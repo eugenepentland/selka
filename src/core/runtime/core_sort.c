@@ -848,16 +848,37 @@ myl_block *myl_core_s2_sort_keyed(myl_block *source, myl_block *keys, uint64_t s
 }
 
 #ifdef MYL_ZERO_RC
-/* Both arguments are independent compiler-created owners. Move elements along
-   permutation cycles; numeric scratch may overwrite keys, which have no managed
-   children on that path. Text/tuple keys stay intact until their direct drop. */
+/* Both arguments are independent compiler-created owners. Wider elements are
+   gathered into untracked temporary storage, then moved back to their original
+   allocation. The temporary is not a managed owner: no children are retained or
+   dropped while transferring the original reference multiset. Scalar elements
+   keep the smaller in-place permutation path. Numeric scratch may overwrite
+   keys, which have no managed children; text/tuple keys stay intact until drop. */
 myl_block *myl_core_owned_sort_keyed(myl_block *values, myl_block *keys,
         uint64_t shape, uint64_t offsets, bool reverse, uint64_t strides) {
     size_t size = (size_t)(strides & UINT32_MAX), key_size = (size_t)(strides >> 32);
     s2_sort_element element = {size}, key_element = {key_size};
     s2_sort_list v = {(size_t)values->len, (size_t)values->cap, 0, block_data(values), &element};
     s2_sort_list k = {(size_t)keys->len, (size_t)keys->cap, 0, block_data(keys), &key_element};
-    int ok = s2_sort_list_sort_keyed(&v, &v, &k, shape, offsets, reverse);
+    int ok;
+    if (size > sizeof(uint64_t) && v.length > 1) {
+        /* Sequential output writes avoid random cycle walks and repeated large
+           record copies. Keep the managed list's capacity and identity intact. */
+        size_t count = v.length;
+        unsigned char *storage = count <= SIZE_MAX / size ? malloc(count * size) : NULL;
+        if (storage) {
+            s2_sort_list out = {0, count, 0, storage, &element};
+            ok = s2_sort_list_sort_keyed(&out, &v, &k, shape, offsets, reverse);
+            if (ok) memcpy(v.storage, storage, count * size);
+            free(storage);
+        } else if (count <= SIZE_MAX / size) {
+            /* Scratch is optional: the original cycle path can still succeed
+               under memory pressure without adding a new fatal OOM point. */
+            ok = s2_sort_list_sort_keyed(&v, &v, &k, shape, offsets, reverse);
+        } else ok = 0; /* Impossible storage product: do not permute invalid metadata. */
+    } else {
+        ok = s2_sort_list_sort_keyed(&v, &v, &k, shape, offsets, reverse);
+    }
     myl_core_drop_owned(keys);
     if (!ok) _Exit(1);
     return values;

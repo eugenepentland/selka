@@ -1,0 +1,180 @@
+# spec-case: NEW-CORE-ZERO-RC-OWNED-MUT-CALL-1
+record Point:
+    x: int
+    values: int[]
+
+
+func replace(mut value: int, named next: int) -> Unit:
+    value = next
+
+
+func replace_points(mut values: int[]) -> Unit:
+    values = [7, 8]
+
+
+func change_pair(mut left: int, mut right: int) -> Unit:
+    left += 10
+    right += 20
+
+
+public func test_scalar_and_nested_mut_writeback() -> bool:
+    mut value = 1
+    replace(mut value, next=5)
+    mut point = Point(x=2, values=[3, 4])
+    replace(mut point.x, next=8)
+    replace(mut point.values[1], next=9)
+    return value == 5 and point.x == 8 and point.values == [3, 9]
+
+
+public func test_mut_snapshot_independence() -> bool:
+    const original = Point(x=1, values=[2, 3])
+    mut changed = original.copy()
+    changed.values[0] = 9
+    return original.values == [2, 3] and changed.values == [9, 3]
+
+
+public func test_whole_collection_rebinding() -> bool:
+    mut values = [1]
+    replace_points(mut values)
+    return values == [7, 8]
+
+
+public func test_dynamic_mut_disjoint_targets() -> bool:
+    mut values = [1, 2]
+    const left = 0
+    const right = 1
+    change_pair(mut values[left], mut values[right])
+    return values == [11, 22]
+
+
+public func test_block_scope_allows_separate_siblings() -> bool:
+    mut result = 0
+    if True:
+        const item = 3
+        result += item
+    if True:
+        const item = 4
+        result += item
+    return result == 7
+
+
+func labelled(named left: int, named right: int) -> int:
+    return left * 10 + right
+
+
+func next_value(mut counter: int) -> int:
+    counter += 1
+    return counter
+
+
+public func test_named_callback_evaluates_in_written_order() -> bool:
+    const operation: func(named left: int, named right: int) -> int = labelled
+    mut counter = 0
+    const value = operation(right=next_value(mut counter), left=next_value(mut counter))
+    return value == 21 and counter == 2
+
+
+func increment(mut value: int) -> Unit:
+    value += 1
+
+
+public func test_mut_callback_updates_caller_scalar() -> bool:
+    const operation: func(mut value: int) -> Unit = increment
+    mut value = 2
+    operation(mut value)
+    return value == 3
+
+
+public func test_snapshot_survives_whole_mut_rebinding() -> bool:
+    mut values = [1, 2]
+    const original = values.copy()
+    replace_points(mut values)
+    return original == [1, 2] and values == [7, 8]
+
+
+func observe_snapshot(before: int[], mut changed: int[]) -> int:
+    changed = [9]
+    return before[0]
+
+
+public func test_readonly_input_is_independent_of_mut_input() -> bool:
+    mut values = [1, 2]
+    const input_snapshot = values.copy()
+    const observed = observe_snapshot(input_snapshot, mut values)
+    return observed == 1 and values == [9]
+
+
+func change_named(named mut left: int, named mut right: int) -> Unit:
+    left += 10
+    right += 20
+
+
+public func test_named_mut_interior_places_preserve_storage_and_written_order() -> bool:
+    const operation: func(named mut left: int, named mut right: int) -> Unit = change_named
+    mut values = [1, 2]
+    mut counter = 0
+    operation(right=mut values[next_value(mut counter) - 1], left=mut values[next_value(mut counter) - 1])
+    mut point = Point(x=2, values=[3])
+    change_named(right=mut point.x, left=mut point.values[0])
+    return values == [21, 12] and counter == 2 and point.x == 22 and point.values == [13]
+
+
+func append_value(mut row: int[]) -> Unit:
+    row.append(9)
+
+
+public func test_scalar_nested_and_dictionary_writeback() -> bool:
+    mut rows = [[1, 2], [3, 4]]
+    change_pair(mut rows[0][0], mut rows[0][1])
+    change_pair(mut rows[0][0], mut rows[1][1])
+    mut table = {"a": 1, "b": 2}
+    const left = "a"
+    const right = "b"
+    change_pair(mut table[left], mut table[right])
+    return rows == [[21, 22], [3, 24]] and table == {"a": 11, "b": 22}
+
+
+public func test_scalar_sibling_writeback_preserves_independent_snapshot() -> bool:
+    mut values = [1, 2]
+    const snapshot = values.copy()
+    change_pair(mut values[0], mut values[1])
+    return snapshot == [1, 2] and values == [11, 22]
+
+
+public func test_managed_mut_leaf_still_transfers_its_owner() -> bool:
+    mut rows = [[1], [2]]
+    append_value(mut rows[0])
+    mut point = Point(x=3, values=[4])
+    append_value(mut point.values)
+    return rows == [[1, 9], [2]] and point.x == 3 and point.values == [4, 9]
+
+
+func observed_pair(mut left: int, mut right: int, out: Stream) -> Unit:
+    out.print("callback executed")
+    left += 10
+    right += 20
+
+
+func main(args: str[], out: Stream) -> int:
+    if len(args) > 0:
+        mut values = [1, 2]
+        mut right = 0
+        if args[0] == "bounds":
+            right = 2
+        observed_pair(mut values[0], mut values[right], out)
+        return 9
+    assert test_scalar_and_nested_mut_writeback()
+    assert test_mut_snapshot_independence()
+    assert test_whole_collection_rebinding()
+    assert test_dynamic_mut_disjoint_targets()
+    assert test_block_scope_allows_separate_siblings()
+    assert test_named_callback_evaluates_in_written_order()
+    assert test_mut_callback_updates_caller_scalar()
+    assert test_snapshot_survives_whole_mut_rebinding()
+    assert test_readonly_input_is_independent_of_mut_input()
+    assert test_named_mut_interior_places_preserve_storage_and_written_order()
+    assert test_scalar_nested_and_dictionary_writeback()
+    assert test_scalar_sibling_writeback_preserves_independent_snapshot()
+    assert test_managed_mut_leaf_still_transfers_its_owner()
+    out.print("scalar writebacks preserved")
+    return 0

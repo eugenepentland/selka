@@ -1,0 +1,23 @@
+{
+  "source_base": "8d4a9845fc997ee59c5591f459dd006507306cf2",
+  "route": "optional --owned-compiler-pin; not selected by root build",
+  "actual_owned_manifest": null,
+  "compiler_support_matrix": "test-support-matrix-refactor.json",
+  "tests": {
+    "native_coordinator_fake_tool_suite": {
+      "passed": 21,
+      "failed": 0,
+      "command": "zig build component-builder; python3 -B selfhost/test_components.py --zig \"$ZIG\" --builder zig-out/tools/selka-components"
+    }
+  },
+  "files": {
+    "selfhost/components.zig": "7d1625ae3a983585e3819ec92147a1911c5c463d4a20a85bbdae0c7a5e29f51a",
+    "selfhost/test_components.py": "20b65b9422a072c6a882221e1a0ae0875bc85c9d89f0591a99688c31ca13bbbb",
+    "selfhost/test_component_native.py": "61be5ee906ff4a88a3f73a09f00502863d524cb56f58aa25841044ee7670efe3",
+    "selfhost/component-seed.json": "a2e02f86f24b139c1b3b71c035ad0f376246f43b12081f3f5beac1bbc007da1c"
+  },
+  "blocked": {
+    "real_component_qualification": "A07 provider/lifetime fixes + A08 component source migrations + integrated compiler pending",
+    "final_pin": "requires actual qualified integrated source commit and archive SHA256"
+  }
+}

@@ -374,6 +374,7 @@ static void *small_alloc(uint32_t class) {
 
 /* A block for `data` bytes after the header; `*room` gets the data bytes it really holds. */
 static myl_block *block_alloc(uint32_t kind, size_t data, size_t *room) {
+    if (data > SIZE_MAX - MYL_HEADER - (MYL_ALIGN - 1)) out_of_memory();
     size_t bytes = MYL_HEADER + data;
     myl_block *block;
     uint32_t class = 0;
@@ -399,10 +400,19 @@ static myl_block *block_alloc(uint32_t kind, size_t data, size_t *room) {
     return block;
 }
 
+/* OWNED-CAPACITY-BOUNDS-1: leave room for both the header and allocation rounding
+   before multiplying. Zero-sized elements are valid and require no payload. */
+static size_t block_data_size(int64_t cap, int64_t element_size, bool terminated) {
+    size_t maximum = SIZE_MAX - MYL_HEADER - (MYL_ALIGN - 1) - (size_t)terminated;
+    if (cap < 0 || element_size < 0) out_of_memory();
+    if (element_size && (uint64_t)cap > maximum / (uint64_t)element_size) out_of_memory();
+    return (size_t)cap * (size_t)element_size + (size_t)terminated;
+}
+
 /* A block of `kind` with room for `cap` elements of `element_size` bytes (a string
    also for its terminating NUL); a list's `cap` is everything the block holds. */
 static myl_block *block_new(uint32_t kind, int64_t cap, int64_t element_size) {
-    size_t wanted = (size_t)(cap > 0 ? cap : 0) * (size_t)element_size + (kind == MYL_KIND_STR);
+    size_t wanted = block_data_size(cap, element_size, kind == MYL_KIND_STR);
     size_t room;
     myl_block *block = block_alloc(kind, wanted, &room);
     block->cap = kind == MYL_KIND_LIST && element_size > 0 ? (int64_t)(room / (size_t)element_size) : (cap > 0 ? cap : 0);
@@ -663,11 +673,12 @@ myl_block *myl_core_list_new_slow(int64_t cap, int64_t element_size) {
    uniqueness rule), so growing frees the old block. */
 myl_block *myl_core_list_grow(myl_block *list, int64_t element_size) {
     if (list->len < list->cap) return list;
+    if (list->cap < 0 || list->cap > INT64_MAX / 2) out_of_memory();
     int64_t cap = list->cap < 4 ? 8 : list->cap * 2;
     if (class_of(list) == 0) {
         /* A large block grows in place where the allocator can (one block either
            way), and moves to a fresh aligned block when `realloc` loses the alignment. */
-        size_t bytes = MYL_HEADER + (size_t)cap * (size_t)element_size;
+        size_t bytes = MYL_HEADER + block_data_size(cap, element_size, false);
         if (heap_ceiling) heap_refund(malloc_usable_size(list));
         myl_block *moved = realloc(list, bytes);
         if (!moved) out_of_memory();
@@ -690,6 +701,50 @@ myl_block *myl_core_list_grow(myl_block *list, int64_t element_size) {
     return grown;
 }
 
+#ifdef MYL_ZERO_RC
+/* OWNED-LIST-MUTATION-1: permutations consume and return the sole list owner.
+   Child bits move between slots; no child is copied, allocated or destroyed.
+   A one-byte temporary also bounds scratch space for wide aggregate elements. */
+/* A nested writable receiver and a borrowed operand can denote one block even
+   when their Core reads differ. This scalar query borrows both inputs. */
+int64_t myl_core_owned_same_block(const myl_block *left, const myl_block *right) {
+    return left == right;
+}
+
+myl_block *myl_core_owned_list_rotate(myl_block *list, int64_t at, int64_t element_size, int64_t last_to_index) {
+    if (at < 0 || at >= list->len) abort(); /* The caller emits the located check. */
+    (void)block_data_size(list->len, element_size, false);
+    unsigned char *data = block_data(list);
+    for (int64_t byte = 0; byte < element_size; ++byte) {
+        unsigned char saved = data[(size_t)(last_to_index ? list->len - 1 : at) * (size_t)element_size + (size_t)byte];
+        if (last_to_index) {
+            for (int64_t index = list->len - 1; index > at; --index)
+                data[(size_t)index * (size_t)element_size + (size_t)byte] = data[(size_t)(index - 1) * (size_t)element_size + (size_t)byte];
+            data[(size_t)at * (size_t)element_size + (size_t)byte] = saved;
+        } else {
+            for (int64_t index = at; index < list->len - 1; ++index)
+                data[(size_t)index * (size_t)element_size + (size_t)byte] = data[(size_t)(index + 1) * (size_t)element_size + (size_t)byte];
+            data[(size_t)(list->len - 1) * (size_t)element_size + (size_t)byte] = saved;
+        }
+    }
+    return list;
+}
+
+myl_block *myl_core_owned_list_reverse(myl_block *list, int64_t element_size) {
+    (void)block_data_size(list->len, element_size, false);
+    unsigned char *data = block_data(list);
+    for (int64_t left = 0; left < list->len / 2; ++left) {
+        int64_t right = list->len - left - 1;
+        for (int64_t byte = 0; byte < element_size; ++byte) {
+            unsigned char saved = data[(size_t)left * (size_t)element_size + (size_t)byte];
+            data[(size_t)left * (size_t)element_size + (size_t)byte] = data[(size_t)right * (size_t)element_size + (size_t)byte];
+            data[(size_t)right * (size_t)element_size + (size_t)byte] = saved;
+        }
+    }
+    return list;
+}
+#endif
+
 /* One more owner of `block` (D4: a count that reaches the saturated value stays there). */
 #ifndef MYL_ZERO_RC
 static void retain_block(myl_block *block) {
@@ -701,6 +756,7 @@ static void retain_block(myl_block *block) {
    copy-on-write update (`own.zig`), so the original block stays intact. The
    copy is a second owner of every block the elements hold. */
 myl_block *myl_core_list_copy(myl_block *list, int64_t element_size) {
+    if (list->len < 0 || list->len == INT64_MAX) out_of_memory();
     myl_block *copy = block_new(MYL_KIND_LIST, list->len + 1, element_size);
     memcpy(block_data(copy), block_data(list), (size_t)list->len * (size_t)element_size);
     copy->len = list->len;
@@ -869,6 +925,13 @@ void myl_core_release(myl_block *block) {
    The pending chain reuses dying headers and requires no allocation or count. */
 static void core_owned_child(myl_block *child, void *context) {
     if (!child || (child->kind & MYL_STATIC_STORAGE)) return;
+    /* Leaves have no provider cleanup or children. Reclaim them directly,
+       without writing a pending-chain link into their capacity word. */
+    unsigned kind = kind_of(child);
+    if (kind == MYL_KIND_STR || kind == MYL_KIND_BYTES) {
+        block_free(child);
+        return;
+    }
     myl_block **pending = context;
     child->cap = (int64_t)(intptr_t)*pending;
     *pending = child;

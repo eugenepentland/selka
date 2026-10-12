@@ -1,0 +1,28 @@
+# A02 explicit ownership migration
+
+Qualification is in progress. The release inventory retains all 51 reserved files and all 341 original zero-argument Boolean test functions. Original sources and SHA-256 identities are preserved under `originals/` and `originals.json`; test names, ordering and assertions remain part of the migration contract. The wrapper executes both public and nonpublic Boolean test functions. Older preintegration harness results label that count `public_tests`; the final harness uses `test_count`.
+
+Changes make independent snapshots explicit with `.copy()`, copy borrowed projections when returning or storing them, and separate receiver/argument evaluation where a mutation crosses a previously captured value. List slicing, extension, insertion, indexed removal and reversal remain their original APIs; compiler fixes supply their ownership implementation. No fallback selects RC after an ownership error.
+
+`preintegration/` preserves exploratory checks on C0 and the first support compiler, including refusals and one ordinary-mode optimizer failure. The partial native sweep stopped after four complete three-file batches while compiler fixes were integrated. Eleven of twelve zero-RC cases and eleven of twelve ordinary controls passed every original assertion and ended with zero managed bytes. The zero-RC failure was nested dictionary/list writeback; the ordinary failure was an optimizer predecessor error in `index_return::test_iteration_binding_stays_independent`. Both have exact compiler/source identities and diagnostics in these records. They are not final qualification and have not been relabeled after source changes.
+
+Final verification will run the same wrappers through a frozen integrated compiler, report every admitted/refused case, require expected output and zero managed exit-live bytes, and audit zero-RC symbols and counters. The draft burden file changes as necessary migrations are completed; it is not a finalized claim.
+
+The combined migration now includes the additional 21 reserved Core fixtures. `current-ledger-draft.json` preserves all 72 source identities and all 358 original test function names. Explicit `assert` statements are unchanged. The 51-file reservation contributes 341 Boolean functions; the additional fixtures include property/trap tests and executable main programs. Copy counts and changed lines are source-migration burden, not compiler-only performance results.
+
+`interim/` captures the Support3 source sweep (43 of 51 admitted) and the first three Support4 native batches. Ordinary controls pass all nine files. Six zero-RC files pass every original Boolean test, have zero RC events, zero managed exit-live bytes and clean symbols. Three remain blocked: `collections` exposes a `providerStore` unit-value panic; `nested_arrays` and `nested_array_callbacks` refuse nested managed-array writeback. The coordinator and A07 own those compiler fixes. Remaining native batches continue separately and cannot be inferred from these nine files.
+
+Other source boundaries are explicitly retained: optional-payload narrowing (`pure_box`, `recursive`, `option_niche`, `rc_box_writeback`), a borrowed dictionary-items iteration binding (`bindings`), borrowed `setdefault` results (`rc_collection_builtins`), and a field mutation following a read-only scan (`rc_interval_anchors`). `stores` uses the forthcoming explicit tuple-copy operation; Support4 predates that API and its recorded refusal is not qualification of the next compiler. No test was removed to make the source sweep pass.
+
+The subsequently archived fourth Support4 batch brings the completed partial
+sweep to 12 ordinary passes and eight zero-RC passes. `nested_collections` adds
+a second providerStore unit panic; `packed_calls` and
+`pending_receiver_arguments` pass both modes. Work stopped at the coordinator's
+request before batch 4 admission, awaiting integrated compiler fixes.
+`interim/support4-native-summary-v2.json` records these exact artifacts and
+corrects the earlier derived summary's RC classification: `release_unique`
+means direct destruction in owned mode and is not an RC event. Native
+retain/release/share totals are included in the corrected zero/nonzero guard.
+Original raw reports and the earlier summary are preserved. No Support4 result
+is promoted to C2/C3 evidence; use the explicit default mode documented in
+`../QUALIFICATION.md` for those future artifacts.

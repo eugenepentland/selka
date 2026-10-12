@@ -1,0 +1,25 @@
+record Item:
+    code: int
+    payload: int[]
+
+
+record Box:
+    items: Item[]
+
+
+func rhs(out: Stream) -> int:
+    out.print("rhs")
+    return 99
+
+
+func put(mut box: Box, index: int, out: Stream):
+    box.items[index].code = rhs(out)
+
+
+func main(args: str[], out: Stream) -> int:
+    mut box = Box(items=[Item(code=1, payload=[1]), Item(code=2, payload=[2])])
+    const saved = box.copy()
+    const index = if len(args) > 0 then - 3 else -1
+    put(mut box, index, out)
+    out.print(box.items[1].code, saved.items[1].code, len(saved.items[1].payload))
+    return 0

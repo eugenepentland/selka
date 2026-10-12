@@ -1,0 +1,91 @@
+build-slot: FIFO ticket 146, position 7; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 146, position 2; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 146 after 85s
+thread 1886964 panic: reached unreachable code
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/debug.zig:442:14: 0x1278ea9 in assert (std.zig)
+    if (!ok) unreachable; // assertion failure
+             ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_expressions.zig:1109:25: 0x1e8248a in expressionWithTemporaries__anon_122137 (compiler.zig)
+        std.debug.assert(temporaries.items.len >= consumed);
+                        ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_expressions.zig:57:50: 0x1e7f941 in expressionWithTemporaries (compiler.zig)
+            return impl.expressionWithTemporaries(Checker, self, root, inherited);
+                                                 ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema.zig:971:46: 0x1e7f36b in expression (compiler.zig)
+        return self.expressionWithTemporaries(root, &.{});
+                                             ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema.zig:1095:42: 0x1e7dfd8 in expressionExpected (compiler.zig)
+        const value = try self.expression(id);
+                                         ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/frontend_failures.zig:33:46: 0x21a9249 in checkReturn__anon_144883 (compiler.zig)
+    const value = try self.expressionExpected(expression, expected);
+                                             ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_statements.zig:562:52: 0x21a595c in statementRet__anon_143348 (compiler.zig)
+    const value = try frontend_failures.checkReturn(Checker, self, expr, stmt.span);
+                                                   ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_statements.zig:662:40: 0x2147e14 in statement__anon_142951 (compiler.zig)
+        .ret => |expr| try statementRet(Checker, self, stmt, expr, &flow),
+                                       ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_statements.zig:124:37: 0x21ae4fc in statementBlock__anon_143313 (compiler.zig)
+        const result = try statement(Checker, self, child);
+                                    ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_statements.zig:657:48: 0x214785d in statement__anon_142951 (compiler.zig)
+        .block => |children| try statementBlock(Checker, self, stmt, children, &flow),
+                                               ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema_statements.zig:45:34: 0x219d053 in statement (compiler.zig)
+            return impl.statement(Checker, self, statement_id);
+                                 ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema.zig:336:38: 0x22759c6 in checkFunction (compiler.zig)
+        var body = try self.statement(function.body);
+                                     ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema.zig:1572:57: 0x226e41b in checkInstance (compiler.zig)
+    const function = reused orelse checker.checkFunction(i) catch |err| switch (err) {
+                                                        ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema.zig:1604:48: 0x1e662e1 in checkBodies (compiler.zig)
+            const function = (try checkInstance(step)) orelse {
+                                               ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema.zig:1846:34: 0x1c567f0 in checkProgram (compiler.zig)
+    const functions = checkBodies(.{
+                                 ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema.zig:1747:33: 0x1c2e122 in checkCore (compiler.zig)
+    const checked = checkProgram(allocator, src, program, sink, options) catch |err| {
+                                ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/sema.zig:1708:21: 0x1c2d8d4 in checkCached (compiler.zig)
+    return checkCore(allocator, src, program, sink, .{ .names = module_names, .cache = cache });
+                    ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/compiler.zig:213:44: 0x2b8380a in checkWithCache (compiler.zig)
+        self.program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, cache);
+                                           ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/frontend.zig:236:32: 0x2b82c1a in checkSingle (cli.zig)
+        try unit.checkWithCache(self.semanticCache());
+                               ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/frontend.zig:203:25: 0x2b80485 in checkFile (cli.zig)
+        self.checkSingle(unit) catch |err| switch (err) {
+                        ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/project_entry.zig:40:46: 0x35e081d in check (cli.zig)
+        const checked = try session.checkFile(allocator, self.path, report);
+                                             ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/check_command.zig:43:32: 0x36546da in run (cli.zig)
+    const checked = entry.check(allocator, &session, &report) catch |err| switch (err) {
+                               ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/cli.zig:100:64: 0x3210611 in dispatch (cli.zig)
+            const result = try @import("check_command.zig").run(init, rest);
+                                                               ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/main.zig:263:33: 0x1472fb8 in dispatch (main.zig)
+    if (try mylang_core.dispatch(process, args)) |status| return status;
+                                ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/main.zig:159:28: 0x1475dc8 in dispatchCommandLine (main.zig)
+    const status = dispatch(init) catch |err| status: {
+                           ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/wiring/process_start.zig:41:9: 0x14332fa in run__anon_32056 (main.zig)
+    body(.{ .minimal = minimal, .arena = &arena, .gpa = gpa, .io = threaded.io(), .environ_map = &environ_map, .preopens = preopens });
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A09/src/main.zig:148:22: 0x1432f11 in main (main.zig)
+    process_start.run(minimal, dispatchCommandLine);
+                     ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x143280f in callMain (std.zig)
+    if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x14321e1 in _start (std.zig)
+    asm volatile (switch (native_arch) {
+    ^

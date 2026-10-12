@@ -1,0 +1,46 @@
+# A04 proposed additional fixture migrations
+
+proposed nonoverlapping reservations for coordinator dispatch; A10 edits none of these sources
+
+- `test/core/f_features.my`
+  - f_features.my:20:17: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+  - Followup: explicit independent copy/local source migration.
+- `test/core/row_string_join.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_string_join.my:43:45: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value
+  - Followup: explicit independent copy/local source migration.
+- `test/core/row_string_split.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_string_split.my:51:45: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value
+  - Followup: explicit independent copy/local source migration.
+- `test/core/s1_ascii.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/s1_ascii.my:31:19: error[E_SINGLE_OWNER_MOVED]: 's' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/s1_bytes.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/s1_bytes.my:15:58: error[E_ZERO_RC_UNSUPPORTED]: shared snapshots and retained views are unsupported; use .borrow() for a checked view or .copy() for ownership
+  - Followup: retired retained-view boundary; migrate to independent slice/copy preserving output; update native allocation oracle.
+- `test/core/s1_collisions.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/s1_collisions.my:63:17: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value
+  - Followup: explicit independent copy/local source migration.
+- `test/core/s1_reads.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/s1_reads.my:31:13: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+  - Followup: explicit independent copy/local source migration.
+- `test/core/s1_views.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/s1_views.my:48:12: error[E_SINGLE_OWNER_MOVED]: 'key' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/t_methods.my`
+  - t_methods.my:5:12: error[E_SINGLE_OWNER_MOVED]: 'text' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/t_scalar_fusion.my`
+  - t_scalar_fusion.my:38:16: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+  - Followup: explicit independent copy/local source migration.
+- `test/core/t_text.my`
+  - t_text.my:27:12: error[E_SINGLE_OWNER_MOVED]: 'original' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/v_buffer_format.my`
+  - v_buffer_format.my:5:12: error[E_SINGLE_OWNER_MOVED]: 'buffer' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/v_buffer_mut.my`
+  - v_buffer_mut.my:41:13: error[E_SINGLE_OWNER_MOVED]: 'sink' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/v_text.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_text.my:19:19: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper
+  - Followup: borrowed field extraction; explicit copy for retained independent owner; retry pending whole-field fixes first.

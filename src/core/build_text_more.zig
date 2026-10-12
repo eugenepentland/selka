@@ -113,7 +113,10 @@ fn decoded(comptime Context: type, b: Context, input: ir.Ref, node: Operation, t
 
 /// Construct the built-in Result from one validation result, with a located error origin.
 pub fn checkedDecode(comptime Context: type, b: Context, receiver: ir.Ref, ty: ir.Type, text: bool, span: u32) Error!ir.Ref {
-    const count = try b.runtimeCall("myl_core_bytes_utf8_count", &.{b.typeOfRef(receiver)}, .i64, &.{receiver}, span);
+    const count = if (b.module().zero_rc)
+        try b.effectCall("myl_core_bytes_utf8_count", &.{b.typeOfRef(receiver)}, .i64, &.{receiver}, span)
+    else
+        try b.runtimeCall("myl_core_bytes_utf8_count", &.{b.typeOfRef(receiver)}, .i64, &.{receiver}, span);
     return decodeResult(Context, b, .{ .receiver = receiver, .ty = ty, .text = text, .count = count, .span = span });
 }
 
@@ -133,7 +136,10 @@ fn decodeResult(comptime Context: type, b: Context, site: DecodeSite) Error!ir.R
     try b.seal(good);
     try b.seal(bad);
     b.current = good;
-    const value = if (text) try b.runtimeCall("myl_core_bytes_decode_text", &.{b.typeOfRef(receiver)}, .str, &.{receiver}, span) else count;
+    const value = if (!text) count else if (b.module().zero_rc)
+        try b.effectCall("myl_core_bytes_decode_text", &.{b.typeOfRef(receiver)}, .str, &.{receiver}, span)
+    else
+        try b.runtimeCall("myl_core_bytes_decode_text", &.{b.typeOfRef(receiver)}, .str, &.{receiver}, span);
     try b.write(slot, good, try b.emit(.{ .op = .union_make, .ty = ty, .a = value, .data = 0, .span = span }));
     try b.jump(join);
     b.current = bad;

@@ -1,0 +1,7 @@
+func repeated(text: str, count: int) -> str:
+    return text.copy() * count
+
+
+func main() -> int:
+    assert repeated("ab", 2) == "abab"
+    return 0

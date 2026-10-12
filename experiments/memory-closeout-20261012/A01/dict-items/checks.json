@@ -1,0 +1,58 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.zig-cache/o/bda68c93caae96b200b176724cd54562/mylang",
+  "compiler_sha256": "77d19bcc0b81c56ce5a39469de7e6aa3bb26cab55b7716460e80aa77b7626fc9",
+  "rows": [
+    {
+      "name": "store",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.zig-cache/o/bda68c93caae96b200b176724cd54562/mylang",
+        "check",
+        ".tmp/memory-closeout/A01/dict-items/store.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "store.my:5:21: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n          kept.append(value)\n                      ^\n",
+      "source_sha256": "d50b84e9167893482dd4b9ccefdc4272d157383672d2eba73af2ab67348575ed"
+    },
+    {
+      "name": "clear",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.zig-cache/o/bda68c93caae96b200b176724cd54562/mylang",
+        "check",
+        ".tmp/memory-closeout/A01/dict-items/clear.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "clear.my:5:9: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n          values.clear()\n          ^\n",
+      "source_sha256": "f47613a6ba55926610a70f001d84f19fe47614feb8711e1777b57fdfb5e2b2c0"
+    },
+    {
+      "name": "rebind",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.zig-cache/o/bda68c93caae96b200b176724cd54562/mylang",
+        "check",
+        ".tmp/memory-closeout/A01/dict-items/rebind.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "81fa6704172e2cb1d6bebc748fefb3bf2c823283a1da726d6e9d0d9c5b0762c5"
+    },
+    {
+      "name": "replace",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.zig-cache/o/bda68c93caae96b200b176724cd54562/mylang",
+        "check",
+        ".tmp/memory-closeout/A01/dict-items/replace.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "replace.my:5:9: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n          values[key.copy()] = []\n          ^\n",
+      "source_sha256": "f471c90b70dd8b7fc91ad6e6c8affad6ef21174ea2715b31673188e4c09e712a"
+    }
+  ]
+}

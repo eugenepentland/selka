@@ -1,0 +1,137 @@
+{
+  "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9",
+  "cases": [
+    {
+      "source": "tests/lang/rc_journal_types.my",
+      "source_sha256": "8b37edbe1c1f4abf0cb34d4329ce273a2811ece77849f4620e1390782a526934",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_journal_types.my:7:41: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut result = Mixed(values=[0], view=list(mapping.values()))\n                                          ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_loop_operand_isolation.my",
+      "source_sha256": "d083e37088b9834b4ad7e6e19faf424a5cdc4e542aee3e3acf57ad9cfb0daf1d",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_loop_uniqueness.my",
+      "source_sha256": "79d229d19c0bc7427d85ab55309a4145df4f65603ae01e4c36cf34685600cca7",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_loop_uniqueness.my:22:22: error[E_SINGLE_OWNER_MOVED]: 'row' was moved or is unavailable on this path; use .copy() when both values are needed\n      mut rows = [row, row]\n                       ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_loop_versions.my",
+      "source_sha256": "2648f7d39238e514a664e75d3259c81bca0e4b199dd091910481cf986ab22334",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_loop_versions.my:24:24: error[E_SINGLE_OWNER_MOVED]: 'row' was moved or is unavailable on this path; use .copy() when both values are needed\n      mut values = [row, row]\n                         ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_mut_list_aliases.my",
+      "source_sha256": "f0ab7f12985f3d8ef84e8205342ea928795bd3c3d2dc65ef236edbf8685dda68",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": [
+        {
+          "line": 42,
+          "before": "    mut first = pins[0]",
+          "after": "    mut first = pins[0].copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 50,
+          "before": "    mut first = pins[0]",
+          "after": "    mut first = pins[0].copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 66,
+          "before": "    mut first = frame.rows[0]",
+          "after": "    mut first = frame.rows[0].copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 94,
+          "before": "    mut rows = frame.rows",
+          "after": "    mut rows = frame.rows.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/rc_mut_payload_snapshots.my",
+      "source_sha256": "ab8e6ff45a180c07c4b58beb93b5524f647261bdf03c2ed9ef2c02bf0962c26e",
+      "status": 0,
+      "stdout": "",
+      "stderr": "rc_mut_payload_snapshots.my:59:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          mut snapshot = parts.copy()\n              ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_mut_uniqueness.my",
+      "source_sha256": "24650576f6c856f19f853a0943a8095a120fdda1b9bfb2fc0627b375702b281e",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": [
+        {
+          "line": 22,
+          "before": "    items = other",
+          "after": "    items = other.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 24,
+          "before": "    return items",
+          "after": "    return items.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/rc_named_record_writes.my",
+      "source_sha256": "ef660299014413b90cc9c08a428c59bfd0d48f66fd6dec75d8fc4c4ca7d7771b",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_named_record_writes.my:76:26: error[E_SINGLE_OWNER_MOVED]: 'state' was moved or is unavailable on this path; use .copy() when both values are needed\n      mut next_count = rhs(mut state)\n                           ^\n",
+      "copy_changes": [
+        {
+          "line": 58,
+          "before": "    mut children = state.values",
+          "after": "    mut children = state.values.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/rc_owned_values.my",
+      "source_sha256": "5443a64feb97c88a087bb0cf1b291b182d24bcc38b6cc5c6a477f74fa4bc4624",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_owned_values.my:59:9: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed\n          values.append(index)\n          ^\n",
+      "copy_changes": [
+        {
+          "line": 9,
+          "before": "    return items",
+          "after": "    return items.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/rc_owning_element_borrows.my",
+      "source_sha256": "04e570a013f4128586f714c3d0c0e66564a09e1fb00fbe926442b7f05a79c5b5",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_owning_element_borrows.my:19:52: error[E_SINGLE_OWNER_MOVED]: 'span' was moved or is unavailable on this path; use .copy() when both values are needed\n      return Pin(part=part, net=span, nc=nc, display=span, net_id=net_id)\n                                                     ^\n",
+      "copy_changes": []
+    }
+  ]
+}

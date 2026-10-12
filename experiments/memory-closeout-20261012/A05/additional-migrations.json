@@ -1,0 +1,172 @@
+{
+  "base_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "scope": "13 coordinator-reserved source migrations; all existing assertions and external expected outputs preserved; owned capability arrays explicitly unsupported",
+  "cases": [
+    {
+      "source": "test/core/c_grants.my",
+      "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+      "original_sha256": "e5b41232dd814d719a0faee2f2e4eb8f5f7f30c9a2569bf82666663f9f075586",
+      "migrated_sha256": "b9cbaf5934aa44fd69bb181991d49b24167331dc04202d1de99aefd5a8074491",
+      "changed_lines_added": 3,
+      "changed_lines_removed": 2,
+      "explicit_copies_before": 0,
+      "explicit_copies_after": 0,
+      "assertions_before": 0,
+      "assertions_after": 0
+    },
+    {
+      "source": "test/core/c_stack_handles.my",
+      "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+      "original_sha256": "2183b9980f2e939618fea4bd776545f899f927f02f67d556bd8ae9c6266ae291",
+      "migrated_sha256": "5ec2177f1fb2dbc7d716c70c306e5412823c8cb64442afeb7ac1e8392bead746",
+      "changed_lines_added": 3,
+      "changed_lines_removed": 2,
+      "explicit_copies_before": 0,
+      "explicit_copies_after": 0,
+      "assertions_before": 0,
+      "assertions_after": 0
+    },
+    {
+      "source": "test/core/c_trap_handles.my",
+      "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+      "original_sha256": "6bd1ec61ef835e7559b594212b5efaed764f807ff2f946662acdf5ec8592d93c",
+      "migrated_sha256": "bdc9451fb8a1d5945052693589d15895a689867816f424557dbc096235c56fe9",
+      "changed_lines_added": 12,
+      "changed_lines_removed": 11,
+      "explicit_copies_before": 0,
+      "explicit_copies_after": 0,
+      "assertions_before": 1,
+      "assertions_after": 1
+    },
+    {
+      "source": "test/core/d_basic.my",
+      "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+      "original_sha256": "467210e6eab505704de656650ac5b61d888500f79866cdebce2d7d4a3713bfc6",
+      "migrated_sha256": "7173e8494e07d17f8bc252f819637682fa41005bf68dd3bfe5cb86311465e157",
+      "changed_lines_added": 1,
+      "changed_lines_removed": 1,
+      "explicit_copies_before": 0,
+      "explicit_copies_after": 1,
+      "assertions_before": 0,
+      "assertions_after": 0
+    },
+    {
+      "source": "test/core/d_collections.my",
+      "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+      "original_sha256": "84834fca4e5116bdfa343d833b793a079e4a11a67c0c21dd1431f96367128ff0",
+      "migrated_sha256": "7e6b115da8072ab3256d7f581eede51529b3aa92ff73bdc82f65715b56aff9a3",
+      "changed_lines_added": 6,
+      "changed_lines_removed": 6,
+      "explicit_copies_before": 0,
+      "explicit_copies_after": 6,
+      "assertions_before": 0,
+      "assertions_after": 0
+    },
+    {
+      "source": "test/core/d_fact_inputs.my",
+      "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+      "original_sha256": "2904498a93f98a88b501d3a60d27ad536f80bda4196e0eb2bc74d7549f53ab32",
+      "migrated_sha256": "89e4c15fb7890c17fce6ceef0323322cfc35e061c86d1f034d17bea60b145a9a",
+      "changed_lines_added": 1,
+      "changed_lines_removed": 1,
+      "explicit_copies_before": 2,
+      "explicit_copies_after": 3,
+      "assertions_before": 0,
+      "assertions_after": 0
+    },
+    {
+      "source": "test/core/d_scalar_stores.my",
+      "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+      "original_sha256": "7a1bc5ad6aa8af39155f280f63e46e6bacd4c60447a4452d62a67362f1da38fc",
+      "migrated_sha256": "29e734e40f454f4b27349f5b9e2a43d18cab8c9a687ae0c6ff8cde111a7af8f7",
+      "changed_lines_added": 5,
+      "changed_lines_removed": 5,
+      "explicit_copies_before": 0,
+      "explicit_copies_after": 5,
+      "assertions_before": 0,
+      "assertions_after": 0
+    },
+    {
+      "source": "test/core/m_none_keys.my",
+      "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+      "original_sha256": "da1a2f0f40b79e557cde167c027b5a72f705d9f402c6005d060e30dcb5eb587c",
+      "migrated_sha256": "7a439d0b838ce1d285600af1c491a1065e2aca63c6eba376c8d4b469873e9a44",
+      "changed_lines_added": 5,
+      "changed_lines_removed": 5,
+      "explicit_copies_before": 0,
+      "explicit_copies_after": 5,
+      "assertions_before": 0,
+      "assertions_after": 0
+    },
+    {
+      "source": "test/core/row_dict_lookup_str.my",
+      "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+      "original_sha256": "7e08d43510abb33d31dd5d12befb522be02e1ca758680f7a5e467fb042a3de21",
+      "migrated_sha256": "c8f3ce39b876a8e77bd6227e6bda3dbd73a8fa341afc649d0bf32c944e0c1dbe",
+      "changed_lines_added": 1,
+      "changed_lines_removed": 1,
+      "explicit_copies_before": 0,
+      "explicit_copies_after": 1,
+      "assertions_before": 0,
+      "assertions_after": 0
+    },
+    {
+      "source": "test/core/row_dict_update_str.my",
+      "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+      "original_sha256": "2a889bffcb00003d82a4a5f816d0c36d69073c32abf1bc072f2d354c6f6cf123",
+      "migrated_sha256": "04929ea1c1459d26b187574f4505bd1fc22fb5a512a4bfd21cb06c4b350fa033",
+      "changed_lines_added": 2,
+      "changed_lines_removed": 2,
+      "explicit_copies_before": 0,
+      "explicit_copies_after": 2,
+      "assertions_before": 0,
+      "assertions_after": 0
+    },
+    {
+      "source": "test/core/v_capability_arrays.my",
+      "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+      "original_sha256": "abb0dd17341301a450de9b05989568a3a908b721250e4520be194de36d636e2a",
+      "migrated_sha256": "59f3b4cf9b004d7a69210f75f131afc37072266851612dd40274581f28bf82d5",
+      "changed_lines_added": 12,
+      "changed_lines_removed": 11,
+      "explicit_copies_before": 0,
+      "explicit_copies_after": 0,
+      "assertions_before": 0,
+      "assertions_after": 0
+    },
+    {
+      "source": "test/fixtures/application-cache/application.my",
+      "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+      "original_sha256": "aa94c91bc1c0948330948d57c88e624328b21b3775158c31f351a5e279a4821e",
+      "migrated_sha256": "bff0742b480b5970ff71895050255f55c2563225c747417da1e8371e182b9f0a",
+      "changed_lines_added": 24,
+      "changed_lines_removed": 24,
+      "explicit_copies_before": 0,
+      "explicit_copies_after": 4,
+      "assertions_before": 3,
+      "assertions_after": 3
+    },
+    {
+      "source": "test/fixtures/attenuation.my",
+      "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+      "original_sha256": "671fa2694449bcc50510f8cf5e536faebf16f37abce8eb171dab3efab043e2e1",
+      "migrated_sha256": "a4c19b5816a7aee5c27d8516eea7af1fc0266c45d0a33254195c5f3f331309d1",
+      "changed_lines_added": 14,
+      "changed_lines_removed": 14,
+      "explicit_copies_before": 0,
+      "explicit_copies_after": 0,
+      "assertions_before": 0,
+      "assertions_after": 0
+    }
+  ],
+  "negative_cases": [
+    {
+      "source": "experiments/memory-closeout-20261012/A05/negative/capability_array.my",
+      "original_source": "test/core/v_capability_arrays.my",
+      "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+      "source_sha256": "abb0dd17341301a450de9b05989568a3a908b721250e4520be194de36d636e2a",
+      "expected_diagnostic": "E_ZERO_RC_UNSUPPORTED",
+      "contract": "Owning Filesystem values cannot be stored in fixed arrays; Stream/Host scalar handles remain valid aggregates."
+    }
+  ]
+}

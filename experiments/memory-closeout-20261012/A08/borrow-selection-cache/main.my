@@ -1,0 +1,11 @@
+func selected_size(values: dict[str, int[]], key: str, fallback: int[]) -> int:
+    return len(values.get(key, fallback))
+
+func main(out: Stream) -> int:
+    mut values = {"present": [1, 2, 3]}
+    mut fallback = [4, 5]
+    out.print(selected_size(values, "present", fallback), selected_size(values, "absent", fallback))
+    values["present"] = [9]
+    fallback.append(6)
+    out.print(selected_size(values, "present", fallback), selected_size(values, "absent", fallback))
+    return 0

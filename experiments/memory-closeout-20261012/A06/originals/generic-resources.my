@@ -1,0 +1,57 @@
+resource File: filesystem
+
+
+result Open:
+    ok: File,
+    err: int
+
+
+record Failure:
+    code: int
+    resource: File
+
+
+result Finish:
+    err: Failure,
+    ok: bool
+
+
+result Status:
+    ok: bool,
+    err: int
+
+
+record Owned:
+    file: File
+    code: int
+
+
+func forward[T](file: File) -> File effects(filesystem):
+    return file
+
+
+func drop[T](file: File) -> int effects(filesystem):
+    return 1
+
+
+func fields[T](value: Owned) -> int effects(filesystem):
+    _ = value
+    return 7
+
+
+func handle[T](r: Open) -> int effects(filesystem):
+    match r:
+        case Open.ok(file):
+            return fields[bool](Owned(file=forward[bool](file), code=7))
+        case Open.err(code):
+            return code
+
+
+func main(fs: Filesystem) -> int:
+    mut empty: FixedArray[u8, 0] = FixedArray[u8, 0]([])
+    mut first = handle[bool](acquire_resource[Open](fs, empty))
+    match acquire_resource[Open](fs, empty):
+        case Open.ok(file):
+            return first + drop[bool](file)
+        case Open.err(code):
+            return code

@@ -1,0 +1,140 @@
+{
+  "compiler_source_revision": "5167c588be79dd43d21d5013c36db15110bf239b",
+  "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "executed": false,
+  "cases": {
+    "all_five": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/boundaries/provider_width/all_five.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-width/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-width/all_five"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+      "source_sha256": "03ab4879949a854ad1313a8e79241a2c9a7a066726e87c4be462723a60ba8dc5"
+    },
+    "five_filesystems": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/boundaries/provider_width/five_filesystems.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-width/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-width/five_filesystems"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "five_filesystems.my:3:8: warning[W_UNUSED_IMPORT]: import `environment` is never referenced in this module; remove it or use it\n  import environment\n         ^\nfive_filesystems.my:4:8: warning[W_UNUSED_IMPORT]: import `network` is never referenced in this module; remove it or use it\n  import network\n         ^\nfive_filesystems.my:5:8: warning[W_UNUSED_IMPORT]: import `time` is never referenced in this module; remove it or use it\n  import time\n         ^\nfive_filesystems.my:6:8: warning[W_UNUSED_IMPORT]: import `random` is never referenced in this module; remove it or use it\n  import random\n         ^\n@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+      "source_sha256": "1019605a2129c814a544b57e825f31ace69f24b511f883b8529a1fef33637383"
+    },
+    "fs_clock": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/boundaries/provider_width/fs_clock.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-width/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-width/fs_clock"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "fs_clock.my:3:8: warning[W_UNUSED_IMPORT]: import `environment` is never referenced in this module; remove it or use it\n  import environment\n         ^\nfs_clock.my:4:8: warning[W_UNUSED_IMPORT]: import `network` is never referenced in this module; remove it or use it\n  import network\n         ^\nfs_clock.my:6:8: warning[W_UNUSED_IMPORT]: import `random` is never referenced in this module; remove it or use it\n  import random\n         ^\n@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+      "source_sha256": "339f56f7fccc702144b54bef8b5194808a1d463e21c159be86aae368bb21d76b"
+    },
+    "fs_entropy": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/boundaries/provider_width/fs_entropy.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-width/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-width/fs_entropy"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "fs_entropy.my:3:8: warning[W_UNUSED_IMPORT]: import `environment` is never referenced in this module; remove it or use it\n  import environment\n         ^\nfs_entropy.my:4:8: warning[W_UNUSED_IMPORT]: import `network` is never referenced in this module; remove it or use it\n  import network\n         ^\nfs_entropy.my:5:8: warning[W_UNUSED_IMPORT]: import `time` is never referenced in this module; remove it or use it\n  import time\n         ^\n@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+      "source_sha256": "191fefd2770b9d97abde49ccfc57c331b8871e87e24c62f3d173ee1f750204e7"
+    },
+    "fs_env": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/boundaries/provider_width/fs_env.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-width/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-width/fs_env"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "fs_env.my:4:8: warning[W_UNUSED_IMPORT]: import `network` is never referenced in this module; remove it or use it\n  import network\n         ^\nfs_env.my:5:8: warning[W_UNUSED_IMPORT]: import `time` is never referenced in this module; remove it or use it\n  import time\n         ^\nfs_env.my:6:8: warning[W_UNUSED_IMPORT]: import `random` is never referenced in this module; remove it or use it\n  import random\n         ^\n@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+      "source_sha256": "b4201fc96eae23cce67d0a2539ccc84f50ee174b91f0f69460a6bb1d774650b6"
+    },
+    "fs_net": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/boundaries/provider_width/fs_net.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-width/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-width/fs_net"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "fs_net.my:3:8: warning[W_UNUSED_IMPORT]: import `environment` is never referenced in this module; remove it or use it\n  import environment\n         ^\nfs_net.my:5:8: warning[W_UNUSED_IMPORT]: import `time` is never referenced in this module; remove it or use it\n  import time\n         ^\nfs_net.my:6:8: warning[W_UNUSED_IMPORT]: import `random` is never referenced in this module; remove it or use it\n  import random\n         ^\n@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+      "source_sha256": "b4ddbea6d31339d00bacaa2f5d8b263443237353d9fb5b00b4e0d99d4ee170e8"
+    },
+    "fs_only": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/boundaries/provider_width/fs_only.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-width/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-width/fs_only"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "fs_only.my:3:8: warning[W_UNUSED_IMPORT]: import `environment` is never referenced in this module; remove it or use it\n  import environment\n         ^\nfs_only.my:4:8: warning[W_UNUSED_IMPORT]: import `network` is never referenced in this module; remove it or use it\n  import network\n         ^\nfs_only.my:5:8: warning[W_UNUSED_IMPORT]: import `time` is never referenced in this module; remove it or use it\n  import time\n         ^\nfs_only.my:6:8: warning[W_UNUSED_IMPORT]: import `random` is never referenced in this module; remove it or use it\n  import random\n         ^\n@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+      "source_sha256": "7e0a9ae25f0f004c0ce94e73b8e68939f7f62b31c60a5b7c1d0184b04ca35c6b"
+    }
+  }
+}

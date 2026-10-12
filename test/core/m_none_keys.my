@@ -25,7 +25,7 @@ public func test_none_keys_replace_lookup_and_evaluate_operands_once() -> bool:
     mapping[selected_key(mut log)] = 8
     mut found = mapping.get(selected_key(mut log), selected_default(mut log))
     mut existing = mapping.setdefault((), 12)
-    mut saved = mapping
+    mut saved = mapping.copy()
     mut removed = mapping.pop(())
     mut absent = mapping.get((), 17)
     if len(mapping) != 0 or () in mapping or found != 8 or existing != 8:
@@ -38,12 +38,12 @@ public func test_none_keys_replace_lookup_and_evaluate_operands_once() -> bool:
 # spec-case: COW-MUT-ARGUMENT-1
 public func test_none_key_mut_values_preserve_parent_and_readonly_snapshots() -> bool:
     mut mapping: dict[Unit, int[]] = {(): [1]}
-    mut saved = mapping
+    mut saved = mapping.copy()
     grow(mut mapping[()])
     mapping[()].append(9)
     mut removed = mapping.pop(())
     grow(mut removed)
-    mapping[()] = removed
+    mapping[()] = removed.copy()
     mapping.update({(): [4, 5]})
     return saved == {(): [1]} and removed == [1, 7, 9, 7] and mapping == {(): [4, 5]}
 
@@ -59,7 +59,7 @@ public func test_none_key_and_value_collections_keep_source_unit_spelling() -> b
     _ = mapping.pop(())
     mapping[()] = ()
     mut units: set[Unit] = {(), ()}
-    mut saved = units
+    mut saved = units.copy()
     mut popped = units.pop()
     if f"{popped}" != "None" or len(units) != 0 or () not in saved:
         return False
@@ -99,7 +99,7 @@ public func test_none_key_remove_reinsert_tombstones_and_defaults() -> bool:
         if removed != [i] or () in mapping:
             return False
     mapping[()] = [100]
-    mut saved = mapping
+    mut saved = mapping.copy()
     mapping.clear()
     return empty == [0] and saved == {(): [100]} and len(mapping) == 0
 

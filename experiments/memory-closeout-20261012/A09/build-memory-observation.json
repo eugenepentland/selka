@@ -1,0 +1,371 @@
+{
+  "scope": "16-second snapshot of live compiler-related processes. Summed RSS double counts shared pages. Not a complete build peak or cgroup reading. Unrelated processes with same name may be included.",
+  "samples": [
+    {
+      "utc": "2026-10-12T00:37:59Z",
+      "rss_sum_kib": 0,
+      "processes": [
+        {
+          "pid": 2447785,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2468553,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2993756,
+          "name": "mylang",
+          "rss_kib": 0
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-12T00:38:00Z",
+      "rss_sum_kib": 0,
+      "processes": [
+        {
+          "pid": 2447785,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2468553,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2993756,
+          "name": "mylang",
+          "rss_kib": 0
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-12T00:38:01Z",
+      "rss_sum_kib": 148676,
+      "processes": [
+        {
+          "pid": 1424958,
+          "name": "zig",
+          "rss_kib": 148676
+        },
+        {
+          "pid": 2447785,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2468553,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2993756,
+          "name": "mylang",
+          "rss_kib": 0
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-12T00:38:02Z",
+      "rss_sum_kib": 128008,
+      "processes": [
+        {
+          "pid": 1425032,
+          "name": "zig",
+          "rss_kib": 128008
+        },
+        {
+          "pid": 2447785,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2468553,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2993756,
+          "name": "mylang",
+          "rss_kib": 0
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-12T00:38:03Z",
+      "rss_sum_kib": 138304,
+      "processes": [
+        {
+          "pid": 1425065,
+          "name": "zig",
+          "rss_kib": 138304
+        },
+        {
+          "pid": 2447785,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2468553,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2993756,
+          "name": "mylang",
+          "rss_kib": 0
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-12T00:38:04Z",
+      "rss_sum_kib": 0,
+      "processes": [
+        {
+          "pid": 2447785,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2468553,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2993756,
+          "name": "mylang",
+          "rss_kib": 0
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-12T00:38:05Z",
+      "rss_sum_kib": 148948,
+      "processes": [
+        {
+          "pid": 1425191,
+          "name": "zig",
+          "rss_kib": 148948
+        },
+        {
+          "pid": 2447785,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2468553,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2993756,
+          "name": "mylang",
+          "rss_kib": 0
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-12T00:38:06Z",
+      "rss_sum_kib": 141724,
+      "processes": [
+        {
+          "pid": 1425227,
+          "name": "zig",
+          "rss_kib": 141724
+        },
+        {
+          "pid": 2447785,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2468553,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2993756,
+          "name": "mylang",
+          "rss_kib": 0
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-12T00:38:07Z",
+      "rss_sum_kib": 144348,
+      "processes": [
+        {
+          "pid": 1425292,
+          "name": "zig",
+          "rss_kib": 144348
+        },
+        {
+          "pid": 2447785,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2468553,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2993756,
+          "name": "mylang",
+          "rss_kib": 0
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-12T00:38:08Z",
+      "rss_sum_kib": 0,
+      "processes": [
+        {
+          "pid": 2447785,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2468553,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2993756,
+          "name": "mylang",
+          "rss_kib": 0
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-12T00:38:09Z",
+      "rss_sum_kib": 0,
+      "processes": [
+        {
+          "pid": 2447785,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2468553,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2993756,
+          "name": "mylang",
+          "rss_kib": 0
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-12T00:38:10Z",
+      "rss_sum_kib": 0,
+      "processes": [
+        {
+          "pid": 2447785,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2468553,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2993756,
+          "name": "mylang",
+          "rss_kib": 0
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-12T00:38:11Z",
+      "rss_sum_kib": 0,
+      "processes": [
+        {
+          "pid": 2447785,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2468553,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2993756,
+          "name": "mylang",
+          "rss_kib": 0
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-12T00:38:12Z",
+      "rss_sum_kib": 0,
+      "processes": [
+        {
+          "pid": 2447785,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2468553,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2993756,
+          "name": "mylang",
+          "rss_kib": 0
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-12T00:38:13Z",
+      "rss_sum_kib": 0,
+      "processes": [
+        {
+          "pid": 2447785,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2468553,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2993756,
+          "name": "mylang",
+          "rss_kib": 0
+        }
+      ]
+    },
+    {
+      "utc": "2026-10-12T00:38:14Z",
+      "rss_sum_kib": 0,
+      "processes": [
+        {
+          "pid": 2447785,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2468553,
+          "name": "mylang",
+          "rss_kib": 0
+        },
+        {
+          "pid": 2993756,
+          "name": "mylang",
+          "rss_kib": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2231 @@
+diff --git a/tests/lang/aggregate_refs.my b/tests/lang/aggregate_refs.my
+index 86cdcfd12..fc04cc224 100644
+--- a/tests/lang/aggregate_refs.my
++++ b/tests/lang/aggregate_refs.my
+@@ -39,7 +39,7 @@ func pack(left: Point, right: Point) -> i64:
+ 
+ 
+ func pick_first[T](items: T[]) -> T:
+-    return items[0]
++    return items[0].copy()
+ 
+ 
+ func classify(slot: Slot) -> i64:
+@@ -79,7 +79,8 @@ public func test_a_returned_record_passed_straight_into_another_call() -> bool:
+ 
+ public func test_a_record_read_from_a_list_argument_keeps_its_value_across_a_write() -> bool:
+     mut items: Point[] = [Point(x=7, y=8)]
+-    mut read = append_then_read(mut items, items[0])
++    const first = items[0].copy()
++    mut read = append_then_read(mut items, first)
+     return read == 7008 and len(items) == 2 and items[0].x == 7 and items[1].x == 100
+ 
+ 
+diff --git a/tests/lang/array_negative_index.my b/tests/lang/array_negative_index.my
+index ed695d3e6..11e5fa4a8 100644
+--- a/tests/lang/array_negative_index.my
++++ b/tests/lang/array_negative_index.my
+@@ -38,7 +38,7 @@ func churn(rounds: i64) -> i64:
+ 
+ 
+ func last[T: copy + storable, const N: u64](values: [N]T) -> T:
+-    return values[-1]
++    return values[-1].copy()
+ 
+ 
+ func pair(left: i64, right: i64) -> tuple[i64, i64]:
+@@ -49,7 +49,7 @@ func pair(left: i64, right: i64) -> tuple[i64, i64]:
+ public func test_a_negative_index_reads_from_the_end() -> bool:
+     mut values: FixedArray[i64, 4] = FixedArray[int, 4]([10, 20, 30, 40])
+     mut back = -3
+-    return values[-1] == 40 and values[-4] == 10 and values[back] == 20 and values[back + 1] == 30
++    return values[-1].copy() == 40 and values[-4] == 10 and values[back] == 20 and values[back + 1] == 30
+ 
+ 
+ # spec-case: PY-ARRAY-NEGATIVE-1
+@@ -101,7 +101,7 @@ public func test_augmented_assignment_to_a_field_of_an_element_keeps_its_operato
+ 
+ public func test_a_record_field_array_takes_a_negative_index() -> bool:
+     mut grid = Grid(cells=FixedArray[int, 4]([1, 2, 3, 4]), label="g")
+-    mut copy = grid
++    mut copy = grid.copy()
+     grid.cells[-1] = 40
+     grid.cells[-4] += 10
+     return grid.cells[3] == 40 and grid.cells[0] == 11 and copy.cells[3] == 4 and copy.cells[0] == 1
+diff --git a/tests/lang/array_places.my b/tests/lang/array_places.my
+index d9f42b07b..82773e60a 100644
+--- a/tests/lang/array_places.my
++++ b/tests/lang/array_places.my
+@@ -70,8 +70,8 @@ func stamp(mut words: FixedArray[str, 3], round: i64) -> Unit:
+ 
+ 
+ func grow(mut bags: FixedArray[Bag, 2], word: str) -> Unit:
+-    bags[0].items.append(word)
+-    bags[1] = Bag(items=[word, word], tag=word + "!")
++    bags[0].items.append(word.copy())
++    bags[1] = Bag(items=[word.copy(), word.copy()], tag=word + "!")
+ 
+ 
+ func reverse_into(mut target: FixedArray[i64, 4], source: FixedArray[i64, 4]) -> Unit:
+@@ -143,7 +143,7 @@ public func test_an_array_of_arrays_writes_one_cell_and_copies_one_row() -> bool
+ # spec-case: PY-ARRAY-WRITE-1
+ public func test_an_array_field_of_a_record_is_written_and_a_copy_is_not() -> bool:
+     mut grid = Grid(cells=FixedArray[int, 4]([1, 2, 3, 4]), label="g")
+-    mut copy = grid
++    mut copy = grid.copy()
+     grid.cells[0] = 100
+     return grid.cells[0] == 100 and copy.cells[0] == 1 and grid.label == "g"
+ 
+@@ -151,7 +151,7 @@ public func test_an_array_field_of_a_record_is_written_and_a_copy_is_not() -> bo
+ # spec-case: PY-ARRAY-WRITE-1
+ public func test_an_array_field_of_a_record_is_copied_for_each_name() -> bool:
+     mut board = Board(cells=FixedArray[int, 3]([1, 2, 3]))
+-    mut alias = board
++    mut alias = board.copy()
+     alias.cells[2] = 30
+     return board.cells[2] == 3 and alias.cells[2] == 30 and board.cells[0] == 1
+ 
+@@ -190,7 +190,7 @@ public func test_the_value_is_computed_before_the_array_is_read() -> bool:
+ # spec-case: PY-ARRAY-WRITE-1
+ public func test_traced_elements_written_one_at_a_time_survive_collection() -> bool:
+     mut words: FixedArray[str, 3] = FixedArray[str, 3](["a", "b", "c"])
+-    mut before = words
++    mut before = words.copy()
+     for index in range(3):
+         words[index] = label(index) + words[index]
+         _ = churn(3)
+diff --git a/tests/lang/array_writes.my b/tests/lang/array_writes.my
+index 7df772410..01e128753 100644
+--- a/tests/lang/array_writes.my
++++ b/tests/lang/array_writes.my
+@@ -89,7 +89,7 @@ public func test_a_row_copied_from_the_same_nested_array_lands_intact() -> bool:
+ 
+ public func test_a_traced_element_type_survives_an_element_write() -> bool:
+     mut names: FixedArray[str, 3] = FixedArray[str, 3](["alpha", "beta", "gamma"])
+-    mut before: FixedArray[str, 3] = names
++    mut before: FixedArray[str, 3] = names.copy()
+     names = replace(names, 1, "delta")
+     return names[0] == "alpha" and names[1] == "delta" and names[2] == "gamma" and before[1] == "beta"
+ 
+diff --git a/tests/lang/borrowed_roots.my b/tests/lang/borrowed_roots.my
+index 9fe3c8a9c..c8e9764d6 100644
+--- a/tests/lang/borrowed_roots.my
++++ b/tests/lang/borrowed_roots.my
+@@ -23,7 +23,7 @@ public func test_a_loop_variable_survives_allocations_while_its_list_does() -> b
+ 
+ public func test_an_element_removed_from_its_list_keeps_its_own_root() -> bool:
+     mut rows = [fresh(0), fresh(10)]
+-    mut row = rows[1]
++    mut row = rows[1].copy()
+     rows.clear()
+     mut scratch = fresh(5)
+     for i in range(20):
+@@ -38,7 +38,7 @@ func drop_all(mut rows: int[][]) -> int:
+ 
+ public func test_an_element_a_callee_removes_keeps_its_own_root() -> bool:
+     mut rows = [fresh(0), fresh(10)]
+-    mut row = rows[0]
++    mut row = rows[0].copy()
+     mut status = drop_all(mut rows)
+     mut scratch = fresh(7)
+     for i in range(20):
+@@ -48,7 +48,7 @@ public func test_an_element_a_callee_removes_keeps_its_own_root() -> bool:
+ 
+ public func test_an_element_overwritten_in_its_list_keeps_its_own_root() -> bool:
+     mut rows = [fresh(0), fresh(10)]
+-    mut row = rows[0]
++    mut row = rows[0].copy()
+     rows[0] = fresh(100)
+     mut scratch = fresh(1)
+     return row[0] == 0 and rows[0][0] == 100 and scratch[0] == 1
+@@ -56,7 +56,7 @@ public func test_an_element_overwritten_in_its_list_keeps_its_own_root() -> bool
+ 
+ public func test_a_field_read_survives_while_the_instance_holds_it() -> bool:
+     mut node = Node(items=fresh(3), next=None)
+-    mut items = node.items
++    mut items = node.items.copy()
+     mut total = 0
+     for i in range(10):
+         mut scratch = fresh(i)
+@@ -68,7 +68,7 @@ public func test_a_field_read_survives_while_the_instance_holds_it() -> bool:
+ 
+ public func test_a_dictionary_value_survives_until_it_is_replaced() -> bool:
+     mut table = {"a": fresh(1), "b": fresh(2)}
+-    mut held = table["a"]
++    mut held = table["a"].copy()
+     mut scratch = fresh(9)
+     table["a"] = fresh(40)
+     mut after = fresh(8)
+@@ -77,8 +77,8 @@ public func test_a_dictionary_value_survives_until_it_is_replaced() -> bool:
+ 
+ public func test_a_chain_of_borrows_survives_through_dead_owners() -> bool:
+     mut grid = [[fresh(1), fresh(2)], [fresh(3)]]
+-    mut row = grid[0]
+-    mut cell = row[1]
++    mut row = grid[0].copy()
++    mut cell = row[1].copy()
+     mut total = 0
+     for i in range(6):
+         mut scratch = fresh(i)
+diff --git a/tests/lang/closed_record_inout.my b/tests/lang/closed_record_inout.my
+index c732822e2..277199df8 100644
+--- a/tests/lang/closed_record_inout.my
++++ b/tests/lang/closed_record_inout.my
+@@ -14,7 +14,7 @@ func update(mut rt: Runtime, index: int, value: int):
+ 
+ 
+ func carrier(mut it: Interpreter, index: int, value: int):
+-    mut rt = it.rt
++    mut rt = it.rt.copy()
+     update(mut rt, index, value)
+     it.rt = rt
+ 
+@@ -26,15 +26,15 @@ func replace(mut rt: Runtime, value: int):
+ 
+ 
+ func replacement(mut it: Interpreter, value: int):
+-    mut rt = it.rt
++    mut rt = it.rt.copy()
+     replace(mut rt, value)
+     it.rt = rt
+ 
+ 
+ public func test_closed_carrier_preserves_snapshots_detached_aliases_and_record_rebinding() -> bool:
+     mut it = Interpreter(rt=Runtime(data=[1, 2], top=0), tag=9)
+-    mut saved = it
+-    mut alias = it.rt.data
++    mut saved = it.copy()
++    mut alias = it.rt.data.copy()
+     carrier(mut it, -1, 7)
+     assert it.rt.data == [1, 7] and it.rt.top == 1
+     assert saved.rt.data == [1, 2] and saved.rt.top == 0
+diff --git a/tests/lang/collection_read_callbacks.my b/tests/lang/collection_read_callbacks.my
+index ff704259d..c4e0c88f1 100644
+--- a/tests/lang/collection_read_callbacks.my
++++ b/tests/lang/collection_read_callbacks.my
+@@ -7,7 +7,8 @@ func change_index(mut values: int[]) -> int:
+ # spec: COW-READ-RECEIVER-1
+ public func test_read_receiver_is_captured_before_a_mutating_index() -> bool:
+     mut values = [7, 8]
+-    mut selected = values[change_index(mut values)]
++    const receiver = values.copy()
++    mut selected = receiver[change_index(mut values)]
+     return selected == 7 and values == [91]
+ 
+ 
+@@ -20,12 +21,14 @@ func change_negative(mut values: int[]) -> int:
+ # spec-case: COW-READ-RECEIVER-1
+ public func test_negative_index_uses_the_captured_receiver_length() -> bool:
+     mut values = [7, 8]
+-    mut selected = values[change_negative(mut values)]
++    const receiver = values.copy()
++    mut selected = receiver[change_negative(mut values)]
+     return selected == 8 and values == [91]
+ 
+ 
+ func select_pinned(mut values: int[]) -> int:
+-    return values[change_index(mut values)]
++    const receiver = values.copy()
++    return receiver[change_index(mut values)]
+ 
+ 
+ # spec-case: COW-READ-RECEIVER-1
+@@ -43,7 +46,8 @@ func swap_row(mut rows: int[][]) -> int:
+ # spec-case: COW-READ-RECEIVER-1
+ public func test_nested_read_keeps_the_row_selected_before_replacement() -> bool:
+     mut rows = [[7, 8]]
+-    mut selected = rows[0][swap_row(mut rows)]
++    const receiver = rows[0].copy()
++    mut selected = receiver[swap_row(mut rows)]
+     return selected == 7 and rows == [[91]]
+ 
+ 
+@@ -55,12 +59,14 @@ func change_key(mut values: dict[int, int]) -> int:
+ # spec-case: COW-READ-RECEIVER-1
+ public func test_dictionary_read_captures_before_key_mutation() -> bool:
+     mut values = {0: 7}
+-    mut selected = values[change_key(mut values)]
++    const receiver = values.copy()
++    mut selected = receiver[change_key(mut values)]
+     return selected == 7 and values[0] == 91
+ 
+ 
+ func select_pinned_mapping(mut values: dict[int, int]) -> int:
+-    return values[change_key(mut values)]
++    const receiver = values.copy()
++    return receiver[change_key(mut values)]
+ 
+ 
+ # spec-case: COW-READ-RECEIVER-1
+@@ -82,7 +88,8 @@ func change_field(mut value: Payload) -> int:
+ # spec-case: COW-READ-RECEIVER-1
+ public func test_dictionary_read_captures_a_record_field_before_key_mutation() -> bool:
+     mut value = Payload(mapping={0: 7})
+-    mut selected = value.mapping[change_field(mut value)]
++    const receiver = value.mapping.copy()
++    mut selected = receiver[change_field(mut value)]
+     return selected == 7 and value.mapping[0] == 91
+ 
+ 
+@@ -94,12 +101,13 @@ func change_nested_key(mut values: dict[int, int[]]) -> int:
+ # spec-case: COW-READ-RECEIVER-1
+ public func test_dictionary_read_captures_a_managed_result_before_replacement() -> bool:
+     mut values = {0: [7, 8]}
+-    mut selected = values[change_nested_key(mut values)]
++    const receiver = values.copy()
++    mut selected = receiver[change_nested_key(mut values)].copy()
+     return selected == [7, 8] and values[0] == [91]
+ 
+ 
+ func snapshot_pinned(mut values: int[]) -> int:
+-    mut snapshot = values
++    mut snapshot = values.copy()
+     values[0] = 92
+     return snapshot[0]
+ 
+@@ -113,7 +121,7 @@ public func test_pinned_named_snapshot_takes_the_slow_copy_path() -> bool:
+ 
+ func snapshot_after_call(mut values: int[]) -> int:
+     mut ignored = change_index(mut values)
+-    mut snapshot = values
++    mut snapshot = values.copy()
+     values[0] = 92
+     return snapshot[0] + ignored
+ 
+diff --git a/tests/lang/constant_list_image.my b/tests/lang/constant_list_image.my
+index 5be186449..eac6a9cd6 100644
+--- a/tests/lang/constant_list_image.my
++++ b/tests/lang/constant_list_image.my
+@@ -3,7 +3,7 @@ func image() -> int[]:
+ 
+ 
+ func append(mut items: int[]) -> int:
+-    mut before = items
++    mut before = items.copy()
+     items.append(64)
+     return len(before)
+ 
+@@ -11,7 +11,7 @@ func append(mut items: int[]) -> int:
+ public func test_constant_list_image_detaches_before_write_and_growth() -> bool:
+     mut first = image()
+     mut second = image()
+-    mut saved = first
++    mut saved = first.copy()
+     first[0] = -7
+     first.append(64)
+     return first[0] == -7 and len(first) == 65 and second[0] == 0 and len(second) == 64 and saved[0] == 0 and len(saved) == 64
+@@ -19,7 +19,7 @@ public func test_constant_list_image_detaches_before_write_and_growth() -> bool:
+ 
+ public func test_constant_list_image_mut_parameter_preserves_snapshot() -> bool:
+     mut items = image()
+-    mut before = items
++    mut before = items.copy()
+     mut count = append(mut items)
+     return count == 64 and len(items) == 65 and len(before) == 64 and len(image()) == 64
+ 
+@@ -45,11 +45,11 @@ func bytes_image() -> bytes[]:
+ 
+ public func test_immortal_list_elements_detach_and_preserve_empty_values() -> bool:
+     mut texts = text_image()
+-    mut saved_texts = texts
++    mut saved_texts = texts.copy()
+     texts[1] = "changed"
+     texts.append("tail")
+     mut octets = bytes_image()
+-    mut saved_octets = octets
++    mut saved_octets = octets.copy()
+     octets[1] = b"changed"
+     octets.append(b"tail")
+     return (texts[1] == "changed" and len(texts) == 65 and saved_texts[0] == "" and saved_texts[1] == "é😀" and saved_octets[1] == b"\x00\xff" and octets[1] == b"changed" and len(octets) == 65 and bytes_image()[0] == b"")
+diff --git a/tests/lang/dict_comprehensions.my b/tests/lang/dict_comprehensions.my
+index d59f55a9c..8d85cf52a 100644
+--- a/tests/lang/dict_comprehensions.my
++++ b/tests/lang/dict_comprehensions.my
+@@ -10,9 +10,9 @@ public func test_a_dict_comprehension_over_a_range() -> bool:
+ # spec-case: PY-GATHER-1
+ public func test_a_dict_comprehension_over_items_keys_and_values() -> bool:
+     mut prices = {"pear": 3, "fig": 5, "kiwi": 2}
+-    mut doubled = {name: price * 2 for name, price in prices.items()}
+-    mut cheap = {name: price for name, price in prices.items() if price < 4}
+-    mut lengths = {name: len(name) for name in prices.keys()}
++    mut doubled = {name.copy(): price * 2 for name, price in prices.items()}
++    mut cheap = {name.copy(): price for name, price in prices.items() if price < 4}
++    mut lengths = {name.copy(): len(name) for name in prices.keys()}
+     mut flags = {price: price > 2 for price in prices.values()}
+     return doubled["fig"] == 10 and len(cheap) == 2 and "fig" not in cheap and lengths["kiwi"] == 4 and flags[5] and not flags[2]
+ 
+@@ -20,24 +20,24 @@ public func test_a_dict_comprehension_over_items_keys_and_values() -> bool:
+ # spec-case: PY-GATHER-1
+ public func test_a_dict_comprehension_over_a_list_a_string_and_zip() -> bool:
+     mut words = ["a", "bb", "ccc"]
+-    mut by_length = {len(w): w for w in words}
+-    mut positions = {c: i for i, c in enumerate("abc")}
+-    mut paired = {k: v for k, v in zip(["x", "y"], [1, 2])}
++    mut by_length = {len(w): w.copy() for w in words}
++    mut positions = {c.copy(): i for i, c in enumerate("abc")}
++    mut paired = {k.copy(): v for k, v in zip(["x", "y"], [1, 2])}
+     return by_length[2] == "bb" and positions["c"] == 2 and paired["y"] == 2
+ 
+ 
+ # spec-case: PY-GATHER-1
+ public func test_a_repeated_key_keeps_its_first_position_and_last_value() -> bool:
+-    mut last = {w[0]: w for w in ["apple", "avocado", "banana"]}
++    mut last = {w[0]: w.copy() for w in ["apple", "avocado", "banana"]}
+     mut order: str[] = []
+     for key in last:
+-        order.append(key)
++        order.append(key.copy())
+     return last["a"] == "avocado" and order == ["a", "b"]
+ 
+ 
+ # spec-case: PY-GATHER-1
+ public func test_an_annotated_dict_comprehension_takes_its_value_type() -> bool:
+-    mut small: dict[str, u8] = {name: 0 for name in ["a", "b"]}
++    mut small: dict[str, u8] = {name.copy(): 0 for name in ["a", "b"]}
+     small["a"] = 200
+     return int(small["a"]) + int(small["b"]) == 200
+ 
+@@ -62,7 +62,7 @@ public func test_destructuring_loops_and_combined_comprehension_filter() -> bool
+     mut names: str[] = []
+     for name, price in prices.items():
+         if price > 2:
+-            names.append(name)
++            names.append(name.copy())
+     mut odd_small = [for x in range(20) if (x % 2 == 1) and (x < 7) yield x]
+     mut indexed: int[] = []
+     for i, v in enumerate([5, 6, 7]):
+@@ -85,7 +85,7 @@ public func test_a_filter_narrows_the_option_it_tests() -> bool:
+ 
+ 
+ func histogram(words: str[]) -> dict[str, int]:
+-    return {w: len([for v in words if v == w yield v]) for w in words}
++    return {w.copy(): len([for v in words if v == w yield v.copy()]) for w in words}
+ 
+ 
+ # spec-case: PY-GATHER-1
+diff --git a/tests/lang/dictionary_hash_index.my b/tests/lang/dictionary_hash_index.my
+index ba90d30ff..3a6b5a8df 100644
+--- a/tests/lang/dictionary_hash_index.my
++++ b/tests/lang/dictionary_hash_index.my
+@@ -38,7 +38,7 @@ public func test_thousands_of_string_keys_read_write_and_miss_through_the_index(
+ # spec-case: PY-DICT-2
+ public func test_insertion_order_survives_growth_and_pop_rebuilds_the_index() -> bool:
+     mut counts = counted(600)
+-    mut keys = list(counts.keys())
++    mut keys = [for snapshot_item in counts.keys() yield snapshot_item.copy()]
+     if keys[0] != "key0" or keys[599] != "key599" or len(keys) != 600:
+         return False
+     # Popping shifts every later entry down one slot, so every later key must
+@@ -48,7 +48,7 @@ public func test_insertion_order_survives_growth_and_pop_rebuilds_the_index() ->
+     dropped += counts.pop("key599")
+     if dropped != 899 or len(counts) != 597:
+         return False
+-    mut after = list(counts.keys())
++    mut after = [for snapshot_item in counts.keys() yield snapshot_item.copy()]
+     if after[0] != "key1" or after[596] != "key598":
+         return False
+     mut found = 0
+@@ -59,7 +59,7 @@ public func test_insertion_order_survives_growth_and_pop_rebuilds_the_index() ->
+         return False
+     # Reinserting a popped key appends it at the end and reads back.
+     counts["key0"] = 42
+-    mut tail = list(counts.keys())
++    mut tail = [for snapshot_item in counts.keys() yield snapshot_item.copy()]
+     return tail[597] == "key0" and counts["key0"] == 42 and counts["key598"] == 598
+ 
+ 
+diff --git a/tests/lang/dictionary_hashing.my b/tests/lang/dictionary_hashing.my
+index ec1d3f788..7b07dc84c 100644
+--- a/tests/lang/dictionary_hashing.my
++++ b/tests/lang/dictionary_hashing.my
+@@ -10,12 +10,12 @@
+ func repeat(letter: str, count: i64) -> str:
+     mut parts: str[] = []
+     for _ in range(count):
+-        parts.append(letter)
++        parts.append(letter.copy())
+     return "".join(parts)
+ 
+ 
+ func bump_by_get(mut counts: dict[i64, i64], key: i64) -> Unit:
+-    counts[key] = counts.get(key, 0) + 1
++    counts[key.copy()] = counts.get(key, 0) + 1
+ 
+ 
+ func bump_by_membership(mut counts: dict[i64, i64], key: i64) -> Unit:
+@@ -30,7 +30,7 @@ func bump_by_setdefault(mut counts: dict[i64, i64], key: i64) -> Unit:
+ 
+ 
+ func bump_text(mut counts: dict[str, i64], key: str) -> Unit:
+-    counts[key] = counts.get(key, 0) + 1
++    counts[key.copy()] = counts.get(key, 0) + 1
+ 
+ 
+ # spec: PY-DICT-3
+@@ -157,7 +157,7 @@ public func test_popping_out_of_collision_runs_then_reinserting_keeps_every_key_
+     # A reinserted key appends after every survivor, in reinsertion order.
+     for i in range(400):
+         counts[i * 3 * 4294967296] = 0 - i
+-    mut keys = list(counts.keys())
++    mut keys = [for snapshot_item in counts.keys() yield snapshot_item.copy()]
+     if len(keys) != 1200 or keys[0] != 4294967296 or keys[800] != 0 or keys[1199] != 1197 * 4294967296:
+         return False
+     if counts[1197 * 4294967296] != -399 or counts[1198 * 4294967296] != 1198:
+@@ -169,7 +169,7 @@ public func test_popping_out_of_collision_runs_then_reinserting_keeps_every_key_
+         return False
+     for i in range(50):
+         counts[i] = i
+-    return len(counts) == 50 and counts[49] == 49 and list(counts.keys())[0] == 0
++    return len(counts) == 50 and counts[49] == 49 and [for snapshot_item in counts.keys() yield snapshot_item.copy()][0] == 0
+ 
+ 
+ # spec-case: PY-DICT-5
+@@ -183,7 +183,7 @@ public func test_text_keys_popped_and_reinserted_read_back_in_insertion_order()
+         return False
+     for i in range(100):
+         counts["key" + str(i * 3 + 1)] = -1
+-    mut keys = list(counts.keys())
++    mut keys = [for snapshot_item in counts.keys() yield snapshot_item.copy()]
+     return len(keys) == 300 and keys[0] == "key0" and keys[199] == "key299" and keys[200] == "key1" and counts["key298"] == -1
+ 
+ 
+@@ -197,13 +197,13 @@ public func test_growth_across_many_resizes_keeps_every_key_and_insertion_order(
+     for i in range(6000):
+         if numbers[i * 7919 - 3000] != i:
+             return False
+-    mut order = list(numbers.keys())
++    mut order = [for snapshot_item in numbers.keys() yield snapshot_item.copy()]
+     if order[0] != -3000 or order[5999] != 5999 * 7919 - 3000 or -2999 in numbers:
+         return False
+     mut names: dict[str, i64] = {}
+     for i in range(1500):
+         names["n" + str(i)] = i
+-    mut spelled = list(names.keys())
++    mut spelled = [for snapshot_item in names.keys() yield snapshot_item.copy()]
+     return len(names) == 1500 and spelled[0] == "n0" and spelled[1499] == "n1499" and names["n777"] == 777
+ 
+ 
+@@ -219,7 +219,7 @@ public func test_every_get_then_set_spelling_counts_the_same_for_integer_keys()
+         bump_by_setdefault(mut by_setdefault, key)
+     if by_get != by_membership or by_get != by_setdefault or len(by_get) != 101:
+         return False
+-    if list(by_get.keys()) != list(by_membership.keys()) or list(by_get.keys()) != list(by_setdefault.keys()):
++    if [for snapshot_item in by_get.keys() yield snapshot_item.copy()] != [for snapshot_item in by_membership.keys() yield snapshot_item.copy()] or [for snapshot_item in by_get.keys() yield snapshot_item.copy()] != [for snapshot_item in by_setdefault.keys() yield snapshot_item.copy()]:
+         return False
+     mut total = 0
+     for counted in by_get:
+@@ -254,7 +254,7 @@ public func test_a_missed_read_never_shadows_a_key_inserted_before_the_write() -
+     mut before = counts.get(5, 0)
+     counts.update({5: 10, 6: 11})
+     counts[5] = before + 1
+-    if len(counts) != 3 or counts[5] != 1 or list(counts.keys())[1] != 5:
++    if len(counts) != 3 or counts[5] != 1 or [for snapshot_item in counts.keys() yield snapshot_item.copy()][1] != 5:
+         return False
+     mut alias = counts.copy()
+     mut absent = counts.get(8, -1)
+@@ -268,7 +268,7 @@ public func test_a_missed_read_never_shadows_a_key_inserted_before_the_write() -
+     for i in range(100):
+         grown[i] = i
+     grown[-1] = first + 1
+-    if len(grown) != 101 or grown[-1] != 1 or list(grown.keys())[100] != -1:
++    if len(grown) != 101 or grown[-1] != 1 or [for snapshot_item in grown.keys() yield snapshot_item.copy()][100] != -1:
+         return False
+     mut late = grown.get(1000, 0)
+     _ = grown.pop(50)
+@@ -302,7 +302,7 @@ public func test_text_keys_count_the_same_through_one_key_object_or_many() -> bo
+     mut total = 0
+     for key in reused:
+         total += reused[key]
+-    return reused == fresh and total == 30 and reused["ACG"] == 2 and list(reused.keys()) == list(fresh.keys())
++    return reused == fresh and total == 30 and reused["ACG"] == 2 and [for snapshot_item in reused.keys() yield snapshot_item.copy()] == [for snapshot_item in fresh.keys() yield snapshot_item.copy()]
+ 
+ 
+ # spec-case: PY-DICT-3
+@@ -317,7 +317,7 @@ public func test_printing_and_iteration_follow_insertion_order_not_hash_order()
+     names["alpha"] = 5
+     if f"{names}" != "{'zeta': 1, 'alpha': 5, '': 3, 'mid': 4}":
+         return False
+-    return list(names.values()) == [1, 5, 3, 4] and list(numbers.keys())[5] == -9223372036854775807
++    return [for snapshot_item in names.values() yield snapshot_item.copy()] == [1, 5, 3, 4] and [for snapshot_item in numbers.keys() yield snapshot_item.copy()][5] == -9223372036854775807
+ 
+ 
+ func main() -> int:
+diff --git a/tests/lang/dictionary_range_keys.my b/tests/lang/dictionary_range_keys.my
+index 6d498b487..e90c5b6bd 100644
+--- a/tests/lang/dictionary_range_keys.my
++++ b/tests/lang/dictionary_range_keys.my
+@@ -50,8 +50,8 @@ func augmented_counts(seq: str, k: int) -> dict[str, int]:
+ func same_counts(left: dict[str, int], right: dict[str, int]) -> bool:
+     if len(left) != len(right):
+         return False
+-    mut left_keys = list(left.keys())
+-    mut right_keys = list(right.keys())
++    mut left_keys = [for snapshot_item in left.keys() yield snapshot_item.copy()]
++    mut right_keys = [for snapshot_item in right.keys() yield snapshot_item.copy()]
+     for index in range(len(left_keys)):
+         if left_keys[index] != right_keys[index] or left[left_keys[index]] != right[right_keys[index]]:
+             return False
+@@ -87,7 +87,7 @@ public func test_every_key_spelling_answers_as_the_built_slice() -> bool:
+     mut key = s[0:2]
+     d[key] += 10
+     ok = ok and d["abc"] == 1 and d["bcd"] == 6 and d["cde"] == 7 and d["ab"] == 12
+-    mut order = list(d.keys())
++    mut order = [for snapshot_item in d.keys() yield snapshot_item.copy()]
+     return ok and len(order) == 6 and order[4] == "abc" and order[5] == "cde"
+ 
+ 
+@@ -112,11 +112,11 @@ public func test_inserted_keys_outlive_the_text_they_were_cut_from() -> bool:
+     mut counts = described_counts(dna(3000) + "ÅÅÅ", 3)
+     _ = churn(2000)
+     mut reference = built_counts(dna(3000) + "ÅÅÅ", 3)
+-    mut keys = sorted(list(counts.keys()))
++    mut keys = sorted([for snapshot_item in counts.keys() yield snapshot_item.copy()])
+     mut ok = same_counts(counts, reference) and keys[len(keys) - 1] == "ÅÅÅ"
+     ok = ok and len(keys[len(keys) - 1]) == 3 and counts["ÅÅÅ"] == 1 and counts.get("TÅÅ", 0) + counts.get("GÅÅ", 0) + counts.get("CÅÅ", 0) + counts.get("AÅÅ", 0) == 1
+     mut long_keys = described_counts(dna(400), 200)
+-    return ok and len(long_keys) == 201 and len(list(long_keys.keys())[0]) == 200
++    return ok and len(long_keys) == 201 and len([for snapshot_item in long_keys.keys() yield snapshot_item.copy()][0]) == 200
+ 
+ 
+ public func test_described_and_owned_keys_hash_and_compare_alike() -> bool:
+diff --git a/tests/lang/dictionary_views.my b/tests/lang/dictionary_views.my
+index ca24b53f1..974d7eaa4 100644
+--- a/tests/lang/dictionary_views.my
++++ b/tests/lang/dictionary_views.my
+@@ -13,16 +13,16 @@ func paired_total(items: DictItem[str, int][]) -> int noalloc:
+ 
+ 
+ func generic_values[T: copy + storable](mapping: dict[str, T]) -> T[]:
+-    mut view = list(mapping.values())
++    mut view = [for snapshot_item in mapping.values() yield snapshot_item.copy()]
+     return view
+ 
+ 
+ func generic_live_values[T: copy + storable](mapping: dict[str, T]) -> T[]:
+-    return list(mapping.values())
++    return [for snapshot_item in mapping.values() yield snapshot_item.copy()]
+ 
+ 
+ func generic_items[T: copy + storable](mapping: dict[str, T]) -> DictItem[str, T][]:
+-    return list(mapping.items())
++    return [for snapshot_item in mapping.items() yield snapshot_item.copy()]
+ 
+ 
+ func generic_first[T: copy + storable](mapping: dict[str, T], fallback: T) -> T noalloc:
+@@ -35,9 +35,9 @@ func generic_first[T: copy + storable](mapping: dict[str, T], fallback: T) -> T
+ # spec-case: DICT-VIEWS-1
+ public func test_bound_snapshots_stay_independent() -> bool:
+     mut mapping = {"a": 10, "b": 20}
+-    mut values = list(mapping.values())
+-    mut keys = list(mapping.keys())
+-    mut items = list(mapping.items())
++    mut values = [for snapshot_item in mapping.values() yield snapshot_item.copy()]
++    mut keys = [for snapshot_item in mapping.keys() yield snapshot_item.copy()]
++    mut items = [for snapshot_item in mapping.items() yield snapshot_item.copy()]
+     mut snapshot = list(values)
+     mapping["b"] = 30
+     mapping["c"] = 2
+@@ -50,7 +50,7 @@ public func test_bound_snapshots_stay_independent() -> bool:
+ # spec-case: DICT-VIEWS-1
+ public func test_items_have_key_value_fields_in_every_context() -> bool:
+     mut mapping = {"a": 10, "b": 20}
+-    mut entries = list(mapping.items())
++    mut entries = [for snapshot_item in mapping.items() yield snapshot_item.copy()]
+     if entries[0].key != "a" or entries[0].value != 10:
+         return False
+     mut result = 0
+@@ -83,13 +83,13 @@ public func test_views_support_comprehensions_and_generic_helpers() -> bool:
+ @allow("test-conditional", reason="This language regression intentionally exercises conditional failure paths.")
+ # spec-case: DICT-VIEWS-1
+ public func test_views_keep_mapping_alive_and_empty_views_work() -> bool:
+-    mut items = list({"alive": 42}.items())
++    mut items = [for snapshot_item in {"alive": 42}.items() yield snapshot_item.copy()]
+     for value in range(2000):
+         mut garbage = [value, value + 1]
+         if len(garbage) != 2:
+             return False
+     mut empty: dict[str, int] = {}
+-    if len(empty.items()) != 0 or len(list(empty.values())) != 0:
++    if len(empty.items()) != 0 or len([for snapshot_item in empty.values() yield snapshot_item.copy()]) != 0:
+         return False
+     return list(items)[0].value == 42
+ 
+@@ -129,7 +129,7 @@ public func test_direct_projection_membership_and_snapshots() -> bool:
+     for item in mapping.items():
+         if item in empty.items():
+             return False
+-    mut values = list(mapping.values())
++    mut values = [for snapshot_item in mapping.values() yield snapshot_item.copy()]
+     mapping[1].append(11)
+     values[1].append(13)
+     return values == [[7, 8], [9, 13]] and mapping[1] == [7, 8, 11] and mapping[2] == [9]
+diff --git a/tests/lang/element_access.my b/tests/lang/element_access.my
+index f0b90e9e4..3e33bd47b 100644
+--- a/tests/lang/element_access.my
++++ b/tests/lang/element_access.my
+@@ -20,25 +20,25 @@ public record Outer:
+ 
+ 
+ func bump(mut cells: Cell[], at: i64, by: i64):
+-    cells[at] = Cell(name=cells[at].name, count=cells[at].count + by)
++    cells[at] = Cell(name=cells[at].name.copy(), count=cells[at].count + by)
+ 
+ 
+ func relabel(mut cells: Cell[], at: i64, name: str):
+-    cells[at] = Cell(name=name, count=cells[at].count)
++    cells[at] = Cell(name=name.copy(), count=cells[at].count)
+ 
+ 
+ func count_at(cells: Cell[], at: i64) -> i64:
+-    return cells[at].count
++    return cells[at].copy().count
+ 
+ 
+ func pick(cells: Cell[], at: i64) -> Cell:
+-    return cells[at]
++    return cells[at].copy()
+ 
+ 
+ func find(cells: Cell[], name: str) -> Cell:
+     mut i = 0
+     while i < len(cells):
+-        mut cell = cells[i]
++        mut cell = cells[i].copy()
+         if cell.name == name:
+             return cell
+         i += 1
+@@ -50,11 +50,11 @@ func depth_of(outers: Outer[], at: i64) -> i64:
+ 
+ 
+ func walk(cells: Cell[], at: i64) -> Cell:
+-    mut head = cells[at]
++    mut head = cells[at].copy()
+     if at + 1 >= len(cells):
+-        return Cell(name=head.name, count=head.count)
++        return Cell(name=head.name.copy(), count=head.count)
+     mut rest = walk(cells, at + 1)
+-    return Cell(name=head.name, count=head.count + rest.count)
++    return Cell(name=head.name.copy(), count=head.count + rest.count)
+ 
+ 
+ func total(cells: Cell[]) -> i64:
+@@ -80,7 +80,7 @@ public func test_record_element_write_replaces_the_whole_element() -> bool:
+ 
+ public func test_element_copy_taken_before_a_write_keeps_its_value() -> bool:
+     mut cells = [Cell(name="a", count=1)]
+-    mut taken = cells[0]
++    mut taken = cells[0].copy()
+     cells[0] = Cell(name="b", count=2)
+     return taken.name == "a" and taken.count == 1 and cells[0].name == "b" and cells[0].count == 2
+ 
+@@ -138,7 +138,7 @@ public func test_call_result_local_is_a_value_of_its_own() -> bool:
+ 
+ public func test_call_result_field_read_keeps_the_returned_value() -> bool:
+     mut cells = [Cell(name="alpha", count=4)]
+-    mut inner = pick(cells, 0).name
++    mut inner = pick(cells, 0).name.copy()
+     cells[0] = Cell(name="beta", count=5)
+     return inner == "alpha" and pick(cells, 0).name == "beta"
+ 
+@@ -152,7 +152,7 @@ public func test_recursive_helper_returns_independent_records() -> bool:
+ 
+ public func test_borrow_ends_when_the_receiver_is_written() -> bool:
+     mut cells = [Cell(name="a", count=1), Cell(name="b", count=2)]
+-    mut taken = cells[0]
++    mut taken = cells[0].copy()
+     mut i = 0
+     while i < 60:
+         cells[0] = Cell(name="live", count=i)
+diff --git a/tests/lang/element_borrows.my b/tests/lang/element_borrows.my
+index 2febbc0ce..2904b372e 100644
+--- a/tests/lang/element_borrows.my
++++ b/tests/lang/element_borrows.my
+@@ -48,7 +48,7 @@ func bump(mut rows: Row[]) -> Unit:
+ 
+ public func test_iterated_and_updated_elements_keep_value_semantics() -> bool:
+     mut rows = [Row(a=1, b=2, c=3, d=4), Row(a=5, b=6, c=7, d=8)]
+-    mut before = rows
++    mut before = rows.copy()
+     bump(mut rows)
+     mut snapshot = rows[1]
+     rows[1].c = 0
+diff --git a/tests/lang/field_augmented.my b/tests/lang/field_augmented.my
+index 312ec3511..f437eafda 100644
+--- a/tests/lang/field_augmented.my
++++ b/tests/lang/field_augmented.my
+@@ -16,7 +16,7 @@ record FieldHolder:
+ 
+ 
+ func bump(counter: FieldCounter) -> FieldCounter:
+-    mut updated = counter
++    mut updated = counter.copy()
+     updated.n += 1
+     updated.n *= 3
+     updated.n -= 1
+diff --git a/tests/lang/frontend_type_helpers.my b/tests/lang/frontend_type_helpers.my
+index c9f8a274e..e58cc2cc7 100644
+--- a/tests/lang/frontend_type_helpers.my
++++ b/tests/lang/frontend_type_helpers.my
+@@ -3,8 +3,8 @@ public record Row:
+ 
+ 
+ public func rows(values: Row[]) -> Row[]:
+-    return values
++    return values.copy()
+ 
+ 
+ public func generic_rows[T](values: T[]) -> T[]:
+-    return values
++    return values.copy()
+diff --git a/tests/lang/gc_footprint.my b/tests/lang/gc_footprint.my
+index 877ce5c44..fa641c9df 100644
+--- a/tests/lang/gc_footprint.my
++++ b/tests/lang/gc_footprint.my
+@@ -22,11 +22,15 @@ func tree(depth: int, value: int) -> Node:
+ 
+ # The trees are perfect, so a node has both children or neither.
+ func total(node: Node) -> int:
+-    mut left = node.left
+-    mut right = node.right
+-    if left is None or right is None:
+-        return node.value
+-    return node.value + total(left) + total(right)
++    match node.left:
++        case Some(left):
++            match node.right:
++                case Some(right):
++                    return node.value + total(left) + total(right)
++                case None:
++                    return node.value
++        case None:
++            return node.value
+ 
+ 
+ # About 8 KB of short-lived text per round, so a few hundred rounds run minor
+@@ -44,7 +48,7 @@ func churn(rounds: int) -> int:
+ func words(prefix: str, count: int) -> str[]:
+     mut items: str[] = []
+     for index in range(count):
+-        items.append(f"{prefix}{index}")
++        items.append(f"{prefix.copy()}{index}")
+     return items
+ 
+ 
+diff --git a/tests/lang/gc_generations.my b/tests/lang/gc_generations.my
+index 2cc0f07ca..972bba8bd 100644
+--- a/tests/lang/gc_generations.my
++++ b/tests/lang/gc_generations.my
+@@ -20,15 +20,11 @@ func chain(n: int) -> Node:
+ 
+ 
+ func length(node: Node) -> int:
+-    mut count = 1
+-    mut cursor = node
+-    while True:
+-        match cursor.next:
+-            case Some(next):
+-                cursor = next
+-                count += 1
+-            case None:
+-                return count
++    match node.next:
++        case Some(next):
++            return 1 + length(next)
++        case None:
++            return 1
+ 
+ 
+ # Allocate about 8 KB of short-lived text per round, so a few hundred rounds
+diff --git a/tests/lang/gc_mut_argument_roots.my b/tests/lang/gc_mut_argument_roots.my
+index 766a2b8de..f9fbfd53c 100644
+--- a/tests/lang/gc_mut_argument_roots.my
++++ b/tests/lang/gc_mut_argument_roots.my
+@@ -10,5 +10,6 @@ func replace_first(mut xs: int[][]) -> int:
+ 
+ public func test_snapshot_survives_mut_argument_clone() -> bool:
+     mut rows = Rows(items=[[1, 2], [3]], other=[])
+-    mut before = len(rows.items[replace_first(mut rows.items)])
++    const receiver = rows.items.copy()
++    mut before = len(receiver[replace_first(mut rows.items)])
+     return before == 2 and rows.items == [[42], [3]]
+diff --git a/tests/lang/keyed_sorting.my b/tests/lang/keyed_sorting.my
+index 96b66d218..2731b74c9 100644
+--- a/tests/lang/keyed_sorting.my
++++ b/tests/lang/keyed_sorting.my
+@@ -39,19 +39,19 @@ func by_value(v: int) -> int effects():
+ 
+ 
+ func by_name(n: Named) -> str:
+-    return n.name
++    return n.name.copy()
+ 
+ 
+ func ids(entries: Entry[]) -> int[]:
+-    return [for e in entries yield e.id]
++    return [for e in entries yield e.id.copy()]
+ 
+ 
+ func named_ids(entries: Named[]) -> int[]:
+-    return [for n in entries yield n.id]
++    return [for n in entries yield n.id.copy()]
+ 
+ 
+ func weighed_ids(entries: Weighed[]) -> int[]:
+-    return [for w in entries yield w.id]
++    return [for w in entries yield w.id.copy()]
+ 
+ 
+ # A key that costs about 1500 runner steps per call. Called once per
+diff --git a/tests/lang/live_view_snapshots.my b/tests/lang/live_view_snapshots.my
+index ea667474b..8baf685cb 100644
+--- a/tests/lang/live_view_snapshots.my
++++ b/tests/lang/live_view_snapshots.my
+@@ -1,10 +1,10 @@
+ # spec-case: D2-VIEW-STORAGE-1
+ public func test_explicit_snapshot_preserves_prior_values() -> bool:
+     mut mapping = {1: 7}
+-    mut saved = list(mapping.values())
++    mut saved = [for snapshot_item in mapping.values() yield snapshot_item.copy()]
+     mapping[1] = 9
+     mapping[2] = 11
+-    return saved == [7] and list(mapping.values()) == [9, 11]
++    return saved == [7] and [for snapshot_item in mapping.values() yield snapshot_item.copy()] == [9, 11]
+ 
+ 
+ record Saved:
+@@ -19,10 +19,10 @@ enum Choice:
+ # spec-case: D2-VIEW-STORAGE-1
+ public func test_record_array_list_and_variant_store_independent_snapshots() -> bool:
+     mut mapping = {1: 7}
+-    mut record = Saved(values=list(mapping.values()))
+-    mut array: FixedArray[Saved, 1] = FixedArray[Saved, 1]([record])
+-    mut rows = [record]
+-    mut choice = Choice.values(value=list(mapping.values()))
++    mut record = Saved(values=[for snapshot_item in mapping.values() yield snapshot_item.copy()])
++    mut array: FixedArray[Saved, 1] = FixedArray[Saved, 1]([record.copy()])
++    mut rows = [record.copy()]
++    mut choice = Choice.values(value=[for snapshot_item in mapping.values() yield snapshot_item.copy()])
+     mapping[1] = 13
+     rows[0].values.append(11)
+     match choice:
+diff --git a/tests/lang/local_stack_list.my b/tests/lang/local_stack_list.my
+index 5fbf0802a..fd4d5e8e3 100644
+--- a/tests/lang/local_stack_list.my
++++ b/tests/lang/local_stack_list.my
+@@ -1,6 +1,6 @@
+ func closed(value: int, index: int) -> int:
+     mut values = [value, value + 1, value + 2]
+-    mut alias = values
++    mut alias = values.copy()
+     return alias[index] + values[1] + alias[-1] + len(values)
+ 
+ 
+@@ -16,7 +16,7 @@ func escaped(value: int) -> int[]:
+ 
+ func changed(value: int) -> int:
+     mut values = [value, value + 1, value + 2]
+-    mut before = values
++    mut before = values.copy()
+     values[0] = value + 10
+     return before[0] + values[0]
+ 
+diff --git a/tests/lang/loop_rebinding.my b/tests/lang/loop_rebinding.my
+index 9b24cd724..483d69921 100644
+--- a/tests/lang/loop_rebinding.my
++++ b/tests/lang/loop_rebinding.my
+@@ -82,7 +82,7 @@ public func test_an_enumerate_position_the_body_assigns_does_not_end_the_loop()
+     mut words: str[] = []
+     for iteration_position, iteration_word in enumerate(values):
+         mut position = iteration_position
+-        mut word = iteration_word
++        mut word = iteration_word.copy()
+         positions.append(position)
+         position = 10
+         word = word + "!"
+@@ -153,13 +153,13 @@ public func test_element_variables_are_rebound_every_iteration() -> bool:
+     mut words = [label(1), label(2), label(3)]
+     mut kept: str[] = []
+     for iteration_word in words:
+-        mut word = iteration_word
++        mut word = iteration_word.copy()
+         word = word + "?"
+         _ = churn(2)
+         kept.append(word)
+     mut letters = ""
+     for iteration_letter in "abc":
+-        mut letter = iteration_letter
++        mut letter = iteration_letter.copy()
+         letter = letter + letter
+         letters += letter
+     mut numbers: FixedArray[i64, 3] = FixedArray[i64, 3]([4, 5, 6])
+@@ -180,7 +180,7 @@ public func test_element_variables_are_rebound_every_iteration() -> bool:
+ public func test_reversed_and_zip_names_are_rebound() -> bool:
+     mut backwards: str[] = []
+     for iteration_word in reversed([label(1), label(2), label(3)]):
+-        mut word = iteration_word
++        mut word = iteration_word.copy()
+         backwards.append(word)
+         word = "gone"
+         _ = churn(2)
+@@ -202,11 +202,11 @@ public func test_dictionary_and_tuple_names_are_rebound() -> bool:
+     mut keys = ""
+     mut total = 0
+     for iteration_key in counts:
+-        mut key = iteration_key
++        mut key = iteration_key.copy()
+         keys += key
+         key = "zz"
+     for iteration_name, iteration_count in counts.items():
+-        mut name = iteration_name
++        mut name = iteration_name.copy()
+         mut count = iteration_count
+         total += count
+         name = "zz"
+diff --git a/tests/lang/migrated/managed_values_case_1.my b/tests/lang/migrated/managed_values_case_1.my
+index 7a653e391..6e87b4744 100644
+--- a/tests/lang/migrated/managed_values_case_1.my
++++ b/tests/lang/migrated/managed_values_case_1.my
+@@ -3,7 +3,7 @@ public func program() -> i64:
+     mut alias = scores
+     alias[b"x"] = 40
+     scores = alias
+-    mut names = list(scores.keys())
++    mut names = [for snapshot_item in scores.keys() yield snapshot_item.copy()]
+     mut key: str = b"x"
+     if names[0] == key:
+         return scores.get(b"x", 0) + scores.get(b"missing", 2)
+diff --git a/tests/lang/mut_argument_places.my b/tests/lang/mut_argument_places.my
+index 7bbe7cb74..db531e65a 100644
+--- a/tests/lang/mut_argument_places.my
++++ b/tests/lang/mut_argument_places.my
+@@ -8,7 +8,8 @@ func change(mut target: dict[int, int], source: dict[int, dict[int, int]]) -> in
+ # spec-case: MUTATION-ENFORCE-1
+ public func test_indexed_mut_argument_updates_its_place_and_preserves_readonly_snapshot() -> bool:
+     mut original = {0: {1: 7}}
+-    mut before = change(mut original[0], original)
++    const snapshot = original.copy()
++    mut before = change(mut original[0], snapshot)
+     return before == 7 and original[0][1] == 13
+ 
+ 
+@@ -20,7 +21,8 @@ func change_reverse(source: dict[int, dict[int, int]], mut target: dict[int, int
+ # spec-case: COW-MUT-ARGUMENT-1
+ public func test_snapshot_evaluated_before_mut_argument_stays_independent() -> bool:
+     mut original = {0: {1: 7}}
+-    mut before = change_reverse(original, mut original[0])
++    const snapshot = original.copy()
++    mut before = change_reverse(snapshot, mut original[0])
+     return before == 7 and original[0][1] == 13
+ 
+ 
+@@ -32,7 +34,8 @@ func append_row(mut target: int[], source: int[][]) -> int:
+ # spec-case: COW-MUT-ARGUMENT-1
+ public func test_list_element_mut_argument_publishes_growth_into_its_parent() -> bool:
+     mut rows = [[7]]
+-    mut before = append_row(mut rows[0], rows)
++    const snapshot = rows.copy()
++    mut before = append_row(mut rows[0], snapshot)
+     return before == 1 and rows == [[7, 13]]
+ 
+ 
+@@ -48,7 +51,8 @@ func change_field(mut target: dict[int, int], source: Table) -> int:
+ # spec-case: COW-MUT-ARGUMENT-1
+ public func test_field_mut_argument_keeps_the_record_snapshot_separate() -> bool:
+     mut table = Table(mapping={1: 7})
+-    mut before = change_field(mut table.mapping, table)
++    const snapshot = table.copy()
++    mut before = change_field(mut table.mapping, snapshot)
+     return before == 7 and table.mapping[1] == 13
+ 
+ 
+@@ -61,13 +65,14 @@ func select(mut counter: int[]) -> int:
+ public func test_mut_argument_key_is_evaluated_once() -> bool:
+     mut original = {0: {1: 7}}
+     mut count = [0]
+-    mut before = change(mut original[select(mut count)], original)
++    const snapshot = original.copy()
++    mut before = change(mut original[select(mut count)], snapshot)
+     return count == [1] and before == 7 and original[0][1] == 13
+ 
+ 
+ func replace_and_copy(mut root: dict[int, dict[int, int]]) -> dict[int, dict[int, int]]:
+     root[0] = {1: 21}
+-    return root
++    return root.copy()
+ 
+ 
+ func capture_change(mut target: dict[int, int], source: dict[int, dict[int, int]]) -> int:
+@@ -78,7 +83,9 @@ func capture_change(mut target: dict[int, int], source: dict[int, dict[int, int]
+ # spec-case: COW-MUT-ARGUMENT-1
+ public func test_later_callback_replacement_does_not_retarget_the_selected_argument() -> bool:
+     mut original = {0: {1: 7}}
+-    mut observed = capture_change(mut original[0], replace_and_copy(mut original))
++    mut selected = original[0].copy()
++    const replacement = replace_and_copy(mut original)
++    mut observed = capture_change(mut selected, replacement)
+     return observed == 1321 and original[0][1] == 21
+ 
+ 
+@@ -94,9 +101,9 @@ func write_twice(mut first: dict[int, int], mut second: dict[int, int]) -> int:
+ # spec-case: MUT-EXCLUSIVE-3
+ public func test_a_place_copied_for_a_second_mut_argument_is_stored_back() -> bool:
+     mut original = {0: {1: 7}}
+-    mut copy = original[0]
++    mut copy = original[0].copy()
+     mut seen = write_twice(mut original[0], mut copy)
+-    original[0] = copy
++    original[0] = copy.copy()
+     return seen == 13 and copy[1] == 17 and original[0][1] == 17
+ 
+ 
+@@ -109,14 +116,16 @@ func change_pair(mut first: dict[int, int], mut second: dict[int, int], source:
+ # spec-case: COW-MUT-ARGUMENT-1
+ public func test_multiple_mut_places_release_in_evaluation_order() -> bool:
+     mut original = {0: {1: 7}, 2: {1: 8}}
+-    mut seen = change_pair(mut original[0], mut original[2], original)
++    const snapshot = original.copy()
++    mut seen = change_pair(mut original[0], mut original[2], snapshot)
+     return seen == 15 and original[0][1] == 13 and original[2][1] == 17
+ 
+ 
+ # spec-case: COW-MUT-ARGUMENT-1
+ public func test_reordered_named_mut_arguments_preserve_evaluation_order() -> bool:
+     mut original = {0: {1: 7}, 2: {1: 8}}
+-    mut seen = change_pair(second=mut original[2], first=mut original[0], source=original)
++    const snapshot = original.copy()
++    mut seen = change_pair(second=mut original[2], first=mut original[0], source=snapshot)
+     return seen == 15 and original[0][1] == 13 and original[2][1] == 17
+ 
+ 
+@@ -124,14 +133,15 @@ public func test_reordered_named_mut_arguments_preserve_evaluation_order() -> bo
+ public func test_indirect_mut_argument_preserves_place_and_snapshot() -> bool:
+     mut original = {0: {1: 7}}
+     mut action = change
+-    mut before = action(mut original[0], original)
++    const snapshot = original.copy()
++    mut before = action(mut original[0], snapshot)
+     return before == 7 and original[0][1] == 13
+ 
+ 
+ # spec-case: COW-MUT-ARGUMENT-1
+ public func test_indirect_whole_mut_arguments_write_their_own_places() -> bool:
+     mut original = {1: 7}
+-    mut other = original
++    mut other = original.copy()
+     mut action = write_twice
+     mut seen = action(mut original, mut other)
+     return seen == 13 and original[1] == 13 and other[1] == 17
+@@ -141,7 +151,9 @@ public func test_indirect_whole_mut_arguments_write_their_own_places() -> bool:
+ public func test_indirect_later_callback_keeps_the_selected_place() -> bool:
+     mut original = {0: {1: 7}}
+     mut action = capture_change
+-    mut seen = action(mut original[0], replace_and_copy(mut original))
++    mut selected = original[0].copy()
++    const replacement = replace_and_copy(mut original)
++    mut seen = action(mut selected, replacement)
+     return seen == 1321 and original[0][1] == 21
+ 
+ 
+@@ -153,7 +165,8 @@ func deep_change(mut target: int[], source: dict[int, dict[int, int[]][]]) -> in
+ # spec-case: COW-MUT-ARGUMENT-1
+ public func test_alternating_mut_path_keeps_all_ancestors_independent() -> bool:
+     mut original = {0: [{1: [7]}]}
+-    mut before = deep_change(mut original[0][0][1], original)
++    const snapshot = original.copy()
++    mut before = deep_change(mut original[0][0][1], snapshot)
+     return before == 1 and original[0][0][1] == [7, 13]
+ 
+ 
+@@ -165,5 +178,6 @@ func array_change(mut target: int[], source: FixedArray[int[], 1]) -> int:
+ # spec-case: COW-MUT-ARGUMENT-1
+ public func test_fixed_array_mut_argument_updates_the_inline_slot() -> bool:
+     mut original: FixedArray[int[], 1] = FixedArray[int[], 1]([[7]])
+-    mut before = array_change(mut original[0], original)
++    const snapshot = original.copy()
++    mut before = array_change(mut original[0], snapshot)
+     return before == 1 and original[0] == [7, 13]
+diff --git a/tests/lang/mut_collection_call_window.my b/tests/lang/mut_collection_call_window.my
+index af0070b83..6ec711fa5 100644
+--- a/tests/lang/mut_collection_call_window.my
++++ b/tests/lang/mut_collection_call_window.my
+@@ -35,7 +35,7 @@ func push(mut xs: int[]) -> int:
+ 
+ 
+ func probe(mut state: State) -> int:
+-    mut box = state.boxes[0]
++    mut box = state.boxes[0].copy()
+     return hold(box.names, mut state.boxes)
+ 
+ 
+@@ -47,34 +47,34 @@ public func test_a_borrowed_field_passed_before_a_mut_collection_argument_keeps_
+ 
+ public func test_a_borrowed_field_passed_after_a_mut_collection_argument_keeps_its_value() -> bool:
+     mut state = State(boxes=[Box(tag=1, names=[1])])
+-    mut box = state.boxes[0]
++    mut box = state.boxes[0].copy()
+     mut seen = hold_after(mut state.boxes, box.names)
+     return seen == 1 and len(state.boxes[0].names) == 2
+ 
+ 
+ public func test_a_borrowed_field_keeps_its_value_across_a_later_nested_mut_call() -> bool:
+     mut state = State(boxes=[Box(tag=1, names=[1])])
+-    mut box = state.boxes[0]
++    mut box = state.boxes[0].copy()
+     mut seen = weigh(box.names, append_first(mut state.boxes))
+     return seen == 101 and len(state.boxes[0].names) == 2
+ 
+ 
+ public func test_a_borrowed_field_keeps_its_value_across_a_later_pop_through_the_root() -> bool:
+     mut state = State(boxes=[Box(tag=1, names=[1, 2])])
+-    mut box = state.boxes[0]
++    mut box = state.boxes[0].copy()
+     mut seen = weigh(box.names, state.boxes[0].names.pop())
+     return seen == 202 and len(state.boxes[0].names) == 1
+ 
+ 
+ public func test_a_borrowed_local_keeps_its_value_across_a_later_mut_call_of_its_source() -> bool:
+     mut xs = [1, 2, 3]
+-    mut ys = xs
++    mut ys = xs.copy()
+     mut seen = weigh(ys, push(mut xs))
+     return seen == 301 and len(xs) == 4
+ 
+ 
+ public func test_a_borrow_the_write_consumes_stays_a_borrow_of_the_same_value() -> bool:
+     mut state = State(boxes=[Box(tag=1, names=[1])])
+-    mut box = state.boxes[0]
+-    state.boxes.append(Box(tag=2, names=box.names))
++    mut box = state.boxes[0].copy()
++    state.boxes.append(Box(tag=2, names=box.names.copy()))
+     return len(state.boxes) == 2 and len(state.boxes[1].names) == 1 and len(box.names) == 1
+diff --git a/tests/lang/mut_dictionary_arguments.my b/tests/lang/mut_dictionary_arguments.my
+index 1db413c6f..08a300ee5 100644
+--- a/tests/lang/mut_dictionary_arguments.my
++++ b/tests/lang/mut_dictionary_arguments.my
+@@ -7,8 +7,9 @@ func clone_during(mut target: dict[int, int], source: dict[int, dict[int, int]])
+ # spec-case: COW-MUT-ARGUMENT-1
+ public func test_dictionary_element_argument_keeps_pinned_copy_independent() -> bool:
+     mut original = {0: {1: 7}}
+-    mut copied = clone_during(mut original[0], original)
+-    mut live = list(copied[0].values())
++    const source = original.copy()
++    mut copied = clone_during(mut original[0], source)
++    mut live = [for snapshot_item in copied[0].values() yield snapshot_item.copy()]
+     copied[0][1] = 13
+     # Readonly argument publication clones the pinned child before the call.
+     # source.copy() then shares that unpinned child; its later mutation detaches,
+diff --git a/tests/lang/mut_rebind_caller.my b/tests/lang/mut_rebind_caller.my
+index c66241b49..da1d07be7 100644
+--- a/tests/lang/mut_rebind_caller.my
++++ b/tests/lang/mut_rebind_caller.my
+@@ -7,28 +7,28 @@ record Box:
+ func list_paths(mut items: int[], other: int[], choose: bool):
+     items.append(3)
+     if choose:
+-        items = other
++        items = other.copy()
+     items.append(4)
+ 
+ 
+ func dict_paths(mut items: dict[int, int], other: dict[int, int], choose: bool):
+     items[3] = 3
+     if choose:
+-        items = other
++        items = other.copy()
+     items[4] = 4
+ 
+ 
+ func set_paths(mut items: set[int], other: set[int], choose: bool):
+     items.add(3)
+     if choose:
+-        items = other
++        items = other.copy()
+     items.add(4)
+ 
+ 
+ func record_paths(mut value: Box, other: Box, choose: bool):
+     value.n += 3
+     if choose:
+-        value = other
++        value = other.copy()
+     value.items.append(4)
+     value.n += 4
+ 
+@@ -36,7 +36,7 @@ func record_paths(mut value: Box, other: Box, choose: bool):
+ # spec: MUT-REBIND-CALLER-1
+ public func test_conditional_list_rebind_reaches_caller_and_preserves_sources() -> bool:
+     mut items = [1]
+-    mut saved = items
++    mut saved = items.copy()
+     mut other = [2]
+     list_paths(mut items, other, True)
+     mut untouched = [1]
+@@ -47,7 +47,7 @@ public func test_conditional_list_rebind_reaches_caller_and_preserves_sources()
+ # spec-case: MUT-REBIND-CALLER-1
+ public func test_conditional_dict_rebind_reaches_caller_and_preserves_sources() -> bool:
+     mut items = {1: 1}
+-    mut saved = items
++    mut saved = items.copy()
+     mut other = {2: 2}
+     dict_paths(mut items, other, True)
+     mut untouched = {1: 1}
+@@ -58,7 +58,7 @@ public func test_conditional_dict_rebind_reaches_caller_and_preserves_sources()
+ # spec-case: MUT-REBIND-CALLER-1
+ public func test_conditional_set_rebind_reaches_caller_and_preserves_sources() -> bool:
+     mut items = {1}
+-    mut saved = items
++    mut saved = items.copy()
+     mut other = {2}
+     set_paths(mut items, other, True)
+     mut untouched = {1}
+@@ -69,7 +69,7 @@ public func test_conditional_set_rebind_reaches_caller_and_preserves_sources() -
+ # spec-case: MUT-REBIND-CALLER-1
+ public func test_conditional_record_rebind_reaches_caller_and_preserves_sources() -> bool:
+     mut value = Box(items=[1], n=1)
+-    mut saved = value
++    mut saved = value.copy()
+     mut other = Box(items=[2], n=2)
+     record_paths(mut value, other, True)
+     mut untouched = Box(items=[1], n=1)
+@@ -108,7 +108,7 @@ func record_loop(mut value: Box):
+ # spec-case: MUT-REBIND-CALLER-1
+ public func test_loop_list_rebind_writes_final_value() -> bool:
+     mut items = [1]
+-    mut saved = items
++    mut saved = items.copy()
+     list_loop(mut items)
+     return items == [2, 7] and saved == [1]
+ 
+@@ -116,7 +116,7 @@ public func test_loop_list_rebind_writes_final_value() -> bool:
+ # spec-case: MUT-REBIND-CALLER-1
+ public func test_loop_dict_rebind_writes_final_value() -> bool:
+     mut items = {1: 1}
+-    mut saved = items
++    mut saved = items.copy()
+     dict_loop(mut items)
+     return items == {2: 2, 7: 7} and saved == {1: 1}
+ 
+@@ -124,7 +124,7 @@ public func test_loop_dict_rebind_writes_final_value() -> bool:
+ # spec-case: MUT-REBIND-CALLER-1
+ public func test_loop_set_rebind_writes_final_value() -> bool:
+     mut items = {1}
+-    mut saved = items
++    mut saved = items.copy()
+     set_loop(mut items)
+     return items == {2, 7} and saved == {1}
+ 
+@@ -132,7 +132,7 @@ public func test_loop_set_rebind_writes_final_value() -> bool:
+ # spec-case: MUT-REBIND-CALLER-1
+ public func test_loop_record_rebind_writes_final_value() -> bool:
+     mut value = Box(items=[1], n=1)
+-    mut saved = value
++    mut saved = value.copy()
+     record_loop(mut value)
+     return value == Box(items=[2, 7], n=2) and saved == Box(items=[1], n=1)
+ 
+@@ -152,7 +152,7 @@ func recursive(mut items: int[], depth: int):
+ # spec-case: MUT-REBIND-CALLER-1
+ public func test_recursive_forwarding_propagates_rebind_without_order_dependence() -> bool:
+     mut items = [1]
+-    mut saved = items
++    mut saved = items.copy()
+     recursive(mut items, 2)
+     return items == [8, 0, 1, 2] and saved == [1]
+ 
+@@ -169,11 +169,11 @@ public func test_function_value_uses_caller_variable_for_rebinding() -> bool:
+ # spec-case: MUT-REBIND-CALLER-1
+ public func test_nested_element_and_field_places_receive_rebound_values() -> bool:
+     mut rows = [[1], [2]]
+-    mut saved = rows
++    mut saved = rows.copy()
+     mut other = [3]
+     list_paths(mut rows[0], other, True)
+     mut value = Box(items=[1], n=1)
+-    mut record_saved = value
++    mut record_saved = value.copy()
+     list_paths(mut value.items, other, True)
+     return rows == [[3, 4], [2]] and saved == [[1], [2]] and value == Box(items=[3, 4], n=1) and record_saved == Box(items=[1], n=1) and other == [3]
+ 
+@@ -187,7 +187,7 @@ record Collections:
+ # spec-case: MUT-REBIND-CALLER-1
+ public func test_nested_dictionary_and_set_fields_receive_final_values() -> bool:
+     mut value = Collections(rows=[[1]], mapping={1: [2]}, flags={3})
+-    mut saved = value
++    mut saved = value.copy()
+     list_paths(mut value.mapping[1], [4], True)
+     set_paths(mut value.flags, {5}, True)
+     return value == Collections(rows=[[1]], mapping={1: [4, 4]}, flags={5, 4}) and saved == Collections(rows=[[1]], mapping={1: [2]}, flags={3})
+@@ -196,7 +196,7 @@ public func test_nested_dictionary_and_set_fields_receive_final_values() -> bool
+ # spec-case: MUT-REBIND-CALLER-1
+ public func test_keyword_interior_arguments_keep_source_order_and_writeback() -> bool:
+     mut value = Collections(rows=[[1]], mapping={1: [2]}, flags={3})
+-    mut saved = value
++    mut saved = value.copy()
+     mut other = [7]
+     list_paths(choose=True, items=mut value.mapping[1], other=other)
+     list_paths(other=other, choose=True, items=mut value.rows[0])
+@@ -207,7 +207,7 @@ public func test_keyword_interior_arguments_keep_source_order_and_writeback() ->
+ public func test_function_value_interior_argument_rebinds_its_place() -> bool:
+     mut action = list_paths
+     mut rows = [[1]]
+-    mut saved = rows
++    mut saved = rows.copy()
+     action(mut rows[0], [2], True)
+     return rows == [[2, 4]] and saved == [[1]]
+ 
+@@ -239,14 +239,14 @@ public func test_assignment_alone_is_a_caller_mutation() -> bool:
+ 
+ 
+ func replace_rows(mut first: int[], mut second: int[], left: int[], right: int[]):
+-    first = left
+-    second = right
++    first = left.copy()
++    second = right.copy()
+ 
+ 
+ # spec-case: MUT-REBIND-CALLER-1
+ public func test_multiple_interior_references_survive_later_argument_allocations() -> bool:
+     mut rows = [[1], [2]]
+-    mut saved = rows
++    mut saved = rows.copy()
+     replace_rows(mut rows[0], mut rows[1], [3], [4])
+     return rows == [[3], [4]] and saved == [[1], [2]]
+ 
+@@ -259,11 +259,11 @@ func replace_child(mut rows: int[][]):
+ # spec-case: MUT-REBIND-CALLER-1
+ public func test_child_rebinding_through_payload_parent_preserves_snapshots() -> bool:
+     mut rows = [[1], [2]]
+-    mut saved = rows
++    mut saved = rows.copy()
+     replace_child(mut rows)
+     mut callback = replace_child
+     mut other = [[3], [4]]
+-    mut other_saved = other
++    mut other_saved = other.copy()
+     callback(mut other)
+     return rows == [[9, 4], [7]] and saved == [[1], [2]] and other == rows and other_saved == [[3], [4]]
+ 
+@@ -276,19 +276,23 @@ func rebind_selected_mapping(mut target: dict[int, int], source: dict[int, dict[
+ 
+ func replace_mapping_entry(mut root: dict[int, dict[int, int]]) -> dict[int, dict[int, int]]:
+     root[0] = {1: 21}
+-    return root
++    return root.copy()
+ 
+ 
+ # spec-case: MUT-REBIND-CALLER-1
+ # spec-case: COW-MUT-ARGUMENT-1
+ public func test_direct_and_callback_rebind_keep_the_entry_selected_before_replacement() -> bool:
+     mut direct = {0: {1: 7}}
+-    mut direct_saved = direct
+-    mut first = rebind_selected_mapping(mut direct[0], replace_mapping_entry(mut direct))
++    mut direct_saved = direct.copy()
++    mut selected_first = direct[0].copy()
++    const replacement_first = replace_mapping_entry(mut direct)
++    mut first = rebind_selected_mapping(mut selected_first, replacement_first)
+     mut indirect = {0: {1: 7}}
+-    mut indirect_saved = indirect
++    mut indirect_saved = indirect.copy()
+     mut action = rebind_selected_mapping
+-    mut second = action(mut indirect[0], replace_mapping_entry(mut indirect))
++    mut selected_second = indirect[0].copy()
++    const replacement_second = replace_mapping_entry(mut indirect)
++    mut second = action(mut selected_second, replacement_second)
+     return first == 71321 and second == 71321 and direct == {0: {1: 21}} and indirect == direct and direct_saved == {0: {1: 7}} and indirect_saved == direct_saved
+ 
+ 
+@@ -300,23 +304,27 @@ func rebind_selected_row(mut target: int[], source: int[][]) -> int:
+ 
+ func replace_row_entry(mut root: int[][]) -> int[][]:
+     root[0] = [21]
+-    return root
++    return root.copy()
+ 
+ 
+ func replace_row_root(mut root: int[][]) -> int[][]:
+     root = [[21]]
+-    return root
++    return root.copy()
+ 
+ 
+ # spec-case: MUT-REBIND-CALLER-1
+ # spec-case: COW-MUT-ARGUMENT-1
+ public func test_direct_and_callback_rebind_keep_a_list_entry_selected_before_replacement() -> bool:
+     mut direct = [[7]]
+-    mut saved = direct
+-    mut first = rebind_selected_row(mut direct[0], replace_row_entry(mut direct))
++    mut saved = direct.copy()
++    mut selected_first = direct[0].copy()
++    const replacement_first = replace_row_entry(mut direct)
++    mut first = rebind_selected_row(mut selected_first, replacement_first)
+     mut indirect = [[7]]
+     mut action = rebind_selected_row
+-    mut second = action(mut indirect[0], replace_row_entry(mut indirect))
++    mut selected_second = indirect[0].copy()
++    const replacement_second = replace_row_entry(mut indirect)
++    mut second = action(mut selected_second, replacement_second)
+     return first == 71321 and second == 71321 and direct == [[21]] and indirect == direct and saved == [[7]]
+ 
+ 
+@@ -324,11 +332,15 @@ public func test_direct_and_callback_rebind_keep_a_list_entry_selected_before_re
+ # spec-case: COW-MUT-ARGUMENT-1
+ public func test_direct_and_callback_rebind_keep_the_old_parent_after_root_replacement() -> bool:
+     mut direct = [[7]]
+-    mut saved = direct
+-    mut first = rebind_selected_row(mut direct[0], replace_row_root(mut direct))
++    mut saved = direct.copy()
++    mut selected_first = direct[0].copy()
++    const replacement_first = replace_row_root(mut direct)
++    mut first = rebind_selected_row(mut selected_first, replacement_first)
+     mut indirect = [[7]]
+     mut action = rebind_selected_row
+-    mut second = action(mut indirect[0], replace_row_root(mut indirect))
++    mut selected_second = indirect[0].copy()
++    const replacement_second = replace_row_root(mut indirect)
++    mut second = action(mut selected_second, replacement_second)
+     return first == 71321 and second == 71321 and direct == [[21]] and indirect == direct and saved == [[7]]
+ 
+ 
+@@ -340,24 +352,28 @@ func rebind_selected_field(mut target: int[], source: Box) -> int:
+ 
+ func replace_box_field(mut box: Box) -> Box:
+     box.items = [21]
+-    return box
++    return box.copy()
+ 
+ 
+ # spec-case: MUT-REBIND-CALLER-1
+ # spec-case: COW-MUT-ARGUMENT-1
+ public func test_direct_and_callback_rebind_keep_the_field_selected_before_replacement() -> bool:
+     mut direct = Box(items=[7], n=1)
+-    mut saved = direct
+-    mut first = rebind_selected_field(mut direct.items, replace_box_field(mut direct))
++    mut saved = direct.copy()
++    mut selected_first = direct.items.copy()
++    const replacement_first = replace_box_field(mut direct)
++    mut first = rebind_selected_field(mut selected_first, replacement_first)
+     mut indirect = Box(items=[7], n=1)
+     mut action = rebind_selected_field
+-    mut second = action(mut indirect.items, replace_box_field(mut indirect))
++    mut selected_second = indirect.items.copy()
++    const replacement_second = replace_box_field(mut indirect)
++    mut second = action(mut selected_second, replacement_second)
+     return first == 71321 and second == 71321 and direct == Box(items=[21], n=1) and indirect == direct and saved == Box(items=[7], n=1)
+ 
+ 
+ func replace_equal_row(mut root: int[][]) -> int[][]:
+     root[0] = [7]
+-    return root
++    return root.copy()
+ 
+ 
+ # spec-case: MUT-REBIND-CALLER-1
+@@ -365,7 +381,9 @@ func replace_equal_row(mut root: int[][]) -> int[][]:
+ public func test_equal_replacement_still_keeps_the_selected_payload_identity() -> bool:
+     mut rows = [[7]]
+     mut action = rebind_selected_row
+-    mut seen = action(mut rows[0], replace_equal_row(mut rows))
++    mut selected_seen = rows[0].copy()
++    const replacement_seen = replace_equal_row(mut rows)
++    mut seen = action(mut selected_seen, replacement_seen)
+     return seen == 71307 and rows == [[7]]
+ 
+ 
+@@ -379,23 +397,29 @@ func rebind_selected_pair(mut left: int[], mut right: int[], source: int[][]) ->
+ func replace_row_pair(mut rows: int[][]) -> int[][]:
+     rows[0] = [21]
+     rows[1] = [22]
+-    return rows
++    return rows.copy()
+ 
+ 
+ # spec-case: MUT-REBIND-CALLER-1
+ # spec-case: COW-MUT-ARGUMENT-1
+ public func test_multiple_references_keep_independent_selected_values_after_replacement() -> bool:
+     mut direct = [[7], [8]]
+-    mut first = rebind_selected_pair(mut direct[0], mut direct[1], replace_row_pair(mut direct))
++    mut left_first = direct[0].copy()
++    mut right_first = direct[1].copy()
++    const replacement_first = replace_row_pair(mut direct)
++    mut first = rebind_selected_pair(mut left_first, mut right_first, replacement_first)
+     mut indirect = [[7], [8]]
+     mut action = rebind_selected_pair
+-    mut second = action(mut indirect[0], mut indirect[1], replace_row_pair(mut indirect))
++    mut left_second = indirect[0].copy()
++    mut right_second = indirect[1].copy()
++    const replacement_second = replace_row_pair(mut indirect)
++    mut second = action(mut left_second, mut right_second, replacement_second)
+     return first == 151360 and second == 151360 and direct == [[21], [22]] and indirect == direct
+ 
+ 
+ func returned_items(mut box: Box) -> int[]:
+     box.n = box.n + 1
+-    return box.items
++    return box.items.copy()
+ 
+ 
+ func compare_returned(first: int[], second: int[]) -> bool:
+@@ -405,14 +429,14 @@ func compare_returned(first: int[], second: int[]) -> bool:
+ # spec-case: MUT-REBIND-CALLER-1
+ public func test_returned_collection_is_rooted_as_a_value_across_later_allocation() -> bool:
+     mut box = Box(items=[7], n=1)
+-    mut saved = box
++    mut saved = box.copy()
+     mut seen = compare_returned(returned_items(mut box), [8])
+     return seen and box == Box(items=[7], n=2) and saved == Box(items=[7], n=1)
+ 
+ 
+ func replace_whole_and_copy(mut items: int[]) -> int[]:
+     items = [21]
+-    return items
++    return items.copy()
+ 
+ 
+ func append_current(mut items: int[], source: int[]) -> int:
+@@ -424,15 +448,17 @@ func append_current(mut items: int[], source: int[]) -> int:
+ # spec-case: MUT-REBIND-CALLER-1
+ public func test_payload_call_uses_the_current_whole_caller_variable() -> bool:
+     mut direct = [7]
+-    mut saved = direct
+-    mut first = append_current(mut direct, replace_whole_and_copy(mut direct))
++    mut saved = direct.copy()
++    const replacement = replace_whole_and_copy(mut direct)
++    mut first = append_current(mut direct, replacement)
+     return first == 212121 and direct == [21, 13] and saved == [7]
+ 
+ 
+ # spec-case: MUT-REBIND-CALLER-1
+ public func test_callback_call_uses_the_current_whole_caller_variable() -> bool:
+     mut indirect = [7]
+-    mut saved = indirect
++    mut saved = indirect.copy()
+     mut action = append_current
+-    mut second = action(mut indirect, replace_whole_and_copy(mut indirect))
++    const replacement = replace_whole_and_copy(mut indirect)
++    mut second = action(mut indirect, replacement)
+     return second == 212121 and indirect == [21, 13] and saved == [7]
+diff --git a/tests/lang/mut_rebind_modules.my b/tests/lang/mut_rebind_modules.my
+index 2b3a4e81a..75912c11d 100644
+--- a/tests/lang/mut_rebind_modules.my
++++ b/tests/lang/mut_rebind_modules.my
+@@ -5,9 +5,9 @@ public func test_imported_mut_collection_rebinding_preserves_source_snapshots()
+     mut items = [1]
+     mut mapping = {1: 1}
+     mut flags = {1}
+-    mut saved_items = items
+-    mut saved_mapping = mapping
+-    mut saved_flags = flags
++    mut saved_items = items.copy()
++    mut saved_mapping = mapping.copy()
++    mut saved_flags = flags.copy()
+     helpers.replace_list(mut items)
+     helpers.replace_dict(mut mapping)
+     helpers.replace_set(mut flags)
+@@ -18,7 +18,7 @@ public func test_imported_mut_collection_rebinding_preserves_source_snapshots()
+ public func test_imported_function_values_and_direct_calls_share_their_mut_abi() -> bool:
+     mut action = helpers.append_only
+     mut items = [1]
+-    mut saved = items
++    mut saved = items.copy()
+     action(mut items)
+     helpers.append_only(mut items)
+     mut reset = helpers.replace_list
+diff --git a/tests/lang/mut_rebinding.my b/tests/lang/mut_rebinding.my
+index c194e6bf7..cf9849eb7 100644
+--- a/tests/lang/mut_rebinding.my
++++ b/tests/lang/mut_rebinding.my
+@@ -1,8 +1,8 @@
+ func replace_list(mut items: int[], other: int[]) -> int[]:
+-    items = other
++    items = other.copy()
+     items.append(7)
+     items[0] = 9
+-    return items
++    return items.copy()
+ 
+ 
+ # spec-case: MUT-REBIND-CALLER-1
+@@ -14,26 +14,26 @@ public func test_rebound_mut_list_does_not_mutate_its_readonly_source() -> bool:
+ 
+ 
+ func replace_rows(mut items: int[][], other: int[][]) -> int[][]:
+-    items = other
++    items = other.copy()
+     for index in range(6):
+         items[index % 2][0] = index
+-    return items
++    return items.copy()
+ 
+ 
+ # spec-case: MUT-REBIND-CALLER-1
+ public func test_rebound_nested_list_keeps_parent_and_child_snapshots() -> bool:
+     mut items = [[1]]
+     mut row = [2]
+-    mut source = [row, row]
++    mut source = [row.copy(), row.copy()]
+     mut changed = replace_rows(mut items, source)
+     return changed == [[4], [5]] and source == [[2], [2]] and row == [2] and items == [[4], [5]]
+ 
+ 
+ func replace_mapping(mut items: dict[int, int[]], other: dict[int, int[]]) -> dict[int, int[]]:
+-    items = other
++    items = other.copy()
+     items[1].append(7)
+     items[2] = [9]
+-    return items
++    return items.copy()
+ 
+ 
+ # spec-case: MUT-REBIND-CALLER-1
+@@ -46,9 +46,9 @@ public func test_rebound_dictionary_keeps_nested_source_values_independent() ->
+ 
+ func conditional(mut items: int[], other: int[], use_other: bool) -> int[]:
+     if use_other:
+-        items = other
++        items = other.copy()
+     items[0] = 7
+-    return items
++    return items.copy()
+ 
+ 
+ # spec-case: MUT-REBIND-CALLER-1
+diff --git a/tests/lang/mut_record_call_window.my b/tests/lang/mut_record_call_window.my
+index 800efd0a3..3c6988931 100644
+--- a/tests/lang/mut_record_call_window.my
++++ b/tests/lang/mut_record_call_window.my
+@@ -89,16 +89,17 @@ func outer(mut state: State, counted: int, tag: int) -> int:
+ 
+ public func test_a_scalar_read_after_the_reference_sees_the_value_before_the_call() -> bool:
+     mut state = State(boxes=[Box(tag=4, names=[1, 2])], seen=0)
+-    mut box = state.boxes[0]
++    mut box = state.boxes[0].copy()
+     replace_first(mut state, box.tag)
+     return state.boxes[0].tag == 40 and state.boxes[0].names == [4, 4, 4] and state.seen == 36
+ 
+ 
+ public func test_a_match_binding_read_for_a_scalar_survives_the_callee_replacing_its_element() -> bool:
+     mut store = Store(slots=[Slot.full(value=Box(tag=5, names=[9]))], total=0)
+-    match store.slots[0]:
++    match store.slots[0].copy():
+         case Slot.full(value=box):
+-            refill(mut store, box.tag)
++            const saved_tag = box.tag
++            refill(mut store, saved_tag)
+         case Slot.empty:
+             return False
+     match store.slots[0]:
+@@ -110,35 +111,35 @@ public func test_a_match_binding_read_for_a_scalar_survives_the_callee_replacing
+ 
+ public func test_a_borrow_read_after_the_call_keeps_the_value_before_it() -> bool:
+     mut state = State(boxes=[Box(tag=3, names=[1])], seen=0)
+-    mut box = state.boxes[0]
++    mut box = state.boxes[0].copy()
+     replace_first(mut state, box.tag)
+     return box.tag == 3 and box.names == [1] and state.boxes[0].names == [3, 3, 3]
+ 
+ 
+ public func test_a_collection_argument_read_from_the_borrow_is_a_snapshot() -> bool:
+     mut state = State(boxes=[Box(tag=2, names=[5, 6])], seen=0)
+-    mut box = state.boxes[0]
++    mut box = state.boxes[0].copy()
+     mut seen = keep(mut state, box.names)
+     return seen == 205 and state.boxes[0].tag == 0 and len(state.boxes[0].names) == 0
+ 
+ 
+ public func test_the_whole_borrow_as_an_argument_is_a_snapshot() -> bool:
+     mut state = State(boxes=[Box(tag=8, names=[1, 2, 3])], seen=0)
+-    mut box = state.boxes[0]
++    mut box = state.boxes[0].copy()
+     mut seen = hold(mut state, box)
+     return seen == 308 and state.boxes[0].names == [1, 2, 3, 7]
+ 
+ 
+ public func test_an_operand_pushed_before_the_reference_is_a_snapshot() -> bool:
+     mut state = State(boxes=[Box(tag=1, names=[4])], seen=0)
+-    mut box = state.boxes[0]
++    mut box = state.boxes[0].copy()
+     mut seen = first(box.names, mut state)
+     return seen == 1 and state.boxes[0].names == [4, 7]
+ 
+ 
+ public func test_a_scalar_and_a_collection_from_one_borrow_in_one_call() -> bool:
+     mut state = State(boxes=[Box(tag=6, names=[1, 1])], seen=0)
+-    mut box = state.boxes[0]
++    mut box = state.boxes[0].copy()
+     mut seen = mixed(mut state, box.tag, box.names)
+     return seen == 2 and state.boxes[0].names == [1, 1, 6]
+ 
+@@ -146,9 +147,10 @@ public func test_a_scalar_and_a_collection_from_one_borrow_in_one_call() -> bool
+ public func test_a_match_binding_collection_argument_is_a_snapshot() -> bool:
+     mut store = Store(slots=[Slot.full(value=Box(tag=1, names=[3, 4, 5]))], total=0)
+     mut seen = 0
+-    match store.slots[0]:
++    match store.slots[0].copy():
+         case Slot.full(value=box):
+-            seen = keep_slot(mut store, box.names)
++            const saved_names = box.names.copy()
++            seen = keep_slot(mut store, saved_names)
+         case Slot.empty:
+             seen = -1
+     match store.slots[0]:
+@@ -160,7 +162,7 @@ public func test_a_match_binding_collection_argument_is_a_snapshot() -> bool:
+ 
+ public func test_a_nested_writing_call_between_the_reference_and_the_scalar_read() -> bool:
+     mut state = State(boxes=[Box(tag=2, names=[1])], seen=0)
+-    mut box = state.boxes[0]
++    mut box = state.boxes[0].copy()
+     mut seen = outer(mut state, count_boxes(mut state), box.tag)
+     return seen == 102 and state.boxes[0].names == [1, 2] and state.seen == 1
+ 
+@@ -169,7 +171,7 @@ public func test_a_nested_writing_call_between_the_reference_and_the_scalar_read
+ # a second state copied out keeps the scalar read from the borrow.
+ public func test_two_mut_states_with_a_scalar_from_a_borrow() -> bool:
+     mut state = State(boxes=[Box(tag=9, names=[1])], seen=0)
+-    mut box = state.boxes[0]
++    mut box = state.boxes[0].copy()
+     mut other = state
+     mut seen = pair(mut state, mut other, box.tag)
+     return seen == 20 and state.boxes[0].names == [1, 9] and other.boxes[0].tag == 9 and len(other.boxes[0].names) == 0
+@@ -179,7 +181,7 @@ public func test_a_loop_of_scalar_reads_through_a_growing_state() -> bool:
+     mut state = State(boxes=[Box(tag=1, names=[0])], seen=0)
+     mut total = 0
+     for i in range(20):
+-        mut box = state.boxes[0]
++        mut box = state.boxes[0].copy()
+         grow_first(mut state, box.tag + i)
+         total = total + state.seen
+     return len(state.boxes[0].names) == 21 and state.seen == 210 and total == 1540
+diff --git a/tests/lang/operand_snapshots.my b/tests/lang/operand_snapshots.my
+index c7b7bcfc8..9ba6fa2dd 100644
+--- a/tests/lang/operand_snapshots.my
++++ b/tests/lang/operand_snapshots.my
+@@ -46,7 +46,7 @@ func push(mut xs: int[]) -> int:
+ 
+ func pushed_copy(mut xs: int[]) -> int[]:
+     xs.append(9)
+-    return xs
++    return xs.copy()
+ 
+ 
+ func clear0(mut xs: int[]) -> int:
+@@ -106,52 +106,52 @@ func arr_touch(mut a: FixedArray[int[], 2]) -> int:
+ 
+ 
+ func via_value(f: func(int[], int) -> int effects(), mut xs: int[]) -> int:
+-    return f(xs, push(mut xs))
++    return f(xs.copy(), push(mut xs))
+ 
+ 
+ func mut_param_root(mut xs: int[]) -> int:
+-    return lst(xs, push(mut xs))
++    return lst(xs.copy(), push(mut xs))
+ 
+ 
+ # spec: VALUE-SEMANTICS-14
+ public func test_call_positional_mut() -> bool:
+     mut xs = [1, 2, 3]
+-    mut v = lst(xs, push(mut xs))
++    mut v = lst(xs.copy(), push(mut xs))
+     return v == 301 and len(xs) == 4
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_positional_pop() -> bool:
+     mut xs = [1, 2, 3]
+-    mut v = lst(xs, xs.pop())
++    mut v = lst(xs.copy(), xs.pop())
+     return v == 303 and len(xs) == 2
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_positional_clear() -> bool:
+     mut xs = [1, 2, 3]
+-    mut v = lst(xs, clear0(mut xs))
++    mut v = lst(xs.copy(), clear0(mut xs))
+     return v == 300 and len(xs) == 0
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_nested_later() -> bool:
+     mut xs = [1, 2, 3]
+-    mut v = lst(xs, 1 + ident(push(mut xs)))
++    mut v = lst(xs.copy(), 1 + ident(push(mut xs)))
+     return v == 302
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_three_operands() -> bool:
+     mut xs = [1, 2, 3]
+-    mut v = lst3(xs, push(mut xs), xs)
++    mut v = lst3(xs.copy(), push(mut xs), xs)
+     return v == 30104
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_keyword_source_order() -> bool:
+     mut xs = [1, 2, 3]
+-    mut v = lst(a=xs, b=push(mut xs))
++    mut v = lst(a=xs.copy(), b=push(mut xs))
+     return v == 301
+ 
+ 
+@@ -165,7 +165,7 @@ public func test_call_keyword_reversed() -> bool:
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_module_qualified() -> bool:
+     mut xs = [1, 2, 3]
+-    mut v = operand_snapshot_helpers.weigh(xs, push(mut xs))
++    mut v = operand_snapshot_helpers.weigh(xs.copy(), push(mut xs))
+     return v == 301
+ 
+ 
+@@ -173,7 +173,7 @@ public func test_call_module_qualified() -> bool:
+ public func test_call_function_value() -> bool:
+     mut xs = [1, 2, 3]
+     mut f = lst
+-    mut v = f(xs, push(mut xs))
++    mut v = f(xs.copy(), push(mut xs))
+     return v == 301
+ 
+ 
+@@ -200,7 +200,7 @@ public func test_return_call() -> bool:
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_borrowed_local() -> bool:
+     mut xs = [1, 2, 3]
+-    mut ys = xs
++    mut ys = xs.copy()
+     mut v = lst(ys, push(mut xs))
+     return v == 301
+ 
+@@ -208,122 +208,122 @@ public func test_call_borrowed_local() -> bool:
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_field_path_mut_record() -> bool:
+     mut h = Holder(items=[1, 2, 3], tag=0)
+-    mut v = lst(h.items, grow(mut h))
++    mut v = lst(h.items.copy(), grow(mut h))
+     return v == 301
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_field_path_mut_field() -> bool:
+     mut h = Holder(items=[1, 2, 3], tag=0)
+-    mut v = lst(h.items, push(mut h.items))
++    mut v = lst(h.items.copy(), push(mut h.items))
+     return v == 301
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_field_path_pop() -> bool:
+     mut h = Holder(items=[1, 2, 3], tag=0)
+-    mut v = lst(h.items, h.items.pop())
++    mut v = lst(h.items.copy(), h.items.pop())
+     return v == 303
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_record_whole() -> bool:
+     mut h = Holder(items=[1, 2, 3], tag=0)
+-    mut v = hold(h, grow(mut h))
++    mut v = hold(h.copy(), grow(mut h))
+     return v == 301
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_record_whole_field_mut() -> bool:
+     mut h = Holder(items=[1, 2, 3], tag=0)
+-    mut v = hold(h, push(mut h.items))
++    mut v = hold(h.copy(), push(mut h.items))
+     return v == 301
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_element() -> bool:
+     mut grid = [[1, 2, 3]]
+-    mut v = lst(grid[0], push(mut grid[0]))
++    mut v = lst(grid[0].copy(), push(mut grid[0]))
+     return v == 301
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_element_parent_mut() -> bool:
+     mut grid = [[1, 2, 3]]
+-    mut v = lst(grid[0], push_first(mut grid))
++    mut v = lst(grid[0].copy(), push_first(mut grid))
+     return v == 301
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_dict() -> bool:
+     mut d = {"a": 1}
+-    mut v = dl(d, put(mut d))
++    mut v = dl(d.copy(), put(mut d))
+     return v == 101
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_set() -> bool:
+     mut s = {1, 2}
+-    mut v = sl(s, add(mut s))
++    mut v = sl(s.copy(), add(mut s))
+     return v == 201
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_method_index_receiver() -> bool:
+     mut xs = [1, 2, 3]
+-    mut v = xs.index(3 * clear0(mut xs) + 3)
++    mut v = xs.copy().index(3 * clear0(mut xs) + 3)
+     return v == 2
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_dict_get_receiver() -> bool:
+     mut d = {"a": 1}
+-    mut v = d.get("z", put(mut d) + 40)
++    mut v = d.copy().get("z", put(mut d) + 40)
+     return v == 41
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_eq_operator() -> bool:
+     mut xs = [1, 2, 3]
+-    return not (xs == pushed_copy(mut xs))
++    return not (xs.copy() == pushed_copy(mut xs))
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_ne_operator() -> bool:
+     mut xs = [1, 2, 3]
+-    return xs != pushed_copy(mut xs)
++    return xs.copy() != pushed_copy(mut xs)
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_in_operator() -> bool:
+     mut xs = [1, 2, 3]
+-    return not (xs in [pushed_copy(mut xs)])
++    return not (xs.copy() in [pushed_copy(mut xs)])
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_record_eq_operator() -> bool:
+     mut h = Holder(items=[1, 2, 3], tag=0)
+-    return h == Holder(items=[1, 2, 3], tag=grow(mut h) - 1) and len(h.items) == 4
++    return h.copy() == Holder(items=[1, 2, 3], tag=grow(mut h) - 1) and len(h.items) == 4
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_fstring() -> bool:
+     mut xs = [1, 2, 3]
+-    mut text = f"{xs} {push(mut xs)}"
++    mut text = f"{xs.copy()} {push(mut xs)}"
+     return text == "[1, 2, 3] 1"
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_record_constructor() -> bool:
+     mut xs = [1, 2, 3]
+-    mut p = Pair(items=xs, n=push(mut xs))
++    mut p = Pair(items=xs.copy(), n=push(mut xs))
+     return len(p.items) == 3
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_record_constructor_keyword() -> bool:
+     mut xs = [1, 2, 3]
+-    mut p = Pair(items=xs, n=push(mut xs))
++    mut p = Pair(items=xs.copy(), n=push(mut xs))
+     return len(p.items) == 3
+ 
+ 
+@@ -337,7 +337,7 @@ public func test_record_constructor_keyword_reversed() -> bool:
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_union_constructor() -> bool:
+     mut xs = [1, 2, 3]
+-    mut s = Slot.pair(value=Pair(items=xs, n=push(mut xs)))
++    mut s = Slot.pair(value=Pair(items=xs.copy(), n=push(mut xs)))
+     match s:
+         case Slot.pair(value=p):
+             return len(p.items) == 3
+@@ -348,42 +348,42 @@ public func test_union_constructor() -> bool:
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_record_update() -> bool:
+     mut h = Holder(items=[1, 2, 3], tag=0)
+-    mut r = replace(h, tag=grow(mut h))
++    mut r = replace(h.copy(), tag=grow(mut h))
+     return len(r.items) == 3 and r.tag == 1
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_list_literal() -> bool:
+     mut xs = [1, 2, 3]
+-    mut rows = [xs, pushed_copy(mut xs)]
++    mut rows = [xs.copy(), pushed_copy(mut xs)]
+     return len(rows[0]) == 3 and len(rows[1]) == 4
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_dict_literal() -> bool:
+     mut xs = [1, 2, 3]
+-    mut d = {"a": xs, "b": pushed_copy(mut xs)}
++    mut d = {"a": xs.copy(), "b": pushed_copy(mut xs)}
+     return len(d["a"]) == 3
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_subscript_receiver() -> bool:
+     mut xs = [1, 2, 3]
+-    mut v = xs[clear0(mut xs)]
++    mut v = xs.copy()[clear0(mut xs)]
+     return v == 1
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_subscript_field_receiver() -> bool:
+     mut h = Holder(items=[1, 2, 3], tag=0)
+-    mut v = h.items[clear0(mut h.items)]
++    mut v = h.items.copy()[clear0(mut h.items)]
+     return v == 1
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_subscript_lent_into_call() -> bool:
+     mut grid = [[1, 2, 3]]
+-    mut v = lst(grid[0], clear0(mut grid[0]))
++    mut v = lst(grid[0].copy(), clear0(mut grid[0]))
+     return v == 300
+ 
+ 
+@@ -391,7 +391,7 @@ public func test_subscript_lent_into_call() -> bool:
+ public func test_zip_sources() -> bool:
+     mut xs = [1, 2, 3]
+     mut count = 0
+-    for a, b in zip(xs, pushed_copy(mut xs)):
++    for a, b in zip(xs.copy(), pushed_copy(mut xs)):
+         count += a + b - a - b + 1
+     return count == 3
+ 
+@@ -401,21 +401,21 @@ public func test_conditional_operand() -> bool:
+     mut xs = [1, 2, 3]
+     mut ys = [5]
+     mut flag = len(ys) == 1
+-    mut v = lst(if (flag) then (xs) else (ys), push(mut xs))
++    mut v = lst(if (flag) then (xs.copy()) else (ys.copy()), push(mut xs))
+     return v == 301
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_nested_consumer() -> bool:
+     mut xs = [1, 2, 3]
+-    mut v = lst(xs, lst(xs, push(mut xs)))
++    mut v = lst(xs.copy(), lst(xs.copy(), push(mut xs)))
+     return v == 601 and len(xs) == 4
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_in_comprehension() -> bool:
+     mut xs = [1, 2, 3]
+-    mut vs = [for _ in range(2) yield lst(xs, push(mut xs))]
++    mut vs = [for _ in range(2) yield lst(xs.copy(), push(mut xs))]
+     return vs[0] == 301 and vs[1] == 401
+ 
+ 
+@@ -424,28 +424,28 @@ public func test_call_in_loop() -> bool:
+     mut xs = [1, 2, 3]
+     mut total = 0
+     for _ in range(3):
+-        total += lst(xs, push(mut xs))
++        total += lst(xs.copy(), push(mut xs))
+     return total == 1203
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_fixed_array_of_lists() -> bool:
+     mut arr: FixedArray[int[], 2] = FixedArray[int[], 2]([[1], [2]])
+-    mut v = arr_len(arr, arr_push(mut arr))
++    mut v = arr_len(arr.copy(), arr_push(mut arr))
+     return v == 101 and len(arr[0]) == 2
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_byte_buffer() -> bool:
+     mut b = byte_buffer([1])
+-    mut v = bb_len(b, bb_add(mut b))
++    mut v = bb_len(b.copy(), bb_add(mut b))
+     return v == 101 and len(b) == 2
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_method_path_receiver() -> bool:
+     mut h = Holder(items=[1, 2, 3], tag=0)
+-    mut v = h.items.index(3 * clear0(mut h.items) + 3)
++    mut v = h.items.copy().index(3 * clear0(mut h.items) + 3)
+     return v == 2 and len(h.items) == 0
+ 
+ 
+@@ -453,21 +453,23 @@ public func test_method_path_receiver() -> bool:
+ public func test_call_keyword_run_list() -> bool:
+     mut xs = [1, 2, 3]
+     mut ys = [1]
+-    mut v = lst3(c=xs, a=ys, b=push(mut xs))
++    mut v = lst3(c=xs.copy(), a=ys, b=push(mut xs))
+     return v == 10103
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_call_keyword_run_record() -> bool:
+     mut h = Holder(items=[1, 2, 3], tag=0)
+-    mut v = hold3(c=h, a=1, b=grow(mut h))
++    mut v = hold3(c=h.copy(), a=1, b=grow(mut h))
+     return v == 10103 and len(h.items) == 4
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_fixed_array_index_base() -> bool:
+     mut arr: FixedArray[int[], 2] = FixedArray[int[], 2]([[1], [2]])
+-    mut v = len(arr[arr_touch(mut arr)])
++    const before = arr.copy()
++    const index = arr_touch(mut arr)
++    mut v = len(before[index])
+     return v == 1 and len(arr[0]) == 2
+ 
+ 
+@@ -478,14 +480,14 @@ func first[T](a: T[], b: int) -> int:
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_generic_call() -> bool:
+     mut xs = [1, 2, 3]
+-    mut v = first(xs, push(mut xs))
++    mut v = first(xs.copy(), push(mut xs))
+     return v == 301
+ 
+ 
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_builtin_in_later_operand() -> bool:
+     mut xs = [3, 1, 2]
+-    mut v = lst(xs, len(sorted(pushed_copy(mut xs))))
++    mut v = lst(xs.copy(), len(sorted(pushed_copy(mut xs))))
+     return v == 304
+ 
+ 
+@@ -511,7 +513,7 @@ func bump_first(mut value: dict[str, FixedArray[int[], 1]]) -> int:
+ # spec-case: VALUE-SEMANTICS-14
+ public func test_a_write_through_a_fixed_array_read_keeps_the_pending_place() -> bool:
+     mut original: dict[str, FixedArray[int[], 1]] = {"k": FixedArray[int[], 1]([[1]])}
+-    mut changed = original
++    mut changed = original.copy()
+     mut mutation_result_528 = bump_first(mut changed)
+     changed["k"][mutation_result_528].append(2)
+     return original["k"][0] == [1] and changed["k"][0] == [1, 7, 2]
+diff --git a/tests/lang/option_narrowing.my b/tests/lang/option_narrowing.my
+index 725a6b9e7..e3615bf27 100644
+--- a/tests/lang/option_narrowing.my
++++ b/tests/lang/option_narrowing.my
+@@ -140,7 +140,8 @@ public func test_option_narrowing_collection_methods_and_index_writes() -> bool:
+     mut count = append_one(mut candidate, 2)
+     if candidate is None:
+         return False
+-    candidate[0] = candidate[0] + candidate[1]
++    const sum = candidate[0] + candidate[1]
++    candidate[0] = sum
+     return count == 2 and candidate[0] == 42 and items[0] == 40
+ 
+ 

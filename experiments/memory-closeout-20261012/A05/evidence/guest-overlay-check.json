@@ -1,0 +1,180 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "overlay": true,
+  "check_only": true,
+  "harness_sha256": "e0cac7ac8672c337959ce6d4405a09c7d8e8957e71d82833b1421dcdd359b3a9",
+  "cases": {
+    "guest_application_cache": {
+      "release": {
+        "original_source": "tests/lang/application_cache.my",
+        "original_sha256": "d27bdb4039f9a4a753c4796bfd4a6ad525fd2598954dfa044c108555f10ba397",
+        "source_sha256": "81129547fbded384fd25e3ed3d5f8fe00c26e48164c28d12d207655a4753a314",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/guest-check-overlay/guest_application_cache/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/guest-check-overlay/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "main.my:119:22: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n      if hashes.sha256(b\"a\" * 1) != \"ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb\":\n                       ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "d2b95d581eec0dead092caaf804f6b8a5c1888f40a846b276e19f8362f231bd8",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "81129547fbded384fd25e3ed3d5f8fe00c26e48164c28d12d207655a4753a314"
+        }
+      }
+    },
+    "guest_capability_fields": {
+      "release": {
+        "original_source": "tests/lang/capability_fields.my",
+        "original_sha256": "fcc03d5095e7fa4068abb5557d295d174cf2e6186d4bf041888819848a1f9807",
+        "source_sha256": "4a233fac826fae90027f2116e2d8e8b31a1e3127c32a0d22755422763af008bb",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/guest-check-overlay/guest_capability_fields/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/guest-check-overlay/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "main.my:24:9: error[E_ZERO_RC_UNSUPPORTED]: store resource owners in named local scopes in the zero-RC prototype\n      mut ports = Ports(fs=filesystem.memory(), env=environment.fixed({\"LANG\": \"C\", \"HOME\": \"/home/test\"}), net=network.denied(), clock=time.simulated_clock(time.from_unix_nanoseconds(42)), entropy=random.seeded_entropy(7))\n          ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "d2b95d581eec0dead092caaf804f6b8a5c1888f40a846b276e19f8362f231bd8",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "4a233fac826fae90027f2116e2d8e8b31a1e3127c32a0d22755422763af008bb"
+        }
+      }
+    },
+    "guest_rc_capability_values": {
+      "release": {
+        "original_source": "tests/lang/rc_capability_values.my",
+        "original_sha256": "d151504ed8ae3e636bfa10be9a64e5a22a26cd6db59b15623bf82fa445d340ad",
+        "source_sha256": "d151504ed8ae3e636bfa10be9a64e5a22a26cd6db59b15623bf82fa445d340ad",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/guest-check-overlay/guest_rc_capability_values/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/guest-check-overlay/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/network.my:71:12: error[E_SINGLE_OWNER_UNSUPPORTED]: this expression is outside the single-owner prototype\n      return acquire_resource[Connected](net, request)\n             ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "d2b95d581eec0dead092caaf804f6b8a5c1888f40a846b276e19f8362f231bd8",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "d151504ed8ae3e636bfa10be9a64e5a22a26cd6db59b15623bf82fa445d340ad",
+          "test_capabilities.my": "2a9cc33b7b141e8540afcfdc092883c33604c0ae3f29700bddd2f5e298bab3bc"
+        }
+      }
+    },
+    "guest_rc_contract_results": {
+      "release": {
+        "original_source": "tests/lang/rc_contract_results.my",
+        "original_sha256": "5f6451472ba46a531cc2cffa8116dda0dd961d3df63b235d5996e9887651d03e",
+        "source_sha256": "5f6451472ba46a531cc2cffa8116dda0dd961d3df63b235d5996e9887651d03e",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/guest-check-overlay/guest_rc_contract_results/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/guest-check-overlay/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "main.my:38:5: error[E_ZERO_RC_UNSUPPORTED]: store resource owners in named local scopes in the zero-RC prototype\n      return fs.open(\"data\", \"w\")\n      ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "d2b95d581eec0dead092caaf804f6b8a5c1888f40a846b276e19f8362f231bd8",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "5f6451472ba46a531cc2cffa8116dda0dd961d3df63b235d5996e9887651d03e"
+        }
+      }
+    },
+    "guest_test_capabilities": {
+      "release": {
+        "original_source": "tests/lang/test_capabilities.my",
+        "original_sha256": "2a9cc33b7b141e8540afcfdc092883c33604c0ae3f29700bddd2f5e298bab3bc",
+        "source_sha256": "9c90fd8fc2c873e1040a47d769e83fb8441c1197dddd04f60694b5bd7a137ebf",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/guest-check-overlay/guest_test_capabilities/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/guest-check-overlay/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/network.my:71:12: error[E_SINGLE_OWNER_UNSUPPORTED]: this expression is outside the single-owner prototype\n      return acquire_resource[Connected](net, request)\n             ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "d2b95d581eec0dead092caaf804f6b8a5c1888f40a846b276e19f8362f231bd8",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "9c90fd8fc2c873e1040a47d769e83fb8441c1197dddd04f60694b5bd7a137ebf"
+        }
+      }
+    },
+    "guest_stdlib": {
+      "release": {
+        "original_source": "tests/value_semantics/stdlib.my",
+        "original_sha256": "bb8a1c40b247cc767b7652b89c27885a964f28ab55d19224ed4e607e29fbbe61",
+        "source_sha256": "e78fe218b8906368a2d894585ef2b966bbc0bd2dc821329749089e559b0d41bb",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/guest-check-overlay/guest_stdlib/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/guest-check-overlay/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/network.my:71:12: error[E_SINGLE_OWNER_UNSUPPORTED]: this expression is outside the single-owner prototype\n      return acquire_resource[Connected](net, request)\n             ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "d2b95d581eec0dead092caaf804f6b8a5c1888f40a846b276e19f8362f231bd8",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "e78fe218b8906368a2d894585ef2b966bbc0bd2dc821329749089e559b0d41bb"
+        }
+      }
+    }
+  },
+  "failures": 6
+}

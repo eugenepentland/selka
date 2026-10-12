@@ -1,0 +1,11 @@
+{
+  "SPEC.md": "82fc1c5e0d3af47d1f2c1466c7fc7fa43f695c97cf608a3438a59b98f9eff3c1",
+  "src/core/build_list_methods.zig": "a2f48c7ca282fe0176ef6aea66649af90275df2513d86ec560cb719f71decffd",
+  "src/collection_lower.zig": "2cd28683c2e0ff9cba6243bdee706981e12e141d3f2a7d7b85b37a28168b65f4",
+  "src/core/single_owner.zig": "2c52d81090da66da0bed838206b3ff007c39091e20ef3324680eb58911b416ff",
+  "src/core/a02_list_methods_fixture.my": "c53f93b5f5d64ac5a23724db0efe2d52eb94818fac86bb81f976cff2948e5f40",
+  "src/core/a02_list_methods_test.zig": "6315d156393b5edf2609c8321858ca4c55cf39a29ec8b2594b2193c093f022b3",
+  "experiments/memory-closeout-20261012/A02/list_methods.py": "4fcf223dfe02178f6353ad4063bd9523900e0eb4c93762e9189913e3a5fca145",
+  "experiments/memory-closeout-20261012/A02/list-copying/resource-slice.my": "01180a96f0d061983430300c91e0f7276a7e4975bb354dfea91fc525766e1fc0",
+  "experiments/memory-closeout-20261012/A02/list-copying/pending-slice.my": "d8ddd848d54f16ba6dd08f21697c8e3951c6de511e4259b713e94af7f3033349"
+}

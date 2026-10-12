@@ -1,0 +1,303 @@
+
+import eval_env as env_mod
+import net_name
+import support_strs as strs
+
+# Shared validator/ERC helpers keep eval-time and on-demand checks in lockstep.
+# Every ground vocabulary lives here, below both the optimizer and pin_roles.
+# These independent tables deliberately retain their consumers' different
+# spellings: merging them would change behaviour and requires a separate test.
+public const analog_ground: bytes = b"AGND"
+
+
+public const digital_ground: bytes = b"DGND"
+
+
+public const power_ground: bytes = b"PGND"
+
+
+const signal_ground: bytes = b"SGND"
+
+
+const analog_ground_suffixed: bytes = b"GNDA"
+
+
+const digital_ground_suffixed: bytes = b"GNDD"
+
+
+# Longest first prevents GNDA from being shadowed by GND. Numbered suffixes
+# identify ground twins, while signal names such as GND_SENSE remain signals.
+public func ground_tokens() -> bytes[]:
+    return [analog_ground_suffixed, digital_ground_suffixed, analog_ground, power_ground, digital_ground, b"VSSA", b"GND", b"VSS"]
+
+
+public func is_ground_name(name: bytes) -> bool:
+    for token in ground_tokens():
+        if not name.startswith(token):
+            continue
+        mut rest = name[len(token):]
+        if len(rest) == 0:
+            return True
+        if rest[0] == 95 or rest[0] == 45:
+            rest = rest[1:]
+        if len(rest) == 0:
+            return False
+        for c in rest:
+            if not strs.is_digit(c):
+                return False
+        return True
+    return False
+
+
+# Chassis is a DC zero-volt rating reference, but never a ground pour token:
+# copper must preserve the intended shield/chassis isolation barrier.
+public const chassis_ground: bytes = b"CHASSIS_GND"
+
+
+public func is_rating_zero_volts(name: bytes) -> bool:
+    if is_ground_name(name):
+        return True
+    if not name.startswith(chassis_ground):
+        return False
+    mut rest = name[len(chassis_ground):]
+    if len(rest) == 0:
+        return True
+    if rest[0] == 95 or rest[0] == 45:
+        rest = rest[1:]
+    if len(rest) == 0:
+        return False
+    for c in rest:
+        if not strs.is_digit(c):
+            return False
+    return True
+
+
+# Normalised pin-function prefixes uniquely include SGND and accept any suffix.
+public func ground_fn_prefixes() -> bytes[]:
+    return [b"GND", b"VSS", analog_ground, digital_ground, power_ground, signal_ground]
+
+
+public func ground_base_names() -> bytes[]:
+    return [b"GND", analog_ground, digital_ground, power_ground]
+
+
+public func ground_stem_prefixes() -> bytes[]:
+    return [b"GND_", b"AGND_", b"DGND_", b"PGND_", b"VSS"]
+
+
+# The schematic intentionally draws PGND as its own labelled node.
+public func schematic_ground_names() -> bytes[]:
+    return [b"GND", analog_ground, digital_ground]
+
+
+# A first-dot collapse folds per-pin bypass stub names onto their base rail.
+public func base_net_name(name: bytes) -> bytes:
+    mut idx = name.find(b".")
+    if idx >= 0:
+        return name[:idx]
+    return name
+
+
+public func is_sub_net_name(name: bytes) -> bool:
+    return len(base_net_name(name)) != len(name)
+
+
+# Display-side first-dot rule is intentionally distinct from stub.split's
+# last-two-dots structural fold: 3.3V.U1.5 hints 3V here, not U1.
+public func sub_net_host_ref(name: bytes) -> bytes?:
+    mut rail = base_net_name(name)
+    if len(rail) == len(name):
+        return None
+    mut rest = name[len(rail) + 1:]
+    mut host = base_net_name(rest)
+    if len(host) == len(rest):
+        return None
+    return Some(host)
+
+
+public func ref_des_local_prefix(ref_des: bytes) -> int:
+    mut local = net_name.leaf(ref_des)
+    if len(local) == 0:
+        return 0
+    return local[0]
+
+
+# Walk a sub-block path to count bypassing inside a tied module's power port.
+public func sub_block_net_has_cap(block: env_mod.DesignBlock, net_path: bytes) -> bool:
+    mut slash = net_path.find(b"/")
+    if slash >= 0:
+        mut head = net_path[:slash]
+        mut rest = net_path[slash + 1:]
+        for sb in block.sub_blocks:
+            if sb.name == head:
+                return sub_block_net_has_cap(sb.block, rest)
+        return False
+    for n in block.nets:
+        if n.name != net_path:
+            continue
+        for pin in n.pins:
+            if len(pin.ref_des) == 0:
+                continue
+            if ref_des_local_prefix(pin.ref_des) == 67 and cap_bridges_base_to_ground(block, pin.ref_des, base_net_name(n.name)):
+                return True
+        return False
+    return False
+
+
+# Return each rail with an IC and no cap once, retaining block.nets order.
+public func find_missing_decoupling_nets(block: env_mod.DesignBlock) -> bytes[]:
+    mut power_nets: set[str] = set()
+    for port in block.ports:
+        if port.direction != b"in":
+            continue
+        # Explicit non-power kind overrides rated enable/control input specs.
+        if env_mod.port_is_declared_non_power(port):
+            continue
+        if strs.eql_ignore_case(port.kind, b"power") or env_mod.port_is_power_source(port):
+            power_nets.add(strs.text(base_net_name(port.net)))
+    for sec in block.sections:
+        collect_section_power_inputs(mut power_nets, sec)
+    # Fold trunk and per-pin bypass stubs together before judging a rail.
+    mut rails_with_ic: set[str] = set()
+    mut rails_with_cap: set[str] = set()
+    for net in block.nets:
+        mut base = base_net_name(net.name)
+        mut key = strs.text(base)
+        if key not in power_nets:
+            continue
+        for pin in net.pins:
+            if len(pin.ref_des) == 0:
+                continue
+            mut prefix = ref_des_local_prefix(pin.ref_des)
+            if prefix == 85:
+                rails_with_ic.add(key)
+            elif prefix == 67 and cap_bridges_base_to_ground(block, pin.ref_des, base):
+                rails_with_cap.add(key)
+    mut missing: bytes[] = []
+    mut emitted: set[str] = set()
+    for net2 in block.nets:
+        mut base2 = base_net_name(net2.name)
+        mut key2 = strs.text(base2)
+        if key2 not in rails_with_ic or key2 in rails_with_cap or key2 in emitted:
+            continue
+        if tied_sub_block_has_cap(block, base2):
+            continue
+        emitted.add(key2)
+        missing.append(base2)
+    return missing
+
+
+func collect_section_power_inputs(mut power_nets: set[str], section: env_mod.Section):
+    # Concept sections have no wired implementation yet; do not demand bypassing.
+    if section.status == env_mod.SectionStatus.concept:
+        return
+    for port in section.ports:
+        if port.signal_type == env_mod.SignalType.power and port.direction == env_mod.PortDirection.in_:
+            power_nets.add(strs.text(base_net_name(port.name)))
+    for sub in section.sub_sections:
+        collect_section_power_inputs(mut power_nets, sub)
+
+
+# A cap only qualifies if it touches both the rail and a recognised ground.
+func cap_bridges_base_to_ground(block: env_mod.DesignBlock, cap_ref: bytes, rail_base: bytes) -> bool:
+    mut has_rail = False
+    mut has_ground = False
+    for net in block.nets:
+        mut touches = False
+        for pin in net.pins:
+            if pin.ref_des == cap_ref:
+                touches = True
+                break
+        if not touches:
+            continue
+        mut base = base_net_name(net.name)
+        if base == rail_base:
+            has_rail = True
+        if is_ground_base(base):
+            has_ground = True
+    return has_rail and has_ground
+
+
+# private in Zig; public for its test counterpart. Unlike other ground tests,
+# this eval-layer predicate accepts case straight from an authored design file.
+public func is_ground_base(name: bytes) -> bool:
+    for ground in ground_base_names():
+        if strs.eql_ignore_case(name, ground):
+            return True
+    if strs.eql_ignore_case(name, b"VSS"):
+        return True
+    return strs.starts_with_ignore_case(name, b"GND_") or strs.starts_with_ignore_case(name, b"VSS_")
+
+
+func tied_sub_block_has_cap(block: env_mod.DesignBlock, base: bytes) -> bool:
+    for tie in block.net_ties:
+        mut other: bytes? = None
+        if tie.a == base:
+            other = Some(tie.b)
+        elif tie.b == base:
+            other = Some(tie.a)
+        if other is not None:
+            if other.find(b"/") >= 0 and sub_block_net_has_cap(block, other):
+                return True
+    return False
+
+
+# Union-find shared by rail construction and power budgeting. findRoot reads
+# its map, so unlike Zig's pointer spelling the mylang argument is plain.
+public func find_root(parent: dict[str, bytes], name: bytes) -> bytes:
+    mut cur = name
+    while strs.text(cur) in parent:
+        mut p = parent[strs.text(cur)]
+        if p == cur:
+            return cur
+        cur = p
+    return cur
+
+
+func union_nets(mut parent: dict[str, bytes], a: bytes, b: bytes):
+    mut ra = find_root(parent, a)
+    mut rb = find_root(parent, b)
+    if ra == rb:
+        return
+    parent[strs.text(rb)] = ra
+
+
+# Preserve pad-1/pad-2 bridge behaviour, including a multi-channel partial
+# bridge. A no-1/2 bead bridges by membership only for exactly two base nets;
+# a true array touching three or more nets must never be mis-bridged.
+public func build_ferrite_bridges(block: env_mod.DesignBlock) -> dict[str, bytes]:
+    mut net_parent: dict[str, bytes] = {}
+    for inst in block.instances:
+        if not inst.component.startswith(b"ferrite"):
+            continue
+        mut net_a: bytes? = None
+        mut net_b: bytes? = None
+        mut d0: bytes? = None
+        mut d1: bytes? = None
+        mut multi = False
+        for net in block.nets:
+            mut base = base_net_name(net.name)
+            mut touches = False
+            for p in net.pins:
+                if p.ref_des != inst.ref_des:
+                    continue
+                touches = True
+                if p.pin == b"1":
+                    net_a = Some(base)
+                if p.pin == b"2":
+                    net_b = Some(base)
+            if not touches:
+                continue
+            if d0 is None:
+                d0 = Some(base)
+            elif d0 != base:
+                if d1 is None:
+                    d1 = Some(base)
+                elif d1 != base:
+                    multi = True
+        if net_a is not None and net_b is not None:
+            union_nets(mut net_parent, net_a, net_b)
+        elif not multi:
+            if d0 is not None and d1 is not None:
+                union_nets(mut net_parent, d0, d1)
+    return net_parent

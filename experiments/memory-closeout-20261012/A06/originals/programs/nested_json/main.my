@@ -1,0 +1,28 @@
+import transform
+
+func main(args: str[], out: Stream) -> int:
+    mut n = 8
+    if len(args) > 0:
+        n = 512
+    mut source = transform.document(n)
+    match transform.roundtrip(source):
+        case Ok(rendered):
+            source = "replaced"
+            match transform.score(rendered):
+                case Ok(total):
+                    out.print(n, total)
+                case Err(_):
+                    return 1
+        case Err(_):
+            return 2
+    match transform.score("{\"records\":[{\"meta\":{\"score\":\"bad\"}}]}"):
+        case Ok(_):
+            return 3
+        case Err(_):
+            _ = 0
+    match transform.roundtrip("[bad"):
+        case Ok(_):
+            return 4
+        case Err(_):
+            _ = 0
+    return 0

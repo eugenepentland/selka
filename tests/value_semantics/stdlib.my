@@ -6,7 +6,7 @@ import pool
 public func test_builder_is_a_value_and_mut_updates_only_the_target() -> bool:
     mut original = byte_builder.create()
     _ = byte_builder.append_byte(mut original, 65)
-    mut changed = original
+    mut changed = original.copy()
     _ = byte_builder.append_byte(mut changed, 66)
     return byte_builder.finish(original) == b"A" and byte_builder.finish(changed) == b"AB"
 
@@ -17,7 +17,7 @@ public func test_pool_handles_address_the_mutated_pool() -> bool:
     mut initial: int[] = [5]
     mut store = pool.create(initial)
     mut handle = pool.insert(mut store, 7)
-    mut copied = store
+    mut copied = store.copy()
     _ = pool.set(mut copied, handle, 9)
     match pool.get(store, handle):
         case Some(value):

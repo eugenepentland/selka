@@ -1,0 +1,2035 @@
+{
+  "method": "counted-release-native-replay-v2",
+  "scope": "Run size-aligned counters through the approved exact-source native adapter.\n\nThis preserves the original compiler command's status, reconstructs no LLVM,\nand produces only counter evidence. It never replaces timing binaries.\n",
+  "adapter_commit": "7b10b6b6f9205993b7f6bdd73be34e32b4ab93ea",
+  "adapter_source": "experiments/memory-closeout-20261012/A10/manual-native-v2/manual_native_v2.py",
+  "adapter_sha256": "62bffd95c9c40f1388447f78ba8f5a87365a4881277f9842ecca3179a4d416c9",
+  "harness_sha256": "fba6c1fac7eb67dff343a54c9fa093d980c94dfe141600a673a41a203cef6119",
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "source_commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "runtime_receipt": {
+    "method": "counted-release-native-replay-v2",
+    "adapter_sha256": "62bffd95c9c40f1388447f78ba8f5a87365a4881277f9842ecca3179a4d416c9",
+    "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+    "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+    "source_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+    "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+    "source_inputs_sha256": {
+      "src/core/driver.zig": "56a8781c82157354f06d4eaa3d1a234e680d918d7ba6a48cdc5f513478f9fe27",
+      "src/core/runtime/core_rt.c": "09bebd4ba75c24b98f82d99defdffc26a79912132687e1f5a38be3bf5f10c1d6",
+      "src/core/runtime/core_dict.c": "379da380517be9cb7e6ef0dba0a16dded8f1b18d836002409c4555a3d53e5ba1",
+      "src/core/runtime/core_unicode_data.h": "668ed92a73281c3d22138b64719b4a30f2cd7472e31db9b6162f2e272292aeea",
+      "src/core/runtime/core_text.c": "d684a834ce0ad0a16eb96939deced5e723268acbd5ae2f77d56bc23c37b610f2",
+      "src/core/runtime/core_sort.c": "85da826333d5f157d32cf396ea29579bc050d9b95bb6acc9744f84e778f9383b",
+      "src/core/runtime/core_number.c": "24134473bbeb81ca4896e37c86ff662f0e1f2524bd9a6b3db8599b9e61ac9143",
+      "src/core/runtime/core_io.c": "302102d37d20192ccba6a176c389f28b05278ecda5683c6914802088d2200ef7",
+      "src/core/runtime/core_durable.c": "168754b78294267aebbd64f98cc712dcb9a08646b1973440452c32f5cd4cb85a",
+      "src/core/runtime/core_host.c": "77fa8d5fe29bbaca29b580256bd6cd786c40f92c3dfd11f839a261d6456d80fb",
+      "src/core/runtime/core_bytes.c": "a4740e070873ff1acb2730ea75b0994b2b3bf2b91b230ea4bd0e093e2a861c09",
+      "src/core/runtime/core_values.c": "26dd1195c8974fb3493645947b812ce6af5904c7fb0e619c6621ccdbbe066123",
+      "src/core/runtime/core_owned_copy.c": "9f0fc3f83cd0a06f8171edb2f23867ef4a1f9213a5554625078df58dda86d450",
+      "src/core/runtime/core_test.c": "18535b83cd85b1f4ccd8bd55153c38a55299e561b8dd09429cba3c257d96e7fd",
+      "src/core/runtime/core_tasks.c": "e3d291ab113bd9f31c0b352761ab2523da20af08800c2010c44240bd5c622b85",
+      "src/core/count_runtime.zig": "190ee3130adb72d24d0f7a1eeec9544cf037ebab5b9e4e50f414746d317d72c7",
+      "src/core/runtime/core_count.h": "3a39d1ece245f90d88a9812e29bb59467d95d34566e33da2c384d41622eaaee7",
+      "src/core/runtime/core_count.c": "e7497cd9feb3ea3d98898223777dc805f3e56f78cbeaa6cfc6cf4d86a090a891",
+      "src/core/target.zig": "ddce9416c892f018ce4a8836d6d68e516a8071fb6bf857b596c840a3d088ddff",
+      "src/core/number_runtime.zig": "da162a909996d5a0f88d3eb4bcdc8626c08514987f6ba8632d8bed76a531a037",
+      "src/core/flags.zig": "0d755cfaf8459362b87a12d41b4ad3e4e61e605b9cec9d7daafb4e1781981c8c",
+      "src/core/build_mode.zig": "b41d9edd6a3dbdaa47de372a62d7f939288cd3210c4d97474225996ae062174f",
+      "src/core/emit_units.zig": "611af1ce861b1a4dc6b3f613ed198a735721646ff6a6a3d680728b6d49d9b029",
+      "src/core/pipeline.zig": "187187d7bbbccb79ede606eb1ed1fa9d36cead65faa31fb6fd1a0a5463c3ce7e"
+    },
+    "runtime_fragment_order": [
+      "runtime/core_rt.c",
+      "runtime/core_dict.c",
+      "runtime/core_unicode_data.h",
+      "runtime/core_text.c",
+      "runtime/core_sort.c",
+      "runtime/core_number.c",
+      "runtime/core_io.c",
+      "runtime/core_durable.c",
+      "runtime/core_host.c",
+      "runtime/core_bytes.c",
+      "runtime/core_values.c",
+      "runtime/core_owned_copy.c",
+      "runtime/core_test.c",
+      "runtime/core_tasks.c"
+    ],
+    "target": "x86_64-linux-gnu.2.31",
+    "cpu_flags": [
+      "-march=native",
+      "-mllvm",
+      "-x86-experimental-pref-innermost-loop-alignment=6"
+    ],
+    "embedded_runtime_matches_git": true,
+    "embedded_number_extracted": true,
+    "number_symbols": [
+      "myl_core_str_from_f64",
+      "myl_core_buffer_append_f64",
+      "myl_core_format_number",
+      "myl_core_format_float",
+      "myl_core_format_text",
+      "myl_core_parse_float_range",
+      "myl_core_round_float"
+    ],
+    "embedded_input_provenance": {
+      "runtime": {
+        "selection": "named-symbol-v1",
+        "size": 439061,
+        "sha256": "d5c393bd561ad2ca363d983209b187d4d823e5f2de7e13312a7f6ce6f960f36e"
+      },
+      "number": {
+        "selection": "named-symbol-v1",
+        "size": 409072,
+        "sha256": "f85642aaba0d26989f5201363adde207470e34e678c7ed45eb2dbbb900e00ae0"
+      }
+    },
+    "files_sha256": {
+      "base.c": "d5c393bd561ad2ca363d983209b187d4d823e5f2de7e13312a7f6ce6f960f36e",
+      "count_runtime.zig": "190ee3130adb72d24d0f7a1eeec9544cf037ebab5b9e4e50f414746d317d72c7",
+      "runtime/core_count.h": "3a39d1ece245f90d88a9812e29bb59467d95d34566e33da2c384d41622eaaee7",
+      "runtime/core_count.c": "e7497cd9feb3ea3d98898223777dc805f3e56f78cbeaa6cfc6cf4d86a090a891",
+      "number.o": "f85642aaba0d26989f5201363adde207470e34e678c7ed45eb2dbbb900e00ae0",
+      "export.zig": "dbf49f76f2c990c102024655b80240c30775065ada58593e688dd40a77527cbf",
+      "export": "2e5bfb5b68c25d388aaacb59629b55631ace709ef1973cb3f19c837250ecaee9",
+      "counted.c": "ff1957e1db368eb0fc42bfa9d85f66871fb0eb9928f1f3799df8b8b2e1815574",
+      "runtime.o": "b7c6e90cd06f2a65f4ce892084ad5da14c9ad0ba4c0d05b4402c99a424b220c5"
+    },
+    "environment": {
+      "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/zig-local",
+      "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/zig-global"
+    }
+  },
+  "original_results": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/raw/size-aligned-C0/results.json",
+  "original_results_sha256": "63b21a65f8851295c5fddb359d3ec80f054612ad87350bd744c6369d136d6a68",
+  "counter_audit_sha256": "36e0707f6622782d94df1df6489064c4ec2928ef55fc65efa4a0d5eaa6ce1bdb",
+  "structural_helper_sha256": "16fe1882a08b656fa08e792a07c0503d5707f0b99403cd392f012834a2187b8b",
+  "case_denominator": 15,
+  "groups": [
+    {
+      "original_build_status": "build_failed",
+      "cases": [
+        {
+          "id": "array",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/array_long.my",
+          "source_inputs_sha256": {
+            "array_long.my": "82125b5cfdfb1da843e5bdf53650dee86130c005d83701252c7143567d5d0942"
+          },
+          "args": [],
+          "env": {},
+          "cpus": [
+            10
+          ],
+          "expected": "array 512000000\n",
+          "matched_uncounted_binary_sha256": "de4b61e31498a7677ae6f9c06a73b5889ad2ba63e101c39143b4d1d300fb2bfe",
+          "original_case_status": "build_failed",
+          "run": {
+            "argv": [
+              "taskset",
+              "-c",
+              "10",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/array/program"
+            ],
+            "exit": 0,
+            "stdout": "array 512000000\n",
+            "stderr": "",
+            "wall_ns_including_admission": 425041551,
+            "wall_ns_excludes_admission_wait": true
+          },
+          "output_matches": true,
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/array/array-counts.json",
+            "counter_sha256": "ce70c97781a9ad2435ac2fea0772a71a9272a4c8b28e70953d0a1d50249b39b3",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 4000777,
+            "memory": {
+              "allocs": 12001554,
+              "alloc_bytes": 1280151792,
+              "frees": 12001554,
+              "reallocs": 2,
+              "peak_live_bytes": 75408,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "whole_program_managed_totals": {
+            "calls": 8004529,
+            "allocs": 12001554,
+            "alloc_bytes": 1280151792,
+            "frees": 12001554,
+            "free_bytes": 1280154864,
+            "list_grows": 133,
+            "list_grow_bytes": 896,
+            "reallocs": 2,
+            "realloc_added_bytes": 3072,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 8000001,
+            "text_copy_bytes": 512017545,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 258,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 258,
+            "buffer_append_bytes": 16512,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 75408,
+            "live_bytes_at_exit": 0
+          },
+          "status": "passed"
+        }
+      ],
+      "admission_lease": 0,
+      "queue_wait_ns": 130625177372,
+      "artifact": {
+        "method": "counted-release-native-replay-v2",
+        "adapter_sha256": "62bffd95c9c40f1388447f78ba8f5a87365a4881277f9842ecca3179a4d416c9",
+        "runtime_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/runtime.json",
+        "runtime_receipt_sha256": "c4c09155d2b61157c287f96873205894b90c7ecbe8425c2c5bdb8b28f701a819",
+        "llvm": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/array/program.ll",
+        "llvm_sha256": "19df30161f07e9df7a649501a10066dcea549f902de9507f2d6f55bcfb67e4ae",
+        "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/array/program",
+        "binary_sha256": "1345bddb4b6f4a1c16a50274a7331d52f76921ddd7e0efb4fce33a4fb7424508",
+        "objects_sha256": {
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/runtime.o": "b7c6e90cd06f2a65f4ce892084ad5da14c9ad0ba4c0d05b4402c99a424b220c5",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/array/native/program.o": "8e9a20032d2639bc0405da36aa22e4ed5eeeefc2aeb989c0867c42f870ba3b70",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/number.o": "f85642aaba0d26989f5201363adde207470e34e678c7ed45eb2dbbb900e00ae0"
+        },
+        "number": true,
+        "math": false,
+        "source_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+        "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+        "scope": "manual native counter supplement; original compiler build status remains separate; no timing/RSS claim"
+      },
+      "structural": {
+        "passed": true,
+        "llvm_sha256": "19df30161f07e9df7a649501a10066dcea549f902de9507f2d6f55bcfb67e4ae",
+        "llvm_violations": [],
+        "legacy_symbols": [],
+        "nm_sha256": "984c764f43cf3163f5b1b91e4aff0054913f073865d8d93a0e146ec01b5df698",
+        "scope": "Emitted guest LLVM and linked symbols; runtime preprocessor/layout proof belongs to A07."
+      },
+      "status": "passed",
+      "admitted_work_ns": 3284774891
+    },
+    {
+      "original_build_status": "build_failed",
+      "cases": [
+        {
+          "id": "object",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/object_long.my",
+          "source_inputs_sha256": {
+            "object_long.my": "e61f89aa77722e1c3386b47a929383bd2b2e5335a9236415f8aded2398159bc8"
+          },
+          "args": [],
+          "env": {},
+          "cpus": [
+            10
+          ],
+          "expected": "object 512000000\n",
+          "matched_uncounted_binary_sha256": "da5a86e49d86bb2ae069cebf553ef3dc2ee8454700dfa9280159d203206da107",
+          "original_case_status": "build_failed",
+          "run": {
+            "argv": [
+              "taskset",
+              "-c",
+              "10",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/object/program"
+            ],
+            "exit": 0,
+            "stdout": "object 512000000\n",
+            "stderr": "",
+            "wall_ns_including_admission": 420726581,
+            "wall_ns_excludes_admission_wait": true
+          },
+          "output_matches": true,
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/object/object-counts.json",
+            "counter_sha256": "3140b1b3345ca5bc0c01184cb42f9deec0a4d04452214cc6956942be419b7e7a",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 4001164,
+            "memory": {
+              "allocs": 12002200,
+              "alloc_bytes": 1280196480,
+              "frees": 12002200,
+              "reallocs": 0,
+              "peak_live_bytes": 90264,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "whole_program_managed_totals": {
+            "calls": 8005948,
+            "allocs": 12002200,
+            "alloc_bytes": 1280196480,
+            "frees": 12002200,
+            "free_bytes": 1280196480,
+            "list_grows": 129,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 8000001,
+            "text_copy_bytes": 512018980,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 5,
+            "dict_grow_bytes": 7936,
+            "buffer_grows": 387,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 387,
+            "buffer_append_bytes": 17560,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 90264,
+            "live_bytes_at_exit": 0
+          },
+          "status": "passed"
+        }
+      ],
+      "admission_lease": 0,
+      "queue_wait_ns": 0,
+      "artifact": {
+        "method": "counted-release-native-replay-v2",
+        "adapter_sha256": "62bffd95c9c40f1388447f78ba8f5a87365a4881277f9842ecca3179a4d416c9",
+        "runtime_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/runtime.json",
+        "runtime_receipt_sha256": "c4c09155d2b61157c287f96873205894b90c7ecbe8425c2c5bdb8b28f701a819",
+        "llvm": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/object/program.ll",
+        "llvm_sha256": "acfb595fe078cb652511e7067ebe1cb500fa1470a1b0c2c3ccf7bc19156d957c",
+        "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/object/program",
+        "binary_sha256": "17d0f3a9d1ec845222888b5f3e0b8b28a5d105144ed639a14dd56412ab47cdab",
+        "objects_sha256": {
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/runtime.o": "b7c6e90cd06f2a65f4ce892084ad5da14c9ad0ba4c0d05b4402c99a424b220c5",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/object/native/program.o": "4e3219711b35070f69404499d144658405c014de6d151f23eb7f75d498fa0f17",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/number.o": "f85642aaba0d26989f5201363adde207470e34e678c7ed45eb2dbbb900e00ae0"
+        },
+        "number": true,
+        "math": false,
+        "source_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+        "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+        "scope": "manual native counter supplement; original compiler build status remains separate; no timing/RSS claim"
+      },
+      "structural": {
+        "passed": true,
+        "llvm_sha256": "acfb595fe078cb652511e7067ebe1cb500fa1470a1b0c2c3ccf7bc19156d957c",
+        "llvm_violations": [],
+        "legacy_symbols": [],
+        "nm_sha256": "3de78df3decc311716dd75746f139806fe8c5354393a18f0d377a9438448d701",
+        "scope": "Emitted guest LLVM and linked symbols; runtime preprocessor/layout proof belongs to A07."
+      },
+      "status": "passed",
+      "admitted_work_ns": 3262946386
+    },
+    {
+      "original_build_status": "build_failed",
+      "cases": [
+        {
+          "id": "record",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/record_long.my",
+          "source_inputs_sha256": {
+            "record_long.my": "384023aefd7a12a2e7db8c759649b8ba8928fb18117c8e56649c2e74b68026b1"
+          },
+          "args": [],
+          "env": {},
+          "cpus": [
+            10
+          ],
+          "expected": "279555560\n",
+          "matched_uncounted_binary_sha256": "f5f994a9341c49ad5ac3e0e61c72aa239ad0ad5d509e25dfd38f3c2c2a48840b",
+          "original_case_status": "build_failed",
+          "run": {
+            "argv": [
+              "taskset",
+              "-c",
+              "10",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/record/program"
+            ],
+            "exit": 0,
+            "stdout": "279555560\n",
+            "stderr": "",
+            "wall_ns_including_admission": 435050159,
+            "wall_ns_excludes_admission_wait": true
+          },
+          "output_matches": true,
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/record/record-counts.json",
+            "counter_sha256": "62fd863d796268cd9164188f3820e5316d34cc86bf24c49d73ede381b2fc389c",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 9000000,
+            "memory": {
+              "allocs": 21000000,
+              "alloc_bytes": 2496000000,
+              "frees": 21000000,
+              "reallocs": 0,
+              "peak_live_bytes": 1536,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "whole_program_managed_totals": {
+            "calls": 3000001,
+            "allocs": 21000000,
+            "alloc_bytes": 2496000000,
+            "frees": 21000000,
+            "free_bytes": 2496000000,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 6000000,
+            "text_copy_bytes": 384000000,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 6000000,
+            "text_grow_bytes": 384000000,
+            "text_appends": 6000000,
+            "text_append_bytes": 35333340,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 1536,
+            "live_bytes_at_exit": 0
+          },
+          "status": "passed"
+        }
+      ],
+      "admission_lease": 0,
+      "queue_wait_ns": 0,
+      "artifact": {
+        "method": "counted-release-native-replay-v2",
+        "adapter_sha256": "62bffd95c9c40f1388447f78ba8f5a87365a4881277f9842ecca3179a4d416c9",
+        "runtime_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/runtime.json",
+        "runtime_receipt_sha256": "c4c09155d2b61157c287f96873205894b90c7ecbe8425c2c5bdb8b28f701a819",
+        "llvm": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/record/program.ll",
+        "llvm_sha256": "f7b2042c3d3791dbf7ec4227c0dedece0c5aa664da7acb3d3bedc92b3e544cb5",
+        "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/record/program",
+        "binary_sha256": "6a25902e0647cfd4568f183c5d5f25a8794603b4708b9b9137dd0797dd428f72",
+        "objects_sha256": {
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/runtime.o": "b7c6e90cd06f2a65f4ce892084ad5da14c9ad0ba4c0d05b4402c99a424b220c5",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/record/native/program.o": "edeab0a4a0a6bc66c0aa17e515c15d99c5a3ca3611c76ed10818907cc241f2a4"
+        },
+        "number": false,
+        "math": false,
+        "source_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+        "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+        "scope": "manual native counter supplement; original compiler build status remains separate; no timing/RSS claim"
+      },
+      "structural": {
+        "passed": true,
+        "llvm_sha256": "f7b2042c3d3791dbf7ec4227c0dedece0c5aa664da7acb3d3bedc92b3e544cb5",
+        "llvm_violations": [],
+        "legacy_symbols": [],
+        "nm_sha256": "2dca5bb6b5fce1c44778caa6dc40ebffb156477b7c73d49ab270f412e350f2d0",
+        "scope": "Emitted guest LLVM and linked symbols; runtime preprocessor/layout proof belongs to A07."
+      },
+      "status": "passed",
+      "admitted_work_ns": 3154829086
+    },
+    {
+      "original_build_status": "build_failed",
+      "cases": [
+        {
+          "id": "parallel_cheap_1",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "args": [
+            "513",
+            "65536",
+            "cheap"
+          ],
+          "env": {
+            "MYLANG_THREADS": "1"
+          },
+          "cpus": [
+            10
+          ],
+          "expected": "25853755392\n",
+          "matched_uncounted_binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+          "original_case_status": "build_failed",
+          "run": {
+            "argv": [
+              "taskset",
+              "-c",
+              "10",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/parallel_cheap_1/program",
+              "513",
+              "65536",
+              "cheap"
+            ],
+            "exit": 0,
+            "stdout": "25853755392\n",
+            "stderr": "",
+            "wall_ns_including_admission": 2654026267,
+            "wall_ns_excludes_admission_wait": true
+          },
+          "output_matches": true,
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/parallel_cheap_1/parallel_cheap_1-counts.json",
+            "counter_sha256": "9c62d2a1ee44d487f7006bd9c2a243120990f1b90e72246c25b731eab28b7690",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 65537,
+            "memory": {
+              "allocs": 101318666,
+              "alloc_bytes": 7949257096,
+              "frees": 101318666,
+              "reallocs": 196611,
+              "peak_live_bytes": 103096,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "whole_program_managed_totals": {
+            "calls": 67305475,
+            "allocs": 101318666,
+            "alloc_bytes": 7949257096,
+            "frees": 101318666,
+            "free_bytes": 8419026312,
+            "list_grows": 262149,
+            "list_grow_bytes": 62915520,
+            "reallocs": 196611,
+            "realloc_added_bytes": 469769216,
+            "realloc_moves": 65536,
+            "realloc_moved_bytes": 270532608,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 103096,
+            "live_bytes_at_exit": 0
+          },
+          "status": "passed"
+        },
+        {
+          "id": "parallel_cheap_2",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "args": [
+            "513",
+            "16384",
+            "cheap"
+          ],
+          "env": {
+            "MYLANG_THREADS": "2"
+          },
+          "cpus": [
+            8,
+            10
+          ],
+          "expected": "6463438848\n",
+          "matched_uncounted_binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+          "original_case_status": "build_failed",
+          "run": {
+            "argv": [
+              "taskset",
+              "-c",
+              "8,10",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/parallel_cheap_1/program",
+              "513",
+              "16384",
+              "cheap"
+            ],
+            "exit": 0,
+            "stdout": "6463438848\n",
+            "stderr": "",
+            "wall_ns_including_admission": 2501741132,
+            "wall_ns_excludes_admission_wait": true
+          },
+          "output_matches": true,
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/parallel_cheap_1/parallel_cheap_2-counts.json",
+            "counter_sha256": "822598fd524d0e1d6ab1bf4198e754e4e19c7eea2f0db9632309cf4e29413b5a",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 16385,
+            "memory": {
+              "allocs": 25329674,
+              "alloc_bytes": 1987316104,
+              "frees": 25329674,
+              "reallocs": 49155,
+              "peak_live_bytes": 103096,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "whole_program_managed_totals": {
+            "calls": 16826371,
+            "allocs": 25329674,
+            "alloc_bytes": 1987316104,
+            "frees": 25329674,
+            "free_bytes": 2104763784,
+            "list_grows": 65541,
+            "list_grow_bytes": 15729600,
+            "reallocs": 49155,
+            "realloc_added_bytes": 117447680,
+            "realloc_moves": 16385,
+            "realloc_moved_bytes": 67635232,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 103096,
+            "live_bytes_at_exit": 0
+          },
+          "status": "passed"
+        },
+        {
+          "id": "parallel_cheap_8",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "args": [
+            "513",
+            "8192",
+            "cheap"
+          ],
+          "env": {
+            "MYLANG_THREADS": "8"
+          },
+          "cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ],
+          "expected": "3231719424\n",
+          "matched_uncounted_binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+          "original_case_status": "build_failed",
+          "run": {
+            "argv": [
+              "taskset",
+              "-c",
+              "0,1,2,3,4,5,6,7,8,9,10,11",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/parallel_cheap_1/program",
+              "513",
+              "8192",
+              "cheap"
+            ],
+            "exit": 0,
+            "stdout": "3231719424\n",
+            "stderr": "",
+            "wall_ns_including_admission": 2254560181,
+            "wall_ns_excludes_admission_wait": true
+          },
+          "output_matches": true,
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/parallel_cheap_1/parallel_cheap_8-counts.json",
+            "counter_sha256": "9e4bfe3349441ede05623ffb1732ae381fcbd9c148b3d82123070d5112c6bf42",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 8193,
+            "memory": {
+              "allocs": 12664842,
+              "alloc_bytes": 993659272,
+              "frees": 12664842,
+              "reallocs": 24579,
+              "peak_live_bytes": 103160,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "whole_program_managed_totals": {
+            "calls": 8413187,
+            "allocs": 12664842,
+            "alloc_bytes": 993659272,
+            "frees": 12664842,
+            "free_bytes": 1052386696,
+            "list_grows": 32773,
+            "list_grow_bytes": 7865280,
+            "reallocs": 24579,
+            "realloc_added_bytes": 58727424,
+            "realloc_moves": 8192,
+            "realloc_moved_bytes": 33816576,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 103160,
+            "live_bytes_at_exit": 0
+          },
+          "status": "passed"
+        },
+        {
+          "id": "parallel_expensive_1",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "args": [
+            "8193",
+            "32",
+            "expensive"
+          ],
+          "env": {
+            "MYLANG_THREADS": "1"
+          },
+          "cpus": [
+            10
+          ],
+          "expected": "131028929568\n",
+          "matched_uncounted_binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+          "original_case_status": "build_failed",
+          "run": {
+            "argv": [
+              "taskset",
+              "-c",
+              "10",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/parallel_cheap_1/program",
+              "8193",
+              "32",
+              "expensive"
+            ],
+            "exit": 0,
+            "stdout": "131028929568\n",
+            "stderr": "",
+            "wall_ns_including_admission": 1203863130,
+            "wall_ns_excludes_admission_wait": true
+          },
+          "output_matches": true,
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/parallel_cheap_1/parallel_expensive_1-counts.json",
+            "counter_sha256": "826a5b5911b0e5f18befb83201dfa4acaea5dcdd394fe921369ab57f91213b9f",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 33,
+            "memory": {
+              "allocs": 786762,
+              "alloc_bytes": 60900232,
+              "frees": 786762,
+              "reallocs": 231,
+              "peak_live_bytes": 1643112,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "whole_program_managed_totals": {
+            "calls": 524387,
+            "allocs": 786762,
+            "alloc_bytes": 60900232,
+            "frees": 786762,
+            "free_bytes": 65195832,
+            "list_grows": 133,
+            "list_grow_bytes": 31680,
+            "reallocs": 231,
+            "realloc_added_bytes": 4295600,
+            "realloc_moves": 67,
+            "realloc_moved_bytes": 2287712,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 1643112,
+            "live_bytes_at_exit": 0
+          },
+          "status": "passed"
+        },
+        {
+          "id": "parallel_expensive_2",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "args": [
+            "8193",
+            "32",
+            "expensive"
+          ],
+          "env": {
+            "MYLANG_THREADS": "2"
+          },
+          "cpus": [
+            8,
+            10
+          ],
+          "expected": "131028929568\n",
+          "matched_uncounted_binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+          "original_case_status": "build_failed",
+          "run": {
+            "argv": [
+              "taskset",
+              "-c",
+              "8,10",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/parallel_cheap_1/program",
+              "8193",
+              "32",
+              "expensive"
+            ],
+            "exit": 0,
+            "stdout": "131028929568\n",
+            "stderr": "",
+            "wall_ns_including_admission": 665215464,
+            "wall_ns_excludes_admission_wait": true
+          },
+          "output_matches": true,
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/parallel_cheap_1/parallel_expensive_2-counts.json",
+            "counter_sha256": "5cbea95d9cf7541ec12d173e262c7ab2d8c60e5fab1845d2ce8219a6fb21cd67",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 33,
+            "memory": {
+              "allocs": 786762,
+              "alloc_bytes": 60900232,
+              "frees": 786762,
+              "reallocs": 231,
+              "peak_live_bytes": 1643048,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "whole_program_managed_totals": {
+            "calls": 524387,
+            "allocs": 786762,
+            "alloc_bytes": 60900232,
+            "frees": 786762,
+            "free_bytes": 65195832,
+            "list_grows": 133,
+            "list_grow_bytes": 31680,
+            "reallocs": 231,
+            "realloc_added_bytes": 4295600,
+            "realloc_moves": 161,
+            "realloc_moved_bytes": 4069408,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 1643048,
+            "live_bytes_at_exit": 0
+          },
+          "status": "passed"
+        },
+        {
+          "id": "parallel_expensive_8",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "args": [
+            "8193",
+            "32",
+            "expensive"
+          ],
+          "env": {
+            "MYLANG_THREADS": "8"
+          },
+          "cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ],
+          "expected": "131028929568\n",
+          "matched_uncounted_binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+          "original_case_status": "build_failed",
+          "run": {
+            "argv": [
+              "taskset",
+              "-c",
+              "0,1,2,3,4,5,6,7,8,9,10,11",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/parallel_cheap_1/program",
+              "8193",
+              "32",
+              "expensive"
+            ],
+            "exit": 0,
+            "stdout": "131028929568\n",
+            "stderr": "",
+            "wall_ns_including_admission": 297635920,
+            "wall_ns_excludes_admission_wait": true
+          },
+          "output_matches": true,
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/parallel_cheap_1/parallel_expensive_8-counts.json",
+            "counter_sha256": "a0ce99391d9ad7f884879fd076bcf0db60e5d67c79bd0dd3484524c6ecaa093f",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 33,
+            "memory": {
+              "allocs": 786762,
+              "alloc_bytes": 60900232,
+              "frees": 786762,
+              "reallocs": 231,
+              "peak_live_bytes": 1643112,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "whole_program_managed_totals": {
+            "calls": 524387,
+            "allocs": 786762,
+            "alloc_bytes": 60900232,
+            "frees": 786762,
+            "free_bytes": 65195832,
+            "list_grows": 133,
+            "list_grow_bytes": 31680,
+            "reallocs": 231,
+            "realloc_added_bytes": 4295600,
+            "realloc_moves": 161,
+            "realloc_moved_bytes": 4069408,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 1643112,
+            "live_bytes_at_exit": 0
+          },
+          "status": "passed"
+        }
+      ],
+      "admission_lease": 0,
+      "queue_wait_ns": 0,
+      "artifact": {
+        "method": "counted-release-native-replay-v2",
+        "adapter_sha256": "62bffd95c9c40f1388447f78ba8f5a87365a4881277f9842ecca3179a4d416c9",
+        "runtime_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/runtime.json",
+        "runtime_receipt_sha256": "c4c09155d2b61157c287f96873205894b90c7ecbe8425c2c5bdb8b28f701a819",
+        "llvm": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/parallel_cheap_1/program.ll",
+        "llvm_sha256": "6ba1b6e35515ec018204a32c456ad2951152c40b26b63933d7eea20d159363a6",
+        "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/parallel_cheap_1/program",
+        "binary_sha256": "4f96d06972ee9f101ae9bb62a09b9fb31ae86b56b339d105748adbd96efcc610",
+        "objects_sha256": {
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/runtime.o": "b7c6e90cd06f2a65f4ce892084ad5da14c9ad0ba4c0d05b4402c99a424b220c5",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/parallel_cheap_1/native/program.o": "165632342f18fc6be9744e771b1d1559f94128e985cf4ec98ca4f4d045c72d14"
+        },
+        "number": false,
+        "math": false,
+        "source_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+        "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+        "scope": "manual native counter supplement; original compiler build status remains separate; no timing/RSS claim"
+      },
+      "structural": {
+        "passed": true,
+        "llvm_sha256": "6ba1b6e35515ec018204a32c456ad2951152c40b26b63933d7eea20d159363a6",
+        "llvm_violations": [],
+        "legacy_symbols": [],
+        "nm_sha256": "0d906d9da83dfed8c91b24df7628aa2209a4da0ebcebef99b86f5e469307fa14",
+        "scope": "Emitted guest LLVM and linked symbols; runtime preprocessor/layout proof belongs to A07."
+      },
+      "status": "passed",
+      "admitted_work_ns": 12295831185
+    },
+    {
+      "original_build_status": "build_failed",
+      "cases": [
+        {
+          "id": "a06_word_count",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/word_count/main.my",
+          "source_inputs_sha256": {
+            "main.my": "4d633e9d3e0a96decb3654cca0a95ff19e2df2cb73d6fb8e84b3fb03a4e5599f",
+            "words.my": "61569e71ae3a0723d2f123720f78d32a33df465cdd5be1e2f76d9b8c7203ef6e"
+          },
+          "args": [
+            "200"
+          ],
+          "env": {
+            "MYLANG_THREADS": "1"
+          },
+          "cpus": [
+            10
+          ],
+          "expected": "7723600\n",
+          "matched_uncounted_binary_sha256": "13974c4ea293b0e43d0f6b5a2dc7c3c0289d5ad691642d0044affd6be88e3efb",
+          "original_case_status": "build_failed",
+          "run": {
+            "argv": [
+              "taskset",
+              "-c",
+              "10",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_word_count/program",
+              "200"
+            ],
+            "exit": 0,
+            "stdout": "7723600\n",
+            "stderr": "",
+            "wall_ns_including_admission": 331879052,
+            "wall_ns_excludes_admission_wait": true
+          },
+          "output_matches": true,
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_word_count/a06_word_count-counts.json",
+            "counter_sha256": "28577a4d469e74f47f69c5f58ec81d79aaa12ed0d1aa377034480aef5d3a84fa",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 9829200,
+            "memory": {
+              "allocs": 13113602,
+              "alloc_bytes": 891555328,
+              "frees": 13113602,
+              "reallocs": 0,
+              "peak_live_bytes": 99152,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "whole_program_managed_totals": {
+            "calls": 1402,
+            "allocs": 13113602,
+            "alloc_bytes": 891555328,
+            "frees": 13113602,
+            "free_bytes": 891555328,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 9831200,
+            "text_copy_bytes": 46341600,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 3281600,
+            "text_grow_bytes": 41584000,
+            "text_appends": 6553600,
+            "text_append_bytes": 22000800,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 99152,
+            "live_bytes_at_exit": 0
+          },
+          "status": "passed"
+        }
+      ],
+      "admission_lease": 1,
+      "queue_wait_ns": 100477708793,
+      "artifact": {
+        "method": "counted-release-native-replay-v2",
+        "adapter_sha256": "62bffd95c9c40f1388447f78ba8f5a87365a4881277f9842ecca3179a4d416c9",
+        "runtime_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/runtime.json",
+        "runtime_receipt_sha256": "c4c09155d2b61157c287f96873205894b90c7ecbe8425c2c5bdb8b28f701a819",
+        "llvm": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_word_count/program.ll",
+        "llvm_sha256": "65588e2fb9f92a0c32e115bcc8c70305fdf81fc5549500d24e0eef1a529eecf8",
+        "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_word_count/program",
+        "binary_sha256": "08ad64c9258f1a61383783b68f0151662e28f048a596b17096fa732bd7af968d",
+        "objects_sha256": {
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/runtime.o": "b7c6e90cd06f2a65f4ce892084ad5da14c9ad0ba4c0d05b4402c99a424b220c5",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_word_count/native/program.o": "e8d416f1bc1da8381f64542901dfef259f6f44b71b24650647f70be5aa239882"
+        },
+        "number": false,
+        "math": false,
+        "source_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+        "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+        "scope": "manual native counter supplement; original compiler build status remains separate; no timing/RSS claim"
+      },
+      "structural": {
+        "passed": true,
+        "llvm_sha256": "65588e2fb9f92a0c32e115bcc8c70305fdf81fc5549500d24e0eef1a529eecf8",
+        "llvm_violations": [],
+        "legacy_symbols": [],
+        "nm_sha256": "1d1c39f4d0b38afb5fa232665c0fa7ee91a4375c8f525b3f7a75c8f925fd723e",
+        "scope": "Emitted guest LLVM and linked symbols; runtime preprocessor/layout proof belongs to A07."
+      },
+      "status": "passed",
+      "admitted_work_ns": 3063072142
+    },
+    {
+      "original_build_status": "build_failed",
+      "cases": [
+        {
+          "id": "a06_nested_json",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/nested_json/main.my",
+          "source_inputs_sha256": {
+            "main.my": "529ff2ba488db292d409ad2af7aac3c49fbc49bb9bfa718504c5ee490270d65f",
+            "transform.my": "731d621883eee8968c0a0fb49353de3908f16e711442d2199b73104d05c99f74"
+          },
+          "args": [
+            "80"
+          ],
+          "env": {
+            "MYLANG_THREADS": "1"
+          },
+          "cpus": [
+            10
+          ],
+          "expected": "1967760\n",
+          "matched_uncounted_binary_sha256": "5c2737ad2521138f3e7a4a25b685912e87889716379268ebbc085889ac64ffc5",
+          "original_case_status": "build_failed",
+          "run": {
+            "argv": [
+              "taskset",
+              "-c",
+              "10",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_nested_json/program",
+              "80"
+            ],
+            "exit": 0,
+            "stdout": "1967760\n",
+            "stderr": "",
+            "wall_ns_including_admission": 154197462,
+            "wall_ns_excludes_admission_wait": true
+          },
+          "output_matches": true,
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_nested_json/a06_nested_json-counts.json",
+            "counter_sha256": "d8deb67168f131d2b052b6300f32ad37e9c36fc10904f94b5ec3c3242c073ce0",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 1639840,
+            "memory": {
+              "allocs": 3403682,
+              "alloc_bytes": 266812928,
+              "frees": 3403682,
+              "reallocs": 880,
+              "peak_live_bytes": 828184,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "whole_program_managed_totals": {
+            "calls": 12172882,
+            "allocs": 3403682,
+            "alloc_bytes": 266812928,
+            "frees": 3403682,
+            "free_bytes": 270499328,
+            "list_grows": 640,
+            "list_grow_bytes": 143360,
+            "reallocs": 880,
+            "realloc_added_bytes": 3686400,
+            "realloc_moves": 714,
+            "realloc_moved_bytes": 3274688,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 204800,
+            "dict_copy_bytes": 13107200,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 778560,
+            "text_copy_bytes": 7707280,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 410400,
+            "buffer_grow_bytes": 80320,
+            "text_grows": 82720,
+            "text_grow_bytes": 3975520,
+            "text_appends": 327680,
+            "text_append_bytes": 3683920,
+            "buffer_pushes": 860640,
+            "buffer_appends": 492160,
+            "buffer_append_bytes": 2062240,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 828184,
+            "live_bytes_at_exit": 0
+          },
+          "status": "passed"
+        }
+      ],
+      "admission_lease": 1,
+      "queue_wait_ns": 0,
+      "artifact": {
+        "method": "counted-release-native-replay-v2",
+        "adapter_sha256": "62bffd95c9c40f1388447f78ba8f5a87365a4881277f9842ecca3179a4d416c9",
+        "runtime_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/runtime.json",
+        "runtime_receipt_sha256": "c4c09155d2b61157c287f96873205894b90c7ecbe8425c2c5bdb8b28f701a819",
+        "llvm": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_nested_json/program.ll",
+        "llvm_sha256": "733c28562cba57c090e40d8537e62fb7da3e7a4d9fbe25a8e08e74175b2ea4fe",
+        "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_nested_json/program",
+        "binary_sha256": "c936d698c7ec225072a5ae0099008439badc03f7796a66b7488e1926ba5be2bb",
+        "objects_sha256": {
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/runtime.o": "b7c6e90cd06f2a65f4ce892084ad5da14c9ad0ba4c0d05b4402c99a424b220c5",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_nested_json/native/program.o": "9b7cad155858c5cff3aec1573b9d04ff5ca455e16e78972206ab3e090865fdef",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/number.o": "f85642aaba0d26989f5201363adde207470e34e678c7ed45eb2dbbb900e00ae0"
+        },
+        "number": true,
+        "math": false,
+        "source_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+        "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+        "scope": "manual native counter supplement; original compiler build status remains separate; no timing/RSS claim"
+      },
+      "structural": {
+        "passed": true,
+        "llvm_sha256": "733c28562cba57c090e40d8537e62fb7da3e7a4d9fbe25a8e08e74175b2ea4fe",
+        "llvm_violations": [],
+        "legacy_symbols": [],
+        "nm_sha256": "4ffc76d3a1abf3a7a7604effde530520ab20585c148c597fc1673e45746eae82",
+        "scope": "Emitted guest LLVM and linked symbols; runtime preprocessor/layout proof belongs to A07."
+      },
+      "status": "passed",
+      "admitted_work_ns": 2994129295
+    },
+    {
+      "original_build_status": "build_failed",
+      "cases": [
+        {
+          "id": "a06_file_processing",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/file_processing/main.my",
+          "source_inputs_sha256": {
+            "main.my": "3d8cdf2a39a31f2fd2206690eff3a2f7cc738e6083efab574ba989fb549ebe33",
+            "process.my": "5226147e7e0e228b006134ea3dc79caa821aadf5b555b3bf034cb35bd280d65b"
+          },
+          "args": [
+            "150"
+          ],
+          "env": {
+            "MYLANG_THREADS": "1"
+          },
+          "cpus": [
+            10
+          ],
+          "expected": "58982550\n",
+          "matched_uncounted_binary_sha256": "c460a2ddff3ddf0d75b4495f49b3d83ef0b02ef22d6c7914e3039dbccde3e161",
+          "original_case_status": "build_failed",
+          "run": {
+            "argv": [
+              "taskset",
+              "-c",
+              "10",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_file_processing/program",
+              "150"
+            ],
+            "exit": 0,
+            "stdout": "58982550\n",
+            "stderr": "",
+            "wall_ns_including_admission": 111760220,
+            "wall_ns_excludes_admission_wait": true
+          },
+          "output_matches": true,
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_file_processing/a06_file_processing-counts.json",
+            "counter_sha256": "c3377d0c9984c18c880fc6d56028908f8885dc7966aface9a68102639296751f",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 1232100,
+            "memory": {
+              "allocs": 2464352,
+              "alloc_bytes": 185360528,
+              "frees": 2464352,
+              "reallocs": 0,
+              "peak_live_bytes": 49680,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "whole_program_managed_totals": {
+            "calls": 1202,
+            "allocs": 2464352,
+            "alloc_bytes": 185360528,
+            "frees": 2464352,
+            "free_bytes": 185360528,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 150,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 1230450,
+            "text_grow_bytes": 7229550,
+            "text_appends": 2457600,
+            "text_append_bytes": 4788600,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 49680,
+            "live_bytes_at_exit": 0
+          },
+          "status": "passed"
+        }
+      ],
+      "admission_lease": 1,
+      "queue_wait_ns": 0,
+      "artifact": {
+        "method": "counted-release-native-replay-v2",
+        "adapter_sha256": "62bffd95c9c40f1388447f78ba8f5a87365a4881277f9842ecca3179a4d416c9",
+        "runtime_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/runtime.json",
+        "runtime_receipt_sha256": "c4c09155d2b61157c287f96873205894b90c7ecbe8425c2c5bdb8b28f701a819",
+        "llvm": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_file_processing/program.ll",
+        "llvm_sha256": "dbdd928dce236cafc957c8b6506f68708230143a03b49b98937cec40260dc7c5",
+        "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_file_processing/program",
+        "binary_sha256": "d6b6f70657b9862483b7b5e469cb2f9f1bd24e0d14daf7ac842ad07d4e6bce8d",
+        "objects_sha256": {
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/runtime.o": "b7c6e90cd06f2a65f4ce892084ad5da14c9ad0ba4c0d05b4402c99a424b220c5",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_file_processing/native/program.o": "a6b754baca3891a0d7c5a0c490da9f47ccad7877ff7088b90e7a450d913fc45d"
+        },
+        "number": false,
+        "math": false,
+        "source_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+        "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+        "scope": "manual native counter supplement; original compiler build status remains separate; no timing/RSS claim"
+      },
+      "structural": {
+        "passed": true,
+        "llvm_sha256": "dbdd928dce236cafc957c8b6506f68708230143a03b49b98937cec40260dc7c5",
+        "llvm_violations": [],
+        "legacy_symbols": [],
+        "nm_sha256": "41dbee538870756f21ba119a8216884cd0e03e8f49795569f1559e7924a9e7ec",
+        "scope": "Emitted guest LLVM and linked symbols; runtime preprocessor/layout proof belongs to A07."
+      },
+      "status": "passed",
+      "admitted_work_ns": 2932903337
+    },
+    {
+      "original_build_status": "build_failed",
+      "cases": [
+        {
+          "id": "a06_parallel_t1",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/parallel/main.my",
+          "source_inputs_sha256": {
+            "main.my": "c8bec39775ef6af6d2822af7d7de52822d81db90ee161bd6060849dd3395ba45",
+            "primes.my": "8ccc5b22614f0f7fd8ee9cc48ff08ce2d5e08ac85da2a0d5945f058c8e7da4de"
+          },
+          "args": [
+            "40"
+          ],
+          "env": {
+            "MYLANG_THREADS": "1"
+          },
+          "cpus": [
+            10
+          ],
+          "expected": "920000\n",
+          "matched_uncounted_binary_sha256": "3be619806b8517c2de383b9aef455aa9d603a7fb02ca1fd4f6762e6ce474653b",
+          "original_case_status": "build_failed",
+          "run": {
+            "argv": [
+              "taskset",
+              "-c",
+              "10",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_parallel_t1/program",
+              "40"
+            ],
+            "exit": 0,
+            "stdout": "920000\n",
+            "stderr": "",
+            "wall_ns_including_admission": 1056631727,
+            "wall_ns_excludes_admission_wait": true
+          },
+          "output_matches": true,
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_parallel_t1/a06_parallel_t1-counts.json",
+            "counter_sha256": "39f450bcfd81cfcd37197eea9b5f58ee7d42b96dfae254fb220cfeec979edb65",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 10520,
+            "memory": {
+              "allocs": 62842,
+              "alloc_bytes": 4664128,
+              "frees": 62842,
+              "reallocs": 80,
+              "peak_live_bytes": 65976,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "whole_program_managed_totals": {
+            "calls": 10629442,
+            "allocs": 62842,
+            "alloc_bytes": 4664128,
+            "frees": 62842,
+            "free_bytes": 4746048,
+            "list_grows": 360,
+            "list_grow_bytes": 76800,
+            "reallocs": 80,
+            "realloc_added_bytes": 81920,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 10360,
+            "text_copy_bytes": 62160,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 10360,
+            "text_grow_bytes": 62160,
+            "text_appends": 10360,
+            "text_append_bytes": 26440,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 65976,
+            "live_bytes_at_exit": 0
+          },
+          "status": "passed"
+        },
+        {
+          "id": "a06_parallel_t2",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/parallel/main.my",
+          "source_inputs_sha256": {
+            "main.my": "c8bec39775ef6af6d2822af7d7de52822d81db90ee161bd6060849dd3395ba45",
+            "primes.my": "8ccc5b22614f0f7fd8ee9cc48ff08ce2d5e08ac85da2a0d5945f058c8e7da4de"
+          },
+          "args": [
+            "40"
+          ],
+          "env": {
+            "MYLANG_THREADS": "2"
+          },
+          "cpus": [
+            8,
+            10
+          ],
+          "expected": "920000\n",
+          "matched_uncounted_binary_sha256": "3be619806b8517c2de383b9aef455aa9d603a7fb02ca1fd4f6762e6ce474653b",
+          "original_case_status": "build_failed",
+          "run": {
+            "argv": [
+              "taskset",
+              "-c",
+              "8,10",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_parallel_t1/program",
+              "40"
+            ],
+            "exit": 0,
+            "stdout": "920000\n",
+            "stderr": "",
+            "wall_ns_including_admission": 535786781,
+            "wall_ns_excludes_admission_wait": true
+          },
+          "output_matches": true,
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_parallel_t1/a06_parallel_t2-counts.json",
+            "counter_sha256": "fa659138d785735729d553607ede6d2bf0134c3745d12e2e5cb7b32b0de286b4",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 10520,
+            "memory": {
+              "allocs": 62842,
+              "alloc_bytes": 4664128,
+              "frees": 62842,
+              "reallocs": 80,
+              "peak_live_bytes": 56312,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "whole_program_managed_totals": {
+            "calls": 10629442,
+            "allocs": 62842,
+            "alloc_bytes": 4664128,
+            "frees": 62842,
+            "free_bytes": 4746048,
+            "list_grows": 360,
+            "list_grow_bytes": 76800,
+            "reallocs": 80,
+            "realloc_added_bytes": 81920,
+            "realloc_moves": 1,
+            "realloc_moved_bytes": 1056,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 10360,
+            "text_copy_bytes": 62160,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 10360,
+            "text_grow_bytes": 62160,
+            "text_appends": 10360,
+            "text_append_bytes": 26440,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 56312,
+            "live_bytes_at_exit": 0
+          },
+          "status": "passed"
+        },
+        {
+          "id": "a06_parallel_t8",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/parallel/main.my",
+          "source_inputs_sha256": {
+            "main.my": "c8bec39775ef6af6d2822af7d7de52822d81db90ee161bd6060849dd3395ba45",
+            "primes.my": "8ccc5b22614f0f7fd8ee9cc48ff08ce2d5e08ac85da2a0d5945f058c8e7da4de"
+          },
+          "args": [
+            "40"
+          ],
+          "env": {
+            "MYLANG_THREADS": "8"
+          },
+          "cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ],
+          "expected": "920000\n",
+          "matched_uncounted_binary_sha256": "3be619806b8517c2de383b9aef455aa9d603a7fb02ca1fd4f6762e6ce474653b",
+          "original_case_status": "build_failed",
+          "run": {
+            "argv": [
+              "taskset",
+              "-c",
+              "0,1,2,3,4,5,6,7,8,9,10,11",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_parallel_t1/program",
+              "40"
+            ],
+            "exit": 0,
+            "stdout": "920000\n",
+            "stderr": "",
+            "wall_ns_including_admission": 210424206,
+            "wall_ns_excludes_admission_wait": true
+          },
+          "output_matches": true,
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_parallel_t1/a06_parallel_t8-counts.json",
+            "counter_sha256": "b825bb55ba0e950f1a3b03fd6a939c9f9bda85e6e0ce7bc2b355b86b553af6e2",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 10520,
+            "memory": {
+              "allocs": 62842,
+              "alloc_bytes": 4664128,
+              "frees": 62842,
+              "reallocs": 80,
+              "peak_live_bytes": 51576,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "whole_program_managed_totals": {
+            "calls": 10629442,
+            "allocs": 62842,
+            "alloc_bytes": 4664128,
+            "frees": 62842,
+            "free_bytes": 4746048,
+            "list_grows": 360,
+            "list_grow_bytes": 76800,
+            "reallocs": 80,
+            "realloc_added_bytes": 81920,
+            "realloc_moves": 1,
+            "realloc_moved_bytes": 1056,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 10360,
+            "text_copy_bytes": 62160,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 10360,
+            "text_grow_bytes": 62160,
+            "text_appends": 10360,
+            "text_append_bytes": 26440,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 51576,
+            "live_bytes_at_exit": 0
+          },
+          "status": "passed"
+        }
+      ],
+      "admission_lease": 1,
+      "queue_wait_ns": 0,
+      "artifact": {
+        "method": "counted-release-native-replay-v2",
+        "adapter_sha256": "62bffd95c9c40f1388447f78ba8f5a87365a4881277f9842ecca3179a4d416c9",
+        "runtime_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/runtime.json",
+        "runtime_receipt_sha256": "c4c09155d2b61157c287f96873205894b90c7ecbe8425c2c5bdb8b28f701a819",
+        "llvm": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_parallel_t1/program.ll",
+        "llvm_sha256": "1918ae5baa92bc2c0c2557c7c57c9a8d01f589c336ec8e0bc54795c302f8cf2c",
+        "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_parallel_t1/program",
+        "binary_sha256": "e7ee148a6638fea4adb04b0d7a656dc7c44793d6c21fcafc22c20362d1d74271",
+        "objects_sha256": {
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/manual-native-v2-C0/runtime.o": "b7c6e90cd06f2a65f4ce892084ad5da14c9ad0ba4c0d05b4402c99a424b220c5",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-native-replay-v2/a06_parallel_t1/native/program.o": "9362c28c738b7c8804bf99db17f045a703c95de86294abc4c9d2a88df1882234"
+        },
+        "number": false,
+        "math": false,
+        "source_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+        "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+        "scope": "manual native counter supplement; original compiler build status remains separate; no timing/RSS claim"
+      },
+      "structural": {
+        "passed": true,
+        "llvm_sha256": "1918ae5baa92bc2c0c2557c7c57c9a8d01f589c336ec8e0bc54795c302f8cf2c",
+        "llvm_violations": [],
+        "legacy_symbols": [],
+        "nm_sha256": "37cb9fa30805ce36bcdb93f42d9a51530898e80ea4cadf9145e1ffbf7a8596ef",
+        "scope": "Emitted guest LLVM and linked symbols; runtime preprocessor/layout proof belongs to A07."
+      },
+      "status": "passed",
+      "admitted_work_ns": 4630472122
+    }
+  ],
+  "admission_leases": [
+    {
+      "queue_wait_ns": 130625177372,
+      "groups": 4,
+      "admitted_work_ns": 21999958351
+    },
+    {
+      "queue_wait_ns": 100477708793,
+      "groups": 4,
+      "admitted_work_ns": 13622904429
+    }
+  ],
+  "limitations": [
+    "Whole-program managed counters; not RSS or timing evidence.",
+    "No arbitrary kernel subtraction for these multi-module inputs.",
+    "Separate from the original30/pinned81+6 census; preserves every failed case.",
+    "Recursive copy telemetry differs after the later instrumentation correction; allocation/peak fields are separate.",
+    "Manual native replay is separate from original compiler command success.",
+    "Final candidate must use this same adapter and repeat normal/manual equivalence controls."
+  ],
+  "passed": true
+}

@@ -1,0 +1,44 @@
+# Test fixture: absent-clock runs return zero without a clock effect.
+
+# Native functions (SPEC §7.5). Lox has one: `clock`.
+import heap
+import lox_strings
+import object
+import value
+
+
+public const CLOCK: int = 0
+
+
+# Seconds from the Runtime's clock capability; 0 when none was granted.
+func clock_native(clock: Clock?) -> value.Value:
+    _ = clock
+    return value.Value.number(value=0.0)
+
+
+# Runs native `id` on the arguments at the top of the stack; the caller has
+# already checked the arity.
+public func call_native(rt: heap.Runtime, id: int, clock: Clock?) -> value.Value:
+    assert id == CLOCK, "unknown native"
+    _ = rt
+    return clock_native(clock)
+
+
+# The allocations every run starts with (SPEC §7.5): the `init` string the
+# runtime keeps as a root, then the natives.
+public func start(mut rt: heap.Runtime):
+    mut init_name = lox_strings.copy_string(mut rt, b"init")
+    rt.init_string = init_name
+    define_natives(mut rt)
+
+
+# Allocates the natives and binds them as globals, rooting the name and the
+# native on the stack across the allocations as clox does.
+func define_natives(mut rt: heap.Runtime):
+    mut name = lox_strings.copy_string(mut rt, b"clock")
+    heap.push(mut rt, value.Value.obj(value=name))
+    mut native = heap.allocate(mut rt, object.Obj.native(value=object.NativeObj(id=CLOCK, arity=0)))
+    heap.push(mut rt, value.Value.obj(value=native))
+    _ = heap.set_global(mut rt, name, value.Value.obj(value=native))
+    _ = heap.pop(mut rt)
+    _ = heap.pop(mut rt)

@@ -1,0 +1,53 @@
+{
+  "schema": "a03-common-87-contract-ledger-v1",
+  "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "source_denominator": 87,
+  "source_admitted": 85,
+  "source_refused": 2,
+  "files_passing_all_five_mode_contracts": 81,
+  "files_blocked_by_native_or_helper_contract": 4,
+  "public_contracts_per_mode": {
+    "denominator": 454,
+    "passed": 427,
+    "failed": 5,
+    "unsupported": 6,
+    "source_blocked": 16
+  },
+  "source_refusals": [
+    "tests/lang/rc_semantic_publication.my",
+    "tests/lang/recursive_values.my"
+  ],
+  "native_or_helper_blockers": [
+    "tests/lang/value_equality.my",
+    "tests/lang/frontend_mut.my",
+    "tests/lang/rc_pin_elide.my",
+    "test/core/m_recursive_values.my"
+  ],
+  "qualification": "intermediate Support7; not C1 or default or retirement",
+  "evidence": [
+    "Support7-source",
+    "Support7-guest-tests",
+    "Support7-properties",
+    "Support7-core-contracts"
+  ],
+  "counted_core_runs": {
+    "counted_builds": 110,
+    "passed_counted_builds": 110,
+    "counted_runs": 225,
+    "passed_counted_runs": 225,
+    "normal_or_validation_exits": 195,
+    "fatal_traps": 30,
+    "actual_guest_test_commands": 10,
+    "public_passed": 75,
+    "public_failed": 0,
+    "public_unsupported": 15,
+    "public_skipped": 0,
+    "public_cached": 0
+  },
+  "separate_contracts": {
+    "tests/lang/rc_nonheld_captures.my": "six private helpers executed by unchanged main, five counted modes",
+    "tests/lang/migrated/surface_statements_case_2.my": "program called by importing surface_statements public tests in all five modes"
+  },
+  "scope": "The 87-source migration inventory is distinct from the pinned81+6 counted census."
+}

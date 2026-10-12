@@ -1,0 +1,28 @@
+{
+  "source_base": "4768e3a7df2bd64f23d368d75c9924cf0eecf067",
+  "original": "experiments/memory-closeout-20261012/A08/component-migrations/incremental-before-field-iteration.my",
+  "original_sha256": "70c6ef9895f8f3b4dfc198c27407b3ca5087a7babbebcf8249e0d59c46ff11b2",
+  "migrated": "selfhost/components/cache_plan/incremental.my",
+  "migrated_sha256": "e797876683a7483ab32f40c1578f2a49c12948f1ece9c22fd9396d9b25122472",
+  "change": "Three borrowed field-row loops become captured-length range loops with immediate scalar reads; same order, checks, work counters and mutations; no collection copy.",
+  "boundary": "Current checked ownership borrows the whole record; disjoint-field iteration/write reasoning remains unsupported.",
+  "source_check": {
+    "compiler": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7",
+    "note": "Source admitted by support3; the separate support4 build advances to the recorded lowering refusal.",
+    "evidence": "component-field-iteration-source.log",
+    "status": 0,
+    "compiler_revision": "0d17e4e130706639c0f49e78b60502bfb2151ebc"
+  },
+  "remaining_blocker": {
+    "owner": "A07",
+    "evidence": "components-support4-cache_plan.json",
+    "diagnostic": "E_ZERO_RC_LOWERING",
+    "location": "incremental.my:241 closures.group_seen[group] = generation"
+  },
+  "seed_compatibility": {
+    "evidence": "component-field-iteration-seed.json",
+    "source_refused": false,
+    "native_build_passed": false,
+    "limitation": "Immutable seed reaches native linking but old staging deletion bug fails on unproved host cache; original seed untouched."
+  }
+}

@@ -1,0 +1,44 @@
+build-slot: FIFO ticket 1206, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1206 after 30s
+1/9 a08_memo_cache_test.test.A08 persisted memo caller hydration preserves fresh checking...FAIL (SourceError)
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/parser.zig:988:36: 0x1dfa2e2 in parse (a08_memo_cache_test.zig)
+        if (self.cursor.recovered) return error.SourceError;
+                                   ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/parser.zig:634:9: 0x1df80bf in parseModule (a08_memo_cache_test.zig)
+        return self.parse();
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/interfaces.zig:1679:5: 0x1df6a8f in parseModule (a08_memo_cache_test.zig)
+    return parse.parseModule();
+    ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/project.zig:138:9: 0x1570709 in fail (a08_memo_cache_test.zig)
+        return error.SourceError;
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/interfaces.zig:1653:9: 0x1dbfe35 in moduleSyntax (a08_memo_cache_test.zig)
+        return failure;
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/interfaces.zig:1574:24: 0x1da471f in buildWithCacheTimed (a08_memo_cache_test.zig)
+        const syntax = try moduleSyntax(project, module_id, cache, frontend, &replayed);
+                       ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/interfaces.zig:1552:5: 0x1da3a60 in buildWithCache (a08_memo_cache_test.zig)
+    return buildWithCacheTimed(project, cache, frontend, null);
+    ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/interfaces.zig:1546:5: 0x1d93874 in build (a08_memo_cache_test.zig)
+    return buildWithCache(project, null, null);
+    ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/a08_memo_cache_test.zig:74:17: 0x1353528 in check (a08_memo_cache_test.zig)
+    var index = try language.interfaces.build(&project);
+                ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/a08_memo_cache_test.zig:109:9: 0x1354051 in test.A08 persisted memo caller hydration preserves fresh checking (a08_memo_cache_test.zig)
+        try check(&cache, text);
+        ^
+2/9 semantic_store.test.A08 unpack durable malformed slot contracts are cache misses...OK
+3/9 semantic_store.test.A08 unpack prior semantic wire version refuses even with a valid checksum...OK
+4/9 semantic_store.test.A08 unpack specialization decode and publication enforce the same slot contract...OK
+5/9 semantic_store.test.A08 selection durable operands validate range order and structural types...OK
+6/9 semantic_store.test.A08 selection rejects prior v8 wire with valid checksum...OK
+7/9 semantic_store.test.A08 selection specialization publication and decoded operands fail closed...OK
+8/9 semantic_copy.test.A08 unpack semantic relocation preserves local IDs and independently owns field slots...OK
+9/9 semantic_copy.test.A08 selection semantic copy relocates both ordered operand NodeIds...OK
+8 passed; 0 skipped; 1 failed.
+error: the following test command failed with exit code 1:
+.zig-cache/o/6b37af120ab17d671f685b51abe1d8ad/test --seed=0xd5fd62a7

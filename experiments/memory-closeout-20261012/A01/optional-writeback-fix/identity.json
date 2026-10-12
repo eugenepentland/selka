@@ -1,0 +1,98 @@
+{
+  "base": "50ac68c1f695f5f2cc461b55c44a99e5e59a2a90",
+  "compiler_sha256": "a08f3b4cc64a50934dbd9e8811f878823aa63822c2997a28bb11e064fd0de693",
+  "compiler_mode": "Debug host compiler; five guest modes in registered test",
+  "source_files": {
+    "src/core/optional_writeback.zig": "ebe3c90d74cc88934c7a2e7fe22b52335613c0bfbb9820befb5f2071f9b0bba0",
+    "src/core/single_owner.zig": "f30cea8606e34bd6ba280736e81d6dbfe7289e0aa57639ca776e9179c75704fa",
+    "src/core/build.zig": "8695d7b555805d5b575e6aee28a66bbc89fa2df5bd0bd9854488940bdf7c07e9",
+    "src/core/a01_optional_writeback_test.zig": "de4187a29e637d8b55628d25f0997352fa487b9adfb60596cea34168932924c0",
+    "src/core/root_test.zig": "2dad9bf56769edcd26372579704c5251a001cb8fa3eda78732986d1284c07731"
+  },
+  "focused_command": "scripts/build-slot.sh build \"$ZIG\" build test-core -Dtest-filter=\"A01 optional writeback\" -Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json -j\"$MYLANG_DEV_JOBS\" --maxrss \"$MYLANG_DEV_MAXRSS\"",
+  "focused_final": {
+    "attempt": 9,
+    "exit": 0,
+    "passed": 4,
+    "failed": 0,
+    "native_modes": [
+      "release",
+      "unoptimized",
+      "verified release",
+      "optimized debug",
+      "release without facts"
+    ],
+    "ordinary_rc_control": true
+  },
+  "attempts": [
+    {
+      "id": 1,
+      "ticket": 1140,
+      "status": "component preparation failed in historical seed; no tests ran"
+    },
+    {
+      "id": 2,
+      "ticket": 1156,
+      "status": "0/2; draft direct root-changing RHS refused E_MUTATION_OVERLAP; retained as negative"
+    },
+    {
+      "id": 3,
+      "status": "1/4; narrowed Optional mut argument refused in both checked and ordinary modes; retained as separate unsupported boundary"
+    },
+    {
+      "id": 4,
+      "ticket": 1210,
+      "status": "cancelled before admission after local edit-script syntax error; no tests or native build ran"
+    },
+    {
+      "id": 5,
+      "ticket": 1214,
+      "status": "1/4; draft try in field-assignment RHS refused E_TRY_POSITION; changed to explicit statement-boundary staging"
+    },
+    {
+      "id": 6,
+      "ticket": 1217,
+      "status": "4/4 pass; five native modes plus ordinary control"
+    },
+    {
+      "id": 7,
+      "ticket": 1234,
+      "status": "4/4 pass on final tests; added narrowed-mut negative and simplified ordinary control"
+    },
+    {
+      "id": "native-v1",
+      "ticket": 1250,
+      "status": "standalone verified-release raw evidence + three A03 source controls pass; expected narrowed-mut refusal preserved"
+    },
+    {
+      "id": "guardian-1",
+      "status": "rejected Boolean condition length and test-only control-flow style; split conditions and extracted fixture searches without ownership changes"
+    },
+    {
+      "id": 8,
+      "ticket": 1263,
+      "status": "4/4 pass after Guardian style corrections; all five native modes and ordinary control"
+    },
+    {
+      "id": "native-v2",
+      "status": "PASS on final production sources; raw/native-v2 contains final compiler provenance and all outputs"
+    },
+    {
+      "id": "guardian-2",
+      "status": "test helper missing-fixture error paths required explicit expectError assertions; added two precise negative helper checks"
+    },
+    {
+      "id": 9,
+      "ticket": 1277,
+      "status": "4/4 pass with final helper checks; five native modes and ordinary control; production compiler unchanged a08f3b4c"
+    }
+  ],
+  "limitations": [
+    "Local defect qualification; final integrated artifact rerun still required",
+    "No timing or RSS comparison and no allocation-saving claim",
+    "Narrowed Optional mutable arguments remain refused; see narrowed-mut.my",
+    "Historical immutable seed unchanged; focused tests use owned component pin"
+  ],
+  "prior_compiler_sha256": "d3a3c923f8b70d1670ffad815f78753e0525d29db75c04d78c75676c73c4261f",
+  "final_native_results": "raw/native-v2/results.json"
+}

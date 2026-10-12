@@ -18,9 +18,16 @@ const deferred_facts = @import("deferred_facts.zig");
 const cache_mod = @import("optimization_cache.zig");
 const shortcut_mod = @import("optimizer_shortcut.zig");
 
-/// Passes only allocate.
-pub const Error = std.mem.Allocator.Error;
-pub const CachedError = @import("demand_ir.zig").Error;
+/// Passes allocate and reject malformed compiler ownership markers.
+pub const Error = std.mem.Allocator.Error || own.Error;
+pub const CachedError = @import("demand_ir.zig").Error || Error;
+
+fn validateSelections(a: std.mem.Allocator, module: *const ir.Module) Error!void {
+    @import("marker_validation.zig").validateModule(a, module) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.UnsupportedInstruction => return error.Unsupported,
+    };
+}
 
 /// How the fact pass runs: `trusted` facts drive the vector lowering; `verify` keeps
 /// comparisons unfolded and plans no vectors; `sabotage`, `sabotage_widening` and
@@ -78,6 +85,7 @@ pub fn debugCached(arena: std.mem.Allocator, backing: std.mem.Allocator, module:
 }
 
 fn debugInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, cache: ?*cache_mod.Context) Error!Result {
+    try validateSelections(backing, module);
     if (cache) |context| try context.prepare(arena);
     var work = std.heap.ArenaAllocator.init(backing);
     defer work.deinit();
@@ -123,6 +131,7 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Resul
 pub fn runWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, mode: Mode) Error!Result {
     return runInternal(arena, backing, module, mode, null) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
+        error.Unsupported => return error.Unsupported,
         error.CacheMiss => unreachable, // No cache or lowering handles on this path.
     };
 }
@@ -139,6 +148,7 @@ pub fn runCachedDeferred(arena: std.mem.Allocator, backing: std.mem.Allocator, m
 }
 
 fn runInternal(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, mode: Mode, cache: ?*cache_mod.Context) CachedError!Result {
+    try validateSelections(backing, module);
     var shortcut = try prepareOptimizer(arena, backing, module, mode, cache);
     var result: Result = .{
         .known = try arena.alloc(?facts.Facts, module.functions.items.len),
@@ -634,6 +644,7 @@ fn prepareOptimizer(arena: std.mem.Allocator, backing: std.mem.Allocator, module
     else
         null;
     if (fusion_requests) |requests| @memset(requests, .empty);
+    _ = try @import("fuse_encode.zig").runRecording(arena, module, fusion_requests);
     _ = try @import("fuse_slice_key.zig").runRecording(arena, module, fusion_requests);
     if (cache) |context| try context.prepare(arena);
     if (shortcut) |*state| {

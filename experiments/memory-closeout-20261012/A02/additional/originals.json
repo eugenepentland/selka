@@ -1,0 +1,172 @@
+{
+  "test/core/b_buffer_values.my": {
+    "sha256": "4bc9302b966705c8c62e9583ab21afd5f12bc50df713df1963a7bf58f3e71ace",
+    "test_names": [
+      "test_byte_buffer_snapshots_copies_and_places",
+      "test_buffer_append_range_utf8_and_float_preserve_inputs"
+    ],
+    "has_main": true,
+    "lines": 32,
+    "copies": 0
+  },
+  "test/core/c_runner_byte_buffer.my": {
+    "sha256": "0d7f50f4a91975cac741a3437f3dd0abd8f3fd89d997074b6c75d69f5a613167",
+    "test_names": [
+      "test_buffer_copy_appends_alone",
+      "test_buffers_inside_records_lists_and_options",
+      "test_short_buffer",
+      "test_buffer_error_result"
+    ],
+    "has_main": false,
+    "lines": 32,
+    "copies": 0
+  },
+  "test/core/ce_appends.my": {
+    "sha256": "9b3d4291265e08c81430bc2979346eb80d0c601b82c832fb05ac04550b537e52",
+    "test_names": [],
+    "has_main": true,
+    "lines": 62,
+    "copies": 0
+  },
+  "test/core/f2_index.my": {
+    "sha256": "73d7f7e1abc917d9e8186af01998c14beadef72a4cf333e6990427f731826c70",
+    "test_names": [],
+    "has_main": true,
+    "lines": 207,
+    "copies": 0
+  },
+  "test/core/list_alias.my": {
+    "sha256": "bd3f40772f562ffe788eb164ecb16522ce6dcb404e359f19e73f06473a216f9d",
+    "test_names": [],
+    "has_main": true,
+    "lines": 26,
+    "copies": 0
+  },
+  "test/core/m_list_methods.my": {
+    "sha256": "0796bcc93b1765c6bf507b72cc9ee851ba11e96fe091cd9e4be2126ab38bb258",
+    "test_names": [
+      "test_bounds_first_occurrence_and_scalar_snapshots",
+      "test_managed_removed_values_and_none_placeholders_survive_clear",
+      "test_readonly_index_captures_receiver_before_needle_mutation",
+      "test_stepped_slice_clamps_endpoints_preserves_elements_and_evaluates_once",
+      "test_missing_index_traps",
+      "test_missing_remove_traps",
+      "test_indexed_pop_reports_original_negative_index",
+      "test_zero_step_traps"
+    ],
+    "has_main": false,
+    "lines": 100,
+    "copies": 0
+  },
+  "test/core/rc_lists.my": {
+    "sha256": "50a0c3423c131ac88c8b6397cf62de85419295a1ca65dbae98408d5661ff53cd",
+    "test_names": [],
+    "has_main": true,
+    "lines": 75,
+    "copies": 0
+  },
+  "test/core/rc_mut.my": {
+    "sha256": "e62557cd2f309793913581736715d7dd739d63e8e7aa898ac98227656c88672e",
+    "test_names": [],
+    "has_main": true,
+    "lines": 52,
+    "copies": 0
+  },
+  "test/core/rc_promote_order.my": {
+    "sha256": "4532c278888bc3409173dc6f21a0ba4f4ca824520607b42761716e15519f4aa6",
+    "test_names": [],
+    "has_main": true,
+    "lines": 37,
+    "copies": 0
+  },
+  "test/core/rc_shared_loops.my": {
+    "sha256": "0ebf0412311e8ee8f39998916749039f8cd20f433ee3b9f0837a7f4f7289da04",
+    "test_names": [],
+    "has_main": true,
+    "lines": 23,
+    "copies": 0
+  },
+  "test/core/u1_growth.my": {
+    "sha256": "db3a32e8c7903db94113b18045ff6aebbf05537a4669151ae730a3fbb2687262",
+    "test_names": [],
+    "has_main": true,
+    "lines": 75,
+    "copies": 0
+  },
+  "test/core/u1_hoist.my": {
+    "sha256": "087a5a54dd751c673bf969b3b9d1a66fa77f7b75918f024f4e906c37593bd816",
+    "test_names": [],
+    "has_main": true,
+    "lines": 223,
+    "copies": 0
+  },
+  "test/core/v_dynamic_repeat.my": {
+    "sha256": "308d0a775bdb7a7ecbac44aac8b237ed1b056d31013464ea2c2341c787a6db24",
+    "test_names": [
+      "test_dynamic_repeat_list_context_and_cow"
+    ],
+    "has_main": true,
+    "lines": 22,
+    "copies": 0
+  },
+  "test/core/v_lists.my": {
+    "sha256": "c58a859115792ea7baf822380d054fe2a2a78692a67608d7837a69b336716d83",
+    "test_names": [],
+    "has_main": true,
+    "lines": 94,
+    "copies": 0
+  },
+  "test/core/v_loops.my": {
+    "sha256": "fca2e3160e5d2d113898e450cd4533d3e08198d2c8feedde3f0bfaf741bac1a3",
+    "test_names": [],
+    "has_main": true,
+    "lines": 49,
+    "copies": 0
+  },
+  "test/core/v_methods.my": {
+    "sha256": "78a07384e1301fa07bcc76e510554e8934f20eaf9379f650292b8576fd1ce59d",
+    "test_names": [],
+    "has_main": true,
+    "lines": 46,
+    "copies": 1
+  },
+  "test/core/v_mut_rebind.my": {
+    "sha256": "20761f7d4a8570a6f8e62780be5562ca10d0b4c42d2ac69059a01281cb653fc5",
+    "test_names": [],
+    "has_main": true,
+    "lines": 85,
+    "copies": 0
+  },
+  "test/core/v_nested_lengths.my": {
+    "sha256": "e6ca1a8a792de3f089aad3d00830534be316175f1b5ef3d21f34d92f2002406e",
+    "test_names": [
+      "test_uniform_child_lengths_follow_each_list_value"
+    ],
+    "has_main": true,
+    "lines": 44,
+    "copies": 0
+  },
+  "test/core/v_nested_places.my": {
+    "sha256": "6d19d13aa76d47936ca706795d8845cbc7552780637e6e75f48b97a5085cb165",
+    "test_names": [
+      "test_nested_unique_and_shared_paths"
+    ],
+    "has_main": true,
+    "lines": 26,
+    "copies": 0
+  },
+  "test/core/v_sort.my": {
+    "sha256": "c80835365551fcb68bd7fc035349d931ada8b744bc2b1ba7969d201347e208aa",
+    "test_names": [],
+    "has_main": true,
+    "lines": 77,
+    "copies": 0
+  },
+  "test/core/v_units.my": {
+    "sha256": "8fda0ae568eca67885c1a1a98e3778695ac20ff83d96e9383390d27402893bc0",
+    "test_names": [],
+    "has_main": true,
+    "lines": 20,
+    "copies": 0
+  }
+}

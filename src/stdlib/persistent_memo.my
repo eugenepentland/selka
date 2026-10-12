@@ -22,12 +22,12 @@ public enum Error:
 
 
 # Describe a rejected request or failed provider operation.
-public func message(error: Error) -> str effects():
+public func message(error: Error) -> str:
     match error:
         case Error.Invalid:
             return "invalid persistent memo bounds"
         case Error.Storage(value=detail):
-            return detail
+            return detail.copy()
 
 
 func argument(key: memo.Key) -> str:
@@ -90,7 +90,7 @@ public func call(fs: Filesystem, options: Options, compute: func(memo.Key) -> by
     if len(identity) == 0 or key_size > options.max_bytes:
         return Ok(Lookup(value=compute(key), reused=False))
     const encoded_key = argument(key)
-    const name = "memo-" + hashes.sha256(cache_record.encode([identity, encoded_key])) + ".entry"
+    const name = "memo-" + hashes.sha256(cache_record.encode([identity.copy(), encoded_key.copy()])) + ".entry"
     with try lock_directory(fs, "") as lease:
         mut names = try list_directory(fs, "", 4096)
         names.sort()
@@ -101,7 +101,7 @@ public func call(fs: Filesystem, options: Options, compute: func(memo.Key) -> by
                 _ = try fs.remove(item)
                 removed = True
             elif owned(item):
-                entries.append(item)
+                entries.append(item.copy())
         # Lowering the limit also bounds an existing cache. Keep the requested
         # entry when possible; sorted enumeration makes eviction deterministic.
         mut count = len(entries)
@@ -129,5 +129,5 @@ public func call(fs: Filesystem, options: Options, compute: func(memo.Key) -> by
                     _ = try fs.remove(item)
                     break
             _ = try sync_directory(fs, "")
-        _ = try atomic_write_file(fs, name, cache_record.encode(["persistent-memo-v1", identity, encoded_key, value.hex()]))
+        _ = try atomic_write_file(fs, name, cache_record.encode(["persistent-memo-v1", identity.copy(), encoded_key.copy(), value.hex()]))
         return Ok(Lookup(value=value, reused=False))

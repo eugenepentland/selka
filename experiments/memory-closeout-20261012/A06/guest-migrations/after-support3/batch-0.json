@@ -1,0 +1,157 @@
+{
+  "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7",
+  "harness_sha256": "f807849d9a4549a6170e692eb3c83ffaef358860fc859f0c963ce932ed9128b3",
+  "ownership": "zero",
+  "cases": [
+    {
+      "source": "tests/lang/rc_journal_types.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_journal_types.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "8b37edbe1c1f4abf0cb34d4329ce273a2811ece77849f4620e1390782a526934",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_journal_types.my:13:35: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n              result = Mixed(values=list(saved.view)[0], view=list(mapping.values()))\n                                    ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_owning_element_borrows.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_owning_element_borrows.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "1590198b404aff838777e6501d04550b1ab4a4cd08a3a7fc5524f5e7be02ae1d",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_owning_element_borrows.my:101:5: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      pins[3].net = Span(source=b\"CHANGED\", start=0, end=7)\n      ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_plain_field_loans.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_plain_field_loans.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "956a3d5f472260df90c131fcb4a9976495300826467c4f43ed5acc52ade5a55f",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_semantic_publication.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_semantic_publication.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "39b1f3f52140749b7c3ea2b398b3f5bf58e6a4ac460288d58f718eaecc9516c5",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_semantic_publication.my:5:27: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed\n          joined = joined + word.unwrap_or(\".\")\n                            ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_tree_drains.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_tree_drains.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "7380fc6b0ea4bca4d90db4902ea68dea43745119ccd1c07a3a578d5fb4ed7fd1",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_tree_drains.my:19:22: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed\n      return 1 + check(left) + check(right)\n                       ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_view_receivers.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_view_receivers.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "e06c0325b188b3719d5be2137a9f85b3e8a2ffb1a3b974c7abf3da175492d869",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_writeback_moves.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_writeback_moves.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "c9d2930cddb14289a344273275fb7d775cad287b2ecac8f0f6d0a8d10915ea7b",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_writeback_moves.my:99:176: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed\n      return len(it.rt.objects) == 20 and it.rt.objects[0] == 4 and it.rt.names[\"it\"] == 19 and len(saved.rt.objects) == 0 and note.words == [\"a\", \"b\"] and last is not None and last.words == [\"it\"]\n                                                                                                                                                                                 ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/recursive_values.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/recursive_values.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "3ba89960ac71da5fa0a55326b1dfd2266998906453b08d93543dd6e98e50a5dd",
+      "status": 1,
+      "stdout": "",
+      "stderr": "recursive_values.my:88:38: error[E_TYPE]: a tuple has no methods; take it apart with `head, rest = value`\n              const value, rest = pair.copy()\n                                       ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/scalable_sorting.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/scalable_sorting.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "b8770c247c9f99d10f3f797a8642c79b31eeca540ae093937ea813503eecf83d",
+      "status": 1,
+      "stdout": "",
+      "stderr": "scalable_sorting.my:21:12: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      return min(words)\n             ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/scalar_dictionary_publication.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/scalar_dictionary_publication.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "f0f560f71e42fbdb4414ee713d82a2ed635fbf9e274a7653c6c37e50f5adfac8",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    }
+  ]
+}

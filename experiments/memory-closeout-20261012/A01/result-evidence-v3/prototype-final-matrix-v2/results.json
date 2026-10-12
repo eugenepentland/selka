@@ -1,0 +1,1371 @@
+{
+  "source_revision": "f82a23e47+A01-prototype",
+  "compiler_sha256": "1efd0c92cc0b98768a9a89961c50f0c1c554b5ae4635dcaa9f218217c50f5275",
+  "harness_sha256": "843b3207051fbe56858e478b6f87084bec76073b3cded4c7ba5238cb16656d87",
+  "cases": {
+    "combined/release": {
+      "source_sha256": "f3707f8855163fbdc522dc1112566119ebc138a7f6f3df318611e9a7b7809630",
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/experiments/memory-closeout-20261012/A01/samples/combined.my",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/cache",
+          "--experimental-zero-rc",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/release/program.ll"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "runs": [
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/release/program"
+          ],
+          "status": 0,
+          "stdout": "2016 item-0! 16\n416\n364184803\n1860\n2145\n",
+          "stderr": "",
+          "threads": 1,
+          "repetition": 0,
+          "passed": true,
+          "counts_path": "combined/release/counts-1-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/release/counts-1-0.json",
+            "counter_sha256": "ef8058aa0882e4ad778ce3627971b3ca13dd4092efc00afd49a38f17212f43b7",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 1685,
+            "memory": {
+              "allocs": 5740,
+              "alloc_bytes": 491816,
+              "frees": 5740,
+              "reallocs": 8,
+              "peak_live_bytes": 60896,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/release/program"
+          ],
+          "status": 0,
+          "stdout": "2016 item-0! 16\n416\n364184803\n1860\n2145\n",
+          "stderr": "",
+          "threads": 2,
+          "repetition": 0,
+          "passed": true,
+          "counts_path": "combined/release/counts-2-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/release/counts-2-0.json",
+            "counter_sha256": "a6a0ab09a15574bcfdc6adb4e6e5e4d7e1d834458e440330349fcde5a65f9d29",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 1685,
+            "memory": {
+              "allocs": 6547,
+              "alloc_bytes": 545256,
+              "frees": 6547,
+              "reallocs": 8,
+              "peak_live_bytes": 61784,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/release/program"
+          ],
+          "status": 0,
+          "stdout": "2016 item-0! 16\n416\n364184803\n1860\n2145\n",
+          "stderr": "",
+          "threads": 8,
+          "repetition": 0,
+          "passed": true,
+          "counts_path": "combined/release/counts-8-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/release/counts-8-0.json",
+            "counter_sha256": "b1d61c2825879675d195cfc699dbf7fdafc3698edea03c6a9d05b90504b892d0",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 1685,
+            "memory": {
+              "allocs": 8696,
+              "alloc_bytes": 700936,
+              "frees": 8696,
+              "reallocs": 8,
+              "peak_live_bytes": 65048,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        }
+      ],
+      "binary_sha256": "be624b6c80f875143fde9d3eb3312a4979730bf82209246bd515626089c1c930",
+      "llvm_sha256": "d3f9dd7cb2b7f192bd6335fdb0648cdb61c2e715efa7a1c2ae97c0ed76e321ac",
+      "structural_rc_free": true
+    },
+    "combined/debug": {
+      "source_sha256": "f3707f8855163fbdc522dc1112566119ebc138a7f6f3df318611e9a7b7809630",
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/experiments/memory-closeout-20261012/A01/samples/combined.my",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/cache",
+          "--experimental-zero-rc",
+          "--unoptimized",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/debug/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/debug/program.ll"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "runs": [
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/debug/program"
+          ],
+          "status": 0,
+          "stdout": "2016 item-0! 16\n416\n364184803\n1860\n2145\n",
+          "stderr": "",
+          "threads": 1,
+          "repetition": 0,
+          "passed": true,
+          "counts_path": "combined/debug/counts-1-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/debug/counts-1-0.json",
+            "counter_sha256": "ab5df7aa770739a6172548aaefbd9346848d9717906223be3fe76ef7e78d0557",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 1686,
+            "memory": {
+              "allocs": 5741,
+              "alloc_bytes": 491944,
+              "frees": 5741,
+              "reallocs": 8,
+              "peak_live_bytes": 60896,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/debug/program"
+          ],
+          "status": 0,
+          "stdout": "2016 item-0! 16\n416\n364184803\n1860\n2145\n",
+          "stderr": "",
+          "threads": 2,
+          "repetition": 0,
+          "passed": true,
+          "counts_path": "combined/debug/counts-2-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/debug/counts-2-0.json",
+            "counter_sha256": "d8fc11e08bf6671c420af657a461af7d575f5d9680b18e03ec3aab1d419f063a",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 1686,
+            "memory": {
+              "allocs": 6548,
+              "alloc_bytes": 545384,
+              "frees": 6548,
+              "reallocs": 8,
+              "peak_live_bytes": 60472,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/debug/program"
+          ],
+          "status": 0,
+          "stdout": "2016 item-0! 16\n416\n364184803\n1860\n2145\n",
+          "stderr": "",
+          "threads": 8,
+          "repetition": 0,
+          "passed": true,
+          "counts_path": "combined/debug/counts-8-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/debug/counts-8-0.json",
+            "counter_sha256": "80dd5242225b7f877c0055a89f2aa0e30a27258c25a5f3714b1f840d71b11f10",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 1686,
+            "memory": {
+              "allocs": 8697,
+              "alloc_bytes": 701064,
+              "frees": 8697,
+              "reallocs": 8,
+              "peak_live_bytes": 63320,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        }
+      ],
+      "binary_sha256": "fbff7b1f9625e74956543347a91f225f88a511caef16b085a4fe8c164e45e561",
+      "llvm_sha256": "91a3978f26bb94bc74ce785be3d45da8ef2d9b81becdba4ef913fde17e9899a2",
+      "structural_rc_free": true
+    },
+    "combined/verify": {
+      "source_sha256": "f3707f8855163fbdc522dc1112566119ebc138a7f6f3df318611e9a7b7809630",
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/experiments/memory-closeout-20261012/A01/samples/combined.my",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/cache",
+          "--experimental-zero-rc",
+          "--release",
+          "--verify-facts",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/verify/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/verify/program.ll"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "runs": [
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/verify/program"
+          ],
+          "status": 0,
+          "stdout": "2016 item-0! 16\n416\n364184803\n1860\n2145\n",
+          "stderr": "",
+          "threads": 1,
+          "repetition": 0,
+          "passed": true,
+          "counts_path": "combined/verify/counts-1-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/verify/counts-1-0.json",
+            "counter_sha256": "e3fea56238e2aa3cb77ff197d2fca537c719b0e406e26705f4da905f1af67e55",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 1685,
+            "memory": {
+              "allocs": 5740,
+              "alloc_bytes": 491816,
+              "frees": 5740,
+              "reallocs": 8,
+              "peak_live_bytes": 60896,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/verify/program"
+          ],
+          "status": 0,
+          "stdout": "2016 item-0! 16\n416\n364184803\n1860\n2145\n",
+          "stderr": "",
+          "threads": 2,
+          "repetition": 0,
+          "passed": true,
+          "counts_path": "combined/verify/counts-2-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/verify/counts-2-0.json",
+            "counter_sha256": "16c4067f60bbce435b269a451f62dc06b0be89b39c1a0360cc0d3bcce6ff9514",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 1685,
+            "memory": {
+              "allocs": 6547,
+              "alloc_bytes": 545256,
+              "frees": 6547,
+              "reallocs": 8,
+              "peak_live_bytes": 60888,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/verify/program"
+          ],
+          "status": 0,
+          "stdout": "2016 item-0! 16\n416\n364184803\n1860\n2145\n",
+          "stderr": "",
+          "threads": 8,
+          "repetition": 0,
+          "passed": true,
+          "counts_path": "combined/verify/counts-8-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/verify/counts-8-0.json",
+            "counter_sha256": "2ec3c80d1569df601a20c9b075aaae8a40a48b9cd7fa8493ee4899ed7109c621",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 1685,
+            "memory": {
+              "allocs": 8696,
+              "alloc_bytes": 700936,
+              "frees": 8696,
+              "reallocs": 8,
+              "peak_live_bytes": 63448,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        }
+      ],
+      "binary_sha256": "1d19e8b0ecb1a80d0cf8667c563d25a7a8352e2dd5df0afd6caee33345f3c6fe",
+      "llvm_sha256": "4ecfc83b141511f67d54a68acde9caca276f52f81bc52375a6e2ee9c03180cee",
+      "structural_rc_free": true
+    },
+    "combined/optimized_debug": {
+      "source_sha256": "f3707f8855163fbdc522dc1112566119ebc138a7f6f3df318611e9a7b7809630",
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/experiments/memory-closeout-20261012/A01/samples/combined.my",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/cache",
+          "--experimental-zero-rc",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/optimized_debug/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/optimized_debug/program.ll"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "runs": [
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/optimized_debug/program"
+          ],
+          "status": 0,
+          "stdout": "2016 item-0! 16\n416\n364184803\n1860\n2145\n",
+          "stderr": "",
+          "threads": 1,
+          "repetition": 0,
+          "passed": true,
+          "counts_path": "combined/optimized_debug/counts-1-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/optimized_debug/counts-1-0.json",
+            "counter_sha256": "61632a7b7226df80ee792c62b94d2a46bfa7ea5e62f1badbd458fba1f97a9574",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 1685,
+            "memory": {
+              "allocs": 5740,
+              "alloc_bytes": 491816,
+              "frees": 5740,
+              "reallocs": 8,
+              "peak_live_bytes": 60896,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/optimized_debug/program"
+          ],
+          "status": 0,
+          "stdout": "2016 item-0! 16\n416\n364184803\n1860\n2145\n",
+          "stderr": "",
+          "threads": 2,
+          "repetition": 0,
+          "passed": true,
+          "counts_path": "combined/optimized_debug/counts-2-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/optimized_debug/counts-2-0.json",
+            "counter_sha256": "1158da07b8271dd687d85a8ec580dba479f4c0a87119cdcb17ca6186cc98dc44",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 1685,
+            "memory": {
+              "allocs": 6547,
+              "alloc_bytes": 545256,
+              "frees": 6547,
+              "reallocs": 8,
+              "peak_live_bytes": 61304,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/optimized_debug/program"
+          ],
+          "status": 0,
+          "stdout": "2016 item-0! 16\n416\n364184803\n1860\n2145\n",
+          "stderr": "",
+          "threads": 8,
+          "repetition": 0,
+          "passed": true,
+          "counts_path": "combined/optimized_debug/counts-8-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/optimized_debug/counts-8-0.json",
+            "counter_sha256": "1a31437191f72d9662bc8b7a864634356bad08992d18df6099c089407de7961b",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 1685,
+            "memory": {
+              "allocs": 8696,
+              "alloc_bytes": 700936,
+              "frees": 8696,
+              "reallocs": 8,
+              "peak_live_bytes": 62552,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        }
+      ],
+      "binary_sha256": "f94944e25b4ec58ccf7d6db895ee1fb14d82008aacb2996a6d21c7f7306fa5be",
+      "llvm_sha256": "d3f9dd7cb2b7f192bd6335fdb0648cdb61c2e715efa7a1c2ae97c0ed76e321ac",
+      "structural_rc_free": true
+    },
+    "combined/no_facts": {
+      "source_sha256": "f3707f8855163fbdc522dc1112566119ebc138a7f6f3df318611e9a7b7809630",
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/experiments/memory-closeout-20261012/A01/samples/combined.my",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/cache",
+          "--experimental-zero-rc",
+          "--release",
+          "--no-facts",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/no_facts/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/no_facts/program.ll"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "runs": [
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/no_facts/program"
+          ],
+          "status": 0,
+          "stdout": "2016 item-0! 16\n416\n364184803\n1860\n2145\n",
+          "stderr": "",
+          "threads": 1,
+          "repetition": 0,
+          "passed": true,
+          "counts_path": "combined/no_facts/counts-1-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/no_facts/counts-1-0.json",
+            "counter_sha256": "0d50102be6df487515a30f85f07d82aa672536942c6f746600673ad80bd6d52f",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 1686,
+            "memory": {
+              "allocs": 5741,
+              "alloc_bytes": 491944,
+              "frees": 5741,
+              "reallocs": 8,
+              "peak_live_bytes": 60896,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/no_facts/program"
+          ],
+          "status": 0,
+          "stdout": "2016 item-0! 16\n416\n364184803\n1860\n2145\n",
+          "stderr": "",
+          "threads": 2,
+          "repetition": 0,
+          "passed": true,
+          "counts_path": "combined/no_facts/counts-2-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/no_facts/counts-2-0.json",
+            "counter_sha256": "658fa0394b294dd213b46689bc80542d01617fcf3ed53ba62fc45daa6cf41993",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 1686,
+            "memory": {
+              "allocs": 6548,
+              "alloc_bytes": 545384,
+              "frees": 6548,
+              "reallocs": 8,
+              "peak_live_bytes": 61784,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/no_facts/program"
+          ],
+          "status": 0,
+          "stdout": "2016 item-0! 16\n416\n364184803\n1860\n2145\n",
+          "stderr": "",
+          "threads": 8,
+          "repetition": 0,
+          "passed": true,
+          "counts_path": "combined/no_facts/counts-8-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/no_facts/counts-8-0.json",
+            "counter_sha256": "dc9cbe65015bb69628c88d8f429634000931fdc116a817a9c40567d98e79e08f",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 1686,
+            "memory": {
+              "allocs": 8697,
+              "alloc_bytes": 701064,
+              "frees": 8697,
+              "reallocs": 8,
+              "peak_live_bytes": 65048,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        }
+      ],
+      "binary_sha256": "da9fb3b6fa4ffb35ba6ea230c1b406421e2f2f22118829f8677fbecde0a8c334",
+      "llvm_sha256": "7628ba87a199b10afea2c774de6229229f1fef4df7de8117f520f95c7e1e0d55",
+      "structural_rc_free": true
+    },
+    "combined/tsan": {
+      "source_sha256": "f3707f8855163fbdc522dc1112566119ebc138a7f6f3df318611e9a7b7809630",
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/experiments/memory-closeout-20261012/A01/samples/combined.my",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/cache",
+          "--experimental-zero-rc",
+          "--release",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/tsan/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/tsan/program.ll"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "runs": [
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/tsan/program"
+          ],
+          "status": 0,
+          "stdout": "2016 item-0! 16\n416\n364184803\n1860\n2145\n",
+          "stderr": "",
+          "threads": 1,
+          "repetition": 0,
+          "passed": true
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/tsan/program"
+          ],
+          "status": 0,
+          "stdout": "2016 item-0! 16\n416\n364184803\n1860\n2145\n",
+          "stderr": "",
+          "threads": 2,
+          "repetition": 0,
+          "passed": true
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/combined/tsan/program"
+          ],
+          "status": 0,
+          "stdout": "2016 item-0! 16\n416\n364184803\n1860\n2145\n",
+          "stderr": "",
+          "threads": 8,
+          "repetition": 0,
+          "passed": true
+        }
+      ],
+      "binary_sha256": "4c7d9f53144444dc2923a99f4462b94c1405ea570e2b619a8b5975e557214a36",
+      "llvm_sha256": "ed9ff8f207c4a41cee2eaef8204955d993a5e37a6bad7a378dfecd9cd559a4d8",
+      "structural_rc_free": true
+    },
+    "trap/release": {
+      "source_sha256": "27438fa0319cd0ae1383f45094f81caf03a673d30f092ab1d628a1c2b13c1ece",
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/experiments/memory-closeout-20261012/A01/samples/trap.my",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/cache",
+          "--experimental-zero-rc",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/release/program.ll"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "runs": [
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/release/program"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "trap.my:4:15: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 42, right 0)\n  in trap::fail at trap.my:4:15\n  in <parallel.map.worker.3> at @stdlib/parallel.my:5:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":42,\"right\":0}\nin task submitted at <unknown> (item 17)\n  group opened at <unknown>\n",
+          "threads": 1,
+          "repetition": 0,
+          "passed": false,
+          "counts_path": "trap/release/counts-1-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/release/counts-1-0.json",
+            "counter_sha256": "cf0055dea6c0b4980bea1f6dceb47b4aa0ce1d9ac5f76fc1d32eec207e8da371",
+            "observed_rc_free": true,
+            "managed_leak_free": false,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 0,
+            "memory": {
+              "allocs": 12,
+              "alloc_bytes": 3656,
+              "frees": 5,
+              "reallocs": 0,
+              "peak_live_bytes": 2536,
+              "live_bytes_at_exit": 2536
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/release/program"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "trap.my:4:15: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 42, right 0)\n  in trap::fail at trap.my:4:15\n  in <parallel.map.worker.3> at @stdlib/parallel.my:5:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":42,\"right\":0}\nin task submitted at <unknown> (item 17)\n  group opened at <unknown>\n",
+          "threads": 2,
+          "repetition": 0,
+          "passed": false
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/release/program"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "trap.my:4:15: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 42, right 0)\n  in trap::fail at trap.my:4:15\n  in <parallel.map.worker.3> at @stdlib/parallel.my:5:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":42,\"right\":0}\nin task submitted at <unknown> (item 17)\n  group opened at <unknown>\n",
+          "threads": 8,
+          "repetition": 0,
+          "passed": false
+        }
+      ],
+      "binary_sha256": "c467c95f8b0d82f9ff2e10286d728be0c4ae54e70a5c5d1e628d2b35a21a663b",
+      "llvm_sha256": "a32a4ae15eda29d59dbbd0b17a8083c789ae3c4cd39b9a81d6d2c9e93aff9af6",
+      "structural_rc_free": true
+    },
+    "trap/debug": {
+      "source_sha256": "27438fa0319cd0ae1383f45094f81caf03a673d30f092ab1d628a1c2b13c1ece",
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/experiments/memory-closeout-20261012/A01/samples/trap.my",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/cache",
+          "--experimental-zero-rc",
+          "--unoptimized",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/debug/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/debug/program.ll"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "runs": [
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/debug/program"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "trap.my:4:15: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 42, right 0)\n  in trap::fail at trap.my:4:15\n  in <parallel.map.worker.3> at @stdlib/parallel.my:5:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":42,\"right\":0}\nin task submitted at <unknown> (item 17)\n  group opened at <unknown>\n",
+          "threads": 1,
+          "repetition": 0,
+          "passed": false,
+          "counts_path": "trap/debug/counts-1-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/debug/counts-1-0.json",
+            "counter_sha256": "4ac1ac3dc4340144b474e349fb3f7afebfa7fc115851bfce5173d63147eb90cc",
+            "observed_rc_free": true,
+            "managed_leak_free": false,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 0,
+            "memory": {
+              "allocs": 12,
+              "alloc_bytes": 3656,
+              "frees": 5,
+              "reallocs": 0,
+              "peak_live_bytes": 2536,
+              "live_bytes_at_exit": 2536
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/debug/program"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "trap.my:4:15: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 42, right 0)\n  in trap::fail at trap.my:4:15\n  in <parallel.map.worker.3> at @stdlib/parallel.my:5:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":42,\"right\":0}\nin task submitted at <unknown> (item 17)\n  group opened at <unknown>\n",
+          "threads": 2,
+          "repetition": 0,
+          "passed": false
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/debug/program"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "trap.my:4:15: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 42, right 0)\n  in trap::fail at trap.my:4:15\n  in <parallel.map.worker.3> at @stdlib/parallel.my:5:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":42,\"right\":0}\nin task submitted at <unknown> (item 17)\n  group opened at <unknown>\n",
+          "threads": 8,
+          "repetition": 0,
+          "passed": false
+        }
+      ],
+      "binary_sha256": "646a1a976397e85807a0745f702f8d22a6f72b6ead55610083bc94523e9a9e4e",
+      "llvm_sha256": "617fddd320235d235332100dcdb1438085a4dcc50270d91e7d4444dd0f8d8eee",
+      "structural_rc_free": true
+    },
+    "trap/verify": {
+      "source_sha256": "27438fa0319cd0ae1383f45094f81caf03a673d30f092ab1d628a1c2b13c1ece",
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/experiments/memory-closeout-20261012/A01/samples/trap.my",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/cache",
+          "--experimental-zero-rc",
+          "--release",
+          "--verify-facts",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/verify/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/verify/program.ll"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "runs": [
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/verify/program"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "trap.my:4:15: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 42, right 0)\n  in trap::fail at trap.my:4:15\n  in <parallel.map.worker.3> at @stdlib/parallel.my:5:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":42,\"right\":0}\nin task submitted at <unknown> (item 17)\n  group opened at <unknown>\n",
+          "threads": 1,
+          "repetition": 0,
+          "passed": false,
+          "counts_path": "trap/verify/counts-1-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/verify/counts-1-0.json",
+            "counter_sha256": "a90ca8e5a17f13e213976e68db10c25ad099af145aad08a9882cfee713c9dcba",
+            "observed_rc_free": true,
+            "managed_leak_free": false,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 0,
+            "memory": {
+              "allocs": 12,
+              "alloc_bytes": 3656,
+              "frees": 5,
+              "reallocs": 0,
+              "peak_live_bytes": 2536,
+              "live_bytes_at_exit": 2536
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/verify/program"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "trap.my:4:15: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 42, right 0)\n  in trap::fail at trap.my:4:15\n  in <parallel.map.worker.3> at @stdlib/parallel.my:5:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":42,\"right\":0}\nin task submitted at <unknown> (item 17)\n  group opened at <unknown>\n",
+          "threads": 2,
+          "repetition": 0,
+          "passed": false
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/verify/program"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "trap.my:4:15: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 42, right 0)\n  in trap::fail at trap.my:4:15\n  in <parallel.map.worker.3> at @stdlib/parallel.my:5:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":42,\"right\":0}\nin task submitted at <unknown> (item 17)\n  group opened at <unknown>\n",
+          "threads": 8,
+          "repetition": 0,
+          "passed": false
+        }
+      ],
+      "binary_sha256": "a61daaad5e979f6f8ce780ee2b2f551c97d3d0eca6223f797f8eb608afeaef0a",
+      "llvm_sha256": "1ddc34116869c558d64b6696ffc1b161e675dee18229d018b558e598a575fcdd",
+      "structural_rc_free": true
+    },
+    "trap/optimized_debug": {
+      "source_sha256": "27438fa0319cd0ae1383f45094f81caf03a673d30f092ab1d628a1c2b13c1ece",
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/experiments/memory-closeout-20261012/A01/samples/trap.my",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/cache",
+          "--experimental-zero-rc",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/optimized_debug/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/optimized_debug/program.ll"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "runs": [
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/optimized_debug/program"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "trap.my:4:15: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 42, right 0)\n  in trap::fail at trap.my:4:15\n  in <parallel.map.worker.3> at @stdlib/parallel.my:5:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":42,\"right\":0}\nin task submitted at <unknown> (item 17)\n  group opened at <unknown>\n",
+          "threads": 1,
+          "repetition": 0,
+          "passed": false,
+          "counts_path": "trap/optimized_debug/counts-1-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/optimized_debug/counts-1-0.json",
+            "counter_sha256": "efcf7fa09ef045353c5380087c798ffaa3e4bb972744b4a371fef5942c4a5adf",
+            "observed_rc_free": true,
+            "managed_leak_free": false,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 0,
+            "memory": {
+              "allocs": 12,
+              "alloc_bytes": 3656,
+              "frees": 5,
+              "reallocs": 0,
+              "peak_live_bytes": 2536,
+              "live_bytes_at_exit": 2536
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/optimized_debug/program"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "trap.my:4:15: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 42, right 0)\n  in trap::fail at trap.my:4:15\n  in <parallel.map.worker.3> at @stdlib/parallel.my:5:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":42,\"right\":0}\nin task submitted at <unknown> (item 17)\n  group opened at <unknown>\n",
+          "threads": 2,
+          "repetition": 0,
+          "passed": false
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/optimized_debug/program"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "trap.my:4:15: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 42, right 0)\n  in trap::fail at trap.my:4:15\n  in <parallel.map.worker.3> at @stdlib/parallel.my:5:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":42,\"right\":0}\nin task submitted at <unknown> (item 17)\n  group opened at <unknown>\n",
+          "threads": 8,
+          "repetition": 0,
+          "passed": false
+        }
+      ],
+      "binary_sha256": "272b9287a6eb3e05382beaa34b862db529e7ad4337999d0362a00fb5a51a62c3",
+      "llvm_sha256": "a32a4ae15eda29d59dbbd0b17a8083c789ae3c4cd39b9a81d6d2c9e93aff9af6",
+      "structural_rc_free": true
+    },
+    "trap/no_facts": {
+      "source_sha256": "27438fa0319cd0ae1383f45094f81caf03a673d30f092ab1d628a1c2b13c1ece",
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/experiments/memory-closeout-20261012/A01/samples/trap.my",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/cache",
+          "--experimental-zero-rc",
+          "--release",
+          "--no-facts",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/no_facts/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/no_facts/program.ll"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "runs": [
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/no_facts/program"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "trap.my:4:15: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 42, right 0)\n  in trap::fail at trap.my:4:15\n  in <parallel.map.worker.3> at @stdlib/parallel.my:5:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":42,\"right\":0}\nin task submitted at <unknown> (item 17)\n  group opened at <unknown>\n",
+          "threads": 1,
+          "repetition": 0,
+          "passed": false,
+          "counts_path": "trap/no_facts/counts-1-0.json",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/no_facts/counts-1-0.json",
+            "counter_sha256": "a89106c8b66319b4005d3bc0003a5f0589a4a53501a1945e5c2374acf29a47fd",
+            "observed_rc_free": true,
+            "managed_leak_free": false,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 0,
+            "memory": {
+              "allocs": 12,
+              "alloc_bytes": 3656,
+              "frees": 5,
+              "reallocs": 0,
+              "peak_live_bytes": 2536,
+              "live_bytes_at_exit": 2536
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          }
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/no_facts/program"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "trap.my:4:15: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 42, right 0)\n  in trap::fail at trap.my:4:15\n  in <parallel.map.worker.3> at @stdlib/parallel.my:5:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":42,\"right\":0}\nin task submitted at <unknown> (item 17)\n  group opened at <unknown>\n",
+          "threads": 2,
+          "repetition": 0,
+          "passed": false
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/no_facts/program"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "trap.my:4:15: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 42, right 0)\n  in trap::fail at trap.my:4:15\n  in <parallel.map.worker.3> at @stdlib/parallel.my:5:13\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":42,\"right\":0}\nin task submitted at <unknown> (item 17)\n  group opened at <unknown>\n",
+          "threads": 8,
+          "repetition": 0,
+          "passed": false
+        }
+      ],
+      "binary_sha256": "8006fb9d5fab74db88ac9a7eb0e7b17427f7a5c502000650a31621d8738295a4",
+      "llvm_sha256": "617fddd320235d235332100dcdb1438085a4dcc50270d91e7d4444dd0f8d8eee",
+      "structural_rc_free": true
+    },
+    "trap/tsan": {
+      "source_sha256": "27438fa0319cd0ae1383f45094f81caf03a673d30f092ab1d628a1c2b13c1ece",
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/experiments/memory-closeout-20261012/A01/samples/trap.my",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/cache",
+          "--experimental-zero-rc",
+          "--release",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/tsan/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/tsan/program.ll"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "runs": [
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/tsan/program"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "trap.my:4:15: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 42, right 0)\n  in trap::fail at trap.my:4:15\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":42,\"right\":0}\nin task submitted at <unknown> (item 17)\n  group opened at <unknown>\n",
+          "threads": 1,
+          "repetition": 0,
+          "passed": false
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/tsan/program"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "trap.my:4:15: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 42, right 0)\n  in trap::fail at trap.my:4:15\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":42,\"right\":0}\nin task submitted at <unknown> (item 17)\n  group opened at <unknown>\n",
+          "threads": 2,
+          "repetition": 0,
+          "passed": false
+        },
+        {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/prototype-final-matrix-v2/trap/tsan/program"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "trap.my:4:15: error[R_DIVISION_BY_ZERO]: native execution failed (floor_div: left 42, right 0)\n  in trap::fail at trap.my:4:15\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"floor_div\",\"left\":42,\"right\":0}\nin task submitted at <unknown> (item 17)\n  group opened at <unknown>\n",
+          "threads": 8,
+          "repetition": 0,
+          "passed": false
+        }
+      ],
+      "binary_sha256": "6197ef8544f3e340419aeba9e034ecfcefc32bc7fb98cf79f66cd7c61fa2ed3e",
+      "llvm_sha256": "8f2523a16e772f10d1815ed8cd4b077e1da44809809361f03d288dbc761f4051",
+      "structural_rc_free": true
+    }
+  },
+  "failures": [
+    "trap/release/1/0",
+    "trap/release/2/0",
+    "trap/release/8/0",
+    "trap/debug/1/0",
+    "trap/debug/2/0",
+    "trap/debug/8/0",
+    "trap/verify/1/0",
+    "trap/verify/2/0",
+    "trap/verify/8/0",
+    "trap/optimized_debug/1/0",
+    "trap/optimized_debug/2/0",
+    "trap/optimized_debug/8/0",
+    "trap/no_facts/1/0",
+    "trap/no_facts/2/0",
+    "trap/no_facts/8/0",
+    "trap/tsan/1/0",
+    "trap/tsan/2/0",
+    "trap/tsan/8/0"
+  ]
+}

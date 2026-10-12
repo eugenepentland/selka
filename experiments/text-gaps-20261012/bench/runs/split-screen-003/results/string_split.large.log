@@ -1,0 +1,8 @@
+build-slot: FIFO ticket 467, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 467, position 2; earlier timing tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 467, position 2; earlier timing tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 467, position 2; earlier timing tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 467, position 2; earlier timing tickets must run first; waiting (240s so far)
+build-slot: FIFO ticket 467, position 2; earlier timing tickets must run first; waiting (301s so far)
+build-slot: timing slot 1, FIFO ticket 467 after 321s
+text-gaps/split-screen-003/string_split/large {'checked-baseline': True, 'checked-candidate': True, 'rust': True}

@@ -1,0 +1,4 @@
+build-slot: build slot 1, FIFO ticket 1315 after 0s
+driver.my:25:18: error[E_ZERO_RC_UNSUPPORTED]: owning providers can be stored only in ordinary records or tuples
+  func execute(mut rt: heap.Runtime, mut o: output.Output, source: bytes, engine: Engine) -> int:
+                   ^

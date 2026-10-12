@@ -1,6 +1,6 @@
 # Returned values retain their lifetime across direct and indirect call frames.
 func selected(items: int[]) -> int[]:
-    return items
+    return items.copy()
 
 
 func apply(f: func(int[]) -> int[], items: int[]) -> int[]:
@@ -9,7 +9,7 @@ func apply(f: func(int[]) -> int[], items: int[]) -> int[]:
 
 func descend(items: int[], depth: int) -> int[]:
     if depth == 0:
-        return items
+        return items.copy()
     mut previous = descend(items, depth - 1)
     assert len(previous) == len(items)
     return previous

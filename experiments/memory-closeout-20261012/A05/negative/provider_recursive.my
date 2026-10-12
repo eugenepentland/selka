@@ -1,0 +1,7 @@
+# spec-case: NEW-CORE-ZERO-RC-RESOURCES-1
+record Chain:
+    fs: Filesystem
+    next: Chain?
+
+func main() -> int:
+    return 0

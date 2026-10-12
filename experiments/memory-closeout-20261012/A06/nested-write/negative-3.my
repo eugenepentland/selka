@@ -1,0 +1,13 @@
+record Inner:
+    scalar: int
+    text: str
+record Outer:
+    left: Inner
+    right: Inner
+
+func observe(inner: Inner, mut owner: Outer) -> int:
+    owner.left.scalar = 7
+    return inner.scalar
+func main() -> int:
+    mut owner = Outer(left=Inner(scalar=2, text="left"), right=Inner(scalar=4, text="right"))
+    return observe(owner.left, mut owner)

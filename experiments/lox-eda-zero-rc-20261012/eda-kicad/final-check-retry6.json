@@ -1,0 +1,42 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/zig-out/bin/mylang",
+  "compiler_sha256": "6e7938a14ad4abc46b76c149ef12551b170f6c7e6f462beec2f81db18d40a83d",
+  "modules": [
+    {
+      "module": "export_kicad.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "export_kicad_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sym_library_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sym_reader.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sym_reader_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sym_testdata.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

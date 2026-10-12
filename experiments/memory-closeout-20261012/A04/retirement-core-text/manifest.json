@@ -1,0 +1,34 @@
+{
+  "status": "prepared only; production not modified or retired",
+  "base_commit": "c749ad5a9d2dfef5d5c4d7b9de2a30f03029999f",
+  "repository": "/home/epentland/ai/canopy/mylang-memory-20261012",
+  "file": "src/core/runtime/core_text.c",
+  "before_sha256": "d684a834ce0ad0a16eb96939deced5e723268acbd5ae2f77d56bc23c37b610f2",
+  "proposed_sha256": "f23364c807e520c7f47edd7375f022122f4fb0b15bec4a303c672477d74c1dc1",
+  "patch_sha256": "4b9fceb18773409792f9333fcf326ddf7f2c77bd92581acb4ba9204205452efc",
+  "patch_check": {
+    "exit_status": 0,
+    "stdout": "",
+    "stderr": "",
+    "scope": "isolated copy of exact committed source"
+  },
+  "source_scan": {
+    "removed_legacy_selectors": 2,
+    "removed_uniqueness_checks": 1,
+    "removed_retained_encoding_aliases": 1,
+    "managed_reference_count_fields_in_this_file": 0
+  },
+  "preconditions": [
+    "Coordinator C2 qualification and C3 activation",
+    "Count-free runtime header plus direct owned destruction selected",
+    "A07/runtime owners retire helpers and ABI paths outside core_text.c"
+  ],
+  "required_qualification": [
+    "A04 80-export five-mode matrix and borrowed-view negatives",
+    "Text/bytes Unicode/encode/copy/static append/mutation tests",
+    "Repetition, formatting and rendering regressions",
+    "A06 text and JSON application rerun",
+    "A03 selected generated LLVM and final linked symbol audit",
+    "Final full verification and Guardian on actual integrated C3 inputs"
+  ]
+}

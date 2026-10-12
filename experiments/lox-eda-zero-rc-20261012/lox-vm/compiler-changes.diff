@@ -1,0 +1,218 @@
+--- compiler.my.frozen
++++ compiler.my.qualified
+@@ -76,18 +76,18 @@
+ 
+ 
+ func current_compiler(p: Parser) -> FnCompiler:
+-    return p.compilers[len(p.compilers) - 1]
++    return p.compilers[len(p.compilers) - 1].copy()
+ 
+ 
+ func current_chunk(p: Parser) -> chunk.Chunk:
+-    return current_compiler(p).function.code
++    return current_compiler(p).function.code.copy()
+ 
+ 
+ # A function object has an ObjRef identity, but its payload is a value. Every
+ # compiler update writes both the active compiler slot and the object table.
+ func store_compiler(mut p: Parser, index: int, updated: FnCompiler):
+-    p.compilers[index] = updated
+-    p.rt.objects[updated.function_ref] = object.Obj.function(value=updated.function)
++    p.compilers[index] = updated.copy()
++    p.rt.objects[updated.function_ref] = object.Obj.function(value=updated.function.copy())
+ 
+ 
+ func error_at(mut p: Parser, token: scanner.Token, message: bytes):
+@@ -112,22 +112,22 @@
+ 
+ 
+ func error(mut p: Parser, message: bytes):
+-    const __owned_arg_1 = p.previous
++    const __owned_arg_1 = p.previous.copy()
+     error_at(mut p, __owned_arg_1, message)
+ 
+ 
+ func error_at_current(mut p: Parser, message: bytes):
+-    const __owned_arg_2 = p.current
++    const __owned_arg_2 = p.current.copy()
+     error_at(mut p, __owned_arg_2, message)
+ 
+ 
+ func advance(mut p: Parser):
+-    p.previous = p.current
++    p.previous = p.current.copy()
+     while True:
+         p.current = scanner.scan_token(mut p.lexer)
+         if p.current.kind != scanner.TokenKind.ERROR:
+             return
+-        const __owned_arg_3 = p.current.message
++        const __owned_arg_3 = p.current.message.copy()
+         error_at_current(mut p, __owned_arg_3)
+ 
+ 
+@@ -153,10 +153,9 @@
+     mut code = current_chunk(p)
+     chunk.write_byte(mut code, byte, p.previous.line)
+     mut current_index = len(p.compilers) - 1
+-    mut current = p.compilers[current_index]
++    mut current = p.compilers[current_index].copy()
+     current.function.code = code
+-    p.compilers[current_index] = current
+-    p.rt.objects[current.function_ref] = object.Obj.function(value=current.function)
++    store_compiler(mut p, current_index, current)
+ 
+ 
+ func emit_bytes(mut p: Parser, first: int, second: int):
+@@ -192,10 +191,9 @@
+     mut code = current_chunk(p)
+     mut index = chunk.add_constant(mut code, constant)
+     mut current_index = len(p.compilers) - 1
+-    mut current = p.compilers[current_index]
++    mut current = p.compilers[current_index].copy()
+     current.function.code = code
+-    p.compilers[current_index] = current
+-    p.rt.objects[current.function_ref] = object.Obj.function(value=current.function)
++    store_compiler(mut p, current_index, current)
+     if index >= UINT8_COUNT:
+         error(mut p, b"Too many constants in one chunk.")
+         return 0
+@@ -215,19 +213,18 @@
+     code.code[offset] = bit_and(shift_right(jump, 8), 255)
+     code.code[offset + 1] = bit_and(jump, 255)
+     mut current_index = len(p.compilers) - 1
+-    mut current = p.compilers[current_index]
++    mut current = p.compilers[current_index].copy()
+     current.function.code = code
+-    p.compilers[current_index] = current
+-    p.rt.objects[current.function_ref] = object.Obj.function(value=current.function)
++    store_compiler(mut p, current_index, current)
+ 
+ 
+ # Allocates the function first, roots it, then interns its name (SPEC §8.3).
+ func init_compiler(mut p: Parser, kind: FunctionType):
+     mut function = object.new_function()
+-    mut ref = heap.allocate(mut p.rt, object.Obj.function(value=function))
++    mut ref = heap.allocate(mut p.rt, object.Obj.function(value=function.copy()))
+     p.rt.compiling.append(ref)
+-    mut fn_compiler = FnCompiler(function=function, function_ref=ref, kind=kind, locals=[], upvalues=[], scope_depth=0)
+-    p.compilers.append(fn_compiler)
++    mut fn_compiler = FnCompiler(function=function.copy(), function_ref=ref, kind=kind, locals=[], upvalues=[], scope_depth=0)
++    p.compilers.append(fn_compiler.copy())
+     if kind != FunctionType.SCRIPT:
+         const __owned_arg_5 = scanner.lexeme(p.source, p.previous)
+         function.name = lox_strings.copy_string(mut p.rt, __owned_arg_5)
+@@ -273,7 +270,7 @@
+     mut locals = p.compilers[level].locals.copy()
+     mut i = len(locals) - 1
+     while i >= 0:
+-        mut local = locals[i]
++        mut local = locals[i].copy()
+         if local.name == name:
+             if local.depth == -1:
+                 error(mut p, b"Can't read local variable in its own initializer.")
+@@ -283,7 +280,7 @@
+ 
+ 
+ func add_upvalue(mut p: Parser, level: int, index: int, is_local: bool) -> int:
+-    mut target = p.compilers[level]
++    mut target = p.compilers[level].copy()
+     mut count = target.function.upvalue_count
+     mut i = 0
+     while i < count:
+@@ -296,8 +293,7 @@
+         return 0
+     target.upvalues.append(UpvalueRef(index=index, is_local=is_local))
+     target.function.upvalue_count = count + 1
+-    p.compilers[level] = target
+-    p.rt.objects[target.function_ref] = object.Obj.function(value=target.function)
++    store_compiler(mut p, level, target)
+     return count
+ 
+ 
+@@ -306,7 +302,7 @@
+         return -1
+     mut local = resolve_local(mut p, level - 1, name)
+     if local != -1:
+-        mut enclosing = p.compilers[level - 1]
++        mut enclosing = p.compilers[level - 1].copy()
+         enclosing.locals[local].is_captured = True
+         p.compilers[level - 1] = enclosing
+         return add_upvalue(mut p, level, local, True)
+@@ -321,7 +317,7 @@
+     if len(current.locals) == UINT8_COUNT:
+         error(mut p, b"Too many local variables in function.")
+         return
+-    current.locals.append(Local(name=name, depth=-1, is_captured=False))
++    current.locals.append(Local(name=name.copy(), depth=-1, is_captured=False))
+     p.compilers[len(p.compilers) - 1] = current
+ 
+ 
+@@ -332,7 +328,7 @@
+     mut name = scanner.lexeme(p.source, p.previous)
+     mut i = len(current.locals) - 1
+     while i >= 0:
+-        mut local = current.locals[i]
++        mut local = current.locals[i].copy()
+         if local.depth != -1 and local.depth < current.scope_depth:
+             break
+         if local.name == name:
+@@ -458,7 +454,7 @@
+ 
+ 
+ func number(mut p: Parser):
+-    mut token = p.previous
++    mut token = p.previous.copy()
+     mut parsed = 0.0
+     match p.source.parse_float_range(token.start, token.start + token.length):
+         case Some(v):
+@@ -469,7 +465,7 @@
+ 
+ 
+ func string(mut p: Parser):
+-    mut token = p.previous
++    mut token = p.previous.copy()
+     mut chars = p.source.borrow(token.start + 1, token.start + token.length - 1).copy()
+     mut ref = lox_strings.copy_string(mut p.rt, chars)
+     emit_constant(mut p, value.Value.obj(value=ref))
+@@ -667,10 +663,9 @@
+ 
+ func parameter(mut p: Parser):
+     mut index = len(p.compilers) - 1
+-    mut target = p.compilers[index]
++    mut target = p.compilers[index].copy()
+     target.function.arity += 1
+-    p.compilers[index] = target
+-    p.rt.objects[target.function_ref] = object.Obj.function(value=target.function)
++    store_compiler(mut p, index, target)
+     if target.function.arity > 255:
+         error_at_current(mut p, b"Can't have more than 255 parameters.")
+     mut constant = parse_variable(mut p, b"Expect parameter name.")
+@@ -885,12 +880,12 @@
+ public func compile(mut rt: heap.Runtime, mut out: output.Output, source: bytes) -> value.ObjRef:
+     mut start = scanner.Token(kind=scanner.TokenKind.EOF, start=0, length=0, line=1, message=b"")
+     mut p = Parser(
+-        rt=rt,
+-        out=out,
+-        source=source,
++        rt=rt.copy(),
++        out=out.copy(),
++        source=source.copy(),
+         lexer=scanner.new_scanner(source),
+-        current=start,
+-        previous=start,
++        current=start.copy(),
++        previous=start.copy(),
+         had_error=False,
+         panic_mode=False,
+         compilers=[],
+@@ -901,8 +896,8 @@
+     while not match_token(mut p, scanner.TokenKind.EOF):
+         declaration(mut p)
+     mut script = end_compiler(mut p)
+-    rt = p.rt
+-    out = p.out
++    rt = p.rt.copy()
++    out = p.out.copy()
+     if p.had_error:
+         return value.NO_OBJ
+     return script.function_ref

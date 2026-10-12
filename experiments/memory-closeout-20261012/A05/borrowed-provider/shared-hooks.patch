@@ -1,0 +1,198 @@
+--- a/src/core/single_owner.zig
++++ b/src/core/single_owner.zig
+@@ -165,6 +165,7 @@
+     transferable: bool = false,
+     dependency: usize = none,
+     ambiguous_borrow: bool = false,
++    provider_context: bool = false,
+ };
+ const Access = enum { read, move, mutate, update, writeback };
+ fn writebackBase(access: Access) Access {
+@@ -305,6 +306,7 @@
+             const message = try std.fmt.allocPrint(c.diagnostic_allocator, "'{s}' was moved or is unavailable on this path; use .copy() when both values are needed", .{local.name});
+             return c.reject(span, "E_SINGLE_OWNER_MOVED", message);
+         }
++        if (c.state[root].provider_context and access != .read) return c.reject(span, borrow_error, "a borrowed provider context is read-only and cannot be moved, stored or returned");
+         if (c.state[slot].ambiguous_borrow and access != .read) return c.reject(span, borrow_error, "a dictionary default selection is read-only; make an explicit .copy() before changing it");
+         if (c.view(local.ty) and access != .read) return c.reject(span, view_escape, "views are read-only; use .copy() for independent owned storage");
+         const write = access != .read;
+@@ -491,6 +493,11 @@
+         if (store.unpack != null) return c.checkUnpack(store, initializing, span);
+         const slot = @backingInt(store.slot);
+         const local = c.function.scope.locals[slot];
++        if (c.zero_rc and initializing and @import("borrowed_provider.zig").initializer(c.program, c.function, store.value)) {
++            for (c.program.nodes[@backingInt(store.value)].data.record) |field| try c.expression(field.value, .read);
++            c.state[slot] = .{ .available = true, .borrowed = true, .provider_context = true };
++            return;
++        }
+         if (c.view(local.ty)) {
+             if (local.mutable and !c.temporary(slot)) return c.reject(span, view_unsupported, "view bindings are immutable in this prototype; create a new const view");
+             try c.expression(store.value, .read);
+@@ -589,6 +596,9 @@
+                 try c.expression(binary.right, .read);
+             },
+             .field => |field| {
++                if (access != .read and c.owns(node.ty)) if (c.origin(field.base)) |root| {
++                    if (c.state[root].provider_context) return c.reject(node.span, borrow_error, "a borrowed provider context cannot transfer a provider field; pass it to a read-only helper");
++                };
+                 if (access == .move and c.owns(node.ty)) return c.reject(node.span, borrow_error, "moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper");
+                 try c.expression(field.base, if (access == .mutate or access == .update) .mutate else .read);
+             },
+--- a/src/core/build.zig
++++ b/src/core/build.zig
+@@ -784,7 +784,8 @@
+         }
+         try self.guardViewRebind(self.local(store.slot), span);
+         var place: ?Place = null;
+-        const value = try self.expressionPlace(store.value, &place);
++        const borrowed_context = self.module().zero_rc and !assign and @import("borrowed_provider.zig").initializer(self.mb.input.program, self.checked, store.value);
++        const value = if (borrowed_context) try self.borrowedProvider(store.value, span) else try self.expressionPlace(store.value, &place);
+         const block = self.current orelse return;
+         try self.providerStore(store, place, value, assign, span);
+         try self.write(self.local(store.slot), block, value);
+@@ -1709,6 +1710,24 @@
+             if (shape.error_tag == tag) _ = try self.emit(.{ .op = .err_trace, .ty = .void, .data = @backingInt(ir.TraceMode.origin), .span = span });
+         }
+         return made;
++    }
++
++    /// A local parameter-rooted provider context borrows each field without clearing ownership pins.
++    fn borrowedProvider(self: *FnBuilder, id: typed.NodeId, span: u32) Error!ir.Ref {
++        const ty = try self.typeOf(id);
++        const stored = self.module().compound(ty).record;
++        const values = try self.allocator().alloc(ir.Ref, stored.len);
++        @memset(values, .none);
++        for (self.nodeOf(id).data.record) |field| {
++            const value = try self.expression(field.value);
++            if (self.current == null) return .none;
++            values[field.index] = try self.boxFor(stored[field.index], value, span);
++        }
++        const callee = @import("borrowed_provider.zig").declare(self.allocator(), self.module(), ty) catch |err| switch (err) {
++            error.OutOfMemory => return error.OutOfMemory,
++            error.UnsupportedInstruction => return self.mb.refuse("invalid borrowed provider context", span),
++        };
++        return self.emit(.{ .op = .call, .ty = ty, .a = @fromBackingInt(callee), .data = try self.extraSlice(values), .span = span });
+     }
+ 
+     /// `Name(fields)`: the fields are evaluated in the order written and placed in declaration order.
+--- a/src/core/own.zig
++++ b/src/core/own.zig
+@@ -393,7 +393,7 @@
+                 // Source `mut` and inferred consuming parameters both receive one count.
+                 .param => if (ownedParameter(f.signature, instruction.data)) .owned else .borrowed,
+                 .str_const, .undef => .immortal,
+-                .call => if (self.viewSource(instruction) orelse self.encodedSource(instruction)) |source| blk: {
++                .call => if ((@import("borrowed_provider.zig").call(self.module, f, instruction) catch return error.Unsupported) != null) .borrowed else if (self.viewSource(instruction) orelse self.encodedSource(instruction)) |source| blk: {
+                     self.parent[i] = source;
+                     break :blk .borrowed;
+                 } else .owned,
+@@ -2053,6 +2053,7 @@
+ /// returned by a call, or a `mut` parameter.
+ fn ownedRecord(module: *const ir.Module, f: *const ir.Function, record: ir.Inst) bool {
+     if (borrowedItem(module, f, record) != null) return false;
++    if ((@import("borrowed_provider.zig").call(module, f, record) catch null) != null) return false;
+     if ((selections.call(module, f, record) catch null) != null) return false;
+     return switch (record.op) {
+         .record_make, .record_set, .array_set, .phi, .call, .union_take, .box_take => true,
+--- a/src/core/emit_llvm.zig
++++ b/src/core/emit_llvm.zig
+@@ -449,6 +449,7 @@
+ 
+     fn declareExtern(self: *ModuleState, index: u32) !void {
+         if (try @import("borrow_selection.zig").declaration(self.module, &self.module.functions.items[index])) return;
++        if (try @import("borrowed_provider.zig").declaration(self.module, &self.module.functions.items[index])) return;
+         const function = &self.module.functions.items[index];
+         return self.external(function, self.functionName(index));
+     }
+@@ -3837,6 +3838,13 @@
+ 
+     /// Emit a direct or indirect call under the internal aggregate ABI.
+     pub fn call(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!void {
++        if ((try @import("borrowed_provider.zig").call(self.state.module, self.function, inst)) != null) {
++            var construction = inst;
++            construction.op = .record_make;
++            construction.a = .none;
++            try self.recordMake(out, name, construction);
++            return;
++        }
+         if (try self.borrowedSelection(out, name, inst)) return;
+         const m = self.state.module;
+         const signature = if (inst.op == .call_indirect) m.compound(self.typeOf(inst.a)).@"fn" else m.functions.items[inst.a.index()].signature;
+--- a/src/core/verify_ir.zig
++++ b/src/core/verify_ir.zig
+@@ -74,6 +74,10 @@
+     for (module.functions.items) |*f| {
+         _ = @import("aggregate_provider.zig").marker(module, f) catch {
+             failure.* = .{ .function = f.name, .reason = "invalid compiler-only provider lifetime marker" };
++            return error.InvalidIr;
++        };
++        _ = @import("borrowed_provider.zig").declaration(module, f) catch {
++            failure.* = .{ .function = f.name, .reason = "invalid borrowed provider context declaration" };
+             return error.InvalidIr;
+         };
+         _ = @import("borrow_selection.zig").declaration(module, f) catch {
+@@ -603,6 +607,7 @@
+                     const span_input = (ty == .str_view or ty == .bytes) and admittedView(callee, i);
+                     if (ty != param and !span_input) break :blk false;
+                 }
++                _ = @import("borrowed_provider.zig").call(m, self.f, inst) catch break :blk false;
+                 _ = @import("borrow_selection.zig").call(m, self.f, inst) catch break :blk false;
+                 break :blk true;
+             },
+--- a/src/core/inline.zig
++++ b/src/core/inline.zig
+@@ -70,6 +70,7 @@
+             if (call.op != .call or call.a.index() == index) continue;
+             if (demand) |handles| try handles.ensure(@intCast(call.a.index()));
+             const callee = &module.functions.items[call.a.index()];
++            if (@import("borrowed_provider.zig").contains(module, callee)) continue;
+             const helper = cfg.qualifies(callee);
+             if (!helper) {
+                 // Each clone adds at most the callee's instructions and a jump.
+@@ -143,6 +144,7 @@
+             if (call.op != .call or call.a.index() == index) continue;
+             if (demand) |handles| try handles.ensure(@intCast(call.a.index()));
+             const callee = &module.functions.items[call.a.index()];
++            if (@import("borrowed_provider.zig").contains(module, callee)) continue;
+             const result = leaf(callee) orelse continue;
+             if (proof.needsProof(callee)) {
+                 if (known == null) known = try facts.analyze(scratch, caller, .{ .fold = false, .mark = false, .params = parameters });
+--- a/src/core/marker_validation.zig
++++ b/src/core/marker_validation.zig
+@@ -2,6 +2,7 @@
+ const std = @import("std");
+ const ir = @import("ir.zig");
+ const selection = @import("borrow_selection.zig");
++const providers = @import("borrowed_provider.zig");
+ const verify = @import("verify_ir.zig");
+ 
+ pub const Error = std.mem.Allocator.Error || selection.Error;
+@@ -17,7 +18,8 @@
+ /// Check each marker-bearing function once, never once per marker. Local shape
+ /// checks run first so malformed operand tables cannot reach the general verifier.
+ pub fn validate(a: std.mem.Allocator, module: *const ir.Module, function: *const ir.Function) Error!void {
+-    if (!present(module, function)) return;
++    if (!present(module, function) and !providers.contains(module, function)) return;
++    try providers.validate(a, module, function);
+     try selection.validate(a, module, function);
+     // The general verifier owns scratch tables for one invocation, not the
+     // caller's lifetime. Some ownership/cache callers pass a backing allocator.
+@@ -33,6 +35,7 @@
+ /// Fresh bodies and declarations receive the same proof as decoded cache bodies.
+ pub fn validateModule(a: std.mem.Allocator, module: *const ir.Module) Error!void {
+     for (module.functions.items) |*function| {
++        _ = try providers.declaration(module, function);
+         _ = try selection.declaration(module, function);
+         try validate(a, module, function);
+     }
+--- a/src/core/cost.zig
++++ b/src/core/cost.zig
+@@ -32,6 +32,8 @@
+ }
+ 
+ fn calleeAllocation(module: *const ir.Module, callee: *const ir.Function) Allocation {
++    if (@import("borrowed_provider.zig").declaration(module, callee) catch return .unresolved) return .never;
++    if (@import("borrowed_provider.zig").keepalive(module, callee) catch return .unresolved) return .never;
+     if (@import("borrow_selection.zig").declaration(module, callee) catch return .unresolved) return .never;
+     if (@import("aggregate_provider.zig").marker(module, callee) catch return .unresolved) return .never;
+     const allocation_free = runtimeAllocationFree(callee.name) or (!module.zero_rc and std.mem.eql(u8, callee.name, "myl_core_text_encode"));

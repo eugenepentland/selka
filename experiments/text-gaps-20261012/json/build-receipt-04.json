@@ -1,0 +1,82 @@
+{
+  "C0": "78b4bb5934748d5942389b12dfe66cb0031cafdc",
+  "compiler": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/.tmp/text-gaps/json/archive-04/mylang",
+  "compiler_sha256": "604fde6b6848d3b4ed62452dff7cd84b7bffb95be90ecd67e47e95edac164efa",
+  "build_compiler_path": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/.tmp/text-gaps/json/package/bin/mylang",
+  "qualification": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/experiments/text-gaps-20261012/json/qualification-04.log",
+  "entries": [
+    {
+      "group": "text",
+      "arm": "json-candidate-04-zero-rc",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/.tmp/text-gaps/json/archive-04/text-runtime",
+      "sha256": "37e349ac5b775502d18a86537357af256c49c28858ccaf70b049605d9d2d2c07",
+      "source": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+      "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/.tmp/text-gaps/json/guest-cache-04"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/.tmp/text-gaps/json/package/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/.tmp/text-gaps/json/text-04-runtime",
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/.tmp/text-gaps/json/guest-cache-04",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/.tmp/text-gaps/json/candidate-04.ll"
+      ],
+      "status": "ok",
+      "returncode": 0,
+      "archive_source": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/.tmp/text-gaps/json/archive-04/text.my"
+    },
+    {
+      "group": "text",
+      "arm": "json-candidate-04-zero-rc",
+      "kind": "counted",
+      "binary": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/.tmp/text-gaps/json/archive-04/text-counted",
+      "sha256": "a6f6657d8c7cf8aa57f8b4698bae5555fb1071b228b229ee4b6696da06898cef",
+      "source": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+      "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/.tmp/text-gaps/json/guest-cache-04-count",
+        "--counters"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/.tmp/text-gaps/json/package/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/.tmp/text-gaps/json/text-04-count",
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/.tmp/text-gaps/json/guest-cache-04-count",
+        "--counters",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/.tmp/text-gaps/json/candidate-04-count.ll"
+      ],
+      "status": "ok",
+      "returncode": 0,
+      "archive_source": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json/.tmp/text-gaps/json/archive-04/text.my"
+    }
+  ],
+  "archive_note": "Compiler and native binaries are byte-identical copies of built outputs in immutable distinct paths. command is the normalized build recipe using original output/compiler paths; compiler supplies archived identity. Candidate04 has numeric scan library changes, before compiler donor overlay."
+}

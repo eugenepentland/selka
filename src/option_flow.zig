@@ -158,6 +158,13 @@ pub fn payloadValue(checker: anytype, value: typed.NodeId, shape: prelude.Option
 /// checker type is an explicit compile-time parameter so this file keeps its
 /// `anytype` budget.
 pub fn defaultValue(comptime Checker: type, checker: *Checker, value: typed.NodeId, shape: prelude.OptionShape, fallback: typed.NodeId, span: source.Span) diagnostic.Error!typed.Node {
+    // Aggregate selections retain both evaluated sources. Primitive scalar
+    // payloads keep the existing ordinary match path.
+    if (shape.element.isAggregate()) return .{ .span = span, .ty = shape.element, .data = .{ .borrow_selection = .{
+        .kind = .optional_default,
+        .first = value,
+        .second = fallback,
+    } } };
     const b: collections.Builder(Checker) = .{ .checker = checker, .span = span };
     const owner = try b.local(checker.nodes.items[@backingInt(value)].ty);
     const rooted = try b.stmt(.{ .initialize = .{ .slot = owner, .value = value } });

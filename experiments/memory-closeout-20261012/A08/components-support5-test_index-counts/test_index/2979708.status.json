@@ -1,0 +1,1 @@
+{"arguments": ["--request", "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/work/tmpkavijnc8/request.bin"], "request_sha256": "c83248a288e908365ad3f1c546a59b0187bda40b1ea0604c772eae1a1eb55dab", "status": 1, "stderr": "error[R_OUTPUT]: native execution failed\nstandard output refused a write\n"}

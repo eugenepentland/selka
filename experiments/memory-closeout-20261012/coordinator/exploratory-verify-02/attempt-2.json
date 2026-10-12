@@ -1,0 +1,12 @@
+{
+  "attempt": 2,
+  "source_revision": "69f797479707dba0fbca18aad5c4fb5d3acbffb7",
+  "status": "input_snapshot_failed",
+  "exit_status": 2,
+  "preparation_steps_passed": 36,
+  "selected_gate_actions": 0,
+  "error": "Unsupported literal input glob selfhost/component-*.json",
+  "fix_commit": "50ac68c1f695f5f2cc461b55c44a99e5e59a2a90",
+  "log": "verify-attempt-2.log",
+  "next_attempt_source": "d01f772cd0cfa823a9ec6a8838aaf5c4856710b4"
+}

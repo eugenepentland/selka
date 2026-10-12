@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/text-cursor/install/focus/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/experiments/memory-closeout-20261012/A04/text-cursor/moving-scans.my",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/text-cursor/corrected-01/cache",
+    "--experimental-zero-rc",
+    "--unoptimized",
+    "--counters",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/text-cursor/corrected-01/checked-debug/program",
+    "--emit-llvm",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/text-cursor/corrected-01/checked-debug/program.ll"
+  ],
+  "status": 0,
+  "elapsed_ns": 123802323,
+  "stdout": "",
+  "stderr": ""
+}

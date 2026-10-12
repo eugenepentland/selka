@@ -1,0 +1,2 @@
+build-slot: timing slot 1, FIFO ticket 415 after 0s
+micro-gaps/expanded/packet_decode/large {'baseline-zero-rc': True, 'mylang-zero-rc': True}

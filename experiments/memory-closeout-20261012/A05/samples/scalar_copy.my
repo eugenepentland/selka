@@ -1,0 +1,12 @@
+# spec-case: NEW-CORE-ZERO-RC-1
+record Entry[V: equality + storable]:
+    value: V
+
+func copied[V: equality + storable](entry: Entry[V]) -> Entry[V]:
+    return Entry[V](value=entry.value.copy())
+
+func main() -> int:
+    const original = Entry[int](value=42)
+    const result = copied(original)
+    assert result.value == 42
+    return 0

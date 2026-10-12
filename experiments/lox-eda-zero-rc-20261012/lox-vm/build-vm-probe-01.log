@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1568, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 1568 after 15s
+natives.my:28:25: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public func call_native(rt: heap.Runtime, id: int, clock: Clock?) -> value.Value:
+                          ^

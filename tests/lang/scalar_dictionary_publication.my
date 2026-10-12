@@ -7,7 +7,7 @@ public func test_scalar_updates_keep_deletion_history_and_snapshot_values() -> b
     mut mapping: dict[int, int] = {}
     for i in range(128):
         mapping[i * 257 - 10000] = i + 3
-    mut snapshot = mapping
+    mut snapshot = mapping.copy()
     for i in range(128):
         const key = i * 257 - 10000
         if i % 2 == 0:
@@ -33,7 +33,7 @@ public func test_payload_free_sets_keep_order_and_plain_structural_keys() -> boo
     mut members: set[u8] = set()
     for i in range(1000):
         members.add(u8(i % 17))
-    mut before = members
+    mut before = members.copy()
     members.remove(u8(3))
     members.add(u8(255))
     mut order = list(members)

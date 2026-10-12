@@ -1,0 +1,162 @@
+{
+  "source_revision": "5167c588be79dd43d21d5013c36db15110bf239b",
+  "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "scope": "targeted rerun of five previously refused documentation blocks; not all71 documentation blocks or final C1 qualification",
+  "passing_blocks": 4,
+  "total_blocks": 5,
+  "reports": [
+    {
+      "report": "docs-support6-blockers-managed.json",
+      "source_blocks": [
+        {
+          "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/managed-memory-C2.md",
+          "line": 317,
+          "source": "# doc: expect 42\nfunc main() -> int:\n    mut mapping = {\"a\": 10, \"b\": 20}\n    mut old_values = list(mapping.values())\n    mapping[\"b\"] = 31\n    mut total = 0\n    for key, value in mapping.items():\n        total += value\n    return total + old_values[1] - 19\n",
+          "sha256": "59df5ac424d8a8901c1d153b1830e2376849965da6ae31838f83d412c8b58cc7"
+        },
+        {
+          "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/managed-memory-C2.md",
+          "line": 329,
+          "source": "# doc: expect 42\nfunc main() -> int:\n    mut counts: dict[str, int] = {}\n    counts[\"pear\"] = 2\n    counts[\"apple\"] = 6\n    counts[\"pear\"] = counts[\"pear\"] + 1\n    counts.update({\"plum\": 4})\n    _ = counts.setdefault(\"fig\", 5)\n    if counts.setdefault(\"fig\", 9) != 5:\n        return 1\n    if counts.pop(\"plum\") != 4:\n        return 2\n    if counts.pop(\"kiwi\", 7) != 7:\n        return 3\n    mut order: str[] = []\n    for name in counts:\n        order.append(name.copy())\n    if order[0] != \"pear\":\n        return 4\n    if counts.get(\"plum\", 0) != 0:\n        return 5\n    mut keys: str[] = []\n    mut total = 0\n    for name, value in counts.items():\n        keys.append(name.copy())\n        total += value\n    if keys[0] != \"pear\" or keys[1] != \"apple\" or keys[2] != \"fig\":\n        return 7\n    mut copy = counts.copy()\n    copy.clear()\n    if len(copy) != 0 or len(counts) != 3:\n        return 6\n    return total * 3\n",
+          "sha256": "3e39b3a2109bacf78879a1f7f6ad4a51b4accc54c16e44ad76f855cff51369d3"
+        }
+      ],
+      "status": 0,
+      "success": true,
+      "units": [
+        {
+          "label": "README.md:1",
+          "kind": "block",
+          "document": "README.md",
+          "status": "run",
+          "detail": "stdout '42'",
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "run",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-a83f0e6697d5e433/unit000/main.my",
+            "--diagnostics=json",
+            "--print-result",
+            "--experimental-zero-rc",
+            "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-a83f0e6697d5e433/unit000/objects"
+          ]
+        },
+        {
+          "label": "README.md:13",
+          "kind": "block",
+          "document": "README.md",
+          "status": "run",
+          "detail": "stdout '42'",
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "run",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-a83f0e6697d5e433/unit001/main.my",
+            "--diagnostics=json",
+            "--print-result",
+            "--experimental-zero-rc",
+            "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-a83f0e6697d5e433/unit001/objects"
+          ]
+        }
+      ]
+    },
+    {
+      "report": "docs-support6-blockers-items.json",
+      "source_blocks": [
+        {
+          "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/python-syntax.md",
+          "line": 233,
+          "source": "# doc: expect 42\nfunc main() -> int:\n    mut prices = {\"pear\": 3, \"fig\": 5, \"kiwi\": 2}\n    mut doubled = {name.copy(): price * 2 for name, price in prices.items() if price > 2}\n    mut squares = {x: x * x for x in range(5)}\n    mut paired = {k.copy(): v for k, v in zip([\"a\", \"b\"], [10, 20])}\n    return doubled[\"fig\"] + squares[4] + paired[\"a\"] + len({c for c in \"hello\"}) + 2\n",
+          "sha256": "be7846daf52ee36100b5e4c7cca222a0f54e966cb95fd0a0918a1c508e8fa28a"
+        }
+      ],
+      "status": 0,
+      "success": true,
+      "units": [
+        {
+          "label": "README.md:1",
+          "kind": "block",
+          "document": "README.md",
+          "status": "run",
+          "detail": "stdout '42'",
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "run",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-1407783e0dd6a9ae/unit000/main.my",
+            "--diagnostics=json",
+            "--print-result",
+            "--experimental-zero-rc",
+            "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-1407783e0dd6a9ae/unit000/objects"
+          ]
+        }
+      ]
+    },
+    {
+      "report": "docs-support6-blockers-round.json",
+      "source_blocks": [
+        {
+          "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/python-syntax.md",
+          "line": 642,
+          "source": "# doc: expect 15\nfunc main() -> int:\n    mut values = [3, 1, 2]\n    if round(3.14159, 2) != 3.14 or round(1234.5, -2) != 1200.0:\n        return 0\n    return sum(values) + max(values) + abs(0 - 6)\n",
+          "sha256": "85cbb3672838db713aa37871274e66c21e684088ff36ce16d947f1e7a7bddb2d"
+        }
+      ],
+      "status": 0,
+      "success": true,
+      "units": [
+        {
+          "label": "README.md:1",
+          "kind": "block",
+          "document": "README.md",
+          "status": "run",
+          "detail": "stdout '15'",
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "run",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e29d0a76307ee05a/unit000/main.my",
+            "--diagnostics=json",
+            "--print-result",
+            "--experimental-zero-rc",
+            "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e29d0a76307ee05a/unit000/objects"
+          ]
+        }
+      ]
+    },
+    {
+      "report": "docs-support6-blockers-provider.json",
+      "source_blocks": [
+        {
+          "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/effects.md",
+          "line": 364,
+          "source": "# doc: check\nrecord Context:\n    fs: Filesystem\n    env: Environment\n\nfunc read_note(ctx: Context, path: str) -> int:\n    match ctx.fs.read_text(path):\n        case Ok(text):\n            return len(text)\n        case Err(_):\n            return -1\n\nfunc main(fs: Filesystem, env: Environment) -> int:\n    mut ctx = Context(fs=fs, env=env)\n    return read_note(ctx, \"note.txt\") + len(ctx.env.names())\n",
+          "sha256": "cb4471d34b70ed9fdd4a43a8d8c7f6ff7bcd27258b01587ae4c2cd38011c87b1"
+        }
+      ],
+      "status": 1,
+      "success": false,
+      "units": [
+        {
+          "label": "README.md:1",
+          "kind": "block",
+          "document": "README.md",
+          "status": "failed",
+          "detail": "exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SINGLE_OWNER_BORROW\",\"severity\":\"error\",\"message\":\"a borrowed value cannot be stored or returned; make an explicit .copy()\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-050bc15c0d75867c/unit000/main.my\",\"start\":{\"line\":13,\"column\":26},\"end\":{\"line\":13,\"column\":28},\"bytes\":{\"start\":312,\"end\":314}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}",
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "check",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-050bc15c0d75867c/unit000/main.my",
+            "--diagnostics=json",
+            "--experimental-zero-rc",
+            "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-050bc15c0d75867c/unit000/objects"
+          ]
+        }
+      ]
+    }
+  ],
+  "blocker": {
+    "owner": "coordinator/A07",
+    "contract": "Wrap entry-point Filesystem and Environment in local Context, then borrow fields through methods and helper calls without substituting stand-in authority.",
+    "diagnostic": "E_SINGLE_OWNER_BORROW at Context(fs=fs, env=env)",
+    "preserved": true
+  },
+  "default_changed": false,
+  "staged_components": "legacy Support5; not installed-package qualification"
+}

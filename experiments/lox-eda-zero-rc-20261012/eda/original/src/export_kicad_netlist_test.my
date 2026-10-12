@@ -1,0 +1,148 @@
+
+import export_kicad_netlist as m
+import flat_netlist as flat
+import eval_env as env
+import sexpr_ast as ast
+import sexpr_parser as parser
+import kicad_pcb_format as kicad_format
+import support_sort as srt
+import support_strs as strs
+import support_expect as ex
+
+# Depth-first read-back of a quoted field; keep the grammar-escaped payload.
+func find_form_string(nodes: ast.Node[], name: bytes) -> bytes?:
+    for n in nodes:
+        mut children = ast.as_list(n)
+        if children is None:
+            continue
+        if ast.is_form(n, name) and len(children) >= 2:
+            mut text = ast.as_string(children[1])
+            if text is not None:
+                return Some(text)
+        mut nested = find_form_string(children, name)
+        if nested is not None:
+            return Some(nested)
+    return None
+
+
+# test "writeNetlist escapes the raw design name and copies tokenizer slices verbatim"
+public func test_writenetlist_escapes_the_raw_design_name_and_copies_tokenizer_slices_verbatim(out: Stream) -> bool:
+    # CLI name is raw; value/net/property are already escaped tokenizer slices.
+    mut raw_name = b"board \\ \"one\""
+    mut slice_value = b"10\\\"K"
+    mut slice_net = b"VDD\\\"RAW"
+    mut fp_names: dict[str, bytes] = {}
+    mut fp_pads: dict[str, bytes[]] = {}
+    mut props = [env.Property(key=b"mpn", value=b"PART\\\"X")]
+    mut instances = [flat.flat_instance_default(b"R1", b"res-0402", slice_value, b"r-0402", props, b"")]
+    mut pins = [flat.FlatPin(ref_des=b"R1", pin=b"1")]
+    mut nets = [flat.FlatNet(name=slice_net, pins=pins)]
+    mut document = m.write_netlist(raw_name, instances, nets, fp_names, fp_pads)
+    mut nodes: ast.Node[] = []
+    match parser.parse(document):
+        case Ok(parsed):
+            nodes = parsed
+        case Err(error):
+            return ex.eq_str(out, "parse written netlist", parser.error_name(error), "")
+    if not ex.eq_int(out, "one document", len(nodes), 1):
+        return False
+    mut source_tok = find_form_string(nodes, b"source")
+    if source_tok is None:
+        return ex.ok(out, "source present", False)
+    if not ex.eq_bytes(out, "raw design name", kicad_format.sexpr_unescape(source_tok), raw_name):
+        return False
+    mut value_tok = find_form_string(nodes, b"value")
+    if value_tok is None:
+        return ex.ok(out, "value present", False)
+    if not ex.eq_bytes(out, "verbatim value", value_tok, slice_value):
+        return False
+    if not ex.ok(out, "verbatim net", document.find(b"(name \"VDD\\\"RAW\")") >= 0):
+        return False
+    return ex.ok(out, "verbatim property", document.find(b"(value \"PART\\\"X\")") >= 0)
+
+
+# test "extractPadNames reads bare-int, quoted, and atom pad numbers"
+public func test_extractpadnames_reads_bare_int_quoted_and_atom_pad_numbers(out: Stream) -> bool:
+    mut src = b"(footprint \"MIX\"\n  (pad 1 smd rect (pos 0 0) (size 1 1))\n  (pad \"2\" smd rect (pos 1 0) (size 1 1))\n  (pad A1 thru circle (pos 2 0) (size 1 1) (drill 0.5)))"
+    match m.extract_pad_names(src):
+        case Err(error):
+            return ex.eq_str(out, "extract pads", error, "")
+        case Ok(pads):
+            if not ex.eq_int(out, "pad count", len(pads), 3):
+                return False
+            if not ex.eq_bytes(out, "bare integer", pads[0], b"1"):
+                return False
+            if not ex.eq_bytes(out, "quoted", pads[1], b"2"):
+                return False
+            return ex.eq_bytes(out, "atom", pads[2], b"A1")
+
+
+# Reconstruct membership from parsed nodes so malformed tokens cannot fool a
+# regex/substr comparison. Code-0 NC bucket is not a real net membership.
+func netlist_membership(document: bytes, mut output: bytes[]) -> bool:
+    match parser.parse(document):
+        case Err(_):
+            return False
+        case Ok(nodes):
+            collect_net_nodes(nodes, mut output)
+            srt.sort_by(mut output, less_than)
+            return True
+
+
+func collect_net_nodes(nodes: ast.Node[], mut output: bytes[]):
+    for n in nodes:
+        mut children = ast.as_list(n)
+        if children is None:
+            continue
+        if not ast.is_form(n, b"net"):
+            collect_net_nodes(children, mut output)
+            continue
+        mut name = find_form_string(children, b"name").unwrap_or(b"")
+        for child in children:
+            mut node_children = ast.as_list(child)
+            if node_children is None:
+                continue
+            if not ast.is_form(child, b"node"):
+                continue
+            mut ref = find_form_string(node_children, b"ref")
+            mut pad = find_form_string(node_children, b"pin")
+            if ref is None or pad is None:
+                continue
+            if len(name) == 0:
+                continue
+            output.append(name + b" " + ref + b"." + pad)
+
+
+func less_than(a: bytes, b: bytes) -> bool:
+    return strs.bytes_order(a, b) == -1
+
+
+func expect_same_membership(out: Stream, want: bytes[], got: bytes[]) -> bool:
+    mut expected = want
+    srt.sort_by(mut expected, less_than)
+    # Length first: a missing final member must not disappear through zip.
+    if not ex.eq_int(out, "membership count", len(got), len(expected)):
+        return False
+    mut i = 0
+    while i < len(expected):
+        if not ex.eq_bytes(out, "membership", got[i], expected[i]):
+            return False
+        i += 1
+    return True
+
+
+# test "the exported netlist reproduces every net's membership exactly"
+public func test_the_exported_netlist_reproduces_every_net_s_membership_exactly(out: Stream) -> bool:
+    # Pad 5V is a pad number, never an SI-suffixed voltage token.
+    mut fp_names: dict[str, bytes] = {}
+    mut fp_pads: dict[str, bytes[]] = {}
+    mut instances = [flat.flat_instance_default(b"U1", b"ldo", b"3v3", b"sot23-5", [], b""), flat.flat_instance_default(b"buck/C2", b"cap", b"1uF", b"c-0402", [], b"")]
+    mut vdd = [flat.FlatPin(ref_des=b"U1", pin=b"5V"), flat.FlatPin(ref_des=b"buck/C2", pin=b"1")]
+    mut gnd = [flat.FlatPin(ref_des=b"U1", pin=b"2"), flat.FlatPin(ref_des=b"buck/C2", pin=b"2")]
+    mut nets = [flat.FlatNet(name=b"V_12V", pins=vdd), flat.FlatNet(name=b"buck/GND_A", pins=gnd)]
+    mut document = m.write_netlist(b"membership", instances, nets, fp_names, fp_pads)
+    mut got: bytes[] = []
+    if not netlist_membership(document, mut got):
+        return ex.ok(out, "parsed membership", False)
+    mut want: bytes[] = [b"V_12V U1.5V", b"V_12V buck/C2.1", b"buck/GND_A U1.2", b"buck/GND_A buck/C2.2"]
+    return expect_same_membership(out, want, got)

@@ -1,0 +1,142 @@
+--- a/src/core/runtime/core_text.c
++++ b/src/core/runtime/core_text.c
+@@ -1,4 +1,4 @@
+-/* S2 text ABI: shared str/bytes leaf blocks; header flags and cache are §3.1. */
++/* S2 text ABI: owned str/bytes leaf blocks; header flags and cache are §3.1. */
+ enum { MYL_TEXT_ASCII = 1u << 8, MYL_TEXT_HASHED = 2u << 8,
+        MYL_TEXT_SCALARS = 4u << 8, MYL_TEXT_CURSOR = 8u << 8, MYL_TEXT_TAIL = 16u << 8 };
+ 
+@@ -307,11 +307,7 @@
+ 
+ static inline myl_block *core_text_append_bytes(myl_block *a, const unsigned char *bytes, int64_t count, bool ascii) {
+     int64_t len = a->len + count;
+-#ifdef MYL_ZERO_RC
+     if (a->kind & MYL_STATIC_STORAGE) a = myl_core_owned_octets_copy(a);
+-#else
+-    if (!count_is_unique(a)) myl_core_s2_unsupported(-1);
+-#endif
+     if ((a->kind & (MYL_TEXT_CURSOR | MYL_TEXT_TAIL)) == MYL_TEXT_CURSOR) a->cap = a->len;
+     a->kind &= ~(MYL_TEXT_CURSOR | MYL_TEXT_TAIL);
+     if (len > a->cap) {
+@@ -592,13 +588,9 @@
+ }
+ 
+ myl_block *myl_core_text_encode(myl_block *text) {
+-#ifdef MYL_ZERO_RC
+     myl_block *copy = myl_core_owned_octets_copy(text);
+     copy->kind = (copy->kind & ~MYL_KIND_MASK) | MYL_KIND_BYTES;
+     return copy;
+-#else
+-    retain_block(text); return text;
+-#endif
+ }
+ int64_t myl_core_bytes_find(myl_block *text, myl_block *needle) { return core_text_find_bytes(text, needle, 0); }
+ 
+@@ -685,7 +677,7 @@
+ }
+ 
+ /* S3 helpers port native_text_methods.c/native_search.c/native_trim.c/native_repr.c
+- * into independent one-count blocks. Inputs borrow, outputs own a fresh block. */
++ * into independent owned blocks. Inputs borrow, outputs own a fresh block. */
+ static uint32_t core_unicode_next(const unsigned char *data, size_t *at) {
+     uint32_t point = data[(*at)++];
+     if (point < 0x80) return point;
+--- a/src/core/runtime/core_values.c
++++ b/src/core/runtime/core_values.c
+@@ -334,11 +334,7 @@
+         memcpy(&value, at, 8);
+         myl_block *text = myl_core_str_from_f64(value);
+         value_render_bytes(output, block_data(text), (size_t)text->len);
+-#ifdef MYL_ZERO_RC
+         myl_core_drop_owned(text);
+-#else
+-        myl_core_release(text);
+-#endif
+         break;
+     }
+     case 3: value_render_octets(output, value_block(at), shape->aux != 0, depth); break;
+--- a/src/core/build_values.zig
++++ b/src/core/build_values.zig
+@@ -50,7 +50,7 @@
+     var value = try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = index, .check = .exact, .span = span });
+     // Repetition promises independent elements. Copy each borrowed child before
+     // transferring it into the output; ordinary list stores still require moves.
+-    if (independent and b.module().zero_rc) value = try b.copyOwned(value, span);
++    if (independent) value = try b.copyOwned(value, span);
+     const at = b.current.?;
+     const pushed = try b.emit(.{ .op = .list_push, .ty = ty, .a = try b.read(result, at), .b = value, .span = span });
+     try b.write(result, at, pushed);
+--- a/src/core/fuse_slice_key.zig
++++ b/src/core/fuse_slice_key.zig
+@@ -66,7 +66,7 @@
+     for (0..count) |index| {
+         const inst = f.insts.items[index];
+         if (inst.op == .str_from_view and onlyReads(f, module, @fromBackingInt(@intCast(index)))) {
+-            if (module.zero_rc and try updated(arena, f, module, f.resolve(inst.a))) continue;
++            if (try updated(arena, f, module, f.resolve(inst.a))) continue;
+             f.insts.items[index] = .{ .op = .copy, .ty = .str_view, .a = inst.a, .span = inst.span };
+             try rewriteUsesRecording(arena, f, module, f.resolve(inst.a), requests);
+             changed += 1;
+@@ -128,50 +128,13 @@
+     return uses != 0;
+ }
+ 
+-/// Whether `source`, or a phi it flows into, is updated in place anywhere in `f` (a
+-/// consuming update, or a call that takes it over as a `mut` argument). A view keeps its
+-/// source live, so an update while the view is live would copy the whole source instead
+-/// of updating it in place: such a slice stays a copy.
+-pub fn updated(arena: std.mem.Allocator, f: *const ir.Function, module: *const ir.Module, source: ir.Ref) std.mem.Allocator.Error!bool {
+-    if (module.zero_rc) return ownedUpdated(arena, f, module, source);
+-    const aliases = try arena.alloc(bool, f.insts.items.len);
+-    defer arena.free(aliases);
+-    @memset(aliases, false);
+-    aliases[source.index()] = true;
+-    var grew = true;
+-    while (grew) {
+-        grew = false;
+-        for (f.insts.items, 0..) |inst, index| {
+-            if (inst.op != .phi or aliases[index]) continue;
+-            for (f.operands(inst.data)) |operand| {
+-                if (!aliases[f.resolve(operand).index()]) continue;
+-                aliases[index] = true;
+-                grew = true;
+-                break;
+-            }
+-        }
+-    }
+-    for (f.insts.items) |inst| {
+-        if (inst.op.consumesOperand0() and inst.a != .none and aliases[f.resolve(inst.a).index()]) return true;
+-        const owned = switch (inst.op) {
+-            .call => if (inst.a.index() < module.functions.items.len) module.functions.items[inst.a.index()].signature.owned else continue,
+-            .call_indirect => module.compound(f.inst(f.resolve(inst.a)).ty).@"fn".owned,
+-            else => continue,
+-        };
+-        for (f.operands(inst.data), 0..) |argument, at| {
+-            if (at < 64 and owned & (@as(u64, 1) << @intCast(at)) != 0 and aliases[f.resolve(argument).index()]) return true;
+-        }
+-    }
+-    return false;
+-}
+-
+ // A checked owner cannot be retained to keep an optimizer-created view alive.
+ // Follow its borrowed parent chain and phi aliases, and leave the source slice
+ // materialized if any of those owners transfers into storage or an owning call.
+ const AliasEdge = struct { target: ir.Ref, next: u32 };
+ const no_edge = std.math.maxInt(u32);
+ 
+-fn ownedUpdated(arena: std.mem.Allocator, f: *const ir.Function, module: *const ir.Module, source: ir.Ref) std.mem.Allocator.Error!bool {
++pub fn updated(arena: std.mem.Allocator, f: *const ir.Function, module: *const ir.Module, source: ir.Ref) std.mem.Allocator.Error!bool {
+     const length = f.insts.items.len;
+     const heads = try arena.alloc(u32, length);
+     defer arena.free(heads);
+--- a/src/core/runtime/core_number_text.zig
++++ b/src/core/runtime/core_number_text.zig
+@@ -5,7 +5,7 @@
+ const formatting = @import("core_number_format.zig");
+ 
+ // The first word belongs to the selected C runtime: kind plus padding in the
+-// owned ABI, or count plus kind in the historical ABI. Never inspect it here.
++// owned ABI. Never inspect it here.
+ const Block = extern struct { header_prefix: [8]u8, len: i64, cap: i64, reserved: u64 };
+ extern fn myl_core_number_text_new(length: usize) *Block;
+ extern fn myl_core_number_text_clear_ascii(text: *Block) void;

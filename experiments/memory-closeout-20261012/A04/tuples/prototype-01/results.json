@@ -1,0 +1,71 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+  "compiler_sha256": "70525285968f79d1bd3e78705b189763ea015d4ac9073676eb0eaa1ed6667d5e",
+  "source_commit": "44ca315ee72739bddd2ecf6f3989fdf7c81b3a15",
+  "source_sha256": "9b19c3b5b7e42b2d98475a0fa703ecc104055991e971d8da764dfe77d6458710",
+  "adapter_sha256": "ebe1d748ef75476a4fa6c1db962b14d7973150255ec36ea12199a9724f852ac5",
+  "default_ownership": false,
+  "harness_sha256": "f0186f97db16b0d8595828ce2aed306f8f1fd580dc0b09f24f56ae98f4032d69",
+  "public_tests": [
+    "test_a_returned_tuple_destructures_and_the_swap_idiom_works",
+    "test_a_tuple_nests_in_a_list_and_in_a_record_field",
+    "test_an_option_and_a_result_payload_can_be_a_tuple",
+    "test_tuple_equality_and_rendering_follow_the_aggregate_rule",
+    "test_a_generic_function_over_a_tuple_keeps_its_element_type"
+  ],
+  "source_checks": {
+    "checked": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/tuples.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "exit_status": 0,
+      "stdout": "",
+      "stderr": "tuples.my:26:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n      const number, letter = found.copy()\n            ^\ntuples.my:98:18: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          case Err(message):\n                   ^\n",
+      "status": "failed"
+    },
+    "ordinary": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/tuples.my",
+        "--no-cache"
+      ],
+      "exit_status": 0,
+      "stdout": "",
+      "stderr": "tuples.my:26:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n      const number, letter = found.copy()\n            ^\ntuples.my:98:18: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          case Err(message):\n                   ^\n",
+      "status": "failed"
+    }
+  },
+  "native": {
+    "release": {
+      "status": "failed",
+      "error": "compiler stderr must be empty"
+    },
+    "debug": {
+      "status": "failed",
+      "error": "compiler stderr must be empty"
+    },
+    "verify": {
+      "status": "failed",
+      "error": "compiler stderr must be empty"
+    },
+    "optimized_debug": {
+      "status": "failed",
+      "error": "compiler stderr must be empty"
+    },
+    "no_facts": {
+      "status": "failed",
+      "error": "compiler stderr must be empty"
+    },
+    "ordinary": {
+      "status": "failed",
+      "error": "compiler stderr must be empty"
+    }
+  },
+  "limitation": "Intermediate worker qualification; final integrated five-mode rerun remains required.",
+  "failed": 8
+}

@@ -1,0 +1,3 @@
+/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/refusal-bare.my:8:9: error[E_BINDING_DECLARATION]: declare this writable local with 'mut'
+          key = keys[(i * 7919) % 1000]
+          ^

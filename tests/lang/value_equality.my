@@ -79,7 +79,7 @@ public func test_recursive_record_equality_is_structural() -> bool:
         return False
     if first != first:
         return False
-    second.next = Some(first)
+    second.next = Some(first.copy())
     mut expected: Node? = Some(first)
     if second.next != expected:
         return False
@@ -108,7 +108,7 @@ public func test_pool_handles_keep_identity_separate_from_record_equality() -> b
 # spec-case: EQUALITY-CONTEXT-1
 public func test_equality_through_a_field_supplies_the_option_type() -> bool:
     mut first = Node(value=1, next=None)
-    mut second = Node(value=2, next=Some(first))
+    mut second = Node(value=2, next=Some(first.copy()))
     if second.next == None:
         return False
     if first.next != None:
@@ -121,8 +121,8 @@ public func test_equality_through_a_field_supplies_the_option_type() -> bool:
 # spec: EQUALITY-CONTEXT-2
 public func test_equality_infers_empty_lists_through_field_and_index_paths() -> bool:
     mut rows = [Bag(items=[], name="empty"), Bag(items=[7], name="full")]
-    mut indexed: dict[str, Bag[]] = {"rows": rows}
-    mut fixed: FixedArray[Bag, 2] = FixedArray[Bag, 2]([rows[0], rows[1]])
+    mut indexed: dict[str, Bag[]] = {"rows": rows.copy()}
+    mut fixed: FixedArray[Bag, 2] = FixedArray[Bag, 2]([rows[0].copy(), rows[1].copy()])
     mut nested: int[][] = [[], [7]]
     if indexed["rows"][0].items != [] or [] == indexed["rows"][1].items:
         return False

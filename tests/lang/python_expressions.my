@@ -31,8 +31,8 @@ public func test_str_orders_by_code_point_with_a_prefix_first() -> bool:
 func first_word[T](tag: T, a: str, b: str) -> str:
     _ = tag
     if a <= b:
-        return a
-    return b
+        return a.copy()
+    return b.copy()
 
 
 # spec-case: PY-TEXT-ORDER-1
@@ -161,7 +161,7 @@ public func test_the_last_step_never_overflows_the_counter_type() -> bool:
 
 
 func times(text: str, count: int) -> str:
-    return text * count
+    return text.copy() * count
 
 
 # spec: PY-REPEAT-1
@@ -189,7 +189,7 @@ public func test_a_list_repeats_by_an_integer_into_independent_values() -> bool:
         return False
     # Value semantics: a copy taken before `*=` keeps its own contents.
     mut xs = [1]
-    mut before = xs
+    mut before = xs.copy()
     xs *= 3
     if before != [1] or xs != [1, 1, 1]:
         return False
@@ -198,14 +198,14 @@ public func test_a_list_repeats_by_an_integer_into_independent_values() -> bool:
         return False
     # Each repeated element is its own value: writing one leaves the others.
     mut inner = [0]
-    mut grid = [inner] * 2
+    mut grid = [inner.copy()] * 2
     grid[0].append(9)
     return grid == [[0, 9], [0]] and inner == [0]
 
 
 func mark_text(mut log: int[], value: int, text: str) -> str:
     log.append(value)
-    return text
+    return text.copy()
 
 
 func mark_count(mut log: int[], value: int) -> int:
@@ -223,7 +223,7 @@ public func test_a_repetition_evaluates_its_operands_once_in_order() -> bool:
 
 func repeated[T](tag: T, text: str, count: int) -> str:
     _ = tag
-    return text * count
+    return text.copy() * count
 
 
 # spec-case: PY-REPEAT-1

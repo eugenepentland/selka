@@ -1,0 +1,100 @@
+{
+  "schema": "a03-assigned-migrations-v1",
+  "assigned_files": [
+    "tests/lang/sets.my",
+    "tests/lang/generator_arguments.my",
+    "tests/lang/move_elision.my"
+  ],
+  "cases": [
+    {
+      "id": "sets",
+      "source_file": "tests/lang/sets.my",
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/remaining-a06/reviewed/tests/lang/sets.my",
+        "sha256": "cead8715e2c46a86830dbb3564d81e4d47f602c4916708d6c05e0f55bbd3f11c"
+      },
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "public_tests": [
+        "test_a_set_literal_keeps_first_insertion_order_and_renders_like_python",
+        "test_a_set_comprehension_and_set_of_an_iterable_build_fresh_sets",
+        "test_add_remove_discard_pop_clear_copy_and_update",
+        "test_a_set_copy_is_independent_and_mut_writes_its_caller",
+        "test_a_set_iterates_sorts_and_folds_in_insertion_order",
+        "test_the_combining_operators_keep_left_order_then_new_right_elements",
+        "test_subset_superset_and_disjoint_answer_like_python",
+        "test_set_equality_ignores_insertion_order",
+        "test_records_tuples_unions_options_enums_bools_and_bytes_key_by_value",
+        "test_a_stored_key_is_a_copy_the_source_binding_cannot_change",
+        "test_thousands_of_record_keys_are_found_through_the_index",
+        "test_removals_in_the_middle_keep_order_membership_and_growth",
+        "test_a_set_pop_after_removals_answers_the_newest_live_element",
+        "test_set_of_a_str_a_list_and_a_range_collects_its_elements",
+        "test_set_of_a_dictionary_and_its_views_collects_keys_or_values",
+        "test_the_method_forms_accept_any_iterable",
+        "test_bitwise_operators_on_integers_follow_python_precedence",
+        "test_list_sorted_and_the_folds_of_a_dictionary_read_its_keys"
+      ],
+      "expected_stdout": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+      "expected_exit": 0
+    },
+    {
+      "id": "generator_arguments",
+      "source_file": "tests/lang/generator_arguments.my",
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/remaining-a06/reviewed/tests/lang/generator_arguments.my",
+        "sha256": "50eb60df08637500cc26f486561fdb465f1ff4156e8ce4d4c576cfca50436a29"
+      },
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "public_tests": [
+        "test_sum_any_all_fold_a_generator",
+        "test_any_and_all_stop_at_the_deciding_value",
+        "test_any_leaves_every_loop_of_a_nested_generator",
+        "test_min_and_max_fold_ints_floats_and_text",
+        "test_sum_of_floats_and_of_an_empty_generator",
+        "test_sorted_list_set_and_dict_collect_a_generator",
+        "test_join_collects_a_generator_of_text",
+        "test_a_parenthesized_generator_and_a_count"
+      ],
+      "expected_stdout": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+      "expected_exit": 0
+    },
+    {
+      "id": "move_elision",
+      "source_file": "tests/lang/move_elision.my",
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/remaining-a06/reviewed/tests/lang/move_elision.my",
+        "sha256": "1e9a6e470f1b1639ec7de74b89305ace4e5dc55cacf0f5738f9a75512873d81d"
+      },
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "public_tests": [
+        "test_a_field_write_updates_only_its_own_record",
+        "test_field_writes_in_a_loop_accumulate_in_place",
+        "test_a_record_read_after_a_copy_is_written_keeps_its_value",
+        "test_a_parameter_the_callee_updates_is_the_callers_value_still",
+        "test_a_list_element_field_write_lands_in_that_element_only",
+        "test_a_negative_index_element_write_lands_in_the_same_element",
+        "test_an_argument_that_names_the_record_keeps_the_old_value"
+      ],
+      "expected_stdout": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+      "expected_exit": 0
+    }
+  ]
+}

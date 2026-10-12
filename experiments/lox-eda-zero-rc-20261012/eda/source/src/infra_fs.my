@@ -1,0 +1,264 @@
+
+import support_sha256 as sha
+import byte_builder
+
+# D4: Filesystem has whole-file byte I/O, directory listing and creation,
+# but no stat/entry kinds, thread-local state, locks, symlink queries or atomic
+# rename. The slice's used API is expressed directly below. ReadTrace and
+# CacheProbe are caller-owned values, with single-threaded test counterparts.
+# SecureWalker, Mutex/Condition and atomic ABA guarantees have no host support.
+public record ReadTrace:
+    reads: dict[str, bytes]
+    states: dict[str, bool]
+    directories: dict[str, str[]]
+    active: bool = False
+    consistent: bool = True
+
+
+public record CacheProbe:
+    active: bool = False
+    hidden_active: bool = False
+
+
+public func make_path(fs: Filesystem, path: str) -> Result[Unit, str]:
+    mut prefix = ""
+    for part in path.split("/"):
+        if len(part) == 0:
+            prefix = prefix + "/"
+            continue
+        if len(prefix) > 0 and prefix[len(prefix) - 1] != "/":
+            prefix = prefix + "/"
+        prefix = prefix + part
+        if not fs.exists(prefix):
+            try fs.mkdir(prefix)
+    return Ok(())
+
+
+public func read_file_alloc(fs: Filesystem, path: str, max_: int) -> Result[bytes, str]:
+    mut data = try fs.read_file(path)
+    if len(data) > max_:
+        return Err("FileTooBig")
+    return Ok(data)
+
+
+public func access(fs: Filesystem, path: str) -> Result[Unit, str]:
+    if not fs.exists(path):
+        return Err("FileNotFound")
+    return Ok(())
+
+
+public func list_dir(fs: Filesystem, path: str) -> Result[str[], str]:
+    mut names = try fs.listdir(path)
+    names.sort()
+    return Ok(names)
+
+
+public func write_file(fs: Filesystem, path: str, data: bytes) -> Result[Unit, str]:
+    return fs.write_file(path, data)
+
+
+public func copy_file(fs: Filesystem, source: str, dest: str) -> Result[Unit, str]:
+    mut data = try fs.read_file(source)
+    return fs.write_file(dest, data)
+
+
+public func read_trace_init() -> ReadTrace:
+    return ReadTrace(reads={}, states={}, directories={})
+
+
+public func read_trace_begin(mut self: ReadTrace):
+    if self.active:
+        self.consistent = False
+        return
+    self.active = True
+
+
+# D9: no ambient trace pointer. A nested scope explicitly names its parent;
+# invalidate both scopes while retaining the outer one's ownership of reads.
+public func read_trace_begin_nested(mut parent: ReadTrace, mut child: ReadTrace):
+    if parent.active or child.active:
+        parent.consistent = False
+        child.consistent = False
+        return
+    child.active = True
+
+
+public func read_trace_end(mut self: ReadTrace):
+    self.active = False
+
+
+# D4: the single-threaded capability model uses an explicit ownership check
+# in place of Thread.Id. This tests the same refusal/retained-scope invariant.
+public func read_trace_end_with_owner(mut self: ReadTrace, owns_scope: bool):
+    if not owns_scope:
+        self.consistent = False
+        return
+    read_trace_end(mut self)
+
+
+public func has_active_read_trace(trace: ReadTrace) -> bool:
+    return trace.active
+
+
+# private in Zig; public for the split-file digest and retained-size tests.
+public func read_trace_record(mut self: ReadTrace, path: str, data: bytes):
+    if path in self.states and not self.states[path]:
+        self.consistent = False
+    if path in self.reads:
+        if self.reads[path] != data:
+            self.consistent = False
+        return
+    self.reads[path.copy()] = data.copy()
+    self.states[path.copy()] = True
+
+
+public func read_trace_retained_bytes(self: ReadTrace) -> int:
+    mut total = 0
+    for path in self.reads:
+        total += len(path.encode()) + len(self.reads[path]) + 64
+    for path2 in self.states:
+        total += len(path2.encode()) + 32
+    for path3 in self.directories:
+        total += len(path3.encode()) + 32
+        for member in self.directories[path3]:
+            total += len(member.encode()) + 32
+    return total
+
+
+func record_state(mut self: ReadTrace, path: str, present: bool):
+    if path in self.states:
+        if self.states[path] != present:
+            self.consistent = False
+        return
+    self.states[path.copy()] = present
+
+
+public func read_file_alloc_traced(fs: Filesystem, mut trace: ReadTrace, path: str, max_: int) -> Result[bytes, str]:
+    match read_file_alloc(fs, path, max_):
+        case Ok(data):
+            if trace.active:
+                read_trace_record(mut trace, path, data)
+            return Ok(data)
+        case Err(e):
+            if trace.active:
+                if not fs.exists(path):
+                    record_state(mut trace, path, False)
+                else:
+                    trace.consistent = False
+            return Err(e)
+
+
+public func access_traced(fs: Filesystem, mut trace: ReadTrace, path: str) -> Result[Unit, str]:
+    mut present = fs.exists(path)
+    if trace.active:
+        record_state(mut trace, path, present)
+    if not present:
+        return Err("FileNotFound")
+    return Ok(())
+
+
+public func list_dir_traced(fs: Filesystem, mut trace: ReadTrace, path: str) -> Result[str[], str]:
+    mut names = try list_dir(fs, path)
+    if trace.active:
+        if path in trace.directories and trace.directories[path] != names:
+            trace.consistent = False
+        else:
+            trace.directories[path.copy()] = names.copy()
+    return Ok(names)
+
+
+public func read_trace_verify(fs: Filesystem, self: ReadTrace) -> bool:
+    if not self.consistent:
+        return False
+    for path in self.states:
+        if fs.exists(path) != self.states[path]:
+            return False
+    for path2 in self.reads:
+        match fs.read_file(path2):
+            case Err(_):
+                return False
+            case Ok(data):
+                if data != self.reads[path2]:
+                    return False
+    for path3 in self.directories:
+        match list_dir(fs, path3):
+            case Err(_):
+                return False
+            case Ok(names):
+                if names != self.directories[path3]:
+                    return False
+    return True
+
+
+# Canonical path order is independent of insertion/read order. Each bytes
+# entry uses the same u64-little path length, path, state name, SHA256 shape.
+public func read_trace_digest(self: ReadTrace) -> bytes:
+    mut w = byte_builder.create()
+    mut paths = list(self.states.keys())
+    paths.sort()
+    for path in paths:
+        mut data = path.encode()
+        append_length(mut w, len(data))
+        byte_builder.append(mut w, data)
+        if path in self.reads:
+            byte_builder.append(mut w, b"bytes")
+            byte_builder.append(mut w, sha.sha256(self.reads[path]))
+        else:
+            if self.states[path]:
+                byte_builder.append(mut w, b"exists")
+            else:
+                byte_builder.append(mut w, b"absent")
+            for i in range(32):
+                _ = byte_builder.append_byte(mut w, 0)
+    mut directories = list(self.directories.keys())
+    directories.sort()
+    for path2 in directories:
+        byte_builder.append(mut w, b"directory")
+        byte_builder.append_text(mut w, path2)
+        for member in self.directories[path2]:
+            byte_builder.append_text(mut w, member)
+            # Entry kinds are unavailable under D4; only names are retained.
+    return sha.sha256(byte_builder.finish(w)).hex().encode()
+
+
+public func read_trace_digest_for_path(self: ReadTrace, path: str) -> bytes?:
+    if path not in self.reads:
+        return None
+    return Some(sha.sha256(self.reads[path]).hex().encode())
+
+
+public func read_trace_closure_digest(self: ReadTrace, paths: str[]) -> bytes:
+    mut selected = read_trace_init()
+    for path in paths:
+        if path in self.reads:
+            read_trace_record(mut selected, path, self.reads[path])
+    return read_trace_digest(selected)
+
+
+func append_length(mut w: byte_builder.Builder, value: int):
+    mut n = value
+    for i in range(8):
+        _ = byte_builder.append_byte(mut w, n % 256)
+        n = n // 256
+
+
+public func begin_cache_probe(mut trace: ReadTrace) -> CacheProbe:
+    mut probe = CacheProbe(active=True, hidden_active=trace.active)
+    trace.active = False
+    return probe
+
+
+public func cache_probe_end(mut self: CacheProbe, mut trace: ReadTrace):
+    if not self.active:
+        return
+    if trace.active:
+        trace.consistent = False
+    trace.active = self.hidden_active
+    self.active = False
+
+
+public func cache_probe_end_with_owner(mut self: CacheProbe, mut trace: ReadTrace, owns_scope: bool):
+    if not owns_scope:
+        trace.consistent = False
+        return
+    cache_probe_end(mut self, mut trace)

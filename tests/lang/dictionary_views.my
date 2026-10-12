@@ -69,7 +69,7 @@ public func test_views_support_comprehensions_and_generic_helpers() -> bool:
     mut mapping = {"a": 10, "b": 20}
     if [for value in mapping.values() yield value + 1] != [11, 21]:
         return False
-    if [for item in mapping.items() yield item.key] != ["a", "b"]:
+    if [for item in mapping.items() yield item.key.copy()] != ["a", "b"]:
         return False
     if generic_values(mapping) != [10, 20]:
         return False
@@ -98,7 +98,8 @@ public func test_views_keep_mapping_alive_and_empty_views_work() -> bool:
 public func test_view_reads_observe_value_replacement_and_loop_control() -> bool:
     mut mapping = {"a": 10, "b": 20, "c": 30}
     mut result = 0
-    for key, value in mapping.items():
+    for key in list(mapping.keys()):
+        const value = mapping[key]
         if key == "a":
             mapping["b"] = 2
             continue

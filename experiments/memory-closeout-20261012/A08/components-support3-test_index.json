@@ -1,0 +1,43 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+  "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7",
+  "compiler_revision": "0d17e4e130706639c0f49e78b60502bfb2151ebc",
+  "harness_sha256": "da4b872fc6b3c5d960e99ee826dff20fbc85571ae534868d7d7b532ebce0e2ab",
+  "source_base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "transformed_source_check": false,
+  "seed_compatibility_only": false,
+  "counted": true,
+  "rows": [
+    {
+      "state": "after",
+      "component": "test_index",
+      "sources": {
+        "codec.my": "e81c6d9535dbe66b704733d26462579057ae6798040eb3beeceb7790285bbdd2",
+        "main.my": "365f56a9f40de9658fed629427a43ba8bcad59f2b4c9b144654a66b1e90cf6b4",
+        "tests.my": "f4786bf0334689801af9ce7b8dfe9f7b5a7bade785f707c704f16d58862a4140",
+        "graph.my": "8dec40f8e2e15e5d796b4c13262e21d1d9f22e8cdd6ed139060e6679c9fc2139"
+      },
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/components-support3-test_index/after/test_index/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/components-support3-test_index/after/test_index/test_index",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/components-support3-test_index/after/test_index/cache",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/components-support3-test_index/after/test_index/test_index.ll",
+        "--counters"
+      ],
+      "status": 2,
+      "stdout": "",
+      "stderr": "error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/components-support3-test_index/after/test_index/cache/native-link-f3211ab2c3734556be22dc5eb93a3b80/148926ecea6bf78e2736a11bc0866dfc9282358e0ae06f4c8d45e6f0564fc00f.o: FileNotFound\n",
+      "passed": false
+    }
+  ],
+  "all_passed": false
+}

@@ -1,0 +1,34 @@
+record Node:
+    number: int
+    next: Node?
+
+
+func total(node: Node) -> int:
+    mut child = node.next
+    if child is None:
+        return node.number
+    return node.number + total(child)
+
+
+func rewrite_next(node: Node) -> Node:
+    mut child = node.next
+    if child is None:
+        return node
+    mut rewritten = child
+    rewritten.number = 9
+    return Node(number=node.number, next=Some(rewritten))
+
+
+public func test_pure_box_projection_retains_private_value_updates() -> bool:
+    mut original = Node(number=1, next=Some(Node(number=2, next=Some(Node(number=3, next=None)))))
+    mut changed = rewrite_next(original)
+    return total(original) == 6 and total(changed) == 13
+
+
+public func test_pure_box_read_remains_live_across_other_allocations() -> bool:
+    mut original = Node(number=1, next=Some(Node(number=2, next=None)))
+    mut copied = original
+    mut junk: Node[] = []
+    for i in range(100):
+        junk.append(Node(number=i, next=Some(Node(number=i + 1, next=None))))
+    return total(original) == 3 and total(copied) == 3 and len(junk) == 100

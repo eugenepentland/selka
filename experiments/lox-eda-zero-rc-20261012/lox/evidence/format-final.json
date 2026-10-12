@@ -1,0 +1,30 @@
+{
+  "changed": [
+    "ast.my",
+    "chunk.my",
+    "compiler.my",
+    "compiler_test.my",
+    "driver.my",
+    "driver_tests.my",
+    "heap.my",
+    "heap_test.my",
+    "interpreter.my",
+    "lox_strings.my",
+    "lox_strings_test.my",
+    "main.my",
+    "natives.my",
+    "object.my",
+    "output.my",
+    "parser.my",
+    "parser_test.my",
+    "resolver.my",
+    "resolver_test.my",
+    "scanner.my",
+    "scanner_test.my",
+    "table.my",
+    "table_test.my",
+    "value.my",
+    "value_test.my",
+    "vm.my"
+  ]
+}

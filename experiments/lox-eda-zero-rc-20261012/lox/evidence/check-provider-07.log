@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1468, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1468 after 10s
+parser.my:142:92: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+      return add_expr(mut p, ast.Expr.literal(value=ast.LiteralExpr(constant=constant, token=token)))
+                                                                                             ^

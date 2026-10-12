@@ -1,0 +1,1137 @@
+diff --git a/src/core/ir_snapshot.zig b/src/core/ir_snapshot.zig
+--- a/src/core/ir_snapshot.zig
++++ b/src/core/ir_snapshot.zig
+@@ -1,6 +1,7 @@
+ //! Portable function-stage snapshots. Function/type ordinals are guarded by the
+ //! complete declaration catalog; strings and source offsets relocate on restore.
+ const std = @import("std");
++const guest_abi = @import("guest_abi.zig");
+ const language = @import("mylang");
+ const codec = language.persist_codec;
+ const ir = @import("ir.zig");
+@@ -54,7 +55,7 @@
+     span: u32,
+ };
+ /// One self-owned stage result, valid after its input arena is destroyed.
+-pub const Wire = struct { function: Function, strings: []const []const u8, locations: []Location };
++pub const Wire = struct { abi: guest_abi.Abi, function: Function, strings: []const []const u8, locations: []Location };
+ 
+ /// Normalize a source offset without retaining merged-source starts in a key.
+ pub fn locate(context: Context, span: u32) Error!Location {
+@@ -109,10 +110,8 @@
+ pub fn layout(a: std.mem.Allocator, context: Context) std.mem.Allocator.Error!Digest {
+     var writer = codec.Writer.init(a);
+     defer writer.deinit();
+-    try writer.write([]const u8, "source-line-column-v2");
+-    try writer.write(bool, context.module.single_owner);
+-    try writer.write(bool, context.module.zero_rc);
+-    try writer.write([]const ir.Type, context.module.shared_lists.items);
++    try writer.write([]const u8, "source-line-column-owned-v3");
++    try writer.write(guest_abi.Abi, context.module.abi);
+     try writer.write([]const ir.Compound, context.module.compounds.items);
+     try writer.write(u64, context.module.functions.items.len);
+     for (context.module.functions.items) |function| {
+@@ -173,6 +172,7 @@
+     var signature = function.signature;
+     signature.params = try a.dupe(ir.Type, signature.params);
+     return .{
++        .abi = context.module.abi,
+         .function = .{
+             .name = try a.dupe(u8, function.name),
+             .signature = signature,
+@@ -206,6 +206,7 @@
+ /// Restore onto the result arena; every mutable list's capacity equals its length.
+ /// The caller must verify `layout` before applying numeric type/function references.
+ pub fn restore(a: std.mem.Allocator, context: Context, wire: Wire) Error!ir.Function {
++    if (wire.abi != context.module.abi) return error.InvalidSnapshot;
+     const f = wire.function;
+     if (f.span >= wire.locations.len or wire.locations.len != f.insts.len + 1) return error.InvalidSnapshot;
+     const strings = try a.alloc(u32, wire.strings.len);
+diff --git a/src/core/lowering_cache.zig b/src/core/lowering_cache.zig
+--- a/src/core/lowering_cache.zig
++++ b/src/core/lowering_cache.zig
+@@ -1,6 +1,7 @@
+ //! Per-function checked-to-Core artifacts. Replay preserves discovery order,
+ //! including private string allocations, before the normal module transforms.
+ const std = @import("std");
++const guest_abi = @import("guest_abi.zig");
+ const language = @import("mylang");
+ const typed = language.typed;
+ const codec = language.persist_codec;
+@@ -42,7 +43,7 @@
+     functions: []FunctionBinding,
+     types: []TypeBinding,
+ };
+-const Wire = struct { function: Function, delta: Delta, sources: []const demand_sources.Proof = &.{} };
++const Wire = struct { abi: guest_abi.Abi, function: Function, delta: Delta, sources: []const demand_sources.Proof = &.{} };
+ const Header = struct { wire: Wire, local_positions: bool, source_max: ?u32 };
+ /// Inputs needed to publish one successful function without repeating arguments.
+ pub const Publication = struct { key: stage.Digest, before: Before, checked: typed.Function };
+@@ -168,7 +169,7 @@
+                     key.* = null;
+                     continue;
+                 };
+-                if (key.*) |raw| key.* = self.store.key("demand-raw-source-v2", &.{ &raw, &layout, &proof });
++                if (key.*) |raw| key.* = self.store.key("demand-raw-source-owned-v3", &.{ &raw, &layout, &proof });
+                 continue;
+             };
+             const raw = key.* orelse continue;
+@@ -185,14 +186,14 @@
+                 std.crypto.hash.Blake3.hash(original.bytes, &digests[origin], .{});
+                 ready[origin] = true;
+             };
+-            key.* = self.store.key("demand-raw-v1", &.{ &raw, &layout, &digests[origin] });
++            key.* = self.store.key("demand-raw-owned-v2", &.{ &raw, &layout, &digests[origin] });
+         }
+         // External debug authority survives independently of the owning file.
+         for (self.tables.sources.items, self.tables.keys.items) |proofs, *key| {
+             if (proofs.len == 0 or key.* == null) continue;
+             var writer = codec.Writer.init(scratch.allocator());
+             try writer.write([]const demand_sources.Proof, proofs);
+-            key.* = self.store.key("demand-raw-external-v1", &.{ &key.*.?, writer.bytes.items });
++            key.* = self.store.key("demand-raw-external-owned-v2", &.{ &key.*.?, writer.bytes.items });
+         }
+         self.context = .{ .pointer = self, .ensure_fn = ensure, .keys = self.tables.keys.items, .loaded = self.tables.loaded.items, .force_eager = self.force_eager };
+     }
+@@ -204,6 +205,7 @@
+         defer scratch.deinit();
+         const a = scratch.allocator();
+         const wire = try self.store.loadValue(a, handle.key, Wire) orelse return error.CacheMiss;
++        if (wire.abi != self.input.module.abi) return error.CacheMiss;
+         var sources: demand_sources.Cache = .{ .arena = a };
+         if (self.input.source) |source| sources.bind(source);
+         if (!sameSourceProofs(wire.sources, self.tables.sources.items[index])) return error.CacheMiss;
+@@ -299,8 +301,8 @@
+         else
+             try self.bodyKey(mb, checked) else try self.bodyKey(mb, checked);
+         if (self.cache.demand) |queries| if (queries.omitted(checked.id)) try queries.record(checked.id, body);
+-        const modes = [_]u8{ @intFromBool(mb.input.drop_debug), @intFromBool(mb.module.single_owner), @intFromBool(mb.module.zero_rc) };
+-        return self.cache.store.key("lowered-function-v4", &.{ &self.catalog, &self.guard, &self.assets, &body, &modes });
++        const modes = [_]u8{@intFromBool(mb.input.drop_debug)};
++        return self.cache.store.key("lowered-function-owned-v5", &.{ guest_abi.identity, &self.catalog, &self.guard, &self.assets, &body, &modes });
+     }
+ 
+     fn bodyKey(self: *Session, mb: Context, checked: typed.Function) Error!stage.Digest {
+@@ -321,8 +323,9 @@
+     /// Decode and validate with private scratch and temporary discovery deltas.
+     /// Every accepted pointer is then copied onto the result arena.
+     pub fn restore(self: *Session, scratch: std.mem.Allocator, key_value: stage.Digest, mb: Context, checked: typed.Function, declared: ir.Function) std.mem.Allocator.Error!?ir.Function {
+-        const header = if (self.cache.lazy != null and !self.cache.lazy.?.force_eager) try self.cache.store.loadValue(scratch, self.cache.store.key("lowered-header-source-v3", &.{&key_value}), Header) else null;
++        const header = if (self.cache.lazy != null and !self.cache.lazy.?.force_eager) try self.cache.store.loadValue(scratch, self.cache.store.key("lowered-header-owned-v4", &.{&key_value}), Header) else null;
+         const wire = if (header) |metadata| metadata.wire else try self.cache.store.loadValue(scratch, key_value, Wire) orelse return null;
++        if (wire.abi != mb.module.abi) return null;
+         const before = Before.init(mb);
+         for (wire.sources) |proof| _ = try self.sources.get(proof.origin);
+         if (!try validWireSources(&self.sources, wire, before.functions)) return null;
+@@ -407,6 +410,7 @@
+         const functions = try a.alloc(FunctionBinding, mb.discovery.pending.items.len - before.pending);
+         for (functions, mb.discovery.pending.items[before.pending..]) |*binding, id| binding.* = .{ .checked = id, .physical = mb.discovery.ids.get(@backingInt(id)).? };
+         var wire: Wire = .{
++            .abi = mb.module.abi,
+             .function = function,
+             .delta = .{
+                 .declarations = declarations,
+@@ -429,7 +433,7 @@
+         header.function.value.extra = &.{};
+         header.function.value.loops = &.{};
+         header.function.positions = function.positions[0..1];
+-        try self.cache.store.storeValue(self.cache.store.key("lowered-header-source-v3", &.{&publication.key}), Header, .{
++        try self.cache.store.storeValue(self.cache.store.key("lowered-header-owned-v4", &.{&publication.key}), Header, .{
+             .wire = header,
+             .local_positions = localPositions(wire, before.functions),
+             .source_max = sourceMaximum(wire, before.functions),
+diff --git a/src/core/optimization_cache.zig b/src/core/optimization_cache.zig
+--- a/src/core/optimization_cache.zig
++++ b/src/core/optimization_cache.zig
+@@ -1,5 +1,6 @@
+ //! Function-stage reuse keyed by actual optimizer inputs, in original mutation order.
+ const std = @import("std");
++const guest_abi = @import("guest_abi.zig");
+ const ir = @import("ir.zig");
+ const facts = @import("facts.zig");
+ const vector = @import("vector.zig");
+@@ -174,12 +175,18 @@
+         }
+         var dependencies: [32]u8 = undefined;
+         std.crypto.hash.Blake3.hash(writer.bytes.items, &dependencies, .{});
+-        return self.store.key(@tagName(stage), &.{ &self.prepared.?.layout, &digest, &dependencies });
++        return self.store.key("optimizer-owned-v2", &.{ @tagName(stage), guest_abi.identity, &self.prepared.?.layout, &digest, &dependencies });
++    }
++
++    /// Decode explicit provenance before any stage-specific artifact is used.
++    pub fn read(self: *Context, a: std.mem.Allocator, input_key: [32]u8, comptime T: type) std.mem.Allocator.Error!?T {
++        const encoded = try self.store.loadValue(a, input_key, Owned(T)) orelse return null;
++        return if (encoded.abi == self.source.module.abi) encoded.value else null;
+     }
+ 
+     /// Decode on reclaimable storage and count the observed lookup result.
+     pub fn load(self: *Context, a: std.mem.Allocator, stage: Stage, input_key: [32]u8, comptime T: type) std.mem.Allocator.Error!?T {
+-        const value = try self.store.loadValue(a, input_key, T);
++        const value = try self.read(a, input_key, T);
+         if (value != null) self.statistics.hits[@backingInt(stage)] += 1 else self.statistics.misses[@backingInt(stage)] += 1;
+         return value;
+     }
+@@ -192,7 +199,7 @@
+ 
+     /// Publish a portable payload; unavailable stores leave computed output usable.
+     pub fn save(self: *Context, input_key: [32]u8, comptime T: type, value: T) std.mem.Allocator.Error!void {
+-        try self.store.storeValue(input_key, T, value);
++        try self.store.storeValue(input_key, Owned(T), .{ .abi = self.source.module.abi, .value = value });
+     }
+ 
+     /// Capture an intermediate body and its local ancestry on temporary storage.
+@@ -262,7 +269,7 @@
+ 
+     /// Bind a canonical fact payload independently of the final metadata record.
+     pub fn factsKey(self: *const Context, digest: [32]u8) [32]u8 {
+-        return self.store.key("final-facts", &.{&digest});
++        return self.store.key("final-facts-owned-v2", &.{ guest_abi.identity, &digest });
+     }
+ 
+     /// Verify encoded analysis before any cached final IR reaches the module.
+@@ -546,3 +553,8 @@
+     for (left, right) |a, b| if (!std.meta.eql(a, b)) return false;
+     return true;
+ }
++
++/// Every optimizer artifact, including body-less identity results, records its ABI.
++pub fn Owned(comptime T: type) type {
++    return struct { abi: guest_abi.Abi, value: T };
++}
+diff --git a/src/core/canonical_ir.zig b/src/core/canonical_ir.zig
+--- a/src/core/canonical_ir.zig
++++ b/src/core/canonical_ir.zig
+@@ -170,8 +170,7 @@
+     fn referenceDigest(self: *Canon, index: u32) Error!Digest {
+         const function = self.module.functions.items[index];
+         var hash = std.crypto.hash.Blake3.init(.{});
+-        put(&hash, u8, @intFromBool(self.module.single_owner));
+-        put(&hash, u8, @intFromBool(self.module.zero_rc));
++        put(&hash, u32, @backingInt(self.module.abi));
+         try self.signature(&hash, function.signature);
+         const name = function.name;
+         if (function.signature.linkage == .runtime_c and std.mem.startsWith(u8, name, equal_prefix)) {
+@@ -228,8 +227,7 @@
+         if (f.signature.linkage != .internal) return self.callee(index);
+         var hash = std.crypto.hash.Blake3.init(.{});
+         text(&hash, f.name);
+-        put(&hash, u8, @intFromBool(self.module.single_owner));
+-        put(&hash, u8, @intFromBool(self.module.zero_rc));
++        put(&hash, u32, @backingInt(self.module.abi));
+         try self.signature(&hash, f.signature);
+         self.locate(&hash, f.span);
+         put(&hash, u64, f.insts.items.len);
+diff --git a/src/core/emission_key.zig b/src/core/emission_key.zig
+--- a/src/core/emission_key.zig
++++ b/src/core/emission_key.zig
+@@ -40,9 +40,8 @@
+     /// Hash exactly the immutable inputs a render can consult, without global IR IDs.
+     pub fn key(self: *Prepared, a: std.mem.Allocator, selection: llvm.Selection) Error!Digest {
+         var hash = std.crypto.hash.Blake3.init(.{});
+-        value(&hash, "core-emission-input-v2");
+-        value(&hash, self.canon.module.single_owner);
+-        value(&hash, self.canon.module.zero_rc);
++        value(&hash, "core-emission-input-owned-v3");
++        value(&hash, self.canon.module.abi);
+         value(&hash, self.options.target);
+         value(&hash, self.options.verify);
+         value(&hash, self.options.counters);
+@@ -234,7 +233,8 @@
+         const layout = receipt.layout;
+         const summaries = options.analysis.effects orelse return null;
+         var hash = std.crypto.hash.Blake3.init(.{});
+-        value(&hash, "core-emission-receipt-v2");
++        value(&hash, "core-emission-receipt-owned-v3");
++        value(&hash, module.abi);
+         value(&hash, layout);
+         value(&hash, options.target);
+         value(&hash, options.verify);
+@@ -316,6 +316,6 @@
+         }
+         var digest: Digest = undefined;
+         hash.final(&digest);
+-        return self.context.store.key("llvm-compact-receipt-v2", &.{&digest});
++        return self.context.store.key("llvm-compact-receipt-owned-v3", &.{&digest});
+     }
+ };
+diff --git a/src/core/emission_cache.zig b/src/core/emission_cache.zig
+--- a/src/core/emission_cache.zig
++++ b/src/core/emission_cache.zig
+@@ -1,5 +1,6 @@
+ //! Persistent completed LLVM artifacts and bounded emission admission.
+ const std = @import("std");
++const guest_abi = @import("guest_abi.zig");
+ const store = @import("stage_store.zig");
+ const deferred = @import("deferred_facts.zig");
+ 
+@@ -42,11 +43,11 @@
+ 
+ /// Integrity-protected payload; metadata never lives in a separate unchecked file.
+ pub const Artifact = struct {
++    abi: guest_abi.Abi,
+     text: []const u8,
+     number: bool,
+     math: bool,
+     counting: bool,
+-    zero_rc: bool = false,
+ };
+ 
+ /// Estimate the scratch held while planning memory homes and rendering instructions.
+@@ -71,6 +72,31 @@
+ /// A checked compact input points at the ordinary exact-key LLVM artifact.
+ pub const Receipt = struct { artifact: store.Digest, text_digest: store.Digest, dependencies: Dependencies };
+ /// Runtime link dependencies recorded alongside completed LLVM identity.
+-pub const Dependencies = struct { number: bool = false, math: bool = false, counting: bool = false, zero_rc: bool = false };
++pub const Dependencies = struct { abi: guest_abi.Abi, number: bool = false, math: bool = false, counting: bool = false };
+ /// A native receipt can serve an object without decoding its LLVM artifact.
+-pub const NativeArtifact = struct { store: *const store.Store, key: store.Digest };
++pub const NativeArtifact = struct { abi: guest_abi.Abi, store: *const store.Store, key: store.Digest };
++
++/// The fixed guest ABI is explicit in every emitted LLVM unit.
++pub const marker = "; " ++ guest_abi.identity ++ "\n";
++
++/// Old, absent or foreign text identities cannot enter the native pipeline.
++pub fn validText(text: []const u8) bool {
++    return std.mem.startsWith(u8, text, marker);
++}
++
++/// Metadata and text must agree even when a cache payload has a valid checksum.
++pub fn validArtifact(artifact: Artifact) bool {
++    return artifact.abi == guest_abi.current and validText(artifact.text);
++}
++
++/// Completed LLVM admissions share one check, including helper seed artifacts.
++pub fn loadArtifact(storage: *const store.Store, a: std.mem.Allocator, key: store.Digest) std.mem.Allocator.Error!?Artifact {
++    const artifact = try storage.loadValue(a, key, Artifact) orelse return null;
++    return if (validArtifact(artifact)) artifact else null;
++}
++
++/// Required nonzero enum decoding rejects absent/old/foreign receipt provenance.
++pub fn loadReceipt(storage: *const store.Store, a: std.mem.Allocator, key: store.Digest) std.mem.Allocator.Error!?Receipt {
++    const receipt = try storage.loadValue(a, key, Receipt) orelse return null;
++    return if (receipt.dependencies.abi == guest_abi.current) receipt else null;
++}
+diff --git a/src/core/emit_units.zig b/src/core/emit_units.zig
+--- a/src/core/emit_units.zig
++++ b/src/core/emit_units.zig
+@@ -1,5 +1,6 @@
+ //! Independent LLVM modules with deterministic source ownership and dependencies.
+ const std = @import("std");
++const guest_abi = @import("guest_abi.zig");
+ const ir = @import("ir.zig");
+ const llvm = @import("emit_llvm.zig");
+ const values = @import("emit_values.zig");
+@@ -55,7 +56,7 @@
+     const name = try a.dupe(u8, "program");
+     errdefer a.free(name);
+     const path = try a.dupe(u8, options.source_path);
+-    units[0] = unit(name, path, .program, text);
++    units[0] = try unit(name, path, .program, text);
+     return units;
+ }
+ 
+@@ -193,7 +194,7 @@
+         });
+         errdefer allocator.free(text);
+         const name = if (group.kind == .module) try std.fmt.allocPrint(a, module_format, .{try digest(a, group.path)}) else try std.fmt.allocPrint(a, content_format, .{ @tagName(group.kind), try digest(a, text) });
+-        try append(allocator, a, &units, &names, unit(name, group.path, group.kind, text));
++        try append(allocator, a, &units, &names, try unit(name, group.path, group.kind, text));
+     }
+     {
+         const entry = try llvm.emitUnitWithScratch(allocator, backing, module, options, .{
+@@ -205,7 +206,7 @@
+             .constants = &catalog,
+         });
+         errdefer allocator.free(entry);
+-        try append(allocator, a, &units, &names, unit("entry", options.source_path, .entry, entry));
++        try append(allocator, a, &units, &names, try unit("entry", options.source_path, .entry, entry));
+     }
+     return allocator.dupe(Unit, units.items);
+ }
+@@ -244,7 +245,8 @@
+ }
+ 
+ /// A unit of `text` with its link dependencies (number-text helpers, `-lm`) read from it.
+-pub fn unit(name: []const u8, path: []const u8, kind: Kind, text: []const u8) Unit {
++pub fn unit(name: []const u8, path: []const u8, kind: Kind, text: []const u8) error{UnsupportedInstruction}!Unit {
++    if (!cache.validText(text)) return error.UnsupportedInstruction;
+     const math = std.mem.indexOf(u8, text, "llvm.sin.f64") != null or std.mem.indexOf(u8, text, "llvm.cos.f64") != null;
+     const counting = std.mem.indexOf(u8, text, "@myl_count_current") != null;
+     return .{
+@@ -256,14 +258,14 @@
+             .number = number_runtime.needed(text),
+             .math = math,
+             .counting = counting,
+-            .zero_rc = std.mem.indexOf(u8, text, "; mylang-zero-rc-v2\n") != null,
++            .abi = guest_abi.current,
+         },
+     };
+ }
+ 
+-fn emissionArtifact(text: []const u8) cache.Artifact {
+-    const dependencies = unit("", "", .program, text);
+-    return .{ .text = text, .number = dependencies.dependencies.number, .math = dependencies.dependencies.math, .counting = dependencies.dependencies.counting, .zero_rc = dependencies.dependencies.zero_rc };
++fn emissionArtifact(text: []const u8) error{UnsupportedInstruction}!cache.Artifact {
++    const dependencies = try unit("", "", .program, text);
++    return .{ .text = text, .number = dependencies.dependencies.number, .math = dependencies.dependencies.math, .counting = dependencies.dependencies.counting, .abi = dependencies.dependencies.abi };
+ }
+ 
+ /// Reuse completed LLVM by canonical inputs; changed units render in bounded batches.
+@@ -324,8 +326,8 @@
+                 .source_path = job.group.path,
+                 .kind = job.group.kind,
+                 .llvm = text,
+-                .dependencies = .{ .number = artifact.number, .math = artifact.math, .counting = artifact.counting, .zero_rc = artifact.zero_rc },
+-                .artifact = if (context.native_handles) .{ .store = context.store, .key = job.key } else null,
++                .dependencies = .{ .number = artifact.number, .math = artifact.math, .counting = artifact.counting, .abi = artifact.abi },
++                .artifact = if (context.native_handles) .{ .abi = artifact.abi, .store = context.store, .key = job.key } else null,
+             });
+             if (context.counts) |counts| {
+                 counts.units += 1;
+@@ -353,7 +355,7 @@
+ fn receiptArtifact(key: key_policy.Digest, artifact: cache.Artifact) cache.Receipt {
+     var text_digest: key_policy.Digest = undefined;
+     std.crypto.hash.Blake3.hash(artifact.text, &text_digest, .{});
+-    return .{ .artifact = key, .text_digest = text_digest, .dependencies = .{ .number = artifact.number, .math = artifact.math, .counting = artifact.counting, .zero_rc = artifact.zero_rc } };
++    return .{ .artifact = key, .text_digest = text_digest, .dependencies = .{ .number = artifact.number, .math = artifact.math, .counting = artifact.counting, .abi = artifact.abi } };
+ }
+ 
+ fn emitUncached(allocator: std.mem.Allocator, backing: std.mem.Allocator, module: *const ir.Module, options: llvm.Options, deferred: ?*const deferred_facts.Table) Error![]Unit {
+@@ -394,13 +396,13 @@
+         const receipt = if (compact.*) |*policy| try policy.key(a, plan.module, plan.options, plan.selection(group, false)) else null;
+         if (receipt) |receipt_key| {
+             if (context.counts) |counts| counts.work.receipts_checked += 1;
+-            if (try context.store.loadValue(temp, receipt_key, cache.Receipt)) |record| {
++            if (try cache.loadReceipt(context.store, temp, receipt_key)) |record| {
+                 if (context.native_handles) {
+                     plan.symbols[index] = try std.fmt.allocPrint(a, helper_format, .{std.fmt.bytesToHex(record.text_digest, .lower)});
+                     if (context.counts) |counts| counts.seeds_reused += 1;
+                     continue;
+                 }
+-                if (try context.store.loadValue(temp, record.artifact, cache.Artifact)) |artifact| {
++                if (try cache.loadArtifact(context.store, temp, record.artifact)) |artifact| {
+                     plan.symbols[index] = try std.fmt.allocPrint(a, helper_format, .{try digest(a, artifact.text)});
+                     if (context.counts) |counts| counts.seeds_reused += 1;
+                     continue;
+@@ -410,14 +412,14 @@
+         try context.ensure(index);
+         if (context.counts) |counts| counts.work.keys_built += 1;
+         const input = keys.key(temp, plan.selection(group, false)) catch |err| return emissionKeyError(err);
+-        const key = context.store.key("llvm-helper-seed-v1", &.{&input});
+-        const served = context.store.loadValue(temp, key, cache.Artifact) catch return error.OutOfMemory;
++        const key = context.store.key("llvm-helper-seed-owned-v2", &.{&input});
++        const served = cache.loadArtifact(context.store, temp, key) catch return error.OutOfMemory;
+         const seed = if (served) |artifact| artifact.text else blk: {
+             const text = try llvm.emitUnitWithScratch(temp, backing, plan.module, plan.options, plan.selection(group, false));
+-            try context.store.storeValue(key, cache.Artifact, emissionArtifact(text));
++            try context.store.storeValue(key, cache.Artifact, try emissionArtifact(text));
+             break :blk text;
+         };
+-        if (receipt) |receipt_key| try context.store.storeValue(receipt_key, cache.Receipt, receiptArtifact(key, emissionArtifact(seed)));
++        if (receipt) |receipt_key| try context.store.storeValue(receipt_key, cache.Receipt, receiptArtifact(key, try emissionArtifact(seed)));
+         plan.symbols[index] = try std.fmt.allocPrint(a, helper_format, .{try digest(a, seed)});
+         if (context.counts) |counts| {
+             if (served != null) counts.seeds_reused += 1 else counts.seeds_rendered += 1;
+@@ -446,7 +448,7 @@
+     errdefer job.deinit();
+     if (receipt) |receipt_key| {
+         if (context.counts) |counts| counts.work.receipts_checked += 1;
+-        if (try context.store.loadValue(job.scratch.allocator(), receipt_key, cache.Receipt)) |record| {
++        if (try cache.loadReceipt(context.store, job.scratch.allocator(), receipt_key)) |record| {
+             job.key = record.artifact;
+             job.receipt_hit = record;
+             return job;
+@@ -459,7 +461,7 @@
+     const input = keys.key(scratch.allocator(), plan.selection(group, entry)) catch |err| return emissionKeyError(err);
+     var instructions: usize = 0;
+     for (group.functions.items) |index| instructions += plan.module.functions.items[index].insts.items.len;
+-    job.key = context.store.key("llvm-unit-v1", &.{&input});
++    job.key = context.store.key("llvm-unit-owned-v2", &.{&input});
+     job.weight = cache.weight(instructions);
+     return job;
+ }
+@@ -496,15 +498,15 @@
+         const a = self.scratch.allocator();
+         if (self.receipt_hit) |record| {
+             if (self.context.native_handles) {
+-                self.artifact = .{ .text = "", .number = record.dependencies.number, .math = record.dependencies.math, .counting = record.dependencies.counting, .zero_rc = record.dependencies.zero_rc };
++                self.artifact = .{ .text = "", .number = record.dependencies.number, .math = record.dependencies.math, .counting = record.dependencies.counting, .abi = record.dependencies.abi };
+                 self.hit = true;
+                 return;
+             }
+-            self.artifact = try self.context.store.loadValue(a, self.key, cache.Artifact) orelse return error.CacheMiss;
++            self.artifact = try cache.loadArtifact(self.context.store, a, self.key) orelse return error.CacheMiss;
+             self.hit = true;
+             return;
+         }
+-        self.artifact = self.context.store.loadValue(a, self.key, cache.Artifact) catch return error.OutOfMemory;
++        self.artifact = cache.loadArtifact(self.context.store, a, self.key) catch return error.OutOfMemory;
+         if (self.artifact != null) {
+             self.hit = true;
+             if (self.receipt) |receipt| try self.context.store.storeValue(receipt, cache.Receipt, receiptArtifact(self.key, self.artifact.?));
+@@ -512,7 +514,7 @@
+         }
+         const options = if (self.context.deferred) |table| try factsOptions(a, self.plan.options, table, self.group.functions.items) else self.plan.options;
+         const text = try llvm.emitUnitWithScratch(a, self.backing, self.plan.module, options, self.plan.selection(self.group, self.entry));
+-        self.artifact = emissionArtifact(text);
++        self.artifact = try emissionArtifact(text);
+         self.context.store.storeValue(self.key, cache.Artifact, self.artifact.?) catch return error.OutOfMemory;
+         if (self.receipt) |receipt| try self.context.store.storeValue(receipt, cache.Receipt, receiptArtifact(self.key, self.artifact.?));
+     }
+diff --git a/src/core/native_receipt.zig b/src/core/native_receipt.zig
+--- a/src/core/native_receipt.zig
++++ b/src/core/native_receipt.zig
+@@ -1,28 +1,35 @@
+ //! Compact mappings from verified LLVM artifacts to existing exact native keys.
+ const std = @import("std");
++const guest_abi = @import("guest_abi.zig");
+ const emission = @import("emission_cache.zig");
+ const units = @import("unit_cache.zig");
+ 
+ /// Missing or corrupt LLVM must trigger the coordinator's eager recovery.
+ pub const Error = std.mem.Allocator.Error || error{CacheMiss};
++const Record = struct { abi: guest_abi.Abi, exact: units.Digest };
+ 
+ fn mapping(handle: emission.NativeArtifact, settings: units.Settings) units.Digest {
+     const policy = units.key(settings, "");
+-    return handle.store.key("native-unit-receipt-v1", &.{ &policy, &handle.key });
++    return handle.store.key("native-unit-receipt-owned-v2", &.{ &policy, &handle.key });
+ }
+ 
+ /// A mapping is only a hint; the caller must verify the native object's checksum.
+ pub fn lookup(a: std.mem.Allocator, handle: emission.NativeArtifact, settings: units.Settings) std.mem.Allocator.Error!?units.Digest {
+-    return handle.store.loadValue(a, mapping(handle, settings), units.Digest);
++    if (handle.abi != settings.abi) return null;
++    const record = try handle.store.loadValue(a, mapping(handle, settings), Record) orelse return null;
++    return if (record.abi == settings.abi) record.exact else null;
+ }
+ 
+ /// Preserve the ordinary text-derived native key, including every codegen input.
+ pub fn remember(handle: emission.NativeArtifact, settings: units.Settings, exact: units.Digest) std.mem.Allocator.Error!void {
+-    try handle.store.storeValue(mapping(handle, settings), units.Digest, exact);
++    if (handle.abi != settings.abi) return;
++    try handle.store.storeValue(mapping(handle, settings), Record, .{ .abi = settings.abi, .exact = exact });
+ }
+ 
+ /// Reload LLVM only when a verified native object cannot serve this unit.
+ pub fn materialize(a: std.mem.Allocator, handle: emission.NativeArtifact) Error!emission.Artifact {
+-    const artifact = try handle.store.loadValue(a, handle.key, emission.Artifact);
+-    return artifact orelse error.CacheMiss;
++    if (handle.abi != guest_abi.current) return error.CacheMiss;
++    const artifact = try emission.loadArtifact(handle.store, a, handle.key) orelse return error.CacheMiss;
++    if (artifact.abi != handle.abi) return error.CacheMiss;
++    return artifact;
+ }
+diff --git a/src/core/unit_cache.zig b/src/core/unit_cache.zig
+--- a/src/core/unit_cache.zig
++++ b/src/core/unit_cache.zig
+@@ -9,6 +9,7 @@
+ //! and BLAKE3 digest. A hit reads and hashes the object, so a truncated,
+ //! overwritten or foreign file is a miss that is rebuilt, never linked.
+ const std = @import("std");
++const guest_abi = @import("guest_abi.zig");
+ const target_policy = @import("target.zig");
+ 
+ /// A BLAKE3 digest: store keys and content identities.
+@@ -17,7 +18,7 @@
+ /// The version of how an object is produced from a unit's text: the compile
+ /// command below and the meaning of the text the emitter writes. Bump it when
+ /// either changes in a way the text itself does not show.
+-pub const format = "core-unit-object-v1";
++pub const format = "core-unit-object-owned-v2";
+ 
+ /// Why a store or compile operation failed; tool output goes to the caller's log.
+ pub const Error = error{ ToolFailed, OutOfMemory, WriteFailed };
+@@ -28,6 +29,8 @@
+ 
+ /// Everything besides a unit's text that decides its object.
+ pub const Settings = struct {
++    /// Required provenance for guest objects; independent of optimization mode.
++    abi: guest_abi.Abi,
+     /// The toolchain's content identity (`tool_identity.Identity.digest`).
+     tool: Digest,
+     /// The resolved host CPU and code-generation flags (`tool_identity.nativeTarget`),
+@@ -44,6 +47,7 @@
+ pub fn key(settings: Settings, text: []const u8) Digest {
+     var hash = std.crypto.hash.Blake3.init(.{});
+     field(&hash, format);
++    field(&hash, @tagName(settings.abi));
+     field(&hash, settings.mode.level());
+     field(&hash, target_policy.native_link_target);
+     for (target_policy.current.cpu_flags) |flag| field(&hash, flag);
+@@ -372,7 +376,7 @@
+ 
+ // spec: NEW-CORE-S4-CACHE-1
+ test "unit keys cover the text, level, toolchain, CPU and runtime, and fields cannot run together" {
+-    const base: Settings = .{ .tool = @splat(1), .cpu = @splat(2), .mode = .debug, .runtime = @splat(3) };
++    const base: Settings = .{ .abi = guest_abi.current, .tool = @splat(1), .cpu = @splat(2), .mode = .debug, .runtime = @splat(3) };
+     const original = key(base, "define i32 @f()");
+     try std.testing.expectEqual(original, key(base, "define i32 @f()"));
+     try std.testing.expect(!std.mem.eql(u8, &original, &key(base, "define i32 @g()")));
+diff --git a/src/core/driver.zig b/src/core/driver.zig
+--- a/src/core/driver.zig
++++ b/src/core/driver.zig
+@@ -15,6 +15,7 @@
+ //! A minimal driver rather than the old core's `qbe_build_llvm_compile.zig`:
+ //! that one is bound to the QBE manifest, fragment store and object cache.
+ const std = @import("std");
++const guest_abi = @import("guest_abi.zig");
+ const build_mode = @import("build_mode.zig");
+ const target_policy = @import("target.zig");
+ const target = target_policy.current;
+@@ -95,8 +96,8 @@
+ };
+ 
+ /// A whole-program LLVM text as the one unit of a build.
+-pub fn wholeUnit(llvm: []const u8) emit_units.Unit {
+-    return emit_units.unit("whole", "", .program, llvm);
++pub fn wholeUnit(llvm: []const u8) error{UnsupportedGuestAbi}!emit_units.Unit {
++    return emit_units.unit("whole", "", .program, llvm) catch return error.UnsupportedGuestAbi;
+ }
+ 
+ const Guard = struct {
+@@ -147,6 +148,7 @@
+ 
+ /// Link with private worker arenas on a reclaiming thread-safe allocator.
+ pub fn linkWithScratch(allocator: std.mem.Allocator, backing: ?std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map, request: Request, log: *std.ArrayList(u8)) Error!Outcome {
++    try validateUnits(allocator, request.units, log);
+     try validateLayout(allocator, environ, log);
+     try validateSanitize(allocator, environ, log);
+     const cwd = std.Io.Dir.cwd();
+@@ -181,15 +183,15 @@
+     defer if (shared_lease) |file| file.close(io);
+     const local_lease = if (places.cacheable and !std.mem.eql(u8, places.shared, places.local)) try work_claim.lease(allocator, io, places.local) else null;
+     defer if (local_lease) |file| file.close(io);
+-    var needs: Dependencies = .{};
++    var needs: Dependencies = .{ .abi = guest_abi.current };
+     for (request.units) |unit| needs = .{
+         .number = needs.number or unit.dependencies.number,
+         .math = needs.math or unit.dependencies.math,
+         .counting = needs.counting or unit.dependencies.counting,
+-        .zero_rc = needs.zero_rc or unit.dependencies.zero_rc,
+-    };
+-    const runtime = try runtimeForMode(allocator, needs.counting, environ, log, needs.zero_rc);
+-    const settings: unit_cache.Settings = .{ .tool = guest.digest, .cpu = guest.native_target, .mode = request.mode, .runtime = runtime.abi };
++        .abi = guest_abi.current,
++    };
++    const runtime = try runtimeFor(allocator, needs.counting, environ, log);
++    const settings: unit_cache.Settings = .{ .abi = guest_abi.current, .tool = guest.digest, .cpu = guest.native_target, .mode = request.mode, .runtime = runtime.abi };
+     var objects: std.ArrayList(Object) = .empty;
+     try objects.append(allocator, try runtimeObject(native, places.shared, runtime));
+     try unitObjects(native, places, settings, request, &objects);
+@@ -285,7 +287,7 @@
+ 
+ fn sharedProgramKey(exact: Digest, environment: *const std.process.Environ.Map) Digest {
+     var hash = std.crypto.hash.Blake3.init(.{});
+-    unit_cache.field(&hash, "core-shared-program-v1");
++    unit_cache.field(&hash, "core-shared-program-owned-v2");
+     unit_cache.field(&hash, @import("build_identity").compiler_identity);
+     unit_cache.field(&hash, &exact);
+     linkEnvironmentInto(&hash, environment);
+@@ -324,18 +326,13 @@
+ const Runtime = struct { source: []const u8, abi: Digest };
+ 
+ fn runtimeFor(allocator: std.mem.Allocator, counting: bool, environment: *const std.process.Environ.Map, log: *std.ArrayList(u8)) Error!Runtime {
+-    return runtimeForMode(allocator, counting, environment, log, false);
+-}
+-
+-fn runtimeForMode(allocator: std.mem.Allocator, counting: bool, environment: *const std.process.Environ.Map, log: *std.ArrayList(u8), zero_rc: bool) Error!Runtime {
+-    const base_source = if (!counting) runtime_source else count_runtime.source(allocator, runtime_source) catch |err| switch (err) {
++    const source = if (!counting) runtime_source else count_runtime.source(allocator, runtime_source) catch |err| switch (err) {
+         error.OutOfMemory => return error.OutOfMemory,
+         error.AnchorMissing => {
+             try log.appendSlice(allocator, "error: the counting runtime no longer matches the runtime source\n");
+             return error.ToolFailed;
+         },
+     };
+-    const source = if (zero_rc) try std.mem.concat(allocator, u8, &.{ "#define MYL_ZERO_RC 1\n", base_source }) else base_source;
+     var abi: Digest = undefined;
+     var hash = std.crypto.hash.Blake3.init(.{});
+     hash.update(source);
+@@ -515,9 +512,10 @@
+ /// bytes, in link order.
+ fn programKey(settings: unit_cache.Settings, objects: []const Object, math: bool, sanitizer: []const u8, environment: *const std.process.Environ.Map) Digest {
+     var hash = std.crypto.hash.Blake3.init(.{});
+-    unit_cache.field(&hash, "core-program-v2");
++    unit_cache.field(&hash, "core-program-owned-v3");
+     unit_cache.field(&hash, sanitizer);
+     unit_cache.field(&hash, unit_cache.format);
++    unit_cache.field(&hash, @tagName(settings.abi));
+     unit_cache.field(&hash, settings.mode.level());
+     unit_cache.field(&hash, target_policy.native_link_target);
+     for (target.cpu_flags) |flag| unit_cache.field(&hash, flag);
+@@ -552,7 +550,7 @@
+     defer temporary.cleanup();
+     const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+     const store: unit_cache.Store = .{ .directory = root };
+-    const settings: unit_cache.Settings = .{ .tool = @splat(1), .cpu = @splat(2), .runtime = @splat(3) };
++    const settings: unit_cache.Settings = .{ .abi = guest_abi.current, .tool = @splat(1), .cpu = @splat(2), .runtime = @splat(3) };
+     const objects = [_]Object{.{ .path = "unit.o", .digest = @splat(4) }};
+     const first = programKey(settings, &objects, false, "", &environment);
+     try temporary.dir.writeFile(std.testing.io, .{ .sub_path = "staged", .data = "linked-program" });
+@@ -587,14 +585,17 @@
+ }
+ 
+ fn unitText(a: std.mem.Allocator, unit: emit_units.Unit) Error![]const u8 {
+-    if (unit.llvm.len != 0) return unit.llvm;
++    if (unit.llvm.len != 0) return if (@import("emission_cache.zig").validText(unit.llvm)) unit.llvm else error.CacheMiss;
+     const handle = unit.artifact orelse return unit.llvm;
+     const artifact = try native_receipt.materialize(a, handle);
++    const recorded: Dependencies = .{ .abi = artifact.abi, .number = artifact.number, .math = artifact.math, .counting = artifact.counting };
++    if (!std.meta.eql(recorded, unit.dependencies)) return error.CacheMiss;
+     return artifact.text;
+ }
+ 
+ fn unitInput(a: std.mem.Allocator, settings: unit_cache.Settings, cacheable: bool, given: emit_units.Unit) Error!UnitInput {
+     var unit = given;
++    if (unit.dependencies.abi != settings.abi) return error.CacheMiss;
+     if (cacheable and unit.llvm.len == 0) if (unit.artifact) |handle| {
+         if (try native_receipt.lookup(a, handle, settings)) |key| return .{ .unit = unit, .key = key };
+     };
+@@ -941,7 +942,7 @@
+     const io = native.io;
+     var digest: Digest = undefined;
+     var hash = std.crypto.hash.Blake3.init(.{});
+-    hash.update("core-runtime-object-v4\x00-O2\x00-g0\x00-falign-functions=64\x00-std=c11\x00");
++    hash.update("core-runtime-object-owned-v5\x00-O2\x00-g0\x00-falign-functions=64\x00-std=c11\x00");
+     hash.update(target_policy.native_link_target);
+     hash.update("\x00");
+     hash.update(&runtime.abi);
+@@ -1137,7 +1138,7 @@
+     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+     var environment = try std.testing.environ.createMap(a);
+     defer environment.deinit();
+-    const units = [_]emit_units.Unit{wholeUnit("invalid LLVM module")};
++    const units = [_]emit_units.Unit{try wholeUnit(@import("emission_cache.zig").marker ++ "invalid LLVM module")};
+     var request: Request = .{ .zig = environment.get("MYLANG_ZIG") orelse "zig", .work = root, .output = "", .mode = .release, .links = &.{}, .units = &units };
+     try std.testing.expectError(error.OutOfMemory, optimizationRemarks(std.testing.failing_allocator, std.testing.io, &environment, request));
+     try directory.dir.writeFile(std.testing.io, .{ .sub_path = "blocked", .data = "file" });
+@@ -1194,3 +1195,15 @@
+     try environment.put(sanitize_variable, "thread");
+     try std.testing.expect(!std.mem.eql(u8, &laid_out, &try remarkKey(a, &store, identity, .release, &environment, "LLVM A")));
+ }
++
++/// Reject malformed or legacy guest units before running any native tool.
++fn validateUnits(a: std.mem.Allocator, units: []const emit_units.Unit, log: *std.ArrayList(u8)) Error!void {
++    for (units) |unit| {
++        const matching_handle = if (unit.artifact) |handle| handle.abi == unit.dependencies.abi else true;
++        const valid_handle = unit.artifact != null and matching_handle;
++        const valid_text = if (unit.llvm.len == 0) valid_handle else @import("emission_cache.zig").validText(unit.llvm);
++        if (unit.dependencies.abi == guest_abi.current and matching_handle and valid_text) continue;
++        try log.print(a, "error: unsupported or missing checked guest ABI in unit '{s}'\n", .{unit.name});
++        return error.ToolFailed;
++    }
++}
+diff --git a/src/core/optimizer_shortcut.zig b/src/core/optimizer_shortcut.zig
+--- a/src/core/optimizer_shortcut.zig
++++ b/src/core/optimizer_shortcut.zig
+@@ -2,6 +2,7 @@
+ //! exact post-fusion and ordered mutation checkpoints for dirty caller inspection.
+ //! Changed source, callees and runtime helper inventories lose demand reuse.
+ const std = @import("std");
++const guest_abi = @import("guest_abi.zig");
+ const facts = @import("facts.zig");
+ const cache = @import("optimization_cache.zig");
+ const effects = @import("effects.zig");
+@@ -131,7 +132,7 @@
+         const saved_checkpoint = self.record(index, phase) orelse return error.CacheMiss;
+         var scratch = std.heap.ArenaAllocator.init(runtime.backing);
+         defer scratch.deinit();
+-        const value = try self.context.store.loadValue(scratch.allocator(), saved_checkpoint.key, cache.Transform) orelse return error.CacheMiss;
++        const value = try self.context.read(scratch.allocator(), saved_checkpoint.key, cache.Transform) orelse return error.CacheMiss;
+         self.context.statistics.restores.checkpoints += 1;
+         if (value.output == null or !std.mem.eql(u8, &value.output.?, &saved_checkpoint.output)) return error.CacheMiss;
+         if (value.changed != saved_checkpoint.changed or !value.provenance.equal(saved_checkpoint.provenance)) return error.CacheMiss;
+@@ -199,8 +200,9 @@
+     /// leaves partial allocations on that arena, reclaimed with the owning build.
+     pub fn prepare(a: std.mem.Allocator, context: *cache.Context, mode: u8) std.mem.Allocator.Error!?Index {
+         const layout = context.layoutDigest() orelse return null;
+-        const key = context.store.key("optimizer-shortcut-v2", &.{ &layout, &.{mode} });
+-        const previous = try context.store.loadValue(a, key, []Entry);
++        const key = context.store.key("optimizer-shortcut-owned-v3", &.{ &layout, &.{mode} });
++        const stored = try context.store.loadValue(a, key, EntryIndex);
++        const previous = if (stored) |value| value.entries else null;
+         const module = context.source.module;
+         const count = module.functions.items.len;
+         const entries = try a.alloc(Entry, count);
+@@ -241,7 +243,7 @@
+     pub fn prepareDemand(a: std.mem.Allocator, context: *cache.Context, mode: u8, field_proof: bool) demand_ir.Error!Index {
+         const demand = context.lazy.raw.?;
+         const name = if (context.source.source) |source| source.path else "";
+-        const key = context.store.key("optimizer-demand-v1", &.{ name, &.{mode} });
++        const key = context.store.key("optimizer-demand-owned-v2", &.{ name, &.{mode} });
+         const saved = if (demand.force_eager) null else try context.store.loadValue(a, key, DemandIndex);
+         const previous = if (saved) |value| value.entries else null;
+         const module = context.source.module;
+@@ -365,13 +367,15 @@
+     /// Atomically replace the advisory index; absent final artifacts still miss normally.
+     pub fn save(self: *const Index) std.mem.Allocator.Error!void {
+         if (self.context.lazy.raw != null) {
+-            try self.context.store.storeValue(self.key, DemandIndex, .{ .entries = self.entries, .catalog = self.catalog });
+-        } else try self.context.store.storeValue(self.key, []Entry, self.entries);
++            try self.context.store.storeValue(self.key, DemandIndex, .{ .abi = self.context.source.module.abi, .entries = self.entries, .catalog = self.catalog });
++        } else try self.context.store.storeValue(self.key, EntryIndex, .{ .abi = self.context.source.module.abi, .entries = self.entries });
+     }
+ };
+ 
+ /// Portable admission metadata and the post-fusion declaration proof.
+-pub const DemandIndex = struct { entries: []Entry, catalog: fusion.Catalog };
++pub const DemandIndex = struct { abi: guest_abi.Abi, entries: []Entry, catalog: fusion.Catalog };
++/// Compact eager checkpoint metadata carries the same required provenance.
++pub const EntryIndex = struct { abi: guest_abi.Abi, entries: []Entry };
+ 
+ fn reusableEntry(entry: Entry, module: *const @import("ir.zig").Module, index: usize, catalog: fusion.Catalog) bool {
+     if (!entry.demand.fusion.identity and entry.demand.fusion.key == null) return false;
+diff --git a/src/core/fusion_checkpoint.zig b/src/core/fusion_checkpoint.zig
+--- a/src/core/fusion_checkpoint.zig
++++ b/src/core/fusion_checkpoint.zig
+@@ -1,5 +1,6 @@
+ //! Portable post-fusion bodies and the exact appended runtime declaration catalog.
+ const std = @import("std");
++const guest_abi = @import("guest_abi.zig");
+ const ir = @import("ir.zig");
+ const cache = @import("optimization_cache.zig");
+ const snapshot = @import("ir_snapshot.zig");
+@@ -31,7 +32,7 @@
+ /// Capture a complete fused input under its lowering, catalog and body identities.
+ pub fn save(a: std.mem.Allocator, context: *cache.Context, index: u32, lowered: [32]u8, output: [32]u8) std.mem.Allocator.Error!?[32]u8 {
+     const layout = context.layoutDigest() orelse return null;
+-    const key = context.store.key("optimizer-fusion-v1", &.{ &lowered, &layout, &output });
++    const key = context.store.key("optimizer-fusion-owned-v2", &.{ guest_abi.identity, &lowered, &layout, &output });
+     const wire = snapshot.capture(a, context.source, context.source.module.functions.items[index]) catch |err| switch (err) {
+         error.OutOfMemory => return error.OutOfMemory,
+         error.InvalidSnapshot => return null,
+diff --git a/src/core/lowering_demand.zig b/src/core/lowering_demand.zig
+--- a/src/core/lowering_demand.zig
++++ b/src/core/lowering_demand.zig
+@@ -4,10 +4,12 @@
+ //! Lowering still validates its exact catalog, discovery order and artifact; any
+ //! missing artifact asks the pipeline to repeat with complete checked trees.
+ const std = @import("std");
++const guest_abi = @import("guest_abi.zig");
+ const language = @import("mylang");
+ const stage = @import("stage_store.zig");
+ const sources = @import("demand_sources.zig");
+ 
++const Manifest = struct { abi: guest_abi.Abi, receipts: []const Receipt };
+ const Receipt = struct {
+     key: []const u8,
+     context: stage.Digest,
+@@ -34,11 +36,12 @@
+ 
+     /// Load the last complete lowering manifest for this entry and debug policy.
+     pub fn init(arena: std.mem.Allocator, store: *const stage.Store, entry: []const u8, drop_debug: bool) std.mem.Allocator.Error!Context {
+-        const key = store.key("lowering-demand-v3", &.{ entry, &.{@intFromBool(drop_debug)} });
++        const key = store.key("lowering-demand-owned-v4", &.{ entry, &.{@intFromBool(drop_debug)} });
+         var self: Context = .{ .arena = arena, .store = store, .key = key, .sources = .{ .arena = arena } };
+         errdefer self.previous.deinit(arena);
+-        const receipts = try store.loadValue(arena, key, []const Receipt) orelse return self;
+-        for (receipts) |receipt| {
++        const manifest = try store.loadValue(arena, key, Manifest) orelse return self;
++        if (manifest.abi != guest_abi.current) return self;
++        for (manifest.receipts) |receipt| {
+             const found = try self.previous.getOrPut(arena, receipt.key);
+             if (found.found_existing) {
+                 self.previous.clearRetainingCapacity();
+@@ -171,6 +174,6 @@
+                 try self.next.append(self.arena, receipt);
+             }
+         }
+-        try self.store.storeValue(self.key, []const Receipt, self.next.items);
++        try self.store.storeValue(self.key, Manifest, .{ .abi = guest_abi.current, .receipts = self.next.items });
+     }
+ };
+diff --git a/src/core/build_replay.zig b/src/core/build_replay.zig
+--- a/src/core/build_replay.zig
++++ b/src/core/build_replay.zig
+@@ -2,7 +2,7 @@
+ //! executable its last identical build produced, without running the front end,
+ //! the whole-program pipeline, emission or any tool.
+ //!
+-//! One record per entry and settings lives in `<cache>/replay-v1/<key>`; the last
++//! One record per entry and settings lives in `<cache>/replay-owned-v2/<key>`; the last
+ //! successful build wins the slot. The key covers the compiler's identity, the
+ //! command's flags, the entry and its project configuration (resolved afresh on
+ //! every build), the toolchain identity and the complete environment. The record
+@@ -17,6 +17,7 @@
+ //! report text the build printed. A replay rereads and rehashes every listed file,
+ //! revalidates the toolchain, and checks the program entry before copying it.
+ const std = @import("std");
++const guest_abi = @import("guest_abi.zig");
+ const language = @import("mylang");
+ const frontend = @import("frontend.zig");
+ const project_entry = @import("project_entry.zig");
+@@ -41,11 +42,11 @@
+ /// Why a replay could not be read or written; a damaged record is a miss.
+ pub const Error = error{ OutOfMemory, WriteFailed };
+ 
+-const version = "core-build-replay-v1";
++const version = "core-build-replay-owned-v2";
+ const Stamp = struct { size: u64, inode: u64, mtime: i64, ctime: i64 };
+ const Entry = struct { path: []const u8, digest: []const u8 };
+-const Snapshot = struct { key: []const u8, dependencies: []const Entry, program: []const u8, digest: []const u8, stamp: Stamp, report: []const u8 };
+-const Envelope = struct { version: []const u8, payload: []const u8, checksum: []const u8 };
++const Snapshot = struct { abi: guest_abi.Abi, key: []const u8, dependencies: []const Entry, program: []const u8, digest: []const u8, stamp: Stamp, report: []const u8 };
++const Envelope = struct { abi: guest_abi.Abi, version: []const u8, payload: []const u8, checksum: []const u8 };
+ 
+ /// Publish the recorded executable to `output` and append the recorded report when
+ /// every input is unchanged; false (a miss) otherwise, having written nothing.
+@@ -100,11 +101,11 @@
+     const entries = try a.alloc(Entry, files.items.len);
+     for (files.items, entries) |file, *entry| entry.* = .{ .path = file.path, .digest = if (file.digest) |digest| try hex(a, digest) else "" };
+     const key = try settingsKey(context, tool);
+-    const snapshot: Snapshot = .{ .key = try hex(a, key), .dependencies = entries, .program = program.path, .digest = try hex(a, program.digest), .stamp = stamp(status), .report = report };
++    const snapshot: Snapshot = .{ .abi = guest_abi.current, .key = try hex(a, key), .dependencies = entries, .program = program.path, .digest = try hex(a, program.digest), .stamp = stamp(status), .report = report };
+     const payload = std.json.Stringify.valueAlloc(a, snapshot, .{}) catch return error.OutOfMemory;
+     var checksum: Digest = undefined;
+     std.crypto.hash.Blake3.hash(payload, &checksum, .{});
+-    const envelope: Envelope = .{ .version = version, .payload = payload, .checksum = try hex(a, checksum) };
++    const envelope: Envelope = .{ .abi = guest_abi.current, .version = version, .payload = payload, .checksum = try hex(a, checksum) };
+     const bytes = std.json.Stringify.valueAlloc(a, envelope, .{}) catch return error.OutOfMemory;
+     try atomicWrite(context, try recordPath(context, key), bytes);
+ }
+@@ -116,6 +117,7 @@
+ pub fn settingsKey(context: Context, tool: tool_identity.Identity) Error!Digest {
+     var hash = std.crypto.hash.Blake3.init(.{});
+     unit_cache.field(&hash, version);
++    unit_cache.field(&hash, guest_abi.identity);
+     unit_cache.field(&hash, frontend.compiler_identity);
+     unit_cache.field(&hash, context.flags);
+     // `--link` compiles name their sources relative to it in debug information.
+@@ -230,19 +232,20 @@
+         return null;
+     };
+     const envelope = std.json.parseFromSliceLeaky(Envelope, a, bytes, .{}) catch return null;
+-    if (!std.mem.eql(u8, envelope.version, version)) return null;
++    if (envelope.abi != guest_abi.current or !std.mem.eql(u8, envelope.version, version)) return null;
+     var checksum: Digest = undefined;
+     std.crypto.hash.Blake3.hash(envelope.payload, &checksum, .{});
+     const recorded = parseDigest(envelope.checksum) orelse return null;
+     if (!std.mem.eql(u8, &checksum, &recorded)) return null;
+     const snapshot = std.json.parseFromSliceLeaky(Snapshot, a, envelope.payload, .{}) catch return null;
++    if (snapshot.abi != guest_abi.current) return null;
+     const stored_key = parseDigest(snapshot.key) orelse return null;
+     if (!std.mem.eql(u8, &stored_key, &key)) return null;
+     return snapshot;
+ }
+ 
+ fn recordPath(context: Context, key: Digest) Error![]const u8 {
+-    return std.fmt.allocPrint(context.arena, "{s}/replay-v1/{s}", .{ context.cache, std.fmt.bytesToHex(key, .lower) });
++    return std.fmt.allocPrint(context.arena, "{s}/replay-owned-v2/{s}", .{ context.cache, std.fmt.bytesToHex(key, .lower) });
+ }
+ 
+ fn toolRequest(context: Context) tool_identity.Request {
+@@ -307,3 +310,44 @@
+     changed.entry.path = "/p/other.my";
+     try std.testing.expect(!std.mem.eql(u8, &original, &try settingsKey(changed, tool)));
+ }
++
++fn a08ReplayImage(context: Context, key: Digest, payload: []const u8, image_version: []const u8) Error!void {
++    var checksum: Digest = undefined;
++    std.crypto.hash.Blake3.hash(payload, &checksum, .{});
++    const envelope: Envelope = .{ .abi = guest_abi.current, .version = image_version, .payload = payload, .checksum = try hex(context.arena, checksum) };
++    const bytes = try std.json.Stringify.valueAlloc(context.arena, envelope, .{});
++    try atomicWrite(context, try recordPath(context, key), bytes);
++}
++
++// spec-case: NEW-CORE-S4-REPLAY-1
++test "A08 retired ABI whole replay rejects missing and foreign provenance before program adoption" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    var environment: std.process.Environ.Map = .init(a);
++    defer environment.deinit();
++    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
++    const context: Context = .{ .arena = a, .io = std.testing.io, .environment = &environment, .cache = root, .zig = "/not-run", .flags = "{}", .entry = .{ .path = "/p/main.my", .root = "/p", .name = "main" } };
++    const key: Digest = @splat(7);
++    const snapshot: Snapshot = .{ .abi = guest_abi.current, .key = try hex(a, key), .dependencies = &.{}, .program = "/not-adopted", .digest = try hex(a, @splat(8)), .stamp = .{ .size = 1, .inode = 2, .mtime = 3, .ctime = 4 }, .report = "" };
++    const valid = try std.json.Stringify.valueAlloc(a, snapshot, .{});
++    const missing = try std.mem.replaceOwned(u8, a, valid, "\"abi\":\"checked_owned_v1\",", "");
++    const foreign = try std.mem.replaceOwned(u8, a, valid, "checked_owned_v1", "foreign_owned_v1");
++    try std.testing.expect(missing.len < valid.len);
++    for ([_][]const u8{ missing, foreign }) |payload| {
++        try a08ReplayImage(context, key, payload, version);
++        try std.testing.expect((try load(context, key)) == null);
++    }
++    try a08ReplayImage(context, key, valid, "core-build-replay-v1");
++    try std.testing.expect((try load(context, key)) == null);
++    try a08ReplayImage(context, key, valid, version);
++    try std.testing.expect((try load(context, key)) != null);
++    const path = try recordPath(context, key);
++    const encoded = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(64 << 10));
++    const no_envelope_abi = try std.mem.replaceOwned(u8, a, encoded, "\"abi\":\"checked_owned_v1\",", "");
++    try std.testing.expect(no_envelope_abi.len < encoded.len);
++    try atomicWrite(context, path, no_envelope_abi);
++    try std.testing.expect((try load(context, key)) == null);
++}
+diff --git a/src/core/a08_retired_abi_test.zig b/src/core/a08_retired_abi_test.zig
+new file mode 100644
+--- /dev/null
++++ b/src/core/a08_retired_abi_test.zig
+@@ -0,0 +1,164 @@
++//! Missing, legacy and foreign guest provenance never enters a checked native link.
++const std = @import("std");
++const abi = @import("guest_abi.zig");
++const codec = @import("mylang").persist_codec;
++const emission = @import("emission_cache.zig");
++const units = @import("emit_units.zig");
++const native = @import("native_receipt.zig");
++const objects = @import("unit_cache.zig");
++const stage = @import("stage_store.zig");
++const driver = @import("driver.zig");
++const ir = @import("ir.zig");
++const snapshot = @import("ir_snapshot.zig");
++const optimizer = @import("optimization_cache.zig");
++const plain = "define i32 @f() { ret i32 7 }\n";
++const checked = emission.marker ++ plain;
++const artifact: emission.Artifact = .{ .abi = abi.current, .text = checked, .number = false, .math = false, .counting = false };
++
++// spec-case: NEW-CORE-STAGE-CACHE-9
++test "A08 retired ABI refuses checksum-valid old artifact shapes and foreign provenance" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var directory = std.testing.tmpDir(.{});
++    defer directory.cleanup();
++    var storage = try stage.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
++    defer storage.deinit();
++    const key = storage.key("A08-owned-admission", &.{});
++    const handle: emission.NativeArtifact = .{ .abi = abi.current, .store = &storage, .key = key };
++    const Legacy = struct { text: []const u8, number: bool, math: bool, counting: bool, zero_rc: bool };
++    for ([_]bool{ false, true }) |old_mode| {
++        try storage.storeValue(key, Legacy, .{ .text = plain, .number = false, .math = false, .counting = false, .zero_rc = old_mode });
++        try std.testing.expect((try emission.loadArtifact(&storage, a, key)) == null);
++        try std.testing.expectError(error.CacheMiss, native.materialize(a, handle));
++    }
++    var encoded = codec.Writer.init(a);
++    try encoded.write(emission.Artifact, artifact);
++    for ([_]u32{ 0, 1, @backingInt(abi.current) + 1 }) |foreign| {
++        std.mem.writeInt(u32, encoded.bytes.items[0..4], foreign, .little);
++        try std.testing.expect(try storage.save(key, encoded.bytes.items));
++        try std.testing.expect((try emission.loadArtifact(&storage, a, key)) == null);
++    }
++    var forged = artifact;
++    for ([_][]const u8{ plain, "; mylang-zero-rc-v2\n" ++ plain, "; foreign-abi\n" ++ plain }) |text| {
++        forged.text = text;
++        try storage.storeValue(key, emission.Artifact, forged);
++        try std.testing.expectError(error.CacheMiss, native.materialize(a, handle));
++    }
++    try storage.storeValue(key, emission.Artifact, artifact);
++    try std.testing.expectEqualStrings(checked, (try native.materialize(a, handle)).text);
++}
++
++// spec-case: NEW-CORE-STAGE-CACHE-9
++test "A08 retired ABI compact receipts and native mappings require explicit OWN1" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var directory = std.testing.tmpDir(.{});
++    defer directory.cleanup();
++    var storage = try stage.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
++    defer storage.deinit();
++    const key = storage.key("A08-owned-receipt", &.{});
++    const Legacy = struct { artifact: stage.Digest, text_digest: stage.Digest, dependencies: struct { number: bool, math: bool, counting: bool, zero_rc: bool } };
++    for ([_]bool{ false, true }) |old_mode| {
++        try storage.storeValue(key, Legacy, .{ .artifact = @splat(1), .text_digest = @splat(2), .dependencies = .{ .number = false, .math = false, .counting = false, .zero_rc = old_mode } });
++        try std.testing.expect((try emission.loadReceipt(&storage, a, key)) == null);
++    }
++    const settings: objects.Settings = .{ .abi = abi.current, .tool = @splat(1), .cpu = @splat(2), .runtime = @splat(3) };
++    const handle: emission.NativeArtifact = .{ .abi = abi.current, .store = &storage, .key = key };
++    const exact = objects.key(settings, checked);
++    const policy = objects.key(settings, "");
++    const mapping = storage.key("native-unit-receipt-owned-v2", &.{ &policy, &key });
++    try storage.storeValue(mapping, objects.Digest, exact);
++    try std.testing.expect((try native.lookup(a, handle, settings)) == null);
++    const Foreign = struct { abi: u32, exact: objects.Digest };
++    try storage.storeValue(mapping, Foreign, .{ .abi = 0, .exact = exact });
++    try std.testing.expect((try native.lookup(a, handle, settings)) == null);
++    try native.remember(handle, settings, exact);
++    try std.testing.expectEqual(exact, (try native.lookup(a, handle, settings)).?);
++}
++
++// spec-case: NEW-CORE-DRIVER-1
++test "A08 retired ABI refuses mixed and absent guest text before tool discovery" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    try std.testing.expectError(error.UnsupportedInstruction, units.unit("old", "", .module, plain));
++    try std.testing.expectError(error.UnsupportedGuestAbi, driver.wholeUnit(plain));
++    const accepted = try driver.wholeUnit(checked);
++    var rejected = accepted;
++    rejected.llvm = "; mylang-zero-rc-v2\n" ++ plain;
++    var environment = try std.testing.environ.createMap(a);
++    defer environment.deinit();
++    var log: std.ArrayList(u8) = .empty;
++    const request: driver.Request = .{ .zig = "/nonexistent/A08-tool-must-not-run", .work = "/nonexistent/A08-cache", .output = "/nonexistent/A08-output", .links = &.{}, .units = &.{ accepted, rejected } };
++    try std.testing.expectError(error.ToolFailed, driver.link(a, std.testing.io, &environment, request, &log));
++    try std.testing.expect(std.mem.indexOf(u8, log.items, "unsupported or missing checked guest ABI") != null);
++    try std.testing.expect(std.mem.indexOf(u8, log.items, "cannot run") == null);
++}
++
++fn locate(_: *const anyopaque, offset: u32) @import("emit_llvm.zig").Location {
++    return .{ .line = 1, .column = offset + 1, .path = "owned.my" };
++}
++
++// spec-case: NEW-CORE-STAGE-CACHE-9
++test "A08 retired ABI snapshot wire requires OWN1 before structural restoration" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var directory = std.testing.tmpDir(.{});
++    defer directory.cleanup();
++    var storage = try stage.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
++    defer storage.deinit();
++    var module: ir.Module = .{};
++    var function: ir.Function = .{ .name = "owned", .signature = .{ .params = &.{}, .ret = .void } };
++    try function.insts.append(a, .{ .op = .ret, .ty = .void });
++    var block: ir.Block = .{};
++    try block.insts.append(a, @fromBackingInt(0));
++    try function.blocks.append(a, block);
++    try module.functions.append(a, function);
++    const context = try snapshot.Context.init(a, &module, null);
++    const wire = try snapshot.capture(a, context, function);
++    const key = storage.key("A08-owned-snapshot", &.{});
++    const Legacy = struct { function: snapshot.Function, strings: []const []const u8, locations: []snapshot.Location };
++    try storage.storeValue(key, Legacy, .{ .function = wire.function, .strings = wire.strings, .locations = wire.locations });
++    try std.testing.expect((try storage.loadValue(a, key, snapshot.Wire)) == null);
++    var encoded = codec.Writer.init(a);
++    try encoded.write(snapshot.Wire, wire);
++    for ([_]u32{ 0, 1, @backingInt(abi.current) + 1 }) |foreign| {
++        std.mem.writeInt(u32, encoded.bytes.items[0..4], foreign, .little);
++        try std.testing.expect(try storage.save(key, encoded.bytes.items));
++        try std.testing.expect((try storage.loadValue(a, key, snapshot.Wire)) == null);
++    }
++    try storage.storeValue(key, snapshot.Wire, wire);
++    const restored = try snapshot.restore(a, context, (try storage.loadValue(a, key, snapshot.Wire)).?);
++    try std.testing.expectEqualStrings(function.name, restored.name);
++    try std.testing.expectEqual(ir.Op.ret, restored.insts.items[0].op);
++}
++
++// spec-case: NEW-CORE-STAGE-CACHE-9
++test "A08 retired ABI bodyless optimizer artifacts require the stage envelope" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var directory = std.testing.tmpDir(.{});
++    defer directory.cleanup();
++    var storage = try stage.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
++    defer storage.deinit();
++    var module: ir.Module = .{};
++    const token: u8 = 0;
++    var context = optimizer.Context.init(&storage, try snapshot.Context.init(a, &module, null), .{ .context = &token, .locate = locate });
++    const key = storage.key("A08-owned-summary", &.{});
++    const value: optimizer.Summary = .{ .returned = null, .calls = &.{} };
++    try storage.storeValue(key, optimizer.Summary, value);
++    try std.testing.expect((try context.read(a, key, optimizer.Summary)) == null);
++    var encoded = codec.Writer.init(a);
++    try encoded.write(optimizer.Owned(optimizer.Summary), .{ .abi = abi.current, .value = value });
++    for ([_]u32{ 0, 1, @backingInt(abi.current) + 1 }) |foreign| {
++        std.mem.writeInt(u32, encoded.bytes.items[0..4], foreign, .little);
++        try std.testing.expect(try storage.save(key, encoded.bytes.items));
++        try std.testing.expect((try context.read(a, key, optimizer.Summary)) == null);
++    }
++    try context.save(key, optimizer.Summary, value);
++    try std.testing.expectEqualDeep(value, (try context.read(a, key, optimizer.Summary)).?);
++}

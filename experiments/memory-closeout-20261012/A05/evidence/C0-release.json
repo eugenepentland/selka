@@ -1,0 +1,278 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "overlay": false,
+  "check_only": false,
+  "harness_sha256": "6076ceba82f7b0cbbc6577dc033539f65bfc0e6022e8b9fae985db93363621ca",
+  "cases": {
+    "math_extra": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/math_extra.my",
+        "original_sha256": "6481c446a352ac939fedf7fad3ec7a428c726567c4d12696d0fc37fc268521e5",
+        "source_sha256": "6481c446a352ac939fedf7fad3ec7a428c726567c4d12696d0fc37fc268521e5",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-release/math_extra/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-release/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-release/math_extra/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-release/math_extra/release/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "build-slot: FIFO ticket 29, position 13; earlier build tickets must run first; waiting (0s so far)\nbuild-slot: FIFO ticket 29, position 13; earlier build tickets must run first; waiting (60s so far)\nbuild-slot: FIFO ticket 29, position 8; earlier build tickets must run first; waiting (121s so far)\nbuild-slot: FIFO ticket 29, position 8; earlier build tickets must run first; waiting (181s so far)\nbuild-slot: FIFO ticket 29, position 3; earlier build tickets must run first; waiting (241s so far)\nbuild-slot: build slot 2, FIFO ticket 29 after 261s\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "6481c446a352ac939fedf7fad3ec7a428c726567c4d12696d0fc37fc268521e5"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stderr": "",
+        "binary_sha256": "ff3c24c7be940d179321f665daa6c960b777f82739968c271e638e4c7d095ae2",
+        "llvm_sha256": "28486399fe07cd8c50d37b972b7b7350b3ef864a0e7343f2a2486c015b0074f8",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/C0-release/math_extra/release/counts.json",
+          "counter_sha256": "548d9e682a5e60a1371a69b1e4313095c7f5c87f91a365c0e6b118aacf1720e0",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 0,
+          "memory": {
+            "allocs": 0,
+            "alloc_bytes": 0,
+            "frees": 0,
+            "reallocs": 0,
+            "peak_live_bytes": 0,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      }
+    },
+    "sort": {
+      "release": {
+        "original_source": "src/stdlib/fixtures/sort.my",
+        "original_sha256": "1e966e156f458334e3bbc153fe7cf535a2996f0e316028e5eb547145ef703567",
+        "source_sha256": "1e966e156f458334e3bbc153fe7cf535a2996f0e316028e5eb547145ef703567",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-release/sort/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-release/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-release/sort/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-release/sort/release/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "build-slot: FIFO ticket 50, position 20; earlier build tickets must run first; waiting (0s so far)\nbuild-slot: FIFO ticket 50, position 12; earlier build tickets must run first; waiting (60s so far)\nbuild-slot: FIFO ticket 50, position 4; earlier build tickets must run first; waiting (120s so far)\nbuild-slot: FIFO ticket 50, position 2; earlier build tickets must run first; waiting (180s so far)\nbuild-slot: build slot 2, FIFO ticket 50 after 200s\n",
+        "expected_status": 42,
+        "passed": true,
+        "source_files": {
+          "main.my": "1e966e156f458334e3bbc153fe7cf535a2996f0e316028e5eb547145ef703567"
+        },
+        "run_status": 42,
+        "stdout": "",
+        "stderr": "",
+        "binary_sha256": "26579a245e35629c49e6816b155831f05c00ac2540443ec01ab397f09db6ce9c",
+        "llvm_sha256": "c9ae0190169b276e4eb3e62f2e3bd72352ab684694a6755bcba051a8863b6433",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/C0-release/sort/release/counts.json",
+          "counter_sha256": "554836d1adbc0305db623c1b8ddcfcbc5bcaf1bfd133851ba69dd3e5f66aa64f",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 26,
+          "memory": {
+            "allocs": 42,
+            "alloc_bytes": 3200,
+            "frees": 42,
+            "reallocs": 0,
+            "peak_live_bytes": 576,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      }
+    },
+    "math": {
+      "release": {
+        "original_source": "src/stdlib/fixtures/math.my",
+        "original_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+        "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-release/math/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-release/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-release/math/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-release/math/release/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "build-slot: FIFO ticket 67, position 16; earlier build tickets must run first; waiting (0s so far)\nbuild-slot: FIFO ticket 67, position 14; earlier build tickets must run first; waiting (61s so far)\nbuild-slot: FIFO ticket 67, position 7; earlier build tickets must run first; waiting (121s so far)\nbuild-slot: FIFO ticket 67, position 2; earlier build tickets must run first; waiting (181s so far)\nbuild-slot: build slot 2, FIFO ticket 67 after 191s\n",
+        "expected_status": 42,
+        "passed": true,
+        "source_files": {
+          "main.my": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02"
+        },
+        "run_status": 42,
+        "stdout": "",
+        "stderr": "",
+        "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff",
+        "llvm_sha256": "c08a627af4ebccf63390ec5bb41acbd1046fb30ee54fcf79efcb8a7e7ac2cec1",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/C0-release/math/release/counts.json",
+          "counter_sha256": "8e4bdf11393a1355f1b57c191b22c20e639eabde8fc0d7210ec7eb973062dd7c",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 4,
+          "memory": {
+            "allocs": 0,
+            "alloc_bytes": 0,
+            "frees": 0,
+            "reallocs": 0,
+            "peak_live_bytes": 0,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      }
+    },
+    "integer_extrema": {
+      "release": {
+        "original_source": "src/stdlib/fixtures/integer_extrema.my",
+        "original_sha256": "6d5ecc8e225b828152404291d1924c69d6984f956aa7d781aff048f378bab1b0",
+        "source_sha256": "6d5ecc8e225b828152404291d1924c69d6984f956aa7d781aff048f378bab1b0",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-release/integer_extrema/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-release/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-release/integer_extrema/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-release/integer_extrema/release/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "build-slot: FIFO ticket 78, position 11; earlier build tickets must run first; waiting (0s so far)\nbuild-slot: FIFO ticket 78, position 5; earlier build tickets must run first; waiting (60s so far)\nbuild-slot: FIFO ticket 78, position 4; earlier build tickets must run first; waiting (120s so far)\nbuild-slot: FIFO ticket 78, position 4; earlier build tickets must run first; waiting (181s so far)\nbuild-slot: FIFO ticket 78, position 4; earlier build tickets must run first; waiting (241s so far)\nbuild-slot: FIFO ticket 78, position 4; earlier build tickets must run first; waiting (301s so far)\nbuild-slot: build slot 2, FIFO ticket 78 after 336s\n",
+        "expected_status": 42,
+        "passed": true,
+        "source_files": {
+          "main.my": "6d5ecc8e225b828152404291d1924c69d6984f956aa7d781aff048f378bab1b0"
+        },
+        "run_status": 42,
+        "stdout": "",
+        "stderr": "",
+        "binary_sha256": "036225b2b4d069f7b869e3376cb8377af9057c42bc4800208fe72c67f6308112",
+        "llvm_sha256": "2081529cf6cfe142714f5d924efa4f6970fca187ab1d2fc5e2a68c0e8c291eaf",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/C0-release/integer_extrema/release/counts.json",
+          "counter_sha256": "6b15e41cf185c9ce61371d35f2f2a82ae86766eac9327783021add94bb4c194a",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 0,
+          "memory": {
+            "allocs": 0,
+            "alloc_bytes": 0,
+            "frees": 0,
+            "reallocs": 0,
+            "peak_live_bytes": 0,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      }
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "source_sha256": "51cd61bacf0503411617441259ac0256be5c313c05a8fcad438747b11e1b90c8",
+  "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+  "source_commit": "66890fbc5135a771e6a423724d13c30018ab717f",
+  "modes": {
+    "ordinary": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/repetition/affine_resource.my"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/repetition/affine_resource.my:1:1: error[E_LIST_ELEMENT]: managed list elements must be copyable values without resources or result obligations\n  resource File: filesystem\n  ^\n"
+    },
+    "zero_rc": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/repetition/affine_resource.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/repetition/affine_resource.my:1:1: error[E_LIST_ELEMENT]: managed list elements must be copyable values without resources or result obligations\n  resource File: filesystem\n  ^\n"
+    }
+  }
+}

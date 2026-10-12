@@ -1,0 +1,32 @@
+{
+  "tests/lang/keyed_sorting.my": {
+    "before_commit": "b89021c4e982e46152295b84f20802ab9268c759",
+    "before_sha256": "f1d0fc654ff341c640c061a50dd29513ca4c010ddf1c436af0ece596a8037d3a",
+    "after_sha256": "977baafac9a143e28cda3289e6d7c99fa8ae2c8860bd3f255ddd02c3a2c12fc9",
+    "added_lines": 4,
+    "removed_lines": 4,
+    "explicit_copy_calls_before": 3,
+    "explicit_copy_calls_after": 7,
+    "test_signatures_and_return_assertions_preserved": true
+  },
+  "tests/lang/field_augmented.my": {
+    "before_commit": "b89021c4e982e46152295b84f20802ab9268c759",
+    "before_sha256": "0e4fc142dde4cc8cf878f7ee802841007c50235ca92f84510efc7ad48fc60d17",
+    "after_sha256": "ea426ef4a22899f286cbee67e339c253a2b16b775662b840712a650beb6c501e",
+    "added_lines": 2,
+    "removed_lines": 2,
+    "explicit_copy_calls_before": 2,
+    "explicit_copy_calls_after": 4,
+    "test_signatures_and_return_assertions_preserved": true
+  },
+  "tests/lang/dictionary_views.my": {
+    "before_commit": "b89021c4e982e46152295b84f20802ab9268c759",
+    "before_sha256": "10841702582ed4090160d396aa57a420a3a9273a07d602041e431ca503cbb796",
+    "after_sha256": "3ce6c4c1c8e3b755c83c62efa837beb5334696183eef93cb1005a909bb08cc05",
+    "added_lines": 1,
+    "removed_lines": 1,
+    "explicit_copy_calls_before": 0,
+    "explicit_copy_calls_after": 1,
+    "test_signatures_and_return_assertions_preserved": true
+  }
+}

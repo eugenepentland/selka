@@ -1,0 +1,13 @@
+{
+  "path": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-provider/.zig-cache",
+  "generated_bytes_removed": 3198063961,
+  "active_compiler_processes_in_worktree": [],
+  "time_unix": 1791793488.8690972,
+  "preserved": [
+    "zig-out",
+    ".tmp",
+    "source",
+    "LLVM",
+    "receipts"
+  ]
+}

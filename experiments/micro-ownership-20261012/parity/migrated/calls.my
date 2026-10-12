@@ -1,0 +1,11 @@
+# calls: N ordinary calls to a two-argument leaf function.
+func step(a: int, b: int) -> int:
+    return (a + b) % 1000003
+
+
+func main(out: Stream) -> int:
+    mut total = 0
+    for i in range(30000000):
+        total = step(total, i)
+    out.print(total)
+    return 0

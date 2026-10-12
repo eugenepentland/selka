@@ -1,0 +1,15 @@
+func make(mut count: int, i: int) -> str:
+    count += 1
+    return "word-" + str(i)
+func main(out: Stream) -> int:
+    mut count = 0
+    mut answer = ""
+    mut seen = False
+    for i in range(32):
+        const candidate = make(mut count, i)
+        if not seen or answer < candidate:
+            answer = candidate
+            seen = True
+    assert seen
+    out.print(answer, count)
+    return 0

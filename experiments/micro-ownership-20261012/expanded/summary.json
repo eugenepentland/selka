@@ -1,0 +1,16 @@
+{
+  "builds": 24,
+  "successful_builds": 24,
+  "refused_builds": 0,
+  "cases": 40,
+  "micros": 35,
+  "applications": 5,
+  "probes": 1200,
+  "failed_probes": 0,
+  "checked_counted_probes": 200,
+  "checked_residual_runtime_rc": [],
+  "checked_live_bytes_at_exit_nonzero": [],
+  "counted_stderr_lengths": [
+    0
+  ]
+}

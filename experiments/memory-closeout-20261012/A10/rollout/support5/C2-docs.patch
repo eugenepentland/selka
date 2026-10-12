@@ -1,0 +1,1258 @@
+diff --git a/docs/current-language.md b/docs/current-language.md
+--- a/docs/current-language.md
++++ b/docs/current-language.md
+@@ -20,16 +20,16 @@
+ | Control flow | Indented if/elif/else, while, foreach/enumerate/range (with an optional step), break/continue and match/case | [range iteration](range-iteration.md), [stepped ranges](range-iteration.md#stepped-ranges), [matching a variant](match-expressions.md); conservative outer ownership on loop exits |
+ | Python expressions | Chained comparisons, `str`/`bytes` ordering, `*` repetition of text and lists, `round(x, n)`, and CPython format specifications in `f"{value:spec}"` | [operators Python has](python-syntax.md#operators-python-has), [ordering and repetition](text.md#ordering-and-repetition), [format specifications](text.md#format-specifications); `round` breaks ties away from zero (a declared divergence); `**` stays rejected |
+ | Generics | Functions and nominal records/unions/results/enums; structural field/operation contracts and const length parameters | [structural contracts](../examples/structural-constraints.my); [inferred call type arguments](generic-inference.md) |
+-| Managed memory | Value semantics: lists, dictionaries, sets and byte buffers are independent values; one-count reference counting with copy-on-write releases each value when its last owner goes away; no collector and no runtime choice | [Value semantics](value-semantics.md), [releasing memory](managed-memory.md#releasing-memory); `class` and builtin `Cell` are rejected |
++| Managed memory | Checked ownership: assignments and returns can move; ordinary parameters borrow; `.copy()` recursively creates independent storage; direct destruction ends each owner | [Value semantics](value-semantics.md), [releasing memory](managed-memory.md#releasing-memory); `class` and builtin `Cell` are rejected |
+ | Managed arenas | Retired: `with arena():` is rejected with `E_ARENA_REMOVED`; `mylang fix` removes the line and dedents its body | [Retired arenas](managed-memory.md#retired-arenas) records the retirement |
+-| Managed bytes | Immutable reference-counted byte strings with Python indexing, slicing, membership, split/join and text/hex conversions | [Managed byte strings](bytes.md); byte strings are rejected at JSON and C boundaries like `str` |
++| Managed bytes | Immutable owned byte strings with Python indexing, slicing, membership, split/join and text/hex conversions | [Managed byte strings](bytes.md); byte strings are rejected at JSON and C boundaries like `str` |
+ | Ordinary I/O | `Stream.print` with Python rendering and an `output` effect; `with open(...)`, handle methods and whole-path file helpers over granted directories | [printing, files and authority](io.md) |
+ | Program boundary | `main(args: str[], ...)` receives guest arguments after `--` from `run`/`build --run` or after `argv[0]` from an installed executable; an `err: Stream` parameter writes diagnostics; explicit `Environment` access and `main -> int fails str` are supported | [arguments](io.md#arguments); [exit results](io.md#what-mylang-run-prints-and-returns); a synthetic program name is never placed in the list |
+ | Resources | External resource owners, explicit completion and deterministic cleanup | [source resources](experiments/source-resources.md) and [resource reads and writes](experiments/resource-io.md), with runnable [`examples/resources.my`](../examples/resources.my) and [`examples/resource-io.my`](../examples/resource-io.my); no ambient operating-system authority |
+ | Authority | Explicit host capabilities and transitive effect ceilings; `mylang run` grants them all, and `--restrict` plus `--allow-*` withholds and narrows them | [capability effects](effects.md); [command-line grants](io.md#capabilities); [scoped directory/endpoint grants](experiments/scoped-providers.md) |
+ | Modules | Path-based disk imports, `public` declarations, nominal identity and embedded standard modules | [domain codecs](../examples/domain-codecs/main.my); [local locked package roots](experiments/local-packages.md); no network version resolver |
+-| Standard library | Fifteen embedded modules over managed types: `math`, `strings`, `sort`, `path`, `hex`, `base64`, `byte_builder`, `json`, `pool`, `memo`, `network`, `random`, `time`, `filesystem`, `environment` | [standard library](standard-library.md); no transcendental functions, generic sorting uses an explicit key callback; filesystem and network operations require capabilities |
+-| Data interchange | Typed JSON codecs for exported types (`schema-project`, `mylang test --cases`), and managed byte strings | [managed byte strings](bytes.md); `bytes` is not a Unicode string type; guest-source JSON operations were removed with the explicit storage tier |
++| Standard library | Embedded modules over managed types include `math`, `strings`, `sort`, `path`, `hex`, `base64`, `byte_builder`, `json`, `pool`, `memo`, `network`, `random`, `time`, `filesystem`, `environment` | [standard library](standard-library.md); no transcendental functions, generic sorting uses an explicit key callback; filesystem and network operations require capabilities |
++| Data interchange | Typed JSON codecs for exported types (`schema-project`, `mylang test --cases`), and managed byte strings | [managed byte strings](bytes.md); `bytes` is not a Unicode string type; the `json` module borrows lookup inputs and returns independent selected values |
+ | Development | Independent function diagnostics, navigation, parse-only declaration listing, formatting, syntax/exact-verdict/function-body caches, symbolic-template and concrete-specialization reuse, receipt-first native-test result and preparation reuse, affected verification | [navigation](experiments/navigation-client.md); [declaration listing](experiments/list-declarations.md) reports kinds and byte ranges without checking; [checked-body and specialization reuse](tooling/caches.md#persistent-checked-body-store) keeps fresh global effect/mutation checks and conservative fallbacks; [guest tests](tooling/guest-tests.md#reusing-unaffected-results) reuse receipts and a reduced preparation graph |
+ | Documentation | Every fenced `mylang` example in README, SPEC and docs is run, type-checked or explicitly skipped by the default test gate | [executable documentation](experiments/doc-examples.md); directives pin expected output, expected diagnostics and explicit skips |
+ | Tests | Exported test_ function discovery, typed expected values, filters and explicit skips | [guest test workflow](experiments/guest-tests.md); deterministic arguments and isolated source-provider fixtures |
+@@ -43,8 +43,8 @@
+ stored reference lifetimes and unrestricted source compile-time execution. The [feature audit](audits/feature-completeness-2026-09-07.md) proposes
+ extensions; their presence in that backlog does not claim implementation.
+ 
+-Memory safety combines automatic reclamation (one-count reference counting) with
+-the runtime's checked pool handles and generations. The language has no guest spawn syntax. The native runtime can use a bounded
++Memory safety combines compiler-checked moves and borrows, direct destruction,
++and the runtime's checked pool handles and generations. The language has no guest spawn syntax. The native runtime can use a bounded
+ worker pool for compiler-selected collection work; independent guest programs and
+ tests can also run in separate processes.
+ Explicit `noalloc` declarations are checked against unoptimized Core after ownership expansion. They reject managed backing allocation, runtime scratch allocation and unresolved foreign or callback calls, including internal callees and cold paths. This is a static may-allocate contract for the function, not a measured allocation count or a promise about compiler allocation or process startup. Existing `effects(...)` lists retain guest-level effect semantics.
+@@ -68,7 +68,7 @@
+ 
+ [Typed noncapturing callbacks](experiments/callbacks.md) support reusable sorting and visitors with explicit signatures and effect ceilings. Captures remain excluded.
+ 
+-The [standard library guide](standard-library.md) lists the fifteen embedded modules that ship with the compiler, their signatures and their bounded contracts. They are ordinary guest source over growable arrays (`T[]`), `dict`, `str`, `bytes`, optional values (`T?`) and checked results, so nothing in them needs an allocator argument or a storage annotation.
++The [standard library guide](standard-library.md) lists the embedded modules that ship with the compiler, their signatures and their bounded contracts. They are ordinary guest source over growable arrays (`T[]`), `dict`, `str`, `bytes`, optional values (`T?`) and checked results, so nothing in them needs an allocator argument or a storage annotation.
+ 
+ Procedures omit their return annotation or use `-> Unit`, bare `return`, and natural fallthrough; ordinary calls may stand alone only when returning unit. See [unit procedures](functions.md#unit-procedures).
+ 
+diff --git a/docs/effects.md b/docs/effects.md
+--- a/docs/effects.md
++++ b/docs/effects.md
+@@ -157,7 +157,7 @@
+   interface summaries. `check` and `check-project` do no whole-program Core
+   allocation work, including after a bounded body changes.
+ - `build`, `run`, `build --run` and `test` report `W_NOALLOC_ALLOCATES` at the
+-  allocation site, naming the bounded function and callee. Copy-on-write and
++  allocation site, naming the bounded function and callee. Explicit independent copies and
+   runtime scratch count even on cold paths. Unresolved callbacks and foreign
+   calls count conservatively. An unsupported concrete body warns with its reason.
+   Concrete generic instances receive the same check; no annotation is required
+@@ -191,10 +191,11 @@
+ not marked: `values.append(1)` updates its writable binding directly.
+ 
+ The guarantee covers the complete value, including managed descendants of records,
+-arrays, options, unions and collections. Assignment and non-`mut` passing preserve
+-independent values. A `mut` argument marks the caller's place to update; the
+-compiler snapshots any read-only argument that might overlap it. Two overlapping
+-`mut` arguments still violate exclusivity. Definitely-fresh local storage may
++arrays, options, unions and collections. Assignment can move ownership; ordinary
++parameters borrow. A `mut` argument exclusively borrows the caller's place to
++update. An overlapping read-only argument must use an explicit independent copy.
++Multiple mutable child arguments rooted in the same collection are conservatively
++rejected, even for distinct constant indices. Definitely-fresh local storage may
+ always be built and mutated.
+ 
+ ```mylang
+@@ -225,8 +226,8 @@
+ 
+ ### Values and caller mutation
+ 
+-Assignment preserves an independent value. A helper changes its caller's value
+-only through a `mut` parameter and a marked argument:
++Use `.copy()` to preserve an independent value. A helper changes its caller's
++value only through a `mut` parameter and a marked argument:
+ 
+ ```mylang
+ # doc: expect 1
+@@ -237,34 +238,32 @@
+ 
+ func main(out: Stream) -> int effects(managed_allocation, output):
+     mut original = [1, 2]
+-    mut copy = original
++    mut copy = original.copy()
+     set_first(mut copy, 5)
+     out.print(original[0])
+     out.print(copy[0])
+     return 0
+ ```
+ 
+-The same rule applies to nested managed values. A copy of an outer list keeps
+-its inner lists independent when one of them is changed. The implementation may
+-share storage until a write, but that sharing has no observable mutation effect:
++The same rule applies to nested managed values. An explicit copy of an outer
++list recursively copies its managed children, keeping both values independent:
+ 
+ ```mylang
+ # doc: expect 1
+ # doc: expect 9
+ func main(out: Stream) -> int effects(managed_allocation, output):
+     mut original = [[1]]
+-    mut copy = original
++    mut copy = original.copy()
+     copy[0][0] = 9
+     out.print(original[0][0])
+     out.print(copy[0][0])
+     return 0
+ ```
+ 
+-A read-only argument can be the same value as a `mut` argument. The callee reads
+-its snapshot from before the call while the writable parameter changes the
+-caller's value. Two `mut` arguments are different: `E_MUTATION_OVERLAP` rejects
+-two `mut` arguments of one call whose places overlap, such as `f(mut a, mut a)`
+-or `f(mut a, mut a[0])` (see
++A read-only argument cannot borrow a root that the same call mutably borrows.
++Copy before the call when the callee needs the original snapshot while changing
++the caller's value. Multiple mutable arguments must also have exclusive roots;
++`f(mut a, mut a)` and two children rooted in `a` are rejected (see
+ [value semantics](value-semantics.md#the-rules)).
+ 
+ ```mylang
+@@ -276,22 +275,23 @@
+ 
+ func main() -> int:
+     mut a = [1, 2]
+-    mut seen = touch(mut a, a)
++    const snapshot = a.copy()
++    mut seen = touch(mut a, snapshot)
+     return seen * 10 + len(a)
+ ```
+ 
+ ### Return values
+ 
+-Returning a managed value, or wrapping it in another value, does not give the
+-caller write access to the callee's input. The returned value is independent;
+-a caller can update its own copy. A write through a read-only parameter itself
+-remains `E_MUTATION_MARKER`.
++Returning an owned managed value moves it to the caller. A borrowed parameter
++cannot become an independent result without `.copy()`. That copy can allocate
++and the function's effect ceiling must allow `managed_allocation`. A write
++through the borrowed parameter itself remains rejected.
+ 
+ ```mylang
+ # doc: expect 1
+ # doc: expect 9
+-func identity(values: int[]) -> int[] effects():
+-    return values
++func identity(values: int[]) -> int[]:
++    return values.copy()
+ 
+ 
+ func main(out: Stream) -> int effects(managed_allocation, output):
+@@ -303,8 +303,9 @@
+     return 0
+ ```
+ 
+-Private helpers derive a return-origin bound from their bodies for ownership
+-optimization; it does not change the value rule seen by callers.
++The compiler checks each move and borrow before lowering. A returned owner must
++remain valid independently of the caller's later input replacement; no reference
++count or implicit copy is added to repair an invalid return.
+ 
+ ### Fresh local mutation
+ 
+@@ -334,17 +335,18 @@
+ ## Capability method narrowing
+ 
+ `fs.read_only()` derives a read-only `Filesystem` from an existing one by
+-intersecting its permission mask. The derived capability is an ordinary typed
+-value: it can be passed, returned and stored in a record field, but it
+-performs no I/O when it is created and contributes no effect of its own. The old
++intersecting its permission mask. Use the dependent capability in a `with`
++scope, so its provider stays alive through every use. It can be borrowed by
++calls within that scope; storing or returning it beyond the scope is rejected.
++Creating it performs no I/O and contributes no effect of its own. The old
+ bracket spelling `restrict_resource[...]` is removed and reports
+ `E_REMOVED_SPELLING` naming the replacement.
+ 
+ ```mylang
+ # doc: check
+ func main(fs: Filesystem) -> int:
+-    mut read_only = fs.read_only()
+-    return 0
++    with fs.read_only() as read_only:
++        return 0
+ ```
+ 
+ ## Capabilities in record fields
+@@ -379,7 +381,7 @@
+ 
+ ## Declaration-site mutation errors
+ 
+-Ordinary parameters are readonly snapshots. A parameter the body
++Ordinary parameters borrow read-only storage. A parameter the body
+ writes with no `mut` is rejected at the write with `E_IMMUTABLE`:
+ 
+ ```mylang
+@@ -415,14 +417,14 @@
+     err: int
+ 
+ func main(fs: Filesystem) -> int:
+-    mut scoped = fs.dir("data")
+-    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([42u8])
+-    match acquire_resource[Open](scoped, request):
+-        case Open.ok(file):
+-            _ = file
+-            return 0
+-        case Open.err(code):
+-            return -code
++    with fs.dir("data") as scoped:
++        mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([42u8])
++        match acquire_resource[Open](scoped, request):
++            case Open.ok(file):
++                _ = file
++                return 0
++            case Open.err(code):
++                return -code
+ ```
+ 
+ ## Network host
+@@ -443,14 +445,14 @@
+ 
+ func main(net: Network) -> int:
+     # The narrowed capability pins the endpoint; the request below is ignored.
+-    mut scoped = net.host("127.0.0.1:8000")
+-    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([0u8])
+-    match acquire_resource[Connected](scoped, request):
+-        case Connected.ok(socket):
+-            _ = socket
+-            return 0
+-        case Connected.err(code):
+-            return code
++    with net.host("127.0.0.1:8000") as scoped:
++        mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([0u8])
++        match acquire_resource[Connected](scoped, request):
++            case Connected.ok(socket):
++                _ = socket
++                return 0
++            case Connected.err(code):
++                return code
+ ```
+ 
+ ## Deterministic stand-ins
+diff --git a/docs/managed-memory.md b/docs/managed-memory.md
+--- a/docs/managed-memory.md
++++ b/docs/managed-memory.md
+@@ -1,30 +1,26 @@
+ # Managed collections
+ 
+-Lists, dictionaries, sets, strings and byte buffers live in managed storage. There
+-are no allocator parameters, no free operations and no borrow scopes: managed memory
+-is the only way application code allocates. The runtime reference-counts each
+-object once and copies on write, so an object is released the moment its last owner
+-goes away, and collections are values: assigning one, passing it or storing it
+-behaves as a copy.
++Lists, dictionaries, sets, strings and byte buffers live in managed storage.
++The compiler checks ownership and inserts direct destruction; source code has no
++allocator parameters or explicit frees. Assignments and owned returns can move a
++value, ordinary parameters borrow, and `.copy()` makes independent storage.
+ 
+ ```mylang
+ # doc: expect 1
+ # doc: expect 2
+ func main(out: Stream) -> int:
+     mut values: int[] = [1]
+-    mut alias = values
++    mut alias = values.copy()
+     alias.append(42)
+     out.print(len(values))
+     out.print(len(alias))
+     return 0
+ ```
+ 
+-A list assignment or function argument transfers a value. The implementation
+-may share backing storage until a write, but writing `alias` leaves `values`
+-unchanged. Appending grows capacity automatically. Reading returns a value
+-snapshot, never an interior pointer into growable storage. Use a `mut`
+-parameter with a marked call when a helper must change its caller's value
+-([value semantics](value-semantics.md)).
++The explicit copy lets `alias` grow while `values` remains usable and unchanged.
++Appending grows capacity automatically. Managed element reads borrow from their
++container; copy a selected child when an independent owner must escape. Use a
++`mut` parameter with a marked call when a helper must change its caller's value.
+ 
+ Use `Node[]` for application collections and `mut nodes: Node[] = []`
+ for an empty list. Read with `nodes[index]`, write with `nodes[index] = value`,
+@@ -51,30 +47,20 @@
+ `record` and its mutable managed fields are values. The builtin `Cell` and `class`
+ are rejected; replace identity-bearing graphs with records plus stable ids in a pool
+ or object table. Capturing closures remain absent. Byte literals and the managed
+-[`bytes`](bytes.md) type keep their documented behavior. Owned resources, provider
+-capabilities, and must-handle results cannot be hidden inside copyable lists. There
+-are no interior pointers into managed storage.
++[`bytes`](bytes.md) type keep their documented behavior. Owned resources and provider capabilities cannot be hidden inside copyable lists.
++A list of Results still requires explicit handling of each selected result; a list
++does not turn an error into success. Borrowed views cannot escape their owners.
+ 
+ ## Releasing memory
+ 
+-The main-derived development worktree also has an opt-in
+-[`--experimental-single-owner` prototype](../experiments/single-owner-20261010/README.md).
+-It changes list assignments to moves and list `.copy()` to explicit storage
+-copies; ordinary builds keep the snapshot rules described on this page.
+-The [migration and nested-cleanup experiment](../experiments/single-owner-followup-20261011/README.md)
+-measures explicit-copy costs and compiler-generated direct cleanup of owned trees.
+-The [explicit-snapshot follow-up](../experiments/shared-snapshot-20261011/README.md)
+-adds list `.snapshot()` to request sharing within that prototype. It preserves
+-independent values using copy-on-write; `.copy()` remains eager. For now a
+-snapshot enables RC/COW for the whole Core list type and its child-list types.
+-
+-The separate [`--experimental-zero-rc` prototype](../experiments/zero-rc-final-20261011/README.md)
+-uses one owner per dynamic allocation and compiler-inserted destruction.
++Every dynamic allocation has one owner and compiler-inserted destruction.
+ Assignments of managed values move ownership; `.copy()` requests independent
+-storage. Read-only `TextView` and `BytesView` values borrow a named owner and may
+-cross calls under a single-input return contract. Mutation or moving that owner
+-while a view is still used is rejected. Files and dependent capabilities use
+-`with` scopes. Sharing and `.snapshot()` are refused in this mode.
++storage. Read-only text and byte views borrow a named owner and may cross calls
++under a single-input return contract. Mutation or moving that owner while a view
++is still used is rejected. Files and dependent capabilities use scoped providers.
++A returned dependent owner needs one unambiguous input provider; escaping a local
++provider or an ambiguous provider choice is rejected. Sharing and `.snapshot()`
++are unsupported.
+ 
+ `try` transfers the active payload of an owned `Result` or `Option` directly.
+ It does not make a deep copy. `match` on a fresh call result also transfers its
+@@ -87,7 +73,7 @@
+ independent ownership. Fields bound to `_` or unused in the arm are destroyed.
+ The hidden payload is consumed as a whole; ordinary `record.field` access and
+ patterns on named values still borrow. Nested patterns also borrow their inner
+-intermediate value; this prototype only splits the immediate fresh payload.
++intermediate value; whole-field transfer only splits the immediate fresh payload.
+ `.copy()` explicitly requests an independent owner.
+ See the [owned-payload](../experiments/owned-payload-20261011/README.md) and
+ [fresh-match](../experiments/owned-match-20261011/README.md) experiments.
+@@ -96,17 +82,19 @@
+ Missing keys, wrong variants and out-of-range indices return `None` without
+ copying the container. `as_list` and `as_dict` still return independent copies.
+ See the [JSON lookup and field-transfer measurements](../experiments/zero-rc-batch-20261011/README.md)
+-for examples, allocation counts, and runtime comparisons.
++for historical examples, allocation counts, and runtime comparisons. These old
++measurements are not results for the current compiler.
+ 
+ The zero-RC runtime has no reference-count field, retain/release functions, or
+ count-based uniqueness checks. Heap allocation and ordinary destruction still
+ occur. The header remains 32 bytes because of alignment, and explicit copies can
+-increase allocation. This is an opt-in prototype with a documented supported
+-subset; ordinary builds retain the rules elsewhere on this page.
+-
+-A managed object is released when its last owner goes away: a local at the end of
++increase allocation. The installed compiler components have a separate
++qualification boundary recorded in the closeout report; an ordinary guest default
++change alone does not qualify the whole package as RC-free.
++
++A managed object is destroyed when its owner goes away: a local at the end of
+ its last use, a temporary right after the expression that made it, a list element
+-when its list is released. The compiler places every count and release
++when its list is destroyed. The compiler places destruction
+ ([ownership](tooling/ownership.md)); the program never says anything. Because values
+ are independent, assignments and container stores cannot build a cycle, so nothing
+ needs tracing, and identity-bearing graphs use pool handles.
+@@ -139,8 +127,9 @@
+ `W_NOALLOC_ALLOCATES` when ownership-expanded Core finds a may-allocate site;
+ `lint --gate` blocks on the corresponding `noalloc-allocates` rule. `check` does
+ not compute this contract. The promise excludes runtime bookkeeping. Reads can
+-be allocation-free; a fixed-slot write may allocate when copy-on-write is needed.
+-Managed mutation is not a promise of purity or exclusive access.
++be allocation-free; independent copies and operations such as text encoding or
++buffer reversal may allocate even when their result has the same length. Managed
++mutation is not a promise of purity. Mutable borrows remain exclusive.
+ Every process that runs a program under `mylang run` or `mylang test` has a byte
+ ceiling ([guest memory ceilings](tooling/runtime-budgets.md#guest-memory-ceilings)).
+ 
+@@ -177,12 +166,11 @@
+ ## Managed lists
+ 
+ `T[]` is the growable sequence application code reaches for. Its storage is
+-managed, so there is no allocator argument to thread and no free to write. Assignment and argument passing preserve the value independently, with
+-copy-on-write backing where possible. Elements must be
+-copyable storable values — scalars, records, strings, byte strings and other
+-managed collections — which keeps owned resources, provider capabilities and
+-unchecked results out of copyable storage. Reading an element yields a
+-snapshot of that value, never an interior pointer into growable storage.
++managed, so there is no allocator argument to thread and no free to write.
++Assignment can move the owner; ordinary arguments borrow. Elements can include
++scalars, records, strings, byte strings, managed collections and Results. Resources
++and provider capabilities remain outside ordinary list storage. A selected managed
++element borrows the container; `.copy()` creates an independent value when needed.
+ 
+ ```mylang
+ # doc: expect 42
+@@ -191,7 +179,7 @@
+ 
+ func main() -> int:
+     mut values: int[] = [40]
+-    mut alias = values
++    mut alias = values.copy()
+     widen(mut alias)
+     return values[0] + alias[1]
+ ```
+@@ -207,7 +195,7 @@
+ returns an indexed element; `remove(value)` deletes the first equal element;
+ `reverse()` reverses in place; `sort()` orders integer, `float`, `str` or `bytes`
+ elements ascending, and `sort(key=f, reverse=True)` orders any list by a key, in
+-place and stably ([keyed sorting](python-syntax.md#keyed-sorting)); `copy()` returns a fresh shallow list; `clear()` empties the list; and
++place and stably ([keyed sorting](python-syntax.md#keyed-sorting)); `copy()` returns an independent list and recursively copies managed children; `clear()` empties the list; and
+ `index(value)` returns the first equal position. Length stays the free function
+ `len(values)`. Every mutating method returns unit, so a discarded `pop` or `index`
+ result needs its own binding or `_ =`. An absent `remove` or `index` traps with
+@@ -286,7 +274,7 @@
+ rewriting an existing key leaves that key in its original position. A key is any
+ [hashable](sets.md#hashable-keys) value — an integer, `bool`, `str`, `bytes`, or a
+ tuple, record, union, enum, domain, `Option` or fixed array built only from those —
+-hashed and compared structurally and copied into the table; a `float`, list, dict,
++hashed and compared structurally and owned by the table; a `float`, list, dict,
+ set, `byte_buffer` or function key is rejected with `E_DICT_KEY` naming the
+ offending part. Values are any copyable storable
+ type, including lists and other dictionaries. `counts[key]` traps with
+@@ -297,17 +285,21 @@
+ the value and `counts.pop(key, fallback)` answers the fallback when absent;
+ `counts.update(other)` replaces existing values in place and appends new keys;
+ `counts.setdefault(key, fallback)` returns the existing value or stores the
+-fallback; `counts.copy()` returns a fresh shallow dictionary; and
++fallback; `counts.copy()` returns an independent dictionary and recursively copies managed children; and
+ `counts.clear()` empties it. `counts.pop(key)` without a fallback traps with
+ `R_MISSING_KEY`. `counts.items()` yields `DictItem[K, V]` value records with `key`
+ and `value` fields. A two-name loop `for name, value in counts.items()` unpacks
+-those fields. Assignment copies a dictionary value; only a `mut` parameter and marked call write back to a caller.
++those fields. Assignment can move a dictionary owner; use `.copy()` for an
++independent dictionary. A `mut` parameter and marked call write back to a caller.
+ 
+ Dictionary views are ephemeral. Use `d.keys()`, `d.values()` and `d.items()`
+ directly as loop or comprehension sources, or immediately with `len`, `in`,
+ `list`, `set` or `sorted`. `enumerate(d.items())` is also a loop source.
+-They allocate no snapshot and observe value replacements as iteration reaches
+-each key. A size change during dictionary iteration traps.
++They allocate no snapshot and borrow the dictionary during iteration. Mutating
++or clearing that dictionary while the loop is active is rejected, even when its
++size would stay unchanged. Direct rebinding of the syntactic source root selects
++an independent entry snapshot; this applies to direct keys/values/items loops,
++not separately stored or escaping views. Copied keys and values remain independent.
+ 
+ Binding, returning, rebinding, storing or passing a view to a user function is
+ `E_VIEW_STORED`. `mylang fix` wraps a stored projection in `list(...)` where
+@@ -351,7 +343,7 @@
+         return 3
+     mut order: str[] = []
+     for name in counts:
+-        order.append(name)
++        order.append(name.copy())
+     if order[0] != "pear":
+         return 4
+     if counts.get("plum", 0) != 0:
+@@ -359,7 +351,7 @@
+     mut keys: str[] = []
+     mut total = 0
+     for name, value in counts.items():
+-        keys.append(name)
++        keys.append(name.copy())
+         total += value
+     if keys[0] != "pear" or keys[1] != "apple" or keys[2] != "fig":
+         return 7
+@@ -377,11 +369,15 @@
+ order. `for key, value in counts.items()` visits each dictionary entry, binding the
+ key and its value in insertion order. `for index, value in enumerate(source)` adds
+ the position, and
+-`for index in range(end)` or `range(start, end)` counts integers; there is no step
+-argument. `break` and `continue` carry their Python meanings. A loop fixes its
+-bound when it starts and rechecks it before each step, so changing the
+-collection's length through the iterated place during iteration traps with
+-`R_LIST_ITERATION_MUTATION` rather than reading past the end.
++`for index in range(end)`, `range(start, end)` or `range(start, end, step)`
++counts integers. `break` and `continue` carry their Python meanings. Iteration
++borrows a managed collection's root; element writes and mutating methods on that
++root are rejected while the loop is active. Direct assignment to the syntactic
++source root is different: the loop visits an independent entry snapshot while the
++root holds the new value. Such snapshots can require independent storage and are
++part of allocation costs. Use an explicit index loop when an algorithm must mutate
++its source, choosing initial or current length for the intended extent. Independent
++`.copy()` snapshots may be changed separately.
+ 
+ ```mylang
+ # doc: expect 19
+@@ -437,7 +433,7 @@
+         return 2
+     if 9 in left:
+         return 3
+-    mut nested: int[][] = [left]
++    mut nested: int[][] = [left.copy()]
+     mut twin: int[][] = [right]
+     if nested != twin:
+         return 4
+@@ -539,39 +535,44 @@
+     return doubled[0] + large[0] + widths[0] + widths[1]
+ ```
+ 
+-## Experimental zero-RC ownership
+-
+-`mylang run app.my --experimental-zero-rc` enables the ownership prototype.
++## Checked ownership
++
++Ordinary commands use checked ownership.
+ Lists, strings, bytes, and mutable byte buffers have one owner. Assignment,
+ container insertion, and owned return move a value; ordinary parameters borrow,
+ and `mut` parameters borrow exclusively. Use `.copy()` when both values must
+ remain independently usable. Copies of lists also duplicate owned children in
+ records and fixed arrays.
+ 
+-```text
+-mut text = "hello" + str(7)
+-const saved = text.copy()
+-text += "!"
+-# saved remains "hello7"; text is "hello7!"
++```mylang
++# doc: expect hello7
++# doc: expect hello7!
++func main(out: Stream) -> int:
++    mut text = "hello" + str(7)
++    const saved = text.copy()
++    text += "!"
++    out.print(saved)
++    out.print(text)
++    return 0
+ ```
+ 
+ Cleanup directly destroys owned storage without reference counts. Literals have
+ static storage; modifying a literal first creates writable storage. Heap
+-allocation and growth still occur. Strings sliced in this stage produce owned
+-results. The Stage 2 prototype also provides explicit borrowed ranges.
+-
+-This mode supports owned dictionaries, sets, recursive values, scoped resources,
++allocation and growth still occur. String slices produce owned results. Explicit
++borrowed ranges avoid that materialization when a local view is sufficient.
++
++The checked contract supports owned dictionaries, sets, recursive values, scoped resources,
+ and synchronous `parallel.map`. It rejects `.snapshot()`, retained byte `.view()`,
+ escaping task handles, arbitrary managed foreign calls, and unaudited runtime APIs.
+ `check` validates source ownership; `build` also checks backend and runtime
+ support. An unsupported shape is diagnosed instead of falling back to RC.
+-The earlier `--experimental-single-owner` mode remains available separately.
+-See the [prototype stages and measurements](../experiments/zero-rc-20261011/README.md).
+-
+-
+-### Borrowed text and byte ranges (experimental Stage 2)
+-
+-With `--experimental-zero-rc`, `.borrow(start, end)` produces a read-only
++Historical [prototype stages and measurements](../experiments/zero-rc-20261011/README.md)
++describe older revisions, not a current compatibility mode.
++
++
++### Borrowed text and byte ranges
++
++`.borrow(start, end)` produces a read-only
+ `TextView` from a string or `ByteView` from bytes/a byte buffer. Endpoints use
+ Unicode scalar positions for text and octet positions for bytes, with negative
+ indices and clamping. A view holds a pointer and length. Creating or borrowing
+@@ -579,11 +580,13 @@
+ length and indexing scan UTF-8. Text character indexing returns an owned string
+ and can allocate for non-ASCII characters. Byte indexing returns a scalar.
+ 
+-```text
++```mylang
++# doc: expect λz7
++# doc: expect λz7
+ func segment(source: TextView, start: int) -> TextView:
+     return source.borrow(start, start + 3)
+ 
+-func example(out: Stream):
++func main(out: Stream) -> int:
+     mut text = "aλz" + str(7)
+     const full = text.borrow(0, len(text))
+     const part = segment(full, 1)
+@@ -592,6 +595,7 @@
+     text += "!"
+     out.print(saved)                # allowed
+     # out.print(part)               # compile error: owner changed
++    return 0
+ ```
+ 
+ The returned-view contract is visible in ordinary types: a function returning a
+@@ -600,7 +604,7 @@
+ The compiler keeps the backing owner alive through the last use of any derived
+ view, including through function calls, without relying on inlining.
+ 
+-Prototype limits: view bindings and parameters are immutable. Views cannot be
++View bindings and parameters are immutable. Views cannot be
+ stored in containers, records, callbacks, or conditional-expression bindings.
+ Use branch returns in a view-returning helper instead. A loop may create fresh
+ views inside its body, but cannot invalidate a view created outside the loop.
+@@ -608,31 +612,34 @@
+ operations are `.borrow()`, indexing, `len()`, `.copy()`, and text printing.
+ Byte-view printing requires `.copy()`; other methods and direct view iteration
+ are not yet admitted. The original byte `.view()` operation remains distinct and
+-is still refused by zero-RC mode. Unsupported shapes have no RC fallback.
++is refused by the checked ownership contract. Unsupported shapes have no RC fallback.
+ 
+ See [Stage 2 measurements and examples](../experiments/zero-rc-views-20261011/README.md).
+ 
+ 
+-### Explicit values and scoped parallel work (experimental closeout)
+-
+-`.copy()` also accepts records, enums, options and fixed arrays. In zero-RC mode
+-it recursively duplicates owned children; scalar copies simply preserve their
+-value. Resources and move-only values cannot be copied. Ordinary builds preserve
+-value semantics with their existing copy-on-write behavior.
+-
+-```text
++### Explicit values and scoped parallel work
++
++`.copy()` also accepts records, enums, options and fixed arrays. It recursively
++duplicates owned children; scalar copies simply preserve their value. Resources
++and move-only values cannot be copied.
++
++```mylang
++# doc: expect 1
++# doc: expect item-1
+ import parallel
+ 
+ func render(value: int) -> str:
+     return "item-" + str(value)
+ 
+-func example(out: Stream):
++func main(out: Stream) -> int:
+     const input = [1, 2, 3]
+     const output = parallel.map(input, render)
+-    out.print(input[0], output[0])
+-```
+-
+-Zero-RC map borrows each input element, runs the callbacks through the task
++    out.print(input[0])
++    out.print(output[0])
++    return 0
++```
++
++`parallel.map` borrows each input element, runs the callbacks through the task
+ scheduler, and joins every task before returning the results in input order.
+ The caller can use its input again immediately. A callback returning managed
+ input data must explicitly copy it; returning new data transfers it to the
+@@ -641,7 +648,6 @@
+ 
+ This initial API takes a function value with one read-only parameter. It has no
+ closure captures, detached work or escaping task handles, and does not support
+-Unit elements. Ordinary RC builds execute the standard function sequentially.
+-The prototype creates task, capture and result storage for each element; it is
+-intended for testing ownership and parallel work, not for accelerating tiny
+-callbacks. Heap allocation and scheduling synchronization remain.
++Unit elements. Heap allocation and scheduling synchronization remain. Output
++storage and independently owned callback results can grow with input size; a
++reduction in scheduling overhead is not a claim of allocation-free parallel work.
+diff --git a/docs/module-constants.md b/docs/module-constants.md
+--- a/docs/module-constants.md
++++ b/docs/module-constants.md
+@@ -121,7 +121,7 @@
+ functions. Each getter evaluates its ordinary checked literal, allocating a
+ managed value; reads therefore contribute `managed_allocation` and are rejected
+ in `noalloc` or `effects()` functions. There is no module initialization order
+-or shared mutable storage. Ordinary reference counting and allocation budgets apply.
++or shared mutable storage. Checked ownership, direct destruction and allocation budgets apply.
+ 
+ `check`, `run`, `build --run` and installed programs use the same checked getter.
+ Function-body semantic caching remains disabled for programs with constants;
+diff --git a/docs/performance.md b/docs/performance.md
+--- a/docs/performance.md
++++ b/docs/performance.md
+@@ -3,35 +3,26 @@
+ `mylang run prog.my` builds `prog.my` and runs the native executable; there is no
+ interpreter to outgrow. The compiler lowers the checked program to Core IR, runs its
+ passes, emits LLVM text, compiles it with `zig cc` and links it with the C runtime
+-([native builds](tooling/native-build.md)). Memory is reference counted with
+-copy-on-write: a value is released when its last owner lets go of it, so there is no
+-collector to pause and no heap to tune.
++([native builds](tooling/native-build.md)). The compiler checks ownership and inserts direct destruction. Ordinary
++allocation and container growth remain; there is no reference-counting runtime
++or collector to tune for generated guest programs.
+ 
+ Most programs need no performance work. Four things change the answer: the build
+-mode, the budgets a run carries, how often a value is shared and then written, and C.
++mode, the budgets a run carries, how often a program grows storage or explicitly copies it, and C.
+ This page covers each, then how to measure a program of your own.
+ 
+-## Records are values, not copies
+-
+-A record is a value: assigning one, passing one to a function or binding one in a
+-pattern match never lets a later write reach the original. The same holds for every
+-`list`, `dict`, `set` and `byte_buffer` a record holds
+-([value semantics](value-semantics.md)). The cost of that meaning is a copy only
+-when a shared value is written:
+-
+-- Storage is shared until a write. `copy = xs` shares the list's storage, and the
+-  first write through either name copies it (copy-on-write).
+-- A write to a value nothing else shares happens in place. The ownership pass proves,
+-  where it can, that the old value is dead or has exactly one owner, and writes into
+-  it. Where it cannot prove that, the write tests the reference count at run time and
+-  copies only when the count says the storage is shared.
+-- A `mut` parameter is owned by the callee for the call: when the caller does not read
+-  its value again before the write-back, the call passes it without taking a new
+-  reference and the callee updates it in place.
+-
+-`mylang build --stats` prints what the ownership pass did for a build: how many
+-updates it made in place, how many it left to a run-time count test and how many it
+-copied, plus the retains and releases it emitted (see [Measure](#measure)).
++## Moves, borrows and independent copies
++
++Assignments of records or containers with managed storage can move ownership.
++Ordinary function parameters borrow. Use `copy = xs.copy()` when both independent
++values must remain usable; copying recursively duplicates managed children.
++A `mut` parameter borrows exclusively during the call and writes its final value
++back. Mutations can grow storage but never fall back to shared copy-on-write
++storage. See [ownership](tooling/ownership.md) for the checked boundaries.
++
++`mylang build --stats` reports the compiler's static decisions. These are sites,
++not runtime events or allocation traffic. Historical `release` fields can describe
++direct cleanup sites; they do not by themselves show runtime reference counting.
+ 
+ ```mylang
+ # doc: expect 42
+@@ -60,9 +51,9 @@
+     return 42
+ ```
+ 
+-To keep a hot loop free of copies, write a value that only one name holds: build a
+-list in the function that changes it, or pass it as `mut` instead of returning a
+-changed copy of an argument the caller still reads.
++To avoid unnecessary copies in a hot loop, build and update an owned list locally
++or pass it with a marked `mut` call. Make a snapshot with `.copy()` only when both
++independent values are needed; preserve that source contract when comparing costs.
+ 
+ ## Build for speed
+ 
+@@ -317,11 +308,12 @@
+ 
+ `--stats` on `build` prints what the core's passes did:
+ 
+-```console
+-$ mylang build scale.my -o scale --release --stats
+-mylang-core: inlined 1 calls, unswitched 0 loops, versioned 0 loops, proved 10 checks, vectorized 0 loops
+-mylang-core: ownership: 7 updates in place, 1 tested, 0 copied; 0 retains, 2 releases (0 pairs elided); 0 lists on the stack
+-```
++```bash
++mylang build scale.my -o scale --release --stats
++```
++
++The counts depend on the exact source, compiler and build mode; save them with
++those identities when making comparisons.
+ 
+ [`mylang cost ENTRY.my [FUNCTION]`](tooling/cost.md) shows these counts per function,
+ plus kept checks and possible allocation sites. `--json` writes `cost-v1`; its
+@@ -376,7 +368,7 @@
+ 
+ - [Native builds](tooling/native-build.md): the driver, its caches and `--report`.
+ - [Runtime budgets](tooling/runtime-budgets.md): step, frame and byte ceilings.
+-- [Value semantics](value-semantics.md): when a write copies.
++- [Value semantics](value-semantics.md): moves and independent explicit copies.
+ - [C interop](c-ffi.md): the exact `extern func` surface.
+ - [Standard library](standard-library.md) and [floating point](floating-point.md):
+   what the shipped modules provide.
+diff --git a/docs/python-syntax.md b/docs/python-syntax.md
+--- a/docs/python-syntax.md
++++ b/docs/python-syntax.md
+@@ -2,9 +2,10 @@
+ 
+ This is the language guide. There is one syntax: `func`, `record`, indentation and
+ `#` comments. The compiler checks types before execution and manages ordinary
+-lists, strings and dictionaries by reference counting with copy-on-write; there is
+-no garbage collector to tune. There are no allocator arguments
+-or ownership annotations in ordinary data code.
++lists, strings and dictionaries with checked ownership and direct destruction.
++Assignments and returns can move; ordinary parameters borrow, and `.copy()` makes
++independent storage. There are no allocator arguments or ownership annotations
++in ordinary data code.
+ 
+ A file can import standard or project modules directly. Its module name comes
+ from its path beneath the project root; no module header is needed. `mylang run`
+@@ -143,8 +144,8 @@
+ `math.pow(x, n)` for a `float`) and `shift_left(value, count)` /
+ `shift_right(value, count)`. Each rejection names that alternative.
+ 
+-Lists infer a homogeneous element type from nonempty literals. Assignment creates
+-an independent value snapshot; managed storage is copied when a write needs it. Use `items.append(value)`,
++Lists infer a homogeneous element type from nonempty literals. Assignment can
++move the owner; use `.copy()` when an independent snapshot must remain usable. Use `items.append(value)`,
+ `len(items)`, `items[index]`, `items[index] = value`, and `items[start:end]`.
+ Negative indexes count from the end. Slices create independent list storage and
+ copy the selected elements. Nested indexing and expression receivers work.
+@@ -181,7 +182,8 @@
+ Dictionaries preserve insertion order and take any
+ [hashable](sets.md#hashable-keys) key: an integer, `bool`, `str`, `bytes`, or a
+ tuple, record, union, enum or `Option` built from those. Their values
+-have a single inferred or annotated type. Updates through an alias are shared.
++have a single inferred or annotated type. Assignment can move the dictionary;
++`.copy()` preserves an independent dictionary, including its managed children.
+ Use `counts[key]`, `counts[key] = value`, `counts.get(key, fallback)`,
+ `counts.keys()`, `counts.values()` and `counts.items()`. These return ephemeral typed
+ views for direct loops and immediate `len`, `in`, `list`, `set` and `sorted`.
+@@ -191,8 +193,9 @@
+ declarations; use a list type for a snapshot. Items yield records with `key` and `value`
+ fields and support `for key, value in counts.items()`.
+ `key in counts`, `value in items`, and `substring in text` support `not in` too.
+-Iterating a dictionary visits keys in insertion order; changing its size during
+-iteration traps. The [word-count example](../examples/python-word-count/main.my)
++Iterating a dictionary visits keys in insertion order and borrows its root.
++Element mutation and clearing during the loop are rejected even at the same size.
++Direct rebinding of the syntactic source root follows the entry-snapshot rule below. The [word-count example](../examples/python-word-count/main.my)
+ puts these operations together.
+ 
+ `[for name in items if condition yield value]` builds a list in one pass.
+@@ -225,15 +228,15 @@
+ `{value for name in source}` a set. These forms retain Python-style nested iteration,
+ destructuring and filters. The key is evaluated before the value, and a repeated key keeps its first
+ position and its last value. An annotated destination gives the key, value or
+-element type to the literals inside: `small: dict[str, u8] = {k: 0 for k in names}`.
++element type to the literals inside: `small: dict[str, u8] = {k.copy(): 0 for k in names}`.
+ 
+ ```mylang
+ # doc: expect 42
+ func main() -> int:
+     mut prices = {"pear": 3, "fig": 5, "kiwi": 2}
+-    mut doubled = {name: price * 2 for name, price in prices.items() if price > 2}
++    mut doubled = {name.copy(): price * 2 for name, price in prices.items() if price > 2}
+     mut squares = {x: x * x for x in range(5)}
+-    mut paired = {k: v for k, v in zip(["a", "b"], [10, 20])}
++    mut paired = {k.copy(): v for k, v in zip(["a", "b"], [10, 20])}
+     return doubled["fig"] + squares[4] + paired["a"] + len({c for c in "hello"}) + 2
+ ```
+ 
+@@ -275,32 +278,35 @@
+ `for index in range(end)` / `range(start, end)` / `range(start, end, step)` support
+ `break` and `continue`. A [stepped range](range-iteration.md#stepped-ranges) counts
+ down for a negative step.
+-Iteration over a place reads its current value on every step. Element writes and
+-`mut` callee updates stay visible even when another variable holds a copy. A live
+-list accepts growth; a decrease from its last observed length traps
+-`R_LIST_ITERATION_MUTATION`. Dictionary and set length changes, and length changes
+-to an indexed ancestor such as `rows` in `for value in rows[0]`, also trap.
+-Indices are evaluated once at entry. Direct assignment to the root variable in
+-the loop body selects an independent entry snapshot. A callee's `mut` write-back
+-remains live, including replacement of the collection with another value.
+-Fixed-array places also see later element writes; their terminal length is fixed.
+-Comprehensions and generator expressions follow the same source rule, including
+-writes by their produced expressions and filters. Immutable string/bytes fields
+-see same-length replacements; terminal length changes and changes to their
+-indexed managed ancestors trap. String length counts Unicode scalars.
+-Copies made before any loop remain independent. Non-place sources retain their
+-entry value.
++A foreach over a managed collection borrows the root collection. Element writes
++and mutating methods on that root are rejected during the loop, including a write
++to a different constant index. Direct assignment to the syntactic source root
++selects an independent entry snapshot for the loop while the root holds its new
++value. This also applies to direct dictionary keys/values/items projections, not
++separately stored or escaping views. Snapshot storage contributes to allocation
++costs. Copies made before a loop remain independent and may be changed separately.
++Managed loop elements borrow their container; use `.copy()` when an independent
++element must escape.
++
++Use an explicit index loop when the algorithm must change its source collection.
++The example below tests the current length on every iteration, so appended values
++are visited. Capture the initial length instead when an algorithm must visit only
++the original extent. Reading the scalar element before mutation preserves its
++value for the rest of that iteration.
+ 
+ ```mylang
+ func main() -> int:
+     mut items = [1, 2]
+-    mut saved = items
++    mut saved = items.copy()
+     mut total = 0
+-    for value in items:
++    mut index = 0
++    while index < len(items):
++        const value = items[index]
+         total += value
+         items[1] = 9
+         if value == 9:
+             items.append(3)
++        index += 1
+     assert total == 13
+     assert saved == [1, 2]
+     return 0
+@@ -308,8 +314,8 @@
+ 
+ Records declare **value records**, with annotated fields and named construction:
+ `Node(value=42, children=[])`. They have no inheritance, methods, or implicit
+-`self`. Assigning a record copies its value. Later writes preserve the other value's
+-snapshot, including managed fields. Field assignment updates a writable record
++`self`. Assigning a record with managed fields can move ownership. Use `.copy()` for
++an independent record that recursively copies those fields. Field assignment updates a writable record
+ local or a record held in a writable array slot.
+ 
+ Enums declare closed cases with named payload fields. `Kind.first` constructs
+@@ -350,8 +356,8 @@
+ 
+ A tuple groups two to eight values without declaring a record: `(a, b)` builds one, the
+ type is written `tuple[str, int]`, and the bare forms `return a, b` and `x, y = a, b`
+-are accepted, so `a, b = b, a` is the swap. A tuple has no fields, no indexing, no
+-methods and no `len`; take it apart by destructuring, `x, y = value` or `for x, y in
++are accepted, so `a, b = b, a` is the swap. A tuple has no fields, no
++indexing or `len`; `.copy()` makes an independent tuple. Take it apart by destructuring, `x, y = value` or `for x, y in
+ pairs`, and bind `_` for a value you do not need. It compares structurally, prints as
+ `(1, 'a')`, and is one structural type everywhere. See [tuples](tuples.md).
+ 
+@@ -661,14 +667,14 @@
+     score: float
+ 
+ func by_name(player: Player) -> str:
+-    return player.name
++    return player.name.copy()
+ 
+ func main() -> int:
+     mut players = [Player(name="cy", team=2, score=7.5), Player(name="al", team=1, score=9.0), Player(name="bo", team=2, score=9.0)]
+     players.sort(key=lambda p: p.score, reverse=True)
+     if players[0].name != "al" or players[1].name != "bo":
+         return 1
+-    mut by_team = sorted(players, key=lambda p: (p.team, p.name))
++    mut by_team = sorted(players, key=lambda p: (p.team, p.name.copy()))
+     if by_team[0].name != "al" or by_team[2].name != "cy":
+         return 2
+     mut alphabetical = sorted(players, key=by_name)
+diff --git a/docs/tooling/cost.md b/docs/tooling/cost.md
+--- a/docs/tooling/cost.md
++++ b/docs/tooling/cost.md
+@@ -33,10 +33,10 @@
+ |---|---|
+ | `checks.kept` | Check-bearing Core instructions still checked at run time; verify builds include checks re-emitted to validate proofs |
+ | `checks.proved` | Proof events recorded by the fact passes, including proofs after loop versioning |
+-| `updates.in_place`, `updates.tested`, `updates.copied` | Ownership decisions: proved unique, run-time uniqueness branch, or unconditional copy |
+-| `allocation.sites` | Sites that may allocate heap or runtime scratch memory; growth and conditional copies count even when an execution does not allocate |
++| `updates.in_place`, `updates.tested`, `updates.copied` | Static update decisions; checked-owned updates never use a reference-count uniqueness test |
++| `allocation.sites` | Sites that may allocate heap or runtime scratch memory; growth counts even when an execution already has sufficient capacity |
+ | `allocation.unresolved_calls` | Subset of allocation sites with a foreign or unresolved function target |
+-| `rc.retains`, `rc.releases` | RC operations inserted by ownership, after paired operations are elided |
++| `rc.retains`, `rc.releases` | Historical schema labels for retain/cleanup sites; a direct owned cleanup is not a runtime RC event |
+ | `inlined_calls` | Calls expanded by the Core inliner, excluding later LLVM inlining |
+ | `loops.vector_plans` | Loops given a Core vector emission plan; `--stats`'s legacy `vectorized` count has this meaning |
+ | `llvm_vectorized_loops` | Positive LLVM loop-vectorization remarks; `null` when no positive evidence is available |
+@@ -109,8 +109,9 @@
+ conservative. Foreign and unresolved function-value calls may allocate.
+ 
+ A whole-program allocation check must visit every internal callee and every path,
+-including cold error paths. It runs before release optimization, after debug
+-ownership exposes conditional and unconditional copy-on-write allocations. This
++including cold error paths. It runs before release optimization, after eager
++source ownership checking and selected owned lowering expose explicit copies,
++materialization and potentially allocating runtime helpers. This
+ prevents release-only stack promotion or unreachable-code proof from satisfying
+ an allocation promise that fails in debug builds. The report itself describes
+ the chosen optimized build, which may eliminate those sites.
+@@ -127,3 +128,9 @@
+ fails the command before it prints a partial listing. Without `--cost`, the
+ existing declaration listing and its handling of bodies are unchanged. Use
+ `mylang cost` directly for JSON, function selection and alternative build modes.
++
++Borrowed text/byte ranges and audited identity helpers are allocation-free.
++Independent text encoding, buffer reversal and `.copy()` may allocate even when
++the output length is unchanged. A source foreign function cannot acquire a native
++helper's audited contract by using a similar name. Static costs, runtime allocation
++traffic, managed peak bytes and process RSS are different measurements.
+diff --git a/docs/tooling/guest-tests.md b/docs/tooling/guest-tests.md
+--- a/docs/tooling/guest-tests.md
++++ b/docs/tooling/guest-tests.md
+@@ -126,7 +126,9 @@
+ A test that reaches a construct the compiler's core does not build yet is
+ reported as `unsupported NAME: E_CORE_UNSUPPORTED (REASON) at LINE:COLUMN` and
+ left out of the executable; the summary line then ends with `, N unsupported`.
+-It is neither a pass nor a failure.
++It is neither a pass nor a failure under the current exit-status contract.
++A qualification gate must inspect the report and require `unsupported == 0`;
++process status 0 alone does not qualify every selected test.
+ 
+ ### Test processes
+ 
+@@ -859,7 +861,18 @@
+ | `--pure-skip` | none: a failure is never replayed |
+ | `--max-calls` | `--max-steps` and `--max-frames` |
+ | `--bench`, `--bench-only`, `--bench-output`, `--bench-baseline`, `--bench-policy`, `--bench-profile`, `--bench-warmup`, `--bench-batches`, `--bench-batch-ms`, `--bench-timeout-ms`, and `mylang bench-promote` | none: `bench_` functions, baselines and policies were dropped; time a built program instead |
+-| `--gc-stress`, `--gc-runtime`, `--rc-runtime`, `--legacy-sharing`, `--value-semantics` | none: one-count reference counting and value semantics are the only modes |
++| `--gc-stress`, `--gc-runtime`, `--rc-runtime`, `--legacy-sharing`, `--value-semantics` | none: checked ownership is the ordinary guest contract; use `.copy()` for independent values |
+ | `--library`, `--provider`, `--link-library`, `--library-path` | `extern func` with `--link FILE.c` |
+ 
+ `--whole-program` is accepted and ignored, and `--qbe PATH` is ignored.
++
++## Ownership and cached tests
++
++Tests use the same checked moves, borrows and explicit copies as ordinary builds.
++This includes generated property inputs, provider stand-ins, directory children
++and cached runs. Source ownership checking stays eager: an old success receipt
++cannot admit a new invalid move in an unused helper. Receipts bind the compiler
++identity and selected ABI; old RC artifacts cannot become checked-owned artifacts.
++
++See [ownership](ownership.md) for source migrations and the separate qualification
++boundary for installed compiler components.
+diff --git a/docs/tooling/native-build.md b/docs/tooling/native-build.md
+--- a/docs/tooling/native-build.md
++++ b/docs/tooling/native-build.md
+@@ -27,8 +27,10 @@
+    `--link` C sources into one executable.
+ 
+ There is no interpreter, no bytecode and no second back end. Memory is managed by
+-one-count reference counting with copy-on-write: collections and records are values,
+-and nothing is collected or traced.
++compiler-checked ownership and direct destruction. Assignments and returns can
++move, ordinary parameters borrow, and `.copy()` makes independent storage.
++Unsupported ownership shapes are rejected before guest lowering. Allocation,
++container growth and direct freeing remain ordinary runtime operations.
+ 
+ ## Debug and release builds
+ 
+@@ -315,11 +317,14 @@
+ - **`--cache-report`** prints the same as one `mylang-core: cache:` text line.
+ - **`--stats`** prints what the release passes did: calls inlined, loops unswitched,
+   versioned and vectorized, checks proved, and the ownership plan's in-place
+-  updates, copies, retains and releases.
++  updates and copy/cleanup sites. Historical retain/release labels in the static
++  schema do not measure runtime RC events.
+ - **`--timings`** on `run`, `run-project` and `build --run` prints
+   `timings: native_ns=N`, the program's own run time with the build excluded.
+ - **`mylang dump-ir FILE.my [--facts]`** prints the Core IR (with `--facts`, after
+-  the release passes, with their intervals); `--emit-llvm PATH` writes the LLVM text.
++  the release passes, with their intervals). It can expose intermediate Core that
++  native lowering subsequently refuses; dump success is not executable admission.
++  `--emit-llvm PATH` on build writes emitted LLVM text.
+ 
+ After a one-line edit to one module of a three-unit program, and again unchanged:
+ 
+diff --git a/docs/tooling/ownership.md b/docs/tooling/ownership.md
+--- a/docs/tooling/ownership.md
++++ b/docs/tooling/ownership.md
+@@ -1,74 +1,65 @@
+ # Ownership
+ 
+-Collections and records are values ([value semantics](../value-semantics.md)): an
+-assignment, an argument, a store or a return behaves as if it copied. The compiler
+-makes that cheap with one-count reference counting and copy-on-write, planned per
+-function by the new core's ownership pass (`src/core/own.zig`). It runs in every
+-build, debug and release, after the release facts when there are any, and it never
+-refuses a program: what it cannot prove it answers the conservative way.
++Managed values have one owner. Assigning, inserting or returning an owner can
++move it; ordinary parameters borrow, and `mut` parameters borrow exclusively for
++the call and write their final values back. Use `.copy()` when two independent
++values must remain usable. The compiler checks these rules before lowering and
++rejects unsupported ownership shapes. Ownership and lifetime names do not appear
++in source syntax.
+ 
+-## What the pass decides
++## Source rules
+ 
+-- **Moves and borrows.** Every managed value (a list, dictionary, set, string, byte
+-  buffer, or a record or enum holding one) is owned, borrowed or immortal. Ordinary
+-  parameters normally borrow their arguments; `mut` parameters take ownership and
+-  return their final values. Optimized builds can also infer that an ordinary list
+-  parameter takes one owner, as described below. The last use of an owned value
+-  that consumes it (a store, a return, an update) moves it; any other consuming use
+-  takes a `retain` first. A value that dies without a consuming last use is released
+-  where it dies, on every path, including early returns and `try` propagation.
+-- **Copy-on-write.** Each in-place update of a list (`append`, an element write,
+-  `pop`) takes one of three forms: in place with no test when the list is provably
+-  unique (fresh from a constructor, a copy or another update, and never shared);
+-  in place after a uniqueness test when it is owned but may be shared; or on a copy
+-  when it is borrowed or used again after the update.
+-- **Cleanup.** A `retain x … release x` pair in one block with only reads between
+-  them is dropped.
+-- **Stack storage.** Optimized builds can keep bounded temporary lists on the
+-  stack, including across direct internal helper calls. The compiler must prove
+-  that each helper only reads the list or forwards it to another proven reader,
+-  without retaining, returning, storing or mutating it. This proof needs no
+-  annotations and works even when the helper is not inlined. Lists with managed
+-  children, unknown bounds or unproved uses keep ordinary managed storage.
+-  Element storage is limited to 4 KiB per list; promoted lists together use at
+-  most 8 KiB per function, including headers and alignment. This limit covers
+-  promoted lists, not other stack storage.
+-- **Caller storage for constructors.** A small function that creates and returns
+-  a bounded list can be inlined into its caller before the storage decision.
+-  Ordinary `values = make_values(n)` syntax can therefore construct directly in
+-  the caller's stack frame. The initial policy accepts one fresh list with
+-  unmanaged elements, ordinary unmanaged arguments, one return, no calls, and a
+-  straight fill or a recognized counted loop. It limits each constructor to
+-  100 body instructions, 128 instruction slots and 20 blocks, and adds at most
+-  256 instructions to a caller. The same list and frame budgets apply. Escaping
+-  results and snapshots kept across mutation retain managed storage. This is
+-  bounded constructor inlining; opaque or uninlined builders do not gain a hidden
+-  destination-passing ABI.
+-- **Repeated list replacement.** In an expression such as
+-  `values = append_batch(values, n)`, the compiler can pass the old list's owner
+-  to an ordinary helper that updates and returns it. If the caller still needs
+-  the old value, it retains an owner first, so snapshots and repeated arguments
+-  remain independent. The callee still checks uniqueness before reusing a shared
+-  block. This initial inference applies to internal leaf helpers returning an
+-  unmanaged-element list through updates, aliases and phis, with at most 4096
+-  instructions. It excludes `mut` parameters, calls, recursion, explicit counting,
+-  the entry point, and any module whose type catalog contains a function value
+-  type, including callbacks. No new source annotation is needed: the inferred
+-  consuming convention is separate from `mut` and does not write back to the
+-  caller's variable except through the ordinary returned value.
++A list, dictionary, set, string, byte buffer, or record or enum containing one can
++own managed storage. A use after a move is an error. Borrowed parameters and
++selected managed fields or elements do not become owners because they are used
++for the last time; copy them when an independent owner must escape. Copies
++recursively duplicate managed children. Resources cannot be copied.
+ 
+-Whether a copy happened never changes what a program prints: only how much it
+-allocates. A release build built with `--verify-facts` checks optimization
+-assumptions at run time, including unique ownership before untested heap updates
+-and available capacity before pushes into stack lists.
++`try` can transfer the successful payload of an owned Result. Matching a fresh
++producing expression can transfer its payload, including an immediate whole-field
++pattern. Matching a named value, field or index borrows its payload. Arbitrary
++partial record moves remain unsupported; explicit copies make independence clear.
+ 
+-## Seeing it
++Text and byte `.borrow(start, end)` create read-only local ranges without managed
++allocation. Their owner must remain valid through their last use. Mutating,
++replacing or moving that owner while a view is live, or storing or escaping the
++view, is rejected. A view's `.copy()` materializes independent storage.
+ 
+-`mylang build --stats` prints what the passes did, the ownership plan included:
+-updates in place without a test, updates behind a uniqueness test, updates on a
+-copy, retains and releases emitted, pairs elided, and lists placed on the stack.
+-These are static compiler decisions across emitted functions, including functions
+-whose calls were all inlined. They are not counts of operations executed by a run.
++Mutable children passed together use exclusivity at the root container, including
++children selected by different constant indices. Explicitly copying child owners
++and writing them back after the call can be a local migration when the callee
++cannot observe a root alias. Evaluate each index once and preserve source argument
++order. The compiler does not promise general disjoint-path analysis.
++
++Resources stay anchored to a live provider. A dependent returned owner must have
++one unambiguous provider input. An owner escaping a local provider or an ambiguous
++provider choice is rejected. Early returns and propagated errors still run scoped
++cleanup. `parallel.map` borrows inputs and joins before returning an independent,
++ordered output; callbacks must copy borrowed input they return as owned data.
++Detached tasks, escaping task handles and general captured closures are outside
++this contract.
++
++## Storage and cleanup
++
++The compiler schedules direct destruction on all exits and replacements. The
++selected guest runtime has no reference-count field or count-based uniqueness
++checks. Dynamic allocation, growth, explicit independent copies and direct freeing
++remain ordinary operations. A task's pending-work counter is synchronization.
++
++Optimized builds can place bounded temporary unmanaged-element lists on the
++stack, including across proven borrowing readers. Current budgets cap each
++promoted list at 4 KiB of elements and total promoted storage at 8 KiB per function,
++including headers and alignment. These budgets do not bound other stack storage.
++Bounded constructor inlining can also construct suitable fresh lists in the
++caller. Unknown bounds, managed children or escaping results keep heap storage.
++
++Repeated replacement can reuse a suitable list's storage when its previous owner
++is consumed. This optimization does not turn an earlier alias into an independent
++snapshot. Preserve a snapshot explicitly with `.copy()` before a consuming use.
++Optimization and facts verification preserve the checked source contract in
++release, unoptimized debug and optimized debug builds.
++
++## Inspecting a program
+ 
+ Save this program as `fill.my`:
+ 
+@@ -80,60 +71,50 @@
+         out.append(i * i)
+     return out
+ 
+-
+ func main() -> int:
+     const squares = fill(10)
+-    mut copy = squares
++    mut copy = squares.copy()
+     copy.append(1)
+     return len(squares) + len(copy)
+ ```
+ 
+-```console
+-$ mylang build fill.my -o fill --release --stats
+-mylang-core: inlined 0 calls, unswitched 0 loops, versioned 0 loops, proved 5 checks, vectorized 0 loops
+-mylang-core: ownership: 1 updates in place, 0 tested, 1 copied; 0 retains, 2 releases (0 pairs elided); 0 lists on the stack
+-mylang-core: cost: 0 checks kept; 4 allocation sites (0 unresolved calls); 1 unknown loops
+-```
++`mylang build fill.my -o fill --release --stats` describes the current compiler's
++static allocation and ownership decisions. `mylang cost fill.my --json` reports
++static costs per function, `mylang dump-ir fill.my` shows Core IR, and
++`mylang build fill.my -o fill --emit-llvm fill.ll` saves emitted LLVM. These reports
++are not runtime event counts. A static cleanup site can be reported using an older
++`release` label while representing direct destruction rather than counting RC.
+ 
+-Measured on 2026-10-10; the final LLVM remarks and compilation-timing line is omitted.
++Allocation analysis follows the same ownership mode as execution. Borrowed local
++views are nonallocating. Independent text encoding, buffer reversal and explicit
++`.copy()` may allocate and violate a `noalloc` ceiling. Invalid source ownership
++is diagnosed before allocation analysis lowers a helper, including unused helpers.
+ 
+-`copy.append(1)` is the update on a copy: `squares` is read after it. `fill` has a
+-parameter-dependent bound, so it does not qualify for the bounded constructor
+-inlining policy. `mylang cost FILE.my --json` reports static counts per function;
+-`mylang dump-ir FILE.my` prints the Core IR before the passes and
+-`--emit-llvm PATH` saves the emitted code with its reference-count operations,
+-copies and stack allocations.
++## Commands, artifacts and package boundary
+ 
+-## Experimental zero RC
++Ordinary build, run, run-project, check, check-project, check-module, check-session,
++lint, dump-ir, cost, coverage, test and doctest commands select checked ownership.
++Persistent checks validate each request. Tests apply the same source rules to
++properties, providers and directory workers. Cached successes cannot bypass
++ownership checking. `check` validates source contracts; a native build also
++qualifies backend and runtime support. `dump-ir` displays intermediate Core for
++diagnosis; its successful output alone does not prove the backend can emit or run
++that program. There is no fallback after an ownership error.
+ 
+-`--experimental-zero-rc` selects source moves, explicit copies, checked borrows
+-and direct destruction. It applies to `build`, `run`, `run-project`, `check`,
+-`check-project`, `check-module`, `check-session`, `dump-ir`, `test` and `doctest`.
+-Persistent checks validate each request, including after cached checks. Documentation
+-examples pass the selection into both checking and execution. Tests use the same checked source ownership rules, including
+-directory workers and property trials. Local, shared and indexed-property test
+-receipts distinguish ownership modes; an ordinary RC success cannot satisfy a
+-zero-RC request. `check` validates source ownership,
+-while `build` also checks backend and runtime support. Unsupported operations
+-fail compilation without an RC fallback. See the
+-[supported features and measurements](../../experiments/zero-rc-final-20261011/README.md).
++Guest LLVM uses the `mylang-zero-rc-v2` ABI marker with `kind` at header offset zero.
++Lowering, optimization, emission, native artifacts and test receipts bind their
++selected compiler/runtime identities. Old RC artifacts cannot be interpreted as
++this ABI. Eager source checking is retained even when safe metadata or compiled
++stages are reused.
+ 
+-The runtime ABI is separate from ordinary RC builds: `kind` is at offset zero,
+-there is no count member, and emitted LLVM starts with `mylang-zero-rc-v2`.
+-Lowering, optimization and emission cache identities include ownership mode.
+-Native cache identities include the runtime ABI. Ownership checking stays eager;
+-zero-RC builds do not use deferred source/body loading. Release builds still
+-emit one whole-program LLVM unit, while development builds can reuse emitted
+-module units. `--report` distinguishes whole-build replay from stage reuse.
++`--counters` and `MYLANG_COUNTERS` distinguish managed allocations/direct frees
++from RC events. Managed peak live bytes differ from cumulative allocation traffic
++and process RSS. Provider buffers, task stacks and other native storage can fall
++outside managed counters. Removing RC alone proves no particular RSS saving.
+ 
+-`--counters` and `MYLANG_COUNTERS` report managed allocations and direct frees
+-separately from RC. Removing RC does not imply zero heap allocations or reduced
+-process RSS; raw provider buffers, task stacks and other native storage are
+-outside the managed-block counters.
+-
+-## Retired
+-
+-The old back end's ownership analysis read its bytecode and is gone with it, and so
+-are its reports: `--explain-ownership` (refused; use `--stats`), the counting RC
+-runtimes `--rc-runtime=stats` and `--rc-runtime=sites` with `MYLANG_RC_COUNTS` and
+-`MYLANG_RC_SITES`, and the tracing collector they were compared against.
++The compiler's Zig allocator is separate from guest memory management. The
++installed test-index and cache-plan components require their own qualified owned
++compiler pin, source and protocol checks. A default guest command change alone
++does not prove those installed components RC-free; the closeout report records
++the exact package qualification and any remaining boundary. Historical immutable
++bootstrap seed inputs remain historical artifacts.

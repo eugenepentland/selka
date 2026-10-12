@@ -1,0 +1,506 @@
+{
+  "C0": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "integration_branch": "codex/memory-closeout-20261012",
+  "milestones": {
+    "qualified_implementation": "not_claimed; expanded common qualification remains incomplete",
+    "zero_rc_default": "deferred_by_user; zero-RC remains opt-in",
+    "legacy_rc_retirement": "deferred_by_user; active guest RC remains"
+  },
+  "items": [
+    {
+      "owner": "A01",
+      "assignment": "Parallel-map scheduling/storage",
+      "status": "shipped",
+      "detail": "Bounded map scheduling, Result lists and transfer fixes integrated; native/count/TSan evidence identifies intermediate artifacts; further runtime comparison deferred."
+    },
+    {
+      "owner": "A02",
+      "assignment": "Capacity and peak live memory",
+      "status": "measured_tradeoff",
+      "detail": "Retain current capacity policy; safety/writeback fixes integrated. Existing measured tradeoff and unchanged operation-count bounds recorded."
+    },
+    {
+      "owner": "A03",
+      "assignment": "Allocation and RC census",
+      "status": "shipped",
+      "detail": "Original30 plus expanded five-mode census report complete on Support7; not relabeled as later final gate compiler."
+    },
+    {
+      "owner": "A04",
+      "assignment": "Text/JSON/codec/path public exports",
+      "status": "shipped",
+      "detail": "Exports classified and expanded native contracts qualified on recorded artifacts; final registered gate passed on the recorded revision."
+    },
+    {
+      "owner": "A05",
+      "assignment": "Remaining libraries and resources",
+      "status": "blocked",
+      "detail": "Exports classified and migrations integrated; later warm-memo repair has focused evidence but complete common revision library matrix is deferred."
+    },
+    {
+      "owner": "A06",
+      "assignment": "Applications and migration",
+      "status": "shipped",
+      "detail": "Four application shapes pass20 builds/60 counted runs on Support7; source pairs and migration burden retained."
+    },
+    {
+      "owner": "A07",
+      "assignment": "Ownership, cleanup and ABI",
+      "status": "blocked",
+      "detail": "Safety fixes integrated with registered regressions; complete retirement and common ABI qualification deferred."
+    },
+    {
+      "owner": "A08",
+      "assignment": "Compile scaling and cache safety",
+      "status": "blocked",
+      "detail": "Cache regressions fixed; compile scaling deferred and recursive canonical shadow defect remains with parked equality patch."
+    },
+    {
+      "owner": "A09",
+      "assignment": "Baseline, timings and RSS",
+      "status": "blocked",
+      "detail": "Existing15 paired counter configurations and3 runtime cases recorded; remaining runtime/RSS/compile measurements deferred by user."
+    },
+    {
+      "owner": "A10",
+      "assignment": "CLI paths, default and RC retirement",
+      "status": "blocked",
+      "detail": "Guest command support and explicit owned package qualification integrated; normal default and RC retirement deferred by user."
+    }
+  ],
+  "scope_updates": [
+    {
+      "requested_by": "user",
+      "change": "Expand Result-list support, including parallel.map returning Results.",
+      "owner": "A01",
+      "status": "integrated; Support7 five-mode Result-map and TSan/task stress passed; final revision requalification pending"
+    },
+    {
+      "requested_by": "user",
+      "change": "Stop once the complete verification gate is green; record existing performance differences. Further performance work, default promotion and RC retirement deferred.",
+      "status": "active stopping criterion"
+    }
+  ],
+  "interim_compilers": [
+    {
+      "name": "support",
+      "revision": "4c4c1663680fa4c290691867107eee24b504604d",
+      "sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5"
+    },
+    {
+      "name": "support2",
+      "revision": "245e892f8518943ee44a0cc6009ab4b4fa6bca43",
+      "sha256": "3e9f7f2cd7e1ff7dc13b342dc812cb64b340cddc02b8b2b4b1ae8008cb203c7c"
+    },
+    {
+      "name": "support3",
+      "revision": "0d17e4e130706639c0f49e78b60502bfb2151ebc",
+      "sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7",
+      "native_qualification": "Superseded: object lifetime fixed in632726724 and host loader cache reviewed in a2160955e; final qualification pending."
+    },
+    {
+      "name": "support4",
+      "revision": "66890fbc5135a771e6a423724d13c30018ab717f",
+      "sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+      "qualification": "Intermediate Debug compiler; historical RC-seed installed components. Not C1/package qualification."
+    },
+    {
+      "name": "support5",
+      "revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+      "sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+      "qualification": "Intermediate Debug compiler; historical RC-seed installed components. Not C1/package qualification."
+    },
+    {
+      "name": "support6",
+      "revision": "5167c588be79dd43d21d5013c36db15110bf239b",
+      "sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+      "qualification": "Intermediate Debug installation retains legacy libexec. Separate exact-source RF29cfbd13 owned package qualifies42 pure tests +protocols; Debug/RF each688 counted suites. No release milestone."
+    }
+  ],
+  "baseline_census": {
+    "original_cases": 30,
+    "allocating": 23,
+    "allocation_free": 7,
+    "migrated_refused": 0,
+    "rc_executions": 0,
+    "expanded_cases": 81,
+    "expanded_executions": 131,
+    "evidence": "A03/C0-release/REPORT.md",
+    "final_candidate_qualification": false
+  },
+  "admission": {
+    "build_slots": 3,
+    "gate_slots": 2,
+    "jobs": 4,
+    "maxrss": 8589934592,
+    "gate_policy": "One full verification maximum; second gate slot is for bounded Guardian hooks.",
+    "observed_MemAvailable_GiB": [
+      14.8,
+      19
+    ],
+    "timing": "Shared admission also serves an independent development-loop session. Queue waits are excluded from timing."
+  },
+  "exploratory_full_gate": {
+    "revision": "245e892f8518943ee44a0cc6009ab4b4fa6bca43",
+    "worktree": "/home/epentland/ai/canopy/mylang-memory-20261012-verify-01",
+    "status": "failed",
+    "known_failure": "Scalar DictItem snapshot copy crash fixed in4fc3f9517; CLI fix needs focused rerun and final full gate remains required.",
+    "selected_actions": 45,
+    "reused_actions": 0,
+    "build_admitted_seconds": 45.331,
+    "gate_admitted_seconds": 913.661,
+    "evidence": "coordinator/exploratory-verify-01/verify.log",
+    "actual_failures": [
+      "language members0/1/2 dictionary snapshot panic",
+      "interface_oracle dictionary snapshot panic",
+      "noalloc_lint dictionary snapshot panic",
+      "Core dict fixture dictionary snapshot panic",
+      "CLI fix contextual dictionary snapshot status2"
+    ],
+    "latest_attempt": {
+      "source_revision": "941bf4c18449492dadaf1a17ba20e35ff702ba0e",
+      "path": "coordinator/exploratory-verify-02/attempt-5.json",
+      "status": "passed"
+    }
+  },
+  "interim_qualification": {
+    "final_candidate": false,
+    "original30_support5": {
+      "cases": 30,
+      "executions": 72,
+      "allocating": 23,
+      "allocation_free": 7,
+      "refused": 0,
+      "failed": 0,
+      "rc_events": 0,
+      "managed_exit_live_bytes": 0,
+      "comparison": "All72 source/input matched runs have identical C0 allocation traffic and managed peaks."
+    },
+    "libraries": "A04:80 functions/5 types,40 native mode lanes and3 negatives passed on Support4. A05:95 functions/25 types,20 native mode lanes passed on Support5. Common final compiler pending.",
+    "applications": "Four shapes x five modes;20 binaries and60 counted executions passed on Support4. Final rerun pending.",
+    "cache": "Support5 40 probes passed; Support6 Debug and independent RF each pass688 real component protocols. New marker corruption and tuple producer tests pending.",
+    "commands": "Support5 main23/23, analysis15/15, followup6/6, cost8/8. Unsupported guest test counts inspected explicitly.",
+    "support6_a06": {
+      "source_revision": "5167c588be79dd43d21d5013c36db15110bf239b",
+      "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+      "status": "intermediate qualification; no release milestone",
+      "component_boundary": "libexec copied byte-for-byte from Support5; historical RC-seed-built components. New compiler includes scalar ownership and numeric ABI fixes, but actual owned installed-component qualification remains pending.",
+      "source_checks": {
+        "guest-source": {
+          "cases": 64,
+          "admitted": 56,
+          "refused": [
+            "tests/lang/rc_owning_element_borrows.my",
+            "tests/lang/rc_semantic_publication.my",
+            "tests/lang/recursive_values.my",
+            "tests/lang/scalable_sorting.my",
+            "tests/lang/sets.my",
+            "tests/lang/generator_arguments.my",
+            "tests/lang/move_elision.my",
+            "tests/lang/properties.my"
+          ],
+          "receipt": "coordinator/support6/a06/guest-source/batch-0.json"
+        },
+        "additional-source": {
+          "cases": 23,
+          "admitted": 21,
+          "refused": [
+            "test/core/row_cow.my",
+            "test/core/v_nested.my"
+          ],
+          "receipt": "coordinator/support6/a06/additional-source/batch-0.json"
+        }
+      },
+      "native": {
+        "cases": [
+          "ce2_effects"
+        ],
+        "modes": [
+          "debug",
+          "verify"
+        ],
+        "passed": 2,
+        "receipt": "coordinator/support6/a06/native/results.json",
+        "scope": "Exact original registered C0 output, counted RC/live and structural checks. No performance comparison."
+      },
+      "operational": "Coordinator ran A06 followups after two agent turns failed before execution with a platform content flag. No checks were skipped or treated as successful."
+    },
+    "rss": "Old pilot RSS invalid due launcher high-water contamination; corrected separate guest-child GNU-time controls pass. Final paired measurements pending.",
+    "support7_latest": {
+      "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "census": {
+        "builds": 435,
+        "runs": 695,
+        "passed": true,
+        "original_denominator": 30,
+        "admitted_run_rc_events": 0,
+        "admitted_run_exit_live_bytes": 0,
+        "evidence": "A03/Support7-full",
+        "original_by_mode": {
+          "release/verified_release/optimized_debug": {
+            "allocating": 23,
+            "allocation_free": 7
+          },
+          "unoptimized_debug/release_without_facts": {
+            "allocating": 28,
+            "allocation_free": 2
+          }
+        },
+        "whole_program_original_allocating": 30
+      },
+      "applications": {
+        "builds": 20,
+        "runs": 60,
+        "passed": true,
+        "evidence": "coordinator/support7/applications/summary.json"
+      },
+      "components": {
+        "pure_tests": 42,
+        "counted_protocol_runs": 688,
+        "passed": true,
+        "evidence": [
+          "A10/support7-qualification/package-results.json",
+          "A08/components-support7-cache_plan-counts"
+        ]
+      },
+      "native_guest_survey": {
+        "per_mode_passed": 427,
+        "per_mode_failed": 5,
+        "per_mode_unsupported": 6,
+        "additional_source_blocked_contracts": 16,
+        "milestone_qualified": false
+      },
+      "measurements": "15 same-adapter C0/Support7 counted configurations each pass; 66 initial runtime observations only; remaining timing/RSS/scaling pending"
+    }
+  },
+  "current_blockers": [
+    {
+      "owner": "A08/A10",
+      "item": "Recursive structural equality and canonical cache consistency",
+      "status": "blocked; unapplied feature parked",
+      "reproducer": "A10/equality/handoff.md; unintegrated-equality.patch and raw shadow failure"
+    },
+    {
+      "owner": "coordinator/A03/A05/A06",
+      "item": "Full release qualification on one final compiler",
+      "status": "deferred by revised endpoint",
+      "reproducer": "Support7 census/apps pass; broad guest survey keeps unsupported/failed contracts; later fixes have individual evidence only"
+    },
+    {
+      "owner": "A09/A08",
+      "item": "Remaining runtime, RSS and compile-scaling comparisons",
+      "status": "deferred by user; existing observations preserved",
+      "reproducer": "A09 raw measurements and report; no final common compiler performance claim"
+    },
+    {
+      "owner": "A10/A07/runtime owners",
+      "item": "Normal zero-RC default, legacy guest RC retirement and default installed package boundary",
+      "status": "deferred by user; active RC remains",
+      "reproducer": "Ordinary command selection and runtime sources retain legacy mode; owned component build requires explicit qualified pin/archive"
+    }
+  ],
+  "next_interim_artifact": {
+    "name": "support7",
+    "status": "Support7 complete owned installation; qualification evidence frozen, not final gate artifact",
+    "purpose": "Earlier measured compiler; later gate inputs and reports retain separate exact identities",
+    "component_boundary": "Use actual qualified owned Support6 pin with recorded final-source component receipts; never copy legacy libexec.",
+    "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+    "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+    "evidence": "coordinator/support7/support7-identity.json"
+  },
+  "worker_status": {
+    "launched": 10,
+    "simultaneous_slots_confirmed": 11,
+    "unavailable": [
+      "A06",
+      "A07"
+    ],
+    "handoff": "All workers stopped; coordinator archived passing gate and performance evidence. No new benchmarks, default promotion or retirement."
+  },
+  "stopping_criterion": {
+    "required": "complete registered verify_cache.py gate and required Guardian checks pass",
+    "performance": "report existing measured differences with exact artifacts; no new benchmarks",
+    "status": "complete; gate passed; work stopped"
+  },
+  "blocker_history": [
+    {
+      "owner": "A07/A08",
+      "item": "Owned cache-plan component",
+      "reproducer": "A08/cache-plan-reduction/README.md; Support5 incremental.my:241 initial loop-record retain",
+      "status": "intermediate_package_passed; final_common_revision_pending",
+      "fix": "9a9410dd6",
+      "latest_evidence": "A10 real owned Support6 RF pin; A08 Debug/RF 688 counted protocols each passed"
+    },
+    {
+      "owner": "A07/coordinator",
+      "item": "Record home cleanup",
+      "reproducer": "A06/evidence/ce2-snapshot-reduction-support5/README.md; child snapshot across sibling scalar update",
+      "status": "intermediate_native_passed; final_common_revision_pending",
+      "fix": "160eb74aa"
+    },
+    {
+      "owner": "A01/A07",
+      "item": "Borrowed dictionary items",
+      "reproducer": "single-item dict.items public and documentation fixtures",
+      "status": "fix_integrated_awaiting_qualification",
+      "worker_commit": "385ed7b1f5e02c937643495f8d5a09bd171ce488",
+      "two_name_fix": "3e6437ae9",
+      "integrated_commit": "9e9342d2a"
+    },
+    {
+      "owner": "A07/A08",
+      "item": "Readonly managed dictionary get",
+      "reproducer": "managed get(key,fallback) must keep both eagerly evaluated possible owners alive; explicit .copy works but does not qualify readonly get",
+      "status": "integrated_focused_passed; final_common_revision_pending",
+      "latest_evidence": "Root combined provider/selection focused checks passed; A08 corruption probes prepared."
+    },
+    {
+      "owner": "A01/A07/coordinator",
+      "item": "Complete owned tuple unpack",
+      "reproducer": "A03/guest-migrations/reproducers/managed_slot_swap.my; A05/samples/provider_tuple.my is mandatory provider contract",
+      "status": "integrated_worker_five_mode_passed; final_common_revision_pending",
+      "latest_evidence": "A07 registered three tests and five guest modes passed; A04 original tuple assertions passed after explicit migration."
+    },
+    {
+      "owner": "A01",
+      "item": "Fresh managed field receiver",
+      "reproducer": "pick(cells,0).name.copy(); fresh call/invoke whole owner must live through borrowed field use",
+      "status": "worker_five_mode_passed; common_revision_pending",
+      "latest_evidence": "A01 exact five-mode native and six refusal regressions"
+    },
+    {
+      "owner": "A04/A08",
+      "item": "Numeric formatter ABI",
+      "reproducer": "historical kind offset in core_number_text under zero-RC; old native-object cache repair must be rerun",
+      "status": "support6_native_and_cache_repair_passed; common_revision_pending",
+      "fix": "219976fa7",
+      "latest_evidence": "A04 numeric native and A08 old-object repair evidence"
+    },
+    {
+      "owner": "coordinator/A05",
+      "item": "Aggregate providers",
+      "reproducer": "A05 provider_record/provider_tuple/guest_capability_fields five-mode positives and ten negative boundaries",
+      "status": "fix_integrated_awaiting_qualification",
+      "fix": "15889a7a00f8b723e6ad13d4ec8fcc2b6a3c460f"
+    },
+    {
+      "owner": "coordinator/A10/A08",
+      "item": "Installed components",
+      "reproducer": "Support6 libexec is planned as byte-identical legacy Support5 components; independently qualified owned source pin and actual rebuilt artifacts are still required",
+      "status": "Support7_complete_owned_installation_qualified; default_selection_pending",
+      "latest_evidence": "A10 b962f3f43:42 pure tests and actual installed protocols/symbol audits; A08 counted688 fresh cases"
+    },
+    {
+      "owner": "coordinator/A05/A07",
+      "item": "Named provider transfer into aggregate",
+      "reproducer": "tests/lang/capability_fields.my:24 five-provider Ports constructor; Support6 E_ZERO_RC_LOWERING",
+      "status": "named_provider_transfer_fix_integrated; common_native_matrix_pending",
+      "latest_evidence": "A05 width alone is not cause; named Ports moved into App retains obsolete source pin, fixed b3392bae0"
+    },
+    {
+      "owner": "coordinator/A10/A07",
+      "item": "Borrowed entry provider wrapper",
+      "reproducer": "A10 effects.md draft block12 constructs Context(fs=borrowed fs,env=borrowed env); Support6 E_SINGLE_OWNER_BORROW",
+      "status": "integrated_focused_passed; final_common_revision_pending",
+      "latest_evidence": "c749ad5a9 includes exact bounded flat readonly borrowed context; root combined 12 focused checks passed."
+    },
+    {
+      "owner": "A02/A03/A07",
+      "item": "Nested mutable dictionary child",
+      "reproducer": "tests/lang/mut_dictionary_arguments.my:11; Support6 source admits then E_ZERO_RC_LOWERING",
+      "status": "worker_five_mode_and_integrated_focused_passed; common_revision_pending",
+      "latest_evidence": "A02 prepared interior mut paths50167; 15 checked native and six ordinary controls passed"
+    },
+    {
+      "owner": "A09/A01/A07",
+      "item": "Managed extrema",
+      "reproducer": "tests/lang/scalable_sorting.my:21 min(words).copy() hidden collection E_SINGLE_OWNER_MOVED",
+      "status": "integrated_focused_passed; final_common_revision_pending",
+      "latest_evidence": "27ffbad1b integrates two-parent min/max/optional selection with semantic-cache v9; A02 generator fold fix also integrated."
+    },
+    {
+      "owner": "A02/A07",
+      "item": "Scalar field write inside managed list record",
+      "status": "integrated_worker_five_mode_passed; final_common_revision_pending",
+      "reproducer": "A03/transferred-a06/v-nested-repro: b.items[1].code = 77, source admits, native refuses in five modes",
+      "latest_evidence": "868a0cd27 scalar child write fix; original v_nested passes worker five-mode checks."
+    },
+    {
+      "owner": "A09/A10",
+      "item": "Size-aligned C0 counted native linking",
+      "status": "same_adapter_C0_and_Support7_comparison_passed; ordinary_C0_link_failure_retained",
+      "reproducer": "A09/raw/size-aligned-C0/results.json: eight unique builds fail native-link object FileNotFound, 15 configurations retained",
+      "latest_evidence": "A10 v2 exact-artifact adapter7b10; A09 aa80f51915/15 each arm"
+    },
+    {
+      "owner": "coordinator/A10",
+      "item": "Full verification owned component pin options",
+      "status": "fixed_integrated; 73 tests pass; full gate now executes with owned pin/archive",
+      "reproducer": "scripts/verify_cache.py parse_options refuses -Dcomponent-owned-compiler-pin and -Dcomponent-seed-source; same package inputs must be bound to verification preparation and replay.",
+      "latest_evidence": "attempt3 executed with exact pin/archive and failed independent regression tests; empty-PATH forwarding fix pending"
+    },
+    {
+      "owner": "A01",
+      "item": "Recursive Optional scalar-field writeback",
+      "reproducer": "recursive_values.my: copied recursive optional child.value assignment",
+      "status": "fix_integrated; focused_native_passed; next_full_gate_pending"
+    },
+    {
+      "owner": "A08",
+      "item": "Warm generic memo callback cache hydration",
+      "reproducer": "memo.create[str[]] raw bracket name passed to module_names.reference; cold passes/warm InternalError",
+      "status": "fix_integrated; focused_native_passed; next_full_gate_pending"
+    },
+    {
+      "owner": "A02",
+      "item": "Indirect owned aggregate result transfer",
+      "reproducer": "rc_pin_elide.my:141 return f(mut xs); three guest tests refuse lowering",
+      "status": "fix_integrated; focused_native_passed; next_full_gate_pending"
+    },
+    {
+      "owner": "A05",
+      "item": "Scalar mutable arguments share one parent",
+      "reproducer": "frontend_mut.my dynamic disjoint targets gives [1,22]; named interior case refuses at116",
+      "status": "fix_integrated; focused_native_passed; next_full_gate_pending"
+    },
+    {
+      "owner": "A10",
+      "item": "Recursive structural equality lowering",
+      "reproducer": "value_equality.my: three native test roots require unaudited myl_core_equal_<type>",
+      "status": "parked_unintegrated; canonical_recursive_shadow_mismatch",
+      "latest_evidence": "A10/equality/handoff.md; patch and native results preserved, no rollout claim"
+    },
+    {
+      "owner": "coordinator",
+      "item": "Registered formatting",
+      "reproducer": "Four new .my fixtures fail full format gate on d01f772cd",
+      "status": "formatted_in_integration; next_full_gate_pending"
+    },
+    {
+      "owner": "coordinator",
+      "item": "Complete registered verification",
+      "status": "resolved; complete gate green",
+      "reproducer": "coordinator/exploratory-verify-02/verify-attempt-4.log",
+      "evidence": "coordinator/exploratory-verify-02/attempt-5.json"
+    }
+  ],
+  "recorded_performance": {
+    "report": "A09/final-performance-handoff.md",
+    "results": "A09/final-performance-handoff.json",
+    "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+    "runtime_cases": 3,
+    "runtime_observations": 66,
+    "paired_counter_configurations": 15,
+    "final_gate_revision_measured": false,
+    "remaining_measurements": "deferred_by_user"
+  },
+  "final_verification": {
+    "source_revision": "941bf4c18449492dadaf1a17ba20e35ff702ba0e",
+    "passed": true,
+    "fresh_actions": 45,
+    "reused_actions": 0,
+    "guardian_checks": 88,
+    "evidence": "coordinator/exploratory-verify-02/attempt-5.json"
+  }
+}

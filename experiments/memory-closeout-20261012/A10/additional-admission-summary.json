@@ -1,0 +1,366 @@
+{
+  "denominator": 219,
+  "roots": {
+    "test/core": 175,
+    "test/fixtures": 44
+  },
+  "classification_counts": {
+    "new_owned_refusal": 86,
+    "both_admitted": 106,
+    "both_refused": 27
+  },
+  "new_refusal_codes": {
+    "E_SINGLE_OWNER_MOVED": 27,
+    "E_ZERO_RC_UNSUPPORTED": 7,
+    "E_SINGLE_OWNER_BORROW": 39,
+    "E_SINGLE_OWNER_OVERLAP": 8,
+    "E_SINGLE_OWNER_LOOP": 2,
+    "E_SINGLE_OWNER_UNSUPPORTED": 3
+  },
+  "first_diagnostics": [
+    {
+      "source": "test/core/b_buffer_values.my",
+      "diagnostic": "b_buffer_values.my:10:26: error[E_SINGLE_OWNER_MOVED]: 'buffer' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/c_grants.my",
+      "diagnostic": "c_grants.my:21:17: error[E_ZERO_RC_UNSUPPORTED]: dependent capabilities require a with scope in zero-RC mode"
+    },
+    {
+      "source": "test/core/c_runner_byte_buffer.my",
+      "diagnostic": "c_runner_byte_buffer.my:8:16: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/c_stack_handles.my",
+      "diagnostic": "c_stack_handles.my:20:19: error[E_ZERO_RC_UNSUPPORTED]: dependent capabilities require a with scope in zero-RC mode"
+    },
+    {
+      "source": "test/core/c_trap_handles.my",
+      "diagnostic": "c_trap_handles.my:7:27: error[E_ZERO_RC_UNSUPPORTED]: dependent capabilities require a with scope in zero-RC mode"
+    },
+    {
+      "source": "test/core/ce2_effects.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce2_effects.my:48:38: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it"
+    },
+    {
+      "source": "test/core/ce2_results.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce2_results.my:87:15: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper"
+    },
+    {
+      "source": "test/core/ce_appends.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_appends.my:43:9: error[E_SINGLE_OWNER_MOVED]: 'buffer' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/ce_cow.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_cow.my:35:9: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/ce_elements.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_elements.my:70:9: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it"
+    },
+    {
+      "source": "test/core/ce_records.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_records.my:125:14: error[E_SINGLE_OWNER_MOVED]: 'b' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/ce_slices.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_slices.my:28:18: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+    },
+    {
+      "source": "test/core/counters.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/counters.my:14:13: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/d_basic.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/d_basic.my:5:5: error[E_SINGLE_OWNER_MOVED]: 'd' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/d_collections.my",
+      "diagnostic": "d_collections.my:13:5: error[E_SINGLE_OWNER_MOVED]: 'd' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/d_fact_inputs.my",
+      "diagnostic": "d_fact_inputs.my:55:12: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/d_scalar_stores.my",
+      "diagnostic": "d_scalar_stores.my:2:35: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/f1_overflow.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/f1_overflow.my:125:28: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit"
+    },
+    {
+      "source": "test/core/f1_storeback.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/f1_storeback.my:25:16: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+    },
+    {
+      "source": "test/core/f1_tbaa.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/f1_tbaa.my:42:17: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it"
+    },
+    {
+      "source": "test/core/f2_index.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/f2_index.my:125:14: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/f_features.my",
+      "diagnostic": "f_features.my:20:17: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/i_live_place.my",
+      "diagnostic": "i_live_place.my:13:5: error[E_SINGLE_OWNER_MOVED]: 'items' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/list_alias.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/list_alias.my:2:16: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/m_list_methods.my",
+      "diagnostic": "m_list_methods.my:19:8: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/m_none_keys.my",
+      "diagnostic": "m_none_keys.my:29:19: error[E_SINGLE_OWNER_MOVED]: 'mapping' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/m_recursive_values.my",
+      "diagnostic": "m_recursive_values.my:59:51: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it"
+    },
+    {
+      "source": "test/core/rc_alias_paths.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_alias_paths.my:11:14: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/rc_field_take.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_field_take.my:30:18: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper"
+    },
+    {
+      "source": "test/core/rc_lists.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_lists.my:2:14: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/rc_mut.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_mut.my:38:9: error[E_SINGLE_OWNER_MOVED]: 'a' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/rc_phi_fields.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_phi_fields.my:17:35: error[E_SINGLE_OWNER_MOVED]: 'xs' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/rc_promote_order.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_promote_order.my:25:5: error[E_SINGLE_OWNER_MOVED]: 'xs' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/rc_shared_loops.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_shared_loops.my:4:5: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit"
+    },
+    {
+      "source": "test/core/row_cow.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_cow.my:13:17: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+    },
+    {
+      "source": "test/core/row_csv_aggregate.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_csv_aggregate.my:84:21: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it"
+    },
+    {
+      "source": "test/core/row_dict_lookup_str.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_dict_lookup_str.my:34:20: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+    },
+    {
+      "source": "test/core/row_dict_update.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_dict_update.my:12:5: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper"
+    },
+    {
+      "source": "test/core/row_dict_update_str.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_dict_update_str.my:8:22: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+    },
+    {
+      "source": "test/core/row_mutate_nested.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_mutate_nested.my:9:20: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/row_mutate_shared.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_mutate_shared.my:29:26: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/row_record_reads.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_record_reads.my:40:20: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+    },
+    {
+      "source": "test/core/row_string_join.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_string_join.my:43:45: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+    },
+    {
+      "source": "test/core/row_string_split.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_string_split.my:51:45: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+    },
+    {
+      "source": "test/core/row_word_count.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_word_count.my:32:16: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it"
+    },
+    {
+      "source": "test/core/s1_ascii.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/s1_ascii.my:22:23: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper"
+    },
+    {
+      "source": "test/core/s1_bytes.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/s1_bytes.my:15:58: error[E_ZERO_RC_UNSUPPORTED]: shared snapshots and retained views are unsupported; use .borrow() for a checked view or .copy() for ownership"
+    },
+    {
+      "source": "test/core/s1_collisions.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/s1_collisions.my:63:17: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+    },
+    {
+      "source": "test/core/s1_reads.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/s1_reads.my:31:13: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/s1_views.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/s1_views.my:4:23: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper"
+    },
+    {
+      "source": "test/core/t_methods.my",
+      "diagnostic": "t_methods.my:5:12: error[E_SINGLE_OWNER_MOVED]: 'text' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/t_scalar_fusion.my",
+      "diagnostic": "t_scalar_fusion.my:38:16: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/t_text.my",
+      "diagnostic": "t_text.my:27:12: error[E_SINGLE_OWNER_MOVED]: 'original' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/u1_growth.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/u1_growth.my:40:13: error[E_SINGLE_OWNER_MOVED]: 'b' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/u1_hoist.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/u1_hoist.my:19:13: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/u1_sink.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/u1_sink.my:33:32: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/u1_state.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/u1_state.my:63:28: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/v_buffer_format.my",
+      "diagnostic": "v_buffer_format.my:5:12: error[E_SINGLE_OWNER_MOVED]: 'buffer' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/v_buffer_mut.my",
+      "diagnostic": "v_buffer_mut.my:41:13: error[E_SINGLE_OWNER_MOVED]: 'sink' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/v_capability_arrays.my",
+      "diagnostic": "v_capability_arrays.my:47:9: error[E_ZERO_RC_UNSUPPORTED]: store resource owners in named local scopes in the zero-RC prototype"
+    },
+    {
+      "source": "test/core/v_dict_view_len.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_dict_view_len.my:5:16: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper"
+    },
+    {
+      "source": "test/core/v_dynamic_repeat.my",
+      "diagnostic": "v_dynamic_repeat.my:11:16: error[E_SINGLE_OWNER_UNSUPPORTED]: this method duplicates nested lists; use explicit .copy() and append/pop in the prototype"
+    },
+    {
+      "source": "test/core/v_inline_loops.my",
+      "diagnostic": "v_inline_loops.my:24:21: error[E_SINGLE_OWNER_MOVED]: 'parent' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/v_lists.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_lists.my:18:14: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/v_loops.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_loops.my:37:17: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/v_methods.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_methods.my:38:20: error[E_SINGLE_OWNER_MOVED]: 'zs' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/v_mut.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_mut.my:67:43: error[E_SINGLE_OWNER_MOVED]: 'st' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/v_mut_rebind.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_mut_rebind.my:3:13: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/v_mut_window.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_mut_window.my:28:15: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+    },
+    {
+      "source": "test/core/v_narrow.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_narrow.my:4:5: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/v_nested.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_nested.my:11:16: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/v_nested_lengths.my",
+      "diagnostic": "v_nested_lengths.my:4:17: error[E_SINGLE_OWNER_MOVED]: 'grid' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/v_nested_places.my",
+      "diagnostic": "v_nested_places.my:10:5: error[E_SINGLE_OWNER_MOVED]: 'a' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/v_row_cow.my",
+      "diagnostic": "v_row_cow.my:17:12: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+    },
+    {
+      "source": "test/core/v_snapshot.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_snapshot.my:28:36: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it"
+    },
+    {
+      "source": "test/core/v_sort.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_sort.my:57:5: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/v_text.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_text.my:19:19: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper"
+    },
+    {
+      "source": "test/core/v_trace.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_trace.my:31:20: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it"
+    },
+    {
+      "source": "test/core/v_trap_set.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_trap_set.my:7:17: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/core/v_units.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_units.my:13:16: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/core/v_wide_managed.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_wide_managed.my:21:13: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+    },
+    {
+      "source": "test/fixtures/application-cache/application.my",
+      "diagnostic": "application.my:40:20: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed"
+    },
+    {
+      "source": "test/fixtures/attenuation.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/fixtures/attenuation.my:21:18: error[E_ZERO_RC_UNSUPPORTED]: dependent capabilities require a with scope in zero-RC mode"
+    },
+    {
+      "source": "test/fixtures/file-methods.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/fixtures/file-methods.my:2:5: error[E_ZERO_RC_UNSUPPORTED]: open a dependent scope directly from a named provider in this prototype"
+    },
+    {
+      "source": "test/fixtures/resource-io.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/fixtures/resource-io.my:32:20: error[E_SINGLE_OWNER_UNSUPPORTED]: this expression is outside the single-owner prototype"
+    },
+    {
+      "source": "test/fixtures/resources.my",
+      "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/fixtures/resources.my:20:11: error[E_SINGLE_OWNER_UNSUPPORTED]: this expression is outside the single-owner prototype"
+    }
+  ]
+}

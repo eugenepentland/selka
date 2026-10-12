@@ -82,12 +82,15 @@ fn rooted(context: Context, path: []const u8) Error![]const u8 {
     return std.fs.path.relativePosix(a, "/", context.entry.root, absolute);
 }
 
-/// The execution settings both tiers bind, as JSON: build mode, fact mode (`verify`
-/// included), code generation choices, the property seed and `runs`, the trial
+/// The execution settings both tiers bind, as JSON: the ownership mode
+/// (`single_owner`, `zero_rc`), build mode, fact mode (`verify` included), code
+/// generation choices, the property seed and `runs`, the trial
 /// budgets and the leak-check mode (`MYL_CORE_LEAKCHECK`, EXEC-RECEIPT-4), so a
 /// fact-verification, a leak-checked and a plain run never share a receipt.
 fn settingsJson(context: Context, runs: u32) Error![]const u8 {
     return std.json.Stringify.valueAlloc(context.arena, .{
+        .single_owner = context.options.build.show.codegen.single_owner,
+        .zero_rc = context.options.build.show.codegen.zero_rc,
         .mode = context.options.build.mode,
         .facts = context.options.build.facts,
         .vectors = context.options.build.show.codegen.generic_vectors,
@@ -940,6 +943,32 @@ test "execution receipts key the linked program, not the compiler, and hit after
     try std.testing.expect(try executionHit(edited, key));
     try std.testing.expect(!try hit(edited, key));
     try std.testing.expectEqualStrings("missing-cache-plan", reuseReason(edited));
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CACHE-1
+test "zero RC test receipts isolate local, execution and indexed ownership modes" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    var context = try fakeToolContext(a, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a), &environment);
+    var inputs: std.ArrayList(Dependency) = .empty;
+    context.options.properties.policy = .indexed_v1;
+    const plain = try settings(context, &inputs);
+    const execution_plain = try executionSettings(context);
+    const indexed_plain = (try campaignSettings(context, &inputs)).?;
+    context.options.build.show.codegen.single_owner = true;
+    const single = try settings(context, &inputs);
+    try std.testing.expect(!std.mem.eql(u8, &plain, &single));
+    context.options.build.show.codegen.zero_rc = true;
+    const owned = try settings(context, &inputs);
+    try std.testing.expect(!std.mem.eql(u8, &single, &owned));
+    try std.testing.expect(!std.mem.eql(u8, &plain, &owned));
+    try std.testing.expect(!std.mem.eql(u8, execution_plain, try executionSettings(context)));
+    try std.testing.expect(!std.mem.eql(u8, &indexed_plain, &(try campaignSettings(context, &inputs)).?));
 }
 
 // spec: EXEC-RECEIPT-2

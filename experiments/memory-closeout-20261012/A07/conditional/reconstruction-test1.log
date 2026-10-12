@@ -1,0 +1,181 @@
+build-slot: FIFO ticket 403, position 18; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 403, position 13; earlier build tickets must run first; waiting (61s so far)
+build-slot: FIFO ticket 403, position 8; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 403, position 3; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 403, position 1; waiting for measurement or memory-accounting settle delay; waiting (241s so far)
+build-slot: build slot 1, FIFO ticket 403 after 246s
+9860b781455ba0fff0277654eea23ec3a893cb3614551f277cbf67d7850f6cf7
+d7c7a2468458d4cddf08970071fd85e6b6c3ff126b450eb15d8f1628fe38d91f
+test-core
++- verification action core member 0 4 pass, 3 fail (7 total)
+guardian/test: test wall 81.57s; slowest over 50ms:
+guardian/test:   21.57s  a06_nested_write_test.test.zero RC nested writeback keeps snapshots and directly cleans early returns
+guardian/test:   20.38s  a06_nested_write_test.test.zero RC fixed array writeback captures a dynamic signed index once
+guardian/test:   20.10s  zero_rc_test.test.zero RC conditional branch storage transfers owners instead of receiver loans
+guardian/test:   19.23s  zero_rc_test.test.zero RC optional narrowing preserves hidden payload availability and mutation
+guardian/test:   0.26s  a06_nested_write_test.test.zero RC list slot nested writeback preserves exact owner and index
+guardian/test: FAIL — 3 failed of 7
+guardian/test: RESULT {"passed":4,"failed":3,"skipped":0}
+error: 'zero_rc_test.test.zero RC optional narrowing preserves hidden payload availability and mutation' failed:
+       guardian/test: 7 test(s) selected by filter: "zero RC optional narrowing", "zero RC setdefault", "zero RC conditional branch" (+3 more)
+       E_MUTATION_MARKER at 78: this function writes `value` (parameter 1), which is read-only here; declare `mut value: int[]?` so the change reaches the caller, or assign it to a local (`copy = value`) and change the copy
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/effects.zig:671:19: 0x1775377 in check (compiler.zig)
+           if (violated) return error.SourceError;
+                         ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/sema.zig:1537:5: 0x182ea3f in retryOr (compiler.zig)
+           return err;
+           ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/sema.zig:1874:170: 0x15e0c07 in checkProgram (compiler.zig)
+           @import("effects.zig").check(allocator, checked, .{ .exported = exported, .src = src, .syntax = program, .sink = sink, .stubs = stubs, .facts = facts }) catch |err| return retryOr(&plan, err);
+                                                                                                                                                                                ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/sema.zig:1750:9: 0x14402af in checkCore (compiler.zig)
+               return err;
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/sema.zig:1708:5: 0x143f32d in checkCached (compiler.zig)
+           return checkCore(allocator, src, program, sink, .{ .names = module_names, .cache = cache });
+           ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/compiler.zig:213:24: 0x143e941 in checkWithCache (compiler.zig)
+               self.program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, cache);
+                              ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/compiler.zig:193:9: 0x143de36 in check (compiler.zig)
+               return self.checkWithCache(null);
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/zero_rc_test.zig:154:9: 0x1fbaa53 in checked (root_test.zig)
+               return err;
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/zero_rc_test.zig:163:87: 0x1fbe158 in refuses (root_test.zig)
+           try std.testing.expectError(error.Rejected, contract.checkMode(arena.allocator(), try checked(arena.allocator(), source), &failure, true));
+                                                                                             ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/zero_rc_test.zig:1677:5: 0x2979ef2 in test.zero RC optional narrowing preserves hidden payload availability and mutation (root_test.zig)
+           try refuses(std.testing.allocator,
+           ^
+       guardian/test: SLOW  19.23s  zero_rc_test.test.zero RC optional narrowing preserves hidden payload availability and mutation
+error: 'zero_rc_test.test.zero RC setdefault copies borrowed hit and inserted payloads independently' failed:
+       zero-RC lowering: this lowering still requires reference counting; use an explicit owned copy or simplify the expression at 76
+       fn main(cap) -> i64
+       b0:
+         %2 = dict_new dict[str, list[i64]] 1:u64
+         %5 = list_new list[i64] 1:i64
+         %7 = list_push list[i64] %5, 1:i64
+         %8 = dict_find i64 %2, str0
+         %10 = cmp.ge bool %8, 0:i64
+         branch %10, b1, b2
+       b1: ; preds b0
+         %12 = dict_set_value dict[str, list[i64]] %2, %8, %7
+         jump b3
+       b2: ; preds b0
+         %14 = dict_insert dict[str, list[i64]] %2, %8, str0, %7
+         jump b3
+       b3: ; preds b1 b2
+         %16 = phi dict[str, list[i64]] %12, %14
+         %19 = list_new list[i64] 1:i64
+         %21 = list_push list[i64] %19, 99:i64
+         %22 = dict_find i64 %16, str1
+         %24 = cmp.ge bool %22, 0:i64
+         branch %24, b4, b5
+       b4: ; preds b3
+         %26 = dict_entry_value list[i64] %16, %22
+         retain %26
+         jump b6
+       b5: ; preds b3
+         retain %21
+         jump b6
+       b6: ; preds b4 b5
+         %29 = phi list[i64] %26, %21
+         %31 = cmp.ge bool %22, 0:i64
+         branch %31, b18, b7
+       b7: ; preds b6
+         %33 = dict_insert dict[str, list[i64]] %16, %22, str1, %21
+         jump b8
+       b8: ; preds b18 b7
+         %41 = phi dict[str, list[i64]] %16, %33
+         %35 = list_copy list[i64] %29
+         release %29
+         %38 = list_new list[i64] 1:i64
+         %40 = list_push list[i64] %38, 2:i64
+         %43 = dict_find i64 %41, str2
+         %45 = cmp.ge bool %43, 0:i64
+         branch %45, b9, b10
+       b9: ; preds b8
+         %47 = dict_entry_value list[i64] %41, %43
+         retain %47
+         jump b11
+       b10: ; preds b8
+         retain %40
+         jump b11
+       b11: ; preds b9 b10
+         %50 = phi list[i64] %47, %40
+         %52 = cmp.ge bool %43, 0:i64
+         branch %52, b19, b12
+       b12: ; preds b11
+         %54 = dict_insert dict[str, list[i64]] %41, %43, str2, %40
+         jump b13
+       b13: ; preds b19 b12
+         %57 = phi dict[str, list[i64]] %41, %54
+         %56 = list_copy list[i64] %50
+         release %50
+         %59 = dict_clear dict[str, list[i64]] %57
+         release %59
+         %69 = cmp.lt bool 0:i64, 0:i64
+         branch %69, b14, b15
+       b14: ; preds b13
+         %71 = list_len u64 %35
+         %72 = convert.exact i64 %71
+         %73 = add.exact i64 %72, 0:i64
+         jump b15
+       b15: ; preds b13 b14
+         %75 = phi i64 0:i64, %73
+         %77 = list_get.exact i64 %35, %75
+         release %35
+         %81 = cmp.lt bool 0:i64, 0:i64
+         branch %81, b16, b17
+       b16: ; preds b15
+         %83 = list_len u64 %56
+         %84 = convert.exact i64 %83
+         %85 = add.exact i64 %84, 0:i64
+         jump b17
+       b17: ; preds b15 b16
+         %87 = phi i64 0:i64, %85
+         %89 = list_get.exact i64 %56, %87
+         release %56
+         print param0, %77, %89
+         ret 0:i64
+       b18: ; preds b6
+         release %21
+         jump b8
+       b19: ; preds b11
+         release %40
+         jump b13
+       
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/single_owner.zig:961:13: 0x2711858 in verifyLowered (root_test.zig)
+                   return error.Rejected;
+                   ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/zero_rc_test.zig:193:13: 0x1fbbf28 in executes (root_test.zig)
+                   return err;
+                   ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/zero_rc_test.zig:1690:5: 0x2979d05 in test.zero RC setdefault copies borrowed hit and inserted payloads independently (root_test.zig)
+           try executes(std.testing.allocator,
+           ^
+error: 'a06_nested_write_test.test.zero RC list slot nested writeback preserves exact owner and index' failed:
+       guardian/test: SLOW  20.10s  zero_rc_test.test.zero RC conditional branch storage transfers owners instead of receiver loans
+       guardian/test: SLOW  21.57s  a06_nested_write_test.test.zero RC nested writeback keeps snapshots and directly cleans early returns
+       guardian/test: SLOW  20.38s  a06_nested_write_test.test.zero RC fixed array writeback captures a dynamic signed index once
+       nested writeback build: /home/epentland/ai/canopy/mylang-memory-20261012-A07/.zig-cache/tmp/K5_8qzq3D2Q-CDBr/nested.my:12:5: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression
+             rows[0].cells[1].value = 9
+             ^
+       
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x140b079 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/a06_nested_write_test.zig:141:9: 0x140c1da in counted (root_test.zig)
+               try std.testing.expect(built.term == .exited and built.term.exited == 0);
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/a06_nested_write_test.zig:247:5: 0x140e8d5 in test.zero RC list slot nested writeback preserves exact owner and index (root_test.zig)
+           try counted(std.testing.allocator, slot_records ++
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A07/zig-out/libexec/mylang/components ./.tmp/memory-closeout/A07/zig-cache/o/40e9785ac74252d576090fa3cb59fdc6/test "--guardian-filter=zero RC optional narrowing" "--guardian-filter=zero RC setdefault" "--guardian-filter=zero RC conditional branch" "--guardian-filter=zero RC list slot nested" "--guardian-filter=zero RC fixed array" "--guardian-filter=zero RC nested writeback" --cache-dir=./.tmp/memory-closeout/A07/zig-cache --seed=0xbedf2951 --listen=-
+
+Build Summary: 10/12 steps succeeded (1 failed); 4/7 tests passed (3 failed)
+test-core transitive failure
++- verification action core member 0 4 pass, 3 fail (7 total)
+

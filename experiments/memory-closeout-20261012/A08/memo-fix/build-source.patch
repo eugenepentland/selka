@@ -1,0 +1,26 @@
+diff --git a/src/root_test.zig b/src/root_test.zig
+index 73575917d..d34b97ee4 100644
+--- a/src/root_test.zig
++++ b/src/root_test.zig
+@@ -101,6 +101,7 @@ test {
+     _ = @import("cache_command.zig");
+     _ = @import("check_cache_test.zig");
+     _ = @import("semantic_cache_test.zig");
++    _ = @import("a08_memo_cache_test.zig");
+     _ = @import("check_scale_test.zig");
+     _ = @import("module_interface_test.zig");
+     _ = @import("semantic_key.zig");
+diff --git a/src/semantic_type_recipe.zig b/src/semantic_type_recipe.zig
+index f1be73bc0..9975b33ab 100644
+--- a/src/semantic_type_recipe.zig
++++ b/src/semantic_type_recipe.zig
+@@ -78,6 +78,9 @@ fn callable(comptime Checker: type, checker: *Checker, sites: *Sites, site: sour
+             const call = node.data.call;
+             // Generic/member/named dispatch needs its own substitution recipe.
+             if (call.owner != null or call.type_arguments.len != 0 or call.argument_names.len != 0) return null;
++            // Parsed bracket applications stay in the raw name until ordinary
++            // call dispatch splits them. They need the same generic fallback.
++            if (std.mem.endsWith(u8, checker.src.text(call.name), "]")) return null;
+             const key = if (checker.catalog.module_names) |names| try names.reference(call.name, .function, null, null, checker.sink) else checker.src.text(call.name);
+             const declaration = checker.functions.get(key) orelse return null;
+             const function = checker.syntax.functions[@backingInt(declaration)];

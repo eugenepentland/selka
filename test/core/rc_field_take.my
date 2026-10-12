@@ -27,7 +27,7 @@ func put(mut rt: Runtime, at: int, v: int):
 # A copy of the field taken before the append is still read after it: it keeps the
 # list as it was.
 func keep(mut rt: Runtime, obj: int) -> int:
-    mut before = rt.objects
+    mut before = rt.objects.copy()
     rt.objects.append(obj)
     return len(before)
 
@@ -69,9 +69,9 @@ record Shelf:
 # A row read before the write-back, which sits in another block, is read again after it:
 # it keeps its own count, so replacing that very row in place does not free it.
 func replace_row(mut s: Shelf, at: int, row: int[]) -> int:
-    mut old = s.rows[at]
+    mut old = s.rows[at].copy()
     if at != 5:
-        s.rows[at] = row
+        s.rows[at] = row.copy()
     return len(old) * 100 + old[0]
 
 

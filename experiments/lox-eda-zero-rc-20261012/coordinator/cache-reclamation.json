@@ -1,0 +1,25 @@
+{
+  "reason": "Reclaim idle generated local caches for new benchmark work. All source, raw evidence, .tmp artifacts and installed/frozen compilers preserved. Earlier A01 cleanup attempt was refused by the clean-tree guard and deleted nothing.",
+  "records": [
+    {
+      "target": "/home/epentland/ai/canopy/mylang-memory-20261012-A10-rollout/.zig-cache",
+      "worker_revision": "7126ec6023bbc5c8e44271f257bd0c949aa47ea7",
+      "worker_status": "",
+      "free_before": 3876999168,
+      "files": 786,
+      "filesystem_bytes": 1482121216,
+      "free_after": 5359325184,
+      "status": "completed"
+    },
+    {
+      "target": "/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/.zig-cache",
+      "worker_revision": "6920ef0cddf0d6c94fc4effb716365c08cec663b",
+      "worker_status": "",
+      "free_before": 5359325184,
+      "files": 932,
+      "filesystem_bytes": 1084555264,
+      "free_after": 6444056576,
+      "status": "completed"
+    }
+  ]
+}

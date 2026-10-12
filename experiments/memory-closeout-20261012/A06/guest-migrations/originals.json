@@ -1,0 +1,327 @@
+[
+  {
+    "source": "tests/lang/rc_journal_types.my",
+    "original_sha256": "a9795862ccf226ada4c2a7a31f91bad0e63ce85628dd10fe1d45b8cfd27fc98f",
+    "original_lines": 32
+  },
+  {
+    "source": "tests/lang/rc_loop_operand_isolation.my",
+    "original_sha256": "c922747e002979addf7eaa14e39efa57d3c8591831c17ea6e2f5e9941c2f2fe9",
+    "original_lines": 38
+  },
+  {
+    "source": "tests/lang/rc_loop_uniqueness.my",
+    "original_sha256": "b5e2bb1396b4a0955b484220cf56344dc553433a684d173749b809ad93287a1c",
+    "original_lines": 58
+  },
+  {
+    "source": "tests/lang/rc_loop_versions.my",
+    "original_sha256": "08c9448c7d57ac87435a28595c8437c37f06a65837a1604aa1341be2980f9438",
+    "original_lines": 36
+  },
+  {
+    "source": "tests/lang/rc_mut_list_aliases.my",
+    "original_sha256": "4fd93570b1aced775125d524763cf3cacc493bc4c93164edb17e343847725256",
+    "original_lines": 104
+  },
+  {
+    "source": "tests/lang/rc_mut_payload_snapshots.my",
+    "original_sha256": "4d5f26dcfdecc3c9378303a67f5a3f0666f7f533904d14b5adaf3c3451571054",
+    "original_lines": 74
+  },
+  {
+    "source": "tests/lang/rc_mut_uniqueness.my",
+    "original_sha256": "393d9d588fc9b1c1c48cef09f76298ed978add481ee82dc87321661551841646",
+    "original_lines": 37
+  },
+  {
+    "source": "tests/lang/rc_named_record_writes.my",
+    "original_sha256": "d8f534748d6e5f6af515a1e56e522a194fc130c4088661fe790cabd5e15e4590",
+    "original_lines": 88
+  },
+  {
+    "source": "tests/lang/rc_owned_values.my",
+    "original_sha256": "f3537acb654c4dd86eeb48b81c93f16fe7350a0cfa1f92bc237d91a11abe29b1",
+    "original_lines": 89
+  },
+  {
+    "source": "tests/lang/rc_owning_element_borrows.my",
+    "original_sha256": "69d382d4c61c654fcc9998578673ca7dc556004cf30492a1c3770644fba9abf9",
+    "original_lines": 194
+  },
+  {
+    "source": "tests/lang/rc_plain_aggregates.my",
+    "original_sha256": "e18652c54935c2ee0768c7eb083da10373e2fb607770b0540bed7699e9cf44d9",
+    "original_lines": 75
+  },
+  {
+    "source": "tests/lang/rc_plain_field_loans.my",
+    "original_sha256": "acd86bb53de24a30703c845b7555a1ffdd03233bc7813c09c9c63abbee7ff34d",
+    "original_lines": 96
+  },
+  {
+    "source": "tests/lang/rc_plain_list_writes.my",
+    "original_sha256": "025fc574f42c1d8581019e39eafa065b544767155cd5704cf12e86dd285bfba0",
+    "original_lines": 26
+  },
+  {
+    "source": "tests/lang/rc_plain_record_writes.my",
+    "original_sha256": "cca07f74240e663192e53e0474eb2813b55910fed2fd44234ef1046208b88f15",
+    "original_lines": 87
+  },
+  {
+    "source": "tests/lang/rc_range_key_anchors.my",
+    "original_sha256": "bd5c8151e112cd5f15b880701e53d11d93e998519e5ba2512ac94b317465f661",
+    "original_lines": 78
+  },
+  {
+    "source": "tests/lang/rc_read_list_versions.my",
+    "original_sha256": "e02dc207ba0e16041acec012828687f298b03820850b0c5dfa2f2cf0c9eb8bc5",
+    "original_lines": 93
+  },
+  {
+    "source": "tests/lang/rc_readonly_calls.my",
+    "original_sha256": "46ee1f8f67aaad9b2831fe74824450c0a46464c94718f076ba4b0a64ac44d6f7",
+    "original_lines": 86
+  },
+  {
+    "source": "tests/lang/rc_readonly_managed_calls.my",
+    "original_sha256": "daa9647073756e074cf7734cc15aa64ae1703dac2837de63156764bf73353adf",
+    "original_lines": 65
+  },
+  {
+    "source": "tests/lang/rc_record_field_reads.my",
+    "original_sha256": "65779ac6bb7e8d0a5360dc8d6060d52c942be155c587be45b390722aa32358b7",
+    "original_lines": 123
+  },
+  {
+    "source": "tests/lang/rc_scalar_loops.my",
+    "original_sha256": "c68c4b8f9bdfde25fa03de66119edea1cdaa9830947602d973cb85452b245a82",
+    "original_lines": 35
+  },
+  {
+    "source": "tests/lang/rc_semantic_publication.my",
+    "original_sha256": "bc969bbae75cc4c58ea646cee652359b0b583d3d461cfcac35168a5a31633c98",
+    "original_lines": 58
+  },
+  {
+    "source": "tests/lang/rc_tree_drains.my",
+    "original_sha256": "09300d51a4d542de94456475fe8d592399767c590e3f37e178fcf3ee1a8af74c",
+    "original_lines": 74
+  },
+  {
+    "source": "tests/lang/rc_variant_reads.my",
+    "original_sha256": "3cc0cdf44698fc83a4b40141897a86ae0331aa042f2d22196735bb6f9449667a",
+    "original_lines": 138
+  },
+  {
+    "source": "tests/lang/rc_view_receivers.my",
+    "original_sha256": "e06c0325b188b3719d5be2137a9f85b3e8a2ffb1a3b974c7abf3da175492d869",
+    "original_lines": 20
+  },
+  {
+    "source": "tests/lang/rc_writeback_moves.my",
+    "original_sha256": "3bad6fc9d9214204ccd4078f8cee34893841ec867bd6ec5b38598e7a9c836e46",
+    "original_lines": 374
+  },
+  {
+    "source": "tests/lang/record_field_snapshots.my",
+    "original_sha256": "3f6c7a02e3f51bfcab91439264cce79d1b8d17b95b5e17d712efe82facea4a40",
+    "original_lines": 152
+  },
+  {
+    "source": "tests/lang/recursive_values.my",
+    "original_sha256": "ed5d02a2d807dd19a818d17037e64557db852f3fae76be3a80ffa94559ca0821",
+    "original_lines": 294
+  },
+  {
+    "source": "tests/lang/root_liveness.my",
+    "original_sha256": "16e453f6a71600a06359cf83ec221f9ceabe477bf412c54d384deb453e3c5232",
+    "original_lines": 149
+  },
+  {
+    "source": "tests/lang/scalable_sorting.my",
+    "original_sha256": "b8770c247c9f99d10f3f797a8642c79b31eeca540ae093937ea813503eecf83d",
+    "original_lines": 42
+  },
+  {
+    "source": "tests/lang/scalar_dictionary_publication.my",
+    "original_sha256": "07eae7de602b7d407d5dd568f7fb842ed13bff7cdaeb08309a6fa46678e8613a",
+    "original_lines": 64
+  },
+  {
+    "source": "tests/lang/sets.my",
+    "original_sha256": "cead8715e2c46a86830dbb3564d81e4d47f602c4916708d6c05e0f55bbd3f11c",
+    "original_lines": 299
+  },
+  {
+    "source": "tests/lang/stable_sorting.my",
+    "original_sha256": "8dc66d0c6ebf47e494626730c827eb325264db5d24ca4d1598b4137175a76837",
+    "original_lines": 340
+  },
+  {
+    "source": "tests/lang/value_equality.my",
+    "original_sha256": "8da5a22c4e14e47526a8356f5a4dd456cb29c3dd0d4721f272e4b188cb8e1a32",
+    "original_lines": 148
+  },
+  {
+    "source": "tests/lang/wide_signatures.my",
+    "original_sha256": "13613005056e476a603dfbcdd25efd115f1b485cc889997d88b6326c91356b40",
+    "original_lines": 50
+  },
+  {
+    "source": "tests/lang/argument_evaluation_order.my",
+    "original_sha256": "e25698fc1865ef216ed45fb1d7b98e18fb9a2cb319b78fb1292adc223dc2f13e",
+    "original_lines": 61
+  },
+  {
+    "source": "tests/lang/discard_names.my",
+    "original_sha256": "d4187db0080ecb899065ab8639b21f576f9002e7e70f17f763ae5153e88caea1",
+    "original_lines": 143
+  },
+  {
+    "source": "tests/lang/exclusive_ownership.my",
+    "original_sha256": "900c3d7e6ff5747cd2c7bbc2c04769f6afcc581bf884982def6a4372d7fa667f",
+    "original_lines": 70
+  },
+  {
+    "source": "tests/lang/frontend_mut.my",
+    "original_sha256": "631fc8a63023a847da9885aeff0dd9ca9d650e695a14295ca751812ae83ba12d",
+    "original_lines": 117
+  },
+  {
+    "source": "tests/lang/frontend_type_helpers.my",
+    "original_sha256": "bb7abc0f0f32fdbb21b779f477f967ba91e33249fe2858ab9615ea3b1774d98a",
+    "original_lines": 10
+  },
+  {
+    "source": "tests/lang/generator_arguments.my",
+    "original_sha256": "50eb60df08637500cc26f486561fdb465f1ff4156e8ce4d4c576cfca50436a29",
+    "original_lines": 72
+  },
+  {
+    "source": "tests/lang/immutable_equal.my",
+    "original_sha256": "b3a304f28a1b617fd10d919a85f7c78c5a6ae5861d4142fcb02c1612a710b73f",
+    "original_lines": 43
+  },
+  {
+    "source": "tests/lang/iteration_identity.my",
+    "original_sha256": "9a60cfc8c087ea9d11d7f359d3c63b9208edd9b54625d58e668262bc3de8f350",
+    "original_lines": 124
+  },
+  {
+    "source": "tests/lang/lambda_sort_keys.my",
+    "original_sha256": "fd251cb488c283503cb7d6c219b08962d1474299c0a2efc08ec74aedf9085f2e",
+    "original_lines": 48
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "original_sha256": "cb678db822f7572c5d3348f491f8506779d7abed638a1e040d58e109a92b981e",
+    "original_lines": 490
+  },
+  {
+    "source": "tests/lang/migrated/surface_statements.my",
+    "original_sha256": "e73c5d3d6e90128bfa0c94a3a81b95e17da2efbd48820985f64ad5cb228c796d",
+    "original_lines": 51
+  },
+  {
+    "source": "tests/lang/migrated/surface_statements_case_2.my",
+    "original_sha256": "3d3b460cd0eba0537b4038ec6a500cd772e0522e3a36e89697591f80c381fc19",
+    "original_lines": 9
+  },
+  {
+    "source": "tests/lang/move_elision.my",
+    "original_sha256": "a8f219f1acec443364cefaaa9f323c69ef2c6671543dddff77aa748471bfc95a",
+    "original_lines": 78
+  },
+  {
+    "source": "tests/lang/properties.my",
+    "original_sha256": "1a126a85cadd1b2e018a84be17940d11d86051f80570c706e54d1f23339e84cc",
+    "original_lines": 135
+  },
+  {
+    "source": "tests/lang/python_comprehension.my",
+    "original_sha256": "0af0792c14c6327a40a119ab5abfcad6faae4ee26a7e6c1e30491b76e04b3a42",
+    "original_lines": 47
+  },
+  {
+    "source": "tests/lang/python_core.my",
+    "original_sha256": "bcdf48800b69a95662aa11cbddc1db071b0ee122e115936f37b33e7e3e4c8126",
+    "original_lines": 183
+  },
+  {
+    "source": "tests/lang/rc_call_lifetimes.my",
+    "original_sha256": "88c30bf38a5e31bbb81d961bf17e55db8e24431e9dda89b542a83bbbe3f63fde",
+    "original_lines": 36
+  },
+  {
+    "source": "tests/lang/rc_fresh_returns.my",
+    "original_sha256": "8a67cec289f7affeef1d53f9f3fb02b9e01f652fa2019e5a62bc21903a7f17ea",
+    "original_lines": 47
+  },
+  {
+    "source": "tests/lang/rc_named_releases.my",
+    "original_sha256": "8cf7fe4c6b9eb865aac23caf48163107333465297c3a5820855374b87f4b1757",
+    "original_lines": 62
+  },
+  {
+    "source": "tests/lang/rc_nested_read_loans.my",
+    "original_sha256": "09036fdf9f0118a1d4083c204e063937e5431650277de1b5e20dde65c020e2e5",
+    "original_lines": 70
+  },
+  {
+    "source": "tests/lang/rc_nonheld_captures.my",
+    "original_sha256": "8c1cbb5a95b2ea837980282e8ae6d55f80ff566183e5a3f6bd3465ca0ec9f11a",
+    "original_lines": 112
+  },
+  {
+    "source": "tests/lang/rc_pin_elide.my",
+    "original_sha256": "cb4dd862dc3ff740c96319556f1c960f01c13a1708c847461f14487c5c458850",
+    "original_lines": 340
+  },
+  {
+    "source": "tests/lang/rc_plain_appends.my",
+    "original_sha256": "085ef387c3c1c17b83d50e9eb2b65ec7605e18c5a48f3f47002d49ef35186aba",
+    "original_lines": 106
+  },
+  {
+    "source": "tests/lang/rc_plain_replacements.my",
+    "original_sha256": "59c52076a791e8eca8ac6a5c7d8bd2d232f57d0b76faa1607f4e03078bd77e98",
+    "original_lines": 25
+  },
+  {
+    "source": "tests/lang/rc_read_loans.my",
+    "original_sha256": "543488b997250a1f1f5e837bad68f4cdf6b650524441de2a44554cb3250ff0ac",
+    "original_lines": 87
+  },
+  {
+    "source": "tests/lang/rc_readonly_body.my",
+    "original_sha256": "23a93cc3f23c2f8fb1ceb619b950076ab236f7ce9abfbca3c23e34686833c655",
+    "original_lines": 80
+  },
+  {
+    "source": "tests/lang/rc_scalar_replacements.my",
+    "original_sha256": "65b5daacfc242776a985482e7dfa62a6fbbada174ffc3787eaeb6f10054b690f",
+    "original_lines": 72
+  },
+  {
+    "source": "tests/lang/rc_scope_inline.my",
+    "original_sha256": "a3a0532b6fdfe5b367c61eca05ce40e45090b4ef510236e597892a2790ba7af5",
+    "original_lines": 33
+  },
+  {
+    "source": "tests/lang/rc_semantic_history.my",
+    "original_sha256": "e794e8361f35145924ae0b9f100e1ac22e17a859c3aba8a5d72d3b11facfbd5b",
+    "original_lines": 17
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "original_sha256": "77f4a4e1b22a047f21a3583d17efba7ca6a8dbd421448e7c7fdc3ed87f191103",
+    "original_lines": 577
+  },
+  {
+    "source": "tests/lang/rc_temporary_lifetimes.my",
+    "original_sha256": "614eda631f9eb5b22cd7a9190ab6f9cc7b22314e10123e91fbaa40193f633ecb",
+    "original_lines": 71
+  }
+]

@@ -1,0 +1,6 @@
+func main() -> int:
+    mut values = {"key": ["value"]}
+    mut kept: str[][] = []
+    for key, value in values.items():
+        values = {}
+    return len(kept)

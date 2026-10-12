@@ -1,0 +1,102 @@
+{
+  "scope": "Synthetic parser controls, not retired-runtime execution evidence",
+  "fixture": "experiments/memory-closeout-20261012/A09/raw/size-aligned-C0-native-replay/raw/array/array-counts.json.gz",
+  "fixture_raw_sha256": "ce70c97781a9ad2435ac2fea0772a71a9272a4c8b28e70953d0a1d50249b39b3",
+  "contract_sha256": "f46c52c076cf1ad913f16195a7f3cf8f627062f02d1816790f822e8b49e082b9",
+  "checks": [
+    {
+      "case": "explicit zeros and positive direct destruction accepted",
+      "passed": true
+    },
+    {
+      "case": "historical ABI rejected",
+      "passed": true,
+      "error": "C3 counter adapter requires the checked-owned ABI"
+    },
+    {
+      "case": "missing runtime total",
+      "passed": true,
+      "error": "missing or incompatible required counter field"
+    },
+    {
+      "case": "missing sharing bytes total",
+      "passed": true,
+      "error": "missing or incompatible required counter field"
+    },
+    {
+      "case": "missing function field",
+      "passed": true,
+      "error": "missing or incompatible required counter field"
+    },
+    {
+      "case": "missing kind",
+      "passed": true,
+      "error": "missing or incompatible required counter field"
+    },
+    {
+      "case": "missing kind bytes",
+      "passed": true,
+      "error": "missing or incompatible required counter field"
+    },
+    {
+      "case": "missing kind extra",
+      "passed": true,
+      "error": "missing or incompatible required counter field"
+    },
+    {
+      "case": "nonzero reserved total",
+      "passed": true,
+      "error": "retired RC telemetry must be an explicit integer zero"
+    },
+    {
+      "case": "nonzero reserved function slot",
+      "passed": true,
+      "error": "retired RC telemetry must be an explicit integer zero"
+    },
+    {
+      "case": "nonzero reserved kind bytes",
+      "passed": true,
+      "error": "retired RC telemetry must be an explicit integer zero"
+    },
+    {
+      "case": "nonzero reserved kind extra",
+      "passed": true,
+      "error": "retired RC telemetry must be an explicit integer zero"
+    },
+    {
+      "case": "boolean zero rejected",
+      "passed": true,
+      "error": "retired RC telemetry must be an explicit integer zero"
+    },
+    {
+      "case": "string zero rejected",
+      "passed": true,
+      "error": "retired RC telemetry must be an explicit integer zero"
+    },
+    {
+      "case": "obsolete zero-valued RC site rejected",
+      "passed": true,
+      "error": "C3 must not emit historical RC counter sites"
+    },
+    {
+      "case": "missing structural proof",
+      "passed": true
+    },
+    {
+      "case": "failed structural proof",
+      "passed": true
+    },
+    {
+      "case": "wrong structural ABI",
+      "passed": true
+    },
+    {
+      "case": "explicit structural proof and leak-free counters required together",
+      "passed": true
+    },
+    {
+      "case": "managed leak blocks qualification",
+      "passed": true
+    }
+  ]
+}

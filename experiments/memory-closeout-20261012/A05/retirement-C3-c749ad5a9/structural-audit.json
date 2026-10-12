@@ -1,0 +1,49 @@
+{
+  "scope": "A05 five runtime source candidates only; not final integrated retirement",
+  "files": {
+    "core_dict.c": {
+      "candidate_sha256": "4f3beca353e7d0908e9f408568ee994aea0abc4da75bf49edfaf9039699115ed",
+      "forbidden_matches": [],
+      "preserved_contracts": {
+        "layout_release(layout, 1)": true,
+        "layout_release(layout, 2)": true,
+        "myl_core_drop_owned(reference_at(layout, entry, r))": true,
+        "core_dict_copy_storage(dict)": true,
+        "core_dict_children": true
+      }
+    },
+    "core_sort.c": {
+      "candidate_sha256": "c45d05dcbf2a9eed86fd4c40dda1dd3ca7c4822d4cb9b10e5218fbe9c414b818",
+      "forbidden_matches": [],
+      "preserved_contracts": {
+        "myl_core_owned_sort_keyed": true,
+        "myl_core_drop_owned(keys)": true
+      }
+    },
+    "core_io.c": {
+      "candidate_sha256": "ded0f00b113b78279afbae8d2f4c0fe77184621c5ddada4dc59f50899f360958",
+      "forbidden_matches": [],
+      "preserved_contracts": {
+        "myl_core_provider_keepalive": true,
+        "myl_core_owned_file_scope_end": true,
+        "myl_core_owned_cap_scope_end": true,
+        "core_io_dependent_layout[]={32,1,0,24,0}": true,
+        "core_io_resource_layout[]={64,0,0}": true,
+        "state->adapter.release(state->adapter.context,resource->handle)": true
+      }
+    },
+    "core_host.c": {
+      "candidate_sha256": "77fa8d5fe29bbaca29b580256bd6cd786c40f92c3dfd11f839a261d6456d80fb",
+      "forbidden_matches": []
+    },
+    "core_durable.c": {
+      "candidate_sha256": "22c616f2a6bec0db2eebd5fa8dc3d645ce760d91d73d73e5dd5b2f08bf0dec7d",
+      "forbidden_matches": [],
+      "preserved_contracts": {
+        "flock": true,
+        "fsync": true,
+        "core_durable_unique_directory": true
+      }
+    }
+  }
+}

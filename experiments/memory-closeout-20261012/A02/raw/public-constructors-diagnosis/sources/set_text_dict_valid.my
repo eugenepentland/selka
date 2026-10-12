@@ -1,0 +1,3 @@
+func main() -> int:
+    mut keys = set({"b": 1, "a": 2})
+    return if len(keys) == 2 then 0 else 1

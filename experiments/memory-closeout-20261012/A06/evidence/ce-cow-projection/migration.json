@@ -1,0 +1,18 @@
+{
+  "before_sha256": "3cacf6b0c40e8ddf85488fb8914f5c6ef1610d021a4bd522f950eedb96647a52",
+  "after_sha256": "423128bd964643674ddc4eddd41ce3e18bd6433f5fe60cbaf7392c6a2f92d8ba",
+  "explicit_copy_sites_removed": 3,
+  "iterations": {
+    "rounds": 40,
+    "per_round": 500
+  },
+  "scope": "Source migration improvement; not a compiler-only performance change.",
+  "preserved": [
+    "All output assertions and input sizes",
+    "callee_slot captured before allocate",
+    "callable payload snapshot across allocate",
+    "kept and snapshot_then_store snapshots",
+    "Builder comp copy around note(self, mut comp, ...)"
+  ],
+  "reason": "Each removed Runtime temporary was published without any intervening observation of outer it; callees receive only rt and scalar or fresh arguments. Direct projections retain expression and call evaluation order."
+}

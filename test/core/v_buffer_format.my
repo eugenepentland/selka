@@ -1,7 +1,7 @@
 # spec-case: NEW-CORE-BUFFER-S4-1
 public func test_numeric_buffer_spelling_and_snapshots() -> bool:
     mut buffer = byte_buffer([])
-    mut saved = buffer
+    mut saved = buffer.copy()
     if not buffer.append_int(-9223372036854775808) or not buffer.append_int(9223372036854775807) or not buffer.append_float(-0.0) or not buffer.append_float(1.5):
         return False
     return bytes(saved) == b"" and bytes(buffer) == b"-92233720368547758089223372036854775807-0.01.5"

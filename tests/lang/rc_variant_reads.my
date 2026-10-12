@@ -16,7 +16,7 @@ record Pool:
 func selected(pool: Pool, at: int) -> Payload:
     match pool.items[at]:
         case Item.value(value=payload):
-            return payload
+            return payload.copy()
         case _:
             return Payload(left=[], right=[])
 
@@ -30,10 +30,11 @@ func replace_and_grow(mut pool: Pool):
 
 
 func through_callback(mut pool: Pool, at: int) -> Payload:
-    match pool.items[at]:
+    const selected_item = pool.items[at].copy()
+    match selected_item:
         case Item.value(value=payload):
             replace_and_grow(mut pool)
-            mut result = payload
+            mut result = payload.copy()
             result.left.append(11)
             return result
         case _:
@@ -50,8 +51,8 @@ public func test_returned_payload_outlives_rebound_and_grown_pool() -> bool:
 
 public func test_arm_callback_keeps_snapshot_and_duplicate_children() -> bool:
     mut values = [5]
-    mut pool = Pool(items=[Item.value(value=Payload(left=values, right=values))])
-    mut saved = pool
+    mut pool = Pool(items=[Item.value(value=Payload(left=values.copy(), right=values.copy()))])
+    mut saved = pool.copy()
     mut result = through_callback(mut pool, 0)
     mut old = selected(saved, 0)
     return result.left == [5, 11] and result.right == [5] and old.left == [5] and old.right == [5] and values == [5]
@@ -87,7 +88,7 @@ func nested(rows: Outer[]) -> Payload:
         case Outer.values(value=inner):
             match inner[-1]:
                 case Item.value(value=payload):
-                    return payload
+                    return payload.copy()
                 case _:
                     return Payload(left=[], right=[])
         case _:
@@ -108,9 +109,10 @@ func changing_index(mut pool: Pool) -> int:
 
 
 func index_callback(mut pool: Pool) -> Payload:
-    match pool.items[changing_index(mut pool)]:
+    const receiver_snapshot = pool.items.copy()
+    match receiver_snapshot[changing_index(mut pool)]:
         case Item.value(value=payload):
-            return payload
+            return payload.copy()
         case _:
             return Payload(left=[], right=[])
 

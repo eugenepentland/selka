@@ -100,12 +100,22 @@ fn append(comptime Context: type, context: Context, out: *std.ArrayList(u8), sit
     const source = try context.value(inst.b);
     const start = try context.value(range[0]);
     const end = try context.value(range[1]);
-    try declare(Context, context, buffers.append_symbol, "ptr, ptr, i64, i64");
+    const view = context.function.inst(context.function.resolve(inst.b)).ty == .str_view;
+    const symbol = if (view) buffers.append_span_symbol else buffers.append_symbol;
+    try declare(Context, context, symbol, if (view) "ptr, ptr, i64, i64, i64" else "ptr, ptr, i64, i64");
     // A buffer a loop appends to keeps its length and capacity in slots (NEW-CORE-U1-STATE-2).
     const slots = context.memory.states.of(context.current);
     const len = if (slots) |kept| try slotField(Context, context, out, kept.len) else try header(Context, context, out, .{ .block = buffer, .offset = 8 });
     const cap = if (slots) |kept| try slotField(Context, context, out, kept.cap) else try header(Context, context, out, .{ .block = buffer, .offset = 16 });
-    const source_len = try header(Context, context, out, .{ .block = source, .offset = 8 });
+    const source_len: []const u8 = if (view) extract: {
+        const length = try context.fresh("%aplen");
+        try out.print(a, "  {s} = extractvalue {{ ptr, i64 }} {s}, 1\n", .{ length, source });
+        break :extract length;
+    } else (try header(Context, context, out, .{ .block = source, .offset = 8 })).value;
+    const source_data = try context.fresh("%apdata");
+    if (view) {
+        try out.print(a, "  {s} = extractvalue {{ ptr, i64 }} {s}, 0\n", .{ source_data, source });
+    } else try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n", .{ source_data, source });
     const count = try context.fresh("%apn");
     const room = try context.fresh("%apr");
     try out.print(a, "  {s} = sub i64 {s}, {s}\n  {s} = sub i64 {s}, {s}\n", .{ count, end, start, room, cap.value, len.value });
@@ -113,7 +123,7 @@ fn append(comptime Context: type, context: Context, out: *std.ArrayList(u8), sit
     const tests = [_][4][]const u8{
         .{ "sgt", count, "0", "" },
         .{ "sge", start, "0", "" },
-        .{ "sle", end, source_len.value, "" },
+        .{ "sle", end, source_len, "" },
         .{ "sle", count, room, "" },
     };
     var fast_test: []const u8 = "true";
@@ -131,7 +141,7 @@ fn append(comptime Context: type, context: Context, out: *std.ArrayList(u8), sit
     const from = try context.fresh("%apf");
     const grown = try context.fresh("%apg");
     try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n  {s}.at = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{ to, buffer, to, to, len.value });
-    try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n  {s}.at = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{ from, source, from, from, start });
+    try out.print(a, "  {s}.at = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{ from, source_data, start });
     try out.print(a, "  call void @llvm.memmove.p0.p0.i64(ptr {s}.at, ptr {s}.at, i64 {s}, i1 false)\n", .{ to, from, count });
     const tag = if (slots == null) ", !tbaa !5" else "";
     try out.print(a, "  {s} = add i64 {s}, {s}\n  store i64 {s}, ptr {s}, align 8{s}\n  br label %{s}\n", .{ grown, len.value, count, grown, len.at, tag, join });
@@ -140,7 +150,9 @@ fn append(comptime Context: type, context: Context, out: *std.ArrayList(u8), sit
     // buffer whose length is in slots has it stored back first and the result's loaded after.
     try out.print(a, "{s}:\n", .{slow});
     if (slots) |kept| try emit_state.store(Context, context, out, buffer, kept);
-    try out.print(a, "  {s} = call ptr @{s}(ptr {s}, ptr {s}, i64 {s}, i64 {s}){s}\n", .{ called, buffers.append_symbol, buffer, source, start, end, try context.callLocation(inst.span) });
+    if (view) {
+        try out.print(a, "  {s} = call ptr @{s}(ptr {s}, ptr {s}, i64 {s}, i64 {s}, i64 {s}){s}\n", .{ called, symbol, buffer, source_data, source_len, start, end, try context.callLocation(inst.span) });
+    } else try out.print(a, "  {s} = call ptr @{s}(ptr {s}, ptr {s}, i64 {s}, i64 {s}){s}\n", .{ called, symbol, buffer, source, start, end, try context.callLocation(inst.span) });
     if (slots) |kept| try emit_state.load(Context, context, out, called, kept);
     try out.print(a, "  br label %{s}\n", .{join});
     try out.print(a, "{s}:\n  {s} = phi ptr [ {s}, %{s} ], [ {s}, %{s} ]\n", .{ join, name, buffer, fast, called, slow });

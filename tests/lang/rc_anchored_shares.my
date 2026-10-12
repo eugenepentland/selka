@@ -20,15 +20,22 @@ func grow(mut frame: Frame, v: int) -> int:
 
 
 func read_touched(mut frame: Frame) -> int:
-    return frame.items[touch(mut frame, 7) % len(frame.items)]
+    const captured = frame.items.copy()
+    const index = touch(mut frame, 7)
+    return captured[index % len(frame.items)]
 
 
 func read_both(mut frame: Frame) -> int:
     mut total = 0
     if len(frame.items) > 0:
-        total = total + frame.items[touch(mut frame, 7) % len(frame.items)]
+        const captured = frame.items.copy()
+        const index = touch(mut frame, 7)
+        total = total + captured[index % len(frame.items)]
     if len(frame.items) > 0:
-        total = total + frame.items[grow(mut frame, frame.n) % len(frame.items)]
+        const captured = frame.items.copy()
+        const value = frame.n
+        const index = grow(mut frame, value)
+        total = total + captured[index % len(frame.items)]
     return total
 
 

@@ -1,0 +1,461 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+  "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9",
+  "sources": {
+    "fixtures/guest_tests.my": "d8394afbcbd4a894fd789589109d598c207d91c6e212034b349d175011f0997d",
+    "fixtures/invalid_library.my": "8029db3178f8723c351fa15670ace43b21b555afc5a1899669e25e9fed268c29",
+    "fixtures/invalid_move.my": "a2c3901c31dcf5480baaad67dae27b31572a4711c7cda7939b72b3a861a8b2af",
+    "fixtures/library.my": "d85baad70010f92e10020bd259911651c7398eb136b7527faf63de06f4ffb40e",
+    "fixtures/result_error.my": "91171d4e047f7b861da166352ca493bc543e7455e1d4f6724da6ca6aba9c93bb",
+    "fixtures/result_ok.my": "71342f9a40f3709766e9b901bab2db90d20ff12ebb2948ac0e9d16654f22cef8"
+  },
+  "default": false,
+  "results": [
+    {
+      "name": "test-debug",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--json",
+        "--force",
+        "--property-runs",
+        "5",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--unoptimized",
+        "--seed",
+        "7",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"guest_tests::test_generated\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"a6ebffae673747b47bf52e102e41b7ca2bc6bc17492dad87693feba0b94ff6f2\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my#53f589489598f7cc59c78b506d01f874fde23e8596300b56276bb94b3fc8f444\",\"producer\":{\"facts\":{\"fresh\":6,\"reused\":0,\"fallback\":3,\"decoded\":0},\"lowering\":{\"fresh\":3,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":6,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":24,\"index_edges\":35,\"affected_nodes\":6,\"closure_nodes\":20,\"closure_edges\":7,\"reused_tests\":0,\"planned_tests\":3},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":4157,\"save_bytes_prepared\":4783,\"sequence_locks\":15}},\"nanoseconds\":{\"lowering\":2125624,\"facts\":817710,\"graph\":183544,\"planner\":231168905,\"keys\":60083,\"publication\":3627699,\"total\":238575211},\"transport\":{\"request_bytes\":428,\"reply_bytes\":256,\"startups\":1}}},\"property\":{\"seed\":7,\"counts\":{\"runs\":5,\"passed\":5,\"discarded\":0,\"processes\":1,\"shrinks\":0,\"attempts\":0},\"failure\":null,\"campaign\":null}},{\"name\":\"guest_tests::test_owned\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ef106b2117c58f4cb3684c5469a6a693c73fe41eac26553b1371082f6ba06181\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"guest_tests::test_result\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"595764f88807b73c2b203223aa0b833b39c1879eee754e4bd6d49989782c2d63\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":3,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my\"]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "test-release",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--json",
+        "--force",
+        "--property-runs",
+        "5",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--release",
+        "--seed",
+        "7",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"guest_tests::test_generated\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"014a25c1a303444af6a8cbd2341ca04e39a7a60d23ff63cfa8da7bc878acedbe\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my#53f589489598f7cc59c78b506d01f874fde23e8596300b56276bb94b3fc8f444\",\"producer\":{\"facts\":{\"fresh\":3,\"reused\":3,\"fallback\":0,\"decoded\":3},\"lowering\":{\"fresh\":0,\"reused\":3,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":6,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":1},\"planner\":{\"index_nodes\":24,\"index_edges\":35,\"affected_nodes\":6,\"closure_nodes\":20,\"closure_edges\":7,\"reused_tests\":0,\"planned_tests\":3},\"storage\":{\"packed_bytes_read\":2860,\"decoded_bytes\":6239,\"blocks_decoded\":1,\"payload_bytes_returned\":2197,\"block_cache_hits\":7,\"publication\":{\"filename_lookups\":3,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":883,\"save_bytes_prepared\":363,\"sequence_locks\":4}},\"nanoseconds\":{\"lowering\":2055757,\"facts\":365691,\"graph\":153840,\"planner\":115613558,\"keys\":101395,\"publication\":1999483,\"total\":120897612},\"transport\":{\"request_bytes\":428,\"reply_bytes\":256,\"startups\":1}}},\"property\":{\"seed\":7,\"counts\":{\"runs\":5,\"passed\":5,\"discarded\":0,\"processes\":1,\"shrinks\":0,\"attempts\":0},\"failure\":null,\"campaign\":null}},{\"name\":\"guest_tests::test_owned\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"478b87ef196949f86b3b81770899159599af744fe576c0a1cfb9cac743f8d9f9\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"guest_tests::test_result\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3c1ae8fa7b4d089c4b434058c9a0d2dfbcd895f1f893352630eccc40e2f3dc37\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":3,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my\"]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "test-verified-release",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--json",
+        "--force",
+        "--property-runs",
+        "5",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--release",
+        "--verify-facts",
+        "--seed",
+        "7",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"guest_tests::test_generated\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"218f034379b839836d73be45bc45d51d690d7014e95be2a57060c2c87f8df208\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my#53f589489598f7cc59c78b506d01f874fde23e8596300b56276bb94b3fc8f444\",\"producer\":{\"facts\":{\"fresh\":3,\"reused\":3,\"fallback\":0,\"decoded\":3},\"lowering\":{\"fresh\":0,\"reused\":3,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":6,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":1},\"planner\":{\"index_nodes\":24,\"index_edges\":35,\"affected_nodes\":6,\"closure_nodes\":20,\"closure_edges\":7,\"reused_tests\":0,\"planned_tests\":3},\"storage\":{\"packed_bytes_read\":2860,\"decoded_bytes\":6239,\"blocks_decoded\":1,\"payload_bytes_returned\":2197,\"block_cache_hits\":7,\"publication\":{\"filename_lookups\":4,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":885,\"save_bytes_prepared\":363,\"sequence_locks\":4}},\"nanoseconds\":{\"lowering\":2407272,\"facts\":365013,\"graph\":179306,\"planner\":11040598,\"keys\":79133,\"publication\":1947415,\"total\":16718432},\"transport\":{\"request_bytes\":428,\"reply_bytes\":256,\"startups\":1}}},\"property\":{\"seed\":7,\"counts\":{\"runs\":5,\"passed\":5,\"discarded\":0,\"processes\":1,\"shrinks\":0,\"attempts\":0},\"failure\":null,\"campaign\":null}},{\"name\":\"guest_tests::test_owned\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ec8d67a92f36bad094be1d3a72a555c43a32565d4665f51019fd51b29a9a87d0\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"guest_tests::test_result\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"14a244a7914b7f691dc1faf6d58dfb93c39b284a2d4183cec15f61e54025d19b\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":3,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my\"]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "test-optimized-debug",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--json",
+        "--force",
+        "--property-runs",
+        "5",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--optimize-debug",
+        "--seed",
+        "7",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"guest_tests::test_generated\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"27c44ce8c2af0554a1f36f5495456587511bdbbf4eb546c35da29aef2dcc95f2\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my#53f589489598f7cc59c78b506d01f874fde23e8596300b56276bb94b3fc8f444\",\"producer\":{\"facts\":{\"fresh\":3,\"reused\":3,\"fallback\":0,\"decoded\":3},\"lowering\":{\"fresh\":0,\"reused\":3,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":6,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":1},\"planner\":{\"index_nodes\":24,\"index_edges\":35,\"affected_nodes\":6,\"closure_nodes\":20,\"closure_edges\":7,\"reused_tests\":0,\"planned_tests\":3},\"storage\":{\"packed_bytes_read\":2860,\"decoded_bytes\":6239,\"blocks_decoded\":1,\"payload_bytes_returned\":2197,\"block_cache_hits\":7,\"publication\":{\"filename_lookups\":5,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":885,\"save_bytes_prepared\":363,\"sequence_locks\":4}},\"nanoseconds\":{\"lowering\":2279836,\"facts\":385675,\"graph\":190670,\"planner\":150538701,\"keys\":39862,\"publication\":1025122,\"total\":155004775},\"transport\":{\"request_bytes\":428,\"reply_bytes\":256,\"startups\":1}}},\"property\":{\"seed\":7,\"counts\":{\"runs\":5,\"passed\":5,\"discarded\":0,\"processes\":1,\"shrinks\":0,\"attempts\":0},\"failure\":null,\"campaign\":null}},{\"name\":\"guest_tests::test_owned\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"060bad1b7558b8dff5ea929feb2d2b51b80ad41ea0429c2b57f518f94c618884\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"guest_tests::test_result\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"450d82761d2e1ab4400e9bc6d4513c3b8a1bace21103119f333cf51e0ff7dda3\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":3,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my\"]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "test-release-no-facts",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--json",
+        "--force",
+        "--property-runs",
+        "5",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--release",
+        "--no-facts",
+        "--seed",
+        "7",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"guest_tests::test_generated\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ad7becbdf8b8580eeda19aeb3f1a49ba8a4291d262bbcb1424dcc4938b381cd6\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my#53f589489598f7cc59c78b506d01f874fde23e8596300b56276bb94b3fc8f444\",\"producer\":{\"facts\":{\"fresh\":3,\"reused\":3,\"fallback\":0,\"decoded\":3},\"lowering\":{\"fresh\":0,\"reused\":3,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":6,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":1},\"planner\":{\"index_nodes\":24,\"index_edges\":35,\"affected_nodes\":6,\"closure_nodes\":20,\"closure_edges\":7,\"reused_tests\":0,\"planned_tests\":3},\"storage\":{\"packed_bytes_read\":2860,\"decoded_bytes\":6239,\"blocks_decoded\":1,\"payload_bytes_returned\":2197,\"block_cache_hits\":7,\"publication\":{\"filename_lookups\":6,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":887,\"save_bytes_prepared\":363,\"sequence_locks\":4}},\"nanoseconds\":{\"lowering\":1410291,\"facts\":208320,\"graph\":95706,\"planner\":142997179,\"keys\":45578,\"publication\":1153836,\"total\":146282254},\"transport\":{\"request_bytes\":428,\"reply_bytes\":256,\"startups\":1}}},\"property\":{\"seed\":7,\"counts\":{\"runs\":5,\"passed\":5,\"discarded\":0,\"processes\":1,\"shrinks\":0,\"attempts\":0},\"failure\":null,\"campaign\":null}},{\"name\":\"guest_tests::test_owned\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"318b29eb7d0f0419008d39abf7099c629c15722f82a584d354a489278fad6736\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"guest_tests::test_result\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3db14792ed608b031e6b48867c6275e98d7f333a281d747de10d2054d4a05674\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":3,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my\"]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "test-cold",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--seed",
+        "7",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"guest_tests::test_generated\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"no-success-receipt\",\"key\":\"fa2c8199ab4b7ce53bb8d842ad92fffff98a34338e328909571308aeedf992b5\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my#53f589489598f7cc59c78b506d01f874fde23e8596300b56276bb94b3fc8f444\",\"producer\":{\"facts\":{\"fresh\":3,\"reused\":3,\"fallback\":0,\"decoded\":3},\"lowering\":{\"fresh\":0,\"reused\":3,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":6,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":1},\"planner\":{\"index_nodes\":24,\"index_edges\":35,\"affected_nodes\":6,\"closure_nodes\":20,\"closure_edges\":7,\"reused_tests\":0,\"planned_tests\":3},\"storage\":{\"packed_bytes_read\":2860,\"decoded_bytes\":6239,\"blocks_decoded\":1,\"payload_bytes_returned\":2197,\"block_cache_hits\":7,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":886,\"save_bytes_prepared\":363,\"sequence_locks\":4}},\"nanoseconds\":{\"lowering\":1400847,\"facts\":205824,\"graph\":93208,\"planner\":143357334,\"keys\":41864,\"publication\":1049410,\"total\":146500465},\"transport\":{\"request_bytes\":428,\"reply_bytes\":256,\"startups\":1}}},\"property\":{\"seed\":7,\"counts\":{\"runs\":100,\"passed\":100,\"discarded\":0,\"processes\":1,\"shrinks\":0,\"attempts\":0},\"failure\":null,\"campaign\":null}},{\"name\":\"guest_tests::test_owned\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"no-success-receipt\",\"key\":\"9b79add5f5796f6deaa2bb4403379448b7ab2349215ed5774e8d51434117379a\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"guest_tests::test_result\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"no-success-receipt\",\"key\":\"d3555624c479b0c222a28f6aa25482c0522a9826f99a24092ed972f03adc0d8a\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":3,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my\"]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "test-warm",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--seed",
+        "7",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"guest_tests::test_generated\",\"status\":\"cached\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"reuse\",\"reason\":\"whole-report-hit\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"checked-file-manifest\",\"key\":\"fa2c8199ab4b7ce53bb8d842ad92fffff98a34338e328909571308aeedf992b5\"},\"property\":{\"seed\":7,\"counts\":{\"runs\":100,\"passed\":100,\"discarded\":0,\"processes\":1,\"shrinks\":0,\"attempts\":0},\"failure\":null,\"campaign\":null}},{\"name\":\"guest_tests::test_owned\",\"status\":\"cached\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"reuse\",\"reason\":\"whole-report-hit\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"checked-file-manifest\",\"key\":\"9b79add5f5796f6deaa2bb4403379448b7ab2349215ed5774e8d51434117379a\"}},{\"name\":\"guest_tests::test_result\",\"status\":\"cached\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"reuse\",\"reason\":\"whole-report-hit\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"checked-file-manifest\",\"key\":\"d3555624c479b0c222a28f6aa25482c0522a9826f99a24092ed972f03adc0d8a\"}}],\"passed\":0,\"failed\":0,\"skipped\":0,\"cached\":3,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my\"]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "test-planner-reference",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--json",
+        "--force",
+        "--property-runs",
+        "5",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--seed",
+        "7",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"guest_tests::test_generated\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"e3bedd85f09d9d89ebf5669db23b0584954c4ef3fe7f3134f4ac7d9dd35acd76\",\"component\":\"c87d0d3b354f11286547a7aaf2a8b25b493173c8881b4823889eec4e84eac5db\",\"key_method\":\"reachable-ir\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my#53f589489598f7cc59c78b506d01f874fde23e8596300b56276bb94b3fc8f444\",\"producer\":{\"facts\":{\"fresh\":6,\"reused\":0,\"fallback\":0,\"decoded\":0},\"lowering\":{\"fresh\":3,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":0,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":0},\"planner\":{\"index_nodes\":0,\"index_edges\":0,\"affected_nodes\":0,\"closure_nodes\":10,\"closure_edges\":7,\"reused_tests\":0,\"planned_tests\":3},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":0,\"refreshes\":0,\"packs_prepared\":0,\"pack_bytes_prepared\":0,\"save_bytes_prepared\":0,\"sequence_locks\":0}},\"nanoseconds\":{\"lowering\":166336,\"facts\":154143,\"graph\":334,\"planner\":10106,\"keys\":33329,\"publication\":0,\"total\":690257},\"transport\":{\"request_bytes\":0,\"reply_bytes\":0,\"startups\":0}}},\"property\":{\"seed\":7,\"counts\":{\"runs\":5,\"passed\":5,\"discarded\":0,\"processes\":1,\"shrinks\":0,\"attempts\":0},\"failure\":null,\"campaign\":null}},{\"name\":\"guest_tests::test_owned\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ce91a4ba7b39952adba9a126a36734a674d0dfce1e2e73a937971160ac663b58\",\"component\":\"c87d0d3b354f11286547a7aaf2a8b25b493173c8881b4823889eec4e84eac5db\",\"key_method\":\"reachable-ir\",\"work\":null}},{\"name\":\"guest_tests::test_result\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"85d383eb4b730eff52c67513d57214f55f4851dd4ac5c770abb100b8e5f27a4c\",\"component\":\"c87d0d3b354f11286547a7aaf2a8b25b493173c8881b4823889eec4e84eac5db\",\"key_method\":\"reachable-ir\",\"work\":null}}],\"passed\":3,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my\"]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "test-planner-shadow",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--json",
+        "--force",
+        "--property-runs",
+        "5",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--seed",
+        "7",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"guest_tests::test_generated\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"df3356d8d2f852e764d602a2f4b2a9109d5457093dc0496a6b4fce199a2b1b52\",\"component\":\"e28d95c5a075caf7acdb990b5fca8aac395ecd29a3a15635455d0e3cdf1196b5\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my#53f589489598f7cc59c78b506d01f874fde23e8596300b56276bb94b3fc8f444\",\"producer\":{\"facts\":{\"fresh\":3,\"reused\":3,\"fallback\":0,\"decoded\":3},\"lowering\":{\"fresh\":0,\"reused\":3,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":6,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":1},\"planner\":{\"index_nodes\":24,\"index_edges\":35,\"affected_nodes\":6,\"closure_nodes\":20,\"closure_edges\":7,\"reused_tests\":0,\"planned_tests\":3},\"storage\":{\"packed_bytes_read\":2860,\"decoded_bytes\":6239,\"blocks_decoded\":1,\"payload_bytes_returned\":2197,\"block_cache_hits\":7,\"publication\":{\"filename_lookups\":8,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":885,\"save_bytes_prepared\":363,\"sequence_locks\":4}},\"nanoseconds\":{\"lowering\":1283893,\"facts\":173273,\"graph\":82032,\"planner\":145931695,\"keys\":45713,\"publication\":1124427,\"total\":149440276},\"transport\":{\"request_bytes\":428,\"reply_bytes\":256,\"startups\":1}}},\"property\":{\"seed\":7,\"counts\":{\"runs\":5,\"passed\":5,\"discarded\":0,\"processes\":1,\"shrinks\":0,\"attempts\":0},\"failure\":null,\"campaign\":null}},{\"name\":\"guest_tests::test_owned\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"1d30d5dfa87874b20565cb4a05ed97e1daecc15f987a2d300cbdcfb83de82af1\",\"component\":\"e28d95c5a075caf7acdb990b5fca8aac395ecd29a3a15635455d0e3cdf1196b5\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"guest_tests::test_result\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3ba032612973c4319dfa6116db01182a77b9b763a707acc3b77f1164c4c5e120\",\"component\":\"e28d95c5a075caf7acdb990b5fca8aac395ecd29a3a15635455d0e3cdf1196b5\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":3,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my\"]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "check-library",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/library.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--report",
+        "--diagnostics=json",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"frontend-cache-v1\",\"syntax_hits\":0,\"syntax_misses\":1,\"syntax_stored\":1,\"verdict_hits\":0,\"verdict_misses\":0,\"verdict_stored\":0,\"damaged\":0,\"bypassed\":0,\"evicted\":0,\"retained_bytes\":471,\"stages\":{\"load_source\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lex_parse\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"collect_declarations\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"resolve_interface\":{\"hits\":0,\"misses\":0,\"skipped\":0},\"check_body\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"instantiate_specialization\":{\"hits\":0,\"misses\":1,\"skipped\":0},\"lower_function\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"emit_fragment\":{\"hits\":0,\"misses\":0,\"skipped\":1},\"link\":{\"hits\":0,\"misses\":0,\"skipped\":1}}}\n{\"version\":\"work-report-v1\",\"command\":\"check\",\"reused\":false,\"parsed_modules\":{\"status\":\"miss\",\"performed\":1,\"reused\":0},\"checked_bodies\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"instantiated_specializations\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"lowered_functions\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"links\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"executed_tests\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"reused_results\":0,\"session_reused_results\":0,\"symbolic_templates\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"specialization_bodies\":{\"status\":\"skipped\",\"performed\":0,\"reused\":0},\"semantic_cache\":{\"retained_bytes\":0,\"ordinary_bytes\":0,\"symbolic_bytes\":0,\"specialization_bytes\":0,\"evicted\":0},\"bypassed\":[],\"session\":{\"parsed_modules\":{\"performed\":1,\"reused\":0},\"checked_bodies\":{\"performed\":0,\"reused\":0},\"instantiated_specializations\":{\"performed\":0,\"reused\":0},\"lowered_functions\":{\"performed\":0,\"reused\":0},\"emitted_fragments\":{\"performed\":0,\"reused\":0},\"links\":{\"performed\":0,\"reused\":0},\"executed_tests\":{\"performed\":0,\"reused\":0}}}\n"
+    },
+    {
+      "name": "check-library-invalid",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/invalid_library.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--diagnostics=json",
+        "--experimental-zero-rc"
+      ],
+      "expected": 1,
+      "status": 1,
+      "passed": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SINGLE_OWNER_MOVED\",\"severity\":\"error\",\"message\":\"'value' was moved or is unavailable on this path; use .copy() when both values are needed\",\"location\":{\"path\":\"invalid_library.my\",\"start\":{\"line\":4,\"column\":12},\"end\":{\"line\":4,\"column\":17},\"bytes\":{\"start\":98,\"end\":103}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "name": "check",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "dump-ir",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "fn main(cap) -> i64\nb0:\n  %3 = call str myl_core_str_from_i64(7:i64)\n  %4 = str_append str str0, %3\n  %5 = call str myl_core_owned_octets_copy(%4)\n  print param0, %5\n  ret 0:i64\nfn myl_core_str_from_i64(i64) -> str extern\nfn myl_core_owned_octets_copy(str) -> str extern\n",
+      "stderr": ""
+    },
+    {
+      "name": "build",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/guest",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "run",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "value-7\n",
+      "stderr": ""
+    },
+    {
+      "name": "run-project",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "value-7\n",
+      "stderr": ""
+    },
+    {
+      "name": "result-ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/result_ok.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "result-error",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/result_error.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--experimental-zero-rc"
+      ],
+      "expected": 1,
+      "status": 1,
+      "passed": true,
+      "stdout": "",
+      "stderr": "error: bad-7\n  /home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/result_error.my:2:12  main  Err(...) created\n"
+    },
+    {
+      "name": "invalid-rc-control",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/invalid_move.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--seed",
+        "7"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"invalid_move::test_moved\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"no-success-receipt\",\"key\":\"0782c44638e8288a189740ee8b0d7a901b68c69100d6792cb3cc4d9eaa9c6152\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/invalid_move.my#320f5fbd3bbd99140cdcf4da118a5fd1a82c59556784231c6480e7c2b99c47e1\",\"producer\":{\"facts\":{\"fresh\":3,\"reused\":0,\"fallback\":1,\"decoded\":0},\"lowering\":{\"fresh\":1,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":3,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":12,\"index_edges\":10,\"affected_nodes\":3,\"closure_nodes\":6,\"closure_edges\":2,\"reused_tests\":0,\"planned_tests\":1},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":2096,\"save_bytes_prepared\":1782,\"sequence_locks\":9}},\"nanoseconds\":{\"lowering\":739821,\"facts\":229070,\"graph\":101768,\"planner\":8797368,\"keys\":23345,\"publication\":2038725,\"total\":12048594},\"transport\":{\"request_bytes\":264,\"reply_bytes\":176,\"startups\":1}}}}],\"passed\":1,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/invalid_move.my\"]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "invalid-cold",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/invalid_move.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--seed",
+        "7",
+        "--experimental-zero-rc"
+      ],
+      "expected": 1,
+      "status": 1,
+      "passed": true,
+      "stdout": "",
+      "stderr": "invalid_move.my:4:12: error[E_SINGLE_OWNER_MOVED]: 'before' was moved or is unavailable on this path; use .copy() when both values are needed\n      return before == after\n             ^\n"
+    },
+    {
+      "name": "invalid-repeat",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/invalid_move.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--seed",
+        "7",
+        "--experimental-zero-rc"
+      ],
+      "expected": 1,
+      "status": 1,
+      "passed": true,
+      "stdout": "",
+      "stderr": "invalid_move.my:4:12: error[E_SINGLE_OWNER_MOVED]: 'before' was moved or is unavailable on this path; use .copy() when both values are needed\n      return before == after\n             ^\n"
+    },
+    {
+      "name": "directory",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/suite",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--property-runs",
+        "5",
+        "--seed",
+        "7",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"alpha_test::test_generated\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"leak-check\",\"key\":\"fbdebc23de4399e9baf10cbd22093bbd75e0793fd9fce360cb78220ad207835b\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/suite/alpha_test.my#3eeb4d75938d2d2eb66eb08f1dcf7a0b7b8ad0dfb8f6be469da641be739b989a\",\"producer\":{\"facts\":{\"fresh\":6,\"reused\":0,\"fallback\":3,\"decoded\":0},\"lowering\":{\"fresh\":3,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":6,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":24,\"index_edges\":35,\"affected_nodes\":6,\"closure_nodes\":20,\"closure_edges\":7,\"reused_tests\":0,\"planned_tests\":3},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":4168,\"save_bytes_prepared\":4777,\"sequence_locks\":15}},\"nanoseconds\":{\"lowering\":1983288,\"facts\":745231,\"graph\":148252,\"planner\":9308518,\"keys\":62243,\"publication\":3101953,\"total\":15921764},\"transport\":{\"request_bytes\":428,\"reply_bytes\":256,\"startups\":1}}},\"property\":{\"seed\":7,\"counts\":{\"runs\":5,\"passed\":5,\"discarded\":0,\"processes\":1,\"shrinks\":0,\"attempts\":0},\"failure\":null,\"campaign\":null}},{\"name\":\"alpha_test::test_owned\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"leak-check\",\"key\":\"153e96ad448d5e8b186bcaa69dad407985baed6427db7f5979a43c28f9557ce5\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"alpha_test::test_result\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"leak-check\",\"key\":\"398e8854747884292b9066c5e43eeb0118483a3705dbe5a3b1c51013f0528ba3\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"beta_test::test_generated\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"leak-check\",\"key\":\"ed0268b84ab593d87b016fdfd4d746a89c38963d5b5e5077919871d4a8c75105\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/suite/beta_test.my#63b9acb187a0f05a05304d64fbf587fd1bf7729274814f7f486e72d52bbc2399\",\"producer\":{\"facts\":{\"fresh\":6,\"reused\":0,\"fallback\":3,\"decoded\":0},\"lowering\":{\"fresh\":3,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":6,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":24,\"index_edges\":35,\"affected_nodes\":6,\"closure_nodes\":20,\"closure_edges\":7,\"reused_tests\":0,\"planned_tests\":3},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":4169,\"save_bytes_prepared\":4771,\"sequence_locks\":15}},\"nanoseconds\":{\"lowering\":1968540,\"facts\":728646,\"graph\":153439,\"planner\":10210504,\"keys\":68743,\"publication\":3170551,\"total\":16879977},\"transport\":{\"request_bytes\":428,\"reply_bytes\":256,\"startups\":1}}},\"property\":{\"seed\":7,\"counts\":{\"runs\":5,\"passed\":5,\"discarded\":0,\"processes\":1,\"shrinks\":0,\"attempts\":0},\"failure\":null,\"campaign\":null}},{\"name\":\"beta_test::test_owned\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"leak-check\",\"key\":\"391e13413c762fdd92fa8bc8a5178d5c002e78362dd01ab7db5bd29482bdc417\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"beta_test::test_result\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"leak-check\",\"key\":\"5ceabc78668b0f427b426d04b60a654629d3555ec87b077f369a6fbea6a0da8c\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":6,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/suite/alpha_test.my\",\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/suite/beta_test.my\"]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "directory-children",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/suite",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/cache",
+        "--force",
+        "--property-runs",
+        "5",
+        "--seed",
+        "7",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"alpha_test::test_generated\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"fbdebc23de4399e9baf10cbd22093bbd75e0793fd9fce360cb78220ad207835b\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/suite/alpha_test.my#3eeb4d75938d2d2eb66eb08f1dcf7a0b7b8ad0dfb8f6be469da641be739b989a\",\"producer\":{\"facts\":{\"fresh\":3,\"reused\":3,\"fallback\":0,\"decoded\":3},\"lowering\":{\"fresh\":0,\"reused\":3,\"materialized\":0}},\"graph\":{\"nodes_read\":6,\"nodes_unchanged\":6,\"changed_nodes\":0,\"candidate_tests\":3,\"shards_read\":3,\"shards_written\":0},\"planner\":{\"index_nodes\":42,\"index_edges\":42,\"affected_nodes\":0,\"closure_nodes\":0,\"closure_edges\":0,\"reused_tests\":3,\"planned_tests\":0},\"storage\":{\"packed_bytes_read\":2871,\"decoded_bytes\":6233,\"blocks_decoded\":1,\"payload_bytes_returned\":3538,\"block_cache_hits\":12,\"publication\":{\"filename_lookups\":3,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":508,\"save_bytes_prepared\":160,\"sequence_locks\":3}},\"nanoseconds\":{\"lowering\":2178551,\"facts\":380236,\"graph\":549113,\"planner\":11342371,\"keys\":3287,\"publication\":1623965,\"total\":16736727},\"transport\":{\"request_bytes\":512,\"reply_bytes\":228,\"startups\":1}}},\"property\":{\"seed\":7,\"counts\":{\"runs\":5,\"passed\":5,\"discarded\":0,\"processes\":1,\"shrinks\":0,\"attempts\":0},\"failure\":null,\"campaign\":null}},{\"name\":\"alpha_test::test_owned\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"153e96ad448d5e8b186bcaa69dad407985baed6427db7f5979a43c28f9557ce5\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"alpha_test::test_result\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"398e8854747884292b9066c5e43eeb0118483a3705dbe5a3b1c51013f0528ba3\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"beta_test::test_generated\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ed0268b84ab593d87b016fdfd4d746a89c38963d5b5e5077919871d4a8c75105\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/suite/beta_test.my#63b9acb187a0f05a05304d64fbf587fd1bf7729274814f7f486e72d52bbc2399\",\"producer\":{\"facts\":{\"fresh\":3,\"reused\":3,\"fallback\":0,\"decoded\":3},\"lowering\":{\"fresh\":0,\"reused\":3,\"materialized\":0}},\"graph\":{\"nodes_read\":6,\"nodes_unchanged\":6,\"changed_nodes\":0,\"candidate_tests\":3,\"shards_read\":3,\"shards_written\":0},\"planner\":{\"index_nodes\":42,\"index_edges\":42,\"affected_nodes\":0,\"closure_nodes\":0,\"closure_edges\":0,\"reused_tests\":3,\"planned_tests\":0},\"storage\":{\"packed_bytes_read\":2872,\"decoded_bytes\":6227,\"blocks_decoded\":1,\"payload_bytes_returned\":3535,\"block_cache_hits\":12,\"publication\":{\"filename_lookups\":3,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":509,\"save_bytes_prepared\":160,\"sequence_locks\":3}},\"nanoseconds\":{\"lowering\":2288311,\"facts\":406092,\"graph\":571010,\"planner\":11955794,\"keys\":3441,\"publication\":1635248,\"total\":17505665},\"transport\":{\"request_bytes\":512,\"reply_bytes\":228,\"startups\":1}}},\"property\":{\"seed\":7,\"counts\":{\"runs\":5,\"passed\":5,\"discarded\":0,\"processes\":1,\"shrinks\":0,\"attempts\":0},\"failure\":null,\"campaign\":null}},{\"name\":\"beta_test::test_owned\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"391e13413c762fdd92fa8bc8a5178d5c002e78362dd01ab7db5bd29482bdc417\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"beta_test::test_result\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"5ceabc78668b0f427b426d04b60a654629d3555ec87b077f369a6fbea6a0da8c\",\"component\":\"9bbe6135c2be822a83c84498d5ac10e8f712b1e8b1201abfc9d12252183f767b\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":6,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/suite/alpha_test.my\",\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/matrix-refactor/suite/beta_test.my\"]}\n",
+      "stderr": ""
+    }
+  ],
+  "success": true
+}

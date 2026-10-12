@@ -1,0 +1,80 @@
+{
+  "cell": "eda/adf5901",
+  "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+  "arms": {
+    "zig-safe": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-zig-safe",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/adf5901/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/adf5901"
+    ],
+    "zig-fast": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-zig-fast",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/adf5901/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/adf5901"
+    ],
+    "rust": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-rust",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/adf5901/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/adf5901"
+    ],
+    "go": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-go",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/adf5901/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/adf5901"
+    ],
+    "mylang-original-rc": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/original-rc",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/adf5901/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/adf5901"
+    ],
+    "mylang-migrated-rc": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/migrated-rc",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/adf5901/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/adf5901"
+    ],
+    "mylang-zero-rc": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/zero-rc",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/adf5901/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/adf5901"
+    ]
+  },
+  "oracle": "zig-safe",
+  "files": [
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/adf5901/model.sexp",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/manifest.json"
+  ],
+  "out_dir": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/adf5901",
+  "golden_dir": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/adf5901/expected",
+  "identity_dirs": [
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/adf5901/expected"
+  ]
+}

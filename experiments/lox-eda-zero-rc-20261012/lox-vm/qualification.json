@@ -1,0 +1,91 @@
+{
+  "owned_files": {
+    "vm.my": {
+      "frozen_baseline_sha256": "1d8671412bc296ee5912834a76d64610309ed4ce8ff375b2a250178a80391a4b",
+      "qualified_sha256": "5a057913ca20e63e55f6f49693cf334b068fd3677c9e96b863cc228e2e93c2a9",
+      "copy_calls_after": 27
+    },
+    "compiler.my": {
+      "frozen_baseline_sha256": "6ecf2077cba14b9268313b2b47b1d50d9a64a6136e4cbca849f6956dfa6f1097",
+      "qualified_sha256": "2bdb518cb16803636ed98fd2175efd5ea9c5a05bcf11c632aee214585f007fcd",
+      "copy_calls_after": 31
+    },
+    "chunk.my": {
+      "frozen_baseline_sha256": "fa51a1ee06bb2d868a6c3bb1c2f4d1405dac15d073d911b451613499cdc167e3",
+      "qualified_sha256": "fa51a1ee06bb2d868a6c3bb1c2f4d1405dac15d073d911b451613499cdc167e3",
+      "copy_calls_after": 0
+    },
+    "object.my": {
+      "frozen_baseline_sha256": "92d819e2533fa5b46896b19a49ed000e5eefb07816c68b7004b0616ef4cb9b03",
+      "qualified_sha256": "92d819e2533fa5b46896b19a49ed000e5eefb07816c68b7004b0616ef4cb9b03",
+      "copy_calls_after": 0
+    }
+  },
+  "source_check": {
+    "compiler_sha256": "63abaf31135a9cbf78b258b63cf21368b85eda3923f7cbd49cabfb789f3870a3",
+    "command": "scripts/build-slot.sh build zig-out/focus/mylang check experiments/lox-eda-zero-rc-20261012/lox/migrated/main.my --experimental-zero-rc",
+    "exit_code": 0,
+    "receipt": "check-03.log"
+  },
+  "native_probe": {
+    "compiler_path": "/home/epentland/ai/canopy/mylang-memory-20261012/zig-out/bin/mylang",
+    "compiler_source_commit": "e2893d2707cbe057a09abf94e04c4b12d16b7b8b",
+    "compiler_sha256": "6e7938a14ad4abc46b76c149ef12551b170f6c7e6f462beec2f81db18d40a83d",
+    "entry_sha256": "d2330baec254fc38a4a902297f8ea17964e914396960206a2f043a2d4de2af98",
+    "flags": [
+      "--unoptimized",
+      "--experimental-zero-rc"
+    ],
+    "cache_directory": ".tmp/lox-vm-common-private-cache",
+    "gc_stress": true,
+    "clock": "real Clock granted to native main; inline Some(clock) forwarded to VM native clock",
+    "exit_code": 0,
+    "stdout": "3\n1\n2\n11\ntrue\n",
+    "stderr": "",
+    "MYL_CORE_LEAKCHECK": "1",
+    "binary_sha256": "844df48c93dfa8c6f62245c3cc9e5fa6b75e2151288ed5c806c1b44f224361fd",
+    "dependency_snapshot_sha256": {
+      "table.my": "0f61900ad713bf297b98d0cdd1a10434fd4835256a07ce28acda64f7f0a679d2",
+      "value.my": "107f46a2d86c339f41a077e0e7d6c14a8cc90dd76155831dba2f9cb5540b3da2",
+      "scanner_test.my": "f00139259f3daf4361e6c282c0c7bb39287c426f39e21702ccd294232d06843f",
+      "natives.my": "112c96d45ef8210a89e0ecdd22d2502a1db5259e07e9e18e951791bc9892c0cd",
+      "resolver.my": "88a7b410737e803ae21d0a525de8b5b23dfd850a93befa93206cfa6a34e3121d",
+      "scanner.my": "1ad2bb0b6bce16fd4d4b33ad51542aac57a69cafe6a095ae914f4d3b29ac49a8",
+      "main.my": "aa4d415863f86219826920e9376d1d890ce5ca939497a00cdc5007dbc92423bf",
+      "resolver_test.my": "a45c78e58008bee637cbc6970b3669196247112037f236b5354dd72734bbf658",
+      "heap_test.my": "f8fcc4814dbe200b4d5274470277ece54d5083446947d0372b93b7f1e3deb25c",
+      "lox_strings.my": "26509e64fe30d98e023430534d16bb389854d1664d2f103d9bb92b50be77880b",
+      "vm_probe.my": "d2330baec254fc38a4a902297f8ea17964e914396960206a2f043a2d4de2af98",
+      "driver_tests.my": "f421744e309cabf0a7567d23cef87fbd9a2f21b49ae5332972b9711983322df3",
+      "driver.my": "8f01c3fc386c3aa5f945940100b246d69f62dcfc4f103b5ef04e44cbebbdb24f",
+      "compiler_test.my": "2a8353200f7df8768592ab6835d633ad153be1e7c68f0badf7f794a596173912",
+      "chunk.my": "fa51a1ee06bb2d868a6c3bb1c2f4d1405dac15d073d911b451613499cdc167e3",
+      "output.my": "bd343a666b8fee0fdc909f064ee55fb2d2ea9eb2ffa6a18aa0f912ca47bbe2ac",
+      "parser_test.my": "2440911a2e85e1573961ed41771f0e9e8157102282f1eeedbecb6a2ee7f9df32",
+      "interpreter.my": "1a052d5b0bfcbce6d095cff324fcb1593122063025051e8e381f8f86b9e441d2",
+      "vm.my": "5a057913ca20e63e55f6f49693cf334b068fd3677c9e96b863cc228e2e93c2a9",
+      "value_test.my": "aa1461d553be8969a27643fb468a3739c0d5292892a05edb2660fb65a2c79ee5",
+      "parser.my": "e997f9b9f1280218fd93d01a3a7848e72eaf9abd892351d52202163cef8a5cdf",
+      "compiler.my": "2bdb518cb16803636ed98fd2175efd5ea9c5a05bcf11c632aee214585f007fcd",
+      "heap.my": "110167bc4c8089ae585711f70881d8762ae0257fe9e42472536610e63b166e80",
+      "ast.my": "e2d5cef75388923e4f82c1c21bca493873a0863863184f5e841fc40b5935eccf",
+      "lox_strings_test.my": "57e3729bbd037cac271916cb345bd8f1d68461ea4c982256108ee7aefc80c184",
+      "table_test.my": "7a23218896e20fd2508f0207be62ab8535f880f76a3f66c699e1dd0557f0e9bc",
+      "object.my": "92d819e2533fa5b46896b19a49ed000e5eefb07816c68b7004b0616ef4cb9b03"
+    }
+  },
+  "changes": [
+    "Cache bytecode operand reads before indexing the mutably advanced frame.",
+    "Snapshot closure before publication while local upvalues are rebuilt.",
+    "Pop printed value before passing runtime as an immutable output argument.",
+    "Return owned compiler/chunk snapshots and copy borrowed token/local fields into owning locals.",
+    "Publish FnCompiler and FunctionObj through existing store_compiler with independent explicit copies.",
+    "Copy Runtime, Output and source into Parser, and copy updated Runtime/Output back."
+  ],
+  "limits": [
+    "Representation and APIs preserved; conservative copy costs require measurement.",
+    "VM frame publication deep copies remain on each opcode as present in the frozen input.",
+    "No full-Lox timing or full conformance claim in this receipt.",
+    "Earlier full-main build blocked on resolver nested mutation; that non-owned issue was handed to and fixed by the Lox owner."
+  ]
+}

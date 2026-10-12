@@ -1,0 +1,8 @@
+guardian/test: 2 test(s) selected by filter: "S3 numeric text", "live iteration refreshes"
+guardian/test: SLOW  5.42s  s3_number_test.test.S3 numeric text and S4 nested values match at every core level
+All 2 tests passed.
+guardian/test: test wall 6.10s; slowest over 50ms:
+guardian/test:   5.42s  s3_number_test.test.S3 numeric text and S4 nested values match at every core level
+guardian/test:   0.67s  iteration_test.test.live iteration refreshes shared elements, appends, mut callees and record fields while root rebinding snapshots
+guardian/test: PASS — 2 passed
+guardian/test: RESULT {"passed":2,"failed":0,"skipped":0}

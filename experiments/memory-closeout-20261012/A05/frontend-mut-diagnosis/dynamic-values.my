@@ -1,0 +1,12 @@
+func change_pair(mut left: int, mut right: int) -> Unit:
+    left += 10
+    right += 20
+
+
+
+func main() -> int:
+    mut values = [1, 2]
+    const left = 0
+    const right = 1
+    change_pair(mut values[left], mut values[right])
+    return values[0] * 10 + values[1]

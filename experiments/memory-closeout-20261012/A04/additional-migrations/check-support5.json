@@ -1,0 +1,307 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "rows": [
+    {
+      "source": "test/core/f_features.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/f_features.my.txt",
+      "original_sha256": "6edbc9f2f4056a37dc4c6c280992fedb0952f131b1ea916a15fd2ce88e8e17ee",
+      "public_tests": [
+        "test_callbacks_pass_return_and_live_fixed_array_writes",
+        "test_managed_array_mut_write_keeps_snapshot",
+        "test_mut_callback_copies_managed_list_back_without_changing_snapshot",
+        "test_keyed_records_remain_stable_and_snapshot_keeps_order",
+        "test_sort_narrow_numeric_and_tuple_keys"
+      ],
+      "source_sha256": "804dbf4df31c99d608802183fedfe6c5e2ac1ab660b993ebecda3dcce66b6fed",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/f_features.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "test/core/row_string_join.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/row_string_join.my.txt",
+      "original_sha256": "fbc884596e2884d63766eb12a883e2a0e69ec2a37b5a8a6252a0553f2b3f2964",
+      "public_tests": [],
+      "source_sha256": "943f53fcb6b89c78d17f04813cd6467b264604c81560a60499a9f6c7ae42315b",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/row_string_join.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/row_string_join.my:36:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func inputs(kind: str, size: int, seed: int) -> Inputs:\n              ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/row_string_join.my:48:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:\n              ^\n"
+    },
+    {
+      "source": "test/core/row_string_split.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/row_string_split.my.txt",
+      "original_sha256": "3abcd95f46ef2e20f2a554cc1ea50292d459504f5046c4d519ebcc3d0d7d968e",
+      "public_tests": [],
+      "source_sha256": "2cdc5714dfad11b8d35100aaedc08cb7279b8fd0341eb5df08d78cc82a595b6a",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/row_string_split.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/row_string_split.my:44:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func inputs(kind: str, size: int, seed: int) -> Inputs:\n              ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/row_string_split.my:56:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:\n              ^\n"
+    },
+    {
+      "source": "test/core/s1_ascii.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/s1_ascii.my.txt",
+      "original_sha256": "ef966f7f75891080a7dc0b78ed397b30662b1903044f62ad569f90ccc9101b58",
+      "public_tests": [],
+      "source_sha256": "f0472e19886786c5ab8e84a388733844569c36706b5b1ca0110447f7384d87c8",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/s1_ascii.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "test/core/s1_bytes.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/s1_bytes.my.txt",
+      "original_sha256": "5576c6c7e20e64456e520c0871a2cb00e7e62f738bcd315aa9f4826fbdbd38d1",
+      "public_tests": [],
+      "source_sha256": "9f8cd6241fe1923abb067e53cb39dbfc3f8729e66a0fa2803fb165b780d05fed",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/s1_bytes.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "test/core/s1_collisions.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/s1_collisions.my.txt",
+      "original_sha256": "e4cb39b87fc3d31506cf04e2696ece5161015a65f50769e846aa87f41eaa8821",
+      "public_tests": [],
+      "source_sha256": "706ffc8ed873cc2a11e7139665cfdcc175ced7346c134db5727413b281e0d956",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/s1_collisions.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "test/core/s1_reads.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/s1_reads.my.txt",
+      "original_sha256": "754c854a3b1a744f877fe23ed9463d9ec5b69b9d617cabefb5bca037977b8d1e",
+      "public_tests": [],
+      "source_sha256": "b17c73ef673004b6bacc36e59a45886d2ff70bc1f142ce4039af6a35b817a654",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/s1_reads.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "test/core/s1_views.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/s1_views.my.txt",
+      "original_sha256": "4499e2e9b6eaabf7003be4de59501c5fb203088d41b362833e7403693fc0ba85",
+      "public_tests": [],
+      "source_sha256": "bb33e24fa121112f51a7df46a6db6b59010f8753970b23b1bc6ce4ca0cdb75d7",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/s1_views.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "test/core/t_methods.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/t_methods.my.txt",
+      "original_sha256": "ea6ad0bdec8d3bb4e53984d47205d0207b921f7acc18330ca8967a45cdd08172",
+      "public_tests": [
+        "test_case_classify_replace_count_and_lines_preserve_snapshots",
+        "test_scalar_search_bounds_and_charset_trim",
+        "test_repr_scalar_ord_chr_and_packed_text_format",
+        "test_bytes_count_search_trim_and_find_any",
+        "test_decode_and_scalar_count_validate_utf8_and_clamped_ranges",
+        "test_extend_and_reverse_preserve_self_and_nested_snapshots",
+        "test_missing_index_traps_at_the_call",
+        "test_invalid_chr_traps_at_the_call",
+        "test_verified_lengths_survive_the_large_source_last_use"
+      ],
+      "source_sha256": "67bc90acd552431964c724ddb9e4ad8e192b2a9aca4570ee0fbf10bc1a37dc8e",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/t_methods.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "test/core/t_scalar_fusion.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/t_scalar_fusion.my.txt",
+      "original_sha256": "6c827a089aa6bc21b58f68a5fee84110595c76485912c2baea0fae2889a76bf2",
+      "public_tests": [
+        "test_comparisons_and_appends_preserve_all_unicode_scalars",
+        "test_comparison_only_reads_cover_nul_and_scalar_extremes",
+        "test_distinct_branches_and_repeated_appends_keep_the_selected_character",
+        "test_same_source_destination_keeps_the_ordinary_path_and_snapshot",
+        "test_distinct_ssa_aliases_share_input_but_copy_the_append_destination",
+        "test_rebinding_the_receiver_does_not_change_the_selected_bytes",
+        "test_escaping_and_multiscalar_consumers_remain_strings",
+        "test_empty_iteration_does_not_read_past_the_text",
+        "test_empty_comparison_only_read_traps",
+        "test_large_positive_index_traps",
+        "test_large_negative_index_traps",
+        "test_surrogate_construction_traps_before_scalar_uses",
+        "test_nonplace_unicode_index_reports_source_index_and_scalar_length",
+        "test_minimum_signed_index_reports_its_original_value",
+        "test_empty_separator_is_a_structured_native_trap",
+        "test_out_of_range_byte_is_a_structured_native_trap",
+        "test_missing_list_value_is_a_structured_native_trap"
+      ],
+      "source_sha256": "4691f7297f123051cd2ae22e6403f841c847f3743abbef996be5c9b32e12dca4",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/t_scalar_fusion.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "t_scalar_fusion.my:143:143: error[E_SINGLE_OWNER_MOVED]: 'wide' was moved or is unavailable on this path; use .copy() when both values are needed\n      return result == \"\u00e9z\u00e9\" and source == \"\u00e9z\" and values == [\"\u00e9z\", \"\u00e9z\"] and expanded == wide + wide + wide + wide and aliases == [wide, wide] and wide == \"123456789012345\u00e9\u20ac\ud83d\ude42\\0\"\n                                                                                                                                                ^\n"
+    },
+    {
+      "source": "test/core/t_text.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/t_text.my.txt",
+      "original_sha256": "1fead4a9adc3567f8d18786b10fd14a88830addf37bb7b0c8f8b67da77bb325e",
+      "public_tests": [
+        "test_unicode_index_slice_and_loop",
+        "test_empty_split_join_and_find",
+        "test_encode_bytes_xor",
+        "test_append_keeps_shared_text",
+        "test_large_unicode_index_and_reverse_slice",
+        "test_long_byte_xor_reduction",
+        "test_doubling_and_self_character_append_preserve_snapshots",
+        "test_append_alias_through_phi_preserves_the_other_owner",
+        "test_empty_separator_traps",
+        "test_zero_slice_step_traps"
+      ],
+      "source_sha256": "6f043d04cad4b0f2c5d52695f446bf2dc32d569b779b35b2fc909652797133ac",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/t_text.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "test/core/v_buffer_format.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/v_buffer_format.my.txt",
+      "original_sha256": "62b308c773d20b55d697c035479c0d2836840b596a794f90a9284db7d06520bc",
+      "public_tests": [
+        "test_numeric_buffer_spelling_and_snapshots"
+      ],
+      "source_sha256": "87fc8924a8e40bc63ac5ee8cd56b59c18de763e477f406fbae096fff84ec8af0",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/v_buffer_format.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "test/core/v_buffer_mut.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/v_buffer_mut.my.txt",
+      "original_sha256": "15c0e86ec4f31a49a4ba146fdd87d87bacd93738853a0f2713a2391dcef3f358",
+      "public_tests": [],
+      "source_sha256": "c063d06160843d430a486f4b1f0e8b58783e4bed1b2bc36ca6e784241e7ff0a3",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/v_buffer_mut.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "source": "test/core/v_text.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/v_text.my.txt",
+      "original_sha256": "74dae6ff0f0853efbddfa542c824ea7e0b23b881bd58c99c9cdcefed850c8d96",
+      "public_tests": [],
+      "source_sha256": "583d69439ba30a7e4a37c849470d22632da7a71c31a869f271d98eb600eb4b12",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/v_text.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/check-support5/cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "passed": 13,
+  "total": 14
+}

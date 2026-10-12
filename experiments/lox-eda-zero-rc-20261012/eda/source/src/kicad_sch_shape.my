@@ -1,0 +1,695 @@
+
+import kicad_sym_reader as kicad_sym
+import sexpr_ast as ast
+import sexpr_parser as parser
+import infra_fs
+import placement_pin_roles as pin_roles
+import lib_limits
+import net_name
+import support_strs as strs
+
+public const grid: int = 127
+
+
+public const pitch: int = 254
+
+
+public const pin_len: int = 254
+
+
+public enum Side:
+    left
+    right
+    top
+    bottom
+
+
+# --- zig: kicad_sch/glyph.zig --- (type needed by Request)
+public enum Class:
+    box
+    resistor
+    capacitor
+    polarized_cap
+    inductor
+    ferrite_bead
+    diode
+    led
+    fuse
+    testpoint
+
+
+public record Pin:
+    pad: bytes
+    name: bytes
+    side: Side
+    x: int
+    y: int
+    len: int = 254
+    show_name: bool = True
+
+
+public record ShapeUnit:
+    number: int
+    title: bytes
+    pins: Pin[]
+    half_w: int
+    half_h: int
+    graphics: kicad_sym.Graphic[]
+    stubs: int[]
+
+
+public record Shape:
+    lib_name: bytes
+    units: ShapeUnit[]
+    vendor: bool = False
+    hide_pin_text: bool = False
+
+
+public record PartSpec:
+    title: bytes
+    pads: bytes[]
+
+
+public record Names:
+    component: bytes
+    symbol: bytes
+    pinout: bytes
+
+
+public record Request:
+    names: Names
+    project_dir: str
+    fp_pads: bytes[]
+    used: bytes[]
+    parts: PartSpec[]
+    glyph: Class
+    nets: dict[str, bytes]? = None
+
+
+public record PadName:
+    pad: bytes
+    name: bytes
+
+
+record UnitPads:
+    title: bytes
+    pads: PadName[]
+
+
+record Style:
+    compact: bool = False
+    nets: dict[str, bytes]? = None
+
+
+record Edges:
+    slot: int[]
+    show_name: bool[]
+
+
+# Explicit constructors for Zig's non-scalar defaults on this compiler pin.
+public func names_default(component: bytes) -> Names:
+    return Names(component=component.copy(), symbol=b"", pinout=b"")
+
+
+public func request_default(names: Names, project_dir: str) -> Request:
+    return Request(names=names.copy(), project_dir=project_dir.copy(), fp_pads=[], used=[], parts=[], glyph=Class.box)
+
+
+public func synth(fs: Filesystem, req: Request) -> Shape:
+    mut pads = required_pads(fs, req)
+    mut drawn = unit_for(req.glyph, pads)
+    if drawn is not None:
+        return Shape(lib_name=lib_name_for(req), units=[drawn.copy()], hide_pin_text=True)
+    mut compact_ = req.glyph != Class.box and len(pads) <= 2
+    mut groups = split_units(pads, req.parts)
+    mut units: ShapeUnit[] = []
+    for i in range(len(groups)):
+        units.append(build_unit(groups[i], i + 1, Style(compact=compact_, nets=req.nets.copy())))
+    return Shape(lib_name=lib_name_for(req), units=units)
+
+
+public func lib_name_for(req: Request) -> bytes:
+    return sanitize_lib_name(req.names.component)
+
+
+public func stub_extra(u: ShapeUnit, i: int) -> int:
+    if i < len(u.stubs):
+        return u.stubs[i]
+    return 0
+
+
+public func names_pad(p: PadName) -> bool:
+    return p.name == p.pad
+
+
+public func max_reach(u: ShapeUnit) -> int:
+    mut out = pin_len
+    for p in u.pins:
+        mut from_body = abs(p.x) - u.half_w
+        if p.side == Side.top or p.side == Side.bottom:
+            from_body = abs(p.y) - u.half_h
+        out = max(out, from_body)
+    return out
+
+
+public func box_unit(pads: PadName[], number: int) -> ShapeUnit:
+    return build_unit(UnitPads(title=b"", pads=pads.copy()), number, Style())
+
+
+# First part claiming a pad owns it. Unclaimed pads form the trailing unit.
+func split_units(pads: PadName[], parts: PartSpec[]) -> UnitPads[]:
+    if len(parts) == 0:
+        return one_unit(pads)
+    mut owner: dict[str, int] = {}
+    for pi in range(len(parts)):
+        for pad in parts[pi].pads:
+            mut key = strs.text(pad)
+            if key not in owner:
+                owner[key] = pi
+    mut buckets: PadName[][] = []
+    for bi in range(len(parts) + 1):
+        buckets.append([])
+    for p in pads:
+        mut index = owner.get(strs.text(p.pad), len(parts))
+        buckets[index].append(p.copy())
+    mut out: UnitPads[] = []
+    for j in range(len(buckets)):
+        if len(buckets[j]) == 0:
+            continue
+        mut title = b""
+        if j < len(parts):
+            title = parts[j].title.copy()
+        out.append(UnitPads(title=title, pads=buckets[j].copy()))
+    if len(out) == 0:
+        return one_unit(pads)
+    return out
+
+
+func one_unit(pads: PadName[]) -> UnitPads[]:
+    return [UnitPads(title=b"", pads=pads.copy())]
+
+
+# Assign edges, group same-net pads, and size around both pins and their names.
+func build_unit(group: UnitPads, number: int, style: Style) -> ShapeUnit:
+    mut pads = group.pads.copy()
+    mut sides: Side[] = []
+    mut n = [0, 0, 0, 0]
+    assign_sides(pads, style.compact, mut sides, mut n)
+    mut edges = order_edges(pads, sides, n, style.nets)
+    mut spans = name_spans(pads, sides, edges.show_name)
+    mut half_w = 635
+    mut half_h = 254
+    if not style.compact:
+        half_w = max(axis_half(max(n[idx(Side.top)], n[idx(Side.bottom)]), 1270), facing(spans[idx(Side.left)], spans[idx(Side.right)]))
+        half_h = max(axis_half(max(n[idx(Side.left)], n[idx(Side.right)]), 508), facing(spans[idx(Side.top)], spans[idx(Side.bottom)]))
+    mut plen = pin_len_for(pads)
+    mut pins: Pin[] = []
+    for i in range(len(pads)):
+        mut p = pads[i].copy()
+        mut side = sides[i]
+        mut along = axis_pos(n[idx(side)], edges.slot[i])
+        mut x = -along
+        mut y = along
+        if side == Side.left:
+            x = -(half_w + plen)
+        elif side == Side.right:
+            x = half_w + plen
+        elif side == Side.top:
+            y = half_h + plen
+        else:
+            y = -(half_h + plen)
+        pins.append(Pin(pad=p.pad.copy(), name=p.name.copy(), side=side, show_name=edges.show_name[i], len=plen, x=x, y=y))
+    return ShapeUnit(number=number, title=group.title.copy(), pins=pins, half_w=half_w, half_h=half_h, graphics=[], stubs=[])
+
+
+func pin_len_for(pads: PadName[]) -> int:
+    mut widest = 0
+    for p in pads:
+        widest = max(widest, len(p.pad))
+    return max(pin_len, snap_up_grid(min(widest, 8) * grid))
+
+
+func order_edges(pads: PadName[], sides: Side[], n: int[], nets: dict[str, bytes]?) -> Edges:
+    mut out = Edges(slot=[], show_name=[])
+    mut seen = [0, 0, 0, 0]
+    for i in range(len(pads)):
+        out.show_name.append(not names_pad(pads[i]))
+        mut si = idx(sides[i])
+        out.slot.append(seen[si])
+        seen[si] += 1
+    if nets is None:
+        return out
+    mut edge_sides = [Side.left, Side.right, Side.top, Side.bottom]
+    for j in range(4):
+        if n[j] >= 2:
+            gang_edge(pads, sides, edge_sides[j], nets, mut out)
+    return out
+
+
+func gang_edge(pads: PadName[], sides: Side[], side: Side, map_: dict[str, bytes], mut out: Edges):
+    mut runs: int[][] = []
+    mut of_net: dict[str, int] = {}
+    for i in range(len(pads)):
+        if sides[i] != side:
+            continue
+        mut net = map_.get(strs.text(pads[i].pad), b"").copy()
+        mut run = len(runs)
+        if len(net) > 0:
+            mut key = strs.text(net)
+            if key not in of_net:
+                of_net[key.copy()] = run
+            run = of_net[key]
+        if run == len(runs):
+            runs.append([])
+        runs[run].append(i)
+    mut slot = 0
+    for members in runs:
+        for pi in members:
+            out.slot[pi] = slot
+            out.show_name[pi] = out.show_name[pi] and len(members) < 2
+            slot += 1
+
+
+func name_spans(pads: PadName[], sides: Side[], show: bool[]) -> int[]:
+    mut out = [0, 0, 0, 0]
+    for i in range(len(pads)):
+        if not show[i]:
+            continue
+        mut si = idx(sides[i])
+        out[si] = max(out[si], min(len(pads[i].name), 16) * grid)
+    return out
+
+
+func facing(a: int, b: int) -> int:
+    if a == 0 and b == 0:
+        return 0
+    return snap_up_grid((a + b) // 2 + pitch)
+
+
+func snap_up_grid(v: int) -> int:
+    mut r = v % grid
+    if r == 0:
+        return v
+    return v + grid - r
+
+
+func idx(s: Side) -> int:
+    match s:
+        case Side.left:
+            return 0
+        case Side.right:
+            return 1
+        case Side.top:
+            return 2
+        case Side.bottom:
+            return 3
+
+
+func assign_sides(pads: PadName[], compact_: bool, mut sides: Side[], mut n: int[]):
+    mut signals: int[] = []
+    for i in range(len(pads)):
+        mut side = Side.left
+        if compact_:
+            if i > 0:
+                side = Side.right
+        elif pin_roles.is_supply_fn(pads[i].name):
+            side = Side.top
+        elif pin_roles.is_ground_fn(pads[i].name):
+            side = Side.bottom
+        else:
+            sides.append(side)
+            signals.append(i)
+            continue
+        sides.append(side)
+        n[idx(side)] += 1
+    mut left_count = (len(signals) + 1) // 2
+    for k in range(len(signals)):
+        mut pi = signals[k]
+        sides[pi] = Side.left
+        if k >= left_count:
+            sides[pi] = Side.right
+        n[idx(sides[pi])] += 1
+
+
+func axis_half(k: int, minimum: int) -> int:
+    if k == 0:
+        return minimum
+    return max(minimum, (k - 1) * grid + pitch)
+
+
+func axis_pos(k: int, i: int) -> int:
+    return (k - 1) * grid - i * pitch
+
+
+public func required_pads(fs: Filesystem, req: Request) -> PadName[]:
+    mut out: PadName[] = []
+    mut seen: set[str] = set()
+    for pn in load_pinout(fs, req):
+        mut key = strs.text(pn.pad)
+        if key not in seen:
+            seen.add(key)
+            out.append(pn.copy())
+    for pad in req.fp_pads:
+        mut key2 = strs.text(pad)
+        if len(pad) > 0 and key2 not in seen:
+            seen.add(key2)
+            out.append(PadName(pad=pad.copy(), name=pad.copy()))
+    for pad2 in req.used:
+        mut key3 = strs.text(pad2)
+        if len(pad2) > 0 and key3 not in seen:
+            seen.add(key3)
+            out.append(PadName(pad=pad2.copy(), name=pad2.copy()))
+    return out
+
+
+func load_pinout(fs: Filesystem, req: Request) -> PadName[]:
+    if len(req.names.pinout) > 0:
+        mut pins = read_pinout(fs, req.project_dir, req.names.pinout)
+        if len(pins) > 0:
+            return pins
+    mut key = declared_pinout(fs, req.project_dir, req.names.component)
+    if key is not None:
+        mut pins2 = read_pinout(fs, req.project_dir, key)
+        if len(pins2) > 0:
+            return pins2
+    if len(req.names.component) > 0:
+        return read_pinout(fs, req.project_dir, req.names.component)
+    return []
+
+
+func declared_pinout(fs: Filesystem, project_dir: str, component: bytes) -> bytes?:
+    if len(component) == 0:
+        return None
+    mut children = try load_form(fs, project_dir, b"components", component)
+    for child in children:
+        mut cl = ast.as_list(child)
+        if cl is None or len(cl) < 2:
+            continue
+        if ast.as_atom(cl[0]).unwrap_or(b"") == b"pinout":
+            mut value = ast.as_text(cl[1])
+            if value is not None:
+                return Some(value.copy())
+    return None
+
+
+func read_pinout(fs: Filesystem, project_dir: str, key: bytes) -> PadName[]:
+    mut top = load_form(fs, project_dir, b"pinouts", key)
+    if top is None or len(top) < 2:
+        return []
+    if ast.as_atom(top[0]).unwrap_or(b"") != b"pinout":
+        return []
+    mut out: PadName[] = []
+    for child in top[2:]:
+        mut cl = ast.as_list(child)
+        if cl is None or len(cl) < 3:
+            continue
+        if ast.as_atom(cl[0]).unwrap_or(b"") != b"pin":
+            continue
+        mut pad = ast.token_text(cl[1])
+        if pad is not None:
+            out.append(PadName(pad=pad.copy(), name=ast.as_text(cl[2]).unwrap_or(pad).copy()))
+    return out
+
+
+func load_form(fs: Filesystem, project_dir: str, dir: bytes, name: bytes) -> ast.Node[]?:
+    if len(name) == 0:
+        return None
+    mut path_ = project_dir + "/lib/" + strs.text(dir) + "/" + strs.text(name) + ".sexp"
+    mut source = b""
+    match infra_fs.read_file_alloc(fs, path_, lib_limits.max_lib_file_bytes):
+        case Err(_):
+            return None
+        case Ok(data):
+            source = data
+    match parser.parse(source):
+        case Err(_):
+            return None
+        case Ok(nodes):
+            if len(nodes) == 0:
+                return None
+            return ast.as_list(nodes[0])
+
+
+public func sanitize_lib_name(name: bytes) -> bytes:
+    if len(name) == 0:
+        return b"UNNAMED"
+    mut out: int[] = []
+    for c in name:
+        if is_lib_name_char(c):
+            out.append(c)
+        else:
+            out.append(95)
+    return bytes(out)
+
+
+func is_lib_name_char(c: int) -> bool:
+    return strs.is_alphanumeric(c) or c == 95 or c == 45 or c == 46 or c == 43
+
+
+# --- zig: kicad_sch/glyph.zig ---
+public func classify(component: bytes, symbol: bytes, ref: bytes) -> Class:
+    mut c = by_component(component)
+    if c is not None:
+        return c
+    mut s = by_symbol(symbol)
+    if s is not None:
+        return s
+    return by_ref(ref)
+
+
+public func unit_for(class_: Class, pads: PadName[]) -> ShapeUnit?:
+    if class_ == Class.box:
+        return None
+    if class_ == Class.testpoint:
+        if len(pads) != 1:
+            return None
+        return Some(probe_unit(pads[0]))
+    if len(pads) == 2:
+        return Some(two_pin_unit(class_, pads))
+    return None
+
+
+func by_component(name: bytes) -> Class?:
+    if len(name) == 0:
+        return None
+    if family(name, b"ferrite") or family(name, b"bead"):
+        return Some(Class.ferrite_bead)
+    if family(name, b"led"):
+        return Some(Class.led)
+    if family(name, b"diode"):
+        return Some(Class.diode)
+    if family(name, b"testpoint") or family(name, b"test-point"):
+        return Some(Class.testpoint)
+    if family(name, b"res"):
+        return Some(Class.resistor)
+    if family(name, b"ind") or family(name, b"coil") or family(name, b"choke"):
+        return Some(Class.inductor)
+    if family(name, b"fuse") or family(name, b"polyfuse"):
+        return Some(Class.fuse)
+    return cap_family(name)
+
+
+func cap_family(name: bytes) -> Class?:
+    for p in [b"cp-", b"cap-pol", b"cap-tant", b"cap-elec", b"tantalum", b"electrolytic"]:
+        if has_prefix(name, p):
+            return Some(Class.polarized_cap)
+    if family(name, b"cap"):
+        return Some(Class.capacitor)
+    return None
+
+
+func by_symbol(name: bytes) -> Class?:
+    if name == b"generic-res":
+        return Some(Class.resistor)
+    if name == b"generic-cap":
+        return Some(Class.capacitor)
+    if name == b"generic-ind":
+        return Some(Class.inductor)
+    if name == b"led":
+        return Some(Class.led)
+    return None
+
+
+func family(name: bytes, prefix: bytes) -> bool:
+    if not has_prefix(name, prefix):
+        return False
+    if len(name) == len(prefix):
+        return True
+    mut following = name[len(prefix)]
+    return following == 45 or following == 95 or strs.is_digit(following)
+
+
+func by_ref(ref: bytes) -> Class:
+    mut leaf = net_name.leaf(ref)
+    if len(leaf) == 0:
+        return Class.box
+    if has_prefix(leaf, b"FB"):
+        return Class.ferrite_bead
+    if has_prefix(leaf, b"LED"):
+        return Class.led
+    if has_prefix(leaf, b"TP"):
+        return Class.testpoint
+    if has_prefix(leaf, b"FID"):
+        return Class.box
+    return by_ref_letter(leaf)
+
+
+func by_ref_letter(leaf: bytes) -> Class:
+    if not tail_is_digits(leaf[1:]):
+        return Class.box
+    mut letter = strs.to_upper(leaf[0])
+    if letter == 82:
+        return Class.resistor
+    if letter == 67:
+        return Class.capacitor
+    if letter == 76:
+        return Class.inductor
+    if letter == 68:
+        return Class.diode
+    if letter == 70:
+        return Class.fuse
+    return Class.box
+
+
+func tail_is_digits(tail: bytes) -> bool:
+    if len(tail) == 0:
+        return False
+    for c in tail:
+        if not strs.is_digit(c):
+            return False
+    return True
+
+
+func has_prefix(name: bytes, prefix: bytes) -> bool:
+    return len(name) >= len(prefix) and strs.eql_ignore_case(name[0:len(prefix)], prefix)
+
+
+record Metrics:
+    lead: int
+    half_w: int
+    half_h: int
+
+
+func two_pin_unit(class_: Class, pads: PadName[]) -> ShapeUnit:
+    mut m = metrics_of(class_)
+    mut left = pads[0].copy()
+    mut right = pads[1].copy()
+    if polarized(class_) and cathode_is_second(pads):
+        left = pads[1].copy()
+        right = pads[0].copy()
+    mut pins = [Pin(pad=left.pad.copy(), name=left.name.copy(), side=Side.left, x=-381, y=0, len=m.lead), Pin(pad=right.pad.copy(), name=right.name.copy(), side=Side.right, x=381, y=0, len=m.lead)]
+    return ShapeUnit(number=1, title=b"", pins=pins, half_w=m.half_w, half_h=m.half_h, graphics=body_of(class_), stubs=[])
+
+
+func probe_unit(pad: PadName) -> ShapeUnit:
+    mut m = metrics_of(Class.testpoint)
+    mut pins = [Pin(pad=pad.pad.copy(), name=pad.name.copy(), side=Side.left, x=-254, y=0, len=m.lead)]
+    return ShapeUnit(number=1, title=b"", pins=pins, half_w=m.half_w, half_h=m.half_h, graphics=body_of(Class.testpoint), stubs=[])
+
+
+func polarized(class_: Class) -> bool:
+    return class_ == Class.diode or class_ == Class.led
+
+
+func cathode_is_second(pads: PadName[]) -> bool:
+    return is_cathode(pads[1].name) and not is_cathode(pads[0].name)
+
+
+func is_cathode(name: bytes) -> bool:
+    return len(name) > 0 and (has_prefix(name, b"K") or has_prefix(name, b"CATHODE"))
+
+
+func metrics_of(class_: Class) -> Metrics:
+    match class_:
+        case Class.box:
+            return Metrics(lead=pin_len, half_w=127, half_h=127)
+        case Class.resistor:
+            return Metrics(lead=127, half_w=254, half_h=127)
+        case Class.capacitor:
+            return Metrics(lead=254, half_w=127, half_h=254)
+        case Class.polarized_cap:
+            return Metrics(lead=254, half_w=254, half_h=254)
+        case Class.inductor:
+            return Metrics(lead=127, half_w=254, half_h=127)
+        case Class.ferrite_bead:
+            return Metrics(lead=254, half_w=254, half_h=381)
+        case Class.diode:
+            return Metrics(lead=254, half_w=127, half_h=127)
+        case Class.led:
+            return Metrics(lead=254, half_w=254, half_h=254)
+        case Class.fuse:
+            return Metrics(lead=127, half_w=254, half_h=127)
+        case Class.testpoint:
+            return Metrics(lead=254, half_w=127, half_h=127)
+
+
+# Embedded stock geometry: ten-thousandths of mm, y-UP. D6 turns tables into
+# functions. Each list remains in its original KiCad/Zig order.
+func pt(x: int, y: int) -> kicad_sym.Point:
+    return kicad_sym.Point(x=x, y=y)
+
+
+func graphic(kind: kicad_sym.Kind, pts: kicad_sym.Point[], width: int, fill: kicad_sym.Fill) -> kicad_sym.Graphic:
+    return kicad_sym.Graphic(kind=kind.copy(), pts=pts.copy(), text=b"", style=kicad_sym.Style(width=width, fill=fill.copy()))
+
+
+func body_of(class_: Class) -> kicad_sym.Graphic[]:
+    match class_:
+        case Class.box:
+            return []
+        case Class.resistor:
+            return resistor_body()
+        case Class.capacitor:
+            return capacitor_body()
+        case Class.polarized_cap:
+            return polarized_body()
+        case Class.inductor:
+            return inductor_body()
+        case Class.ferrite_bead:
+            return ferrite_body()
+        case Class.diode:
+            return diode_body()
+        case Class.led:
+            return led_body()
+        case Class.fuse:
+            return fuse_body()
+        case Class.testpoint:
+            return probe_body()
+
+
+func resistor_body() -> kicad_sym.Graphic[]:
+    return [graphic(kicad_sym.Kind.rectangle, [pt(-25400, 10160), pt(25400, -10160)], 2540, kicad_sym.Fill.none)]
+
+
+func capacitor_body() -> kicad_sym.Graphic[]:
+    return [graphic(kicad_sym.Kind.polyline, [pt(-7620, -20320), pt(-7620, 20320)], 5080, kicad_sym.Fill.none), graphic(kicad_sym.Kind.polyline, [pt(7620, -20320), pt(7620, 20320)], 5080, kicad_sym.Fill.none)]
+
+
+func polarized_body() -> kicad_sym.Graphic[]:
+    return [graphic(kicad_sym.Kind.rectangle, [pt(-5080, -22860), pt(-10160, 22860)], 0, kicad_sym.Fill.none), graphic(kicad_sym.Kind.polyline, [pt(-22860, -17780), pt(-22860, -7620)], 0, kicad_sym.Fill.none), graphic(kicad_sym.Kind.polyline, [pt(-27940, -12700), pt(-17780, -12700)], 0, kicad_sym.Fill.none), graphic(kicad_sym.Kind.rectangle, [pt(5080, 22860), pt(10160, -22860)], 0, kicad_sym.Fill.outline)]
+
+
+func inductor_body() -> kicad_sym.Graphic[]:
+    return [graphic(kicad_sym.Kind.arc, [pt(-25400, 0), pt(-19050, 6323), pt(-12700, 0)], 0, kicad_sym.Fill.none), graphic(kicad_sym.Kind.arc, [pt(-12700, 0), pt(-6350, 6323), pt(0, 0)], 0, kicad_sym.Fill.none), graphic(kicad_sym.Kind.arc, [pt(0, 0), pt(6350, 6323), pt(12700, 0)], 0, kicad_sym.Fill.none), graphic(kicad_sym.Kind.arc, [pt(12700, 0), pt(19050, 6323), pt(25400, 0)], 0, kicad_sym.Fill.none)]
+
+
+func ferrite_body() -> kicad_sym.Graphic[]:
+    return [graphic(kicad_sym.Kind.polyline, [pt(-4064, -27686), pt(-22606, -17018), pt(3048, 27686), pt(21590, 16764), pt(-4064, -27686)], 0, kicad_sym.Fill.none), graphic(kicad_sym.Kind.polyline, [pt(-12700, 0), pt(-12954, 0)], 0, kicad_sym.Fill.none), graphic(kicad_sym.Kind.polyline, [pt(12700, 0), pt(12192, 0)], 0, kicad_sym.Fill.none)]
+
+
+func diode_body() -> kicad_sym.Graphic[]:
+    return [graphic(kicad_sym.Kind.polyline, [pt(-12700, 12700), pt(-12700, -12700)], 2540, kicad_sym.Fill.none), graphic(kicad_sym.Kind.polyline, [pt(12700, 12700), pt(12700, -12700), pt(-12700, 0), pt(12700, 12700)], 2540, kicad_sym.Fill.none), graphic(kicad_sym.Kind.polyline, [pt(12700, 0), pt(-12700, 0)], 0, kicad_sym.Fill.none)]
+
+
+func led_body() -> kicad_sym.Graphic[]:
+    return [graphic(kicad_sym.Kind.polyline, [pt(-30480, -7620), pt(-45720, -22860), pt(-38100, -22860), pt(-45720, -22860), pt(-45720, -15240)], 0, kicad_sym.Fill.none), graphic(kicad_sym.Kind.polyline, [pt(-17780, -7620), pt(-33020, -22860), pt(-25400, -22860), pt(-33020, -22860), pt(-33020, -15240)], 0, kicad_sym.Fill.none), graphic(kicad_sym.Kind.polyline, [pt(-12700, 0), pt(12700, 0)], 0, kicad_sym.Fill.none), graphic(kicad_sym.Kind.polyline, [pt(-12700, -12700), pt(-12700, 12700)], 2540, kicad_sym.Fill.none), graphic(kicad_sym.Kind.polyline, [pt(12700, -12700), pt(12700, 12700), pt(-12700, 0), pt(12700, -12700)], 2540, kicad_sym.Fill.none)]
+
+
+func fuse_body() -> kicad_sym.Graphic[]:
+    return [graphic(kicad_sym.Kind.rectangle, [pt(-25400, 7620), pt(25400, -7620)], 2540, kicad_sym.Fill.none), graphic(kicad_sym.Kind.polyline, [pt(-25400, 0), pt(25400, 0)], 0, kicad_sym.Fill.none)]
+
+
+func probe_body() -> kicad_sym.Graphic[]:
+    mut g = graphic(kicad_sym.Kind.circle, [pt(7620, 0)], 0, kicad_sym.Fill.none)
+    g.radius = 7620
+    return [g]

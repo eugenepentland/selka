@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1440, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1440 after 15s
+scanner.my:71:12: error[E_ZERO_RC_UNSUPPORTED]: shared snapshots and retained views are unsupported; use .borrow() for a checked view or .copy() for ownership
+      return source.view(token.start, token.start + token.length).copy()
+             ^

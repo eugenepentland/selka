@@ -34,9 +34,9 @@ record Holder:
 
 func choose_holder(mut value: Holder, other: i64[]) -> i64:
     _ = other
-    mut xs = value.values
+    mut xs = value.values.copy()
     xs.append(42)
-    value.values = xs
+    value.values = xs.copy()
     return xs[0u64]
 
 

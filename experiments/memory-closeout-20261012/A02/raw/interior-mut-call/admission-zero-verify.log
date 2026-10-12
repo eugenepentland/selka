@@ -1,0 +1,5 @@
+plain zero verify True
+dictionary zero verify True
+child zero verify True
+build-slot: FIFO ticket 792, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 3, FIFO ticket 792 after 5s

@@ -1,0 +1,5 @@
+oracle ordinary debug True
+reduced ordinary debug True
+control ordinary debug True
+build-slot: FIFO ticket 863, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 863 after 20s

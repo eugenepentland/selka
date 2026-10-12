@@ -1,0 +1,4 @@
+build-slot: build slot 1, FIFO ticket 1430 after 0s
+natives.my:16:19: error[E_SHADOWING]: payload binding shadows an active binding or top-level name
+          case Some(clock):
+                    ^

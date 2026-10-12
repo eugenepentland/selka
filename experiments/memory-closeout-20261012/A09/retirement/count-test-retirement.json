@@ -1,0 +1,8 @@
+{
+  "applied": false,
+  "requires": "C2 qualification and coordinated Stage4 retirement",
+  "preimage_sha256": "91e5f5d58d1401934a1342f96835ce56e795c721478a55c05623d35af143aab3",
+  "proposed_sha256": "6702c73fa9d3dedae26b06052f0759d75da93ad44baef61425c739b6fbeff534",
+  "source_sha256": "f3cc9a8eb4661c0fb23eca957defb21ce019a368fd28eaee663e258428b3be76",
+  "qualification": "Support5 explicit-selector debug/release only; all five actual default pipelines remain required after application"
+}

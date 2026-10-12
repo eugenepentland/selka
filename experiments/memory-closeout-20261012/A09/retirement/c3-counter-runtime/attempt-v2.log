@@ -1,0 +1,13 @@
+build-slot: FIFO ticket 984, position 14; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 984, position 5; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 984 after 91s
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/retirement/c3-counter-runtime/check_native.py", line 130, in <module>
+    main()
+    ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/retirement/c3-counter-runtime/check_native.py", line 112, in main
+    assert {k: v for k, v in old['totals'].items() if k not in excluded} == {
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        k: v for k, v in new['totals'].items() if k not in excluded}
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

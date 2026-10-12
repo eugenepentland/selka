@@ -1,0 +1,20 @@
+build-slot: FIFO ticket 42, position 1; all 2 gate slot(s) busy; waiting (0s so far)
+build-slot: gate slot 2, FIFO ticket 42 after 5s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10006 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/memory-closeout-20261012-A09 714ae7645] Reject loop duplication across external entry edges
+ 14 files changed, 370 insertions(+), 2 deletions(-)
+ create mode 100644 experiments/memory-closeout-20261012/A09/raw/version/after-test-v2.log
+ create mode 100644 experiments/memory-closeout-20261012/A09/raw/version/after-test-v3.log
+ create mode 100644 experiments/memory-closeout-20261012/A09/raw/version/after-test.log
+ create mode 100644 experiments/memory-closeout-20261012/A09/raw/version/before-optimized.ir.gz
+ create mode 100644 experiments/memory-closeout-20261012/A09/raw/version/before-test.log
+ create mode 100644 experiments/memory-closeout-20261012/A09/raw/version/dump.log
+ create mode 100644 experiments/memory-closeout-20261012/A09/raw/version/guardian-first.log
+ create mode 100644 experiments/memory-closeout-20261012/A09/raw/version/results.json
+ create mode 100644 experiments/memory-closeout-20261012/A09/samples/loop_early_return.my
+ create mode 100644 src/core/a09_version_test.zig

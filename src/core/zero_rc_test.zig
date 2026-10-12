@@ -1,5 +1,6 @@
 //! Source ownership, direct cleanup, and rejection boundaries for zero-RC stage 1.
 const std = @import("std");
+
 const language = @import("mylang");
 const contract = @import("single_owner.zig");
 const build = @import("build.zig");
@@ -356,19 +357,169 @@ test "zero RC runtime admission and emitted count operations fail closed" {
     try std.testing.expect(!zero.emittedClean("  call void @myl_core_release(ptr %p)\n"));
     try std.testing.expect(!zero.emittedClean("  call preserve_mostcc void @myl_core_retain_slow(ptr %p)\n"));
     try std.testing.expect(zero.emittedClean("  call void @myl_core_drop_owned(ptr %p)\n"));
-    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
-    defer arena.deinit();
-    const a = arena.allocator();
-    const program = try checked(a,
+    // Rounding is now an audited scalar helper; keep the unknown-symbol
+    // refusals above and exercise the admitted operation through native code.
+    try executes(std.testing.allocator,
         \\func main() -> int:
         \\    const value = round(1.234, 2)
         \\    if value > 1.0:
-        \\        return 1
-        \\    return 0
-    );
+        \\        return 0
+        \\    return 1
+    , "");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-TASKS-1
+test "zero RC task item diagnostics do not transfer managed ownership" {
+    const marker = zero.contract("myl_core_task_item").?;
+    try std.testing.expectEqual(@as(u64, 0), marker.owned);
+    try std.testing.expectEqual(@as(u64, 0), marker.views);
+    try std.testing.expectEqual(.scalar, marker.result);
+    try std.testing.expect(zero.contract("myl_core_task_submit") == null);
+}
+
+fn resultEntryCase(parent: std.mem.Allocator, mode: support.RunOptions, failed: bool, direct: bool) !void {
+    var arena = std.heap.ArenaAllocator.init(parent);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const source = if (failed)
+        \\func main(args: str[]) -> Result[int, str]:
+        \\    return Err("failure-" + str(len(args)))
+    else
+        \\func main(args: str[]) -> Result[int, str]:
+        \\    return Ok(len(args))
+    ;
+    var program = try checked(a, source);
+    // Source compilation normally synthesizes an integer-returning wrapper.
+    // Also exercise the emitter's direct Core Result entry, used by IR clients.
+    if (direct) for (program.functions) |function| {
+        if (language.typed.resultShape(function.signature.return_type, program.records) != null) {
+            program.main = function.id;
+            break;
+        }
+    };
+    var failure: contract.Failure = .{};
+    try contract.checkMode(a, program, &failure, true);
     var refusal: build.Refusal = .{};
-    try std.testing.expectError(error.Unsupported, build.buildExecutable(a, .{ .program = program, .zero_rc = true }, &refusal));
-    try std.testing.expect(std.mem.indexOf(u8, refusal.reason, "unaudited zero-RC runtime helper") != null);
+    var module = try build.buildExecutable(a, .{ .program = program, .single_owner = true, .zero_rc = true }, &refusal);
+    const result = if (mode.own) try passes.run(a, &module, if (mode.verify) .verify else .trusted) else try passes.debug(a, &module);
+    try contract.verifyLowered(&module, &failure);
+    const run = try support.runOwned(a, &module, .{
+        .own = false,
+        .release = mode.release,
+        .verify = mode.verify,
+        .analysis = support.analysis(&result),
+        .main = .{ .parameters = &.{"args"}, .result = .{ .ok_tag = 0, .error_tag = 1 } },
+    });
+    try std.testing.expectEqual(@as(u8, if (failed) 1 else 0), run.status);
+    try std.testing.expectEqualStrings("", run.stdout);
+    if (failed) {
+        try std.testing.expect(std.mem.startsWith(u8, run.stderr, "error: failure-0\n"));
+        if (direct) try std.testing.expect(std.mem.indexOf(u8, run.llvm, "call void @myl_core_drop_owned(ptr %error)") != null);
+    } else try std.testing.expectEqualStrings("", run.stderr);
+    try std.testing.expect(std.mem.indexOf(u8, run.stderr, "leak") == null);
+    try std.testing.expect(zero.emittedClean(run.llvm));
+}
+
+fn resultEntryModes(parent: std.mem.Allocator) !void {
+    const modes = [_]support.RunOptions{
+        .{ .own = false },
+        .{ .release = true },
+        .{ .release = true, .verify = true },
+        .{},
+        .{ .release = true, .own = false },
+    };
+    for (modes) |mode| {
+        try resultEntryCase(parent, mode, false, false);
+        try resultEntryCase(parent, mode, true, false);
+        try resultEntryCase(parent, mode, false, true);
+        try resultEntryCase(parent, mode, true, true);
+    }
+}
+
+// spec-case: NEW-CORE-ZERO-RC-2
+test "zero RC Result main destroys text errors and borrowed argv in five modes" {
+    try resultEntryModes(std.testing.allocator);
+}
+
+// spec-case: NEW-CORE-ZERO-RC-3
+test "zero RC test transport borrows writes and returns independent decoded blocks" {
+    try std.testing.expectEqual(.fresh, zero.contract("myl_core_test_read_text").?.result);
+    try std.testing.expectEqual(.fresh, zero.contract("myl_core_test_read_bytes").?.result);
+    try std.testing.expectEqual(@as(u64, 0), zero.contract("myl_core_test_write_text").?.owned);
+    try std.testing.expectEqual(@as(u64, 0), zero.contract("myl_core_test_open").?.owned);
+    try std.testing.expectEqual(.scalar, zero.contract("myl_core_test_register").?.result);
+    try std.testing.expect(zero.contract("myl_core_test_unreviewed") == null);
+}
+
+// spec-case: NEW-CORE-ZERO-RC-3
+test "zero RC encoded span offsets borrow octets and return a scalar" {
+    const signature = zero.contract("myl_core_span_bytes_index_offset").?;
+    try std.testing.expectEqual(@as(u64, 1), signature.views);
+    try std.testing.expectEqual(@as(u64, 0), signature.owned);
+    try std.testing.expectEqual(.scalar, signature.result);
+    try std.testing.expect(zero.contract("myl_core_span_bytes_index_offset_other") == null);
+}
+
+// spec-case: DICT-VIEWS-1
+test "zero RC immediate dictionary snapshots own keys values and item children" {
+    try executes(std.testing.allocator,
+        \\func main(out: Stream) -> int:
+        \\    mut source = {"key-" + str(1): ["value-" + str(1)]}
+        \\    const keys = list(source.keys())
+        \\    const values = list(source.values())
+        \\    const items = list(source.items())
+        \\    source.clear()
+        \\    out.print(keys[0], values[0][0], items[0].key, items[0].value[0])
+        \\    mut scalar_keys = {7: ["saved-" + str(2)]}
+        \\    const first = list(scalar_keys.items())
+        \\    scalar_keys.clear()
+        \\    mut scalar_values = {"saved-" + str(3): 9}
+        \\    const second = list(scalar_values.items())
+        \\    scalar_values.clear()
+        \\    const scalars = list({4: 5}.items())
+        \\    out.print(first[0].key, first[0].value[0], second[0].key, second[0].value)
+        \\    out.print(scalars[0].key, scalars[0].value)
+        \\    return 0
+    , "key-1 value-1 key-1 value-1\n7 saved-2 saved-3 9\n4 5\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-RESOURCE-SCOPES-1
+test "zero RC fallible file scopes borrow named helper providers through propagation" {
+    try executes(std.testing.allocator,
+        \\import filesystem
+        \\func read(fs: Filesystem, path: str, fail: bool) -> Result[int, str]:
+        \\    with try fs.open(path, "rb") as file:
+        \\        if fail:
+        \\            return Err("inside")
+        \\        return Ok(len(file.read(16)))
+        \\func nested(fs: Filesystem) -> Result[int, str]:
+        \\    with try fs.open("outer", "w") as outer:
+        \\        _ = outer.write("saved")
+        \\        with try fs.open("missing", "r") as inner:
+        \\            return Ok(len(inner.read()))
+        \\func main(out: Stream) -> int:
+        \\    const fs = filesystem.memory()
+        \\    with fs.open("data", "w") as file:
+        \\        _ = file.write("abc")
+        \\    match read(fs, "data", False):
+        \\        case Ok(size):
+        \\            out.print(size)
+        \\        case Err(message):
+        \\            out.print(message)
+        \\    match read(fs, "data", True):
+        \\        case Ok(size):
+        \\            out.print(size)
+        \\        case Err(message):
+        \\            out.print(message)
+        \\    match nested(fs):
+        \\        case Ok(size):
+        \\            out.print(size)
+        \\        case Err(message):
+        \\            out.print("missing")
+        \\    with fs.open("outer", "r") as outer:
+        \\        out.print(outer.read())
+        \\    return 0
+    , "3\ninside\nmissing\nsaved\n");
 }
 
 // spec-case: NEW-CORE-ZERO-RC-1
@@ -1273,3 +1424,1021 @@ const json_lookup_output =
     "[{\"nested\":\"value-7\"}] {\"nested\":[\"value-9\"]}\n" ++
     "[{\"nested\":\"value-7\"}] {\"nested\":[\"value-9\"]}\n" ++
     "{\"target\":\"changed\"} [\"changed\"]\n";
+
+// spec: NEW-CORE-ZERO-RC-AFFINE-RESOURCES-1
+test "zero RC affine resource parameters and local matches transfer owners" {
+    try executes(std.testing.allocator,
+        \\import filesystem
+        \\resource File: filesystem
+        \\result Open:
+        \\    ok: File,
+        \\    err: int
+        \\record Owned:
+        \\    file: File
+        \\    code: int
+        \\func forward(file: File) -> File effects(filesystem):
+        \\    return file
+        \\func fields(value: Owned) -> int effects(filesystem):
+        \\    _ = value
+        \\    return 7
+        \\func handle(result: Open) -> int effects(filesystem):
+        \\    match result:
+        \\        case Open.ok(file):
+        \\            return fields(Owned(file=forward(file), code=7))
+        \\        case Open.err(code):
+        \\            return code
+        \\func open(fs: Filesystem) -> Open:
+        \\    const request = FixedArray[u8, 6]([114u8, 58u8, 100u8, 97u8, 116u8, 97u8])
+        \\    return acquire_resource[Open](fs, request)
+        \\func main(out: Stream) -> int:
+        \\    const original = filesystem.memory()
+        \\    mut fs = original
+        \\    with fs.open("data", "w") as file:
+        \\        _ = file.write("abc")
+        \\    out.print(handle(open(fs)))
+        \\    fs = filesystem.memory()
+        \\    out.print(fs.exists("data"))
+        \\    return 0
+    , "7\nFalse\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-AFFINE-RESOURCES-1
+test "zero RC dependent resource returns reject local and ambiguous providers" {
+    try refuses(std.testing.allocator,
+        \\import filesystem
+        \\resource File: filesystem
+        \\result Open:
+        \\    ok: File,
+        \\    err: int
+        \\func escape(unused: Filesystem) -> Open:
+        \\    _ = unused.exists("unused")
+        \\    const local = filesystem.memory()
+        \\    return acquire_resource[Open](local, FixedArray[u8, 0]([]))
+        \\func main() -> int:
+        \\    return 0
+    , "E_ZERO_RC_RESOURCE_ESCAPE");
+    try refuses(std.testing.allocator,
+        \\resource File: filesystem
+        \\result Open:
+        \\    ok: File,
+        \\    err: int
+        \\func ambiguous(first: Filesystem, second: Filesystem) -> Open:
+        \\    _ = second.exists("unused")
+        \\    return acquire_resource[Open](first, FixedArray[u8, 0]([]))
+        \\func main() -> int:
+        \\    return 0
+    , "E_ZERO_RC_RESOURCE_ORIGIN");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-1
+test "zero RC scalar text conversions and characters have fresh receiver origins" {
+    try executes(std.testing.allocator,
+        \\func main(out: Stream) -> int:
+        \\    mut total = 0
+        \\    for value in [0.1, 2.5]:
+        \\        const encoded = str(value).encode()
+        \\        total += len(encoded)
+        \\    const letters = [for letter in "abc" yield letter]
+        \\    out.print(total, letters[1])
+        \\    return 0
+    , "6 b\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-AFFINE-RESOURCES-1
+test "zero RC affine resource cleanup covers completion propagation and loop exits" {
+    try executes(std.testing.allocator,
+        \\import filesystem
+        \\
+        \\resource File: filesystem
+        \\result Open:
+        \\    ok: File,
+        \\    err: int
+        \\record Failure:
+        \\    resource: File
+        \\    code: int
+        \\result Finish:
+        \\    ok: bool,
+        \\    err: Failure
+        \\func request() -> FixedArray[u8, 6]:
+        \\    return FixedArray[u8, 6]([114u8, 58u8, 100u8, 97u8, 116u8, 97u8])
+        \\func open(fs: Filesystem) -> Open:
+        \\    return acquire_resource[Open](fs, request())
+        \\func finish(file: File) -> Finish:
+        \\    return complete_resource[Finish](file)
+        \\func attempt(fs: Filesystem) -> int:
+        \\    match open(fs):
+        \\        case Open.ok(file):
+        \\            match finish(file):
+        \\                case Finish.ok(done):
+        \\                    if done:
+        \\                        return 7
+        \\                    return 0
+        \\                case Finish.err(failure):
+        \\                    const code = failure.code
+        \\                    return code
+        \\        case Open.err(code):
+        \\            return code
+        \\func partial(fs: Filesystem) -> Result[int, int]:
+        \\    const first = try open(fs)
+        \\    const second = try acquire_resource[Open](fs, FixedArray[u8, 3]([114u8, 58u8, 120u8]))
+        \\    _ = first
+        \\    _ = second
+        \\    return Ok(1)
+        \\func main(out: Stream) -> int:
+        \\    mut fs = filesystem.memory()
+        \\    with fs.open("data", "w") as file:
+        \\        _ = file.write("abc")
+        \\    out.print(attempt(fs))
+        \\    with fs.read_only() as readonly:
+        \\        out.print(attempt(readonly))
+        \\        _ = open(readonly)
+        \\    match partial(fs):
+        \\        case Ok(code):
+        \\            out.print(code)
+        \\        case Err(code):
+        \\            out.print(code)
+        \\    for i in range(20):
+        \\        _ = open(fs)
+        \\        if i < 3:
+        \\            continue
+        \\        break
+        \\    _ = open(fs)
+        \\    fs = filesystem.memory()
+        \\    out.print(fs.exists("data"))
+        \\    return 0
+    , "7\n2\n3\nFalse\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-AFFINE-RESOURCES-1
+test "zero RC affine resources reject provider replacement" {
+    try refuses(std.testing.allocator,
+        \\import filesystem
+        \\resource File: filesystem
+        \\result Open:
+        \\    ok: File,
+        \\    err: int
+        \\func open(fs: Filesystem) -> Open:
+        \\    return acquire_resource[Open](fs, FixedArray[u8, 0]([]))
+        \\func main() -> int:
+        \\    mut fs = filesystem.memory()
+        \\    const live = open(fs)
+        \\    fs = filesystem.memory()
+        \\    _ = live
+        \\    return 0
+    , "E_ZERO_RC_RESOURCE_ESCAPE");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-AFFINE-RESOURCES-1
+test "zero RC affine resources reject scoped provider escape" {
+    try refuses(std.testing.allocator,
+        \\import filesystem
+        \\resource File: filesystem
+        \\result Open:
+        \\    ok: File,
+        \\    err: int
+        \\func open(fs: Filesystem) -> Open:
+        \\    return acquire_resource[Open](fs, FixedArray[u8, 0]([]))
+        \\func main() -> int:
+        \\    const fs = filesystem.memory()
+        \\    mut saved: Open = Err(0)
+        \\    _ = saved
+        \\    with fs.read_only() as readonly:
+        \\        saved = open(readonly)
+        \\    _ = saved
+        \\    return 0
+    , "E_ZERO_RC_RESOURCE_ESCAPE");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-AFFINE-RESOURCES-1
+test "zero RC affine resources reject record sibling invalidation" {
+    try refuses(std.testing.allocator,
+        \\import filesystem
+        \\resource File: filesystem
+        \\result Open:
+        \\    ok: File,
+        \\    err: int
+        \\func open(fs: Filesystem) -> Open:
+        \\    return acquire_resource[Open](fs, FixedArray[u8, 0]([]))
+        \\record Owned:
+        \\    child: Open
+        \\    code: int
+        \\func replace(mut fs: Filesystem) -> int:
+        \\    fs = filesystem.memory()
+        \\    return 1
+        \\func main() -> int:
+        \\    mut fs = filesystem.memory()
+        \\    const carrier = Owned(child=open(fs), code=replace(mut fs))
+        \\    _ = carrier
+        \\    return 0
+    , "E_SINGLE_OWNER_OVERLAP");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-AFFINE-RESOURCES-1
+test "zero RC builtin file results preserve named provider origins through helpers" {
+    try executes(std.testing.allocator,
+        \\import filesystem
+        \\@ensures(True)
+        \\func opened(fs: Filesystem) -> Result[TextFile, str]:
+        \\    return fs.open("data", "w")
+        \\func write(fs: Filesystem, fail: bool) -> Result[int, str]:
+        \\    with try opened(fs) as file:
+        \\        _ = file.write("hello")
+        \\        if fail:
+        \\            return Err("early")
+        \\    const text = try fs.read_text("data")
+        \\    return Ok(len(text))
+        \\func main(out: Stream) -> int:
+        \\    const fs = filesystem.memory()
+        \\    match write(fs, False):
+        \\        case Ok(size):
+        \\            out.print(size)
+        \\        case Err(message):
+        \\            out.print(message)
+        \\    match write(fs, True):
+        \\        case Ok(size):
+        \\            out.print(size)
+        \\        case Err(message):
+        \\            out.print(message)
+        \\    return 0
+    , "5\nearly\n");
+    try refuses(std.testing.allocator,
+        \\import filesystem
+        \\func escape(fs: Filesystem) -> Result[TextFile, str]:
+        \\    _ = fs.exists("unused")
+        \\    const local = filesystem.memory()
+        \\    return local.open("data", "w")
+        \\func main() -> int:
+        \\    return 0
+    , "E_ZERO_RC_RESOURCE_ESCAPE");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC optional narrowing preserves hidden payload availability and mutation" {
+    try executes(std.testing.allocator,
+        \\record Node:
+        \\    items: int[]
+        \\    next: Node?
+        \\func size(node: Node) -> int:
+        \\    mut child = node.next.copy()
+        \\    if child is None:
+        \\        return len(node.items)
+        \\    child.items.append(9)
+        \\    return len(node.items) + size(child)
+        \\func main(out: Stream) -> int:
+        \\    const root = Node(items=[1], next=Some(Node(items=[2], next=None)))
+        \\    out.print(size(root), size(root))
+        \\    return 0
+    , "3 3\n");
+    try refuses(std.testing.allocator,
+        \\func escape(value: int[]?) -> int[]:
+        \\    if value is None:
+        \\        return []
+        \\    return value
+        \\func main() -> int:
+        \\    return len(escape(Some([1])))
+    , "E_SINGLE_OWNER_BORROW");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC dictionary default explicit copies select before the owning join" {
+    try executes(std.testing.allocator,
+        \\enum Choice:
+        \\    numbers(value: int[])
+        \\    text(value: str)
+        \\func fallback(mut calls: int, value: str) -> bytes:
+        \\    calls += 1
+        \\    return value.encode()
+        \\func main(out: Stream) -> int:
+        \\    mut mapping = {"hit": b"stored"}
+        \\    mut calls = 0
+        \\    const hit = mapping.get("hit", fallback(mut calls, "ignored")).copy()
+        \\    const miss = mapping.get("miss", fallback(mut calls, "chosen")).copy()
+        \\    mut supplied = b"caller"
+        \\    const independent = mapping.get("absent", supplied).copy()
+        \\    const nested = mapping.get("absent", mapping.get("hit", supplied)).copy()
+        \\    mapping.clear()
+        \\    supplied = b"changed"
+        \\    assert calls == 2
+        \\    assert hit == b"stored" and miss == b"chosen"
+        \\    assert independent == b"caller" and nested == b"stored"
+        \\    mut choices = {"hit": Choice.numbers(value=[1, 2])}
+        \\    const selected = choices.get("hit", Choice.text(value="unused")).copy()
+        \\    choices.clear()
+        \\    match selected:
+        \\        case Choice.numbers(value=values):
+        \\            out.print(len(values))
+        \\        case Choice.text(value=value):
+        \\            out.print(len(value))
+        \\    return 0
+    , "2\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-VIEWS-1
+test "zero RC dictionary fallback views refuse ambiguous owner provenance" {
+    try refuses(std.testing.allocator,
+        \\func main(args: str[]) -> int:
+        \\    const values: dict[str, bytes] = {"present": b"stored"}
+        \\    const key = str(len(args))
+        \\    mut fallback = ("abc" + key).encode()
+        \\    const view = values.get(key, fallback).borrow(0, 3)
+        \\    fallback = ("changed" + key).encode()
+        \\    return int(view[0])
+    , "E_ZERO_RC_VIEW_ESCAPE");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC setdefault copies borrowed hit and inserted payloads independently" {
+    try executes(std.testing.allocator,
+        \\func fallback(mut calls: int, value: int) -> int[]:
+        \\    calls += 1
+        \\    return [value]
+        \\func key(mut calls: int, value: str) -> str:
+        \\    calls += 1
+        \\    return value.copy()
+        \\func main(out: Stream) -> int:
+        \\    mut mapping = {"a": [1]}
+        \\    mut key_calls = 0
+        \\    mut value_calls = 0
+        \\    const hit = mapping.setdefault(key(mut key_calls, "a"), fallback(mut value_calls, 99)).copy()
+        \\    const added = mapping.setdefault(key(mut key_calls, "b"), fallback(mut value_calls, 2)).copy()
+        \\    assert key_calls == 2
+        \\    assert value_calls == 2
+        \\    for i in range(40):
+        \\        const grown = mapping.setdefault(str(i), [i]).copy()
+        \\        assert grown[0] == i
+        \\    _ = mapping.pop("5")
+        \\    const after_hole = mapping.setdefault("again-" + str(5), [5]).copy()
+        \\    assert after_hole[0] == 5
+        \\    for i in range(30):
+        \\        _ = mapping.pop(str(i), [])
+        \\    for i in range(30):
+        \\        const compacted = mapping.setdefault("new-" + str(i), [i]).copy()
+        \\        assert compacted[0] == i
+        \\    mapping.clear()
+        \\    out.print(hit[0], added[0])
+        \\    return 0
+    , "1 2\n");
+    try refuses(std.testing.allocator,
+        \\func main() -> int:
+        \\    mut mapping = {"a": [1]}
+        \\    const borrowed = mapping.setdefault("a", [99])
+        \\    mapping.clear()
+        \\    return borrowed[0]
+    , "E_SINGLE_OWNER_BORROW");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC conditional branch storage transfers owners instead of receiver loans" {
+    try executes(std.testing.allocator,
+        \\func identity(text: str) -> str:
+        \\    return text.copy()
+        \\func called(text: str, take: bool) -> str:
+        \\    const ch = text[0]
+        \\    const result = identity(ch)
+        \\    return if (take) then (result) else ("!")
+        \\func main(out: Stream) -> int:
+        \\    out.print(called("éz", True), called("éz", False))
+        \\    return 0
+    , "é !\n");
+    try refuses(std.testing.allocator,
+        \\func main(args: str[]) -> int:
+        \\    const owner = "value-" + str(len(args))
+        \\    const selected = if (len(args) == 0) then (owner) else ("!")
+        \\    return len(owner) + len(selected)
+    , "E_SINGLE_OWNER_MOVED");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC rejects shallow managed container copies in IR and emission" {
+    const ir = @import("ir.zig");
+    const verify = @import("verify_ir.zig");
+    for (0..3) |shape| {
+        var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+        defer arena.deinit();
+        const a = arena.allocator();
+        var module: ir.Module = .{ .single_owner = true, .zero_rc = true };
+        const ty = try module.intern(a, switch (shape) {
+            0 => .{ .list = .str },
+            1 => .{ .dict = .{ .key = .i64, .value = .str } },
+            else => .{ .dict = .{ .key = .str, .value = .i64 } },
+        });
+        var h = try support.Hand.init(a, &module, "main", .{ .params = &.{}, .ret = .i64 });
+        const source = try h.emit(.{ .op = if (shape == 0) .list_new else .dict_new, .ty = ty, .a = try h.int(.u64, 0) });
+        _ = try h.emit(.{ .op = if (shape == 0) .list_copy else .dict_copy, .ty = ty, .a = source });
+        _ = try h.emit(.{ .op = .ret, .ty = .void, .a = try h.int(.i64, 0) });
+        _ = try h.finish();
+        var failure: verify.Failure = .{};
+        try std.testing.expectError(error.InvalidIr, verify.verifyModule(a, &module, &failure));
+        try std.testing.expect(std.mem.indexOf(u8, failure.reason, "shallow container copy") != null);
+        try std.testing.expectError(error.UnsupportedInstruction, support.runOwned(a, &module, .{ .own = false, .check_ir = false, .main = .{} }));
+    }
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC receiver preparation preserves parent identity across sibling borrows" {
+    const ir = @import("ir.zig");
+    const flags = @import("flags.zig");
+    for ([_]bool{ false, true }) |release| {
+        var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+        defer arena.deinit();
+        const a = arena.allocator();
+        var module: ir.Module = .{ .single_owner = true, .zero_rc = true };
+        const row = try module.intern(a, .{ .list = .i64 });
+        const rows = try module.intern(a, .{ .list = row });
+        var h = try support.Hand.init(a, &module, "main", .{ .params = &.{.cap}, .ret = .i64 });
+        const zero_index = try h.int(.u64, 0);
+        const one = try h.int(.u64, 1);
+        const empty = try h.emit(.{ .op = .list_new, .ty = rows, .a = try h.int(.u64, 2) });
+        const left = try h.emit(.{ .op = .list_new, .ty = row, .a = zero_index });
+        const right = try h.emit(.{ .op = .list_new, .ty = row, .a = zero_index });
+        const first = try h.emit(.{ .op = .list_push, .ty = rows, .a = empty, .b = left });
+        const parent = try h.emit(.{ .op = .list_push, .ty = rows, .a = first, .b = right });
+        const borrowed = try h.emit(.{ .op = .list_get, .ty = row, .a = parent, .b = one, .check = .exact });
+        const prepared = try h.emit(.{ .op = .list_copy, .ty = rows, .a = parent, .data = flags.place_copy });
+        const target = try h.emit(.{ .op = .list_get, .ty = row, .a = prepared, .b = zero_index, .data = flags.place_read, .check = .exact });
+        const grown = try h.emit(.{ .op = .list_push, .ty = row, .a = target, .b = try h.int(.i64, 42) });
+        const length = try h.emit(.{ .op = .list_len, .ty = .u64, .a = borrowed });
+        const updated = try h.emit(.{ .op = .list_set, .ty = rows, .a = prepared, .b = zero_index, .data = try h.extra(&.{grown}), .check = .exact });
+        const selected = try h.emit(.{ .op = .list_get, .ty = row, .a = updated, .b = zero_index, .check = .exact });
+        const value = try h.emit(.{ .op = .list_get, .ty = .i64, .a = selected, .b = zero_index, .check = .exact });
+        try h.printValues(try h.param(0), &.{ length, value });
+        _ = try h.emit(.{ .op = .ret, .ty = .void, .a = try h.int(.i64, 0) });
+        _ = try h.finish();
+        const result = try support.runOwned(a, &module, .{ .release = release });
+        try std.testing.expectEqual(@as(u8, 0), result.status);
+        try std.testing.expectEqualStrings("0 42\n", result.stdout);
+        try std.testing.expectEqualStrings("", result.stderr);
+        try std.testing.expect(zero.emittedClean(result.llvm));
+    }
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC list extension refuses recursive ancestor sources" {
+    try refuses(std.testing.allocator,
+        \\record Node:
+        \\    value: int
+        \\    children: Node[]
+        \\func main() -> int:
+        \\    mut tree = Node(value=0, children=[Node(value=1, children=[])])
+        \\    tree.children[0].children.extend(tree.children)
+        \\    return 0
+    , "E_SINGLE_OWNER_OVERLAP");
+    try refuses(std.testing.allocator,
+        \\record Node:
+        \\    value: int
+        \\    children: Node[]
+        \\func main(args: str[]) -> int:
+        \\    mut tree = Node(value=0, children=[Node(value=1, children=[])])
+        \\    const index = len(args) % 1
+        \\    tree.children[index].children.extend(tree.children)
+        \\    return 0
+    , "E_SINGLE_OWNER_OVERLAP");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC list extension accepts independent copies of recursive ancestors" {
+    try executes(std.testing.allocator,
+        \\record Node:
+        \\    value: int
+        \\    children: Node[]
+        \\func main(out: Stream) -> int:
+        \\    mut tree = Node(value=0, children=[Node(value=1, children=[]), Node(value=2, children=[])])
+        \\    tree.children[1].children.extend(tree.children.copy())
+        \\    out.print(len(tree.children[1].children), len(tree.children[1].children[1].children))
+        \\    mut items = [1, 2]
+        \\    items.extend(items)
+        \\    out.print(len(items), items[2])
+        \\    return 0
+    , "2 0\n4 1\n");
+}
+
+// spec-case: NEW-CORE-U2-BORROW-1
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC scalar field snapshots do not borrow a later loop owner" {
+    try executes(std.testing.allocator,
+        \\record Marks:
+        \\    seen: int[]
+        \\    generation: int
+        \\func visit(mut marks: Marks, n: int) -> int:
+        \\    marks.generation += 1
+        \\    const generation = marks.generation
+        \\    marks.seen[0] = generation
+        \\    mut next = 0
+        \\    while next < n:
+        \\        marks.seen[next % len(marks.seen)] = generation
+        \\        next += 1
+        \\    return marks.seen[0]
+        \\func main(args: str[], out: Stream) -> int:
+        \\    mut marks = Marks(seen=[0, 0], generation=0)
+        \\    out.print(visit(mut marks, len(args) + 2))
+        \\    out.print(marks.seen[0], marks.seen[1])
+        \\    return 0
+    , "1\n1 1\n");
+}
+
+// spec-case: DICT-VIEWS-1
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC single dictionary items borrow one entry and copies stay independent" {
+    try executes(std.testing.allocator,
+        \\func score(values: dict[str, int[]]) -> int:
+        \\    mut total = 0
+        \\    for item in values.items():
+        \\        total += len(item.key) + item.value[0]
+        \\    return total
+        \\func main(out: Stream) -> int:
+        \\    mut values = {"key-" + str(1): [7, 9], "key-" + str(2): [11]}
+        \\    out.print(score(values))
+        \\    mut saved: int[][] = []
+        \\    mut pairs: DictItem[str, int[]][] = []
+        \\    for item in values.items():
+        \\        saved.append(item.value.copy())
+        \\        pairs.append(item.copy())
+        \\    values.clear()
+        \\    out.print(saved[0][0], saved[1][0])
+        \\    out.print(pairs[0].key, pairs[1].value[0])
+        \\    return 0
+    , "28\n7 11\nkey-1 11\n");
+}
+
+// spec-case: DICT-VIEWS-1
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC single dictionary items cannot escape or invalidate their owner" {
+    try refuses(std.testing.allocator,
+        \\func escape(values: dict[str, int[]]) -> int[]:
+        \\    for item in values.items():
+        \\        return item.value
+        \\    return []
+        \\func main() -> int:
+        \\    return 0
+    , "E_SINGLE_OWNER_BORROW");
+    try refuses(std.testing.allocator,
+        \\func main() -> int:
+        \\    mut values = {"key": [7]}
+        \\    for item in values.items():
+        \\        values.clear()
+        \\        return item.value[0]
+        \\    return 0
+    , "E_SINGLE_OWNER_OVERLAP");
+    try refuses(std.testing.allocator,
+        \\func main() -> int:
+        \\    mut values = {"key": [7]}
+        \\    for item in values.items():
+        \\        values["key"] = [9]
+        \\        return item.value[0]
+        \\    return 0
+    , "E_SINGLE_OWNER_OVERLAP");
+}
+
+// spec-case: DICT-VIEWS-1
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC single dictionary items preserve enumeration and unit members" {
+    try executes(std.testing.allocator,
+        \\func main(out: Stream) -> int:
+        \\    const values = {"key-" + str(1): [7], "key-" + str(2): [11]}
+        \\    for index, item in enumerate(values.items()):
+        \\        out.print(index, item.key, item.value[0])
+        \\    const empty_values: dict[str, Unit] = {"empty-" + str(3): ()}
+        \\    for item in empty_values.items():
+        \\        out.print(item.key)
+        \\    const empty_keys: dict[Unit, str] = {(): "value-" + str(4)}
+        \\    for item in empty_keys.items():
+        \\        out.print(item.value)
+        \\    return 0
+    , "0 key-1 7\n1 key-2 11\nempty-3\nvalue-4\n");
+}
+
+// spec: NEW-CORE-ZERO-RC-DEFAULT-BORROWS-1
+test "zero RC borrowed defaults keep both roots through readonly and nested uses" {
+    try executes(std.testing.allocator,
+        \\record Item:
+        \\    values: int[]
+        \\    label: str
+        \\func fallback(mut calls: int, value: int) -> int[]:
+        \\    calls += 1
+        \\    return [value, value + 1]
+        \\func score(value: int[]) -> int:
+        \\    return value[0] + len(value)
+        \\func main(out: Stream) -> int:
+        \\    mut calls = 0
+        \\    mut first = {"hit": [7]}
+        \\    mut second = {"hit": [11, 12]}
+        \\    mut backup = [17, 18, 19]
+        \\    out.print(score(first.get("hit", fallback(mut calls, 20))))
+        \\    out.print(score(first.get("miss", fallback(mut calls, 30))))
+        \\    out.print(score(first.get("miss", second.get("hit", backup))))
+        \\    out.print(score(first.get("miss", second.get("miss", backup))))
+        \\    out.print(calls, backup[0], first["hit"][0], second["hit"][0])
+        \\    const saved = first.get("miss", second.get("miss", backup)).copy()
+        \\    backup.clear()
+        \\    first.clear()
+        \\    second.clear()
+        \\    out.print(saved[0], len(saved))
+        \\    mut records = {1: Item(values=[3], label="item-" + str(1))}
+        \\    const other = Item(values=[5, 6], label="other-" + str(2))
+        \\    out.print(len(records.get(1, other).values), len(records.get(2, other).values))
+        \\    return 0
+    , "8\n32\n13\n20\n2 17 7 11\n17 3\n1 2\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-DEFAULT-BORROWS-1
+test "zero RC borrowed defaults refuse mutation of either possible root" {
+    const prefix =
+        \\func overwrite(mut values: int[]) -> int:
+        \\    values.clear()
+        \\    return 0
+        \\func replace(mut values: dict[str, int[]]) -> int:
+        \\    values.clear()
+        \\    return 0
+        \\func use(values: int[], ignored: int) -> int:
+        \\    return len(values)
+        \\func main() -> int:
+        \\    mut values = {"hit": [7]}
+        \\    mut other = {"hit": [8]}
+        \\    mut fallback = [9]
+        \\
+    ;
+    inline for (.{
+        "    return use(values.get(\"missing\", fallback), overwrite(mut fallback))\n",
+        "    return use(values.get(\"hit\", fallback), replace(mut values))\n",
+        "    return use(values.get(\"missing\", other.get(\"missing\", fallback)), overwrite(mut fallback))\n",
+        "    return use(values.get(\"missing\", other.get(\"hit\", fallback)), replace(mut other))\n",
+    }) |tail| try refuses(std.testing.allocator, prefix ++ tail, "E_SINGLE_OWNER_OVERLAP");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-DEFAULT-BORROWS-1
+test "zero RC borrowed defaults reject malformed and consuming IR markers" {
+    const selections = @import("borrow_selection.zig");
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const source =
+        \\func size(values: dict[str, int[]], key: str, fallback: int[]) -> int noalloc:
+        \\    return len(values.get(key, fallback))
+        \\func main() -> int:
+        \\    return size({"a": [1]}, "b", [2])
+    ;
+    var unit = try language.Compilation.init(a, "default-borrow.my", source);
+    try unit.check();
+    const program = unit.program.?;
+    var refusal: build.Refusal = .{};
+    var module = try build.buildExecutable(a, .{ .program = program, .single_owner = true, .zero_rc = true }, &refusal);
+    var found = false;
+    for (module.functions.items) |*function| {
+        for (function.insts.items) |*instruction| {
+            const selection = (try selections.call(&module, function, instruction.*)) orelse continue;
+            found = true;
+            try selections.validate(a, &module, function);
+            // Public ownership/cache callers can supply a backing allocator.
+            try @import("marker_validation.zig").validate(std.testing.allocator, &module, function);
+            const original = instruction.*;
+            instruction.data = std.math.maxInt(u64);
+            try std.testing.expectError(error.UnsupportedInstruction, selections.validate(a, &module, function));
+            try std.testing.expectError(error.Unsupported, @import("own.zig").function(a, &module, function, .{}));
+            const violation = (try @import("allocation_contract.zig").validate(a, program, unit.src, &module)).?;
+            try std.testing.expect(violation.unresolved);
+            try std.testing.expectEqualStrings("size", violation.function);
+            instruction.* = original;
+            const declaration = &module.functions.items[instruction.a.index()];
+            declaration.signature.owned = 1;
+            try std.testing.expectError(error.UnsupportedInstruction, selections.declaration(&module, declaration));
+            declaration.signature.owned = 0;
+            declaration.signature.linkage = .extern_c;
+            try std.testing.expectError(error.UnsupportedInstruction, selections.declaration(&module, declaration));
+            declaration.signature.linkage = .runtime_c;
+            const phi = selection.phi.?;
+            const selected = function.insts.items[phi.index()];
+            function.insts.items[phi.index()].data = std.math.maxInt(u64);
+            try std.testing.expectError(error.UnsupportedInstruction, selections.validate(a, &module, function));
+            function.insts.items[phi.index()] = selected;
+            const incoming = @constCast(function.operands(selected.data));
+            std.mem.swap(@import("ir.zig").Ref, &incoming[0], &incoming[1]);
+            // Types and producer identities still match, but the hit value now
+            // arrives on the miss edge where its definition does not dominate.
+            try selections.validate(a, &module, function);
+            try std.testing.expectError(error.UnsupportedInstruction, @import("marker_validation.zig").validate(std.testing.allocator, &module, function));
+            try std.testing.expectError(error.Unsupported, @import("own.zig").function(a, &module, function, .{}));
+            std.mem.swap(@import("ir.zig").Ref, &incoming[0], &incoming[1]);
+            try function.insts.append(a, .{ .op = .ret, .ty = .void, .a = phi });
+            try std.testing.expectError(error.UnsupportedInstruction, selections.validate(a, &module, function));
+            function.insts.items.len -= 1;
+            try selections.validate(a, &module, function);
+            break;
+        }
+        if (found) break;
+    }
+    try std.testing.expect(found);
+}
+
+// spec-case: NEW-CORE-ZERO-RC-DEFAULT-BORROWS-1
+test "zero RC borrowed defaults release fresh fallback on success and error exits" {
+    try executes(std.testing.allocator,
+        \\func inspect(values: dict[str, bytes], key: str) -> Result[int, str]:
+        \\    const size = len(values.get(key, ("fallback-" + key).encode()))
+        \\    if key == "error":
+        \\        return Err("failure-" + str(size))
+        \\    return Ok(size)
+        \\func outer(key: str) -> Result[int, str]:
+        \\    const values = {"hit": ("value-" + str(7)).encode()}
+        \\    const size = try inspect(values, key)
+        \\    return Ok(size + 1)
+        \\func main(out: Stream) -> int:
+        \\    for key in ["hit", "miss", "error"]:
+        \\        match outer(key):
+        \\            case Ok(size):
+        \\                out.print(size)
+        \\            case Err(message):
+        \\                out.print(message)
+        \\    return 0
+    , "8\n14\nfailure-14\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-DEFAULT-BORROWS-1
+test "zero RC borrowed defaults preserve a 64-level shared-root selection chain" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try executes(a, try nestedDefaultSource(a, 64), "1 3\n");
+}
+
+fn nestedDefaultSource(a: std.mem.Allocator, depth: usize) ![]const u8 {
+    var source: std.ArrayList(u8) = .empty;
+    try source.appendSlice(a, "func size(values: dict[int, int[]]) -> int:\n    return len(");
+    for (0..depth) |index| try source.print(a, "values.get({d}, ", .{index});
+    try source.appendSlice(a, "[42]");
+    for (0..depth) |_| try source.append(a, ')');
+    try source.appendSlice(a, ")\nfunc main(out: Stream) -> int:\n    out.print(size({}), size({31: [1, 2, 3]}))\n    return 0\n");
+    return source.items;
+}
+
+// spec-case: NEW-CORE-ZERO-RC-DEFAULT-BORROWS-1
+test "zero RC borrowed defaults cannot mutate the selected receiver" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var unit = try language.Compilation.init(arena.allocator(), "default-mutation.my",
+        \\func main() -> int:
+        \\    mut values = {"hit": [7]}
+        \\    mut fallback = [9]
+        \\    values.get("missing", fallback).append(10)
+        \\    return 0
+    );
+    try std.testing.expectError(error.SourceError, unit.check());
+    try std.testing.expectEqualStrings("E_ASSIGNMENT_TARGET", unit.diagnostics.items[0].code);
+    try refuses(std.testing.allocator,
+        \\func main() -> int:
+        \\    mut values = {"hit": [7]}
+        \\    mut fallback = [9]
+        \\    mut selected = values.get("missing", fallback)
+        \\    selected.append(10)
+        \\    return 0
+    , "E_SINGLE_OWNER_BORROW");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+// spec-case: TUPLE-3
+// spec-case: PY-DESTRUCTURE-PLACE-1
+test "zero RC tuple staging consumes whole owners before destination effects" {
+    try executes(std.testing.allocator,
+        \\func pair(mut calls: int[]) -> tuple[str, str]:
+        \\    calls.append(1)
+        \\    return "first-" + str(1), "second-" + str(2)
+        \\func at(mut calls: int[], value: int) -> int:
+        \\    calls.append(value)
+        \\    return 0
+        \\func owned() -> tuple[str, int[]]:
+        \\    return "owned-" + str(3), [4, 5]
+        \\func early() -> str:
+        \\    const text, _ = owned()
+        \\    return text
+        \\func main(out: Stream) -> int:
+        \\    mut words = ["a" + str(1), "b" + str(2)]
+        \\    words[0], words[1] = words[1].copy(), words[0].copy()
+        \\    mut calls: int[] = []
+        \\    words[at(mut calls, 2)], words[at(mut calls, 3)] = pair(mut calls)
+        \\    const complete = owned()
+        \\    const text, items = complete
+        \\    const _, _ = owned()
+        \\    const ignored, number = (), 7
+        \\    out.print(words[0], words[1], len(calls), calls[0], calls[1], calls[2], text, items[0], early(), number)
+        \\    return 0
+    , "second-2 a1 3 1 2 3 owned-3 4 owned-3 7\n");
+}
+
+// spec-case: TUPLE-3
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC tuple staging refuses borrowed whole tuples and reuse" {
+    try refuses(std.testing.allocator,
+        \\func consume(pair: tuple[str, int]) -> str:
+        \\    const text, number = pair
+        \\    return text
+        \\func main() -> int:
+        \\    return 0
+    , "E_SINGLE_OWNER_BORROW");
+    try refuses(std.testing.allocator,
+        \\func main() -> int:
+        \\    const pair = ("value-" + str(1), [2])
+        \\    const first, items = pair
+        \\    const again, second = pair
+        \\    return len(first) + len(again)
+    , "E_SINGLE_OWNER_MOVED");
+}
+
+// spec-case: TUPLE-3
+// spec-case: PY-DESTRUCTURE-PLACE-1
+test "zero RC tuple staging validates complete cached shape before lowering" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const program = try checked(a,
+        \\func main(out: Stream) -> int:
+        \\    const first, second = ("value-" + str(1), [2])
+        \\    out.print(first, second[0])
+        \\    return 0
+    );
+    const statement = try tupleStore(program);
+    const original = statement.*;
+    defer statement.* = original;
+    const store = original.data.initialize;
+    const wrong: [2]?language.typed.LocalId = .{ store.unpack.?[0], store.unpack.?[0] };
+    for ([_][]const ?language.typed.LocalId{ store.unpack.?[0..1], &wrong, &.{ store.slot, store.unpack.?[1] } }) |slots| {
+        statement.data.initialize.unpack = slots;
+        var failure: contract.Failure = .{};
+        try std.testing.expectError(error.Rejected, contract.checkMode(a, program, &failure, true));
+        var refusal: build.Refusal = .{};
+        try std.testing.expectError(error.Unsupported, build.buildExecutable(a, .{ .program = program, .single_owner = true, .zero_rc = true }, &refusal));
+    }
+    statement.* = original;
+    statement.data = .{ .assign = store };
+    var refusal: build.Refusal = .{};
+    try std.testing.expectError(error.Unsupported, build.buildExecutable(a, .{ .program = program, .zero_rc = true }, &refusal));
+}
+
+// spec-case: TUPLE-3
+// spec-case: NEW-CORE-ZERO-RC-AFFINE-RESOURCES-1
+test "zero RC tuple staging preserves dependent resource roots" {
+    try executes(std.testing.allocator,
+        \\import filesystem
+        \\resource File: filesystem
+        \\result Open:
+        \\    ok: File,
+        \\    err: int
+        \\func main(out: Stream) -> int:
+        \\    const fs = filesystem.memory()
+        \\    _ = fs.write_text("x", "value")
+        \\    match acquire_resource[Open](fs, FixedArray[u8, 3]([114u8, 58u8, 120u8])):
+        \\        case Open.ok(file):
+        \\            const pair = (file, 7)
+        \\            const owner, code = pair
+        \\            _ = owner
+        \\            out.print(code)
+        \\        case Open.err(code):
+        \\            return code
+        \\    return 0
+    , "7\n");
+    try refuses(std.testing.allocator,
+        \\import filesystem
+        \\resource File: filesystem
+        \\result Open:
+        \\    ok: File,
+        \\    err: int
+        \\func main() -> int:
+        \\    mut fs = filesystem.memory()
+        \\    match acquire_resource[Open](fs, FixedArray[u8, 0]([])):
+        \\        case Open.ok(file):
+        \\            const pair = (file, 7)
+        \\            const owner, code = pair
+        \\            fs = filesystem.memory()
+        \\            _ = owner
+        \\            return code
+        \\        case Open.err(code):
+        \\            return code
+    , "E_ZERO_RC_RESOURCE_ESCAPE");
+}
+
+// spec-case: TUPLE-3
+// spec-case: PY-DESTRUCTURE-PLACE-1
+test "zero RC tuple staging ordinary mode keeps borrowed input usable" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a,
+        \\func extend(pair: tuple[str, int[]]) -> int:
+        \\    mut text, items = pair
+        \\    items.append(9)
+        \\    const again, original = pair
+        \\    return len(items) * 10 + len(original)
+        \\func main(out: Stream) -> int:
+        \\    const pair = ("text-" + str(1), [2, 3])
+        \\    out.print(extend(pair))
+        \\    const text, original = pair
+        \\    out.print(text, len(original))
+        \\    return 0
+    , &refusal);
+    const run = try support.runOwned(a, &module, .{});
+    try std.testing.expectEqual(@as(u8, 0), run.status);
+    try std.testing.expectEqualStrings("32\ntext-1 2\n", run.stdout);
+    try std.testing.expectEqualStrings("", run.stderr);
+}
+
+fn tupleStore(program: language.typed.Program) !*language.typed.Statement {
+    for (@constCast(program.statements)) |*candidate| {
+        if (candidate.data == .initialize and candidate.data.initialize.unpack != null) return candidate;
+    }
+    return error.TestUnexpectedResult;
+}
+
+// spec-case: NEW-CORE-ZERO-RC-PROVIDER-FIELDS-1
+// spec-case: NEW-CORE-ZERO-RC-ABI-1
+test "zero RC aggregate provider markers reject malformed calls before ownership" {
+    const ir = @import("ir.zig");
+    const provider = @import("aggregate_provider.zig");
+    const markers = @import("marker_validation.zig");
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var module: ir.Module = .{ .zero_rc = true, .single_owner = true };
+    const ty = try module.intern(a, .{ .record = &.{ .capability, .str } });
+    try module.functions.append(a, .{ .name = try std.fmt.allocPrint(a, "{s}{d}", .{ provider.prefix, @backingInt(ty) }), .signature = .{ .params = &.{ty}, .ret = .void, .linkage = .runtime_c } });
+    var function: ir.Function = .{ .name = "pin", .signature = .{ .params = &.{ty}, .ret = .void } };
+    try function.insts.appendSlice(a, &.{
+        .{ .op = .param, .ty = ty, .data = 0 },
+        .{ .op = .call, .ty = .void, .a = @fromBackingInt(0), .data = (ir.ExtraSlice{ .start = 0, .len = 1 }).pack() },
+        .{ .op = .ret, .ty = .void },
+    });
+    try function.extra.append(a, @fromBackingInt(0));
+    var block: ir.Block = .{};
+    try block.insts.appendSlice(a, &.{ @fromBackingInt(1), @fromBackingInt(2) });
+    try function.blocks.append(a, block);
+    try markers.validate(std.testing.allocator, &module, &function);
+    const original = function.insts.items[1];
+    const malformed = [_]ir.Inst{
+        .{ .op = .call, .ty = .void, .a = @fromBackingInt(0), .data = std.math.maxInt(u64) },
+        .{ .op = .call, .ty = .void, .a = @fromBackingInt(0), .data = (ir.ExtraSlice{ .start = 0, .len = 0 }).pack() },
+        .{ .op = .call, .ty = .i64, .a = @fromBackingInt(0), .data = original.data },
+        .{ .op = .call, .ty = .void, .a = .none, .data = original.data },
+        .{ .op = .call, .ty = .void, .a = @fromBackingInt(100), .data = original.data },
+    };
+    for (malformed) |invalid| {
+        function.insts.items[1] = invalid;
+        try std.testing.expectError(error.UnsupportedInstruction, provider.call(&module, &function, invalid));
+        try std.testing.expectError(error.UnsupportedInstruction, markers.validate(std.testing.allocator, &module, &function));
+    }
+    function.insts.items[1] = original;
+    function.extra.items[0] = .none;
+    try std.testing.expectError(error.UnsupportedInstruction, markers.validate(std.testing.allocator, &module, &function));
+    function.extra.items[0] = @fromBackingInt(0);
+    function.insts.items[0].ty = .str;
+    try std.testing.expectError(error.UnsupportedInstruction, markers.validate(std.testing.allocator, &module, &function));
+    function.insts.items[0].ty = ty;
+    function.insts.items[0].op = .copy;
+    function.insts.items[0].a = @fromBackingInt(0);
+    try std.testing.expectError(error.UnsupportedInstruction, markers.validate(std.testing.allocator, &module, &function));
+    function.insts.items[0] = .{ .op = .param, .ty = ty, .data = 0 };
+    function.blocks.items[0].insts.items[1] = .none;
+    try std.testing.expectError(error.UnsupportedInstruction, markers.validate(std.testing.allocator, &module, &function));
+    function.blocks.items[0].insts.items[1] = @fromBackingInt(2);
+    function.insts.items[2].ty = @fromBackingInt(std.math.maxInt(u32));
+    try std.testing.expectError(error.UnsupportedInstruction, markers.validate(std.testing.allocator, &module, &function));
+    function.insts.items[2].ty = .void;
+    try module.functions.items[0].insts.append(a, .{ .op = .ret, .ty = .void });
+    try std.testing.expectError(error.UnsupportedInstruction, provider.marker(&module, &module.functions.items[0]));
+    try std.testing.expectError(error.UnsupportedInstruction, markers.validate(std.testing.allocator, &module, &function));
+}
+
+// spec-case: NEW-CORE-ZERO-RC-RESOURCE-SCOPES-1
+// spec-case: NEW-CORE-ZERO-RC-DEFAULT-BORROWS-1
+test "zero RC live file scopes and fresh selections clean up across loop exits" {
+    try executes(std.testing.allocator, @embedFile("a07_lifecycle_fixture.my"), "43 18\nscope-47 36\npayload\nFalse\n");
+}
+
+// spec-case: CAPABILITY-FIELD-METHOD-1
+test "zero RC context-only markers reject malformed block references before verification" {
+    const ir = @import("ir.zig");
+    const contexts = @import("borrowed_provider.zig");
+    const markers = @import("marker_validation.zig");
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var module: ir.Module = .{ .zero_rc = true };
+    const ty = try module.intern(a, .{ .record = &.{ .capability, .i64 } });
+    const marker = try contexts.declare(a, &module, ty);
+    var hand = try support.Hand.init(a, &module, "context", .{ .params = &.{.capability}, .ret = .i64 });
+    const value = try hand.emit(.{ .op = .call, .ty = ty, .a = @fromBackingInt(marker), .data = try hand.extra(&.{ try hand.param(0), try hand.int(.i64, 7) }) });
+    const scalar = try hand.emit(.{ .op = .record_get, .ty = .i64, .a = value, .data = 1 });
+    _ = try hand.emit(.{ .op = .ret, .ty = .void, .a = scalar });
+    const index = try hand.finish();
+    const function = &module.functions.items[index];
+    try markers.validate(std.testing.allocator, &module, function);
+    const block = &function.blocks.items[0];
+    const last = block.insts.items.len - 1;
+    const original = block.insts.items[last];
+    for ([_]ir.Ref{ .none, @fromBackingInt(@as(u32, @intCast(function.insts.items.len))) }) |invalid| {
+        block.insts.items[last] = invalid;
+        // The provider contract is valid; the shared boundary must reject the
+        // unrelated malformed CFG before the general verifier follows it.
+        try contexts.validate(std.testing.allocator, &module, function);
+        try std.testing.expectError(error.UnsupportedInstruction, markers.validate(std.testing.allocator, &module, function));
+    }
+    block.insts.items[last] = original;
+    try markers.validate(std.testing.allocator, &module, function);
+}

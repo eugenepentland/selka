@@ -23,16 +23,17 @@ record Pair:
 
 
 func change_owners(mut owner: Owner, mut other: Owner):
-    mut work = owner.box
+    mut work = owner.box.copy()
     work.items.append(2)
     other.count += 1
     owner.box = work
 
 
 func change_items(mut items: Item[], mut other: Item[], index: int):
-    match items[index]:
+    const selected_item = items[index].copy()
+    match selected_item:
         case Item.payload(value=old):
-            mut fields = old.items
+            mut fields = old.items.copy()
             fields.append(2)
             other.append(Item.empty)
             items[index] = Item.payload(value=Payload(number=0, items=fields))
@@ -49,16 +50,16 @@ func change_pairs(mut a: Pair, mut b: Pair) -> int:
 
 public func test_disjoint_mut_record_parameters_keep_shared_inputs_independent() -> bool:
     mut owner = Owner(box=Box(items=[1]), count=0)
-    mut other = owner
-    mut kept = owner
+    mut other = owner.copy()
+    mut kept = owner.copy()
     change_owners(mut owner, mut other)
     return owner.box.items == [1, 2] and owner.count == 0 and other.box.items == [1] and other.count == 1 and kept.box.items == [1] and kept.count == 0
 
 
 public func test_disjoint_mut_list_parameters_return_only_the_selected_payload() -> bool:
     mut items = [Item.payload(value=Payload(number=3, items=[1]))]
-    mut other = items
-    mut kept = items
+    mut other = items.copy()
+    mut kept = items.copy()
     change_items(mut items, mut other, -1)
     return items == [Item.payload(value=Payload(number=0, items=[1, 2]))] and other == [Item.payload(value=Payload(number=3, items=[1])), Item.empty] and kept == [Item.payload(value=Payload(number=3, items=[1]))]
 

@@ -13,7 +13,7 @@ const BLOCK: str = "aé中😀b"
 # number of guest steps.
 func repeated(piece: str, times: int) -> str:
     mut out = ""
-    mut chunk = piece
+    mut chunk = piece.copy()
     mut remaining = times
     while remaining > 0:
         if remaining % 2 == 1:
@@ -304,7 +304,7 @@ public func test_short_empty_and_ascii_texts_are_unchanged() -> bool:
 # spec-case: TEXT-INDEX-1
 public func test_aliases_and_copies_read_independently() -> bool:
     mut text = repeated(BLOCK, 300)
-    mut alias = text
+    mut alias = text.copy()
     mut copy = text + ""
     mut other = repeated(BLOCK, 300)
     mut ok = text[1400] == scalar_at(1400) and alias[3] == scalar_at(3) and copy[1499] == "b" and other[0] == "a"

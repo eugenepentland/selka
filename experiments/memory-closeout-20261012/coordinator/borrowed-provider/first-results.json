@@ -1,0 +1,29 @@
+{
+  "source_base": "41d3713f633c6f516fe895105eda99de66f2e3fb",
+  "status": "integrated focused validation; no C1/default/retirement claim",
+  "tests": {
+    "filter": "borrowed provider",
+    "passed": 8,
+    "failed": 0,
+    "process_exit_code": 0
+  },
+  "source_sha256": {
+    "SPEC.md": "c472ba1ba1f2558fcf096a98321f69cc224d3dc7ea2e1d45d7da866e8ad37b13",
+    "src/core/build.zig": "35eff26e0c1d73e4591a0d98df9517a6c21af010488ee98a0dc274282543beee",
+    "src/core/cost.zig": "2b75b3adedb883395525a7cbc2d5365c62ffe7be90e8fccd06777b6166771c61",
+    "src/core/emit_llvm.zig": "9bbda0c8deee6c2e6cd6ae95e94e87a841bef76c32f9daaf49dc055e0a770197",
+    "src/core/inline.zig": "0f794471a7310f58feedc320f8a38c01fc1428376904a166e678df9c01f05241",
+    "src/core/marker_validation.zig": "0e86216cb04ab4ff00dd45bf4b73a45a8b53e296db6c45146cd8895ca48ad44e",
+    "src/core/own.zig": "f6c8843c0bd2341ead29e42be184d02deb3e3394b62cc6d5a354203db2e4a4f3",
+    "src/core/root_test.zig": "58d2e1a13a23be0cf61015205e64317b0ee31468a1f1225c5d4e48e1f5c23dd0",
+    "src/core/single_owner.zig": "af8f0a7065503edc328a7ef968b1bf149e8139f3f9cae8f84d4b3df4d050a986",
+    "src/core/verify_ir.zig": "d9c4ee081962d2070ca6624dfa329ab423157fe6b4a99b1217d48299c70deb24",
+    "src/core/borrowed_provider.zig": "44091bbe2064d7894fb9d3026b4f1abe2f1ef75f644ab8f538084eedb606f963",
+    "src/core/borrowed_provider_test.zig": "fb53a45d82ef9f4f2fdbc3bbd124b7e4a6aaa147b8770094dee21ab45ec94c25",
+    "src/core/borrowed_provider_cache_test.zig": "ea74aeb87239d9a1c318fb4aa329415bf79852a6d21845fa96c89f2ef7b5cac8"
+  },
+  "marker_merge": "A07 aggregate marker validation and bounded operand/callee checks preserved; A05 borrowed provider declarations/calls added; one general verifier per marked function with scratch arena.",
+  "evidence_commit": "69bb893888757ca4716e6e04b9d873ad6f8eada4",
+  "native_evidence": "../../A05/borrowed-provider/README.md",
+  "remaining": "Combined common compiler native/export/application and complete registered gate required."
+}

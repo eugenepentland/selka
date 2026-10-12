@@ -1,0 +1,300 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+  "compiler_sha256": "822ed83011bb662b0618c3752e8581b2266af91d3721bb3237f91ec52eb57f3b",
+  "total_denominator": 219,
+  "start": 0,
+  "limit": 10,
+  "seconds": 1.3126584489364177,
+  "results": [
+    {
+      "source": "test/core/b_buffer_values.my",
+      "sha256": "4bc9302b966705c8c62e9583ab21afd5f12bc50df713df1963a7bf58f3e71ace",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/b_buffer_values.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/b_buffer_values.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "b_buffer_values.my:10:26: error[E_SINGLE_OWNER_MOVED]: 'buffer' was moved or is unavailable on this path; use .copy() when both values are needed\n      mut snapshot = bytes(buffer)\n                           ^\n"
+      }
+    },
+    {
+      "source": "test/core/b_embedded_assets.my",
+      "sha256": "d9be34bf41babfa5c987d2470614348a781b6cb47eedf6c7b86b81c5690371a0",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/b_embedded_assets.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/b_embedded_assets.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "source": "test/core/b_packet_decode.my",
+      "sha256": "5afb8ad33e4e687c8947d8d6d1c3d4ea2f1beb5f413144e9d39272d1cd4391d1",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/b_packet_decode.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/b_packet_decode.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "source": "test/core/binary_search.my",
+      "sha256": "e8eb9f81d5c56cc44db177cc6c6f6fd0f4e4aec455dfdb50450a064b391daf26",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/binary_search.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/binary_search.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "source": "test/core/bounds.my",
+      "sha256": "68728802e240569a24d3e5f3f0f051df6915161d5a6ae0a805d94e09d270704d",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/bounds.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/bounds.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "source": "test/core/branch_mixed.my",
+      "sha256": "83e8139e3cd500704556c3f43c02ddc0428b2a6669b79c2c6d8fcd5d3fd0806b",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/branch_mixed.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/branch_mixed.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "source": "test/core/branch_predictable.my",
+      "sha256": "deb50bda2aa8a63229c80dbb22cac9edf6e74209008c6112faf513b061ca10b6",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/branch_predictable.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/branch_predictable.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "source": "test/core/c_capabilities.my",
+      "sha256": "299358cb4e461d014068e16832f0bcc48eb1f60a979a057303f32c8ccf7d491b",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/c_capabilities.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/c_capabilities.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "source": "test/core/c_environment_context.my",
+      "sha256": "3e1a3cbfa6d6c10748a50b4c983a45faa81be91163dec39c4b1ec9568e334586",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/c_environment_context.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/c_environment_context.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "source": "test/core/c_grants.my",
+      "sha256": "e5b41232dd814d719a0faee2f2e4eb8f5f7f30c9a2569bf82666663f9f075586",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/c_grants.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n"
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/followup-install/focus/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/c_grants.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional/cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "c_grants.my:21:17: error[E_ZERO_RC_UNSUPPORTED]: dependent capabilities require a with scope in zero-RC mode\n      for name in env.only(\"KEEP\", \"MISSING\", \"KEEP\").names():\n                  ^\n"
+      }
+    }
+  ]
+}

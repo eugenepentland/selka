@@ -1,0 +1,226 @@
+
+# Guest tests translated one-to-one from the `test "..."` blocks of
+# zig/src/sexpr/tokenizer.zig. Each Zig test name is the comment above its
+# mylang test (`test_` + the name in snake_case).
+import sexpr_tokenizer as tk
+
+# Fetch the next token; a lexer error becomes an ERROR marker token so the
+# calling test fails on its tag/text assertion instead of trapping.
+func next_tok(mut t: tk.Tokenizer) -> tk.Token:
+    match tk.next(mut t):
+        case Ok(token):
+            return token
+        case Err(_):
+            return tk.Token(tag=tk.TokenTag.eof, text=b"<lex error>", span=tk.tokenizer_init(b"").cur.error_span)
+
+
+func expect(mut t: tk.Tokenizer, tag: tk.TokenTag, text: bytes):
+    mut got = next_tok(mut t)
+    assert got.tag == tag, "token tag mismatch"
+    assert got.text == text, "token text mismatch"
+
+
+func expect_tag(mut t: tk.Tokenizer, tag: tk.TokenTag):
+    mut got = next_tok(mut t)
+    assert got.tag == tag, "token tag mismatch"
+
+
+# test "tokenize parens and atoms"
+public func test_tokenize_parens_and_atoms() -> bool:
+    mut t = tk.tokenizer_init(b"(footprint \"QFN9\" pad-1)")
+    expect_tag(mut t, tk.TokenTag.lparen)
+    expect(mut t, tk.TokenTag.atom, b"footprint")
+    expect(mut t, tk.TokenTag.string, b"QFN9")
+    expect(mut t, tk.TokenTag.atom, b"pad-1")
+    expect_tag(mut t, tk.TokenTag.rparen)
+    expect_tag(mut t, tk.TokenTag.eof)
+    return True
+
+
+# test "tokenize dollar-sign pad identifiers"
+public func test_tokenize_dollar_sign_pad_identifiers() -> bool:
+    mut t = tk.tokenizer_init(b"(pad P$1 smd custom) (pin P$2 \"RF\")")
+    expect(mut t, tk.TokenTag.lparen, b"(")
+    expect(mut t, tk.TokenTag.atom, b"pad")
+    expect(mut t, tk.TokenTag.atom, b"P$1")
+    expect(mut t, tk.TokenTag.atom, b"smd")
+    expect(mut t, tk.TokenTag.atom, b"custom")
+    expect(mut t, tk.TokenTag.rparen, b")")
+    expect(mut t, tk.TokenTag.lparen, b"(")
+    expect(mut t, tk.TokenTag.atom, b"pin")
+    expect(mut t, tk.TokenTag.atom, b"P$2")
+    expect(mut t, tk.TokenTag.string, b"RF")
+    expect(mut t, tk.TokenTag.rparen, b")")
+    expect(mut t, tk.TokenTag.eof, b"")
+    return True
+
+
+# test "tokenize unquoted filename with plus"
+public func test_tokenize_unquoted_filename_with_plus() -> bool:
+    mut t = tk.tokenizer_init(b"(model PMA3-24323LN+.stp)")
+    expect_tag(mut t, tk.TokenTag.lparen)
+    expect(mut t, tk.TokenTag.atom, b"model")
+    expect(mut t, tk.TokenTag.atom, b"PMA3-24323LN+.stp")
+    expect_tag(mut t, tk.TokenTag.rparen)
+    return True
+
+
+# test "tokenize unquoted filename with comma"
+public func test_tokenize_unquoted_filename_with_comma() -> bool:
+    mut t = tk.tokenizer_init(b"(model 74AHCT1G125GF,132.stp)")
+    expect_tag(mut t, tk.TokenTag.lparen)
+    expect(mut t, tk.TokenTag.atom, b"model")
+    expect(mut t, tk.TokenTag.atom, b"74AHCT1G125GF,132.stp")
+    expect_tag(mut t, tk.TokenTag.rparen)
+    return True
+
+
+# test "tokenize standalone plus stays as operator atom"
+public func test_tokenize_standalone_plus_stays_as_operator_atom() -> bool:
+    mut t = tk.tokenizer_init(b"(+ 1 2)")
+    expect_tag(mut t, tk.TokenTag.lparen)
+    expect(mut t, tk.TokenTag.atom, b"+")
+    expect(mut t, tk.TokenTag.int, b"1")
+    return True
+
+
+# test "tokenize numbers"
+public func test_tokenize_numbers() -> bool:
+    mut t = tk.tokenizer_init(b"42 3.3 -5 1.0mm 10mil")
+    expect(mut t, tk.TokenTag.int, b"42")
+    expect(mut t, tk.TokenTag.float, b"3.3")
+    expect(mut t, tk.TokenTag.int, b"-5")
+    expect(mut t, tk.TokenTag.unit_val, b"1.0")
+    expect(mut t, tk.TokenTag.unit_val, b"10")
+    return True
+
+
+# test "tokenize si suffixed numbers"
+public func test_tokenize_si_suffixed_numbers() -> bool:
+    mut t = tk.tokenizer_init(b"220k 4.7M 1G 10u 100n 22p 100nF 10mA 100mV 3.3V 0.5A 10R 1uH")
+    mut expected = [b"220k", b"4.7M", b"1G", b"10u", b"100n", b"22p", b"100nF", b"10mA", b"100mV", b"3.3V", b"0.5A", b"10R", b"1uH"]
+    for want in expected:
+        expect(mut t, tk.TokenTag.si_val, want)
+    expect_tag(mut t, tk.TokenTag.eof)
+    return True
+
+
+# test "tokenize si suffix boundary cases"
+public func test_tokenize_si_suffix_boundary_cases() -> bool:
+    mut t = tk.tokenizer_init(b"1.0mm 10mil 3m 100kHz 5V3 204928-0301.stp 42 3.3")
+    expect(mut t, tk.TokenTag.unit_val, b"1.0")
+    expect(mut t, tk.TokenTag.unit_val, b"10")
+    expect(mut t, tk.TokenTag.atom, b"3m")
+    expect(mut t, tk.TokenTag.atom, b"100kHz")
+    expect(mut t, tk.TokenTag.atom, b"5V3")
+    expect(mut t, tk.TokenTag.atom, b"204928-0301.stp")
+    expect(mut t, tk.TokenTag.int, b"42")
+    expect(mut t, tk.TokenTag.float, b"3.3")
+    return True
+
+
+# test "tokenize percent literals"
+public func test_tokenize_percent_literals() -> bool:
+    mut t = tk.tokenizer_init(b"(tolerance 10% 0.1%) (% a b) (x 50%)")
+    expect(mut t, tk.TokenTag.lparen, b"(")
+    expect(mut t, tk.TokenTag.atom, b"tolerance")
+    expect(mut t, tk.TokenTag.si_val, b"10%")
+    expect(mut t, tk.TokenTag.si_val, b"0.1%")
+    expect(mut t, tk.TokenTag.rparen, b")")
+    expect(mut t, tk.TokenTag.lparen, b"(")
+    expect(mut t, tk.TokenTag.atom, b"%")
+    expect(mut t, tk.TokenTag.atom, b"a")
+    expect(mut t, tk.TokenTag.atom, b"b")
+    expect(mut t, tk.TokenTag.rparen, b")")
+    expect(mut t, tk.TokenTag.lparen, b"(")
+    expect(mut t, tk.TokenTag.atom, b"x")
+    expect(mut t, tk.TokenTag.si_val, b"50%")
+    expect(mut t, tk.TokenTag.rparen, b")")
+    expect(mut t, tk.TokenTag.eof, b"")
+    return True
+
+
+# test "tokenize si suffix before rparen"
+public func test_tokenize_si_suffix_before_rparen() -> bool:
+    mut t = tk.tokenizer_init(b"(let r 4.7k)")
+    expect_tag(mut t, tk.TokenTag.lparen)
+    expect_tag(mut t, tk.TokenTag.atom)
+    expect_tag(mut t, tk.TokenTag.atom)
+    expect(mut t, tk.TokenTag.si_val, b"4.7k")
+    expect_tag(mut t, tk.TokenTag.rparen)
+    return True
+
+
+# test "tokenize comments"
+public func test_tokenize_comments() -> bool:
+    mut t = tk.tokenizer_init(b"; this is a comment\n(hello)")
+    expect_tag(mut t, tk.TokenTag.lparen)
+    expect(mut t, tk.TokenTag.atom, b"hello")
+    return True
+
+
+# test "tokenize operators"
+public func test_tokenize_operators() -> bool:
+    mut t = tk.tokenizer_init(b"(+ a (* b c))")
+    expect_tag(mut t, tk.TokenTag.lparen)
+    expect(mut t, tk.TokenTag.atom, b"+")
+    expect_tag(mut t, tk.TokenTag.atom)
+    expect_tag(mut t, tk.TokenTag.lparen)
+    mut got = next_tok(mut t)
+    assert got.text == b"*", "expected the * operator"
+    return True
+
+
+# test "tokenize comparison operators"
+public func test_tokenize_comparison_operators() -> bool:
+    mut t = tk.tokenizer_init(b">= <= == !=")
+    assert next_tok(mut t).text == b">=", "expected >="
+    assert next_tok(mut t).text == b"<=", "expected <="
+    assert next_tok(mut t).text == b"==", "expected =="
+    assert next_tok(mut t).text == b"!=", "expected !="
+    return True
+
+
+# test "records unexpected-character error span"
+public func test_records_unexpected_character_error_span() -> bool:
+    mut t = tk.tokenizer_init(b"ab ?")
+    expect_tag(mut t, tk.TokenTag.atom)
+    match tk.next(mut t):
+        case Err(e):
+            assert e == tk.LexError.unexpected_character, "expected UnexpectedCharacter"
+        case Ok(_):
+            assert False, "expected a lex error"
+    # `?` is at line 1, col 4 (a=1, b=2, space=3, ?=4).
+    assert t.cur.error_span.line == 1, "error line"
+    assert t.cur.error_span.col == 4, "error col"
+    assert t.cur.error_span.offset == 3, "error offset"
+    return True
+
+
+# test "records unterminated-string error span"
+public func test_records_unterminated_string_error_span() -> bool:
+    mut t = tk.tokenizer_init(b"(a \"oops")
+    expect_tag(mut t, tk.TokenTag.lparen)
+    expect_tag(mut t, tk.TokenTag.atom)
+    match tk.next(mut t):
+        case Err(e):
+            assert e == tk.LexError.unterminated_string, "expected UnterminatedString"
+        case Ok(_):
+            assert False, "expected a lex error"
+    # Points at the opening quote (col 4), not the EOF where scanning stopped.
+    assert t.cur.error_span.line == 1, "error line"
+    assert t.cur.error_span.col == 4, "error col"
+    return True
+
+
+# test "tracks line and column"
+public func test_tracks_line_and_column() -> bool:
+    mut t = tk.tokenizer_init(b"(a\n  b)")
+    mut t1 = next_tok(mut t)
+    assert t1.span.line == 1, "line of ("
+    assert t1.span.col == 1, "col of ("
+    expect_tag(mut t, tk.TokenTag.atom)
+    mut t3 = next_tok(mut t)
+    assert t3.span.line == 2, "line of b"
+    assert t3.span.col == 3, "col of b"
+    return True

@@ -1,0 +1,6 @@
+{
+  "source": "test/core/m_recursive_values.my",
+  "source_sha256": "0c4c5d9efc1e78e3c19df9ede42c79d6137a4c432635005b318eb2cb4b955462",
+  "function_sha256": "2cd286c078a8c85ab05ceb92e24a77b33be0ffbfcfbd83c8d685033583df7449",
+  "extraction": "Exact original trailing public function including spec tag; main adapter only. Entire recursive-values file remains unchanged and awaits separate equality support."
+}

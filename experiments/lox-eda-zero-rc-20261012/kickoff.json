@@ -1,0 +1,25 @@
+{
+  "base_revision": "8fa0560309cc2c78b9691a94a6c7e2be2815d4a4",
+  "branch": "codex/lox-eda-zero-rc-20261012",
+  "compiler_revision": "941bf4c18449492dadaf1a17ba20e35ff702ba0e",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-verify-02/zig-out/bin/mylang",
+  "compiler_sha256": "178de446d467e61aa6f7f60e3f74715f1ed5efde555f62f11f6e5e6bbba3ca26",
+  "workers": {
+    "lox_owned": "gpt-6.1-sol / low",
+    "eda_owned": "gpt-6.1-sol / low",
+    "lox_eda_bench": "gpt-6.1-sol / low; also temporary EDA KiCad source migration",
+    "lox_provider": "gpt-6.1-sol / low",
+    "eda_eval": "gpt-6.1-sol / low"
+  },
+  "scope": "Migrate full Lox interpreter and full EDA renderer to checked ownership; compare fresh matched runtime and memory against current RC control and available reference languages, with stored historical results separately identified. No default promotion or RC retirement.",
+  "publication": "local commits only",
+  "admission": {
+    "slot_dir": "/home/epentland/.cache/mylang/slots",
+    "jobs": 4,
+    "maxrss": 8589934592,
+    "timing_owner": "lox_eda_bench"
+  },
+  "status": "in progress; no measurements or migration completion claimed",
+  "integrated_harness_revision": "ec461ea0b",
+  "capacity_note": "An additional eda_kicad agent spawn returned agent thread limit reached; existing Sol6.1-low benchmark worker reused for that independent source assignment."
+}

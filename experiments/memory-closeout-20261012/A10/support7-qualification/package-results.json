@@ -1,0 +1,517 @@
+{
+  "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "installation": {
+    "bin/mylang": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+    "libexec/mylang/components/cache-plan-ccc22b9c6efac02da2488dc1eec1e1b441a0c224dec383f509e0200ead4d6582": "ccc22b9c6efac02da2488dc1eec1e1b441a0c224dec383f509e0200ead4d6582",
+    "libexec/mylang/components/cache-plan.json": "52488fae7bf2884569dd0fe31496ab140c69e6235f298f0abf49ead85622a505",
+    "libexec/mylang/components/test-index-0e28cc1903bc4d763f3e1b3e4ad8266c481fa8ed85e4d37af4accfc9291d16ee": "0e28cc1903bc4d763f3e1b3e4ad8266c481fa8ed85e4d37af4accfc9291d16ee",
+    "libexec/mylang/components/test-index.json": "69025cb228f81331b8ddb4b58c90b4f3db8e589485d8f2c10ba454b1079b5622",
+    "tools/selka-components": "6eff221dc0fb75a163347f9e4e4b11b9bbc1a9ddddc9b5678c075a74dbeaa9da"
+  },
+  "component_sources": {
+    "selfhost/components/cache_plan/codec.my": "fa0592f90fad2ac0efb7f1ca955e63a1a9059e03559e1c0c2bf97417c15102e5",
+    "selfhost/components/cache_plan/incremental.my": "e797876683a7483ab32f40c1578f2a49c12948f1ece9c22fd9396d9b25122472",
+    "selfhost/components/cache_plan/main.my": "03222396a6df8346c8dfe1396b384ba43adf63f370a536ad9bebf59e412cfda7",
+    "selfhost/components/cache_plan/tests.my": "1cdf4d70dd5397ec9f97ed111e39f5c003ee35c5851c3469f7f69054ed96d829",
+    "selfhost/components/cache_plan/graph.my": "ae55b3f4e713a1e86cee87e2e870e2fe65ca11e7604e0000759fcbaa0145a5a7",
+    "selfhost/components/cache_plan/codec_v2.my": "409a84cfb78d309421e855f97f24d674913213a8ae748e8de4a848970ba6eb05",
+    "selfhost/components/test_index/codec.my": "e81c6d9535dbe66b704733d26462579057ae6798040eb3beeceb7790285bbdd2",
+    "selfhost/components/test_index/main.my": "365f56a9f40de9658fed629427a43ba8bcad59f2b4c9b144654a66b1e90cf6b4",
+    "selfhost/components/test_index/tests.my": "f4786bf0334689801af9ce7b8dfe9f7b5a7bade785f707c704f16d58862a4140",
+    "selfhost/components/test_index/graph.my": "8dec40f8e2e15e5d796b4c13262e21d1d9f22e8cdd6ed139060e6679c9fc2139"
+  },
+  "oracle_sources": {
+    "selfhost/tests/run_test_index_component.py": "4e3965d9f20c0237632d08621780ae17b0ef4f7e8d54b155ee599204173de87c",
+    "selfhost/tests/run_cache_plan_component.py": "3b88c6a85b1f4bb7a5e508abf6eca35532ae4de88b1f8164d7c13bcef089a99c"
+  },
+  "rows": [
+    {
+      "label": "test-index-debug-pure",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/selfhost/components/test_index/tests.my",
+        "--json",
+        "--no-cache",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/package-support7/test-index-debug-pure-cache",
+        "--verify-facts",
+        "--experimental-zero-rc"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-support7",
+      "status": 0,
+      "elapsed_including_queue_seconds": 98.2184412558563,
+      "stdout_sha256": "09b851b3a296d406040a8f656f7f162797810e98ec3be2c4288f1ef1c130e4df",
+      "stderr_sha256": "a89465985e0f40493ade1aa9e383788cce6f079061005756d8053e82310897c8",
+      "test_counts": {
+        "passed": 6,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      }
+    },
+    {
+      "label": "test-index-release-pure",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/selfhost/components/test_index/tests.my",
+        "--json",
+        "--no-cache",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/package-support7/test-index-release-pure-cache",
+        "--verify-facts",
+        "--experimental-zero-rc",
+        "--release"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-support7",
+      "status": 0,
+      "elapsed_including_queue_seconds": 113.81562939588912,
+      "stdout_sha256": "6c3e491e3b0a67374842799414ec3f38ad25442704f06e2008f0082ab3e8a06a",
+      "stderr_sha256": "47493f8a375266e76b76cbb15da621657e08be210007f5cb46d2ec8b0efc43fb",
+      "test_counts": {
+        "passed": 6,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      }
+    },
+    {
+      "label": "test-index-fresh-release",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/selfhost/components/test_index/main.my",
+        "--release",
+        "--verify-facts",
+        "--no-cache",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/package-support7/test-index-release-cache",
+        "--experimental-zero-rc",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/package-support7/test-index-release"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-support7",
+      "status": 0,
+      "elapsed_including_queue_seconds": 118.37178690219298,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e76e5cdfffbd3e6ee413531eb5284a297217da88a688e31c525e4ab3f7d191d4"
+    },
+    {
+      "label": "test-index-fresh-protocol",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/scripts/build-slot.sh",
+        "build",
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/selfhost/tests/run_test_index_component.py",
+        "--component",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/package-support7/test-index-release"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-support7",
+      "status": 0,
+      "elapsed_including_queue_seconds": 110.9597137151286,
+      "stdout_sha256": "e1df2c23a2619ae6da4d1ba6bde1292a9862f83694be8afee88c74a824051274",
+      "stderr_sha256": "1b02bd9e404edf41df43f766889e7f2971765a09166c5dd221996cce8e03dbc8"
+    },
+    {
+      "label": "test-index-installed-protocol",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/scripts/build-slot.sh",
+        "build",
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/selfhost/tests/run_test_index_component.py",
+        "--component",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/libexec/mylang/components/test-index-0e28cc1903bc4d763f3e1b3e4ad8266c481fa8ed85e4d37af4accfc9291d16ee"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-support7",
+      "status": 0,
+      "elapsed_including_queue_seconds": 110.99006431293674,
+      "stdout_sha256": "94d2617407102c84a63dad2ea172471b978a8d40461924796a6f5b814a2c36a2",
+      "stderr_sha256": "9cbfcf8ce8da65c262f9c2e85ba7b4ed84bd28cb4aa607a8703e6da64fe6e8f3"
+    },
+    {
+      "label": "test-index-installed-symbols",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/scripts/build-slot.sh",
+        "build",
+        "nm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/libexec/mylang/components/test-index-0e28cc1903bc4d763f3e1b3e4ad8266c481fa8ed85e4d37af4accfc9291d16ee"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-support7",
+      "status": 0,
+      "elapsed_including_queue_seconds": 125.57102496502921,
+      "stdout_sha256": "930768e84a3ff47d9173845c0f88e8368d3a8d01be2ae3f649e88a25d6bf322f",
+      "stderr_sha256": "467fecda797cabb600d7e60a76301f16f9018f2e7a598f2b87d7cb594f03b9f6"
+    },
+    {
+      "label": "cache-plan-debug-pure",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/selfhost/components/cache_plan/tests.my",
+        "--json",
+        "--no-cache",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/package-support7/cache-plan-debug-pure-cache",
+        "--verify-facts",
+        "--experimental-zero-rc"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-support7",
+      "status": 0,
+      "elapsed_including_queue_seconds": 123.91051687207073,
+      "stdout_sha256": "2b295ed13484b64f96470d73ef3f65d5161cbf9def198c5b3689378446c0d0bc",
+      "stderr_sha256": "ec05b9c847b36944939a6590302b1c2ac1ba129760afdbb7d6b84f473a830b7a",
+      "test_counts": {
+        "passed": 15,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      }
+    },
+    {
+      "label": "cache-plan-release-pure",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/selfhost/components/cache_plan/tests.my",
+        "--json",
+        "--no-cache",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/package-support7/cache-plan-release-pure-cache",
+        "--verify-facts",
+        "--experimental-zero-rc",
+        "--release"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-support7",
+      "status": 0,
+      "elapsed_including_queue_seconds": 104.5794069969561,
+      "stdout_sha256": "8da4d212d5e2dd28e0460d721d1f7c507e851af28237f3dfe3d638315d667a13",
+      "stderr_sha256": "8ef3206500ac4f56079f2521a19206d5bc85eb9237f7944fd8b103af252cf441",
+      "test_counts": {
+        "passed": 15,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      }
+    },
+    {
+      "label": "cache-plan-fresh-release",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/selfhost/components/cache_plan/main.my",
+        "--release",
+        "--verify-facts",
+        "--no-cache",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/package-support7/cache-plan-release-cache",
+        "--experimental-zero-rc",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/package-support7/cache-plan-release"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-support7",
+      "status": 0,
+      "elapsed_including_queue_seconds": 94.57136047794484,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "d2efe8518d7fa76c133504cc49a0fa3edb604c296967b6e6831fbbddaf5663b3"
+    },
+    {
+      "label": "cache-plan-fresh-protocol",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/scripts/build-slot.sh",
+        "build",
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/selfhost/tests/run_cache_plan_component.py",
+        "--component",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/package-support7/cache-plan-release"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-support7",
+      "status": 0,
+      "elapsed_including_queue_seconds": 288.649159276858,
+      "stdout_sha256": "345503f162e152d554c4c87e3a7ee5aabaeb722ec6d959dbe69b7debaf00b03a",
+      "stderr_sha256": "02f273fa655297a4103e8019d1e00e3921d1490d6d37e51f3e15205eede5ba71"
+    },
+    {
+      "label": "cache-plan-installed-protocol",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/scripts/build-slot.sh",
+        "build",
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/selfhost/tests/run_cache_plan_component.py",
+        "--component",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/libexec/mylang/components/cache-plan-ccc22b9c6efac02da2488dc1eec1e1b441a0c224dec383f509e0200ead4d6582"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-support7",
+      "status": 0,
+      "elapsed_including_queue_seconds": 57.813178258016706,
+      "stdout_sha256": "68828770102f5a1660642fb87aebbf57e78d14d23b7746267ba35449249b89ad",
+      "stderr_sha256": "992ca1623826dce7702ab22bdfc9c0dd64d777e8428d1586ac5c145805ae6584"
+    },
+    {
+      "label": "cache-plan-installed-symbols",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-support7/scripts/build-slot.sh",
+        "build",
+        "nm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/libexec/mylang/components/cache-plan-ccc22b9c6efac02da2488dc1eec1e1b441a0c224dec383f509e0200ead4d6582"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-support7",
+      "status": 0,
+      "elapsed_including_queue_seconds": 65.26542122894898,
+      "stdout_sha256": "28c27b3a5e8a172d7b4e0fa1dca7f45fb4cb5c6242f0537260d0339ebd024d94",
+      "stderr_sha256": "9da1aa7303d7fc16e4c2fe5875ce4fbc0552d1c292388f8b84dd44ca3309866c"
+    }
+  ],
+  "scope": "Support7 exact installed package and compiler qualification; C2/C3 unchanged",
+  "passed": true,
+  "pure_test_executions": 42,
+  "fresh_binaries": {
+    "test-index": "1a86f205f945c6fd9d46a8030c6c55f55e5d07ed9d0b4e1c495a20856be9c285",
+    "cache-plan": "5d2b1ab624988b27f7500fc38d6ef5f1b400bb9e21f065b69818df7540b8edc5"
+  },
+  "harness_sha256": "c4d82f142e4974fc34e33808e766709261dc9f020c82c115ef95cf57c3ec04ed",
+  "raw": {
+    "raw/results.json.gz": {
+      "original_sha256": "5cc74073fcfd2f8aa163c47779f2226cc03f0d08500a6d47257b3534edaa2336",
+      "compressed_sha256": "c2ad5df858f86738b94224562d38843515ae9e51ee192cf8a9050b99cd5c05ad",
+      "original_bytes": 14582
+    },
+    "raw/identities/cache-plan-manifest.json.gz": {
+      "original_sha256": "52488fae7bf2884569dd0fe31496ab140c69e6235f298f0abf49ead85622a505",
+      "compressed_sha256": "bb28452f891da5a2cfd6d65e78814b669bed3a0432800e5b6089fd6559f204b0",
+      "original_bytes": 327
+    },
+    "raw/identities/cache-plan-receipt.json.gz": {
+      "original_sha256": "9e012ec91d3a2131f2b7504d6e8fb9390d1c57d239ce0ae8eb0427a8dd15e4f7",
+      "compressed_sha256": "97f78da375fa867f6cc15686e1c4f039a06bedf2e2f7fb05f80bdda32cd8246e",
+      "original_bytes": 71905
+    },
+    "raw/identities/support7-identity.json.gz": {
+      "original_sha256": "6471d6c0edc39d08b9474591259d44c03163167e05e72217e39fa1aecdaab6be",
+      "compressed_sha256": "0de83d0bcd251eb261e15e44d95eb2aff1b5f0885a0f68a0855bbeb095e6749f",
+      "original_bytes": 4095
+    },
+    "raw/identities/test-index-manifest.json.gz": {
+      "original_sha256": "69025cb228f81331b8ddb4b58c90b4f3db8e589485d8f2c10ba454b1079b5622",
+      "compressed_sha256": "d63734449699cf5e1b1f19ee9ab77e9af47653c6ade03339064254eb427bfc39",
+      "original_bytes": 327
+    },
+    "raw/identities/test-index-receipt.json.gz": {
+      "original_sha256": "0a96de96bc1195b6c4ddeeee69ee2920e3449c782906d532209d9cb9eaf4d9a6",
+      "compressed_sha256": "ca8d7fe2b02b73ab9567fa5579ead4a6165140603ea46019b2a8fda334d8ee85",
+      "original_bytes": 71740
+    },
+    "raw/test-index-debug-pure/command.json.gz": {
+      "original_sha256": "f6c235df9a381ce80768bbf0713ba5bcb5b64937819716ff044c8c8b42790b9f",
+      "compressed_sha256": "9cedf11426e70ddc625dae9352cbe27b1a9f265111506184937fa2a0cc232e3c",
+      "original_bytes": 936
+    },
+    "raw/test-index-debug-pure/stderr.gz": {
+      "original_sha256": "a89465985e0f40493ade1aa9e383788cce6f079061005756d8053e82310897c8",
+      "compressed_sha256": "c96684fdf31f216ce4f6a4abb9db126822c6a8022105a9b2a48c0c5b1b53c68e",
+      "original_bytes": 255
+    },
+    "raw/test-index-debug-pure/stdout.gz": {
+      "original_sha256": "09b851b3a296d406040a8f656f7f162797810e98ec3be2c4288f1ef1c130e4df",
+      "compressed_sha256": "8f652e874480e4e213b6c22eb83eb316cd23666e4af1d80db14cd3fbf9346a37",
+      "original_bytes": 3428
+    },
+    "raw/test-index-release-pure/command.json.gz": {
+      "original_sha256": "39a5d6584a3e68f323f485297d9a7587455fafa375c1494c5952258f15f67272",
+      "compressed_sha256": "248ae37d816979d55e85e06c21a8342e8877314456af922f0791fe36ce3fb524",
+      "original_bytes": 959
+    },
+    "raw/test-index-release-pure/stderr.gz": {
+      "original_sha256": "47493f8a375266e76b76cbb15da621657e08be210007f5cb46d2ec8b0efc43fb",
+      "compressed_sha256": "d3ca595365cc8caab94444d01b4376f9324b3ef8af3b25b453382dc855a2e59d",
+      "original_bytes": 256
+    },
+    "raw/test-index-release-pure/stdout.gz": {
+      "original_sha256": "6c3e491e3b0a67374842799414ec3f38ad25442704f06e2008f0082ab3e8a06a",
+      "compressed_sha256": "a4b288c4d82d3b0178ce919327ae6ee88df7c22d4c0c23e3035641253124ff92",
+      "original_bytes": 3428
+    },
+    "raw/test-index-fresh-release/command.json.gz": {
+      "original_sha256": "6ce864f9506d77b725896cc8d039f8522bd9f76c019d1a327755bcf0430c6ae2",
+      "compressed_sha256": "d0fb1c71fb0233618859663cbfbc68cc1a9b28e299ff4e87a0a2a20960bde428",
+      "original_bytes": 1072
+    },
+    "raw/test-index-fresh-release/stderr.gz": {
+      "original_sha256": "e76e5cdfffbd3e6ee413531eb5284a297217da88a688e31c525e4ab3f7d191d4",
+      "compressed_sha256": "b96f47db52e27ea68b4550151d07380f0d5afce6fc105fb2d2e0ce1727f9df38",
+      "original_bytes": 256
+    },
+    "raw/test-index-fresh-release/stdout.gz": {
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compressed_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "original_bytes": 0
+    },
+    "raw/test-index-fresh-protocol/command.json.gz": {
+      "original_sha256": "d55d9bd26c96ab53ae675211b188c22b66aa71df506dce7cacf4928493df2713",
+      "compressed_sha256": "ccc0ec36dd7e05b2fa870ed94a84610fe23b74626afa1c1f3dc4987cbd8ecf8a",
+      "original_bytes": 756
+    },
+    "raw/test-index-fresh-protocol/stderr.gz": {
+      "original_sha256": "1b02bd9e404edf41df43f766889e7f2971765a09166c5dd221996cce8e03dbc8",
+      "compressed_sha256": "5ab32d4eb744125cf51f3d641c642e3e75573ccdefb2cf04a00b1c3ea3a6ad61",
+      "original_bytes": 256
+    },
+    "raw/test-index-fresh-protocol/stdout.gz": {
+      "original_sha256": "e1df2c23a2619ae6da4d1ba6bde1292a9862f83694be8afee88c74a824051274",
+      "compressed_sha256": "9ed6b2b82ffd62744b280cebddfa6d4bca56b8f99347c93c1995182e11b312aa",
+      "original_bytes": 257
+    },
+    "raw/test-index-installed-protocol/command.json.gz": {
+      "original_sha256": "0fd1115548a116c1527eb710ba516ffe8acfe2df9d7a97e203493d76705328d3",
+      "compressed_sha256": "4d32b4efbe5c11c21406f7bd89893e92d25f22c1af35c06e48173b03bed8a2d9",
+      "original_bytes": 848
+    },
+    "raw/test-index-installed-protocol/stderr.gz": {
+      "original_sha256": "9cbfcf8ce8da65c262f9c2e85ba7b4ed84bd28cb4aa607a8703e6da64fe6e8f3",
+      "compressed_sha256": "223a7d4a054d1d913abb6b4691ed11a5d1e43ce83ac26cbd2f98180cf6cb783a",
+      "original_bytes": 256
+    },
+    "raw/test-index-installed-protocol/stdout.gz": {
+      "original_sha256": "94d2617407102c84a63dad2ea172471b978a8d40461924796a6f5b814a2c36a2",
+      "compressed_sha256": "7ee5b2f6c6cc45aa8e65114b451c62172b30ba26c6808eebb1deed0026aa9c34",
+      "original_bytes": 257
+    },
+    "raw/test-index-installed-symbols/command.json.gz": {
+      "original_sha256": "bb226c718201ee53576e26bd44bdc5a9f1eee23253b9948ecb57cab6da114cd0",
+      "compressed_sha256": "f09596368ee1c9c98e5228e850f61a7a86222510eb3ac6c9681879a65b4acd61",
+      "original_bytes": 696
+    },
+    "raw/test-index-installed-symbols/stderr.gz": {
+      "original_sha256": "467fecda797cabb600d7e60a76301f16f9018f2e7a598f2b87d7cb594f03b9f6",
+      "compressed_sha256": "4b043b9e5a98a585378713ddc09591c4aa7f96e2e23b3ab8ac1e294bf2407582",
+      "original_bytes": 380
+    },
+    "raw/test-index-installed-symbols/stdout.gz": {
+      "original_sha256": "930768e84a3ff47d9173845c0f88e8368d3a8d01be2ae3f649e88a25d6bf322f",
+      "compressed_sha256": "2c222fd31b06437d2d0d9e4019532dcb955e8f8a3fdda560cd7d5cdf5ab5f99a",
+      "original_bytes": 22074
+    },
+    "raw/cache-plan-debug-pure/command.json.gz": {
+      "original_sha256": "35764017e815f93f1c8c6cbad470a5f3213cd2a76908aa42addc96ac2d9775ab",
+      "compressed_sha256": "b865f2be01065bd76fec68ef0711b6d4785bcc8750f4b140cdb58b78b68856d4",
+      "original_bytes": 938
+    },
+    "raw/cache-plan-debug-pure/stderr.gz": {
+      "original_sha256": "ec05b9c847b36944939a6590302b1c2ac1ba129760afdbb7d6b84f473a830b7a",
+      "compressed_sha256": "dfd2ea1fccdb2a5575fef1d2ca4f8e85cb3c9d416b12ac5682921e67ff57449a",
+      "original_bytes": 256
+    },
+    "raw/cache-plan-debug-pure/stdout.gz": {
+      "original_sha256": "2b295ed13484b64f96470d73ef3f65d5161cbf9def198c5b3689378446c0d0bc",
+      "compressed_sha256": "0fc45e1ca3ffd4da667f0fcde94fc4559c83ed50fb4d8a5148daae6747d790f5",
+      "original_bytes": 6824
+    },
+    "raw/cache-plan-release-pure/command.json.gz": {
+      "original_sha256": "9a5986b87602db56a9a5380793cec317a0468bd273bcba5ca7b572c96325c2e2",
+      "compressed_sha256": "b6434fef8103bfa69aa11fc397fca2f90c63317055c74e817ea05991cb2d8d7e",
+      "original_bytes": 958
+    },
+    "raw/cache-plan-release-pure/stderr.gz": {
+      "original_sha256": "8ef3206500ac4f56079f2521a19206d5bc85eb9237f7944fd8b103af252cf441",
+      "compressed_sha256": "dde499da6a56f3996ba3f6b1d37b1b43a9f46f8562eca6f593f30b946a74ebc3",
+      "original_bytes": 256
+    },
+    "raw/cache-plan-release-pure/stdout.gz": {
+      "original_sha256": "8da4d212d5e2dd28e0460d721d1f7c507e851af28237f3dfe3d638315d667a13",
+      "compressed_sha256": "c69ca93890d0ba22a59194cf02107d344b5c5ff86dd576fc8679c8b6e33dbe24",
+      "original_bytes": 6824
+    },
+    "raw/cache-plan-fresh-release/command.json.gz": {
+      "original_sha256": "7c43e4f1eb8ef556e817c212171aa951c995e3194ed8511144b6d5d56e7b7051",
+      "compressed_sha256": "5ae9914827c634a28d35e79c954f9de1da43966058e5e486d4ed2eb8d0bca3a2",
+      "original_bytes": 1071
+    },
+    "raw/cache-plan-fresh-release/stderr.gz": {
+      "original_sha256": "d2efe8518d7fa76c133504cc49a0fa3edb604c296967b6e6831fbbddaf5663b3",
+      "compressed_sha256": "b09a0c8644a2e60e8b2963a2b311959161aee393a2fba419eefc866b264f7011",
+      "original_bytes": 255
+    },
+    "raw/cache-plan-fresh-release/stdout.gz": {
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compressed_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+      "original_bytes": 0
+    },
+    "raw/cache-plan-fresh-protocol/command.json.gz": {
+      "original_sha256": "58c7d52559869f9f73e9a8061d4052c19102a1fffb7f03be1582ee56de9fb4e6",
+      "compressed_sha256": "44be01986da1420bd06eccd0efcafae55716ee21329b296e83ac99592c517fd2",
+      "original_bytes": 755
+    },
+    "raw/cache-plan-fresh-protocol/stderr.gz": {
+      "original_sha256": "02f273fa655297a4103e8019d1e00e3921d1490d6d37e51f3e15205eede5ba71",
+      "compressed_sha256": "76a9e7e2d72a7ce95c8ec98f81e56d53a0d81a37df5706147057bd6dbb107a84",
+      "original_bytes": 565
+    },
+    "raw/cache-plan-fresh-protocol/stdout.gz": {
+      "original_sha256": "345503f162e152d554c4c87e3a7ee5aabaeb722ec6d959dbe69b7debaf00b03a",
+      "compressed_sha256": "41399f722355fe316be1dafe8ddac784e85f47f67651950d7d054096e98a6cce",
+      "original_bytes": 564
+    },
+    "raw/cache-plan-installed-protocol/command.json.gz": {
+      "original_sha256": "45697723e6d57afaad0cd648bac9352ae0b24b2e6293e73462cd30cfdc33dea0",
+      "compressed_sha256": "e824da3b07a43e1d8989f5d9c725abb2cf851003078d525779ebbe184a5c0127",
+      "original_bytes": 848
+    },
+    "raw/cache-plan-installed-protocol/stderr.gz": {
+      "original_sha256": "992ca1623826dce7702ab22bdfc9c0dd64d777e8428d1586ac5c145805ae6584",
+      "compressed_sha256": "3573462b8618b9649b5d0c517e94071e5a7a04e804923fe8d36d4b4ba583f679",
+      "original_bytes": 153
+    },
+    "raw/cache-plan-installed-protocol/stdout.gz": {
+      "original_sha256": "68828770102f5a1660642fb87aebbf57e78d14d23b7746267ba35449249b89ad",
+      "compressed_sha256": "7cfc6ac9fad09186e5fc2e4e606027ae8a9cf2ed94012c5f0b1df7bdfda0f170",
+      "original_bytes": 564
+    },
+    "raw/cache-plan-installed-symbols/command.json.gz": {
+      "original_sha256": "0de3d7c44a8122c2e5781d274e80ff9a69fa44b8c5af2f6b7cc2c854d1eff068",
+      "compressed_sha256": "28dc32bedba91ca6a3495a31c28bfce0fcd300f6f7a3dde79c07368b67289be2",
+      "original_bytes": 695
+    },
+    "raw/cache-plan-installed-symbols/stderr.gz": {
+      "original_sha256": "9da1aa7303d7fc16e4c2fe5875ce4fbc0552d1c292388f8b84dd44ca3309866c",
+      "compressed_sha256": "c4e39e1e3829934485dfcba9a4b8db1d699419fe4f28061c6bb61895ba7f09ff",
+      "original_bytes": 275
+    },
+    "raw/cache-plan-installed-symbols/stdout.gz": {
+      "original_sha256": "28c27b3a5e8a172d7b4e0fa1dca7f45fb4cb5c6242f0537260d0339ebd024d94",
+      "compressed_sha256": "ab7ebfb9fb5a31a26fc96fe1ee3bebf8911483963321bccfe16a52e4668c6911",
+      "original_bytes": 22540
+    }
+  },
+  "measurement_limits": "Oracle scripts print incidental durations; these correctness runs have shared build admission, not exclusive timing admission. No runtime/RSS or speedup claim.",
+  "counted_component_protocols": "A08 separately owns exact Support7 688-run counted protocol qualification; these installed components are uninstrumented.",
+  "state": "Support7 intermediate exact package qualification passed; later candidates and C2/C3 require rerun",
+  "counted_evidence": {
+    "owner": "A08",
+    "commit": "765988210",
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A08/experiments/memory-closeout-20261012/A08/support7-components-summary.json",
+    "sha256": "e1e9137d7671cb594d73f33e753aa21ba4d39c9aa4bc216995f124db7a8b49af",
+    "scope": "separate fresh688 counted executions from the same Support7 compiler; not installed uninstrumented binary identity"
+  },
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+}

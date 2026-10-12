@@ -3,7 +3,7 @@ func test_repeated_string_key_insert_and_overwrite() -> bool:
     mut counts: dict[str, int] = {}
     for i in range(300):
         mut key = "key" + str(i % 40)
-        counts[key] = counts.get(key, 0) + 1
+        counts[key.copy()] = counts.get(key, 0) + 1
     assert len(counts) == 40
     assert counts["key0"] == 8
     assert counts["key39"] == 7
@@ -13,9 +13,9 @@ func test_repeated_string_key_insert_and_overwrite() -> bool:
 # RC-DICTIONARY-TAIL-1 control
 func test_preexisting_snapshot_keeps_first_uniqueness() -> bool:
     mut counts = {1: 7}
-    mut saved = counts
+    mut saved = counts.copy()
     mut key = 1
-    counts[key] = 13
+    counts[key.copy()] = 13
     assert saved[key] == 7
     assert counts[key] == 13
     return True
@@ -33,7 +33,7 @@ func test_completed_key_and_rhs_callbacks_keep_order() -> bool:
     mut seen: int[] = []
     mut key = callback(mut counts, mut seen, 11)
     mut value = callback(mut counts, mut seen, 13)
-    counts[key] = value
+    counts[key.copy()] = value
     assert seen == [11, 13]
     assert counts[1] == 1
     assert counts[2] == 13
@@ -57,10 +57,10 @@ func test_live_view_and_managed_value_keep_general_paths() -> bool:
     mut counts = {1: 7}
     mut view = list(counts.values())
     mut key = 1
-    counts[key] = 13
+    counts[key.copy()] = 13
     assert list(view) == [7]
     mut nested = {1: [7]}
-    mut saved = nested
+    mut saved = nested.copy()
     nested[key] = [13]
     assert saved[key] == [7]
     assert nested[key] == [13]
@@ -74,6 +74,6 @@ func test_function_wide_string_iteration_keeps_key_load_roles() -> bool:
     mut letters = 0
     for letter in key:
         letters += len(letter)
-    counts[key] = letters
+    counts[key.copy()] = letters
     assert counts[key] == 3
     return True

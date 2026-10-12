@@ -5,7 +5,7 @@ const typed = @import("mylang").typed;
 /// Allocation and located source refusals from effect lowering.
 pub const Error = error{ OutOfMemory, Unsupported };
 /// A live lexical file scope and the loop depth at which it was opened.
-pub const Scope = struct { owner: ir.Ref, depth: usize, provider: ir.Ref = .none };
+pub const Scope = struct { owner: ir.Ref, depth: usize, provider: ir.Ref = .none, pin: ?u32 = null };
 
 const file_access_symbol = "myl_core_file_access";
 const stream_write_symbol = "myl_core_stream_write";
@@ -284,8 +284,12 @@ pub fn Lower(comptime Context: type) type {
 }
 
 /// The source-level parent whose lifetime encloses a dependent scope.
-pub fn scopeProvider(node: typed.Node) ?typed.NodeId {
+pub fn scopeProvider(program: typed.Program, source: typed.NodeId) ?typed.NodeId {
+    const node = program.nodes[@backingInt(source)];
     return switch (node.data) {
+        .propagate => |value| scopeProvider(program, value.value),
+        .block_value => |block| scopeProvider(program, block.value),
+        .call => |call| call.arguments[@import("single_owner_resource.zig").parameter(program, program.functions[@backingInt(call.function)]) orelse return null],
         .file_access => |file| file.arguments[0],
         .dir_resource => |dir| dir.capability,
         .host_resource => |host| host.capability,
@@ -297,6 +301,10 @@ pub fn scopeProvider(node: typed.Node) ?typed.NodeId {
 
 /// Close and drop a scoped handle while its provider is still a borrowed argument.
 pub fn closeScope(comptime Context: type, c: Context, scope: Scope, span: u32) Error!void {
+    if (scope.pin) |slot| {
+        try @import("aggregate_provider.zig").keepalive(Context, c, try c.read(slot, c.current.?), span);
+        return;
+    }
     if (c.module().zero_rc) {
         const ty = c.typeOfRef(scope.owner);
         const symbol = if (ty == .resource) "myl_core_owned_file_scope_end" else "myl_core_owned_cap_scope_end";

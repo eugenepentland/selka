@@ -1,0 +1,106 @@
+{
+  "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9",
+  "cases": [
+    {
+      "source": "tests/lang/rc_plain_aggregates.my",
+      "source_sha256": "b8bd8435c2df588d719cc6fccd7326308b939371cf5a7fa88a24de2f42d31293",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_plain_field_loans.my",
+      "source_sha256": "956a3d5f472260df90c131fcb4a9976495300826467c4f43ed5acc52ade5a55f",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_plain_field_loans.my:84:30: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut rows = [HeldRow(view=list(mapping.values()), number=3)]\n                               ^\n",
+      "copy_changes": [
+        {
+          "line": 43,
+          "before": "    mut row = rows[at]",
+          "after": "    mut row = rows[at].copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/rc_plain_list_writes.my",
+      "source_sha256": "b42d1ba3add1a7b54f364b4a67df2b5ac2500591b595b5f18d9eb0a4bcac4104",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_plain_record_writes.my",
+      "source_sha256": "60742f3c7062ae824ee7d7d9e4d9024867cba15b7b5e4a4bb4f3d69c5269b4ed",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": [
+        {
+          "line": 77,
+          "before": "    mut changed = states[0]",
+          "after": "    mut changed = states[0].copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/rc_range_key_anchors.my",
+      "source_sha256": "b881a56c880036e482bbe01fa3ebb2f47971ec8831c0ee48a47869906ede2d97",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": [
+        {
+          "line": 43,
+          "before": "    mut seq = input_seq",
+          "after": "    mut seq = input_seq.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/rc_read_list_versions.my",
+      "source_sha256": "f1c1e447b9ec07d8fb571101f3c77bef1445d6c8b7ee1b1b2a5a0ff3d09f2671",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_readonly_calls.my",
+      "source_sha256": "905b83a94bccb7147e1fcbae3a4bd8ab5b8571554a6f7a135578a804c15b2ed4",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_readonly_managed_calls.my",
+      "source_sha256": "62a9ba54f7e976e8cc26ebd028f0e4f376e70723520dcd9b2baddf61bef16469",
+      "status": 0,
+      "stdout": "",
+      "stderr": "rc_readonly_managed_calls.my:16:40: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func choose(index: int, first: Item[], second: Item[]) -> Item:\n                                         ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_record_field_reads.my",
+      "source_sha256": "8952c445a1a68ed0a4f179b78b0cbc962059884eda38438e61e1db52183c56cf",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_scalar_loops.my",
+      "source_sha256": "af846cd5d5593380794b895d27b6675304b166d082e9a003a9cc74fe6f3db534",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    }
+  ]
+}

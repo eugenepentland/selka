@@ -1,0 +1,78 @@
+build-slot: FIFO ticket 163, position 9; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 163, position 2; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 2, FIFO ticket 163 after 70s
+fn converted #0 params=1 ret=bytes cabi=false host=false
+  local %0 value: float
+  local %1 <collection>: str mut
+  block
+    ret
+      block_value : bytes
+        block
+          initialize %1
+            cast : str
+              local : float %0
+        buffer_operation : bytes encode owner=%1
+fn main #1 params=0 ret=i64 cabi=false host=false
+  local %0 <collection>: List<float> mut
+  local %1 <collection>: List<float> mut
+  local %2 <collection>: i64 mut
+  local %3 <collection>: i64 mut
+  local %4 value: float
+  local %5 <collection>: str mut
+  block
+    block
+      initialize %1
+        block_value : List<float>
+          block
+            initialize %0
+              acquire_buffer : List<float>
+                integer : i64 2
+            discard
+              buffer_operation : unit append owner=%0
+                wrap : float
+                  integer : u64 4591870180066957722
+            discard
+              buffer_operation : unit append owner=%0
+                wrap : float
+                  integer : u64 4612811918334230528
+          local : List<float> %0
+      initialize %2
+        integer : i64 0
+      initialize %3
+        cast : i64
+          buffer_operation : u64 length owner=%1
+      loop id=0
+        binary : bool lt
+          local : i64 %2
+          local : i64 %3
+        block
+          block
+            discard
+              buffer_operation : unit iteration_check owner=%1
+                local : i64 %3
+          initialize %4
+            buffer_operation : float read owner=%1
+              local : i64 %2
+          block
+            assertion len(str(value).encode()) > 0
+              binary : bool gt
+                length : i64
+                  block_value : bytes
+                    block
+                      initialize %5
+                        cast : str
+                          local : float %4
+                    buffer_operation : bytes encode owner=%5
+                integer : i64 0
+        step:
+          block
+            block
+              discard
+                buffer_operation : unit iteration_check owner=%1
+                  local : i64 %3
+            assign %2
+              binary : i64 add
+                local : i64 %2
+                integer : i64 1
+    ret
+      integer : i64 0

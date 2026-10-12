@@ -1,0 +1,7 @@
+record Runtime:
+    clock: Clock?
+func inspect(rt: Runtime) -> int:
+    return 0
+func main(clock: Clock) -> int:
+    const rt = Runtime(clock=Some(clock))
+    return inspect(rt)

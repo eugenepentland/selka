@@ -1,0 +1,5 @@
+# spec-case: NEW-CORE-ZERO-RC-1
+func main() -> int:
+    assert b"a" * 1 == b"a"
+    assert b"a" * 3 == b"aaa"
+    return 0

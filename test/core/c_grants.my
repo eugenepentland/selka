@@ -18,8 +18,9 @@ func main(fs: Filesystem, env: Environment, entropy: Entropy, clock: Clock, out:
             out.print("written")
         case Err(message):
             out.print(message)
-    for name in env.only("KEEP", "MISSING", "KEEP").names():
-        out.print(name)
+    with env.only("KEEP", "MISSING", "KEEP") as selected:
+        for name in selected.names():
+            out.print(name)
     match env.get("KEEP"):
         case Some(value):
             out.print(value)

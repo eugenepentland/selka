@@ -1,0 +1,110 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "generator": "index i, value (17*i+11) mod 97; word index (17*i+11) mod 7",
+  "cases": {
+    "word_count": {
+      "sources": {
+        "programs/word_count/main.my": "754f348c9fe5e2aa38618077ffed2464f623ea7ae3a0be66a72c4a289dd8ac2c",
+        "programs/word_count/words.my": "61569e71ae3a0723d2f123720f78d32a33df465cdd5be1e2f76d9b8c7203ef6e"
+      },
+      "inputs": {
+        "small": {
+          "args": [],
+          "n": 64,
+          "dataset_sha256": "4d703c642c7f84f1b1e488e1ac453d0be3ec1967fe67b2ddb612a435271206ce",
+          "dataset_bytes": 366,
+          "dataset_archive": "datasets/word_count-small.txt.gz",
+          "stdout": "64 7 302\n"
+        },
+        "large": {
+          "args": [
+            "large"
+          ],
+          "n": 8192,
+          "dataset_sha256": "39e475528883fa81beab7869d9433796af1ed207497b442a573586dff257b1b3",
+          "dataset_bytes": 46810,
+          "dataset_archive": "datasets/word_count-large.txt.gz",
+          "stdout": "8192 7 38618\n"
+        }
+      }
+    },
+    "nested_json": {
+      "sources": {
+        "programs/nested_json/main.my": "c37319aadc2db25b3b312187279a27a7292556692b32ed9c096ceabd9fbde22b",
+        "programs/nested_json/transform.my": "731d621883eee8968c0a0fb49353de3908f16e711442d2199b73104d05c99f74"
+      },
+      "inputs": {
+        "small": {
+          "args": [],
+          "n": 8,
+          "dataset_sha256": "56075e7ddb6c5555b415adcfffc831f795a012eaeb4f4bee3ddd309ae8fa290b",
+          "dataset_bytes": 373,
+          "dataset_archive": "datasets/nested_json-small.txt.gz",
+          "stdout": "8 370\n"
+        },
+        "large": {
+          "args": [
+            "large"
+          ],
+          "n": 512,
+          "dataset_sha256": "8de60ad9d0b1919ea2c056c33eec4a370107838b5f99336b7d9924529d6a503f",
+          "dataset_bytes": 24829,
+          "dataset_archive": "datasets/nested_json-large.txt.gz",
+          "stdout": "512 24597\n"
+        }
+      }
+    },
+    "file_processing": {
+      "sources": {
+        "programs/file_processing/main.my": "8cd863158b7cab142456063f07025a97f790dc6806fbacf3db762e7bcf60a3eb",
+        "programs/file_processing/process.my": "5226147e7e0e228b006134ea3dc79caa821aadf5b555b3bf034cb35bd280d65b"
+      },
+      "inputs": {
+        "small": {
+          "args": [],
+          "n": 64,
+          "dataset_sha256": "a3458040751967fd25d8f4f2ff90fb5cf451f0dc588eafa0ce1f33ae30bbb1a8",
+          "dataset_bytes": 186,
+          "dataset_archive": "datasets/file_processing-small.txt.gz",
+          "stdout": "64 3063\n"
+        },
+        "large": {
+          "args": [
+            "large"
+          ],
+          "n": 8192,
+          "dataset_sha256": "80809ee09c22396a791a21e00acad5084fc02daddf6ffcf9bcb26902d059a4a7",
+          "dataset_bytes": 23732,
+          "dataset_archive": "datasets/file_processing-large.txt.gz",
+          "stdout": "8192 393217\n"
+        }
+      }
+    },
+    "parallel": {
+      "sources": {
+        "programs/parallel/main.my": "417994b665dfdb6bdb72c3e4524b7754a8692f2d89d4f324d3fda6718db5e962",
+        "programs/parallel/primes.my": "8ccc5b22614f0f7fd8ee9cc48ff08ce2d5e08ac85da2a0d5945f058c8e7da4de"
+      },
+      "inputs": {
+        "small": {
+          "args": [],
+          "n": 4,
+          "dataset_sha256": "3f31bc2191b8b55d447838e14cbce78ca44feba5b46c902ade4cc2eb7b68a041",
+          "dataset_bytes": 8,
+          "dataset_archive": "datasets/parallel-small.txt.gz",
+          "stdout": "4 564\n"
+        },
+        "large": {
+          "args": [
+            "large"
+          ],
+          "n": 256,
+          "dataset_sha256": "0e55b5f9a16cf7ff7743aeca77d64e2585b32868c4c6dcd4d07f47e548985418",
+          "dataset_bytes": 914,
+          "dataset_archive": "datasets/parallel-large.txt.gz",
+          "stdout": "256 23000\n"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,207 @@
+
+import placement_pin_roles as m
+import eval_env as env
+import support_expect as ex
+
+# test "isTranslatorChannel rejects names shorter than 2 or longer than 16 chars"
+public func test_istranslatorchannel_rejects_names_shorter_than_2_or_longer_than_16_chars(out: Stream) -> bool:
+    mut fn_set: set[str] = {"B1"}
+    if not ex.ok(out, "A1 with B1 twin", m.is_translator_channel(b"A1", fn_set)):
+        return False
+    if not ex.ok(out, "too short", not m.is_translator_channel(b"A", fn_set)):
+        return False
+    return ex.ok(out, "too long", not m.is_translator_channel(b"A0000000000000000", fn_set))
+
+
+# test "isGroundFn separates real grounds from config straps"
+public func test_isgroundfn_separates_real_grounds_from_config_straps(out: Stream) -> bool:
+    mut grounds: bytes[] = [b"GND", b"GND_1", b"gnd", b"AGND", b"VSSA", b"EP", b"PAD"]
+    for name in grounds:
+        if not ex.ok(out, "real ground", m.is_ground_fn(name)):
+            return False
+    # Straps tied to GND must not be classified as returns.
+    mut signals: bytes[] = [b"ILIM", b"EN/UV", b"PGFB", b"MODE", b"IN_1"]
+    for name in signals:
+        if not ex.ok(out, "non-ground", not m.is_ground_fn(name)):
+            return False
+    return True
+
+
+# test "optional NC names stay distinct from forbidden or reserved pads"
+public func test_optional_nc_names_stay_distinct_from_forbidden_or_reserved_pads(out: Stream) -> bool:
+    for name in [b"NC", b"N/C", b"NC_12"]:
+        if not ex.ok(out, "optional NC", m.is_optional_nc_name(name)):
+            return False
+    if not ex.ok(out, "class NC_12", m.classify(None, b"NC_12") == m.PinClass.optional_nc):
+        return False
+    for name in [b"DNC", b"DNU", b"RESERVED", b"RFU"]:
+        if not ex.ok(out, "reserved is distinct", not m.is_optional_nc_name(name)):
+            return False
+    return True
+
+
+# test "isSupplyFn separates real supplies from grounds and signals"
+public func test_issupplyfn_separates_real_supplies_from_grounds_and_signals(out: Stream) -> bool:
+    for name in [b"VCC", b"VDD", b"VDD_1", b"AVDD", b"DVDD", b"PVDD", b"VBAT", b"VIN", b"VREF_A", b"V+"]:
+        if not ex.ok(out, "real supply", m.is_supply_fn(name)):
+            return False
+    # VS is a prefix of ground VSS; passive signal pads and supply-named straps
+    # are not supplies. The strap token wins over the supply prefix.
+    for name in [b"VSS", b"VSSA", b"GND", b"RF-IN", b"RF_OUT", b"INPUT", b"OUTPUT", b"VDD_EN", b"VIN_SEL0", b"VCC_MODE"]:
+        if not ex.ok(out, "non-supply", not m.is_supply_fn(name)):
+            return False
+    if not ex.ok(out, "supply-named enable strap", m.is_strap_fn(b"VDD_EN")):
+        return False
+    if not ex.ok(out, "supply-named select strap", m.is_strap_fn(b"VIN_SEL0")):
+        return False
+    if not ex.ok(out, "plain trailing-letter bank supply", m.is_supply_fn(b"VREF_A")):
+        return False
+    return ex.ok(out, "numbered supply", m.is_supply_fn(b"VDD_1"))
+
+
+# test "classify prefers electrical type, falls back to ground name"
+public func test_classify_prefers_electrical_type_falls_back_to_ground_name(out: Stream) -> bool:
+    if not ex.ok(out, "declared input GND", m.classify(Some(env.ElectricalType.input), b"GND_1") == m.PinClass.strap):
+        return False
+    if not ex.ok(out, "declared IO VDD", m.classify(Some(env.ElectricalType.io), b"VDD") == m.PinClass.strap):
+        return False
+    if not ex.ok(out, "declared supply", m.classify(Some(env.ElectricalType.power_in), b"IN_1") == m.PinClass.power):
+        return False
+    if not ex.ok(out, "passive GND", m.classify(Some(env.ElectricalType.passive), b"GND_2") == m.PinClass.ground):
+        return False
+    if not ex.ok(out, "nc ILIM", m.classify(Some(env.ElectricalType.nc), b"ILIM") == m.PinClass.other):
+        return False
+    if not ex.ok(out, "undeclared AGND", m.classify(None, b"AGND") == m.PinClass.ground):
+        return False
+    return ex.ok(out, "undeclared ILIM", m.classify(None, b"ILIM") == m.PinClass.other)
+
+
+# test "isStrapFn recognises config straps but not supplies, grounds, or GPIO"
+public func test_isstrapfn_recognises_config_straps_but_not_supplies_grounds_or_gpio(out: Stream) -> bool:
+    # Names include enable/control/mode/boot/current-limit/reset and one-digit
+    # address straps, including a strap token in a multi-function name.
+    for name in [b"EN", b"~{CE}", b"MODE", b"ILIM", b"BOOT0", b"~{SHDN}", b"NRST", b"RESET_N", b"A0", b"A2", b"PRTPWR1/BC_EN1", b"SCL/SMBCLK/CFG_SEL0"]:
+        if not ex.ok(out, "strap", m.is_strap_fn(name)):
+            return False
+    # Connector grids, real supplies/grounds, GPIO ports, and words merely
+    # starting with a strap token must stay out of the heuristic.
+    for name in [b"A01", b"A20", b"A14", b"VDD", b"GND", b"VIN", b"PA1", b"PD15", b"PB0", b"ENC", b"ADC", b"GREEN"]:
+        if not ex.ok(out, "not strap", not m.is_strap_fn(name)):
+            return False
+    return True
+
+
+# Each filesystem test receives its own in-memory filesystem. The library tree
+# mirrors Zig's temporary directory fixtures and carries the same file bytes.
+func fixture(fs: Filesystem, component: str, comp: bytes, pinout: bytes) -> bool:
+    for path in ["project", "project/lib", "project/lib/components", "project/lib/pinouts"]:
+        match fs.mkdir(path):
+            case Err(_):
+                return False
+            case Ok(_):
+                pass
+    match fs.write_file("project/lib/components/" + component + ".sexp", comp):
+        case Err(_):
+            return False
+        case Ok(_):
+            pass
+    match fs.write_file("project/lib/pinouts/" + component + ".sexp", pinout):
+        case Err(_):
+            return False
+        case Ok(_):
+            return True
+
+
+# test "strapPads collects strap pads by name and by electrical type"
+public func test_strappads_collects_strap_pads_by_name_and_by_electrical_type(fs: Filesystem, out: Stream) -> bool:
+    # CTRL is a plain name explicitly declared input, EN/A0 are straps by name.
+    mut comp = b"(component reg (pinout \"reg\") (electrical \"CTRL\" (type input)))"
+    mut pinout = b"(pinout \"reg\" (pin 1 \"VDD\") (pin 2 \"EN\") (pin 3 \"A0\") (pin 4 \"GND\") (pin 5 \"OUT\") (pin 6 \"CTRL\"))"
+    if not ex.ok(out, "fixture", fixture(fs, "reg", comp, pinout)):
+        return False
+    mut straps = m.strap_pads(fs, "project", b"reg")
+    if not ex.eq_int(out, "straps count", len(straps), 3):
+        return False
+    if not ex.eq_bytes(out, "pad 2", straps.get("2", b""), b"EN"):
+        return False
+    if not ex.eq_bytes(out, "pad 3", straps.get("3", b""), b"A0"):
+        return False
+    if not ex.eq_bytes(out, "pad 6 type", straps.get("6", b""), b"CTRL"):
+        return False
+    for pad in ["1", "4", "5"]:
+        if not ex.ok(out, "VDD/GND/OUT excluded", pad not in straps):
+            return False
+    return True
+
+
+# test "strapPads ignores connector positional pins"
+public func test_strappads_ignores_connector_positional_pins(fs: Filesystem, out: Stream) -> bool:
+    # Both doubled A01_A01 and plain B2-on-B2 are positional, not straps.
+    mut comp = b"(component conn (pinout \"conn\"))"
+    mut pinout = b"(pinout \"conn\" (pin A01 \"A01_A01\") (pin A02 \"A02_A02\") (pin B2 \"B2\") (pin 7 \"EN\"))"
+    if not ex.ok(out, "fixture", fixture(fs, "conn", comp, pinout)):
+        return False
+    mut straps = m.strap_pads(fs, "project", b"conn")
+    if not ex.eq_int(out, "only EN", len(straps), 1):
+        return False
+    if not ex.eq_bytes(out, "pad 7", straps.get("7", b""), b"EN"):
+        return False
+    if not ex.ok(out, "doubled positional", "A01" not in straps):
+        return False
+    return ex.ok(out, "plain grid positional", "B2" not in straps)
+
+
+# test "connectionRequirement tiers floating pads by confidence"
+public func test_connectionrequirement_tiers_floating_pads_by_confidence(out: Stream) -> bool:
+    if not ex.ok(out, "supply defer", m.connection_requirement(None, b"VDD") == m.NcRequirement.skip):
+        return False
+    if not ex.ok(out, "ground defer", m.connection_requirement(None, b"GND") == m.NcRequirement.skip):
+        return False
+    if not ex.ok(out, "declared supply defer", m.connection_requirement(Some(env.ElectricalType.power_in), b"IN") == m.NcRequirement.skip):
+        return False
+    if not ex.ok(out, "input required", m.connection_requirement(Some(env.ElectricalType.input), b"CTRL") == m.NcRequirement.required):
+        return False
+    for name in [b"EN", b"BOOT0", b"NRST", b"A0"]:
+        if not ex.ok(out, "name-only suspect", m.connection_requirement(None, name) == m.NcRequirement.suspect):
+            return False
+    if not ex.ok(out, "output fine", m.connection_requirement(Some(env.ElectricalType.output), b"DOUT") == m.NcRequirement.fine):
+        return False
+    if not ex.ok(out, "IO fine", m.connection_requirement(Some(env.ElectricalType.io), b"PA3") == m.NcRequirement.fine):
+        return False
+    if not ex.ok(out, "passive fine", m.connection_requirement(Some(env.ElectricalType.passive), b"FILT") == m.NcRequirement.fine):
+        return False
+    if not ex.ok(out, "nc fine", m.connection_requirement(Some(env.ElectricalType.nc), b"NC") == m.NcRequirement.fine):
+        return False
+    for name in [b"NC", b"N/C", b"NC3", b"RESERVED", b"PD15", b"SOMESIG"]:
+        if not ex.ok(out, "meant to float or unknown", m.connection_requirement(None, name) == m.NcRequirement.fine):
+            return False
+    return True
+
+
+# test "padRequirements maps only the pads worth flagging"
+public func test_padrequirements_maps_only_the_pads_worth_flagging(fs: Filesystem, out: Stream) -> bool:
+    # A8/B8 are translator channels, so A8 is demoted; A0 has no B0 twin.
+    mut comp = b"(component reg (pinout \"reg\") (electrical \"CTRL\" (type input)))"
+    mut pinout = b"(pinout \"reg\" (pin 1 \"VDD\") (pin 2 \"EN\") (pin 3 \"A0\") (pin 4 \"GND\") (pin 5 \"DOUT\") (pin 6 \"CTRL\") (pin 7 \"NC\") (pin 8 \"A8\") (pin 9 \"B8\"))"
+    if not ex.ok(out, "fixture", fixture(fs, "reg", comp, pinout)):
+        return False
+    mut reqs = m.pad_requirements(fs, "project", b"reg")
+    if not ex.eq_int(out, "flaggable count", len(reqs), 3):
+        return False
+    if "2" not in reqs or "3" not in reqs or "6" not in reqs:
+        return ex.ok(out, "pads 2,3,6", False)
+    mut r2 = reqs["2"].copy()
+    mut r3 = reqs["3"].copy()
+    mut r6 = reqs["6"].copy()
+    if not ex.ok(out, "2 suspect", r2.req == m.NcRequirement.suspect):
+        return False
+    if not ex.ok(out, "3 suspect", r3.req == m.NcRequirement.suspect):
+        return False
+    if not ex.ok(out, "6 required", r6.req == m.NcRequirement.required):
+        return False
+    if not ex.eq_bytes(out, "6 function", r6.fn_name, b"CTRL"):
+        return False
+    for pad in ["1", "4", "5", "7", "8"]:
+        if not ex.ok(out, "skip/fine/channel excluded", pad not in reqs):
+            return False
+    return ex.ok(out, "A0 remains suspect without B0", r3.req == m.NcRequirement.suspect)

@@ -1,0 +1,32 @@
+{
+  "docs/performance.md": {
+    "original_sha256": "44564ebdf830bd7c7392136486a14c1098fbdcc043e1eb1eaa30d691c762cc5d",
+    "draft": "experiments/memory-closeout-20261012/A10/rollout/reference-docs/performance.md",
+    "draft_sha256": "45500ccfc54b705973dff2a3587851ad451355dbaeccc7f1f80c74880e6ac8e9"
+  },
+  "docs/python-syntax.md": {
+    "original_sha256": "dd05bbf99769c9b78dae4ca337d30c789157ea516ec299f8cb12cc67c2bad1fb",
+    "draft": "experiments/memory-closeout-20261012/A10/rollout/reference-docs/python-syntax.md",
+    "draft_sha256": "7b3a9e4290c7151b54ea176d97c6037c1a438e98d256d089ff5cb071c45327e8"
+  },
+  "docs/current-language.md": {
+    "original_sha256": "2edf83d302b610eca8352ec101bae80d2b9b296c020942e25d7e1301a7a3b8d6",
+    "draft": "experiments/memory-closeout-20261012/A10/rollout/reference-docs/current-language.md",
+    "draft_sha256": "d69639bcdb33bf9fa32aeac052cfe1a85f94cf6ff499ed20b517b648c954a761"
+  },
+  "docs/tooling/native-build.md": {
+    "original_sha256": "c93d81a2e438f5406cf765d2482dec12d41892120785fb7c0e38b3e585f23a52",
+    "draft": "experiments/memory-closeout-20261012/A10/rollout/reference-docs/tooling/native-build.md",
+    "draft_sha256": "274435a8e3df1b79766b83b7ba85eb45b07b9176815e37b126a0b490a7d20b54"
+  },
+  "docs/tooling/guest-tests.md": {
+    "original_sha256": "6d991ec6657ce276db9118514c24204420c56bc2ece4da03e6e38c1dcbd08abc",
+    "draft": "experiments/memory-closeout-20261012/A10/rollout/reference-docs/tooling/guest-tests.md",
+    "draft_sha256": "a4f1da28be2e65de866eb0d6d2c184a6de5d8a95a0713be8df62d9b8204ff63f"
+  },
+  "docs/tooling/cost.md": {
+    "original_sha256": "676879498c1d4d0d052ae69572371d7d39bde96d2efd9dbf9a734d95008e89a4",
+    "draft": "experiments/memory-closeout-20261012/A10/rollout/reference-docs/tooling/cost.md",
+    "draft_sha256": "245ebf399ff02edee7ebb39cce55f5092a9962e088ea0179b5ed3c1a68a69b26"
+  }
+}

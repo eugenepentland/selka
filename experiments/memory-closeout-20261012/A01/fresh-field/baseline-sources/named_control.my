@@ -1,0 +1,9 @@
+record Cell:
+    name: str
+    rows: str[][]
+func make() -> Cell:
+    return Cell(name="value-" + str(1), rows=[["ignored-" + str(1)]])
+func main() -> int:
+    const whole = make()
+    const text = whole.name.copy()
+    return len(text) - 7

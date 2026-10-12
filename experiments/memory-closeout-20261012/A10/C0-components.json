@@ -1,0 +1,33 @@
+{
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "results": [
+    {
+      "component": "test_index",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "check",
+        "selfhost/components/test_index/main.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "main.my:6:5: error[E_ZERO_RC_UNSUPPORTED]: open a dependent scope directly from a named provider in this prototype\n      with try fs.open(path, \"rb\") as file:\n      ^\n",
+      "source_sha256": "365f56a9f40de9658fed629427a43ba8bcad59f2b4c9b144654a66b1e90cf6b4"
+    },
+    {
+      "component": "cache_plan",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "check",
+        "selfhost/components/cache_plan/main.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "main.my:8:5: error[E_ZERO_RC_UNSUPPORTED]: open a dependent scope directly from a named provider in this prototype\n      with try fs.open(path, \"rb\") as file:\n      ^\n",
+      "source_sha256": "03222396a6df8346c8dfe1396b384ba43adf63f370a536ad9bebf59e412cfda7"
+    }
+  ]
+}

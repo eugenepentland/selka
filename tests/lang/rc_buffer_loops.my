@@ -19,7 +19,7 @@ public func test_a_snapshot_taken_before_the_loop_keeps_its_octets() -> bool:
     mut buffer = byte_buffer(empty)
     _ = buffer.append_byte(65)
     mut before = bytes(buffer)
-    mut shared = buffer
+    mut shared = buffer.copy()
     mut piece = b"xyz"
     for index in range(5):
         if index == 4:

@@ -12,6 +12,9 @@ myl_block *myl_core_number_text_new(size_t length) {
     return text;
 }
 
+/* The prebuilt Zig formatter must not guess the selected runtime's kind offset. */
+void myl_core_number_text_clear_ascii(myl_block *text) { text->kind &= ~MYL_TEXT_ASCII; }
+
 /* Invalid packed formats or impossible bounded-frame failures are internal errors. */
 _Noreturn void myl_core_number_text_invalid(void) { abort(); }
 

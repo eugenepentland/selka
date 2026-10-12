@@ -1,5 +1,5 @@
 # NEW-CORE-COUNTERS-1: a counting build (`--counters`) of this program records one
-# list copy (`ys` is appended to while `xs` is still live), ten record copies into
+# explicit list copy (`ys` is appended to while `xs` is still live), ten record copies into
 # list elements in `bump`, the pushes and the allocations, and prints the same output
 # as an ordinary build. Any argument makes it trap after printing.
 record P:
@@ -11,12 +11,12 @@ record P:
 
 
 func bumped(p: P) -> P:
-    mut q = p
+    mut q = p.copy()
     q.a += 1
     return q
 
 
-# The element goes out by value and a new record comes back: both are copied. (Read and
+# The borrowed element is copied explicitly and a new record comes back. (Read and
 # written back in place, `p = ps[i]; p.a += 1; ps[i] = p` stores only `a`, NEW-CORE-CE2-EFFECTS-4.)
 func bump(mut ps: P[], i: int) -> Unit:
     ps[i] = bumped(ps[i])
@@ -26,7 +26,7 @@ func main(args: str[], out: Stream) -> int:
     mut xs: int[] = []
     for i in range(100):
         xs.append(i)
-    mut ys = xs
+    mut ys = xs.copy()
     ys.append(5)
     mut ps: P[] = []
     for i in range(10):

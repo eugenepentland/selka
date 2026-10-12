@@ -1,0 +1,38 @@
+[
+  {
+    "source": "tests/lang/rc_variant_reads.my",
+    "before": "match pool.items[changing_index(mut pool)]:",
+    "after": "const receiver_snapshot = pool.items.copy()\n    match receiver_snapshot[changing_index(mut pool)]:",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/value_equality.my",
+    "before": "mut second = Node(value=2, next=Some(first))",
+    "after": "mut second = Node(value=2, next=Some(first.copy()))",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/value_equality.my",
+    "before": "dict[str, Bag[]] = {\"rows\": rows}",
+    "after": "dict[str, Bag[]] = {\"rows\": rows.copy()}",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/value_equality.my",
+    "before": "FixedArray[Bag, 2]([rows[0], rows[1]])",
+    "after": "FixedArray[Bag, 2]([rows[0].copy(), rows[1].copy()])",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "m.stack[mutation_result_53] = item",
+    "after": "m.stack[mutation_result_53] = item.copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_tree_drains.my",
+    "before": "Node(left=Some(shared), right=",
+    "after": "Node(left=Some(shared.copy()), right=",
+    "count": 1
+  }
+]

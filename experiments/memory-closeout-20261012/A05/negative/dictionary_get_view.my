@@ -1,0 +1,13 @@
+# spec-case: NEW-CORE-ZERO-RC-VIEWS-1
+func chosen(args: str[]) -> str:
+    if len(args) > 0:
+        return args[0].copy()
+    return "missing"
+
+func main(args: str[]) -> int:
+    const values: dict[str, bytes] = {"present": b"stored"}
+    const key = chosen(args)
+    mut fallback = ("abc" + str(len(args))).encode()
+    const view = values.get(key, fallback).borrow(0, 3)
+    fallback = ("changed" + str(len(args))).encode()
+    return int(view[0])

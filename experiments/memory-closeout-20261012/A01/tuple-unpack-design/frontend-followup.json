@@ -1,0 +1,28 @@
+{
+  "base_frontend_commit": "10f5e21aff4d49b2a92916003bee28e3555d4eff",
+  "fixture_correction": "Rename the evaluation-order helper pair to evaluated_pair so the unmodified provider fixture may retain its local pair binding. No assertion/output/ownership change. The registered native test now checks an additional provider checksum56 computed from both independent file contents, making provider-case execution observable. Original standalone provider_tuple.my unchanged.",
+  "current_fixture_hashes": {
+    "sources/positive.my": "b5e795f0f56d2df7cc329716630fcfec19e039039f8d7f41e1b0e33ec57b1819",
+    "sources/combined.my": "f5c60778dd6048af32f2ecc37ebea1b110b670c6a60516f9b0dd8abdbad38f58",
+    "sources/generic_split.my": "bace27f035ed485fc988e7516c70e6747096ac55d70542eaf934cdad1b138275"
+  },
+  "current_core_test_sha256": "5521f6c951f5603db0e2cc349c7e79165abc66e52c7f1ea8c787c24ee14b504c",
+  "combined_ordinary_frontend_check": {
+    "exit_status": 0,
+    "log": "raw/combined-front-check-3.log.gz",
+    "native_qualification": false,
+    "warning": "W_UNUSED_BINDING for intentionally untaken Ok(value) branch"
+  },
+  "preserved_initial_failure": {
+    "diagnostic": "E_SHADOWING",
+    "log": "raw/combined-front-check-1.log.gz"
+  },
+  "generic_check": "generic-manifest.json",
+  "result_controls": {
+    "passed": 4,
+    "failed": 0,
+    "raw": "raw/result-front-check-1.json.gz"
+  },
+  "compiler_sha256": "4cfbbde4f21e17f5cb538059c68ef678fae3a7e1d8a53fa3a381017f105a038f",
+  "combined_expected_stdout": "tuple-unpack 3\ntuple-results 28\ntuple-providers 56\n"
+}

@@ -23,20 +23,21 @@ func replace_row(mut rows: int[][]) -> int:
 
 public func test_nested_read_loans_keep_the_row_captured_before_a_callback() -> bool:
     mut rows = [[7, 8]]
-    mut selected = rows[0][replace_row(mut rows)]
+    const receiver_snapshot = rows[0].copy()
+    mut selected = receiver_snapshot[replace_row(mut rows)]
     return selected == 7 and rows == [[91]]
 
 
 public func test_named_row_keeps_ownership_after_root_replacement() -> bool:
     mut rows = [[7, 8]]
-    mut selected = rows[0]
+    mut selected = rows[0].copy()
     rows = [[91]]
     return selected[-1] == 8 and rows[0][0] == 91
 
 
 public func test_nested_reads_preserve_mutating_receiver_snapshots() -> bool:
     mut rows = [[7, 8]]
-    mut snapshot = rows
+    mut snapshot = rows.copy()
     rows[0].append(rows[0][0])
     return rows == [[7, 8, 7]] and snapshot == [[7, 8]]
 

@@ -1,0 +1,24 @@
+build-slot: gate slot 1, FIFO ticket 266 after 0s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10258 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/memory-closeout-20261012-A08-integrated 46a42d5de] Qualify borrowed selection cache restoration and corruption rejection
+ 17 files changed, 820 insertions(+)
+ create mode 100644 experiments/memory-closeout-20261012/A08/borrow-selection-cache/README.md
+ create mode 100644 experiments/memory-closeout-20261012/A08/borrow-selection-cache/first-guardian.log
+ create mode 100644 experiments/memory-closeout-20261012/A08/borrow-selection-cache/first-string-order-failure.log
+ create mode 100644 experiments/memory-closeout-20261012/A08/borrow-selection-cache/main.my
+ create mode 100644 experiments/memory-closeout-20261012/A08/borrow-selection-cache/predecessor-proof-failure.log
+ create mode 100644 experiments/memory-closeout-20261012/A08/borrow-selection-cache/results.json
+ create mode 100644 experiments/memory-closeout-20261012/A08/borrow-selection-cache/validation-before-literal-refactor.log
+ create mode 100644 experiments/memory-closeout-20261012/A08/borrow-selection-cache/validation.log
+ create mode 100644 experiments/memory-closeout-20261012/A08/borrow-selection-cache/verifier-scratch-leak.log
+ create mode 100644 experiments/memory-closeout-20261012/A08/borrowed_cache.py
+ create mode 100644 experiments/memory-closeout-20261012/A08/final-qualification-plan.json
+ create mode 100644 experiments/memory-closeout-20261012/A08/tuple-source-cache/main.my
+ create mode 100644 experiments/memory-closeout-20261012/A08/tuple-source-cache/manifest.json
+ create mode 100644 experiments/memory-closeout-20261012/A08/tuple_cache.py
+ create mode 100644 src/core/a08_borrow_cache_test.zig

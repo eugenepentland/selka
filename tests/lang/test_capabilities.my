@@ -51,7 +51,7 @@ func log(fs: Filesystem, line: str) -> bool:
 func text(result: Result[str, str]) -> str:
     match result:
         case Ok(value):
-            return value
+            return value.copy()
         case Err(message):
             return "error: " + message
 
@@ -69,7 +69,7 @@ func done(result: Result[Unit, str]) -> bool:
 func data(result: Result[bytes, str]) -> bytes:
     match result:
         case Ok(value):
-            return value
+            return value.copy()
         case Err(_):
             return b""
 
@@ -78,7 +78,7 @@ func data(result: Result[bytes, str]) -> bytes:
 func names(result: Result[str[], str]) -> str[]:
     match result:
         case Ok(value):
-            return value
+            return value.copy()
         case Err(_):
             return ["error"]
 
@@ -87,7 +87,7 @@ func names(result: Result[str[], str]) -> str[]:
 func home(env: Environment) -> str:
     match env.get("HOME"):
         case Some(value):
-            return value
+            return value.copy()
         case None:
             return "/"
 
@@ -108,14 +108,18 @@ public func test_simulated_clock_reads_its_start_until_advanced() -> bool:
             return False
 
 
+# Borrowed parameters name the same provider without copying its owner.
+func advance_borrowed_clock(alias: Clock, step: time.Duration) -> Result[Unit, str]:
+    return time.advance(alias, step)
+
+
 # spec-case: TEST-CAPS-1
-public func test_copies_of_a_simulated_clock_share_one_reading() -> bool:
+public func test_borrowed_simulated_clock_shares_one_reading() -> bool:
     mut clock = time.simulated_clock(time.from_unix_nanoseconds(0))
-    mut alias = clock
     mut start = time.from_unix_nanoseconds(0)
     match time.seconds(3):
         case Ok(step):
-            _ = time.advance(alias, step)
+            _ = advance_borrowed_clock(clock, step)
         case Err(_):
             return False
     return seconds_since(clock, start) == 3
@@ -190,21 +194,21 @@ public func test_memory_filesystem_opens_files_with_python_modes() -> bool:
 public func test_memory_filesystem_narrowing_stays_in_memory() -> bool:
     mut fs = filesystem.memory()
     _ = fs.mkdir("data")
-    mut scoped = fs.dir("data")
-    mut inside = done(scoped.write_text("x.txt", "1"))
-    mut outside = text(fs.read_text("data/x.txt"))
-    mut frozen = fs.read_only()
-    mut refused = done(frozen.write_text("y.txt", "2"))
-    mut readable = text(frozen.read_text("data/x.txt"))
-    mut escape = text(scoped.read_text("../notes.txt"))
-    return inside and outside == "1" and not refused and readable == "1" and not fs.exists("y.txt") and escape.startswith("error: ")
+    with fs.dir("data") as scoped:
+        with fs.read_only() as frozen:
+            mut inside = done(scoped.write_text("x.txt", "1"))
+            mut outside = text(fs.read_text("data/x.txt"))
+            mut refused = done(frozen.write_text("y.txt", "2"))
+            mut readable = text(frozen.read_text("data/x.txt"))
+            mut escape = text(scoped.read_text("../notes.txt"))
+            return inside and outside == "1" and not refused and readable == "1" and not fs.exists("y.txt") and escape.startswith("error: ")
 
 
 # spec-case: TEST-CAPS-1
 public func test_fixed_environment_answers_only_its_pairs() -> bool:
     mut env = environment.fixed({"LANG": "C", "HOME": "/home/test"})
-    mut narrowed = env.only("HOME")
-    return home(env) == "/home/test" and env.get("PATH") is None and env.names() == ["HOME", "LANG"] and home(narrowed) == "/home/test" and narrowed.names() == ["HOME"]
+    with env.only("HOME") as narrowed:
+        return home(env) == "/home/test" and env.get("PATH") is None and env.names() == ["HOME", "LANG"] and home(narrowed) == "/home/test" and narrowed.names() == ["HOME"]
 
 
 # spec-case: TEST-CAPS-1
@@ -216,11 +220,12 @@ public func test_empty_fixed_environment_has_no_names() -> bool:
 # spec-case: TEST-CAPS-1
 public func test_denied_network_refuses_every_connection() -> bool:
     mut net = network.denied()
-    match network.connect(net.host("127.0.0.1:8000")):
-        case network.Connected.ok(_):
-            return False
-        case network.Connected.err(code):
-            return code == network.denied_here() and network.describe(code) == "network access is denied in this context: this Network is a deterministic stand-in"
+    with net.host("127.0.0.1:8000") as scoped:
+        match network.connect(scoped):
+            case network.Connected.ok(_):
+                return False
+            case network.Connected.err(code):
+                return code == network.denied_here() and network.describe(code) == "network access is denied in this context: this Network is a deterministic stand-in"
 
 
 # spec-case: TEST-CAPS-3
@@ -238,8 +243,9 @@ public func test_runner_clock_starts_at_the_documented_instant(clock: Clock) -> 
 public func test_runner_capabilities_are_empty_and_deterministic(fs: Filesystem, env: Environment, net: Network, entropy: Entropy) -> bool:
     mut empty = len(names(fs.listdir(""))) == 0 and len(env.names()) == 0
     mut logged = log(fs, "first")
-    match network.connect(net.host("127.0.0.1:80")):
-        case network.Connected.ok(_):
-            return False
-        case network.Connected.err(code):
-            return empty and logged and code == network.denied_here() and first_word(entropy) != first_word(entropy)
+    with net.host("127.0.0.1:80") as scoped:
+        match network.connect(scoped):
+            case network.Connected.ok(_):
+                return False
+            case network.Connected.err(code):
+                return empty and logged and code == network.denied_here() and first_word(entropy) != first_word(entropy)

@@ -1,0 +1,49 @@
+{
+  "base": "ba273f0410597f8c9a3557635367907c87b15b51",
+  "status": "focused passed; integrated provider/Result/optional matrix pending",
+  "tests": {
+    "command": "scripts/build-slot.sh build $ZIG build test-core -Dtest-filter=\"zero RC tuple staging\" -j$MYLANG_DEV_JOBS --maxrss $MYLANG_DEV_MAXRSS",
+    "passed": 5,
+    "failed": 0,
+    "native_modes": [
+      "unoptimized debug",
+      "verified release"
+    ],
+    "ordinary_control": "borrowed tuple remains usable, child modification independent",
+    "checks": [
+      "RHS exactly once before targets",
+      "managed field and indexed swaps",
+      "ignored/unused/unit fields",
+      "early return",
+      "dependent resource cleanup and provider invalidation refusal",
+      "borrowed whole and use-after-move refusals",
+      "malformed typed cached arity/alias/placement refuses before lowering"
+    ]
+  },
+  "guardian": {
+    "passed": 88
+  },
+  "source_sha256": {
+    "SPEC.md": "03b3c4bc1b134d24965150079a33fc455714edc6e7e25beda7c438a0ae557eb5",
+    "src/core/tuple_unpack.zig": "19bfd1254caaf97f91e035e0f254effad1e154d14651ed57a662a450d96744a0",
+    "src/core/build.zig": "dceabf46a88860b9f956fad09bffc9e4e4d253f9539a2a718543fce1d252de6f",
+    "src/core/single_owner.zig": "3ba8fd8c30afb6e567ee59b763bacbd7158e786647a94d94a154c47d653dc005",
+    "src/core/typed_dump.zig": "fb6a0b5256b05195373af419b186f71a699aa93edaa7a0377d71044e65397d00",
+    "src/core/zero_rc_test.zig": "5639c6592ec34ccd0ad3ff401fc2e3a301cb4a0452900f1d7c06cfe8dc2e8c78"
+  },
+  "required_integration": [
+    "A08 3bbff3a61 semantic cache v8 and typed.Store declaration",
+    "A01 10f5e21af producer and origins/effects/value-semantics/duplicate consumers",
+    "root aggregate providers for provider tuple matrix"
+  ],
+  "overlays_excluded": [
+    "src/typed.zig shared Store.unpack declaration",
+    "src/sema_places.zig A01 producer",
+    "duplicate local providerStore none guard and restrict_resource scope case"
+  ],
+  "limits": [
+    "Worker native uses managed leakcheck and LLVM RC audit, not final census timing/counters.",
+    "Provider-owner tuple and pending Result full matrix require integrated compiler; not established by generic dependent-resource test.",
+    "Earlier test1 failure was unsupported untyped None test literal, corrected to Unit ()."
+  ]
+}

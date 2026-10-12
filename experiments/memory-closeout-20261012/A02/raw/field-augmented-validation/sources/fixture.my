@@ -1,0 +1,53 @@
+# spec-case: AUGMENTED-FIELD-1
+record AugmentedOwner:
+    items: str[]
+    label: str
+
+record AugmentedParent:
+    child: AugmentedOwner
+    rows: AugmentedOwner[]
+    mapping: dict[int, AugmentedOwner]
+
+func owner(seed: int) -> AugmentedOwner:
+    return AugmentedOwner(items=["item-" + str(seed)], label="label-" + str(seed))
+
+func selected(mut events: int[]) -> int:
+    events.append(1)
+    return -1
+
+func values(mut events: int[], out: Stream) -> str[]:
+    events.append(2)
+    out.print("rhs")
+    return ["extra-" + str(len(events))]
+
+func main(args: str[], out: Stream) -> int:
+    mut parent = AugmentedParent(child=owner(0), rows=[owner(1)], mapping={3: owner(3)})
+    const before = parent.copy()
+    mut events: int[] = []
+    if len(args) > 0:
+        if args[0] == "bounds":
+            parent.rows[-2].items += values(mut events, out)
+        else:
+            parent.mapping[9].items += values(mut events, out)
+        return 9
+    parent.rows[selected(mut events)].items += values(mut events, out)
+    assert events == [1, 2]
+    assert parent.rows[0].items == ["item-1", "extra-2"]
+    assert before.rows[0].items == ["item-1"]
+    parent.child.items += ["nested"]
+    parent.mapping[3].items += ["mapped"]
+    parent.child.items += parent.child.items
+    assert parent.child.items == ["item-0", "nested", "item-0", "nested"]
+    assert parent.mapping[3].items == ["item-3", "mapped"]
+    assert before.child.items == ["item-0"] and before.mapping[3].items == ["item-3"]
+    mut maybe: AugmentedOwner? = Some(owner(4))
+    if maybe is None:
+        return 8
+    maybe.items += ["optional"]
+    assert maybe.items == ["item-4", "optional"]
+    const independent = parent.rows[0].items.copy()
+    parent.rows.clear()
+    assert independent == ["item-1", "extra-2"]
+    assert parent.child.label == "label-0" and before.rows[0].label == "label-1"
+    out.print("field augmented preserved")
+    return 0

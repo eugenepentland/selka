@@ -1,0 +1,25 @@
+{
+  "base": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "status": "unapplied C3 patch request",
+  "files": {
+    "src/core/emit_count.zig": {
+      "before_sha256": "ddd351ca49a3ea9248594b7a18a432c2fe84dd5323e4ecc45f226155382adf42",
+      "prepared_sha256": "9735b9ad2c52a4491532ddd3622fe8933c8e9f3903b79b5c97728f1075d5f881"
+    },
+    "src/core/count_runtime.zig": {
+      "before_sha256": "1f98dd5f443cb411cb12a5adae0fdc2107342932089d1dc4b90b72de8d7870cc",
+      "prepared_sha256": "f58f19dbd9dc00047025482ff98b299bdcc800beef836d30006b5c2ebb205438"
+    },
+    "src/core/runtime/core_count.h": {
+      "before_sha256": "3a39d1ece245f90d88a9812e29bb59467d95d34566e33da2c384d41622eaaee7",
+      "prepared_sha256": "323ed0b0e25b0e4d8ff3b46809cf3b3c11487f93bdd1cf1a14b48355103fdd9f"
+    },
+    "src/core/runtime/core_count.c": {
+      "before_sha256": "e7497cd9feb3ea3d98898223777dc805f3e56f78cbeaa6cfc6cf4d86a090a891",
+      "prepared_sha256": "6b930b4d9403788afa5d589d0d23c2ff5e7c0b80a7294855a536bc9d0dd37dba"
+    }
+  },
+  "patch_sha256": "74a87be05cda44c353444ad0a013255252ed73951b9afdb8d86e492d99537c2b",
+  "counter_schema": "mylang-counters-v1 unchanged; required historical RC fields explicitly zero",
+  "shared_contract": "Apply with A02 runtime RC removal and A07 direct owned LLVM templates; preserve allocation/copy/live/task synchronization."
+}

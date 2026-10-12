@@ -1,0 +1,105 @@
+{
+  "archive_sha256": "8cbf7d5c1918a2efbc12f69bd72e5374364881cdaa28e96d058c2b296cad6368",
+  "files": [
+    {
+      "file": "board_layers.my",
+      "before_sha256": "c288df6bbec4421c30a9cd8b517b7d4c3f8e886687aee25fef13132263624f53",
+      "after_sha256": "c288df6bbec4421c30a9cd8b517b7d4c3f8e886687aee25fef13132263624f53"
+    },
+    {
+      "file": "board_layers_test.my",
+      "before_sha256": "2eb7d06b5e6f9abedfc54ed4dd47526b90723bc4e6f61fadacfc3d81d5536e8c",
+      "after_sha256": "2eb7d06b5e6f9abedfc54ed4dd47526b90723bc4e6f61fadacfc3d81d5536e8c"
+    },
+    {
+      "file": "design_model.my",
+      "before_sha256": "6e4d3480905e9d7fc20888647cd95dcd536b0eff6d63605a9a4dcac1aefdb161",
+      "after_sha256": "6e4d3480905e9d7fc20888647cd95dcd536b0eff6d63605a9a4dcac1aefdb161"
+    },
+    {
+      "file": "design_model_test.my",
+      "before_sha256": "ab43ea082112e14ddb3715496dde46309a0ec4d101f639a7f134fc2ef24f93e5",
+      "after_sha256": "ab43ea082112e14ddb3715496dde46309a0ec4d101f639a7f134fc2ef24f93e5"
+    },
+    {
+      "file": "diagram_membership.my",
+      "before_sha256": "fdf4788babc9635a2f1d9ba7c3c637bad59bfd2748f10f05949e50e329a3e70a",
+      "after_sha256": "fdf4788babc9635a2f1d9ba7c3c637bad59bfd2748f10f05949e50e329a3e70a"
+    },
+    {
+      "file": "diagram_membership_test.my",
+      "before_sha256": "0d8d662874d6052c0c80929888f4548e1710222e6697d5a443be19dd064ff49a",
+      "after_sha256": "0d8d662874d6052c0c80929888f4548e1710222e6697d5a443be19dd064ff49a"
+    },
+    {
+      "file": "eval_electrical.my",
+      "before_sha256": "d539d1104eec781093e6d499b237885607719a33f957cc42e41c124337691739",
+      "after_sha256": "d539d1104eec781093e6d499b237885607719a33f957cc42e41c124337691739"
+    },
+    {
+      "file": "eval_electrical_test.my",
+      "before_sha256": "b684e3219d7ec4b4f30a2fecb746e59da24bf4a70fc471c719b52cdfcf6ed428",
+      "after_sha256": "b684e3219d7ec4b4f30a2fecb746e59da24bf4a70fc471c719b52cdfcf6ed428"
+    },
+    {
+      "file": "eval_env.my",
+      "before_sha256": "3f5b7454112435dba44cbbb2805cbc8846124fdf39676f1c5a7a42f82de01368",
+      "after_sha256": "3f5b7454112435dba44cbbb2805cbc8846124fdf39676f1c5a7a42f82de01368"
+    },
+    {
+      "file": "eval_env_test.my",
+      "before_sha256": "9571453310bf7fa116407a5e2571a73d71842c77fb1385019eb93a806bdb6e9c",
+      "after_sha256": "9571453310bf7fa116407a5e2571a73d71842c77fb1385019eb93a806bdb6e9c"
+    },
+    {
+      "file": "eval_net_analysis.my",
+      "before_sha256": "8e9f1ec9d3eb5663318dda18bb7a4d0c0135e9a8448e830ebd1e49bd931b5911",
+      "after_sha256": "8e9f1ec9d3eb5663318dda18bb7a4d0c0135e9a8448e830ebd1e49bd931b5911"
+    },
+    {
+      "file": "eval_net_analysis_test.my",
+      "before_sha256": "1e42c462400641deb2b7a33ce3f450167d0bba47d7d4155cf6c517ba085ee3f5",
+      "after_sha256": "1e42c462400641deb2b7a33ce3f450167d0bba47d7d4155cf6c517ba085ee3f5"
+    },
+    {
+      "file": "eval_rails.my",
+      "before_sha256": "ee66dbf0598c27952f8fecbc4f887d6b85568ed84384a6085d62730c190210f3",
+      "after_sha256": "ee66dbf0598c27952f8fecbc4f887d6b85568ed84384a6085d62730c190210f3"
+    },
+    {
+      "file": "eval_rails_test.my",
+      "before_sha256": "745390f62018503c1b1d444d7be8318b16f96c59293a93a2de5bbd62f8100132",
+      "after_sha256": "745390f62018503c1b1d444d7be8318b16f96c59293a93a2de5bbd62f8100132"
+    },
+    {
+      "file": "flat_netlist.my",
+      "before_sha256": "26cdd16c2d81e5f4067ebf64993afb9be5d1a8e2b2f870037d75f88d98bb2ab7",
+      "after_sha256": "26cdd16c2d81e5f4067ebf64993afb9be5d1a8e2b2f870037d75f88d98bb2ab7"
+    },
+    {
+      "file": "flat_netlist_test.my",
+      "before_sha256": "74f8f0e74b1bb8b09240147434fa610940281d9d122a4a5e51f6a0be42545e55",
+      "after_sha256": "74f8f0e74b1bb8b09240147434fa610940281d9d122a4a5e51f6a0be42545e55"
+    },
+    {
+      "file": "placement_geometry.my",
+      "before_sha256": "39f4ef41cd0f0194bfb11336b070ff9f5a73ee4cc7d44ada5aa283fb0dca35b7",
+      "after_sha256": "39f4ef41cd0f0194bfb11336b070ff9f5a73ee4cc7d44ada5aa283fb0dca35b7"
+    },
+    {
+      "file": "placement_geometry_test.my",
+      "before_sha256": "e2aeb1f9195cf1115fe86d47f4ff6d37917f5e7800d55d7e5776358497fb0a6d",
+      "after_sha256": "e2aeb1f9195cf1115fe86d47f4ff6d37917f5e7800d55d7e5776358497fb0a6d"
+    },
+    {
+      "file": "placement_pin_roles.my",
+      "before_sha256": "8f6c1a2eab78ec1b30acfc0103419c9f0d21febe0ae5df78e87407a8089fb937",
+      "after_sha256": "8f6c1a2eab78ec1b30acfc0103419c9f0d21febe0ae5df78e87407a8089fb937"
+    },
+    {
+      "file": "placement_pin_roles_test.my",
+      "before_sha256": "07225f90e1f93c3020a4bb40366a77bc2e61aba13467720751d9a3a1033f6050",
+      "after_sha256": "07225f90e1f93c3020a4bb40366a77bc2e61aba13467720751d9a3a1033f6050"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "source_worktree": "/home/epentland/ai/canopy/mylang-memory-20261012-support7",
+  "environment_file": "/home/epentland/.config/mylang/dev-env.sh",
+  "component_cache": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/component-cache",
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "build",
+    "-Doptimize=ReleaseFast",
+    "-Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+    "-Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar",
+    "-p",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install",
+    "-j4",
+    "--maxrss",
+    "8589934592"
+  ],
+  "status": "building; not qualification",
+  "build_log": "build.log",
+  "component_boundary": "Full install using independently qualified owned Support6 compiler pin; actual component source and binary identities recorded at completion. Immutable historical seed unchanged."
+}

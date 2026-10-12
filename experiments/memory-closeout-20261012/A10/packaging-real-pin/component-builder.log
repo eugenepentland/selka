@@ -1,0 +1,6 @@
+build-slot: build slot 3, FIFO ticket 669 after 0s
+Build Summary: 3/3 steps succeeded
+component-builder success
++- install generated to selka-components success
+   +- compile exe selka-components safe native cached 7ms MaxRSS:42M
+

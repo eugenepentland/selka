@@ -1,5 +1,5 @@
 func grow(xs: int[]) -> int:
-    mut copy = xs
+    mut copy = xs.copy()
     copy.append(1)
     copy.append(2)
     return len(copy) * 10 + len(xs)
@@ -7,7 +7,7 @@ func grow(xs: int[]) -> int:
 
 func local_alias(n: int) -> int:
     mut a = [1, 2, 3]
-    mut b = a
+    mut b = a.copy()
     for j in range(n):
         b.append(j)
     return len(a) * 100 + len(b)

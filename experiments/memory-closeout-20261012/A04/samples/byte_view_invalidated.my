@@ -1,0 +1,5 @@
+func main() -> int:
+    mut source = byte_buffer([1, 2, 3])
+    const view = source.borrow(0, 3)
+    _ = source.append_byte(4)
+    return len(view)

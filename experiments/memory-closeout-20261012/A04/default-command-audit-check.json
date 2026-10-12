@@ -1,0 +1,22 @@
+{
+  "scope": "Existing actual checked/RC binaries and counters test the new default audit independently of flag selection; no C2 compiler/default claim.",
+  "ownership_support_sha256": "09a65264e96844f62e0b8bb59bb8e12674a9c20ab5f9c1b30ab552351a784ace",
+  "results": [
+    {
+      "case": "s1_reads/release",
+      "accepted": true,
+      "expected": true,
+      "reason": "",
+      "compiler_sha256": "3aa1647fd499c237083289c5d44e22efa0ceb37937ad974865275e5cfd80d65c",
+      "binary_sha256": "af09952649b337ff78338bf65c28c3d2eee0151ba53152e3a2de7091f07a977b"
+    },
+    {
+      "case": "s1_reads/ordinary",
+      "accepted": false,
+      "expected": false,
+      "reason": "",
+      "compiler_sha256": "3aa1647fd499c237083289c5d44e22efa0ceb37937ad974865275e5cfd80d65c",
+      "binary_sha256": "aed2faefad1ea43fbd0a49e6120e98b7159d4953058887a7994efcc9666e2a94"
+    }
+  ]
+}

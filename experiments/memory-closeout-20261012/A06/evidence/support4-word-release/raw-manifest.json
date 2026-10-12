@@ -1,0 +1,27 @@
+{
+  "word_count/release/build.json": {
+    "raw_sha256": "19727f9c04379f8dc39bd41a6376fd596caf9e0a1adf110a5273f4bd9b0548c0",
+    "compressed_sha256": "d353f16fbfa0123e857918f52097f5fcefaa089123a708b6cf69bfff984efce4",
+    "raw_bytes": 1611
+  },
+  "word_count/release/counts-large-threads-1.json": {
+    "raw_sha256": "d29afab60914949a774a55326fc194e94cee8e0aa5a0d35d9507810d3eeb976e",
+    "compressed_sha256": "63729bf1e018fb481f783875408bb9f40c9d0281d800e4443eea01fe74833e7e",
+    "raw_bytes": 9372
+  },
+  "word_count/release/counts-small-threads-1.json": {
+    "raw_sha256": "14927831f17a45efc15116725c622372cdf52e6abd5b9fa9c601225c2dbaba3a",
+    "compressed_sha256": "bfc9c6fd4a4e1f958ab4e0a75c74a86ad1bacd32eb215bcce15f842a98082c69",
+    "raw_bytes": 9283
+  },
+  "word_count/release/run-large-threads-1.json": {
+    "raw_sha256": "fac2b234bda9e4bc943fd4d0b13c62df0eb955088b055dd7c35c02531599854f",
+    "compressed_sha256": "ca453833a431fa549e6deeeb5e302af043a78509f63a23faec9daa7d808fb661",
+    "raw_bytes": 272
+  },
+  "word_count/release/run-small-threads-1.json": {
+    "raw_sha256": "6191b63e99c849c665b6b390dd8404caf7a3ee9c0ff28c4e6d25c0dc9f7448cc",
+    "compressed_sha256": "9c6b0c30f93ad24a279b8aa897a69b137b005b57ffeed8dbd3e9df0e2a917ef7",
+    "raw_bytes": 255
+  }
+}

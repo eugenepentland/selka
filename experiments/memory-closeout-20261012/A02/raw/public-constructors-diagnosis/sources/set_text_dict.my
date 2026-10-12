@@ -1,0 +1,4 @@
+func main() -> int:
+    mut keys = set({"b": 1, "a": 2})
+    print(len(keys))
+    return 0

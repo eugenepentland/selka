@@ -1,0 +1,9 @@
+record Context:
+    fs: Filesystem
+    env: Environment
+
+func escape(fs: Filesystem, env: Environment) -> Context:
+    const ctx = Context(fs=fs, env=env)
+    return ctx
+func main(fs: Filesystem, env: Environment) -> int:
+    return len(escape(fs, env).env.names())

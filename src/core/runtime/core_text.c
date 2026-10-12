@@ -305,26 +305,36 @@ static inline void core_text_copy_short(unsigned char *output, const unsigned ch
     } else if (count) output[0]=input[0];
 }
 
+/* Expose the bounded scalar capture to each of the two append wrappers. */
+#ifdef MYL_ZERO_RC
+__attribute__((always_inline))
+#endif
 static inline myl_block *core_text_append_bytes(myl_block *a, const unsigned char *bytes, int64_t count, bool ascii) {
+    if (a->len < 0 || count < 0 || count > INT64_MAX - a->len) out_of_memory();
     int64_t len = a->len + count;
 #ifdef MYL_ZERO_RC
-    if (a->kind & MYL_STATIC_STORAGE) a = myl_core_owned_octets_copy(a);
+    const bool static_source = (a->kind & MYL_STATIC_STORAGE) != 0;
 #else
+    const bool static_source = false;
     if (!count_is_unique(a)) myl_core_s2_unsupported(-1);
 #endif
-    if ((a->kind & (MYL_TEXT_CURSOR | MYL_TEXT_TAIL)) == MYL_TEXT_CURSOR) a->cap = a->len;
-    a->kind &= ~(MYL_TEXT_CURSOR | MYL_TEXT_TAIL);
-    if (len > a->cap) {
-        int64_t cap = a->cap > 0 ? a->cap * 2 : 16;
+    /* An immortal source is copied directly into the final append allocation.
+     * Never alter its header, and never allocate an intermediate owned shell. */
+    if (!static_source) {
+        if ((a->kind & (MYL_TEXT_CURSOR | MYL_TEXT_TAIL)) == MYL_TEXT_CURSOR) a->cap = a->len;
+        a->kind &= ~(MYL_TEXT_CURSOR | MYL_TEXT_TAIL);
+    }
+    if (static_source || len > a->cap) {
+        int64_t cap = a->cap > INT64_MAX / 2 ? len : a->cap > 0 ? a->cap * 2 : 16;
         if (cap < len) cap = len;
         size_t room;
-        myl_block *grown = block_alloc(MYL_KIND_STR, (size_t)cap + 1, &room);
+        myl_block *grown = block_alloc(MYL_KIND_STR, block_data_size(cap, 1, true), &room);
         grown->cap = (int64_t)room - 1;
         grown->len = a->len;
         memcpy(block_data(grown), block_data(a), (size_t)a->len);
         if (count <= 16) core_text_copy_short(block_data(grown) + a->len, bytes, (size_t)count);
         else memcpy(block_data(grown) + a->len, bytes, (size_t)count);
-        block_free(a);
+        if (!static_source) block_free(a);
         a = grown;
     } else if (count <= 16) core_text_copy_short(block_data(a) + a->len, bytes, (size_t)count);
     else memmove(block_data(a) + a->len, bytes, (size_t)count);
@@ -343,6 +353,14 @@ myl_block *myl_core_ir_str_append(myl_block *a, const myl_block *b) {
 
 myl_block *myl_core_ir_str_append_char(myl_block *a, myl_block *text, uint64_t offset) {
     uint64_t width = myl_core_ir_str_width(text, offset);
+#ifdef MYL_ZERO_RC
+    /* Capture an ASCII octet before any write, including a same-owner read. */
+    if (width == 1 && a->len >= 0 && a->len < a->cap &&
+        (a->kind & (MYL_STATIC_STORAGE | MYL_TEXT_CURSOR | MYL_TEXT_TAIL)) == 0) {
+        unsigned char octet = block_data(text)[offset];
+        return core_text_append_bytes(a, &octet, 1, (a->kind & MYL_TEXT_ASCII) != 0);
+    }
+#endif
     unsigned char bytes[4];
     /* Capture the complete scalar before a cursor reset, growth or alias free.
      * The bounded copy reads exactly width bytes, including three-byte UTF-8. */
@@ -497,12 +515,44 @@ bool myl_core_str_ends(myl_block *text, myl_block *needle) { return needle->len 
 
 static const int32_t core_text_list_layout[] = {8, 1, 0, 0, 0};
 /* Offset-only lists are private to a compiler-proven nonescaping split. */
+static uint64_t core_split_initial_capacity(uint64_t len, uint64_t separator_len) {
+    /* Clamp before adding: even UINT64_MAX input cannot wrap the capacity.
+       Sparse large inputs reserve at most 128 pairs, never a text-sized list. */
+    const uint64_t maximum = len / separator_len;
+    return maximum < 128 ? maximum + 1 : 128;
+}
 myl_block *myl_core_span_split_offsets(const unsigned char *text, uint64_t len, const unsigned char *separator, uint64_t separator_len) {
     if (!separator_len) myl_core_s2_unsupported(-1);
-    myl_block *list = myl_core_list_new_slow(0, 16);
+    myl_block *list = myl_core_list_new_slow((int64_t)core_split_initial_capacity(len, separator_len), 16);
     int64_t at = 0;
     for (;;) {
-        int64_t hit = core_span_find(text, (int64_t)len, separator, (int64_t)separator_len, at);
+        int64_t hit = -1;
+        if (separator_len == 1) {
+            /* Frequent single-byte pieces avoid the general needle-search frame. */
+            if ((uint64_t)at < len) {
+                const unsigned char *found = memchr(text + at, separator[0], (size_t)(len - (uint64_t)at));
+                if (found) hit = found - text;
+            }
+        } else if (separator_len == 2 && len - (uint64_t)at >= 2) {
+            /* Verify the second byte locally; bound failed probes before libc's
+               linear fallback so repeated first bytes retain predictable work. */
+            uint64_t cursor = (uint64_t)at;
+            unsigned tried = 0;
+            for (; tried < 8 && cursor + 1 < len; ++tried) {
+                const unsigned char *found = memchr(text + cursor, separator[0], (size_t)(len - cursor - 1));
+                if (!found) break;
+                cursor = (uint64_t)(found - text);
+                if (found[1] == separator[1]) { hit = (int64_t)cursor; break; }
+                ++cursor;
+            }
+            if (hit < 0 && tried == 8 && cursor + 1 < len) {
+                extern void *memmem(const void *, size_t, const void *, size_t);
+                const unsigned char *found = memmem(text + cursor, (size_t)(len - cursor), separator, 2);
+                if (found) hit = found - text;
+            }
+        } else {
+            hit = core_span_find(text, (int64_t)len, separator, (int64_t)separator_len, at);
+        }
         int64_t end = hit < 0 ? (int64_t)len : hit;
         if (list->len == list->cap) list = myl_core_list_grow(list, 16);
         uint64_t *piece = (uint64_t *)block_data(list) + 2 * list->len++;
@@ -1080,6 +1130,10 @@ int64_t myl_core_bytes_utf8_count_range(myl_block *bytes, int64_t start, int64_t
     return myl_core_span_utf8_count(block_data(bytes) + first, last > first ? last - first : 0);
 }
 myl_block *myl_core_bytes_decode_text(myl_block *bytes) { return str_from((const char *)block_data(bytes), (size_t)bytes->len); }
+/* The caller has validated this exact UTF-8 span; the result owns its copy. */
+myl_block *myl_core_span_decode_text(const unsigned char *bytes, uint64_t length) {
+    return str_from((const char *)bytes, (size_t)length);
+}
 myl_block *myl_core_bytes_utf8_error(void) { return str_from("invalid UTF-8 in byte string", sizeof("invalid UTF-8 in byte string") - 1); }
 
 /* Packed PY-FSTRING-SPEC-1 text layout, ported from format_spec.zig.

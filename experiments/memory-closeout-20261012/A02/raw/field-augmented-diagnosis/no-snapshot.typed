@@ -1,0 +1,68 @@
+fn main #0 params=0 ret=i64 cabi=false host=false
+  local %0 <collection>: List<i64> mut
+  local %1 receiver: Holder mut
+  local %2 <collection>: Holder mut
+  local %3 <collection>: List<i64> mut
+  local %4 <collection>: List<i64> mut
+  local %5 <collection>: List<i64> mut
+  local %6 <collection>: List<i64> mut
+  block
+    initialize %1
+      record : Holder
+        field .0
+          block_value : List<i64>
+            block
+              initialize %0
+                acquire_buffer : List<i64>
+                  integer : i64 1
+              discard
+                buffer_operation : unit append owner=%0
+                  integer : i64 1
+            local : List<i64> %0
+    discard
+      block_value : unit
+        block
+          initialize %2
+            local : Holder %1
+          initialize %4
+            field : List<i64> .0
+              local : Holder %2
+          discard
+            buffer_operation : unit extend owner=%4
+              block_value : List<i64>
+                block
+                  initialize %3
+                    acquire_buffer : List<i64>
+                      integer : i64 1
+                  discard
+                    buffer_operation : unit append owner=%3
+                      integer : i64 2
+                local : List<i64> %3
+          initialize %5
+            local : List<i64> %4
+          initialize %2
+            local : Holder %1
+          assign %1
+            update : Holder
+              local : Holder %2
+              field .0
+                local : List<i64> %5
+        unit : unit ...
+    assertion receiver.items == [1, 2]
+      binary : bool eq
+        field : List<i64> .0
+          local : Holder %1
+        block_value : List<i64>
+          block
+            initialize %6
+              acquire_buffer : List<i64>
+                integer : i64 2
+            discard
+              buffer_operation : unit append owner=%6
+                integer : i64 1
+            discard
+              buffer_operation : unit append owner=%6
+                integer : i64 2
+          local : List<i64> %6
+    ret
+      integer : i64 0

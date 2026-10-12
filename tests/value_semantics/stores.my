@@ -22,10 +22,10 @@ func size(values: int[]) -> int:
 # spec-case: VALUE-SEMANTICS-2
 public func test_a_record_field_holds_its_own_list() -> bool:
     mut items = [1]
-    mut bag = Bag(items=items, tags={})
+    mut bag = Bag(items=items.copy(), tags={})
     items.append(2)
     bag.items.append(3)
-    mut copy = bag
+    mut copy = bag.copy()
     copy.items.append(4)
     return items == [1, 2] and bag.items == [1, 3] and copy.items == [1, 3, 4]
 
@@ -33,7 +33,7 @@ public func test_a_record_field_holds_its_own_list() -> bool:
 # spec-case: VALUE-SEMANTICS-2
 public func test_a_nested_record_copy_is_independent() -> bool:
     mut holder = Holder(bag=Bag(items=[1], tags={"a": [1]}), count=1)
-    mut other = holder
+    mut other = holder.copy()
     other.bag.items.append(2)
     other.bag.tags["a"].append(2)
     return holder.bag.items == [1] and holder.bag.tags["a"] == [1] and other.bag.items == [1, 2] and other.bag.tags["a"] == [1, 2]
@@ -43,10 +43,10 @@ public func test_a_nested_record_copy_is_independent() -> bool:
 public func test_element_and_dictionary_value_stores_copy() -> bool:
     mut row = [1]
     mut rows: int[][] = []
-    rows.append(row)
-    rows.insert(0, row)
+    rows.append(row.copy())
+    rows.insert(0, row.copy())
     mut table: dict[str, int[]] = {}
-    table["r"] = row
+    table["r"] = row.copy()
     row.append(9)
     rows[0].append(2)
     table["r"].append(3)
@@ -56,10 +56,10 @@ public func test_element_and_dictionary_value_stores_copy() -> bool:
 # spec-case: VALUE-SEMANTICS-2
 public func test_tuple_and_payload_stores_copy() -> bool:
     mut items = [1]
-    mut pair = (items, 5)
-    mut maybe: int[]? = Some(items)
+    mut pair = (items.copy(), 5)
+    mut maybe: int[]? = Some(items.copy())
     items.append(2)
-    const first, count = pair
+    const first, count = pair.copy()
     match maybe:
         case Some(inside):
             return len(first) == 1 and count == 5 and len(inside) == 1 and len(items) == 2
@@ -106,8 +106,8 @@ public func test_update_copies_the_dictionary_values_it_takes() -> bool:
 public func test_setdefault_and_get_hand_back_copies() -> bool:
     mut table: dict[str, int[]] = {}
     mut fallback = [0]
-    mut stored = table.setdefault("a", [1])
+    mut stored = table.setdefault("a", [1]).copy()
     stored.append(2)
-    mut got = table.get("b", fallback)
+    mut got = table.get("b", fallback).copy()
     got.append(3)
     return table["a"] == [1] and stored == [1, 2] and fallback == [0] and got == [0, 3]

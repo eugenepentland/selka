@@ -1,0 +1,115 @@
+{
+  "base_commit": "8fa0560309cc2c78b9691a94a6c7e2be2815d4a4",
+  "compiler_sha256": "63abaf31135a9cbf78b258b63cf21368b85eda3923f7cbd49cabfb789f3870a3",
+  "source_files_sha256": {
+    "src/core/aggregate_provider.zig": "3462d4bfefd3a272789f469e72479049e35b2347665cc5ab3521b1787e2b80d6",
+    "src/core/borrowed_provider.zig": "fae14bd0a0d1fc82869cff33bee183f1930127b96ba6dfa25970cb6e9eeed205",
+    "src/core/build.zig": "f0586bb5e73047c604288e8a9466d80f8326a63ee44792fbe5ca6fd2b358c8fc",
+    "src/core/emit_llvm.zig": "7ce0699104d4b78d2917af84ba46b635020efcb9036410d7c915c38c61affb5b",
+    "src/core/single_owner.zig": "53a6962e25b99d8d7a0160d60ea968ce8cf98e166296063de8c119c2a47709c7",
+    "src/core/root_test.zig": "04930f2cd7922c8d60533e0ed3015b2f1d8b69b7221ceaabeb4ed1dff895a468",
+    "src/core/optional_provider_20261012_test.zig": "c8da966a0124f271f5ff7e2a0a5944ae61515bf9d7f462e0e9f168faa4638ea7"
+  },
+  "qualified_component_directory": "/home/epentland/ai/canopy/mylang-memory-20261012-verify-02/zig-out/libexec/mylang/components",
+  "contract": "Exact builtin None/Some(provider) only. Immutable optional parameters borrow; Some borrows an immutable parameter projection only as a direct read-only call argument. Optional local storage, aggregate embedding, return and fresh temporary match are rejected. Helper ABI has no ownership bits and source root proof is repeated after cache restore. Physical payload borrow cannot be released or escape.",
+  "focused_unit_command": "scripts/build-slot.sh build zig build core-test-binary '-Dtest-filter=optional provider 20261012' -j4; scripts/build-slot.sh build zig-out/focus/core-tests",
+  "native_modes": {
+    "unoptimized": {
+      "flags": [
+        "--unoptimized"
+      ],
+      "stdout": "1\n0\n1\nTrue\n",
+      "stderr": "",
+      "leakcheck": true,
+      "llvm_sha256": "6d299a38684162fe16e78c4c17ba0ca7956dd6132a603a3d53a9d8a42320e1f9",
+      "binary_sha256": "52dadfc24d4798a5541998019fa828639c37134975d3ab221a3e5ebcc659dd9c",
+      "zero_rc_operations": {
+        "retain": 0,
+        "release": 0
+      }
+    },
+    "optimize-debug": {
+      "flags": [
+        "--optimize-debug"
+      ],
+      "stdout": "1\n0\n1\nTrue\n",
+      "stderr": "",
+      "leakcheck": true,
+      "llvm_sha256": "6d299a38684162fe16e78c4c17ba0ca7956dd6132a603a3d53a9d8a42320e1f9",
+      "binary_sha256": "381d2d8d6a742f950ecde338b1111d00bd45ac8af924524048729a6de35e57e7",
+      "zero_rc_operations": {
+        "retain": 0,
+        "release": 0
+      }
+    },
+    "release": {
+      "flags": [
+        "--release"
+      ],
+      "stdout": "1\n0\n1\nTrue\n",
+      "stderr": "",
+      "leakcheck": true,
+      "llvm_sha256": "6d299a38684162fe16e78c4c17ba0ca7956dd6132a603a3d53a9d8a42320e1f9",
+      "binary_sha256": "b80548aee8b8d21f03a7ac69c5d8c5878d3c29cbfd6c283b58298b1d39e3baf0",
+      "zero_rc_operations": {
+        "retain": 0,
+        "release": 0
+      }
+    },
+    "release-no-facts": {
+      "flags": [
+        "--release",
+        "--no-facts"
+      ],
+      "stdout": "1\n0\n1\nTrue\n",
+      "stderr": "",
+      "leakcheck": true,
+      "llvm_sha256": "6d299a38684162fe16e78c4c17ba0ca7956dd6132a603a3d53a9d8a42320e1f9",
+      "binary_sha256": "b80548aee8b8d21f03a7ac69c5d8c5878d3c29cbfd6c283b58298b1d39e3baf0",
+      "zero_rc_operations": {
+        "retain": 0,
+        "release": 0
+      }
+    },
+    "release-facts": {
+      "flags": [
+        "--release",
+        "--verify-facts"
+      ],
+      "stdout": "1\n0\n1\nTrue\n",
+      "stderr": "",
+      "leakcheck": true,
+      "llvm_sha256": "a3c45915767c2183f695f96ca7a9f46196e88191f9174b31ba73ff4f889a18b1",
+      "binary_sha256": "b80548aee8b8d21f03a7ac69c5d8c5878d3c29cbfd6c283b58298b1d39e3baf0",
+      "zero_rc_operations": {
+        "retain": 0,
+        "release": 0
+      }
+    },
+    "debug-facts": {
+      "flags": [
+        "--optimize-debug",
+        "--verify-facts"
+      ],
+      "stdout": "1\n0\n1\nTrue\n",
+      "stderr": "",
+      "leakcheck": true,
+      "llvm_sha256": "a3c45915767c2183f695f96ca7a9f46196e88191f9174b31ba73ff4f889a18b1",
+      "binary_sha256": "381d2d8d6a742f950ecde338b1111d00bd45ac8af924524048729a6de35e57e7",
+      "zero_rc_operations": {
+        "retain": 0,
+        "release": 0
+      }
+    }
+  },
+  "focused_unit_results": {
+    "optional_contract": {
+      "passed": 4,
+      "failed": 0
+    },
+    "legacy_borrowed_provider": {
+      "passed": 8,
+      "failed": 0
+    }
+  }
+}

@@ -3,6 +3,7 @@ const ir = @import("ir.zig");
 const std = @import("std");
 const typed = @import("mylang").typed;
 const Operation = @FieldType(@FieldType(typed.Node, "data"), "buffer_operation");
+const encode_symbol = "myl_core_text_encode";
 const more = @import("build_text_more.zig");
 
 /// Allocation and precise feature refusals are the builder's only failures.
@@ -35,7 +36,7 @@ pub fn operation(comptime Context: type, context: Context, node: Operation, ty: 
             const offset = try context.effectCall("myl_core_str_offset", &.{ .str, context.typeOfRef(index) }, .u64, &.{ receiver, index }, span);
             return context.emit(.{ .op = .str_char, .ty = .str, .a = receiver, .b = offset, .check = .exact, .span = span });
         },
-        .encode => return context.runtimeCall("myl_core_text_encode", &.{.str}, .bytes, &.{receiver}, span),
+        .encode => return if (context.module().zero_rc) context.effectCall(encode_symbol, &.{.str}, .bytes, &.{receiver}, span) else context.runtimeCall(encode_symbol, &.{.str}, .bytes, &.{receiver}, span),
         .slice_step => {
             const start = try context.expression(node.arguments[0]);
             const end = try context.expression(node.arguments[1]);
@@ -98,8 +99,11 @@ pub fn literal(comptime Context: type, context: Context, items: []const typed.No
     }
     const index = context.mb.module.strings.items.len;
     try context.mb.module.strings.append(context.allocator(), try bytes.toOwnedSlice(context.allocator()));
+    // Immutable octets use the existing static byte-literal layout. No writable
+    // buffer or independently requested copy aliases this storage.
+    if (context.module().zero_rc) return context.detached(.{ .op = .str_const, .ty = .bytes, .data = index, .span = span });
     const source = try context.detached(.{ .op = .str_const, .ty = .str, .data = index });
-    return context.runtimeCall("myl_core_text_encode", &.{.str}, .bytes, &.{source}, span);
+    return context.runtimeCall(encode_symbol, &.{.str}, .bytes, &.{source}, span);
 }
 
 /// Index a non-place string/bytes expression; the offset helper normalizes negatives.

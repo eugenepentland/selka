@@ -1,0 +1,27 @@
+# spec-case: STANDARD-MEMO-1
+# spec-case: STANDARD-PERSISTENT-MEMO-1
+# spec-case: STANDARD-DURABLE-1
+import durable
+import memo
+import persistent_memo
+
+func main() -> int:
+    mut memo_error = memo.Error.InvalidCapacity(value="memo-" + str(7))
+    const memo_text = memo.message(memo_error)
+    memo_error = memo.Error.InvalidCapacity(value="replaced")
+    assert memo_text == "memo-7"
+    assert memo.message(memo_error) == "replaced"
+    mut persistent_error = persistent_memo.Error.Storage(value="persistent-" + str(11))
+    const persistent_text = persistent_memo.message(persistent_error)
+    persistent_error = persistent_memo.Error.Invalid
+    assert persistent_text == "persistent-11"
+    assert len(persistent_memo.message(persistent_error)) != 0
+    mut durable_error = durable.Error.Storage(value="durable-" + str(13))
+    const durable_text = durable.message(durable_error)
+    durable_error = durable.Error.Corrupt
+    assert durable_text == "durable-13"
+    assert len(durable.message(durable_error)) != 0
+    assert len(durable.message(durable.Error.Invalid)) != 0
+    assert len(durable.message(durable.Error.Incompatible)) != 0
+    assert len(durable.message(durable.Error.Uncacheable)) != 0
+    return 0

@@ -1,0 +1,65 @@
+{
+  "origin": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install",
+  "files": [
+    {
+      "path": "bin/mylang",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/bin/mylang",
+      "sha256": "ec423f5ff7dba37f5d39489fec12b9c851754c0ad69125fc8aaafe85e31ea44e"
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan-a3433084f84ddfce28db22e7bb3e1b10bc7d5610bfff9abad0503b24de9b68a9",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/libexec/mylang/components/cache-plan-a3433084f84ddfce28db22e7bb3e1b10bc7d5610bfff9abad0503b24de9b68a9",
+      "sha256": "a3433084f84ddfce28db22e7bb3e1b10bc7d5610bfff9abad0503b24de9b68a9"
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan-b2b1e9bf74b637d8dbbf5db4242d633ac1d1a9757772c572c2cd2f8099137460",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/libexec/mylang/components/cache-plan-b2b1e9bf74b637d8dbbf5db4242d633ac1d1a9757772c572c2cd2f8099137460",
+      "sha256": "b2b1e9bf74b637d8dbbf5db4242d633ac1d1a9757772c572c2cd2f8099137460"
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan-d69b536c904f109ef2d292ac376ce3ecb811da91db6e051b2a49a176a1c31840",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/libexec/mylang/components/cache-plan-d69b536c904f109ef2d292ac376ce3ecb811da91db6e051b2a49a176a1c31840",
+      "sha256": "d69b536c904f109ef2d292ac376ce3ecb811da91db6e051b2a49a176a1c31840"
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan-f670f2a1520a585015eabc7b1481badb9b2317c6c2a264b533177e82a5e11929",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/libexec/mylang/components/cache-plan-f670f2a1520a585015eabc7b1481badb9b2317c6c2a264b533177e82a5e11929",
+      "sha256": "f670f2a1520a585015eabc7b1481badb9b2317c6c2a264b533177e82a5e11929"
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan.json",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/libexec/mylang/components/cache-plan.json",
+      "sha256": "7bf104161b19a4ed8abd758c04b2a27818e7e00bf79365f8641c83857350da80"
+    },
+    {
+      "path": "libexec/mylang/components/test-index-421c25cd90ec028fefd5f3f428bb7f8811428ee0ab8196839350fcb1d69e67a6",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/libexec/mylang/components/test-index-421c25cd90ec028fefd5f3f428bb7f8811428ee0ab8196839350fcb1d69e67a6",
+      "sha256": "421c25cd90ec028fefd5f3f428bb7f8811428ee0ab8196839350fcb1d69e67a6"
+    },
+    {
+      "path": "libexec/mylang/components/test-index-aad4a3ec908f250f5cd68a365bc88d0d2efdab41bbf0c830c915c042828ed83b",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/libexec/mylang/components/test-index-aad4a3ec908f250f5cd68a365bc88d0d2efdab41bbf0c830c915c042828ed83b",
+      "sha256": "aad4a3ec908f250f5cd68a365bc88d0d2efdab41bbf0c830c915c042828ed83b"
+    },
+    {
+      "path": "libexec/mylang/components/test-index-dbd9fea31ee72550200d6f21c4a42dcfadf00321e9697eb9d4cc21cdbfa99a27",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/libexec/mylang/components/test-index-dbd9fea31ee72550200d6f21c4a42dcfadf00321e9697eb9d4cc21cdbfa99a27",
+      "sha256": "dbd9fea31ee72550200d6f21c4a42dcfadf00321e9697eb9d4cc21cdbfa99a27"
+    },
+    {
+      "path": "libexec/mylang/components/test-index-ef88467eb96afbcc96d75273450c02b05cfb5e626a60dfa770b8499af934f29c",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/libexec/mylang/components/test-index-ef88467eb96afbcc96d75273450c02b05cfb5e626a60dfa770b8499af934f29c",
+      "sha256": "ef88467eb96afbcc96d75273450c02b05cfb5e626a60dfa770b8499af934f29c"
+    },
+    {
+      "path": "libexec/mylang/components/test-index.json",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/libexec/mylang/components/test-index.json",
+      "sha256": "2dd5b614deac9d6602de5a9b9aa9c2f8773e3668d953bfe5d3e7ea0de7309161"
+    },
+    {
+      "path": "tools/selka-components",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/tools/selka-components",
+      "sha256": "7861f4fba7df070b86f0c03dcc42c8231c609035a3f3c29f8df31c41792fa01b"
+    }
+  ]
+}

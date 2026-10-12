@@ -1,0 +1,3 @@
+/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-prior-mut/augmented.my:11:5: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression
+      c.items += added
+      ^

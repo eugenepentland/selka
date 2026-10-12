@@ -1,0 +1,8 @@
+{
+  "src/core/runtime/core_rt.c": "140646308237cf7caf740093924880fabf03861db7f74117f75176407185c241",
+  "src/core/runtime/core_bytes.c": "3e776dd1d693c638d661086b1c375988e59a124bb132cc132c02bb531af05d96",
+  "src/core/a02_capacity_fixture.c": "579f952f2377985c5eea959a789134bb0e4a4b8e374761023d6fe45b6fc90e4e",
+  "src/core/a02_capacity_test.zig": "97277a8569ee1a25baa03ad454c4c4a4051f3b3dbfd43df7f09ec697cff27667",
+  "SPEC.md": "c6bbf9d73089abff5c8bdfcb8b45e0b157cf9b812d247f7b367f560e4d65a02f",
+  "src/core/root_test.zig": "ab23382b8b7e069a1bd9f794abcfc3ae6378f3d6dfb4509511c9e4ff19da269a"
+}

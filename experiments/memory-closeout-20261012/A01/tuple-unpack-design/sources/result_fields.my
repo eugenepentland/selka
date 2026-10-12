@@ -1,0 +1,22 @@
+func results() -> tuple[Result[str, str], Result[str, str]]:
+    return Ok("value-" + str(1)), Err("error-" + str(2))
+func consume(value: Result[str, str]) -> int:
+    match value:
+        case Ok(text):
+            return len(text)
+        case Err(text):
+            return len(text)
+func main(out: Stream) -> int:
+    const first, ignored = results()
+    _ = ignored
+    assert consume(first) == 7
+    const left, _ = results()
+    assert consume(left) == 7
+    const whole = results()
+    const duplicate = whole.copy()
+    const one, two = whole
+    const three, four = duplicate
+    assert consume(one) + consume(two) + consume(three) + consume(four) == 28
+    const _, _ = results()
+    out.print("tuple-results", 28)
+    return 0

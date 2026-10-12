@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Blackbox tests of the native component coordinator; Python is test-only."""
 import argparse
+import contextlib
 import hashlib
+import io
 import json
 import os
 import platform
@@ -12,6 +14,9 @@ import subprocess
 import tarfile
 import tempfile
 import unittest
+from unittest import mock
+import test_component_native as native_qualification
+from test_component_native import require_completed_tests
 
 BUILDER = None
 ZIG = None
@@ -46,6 +51,7 @@ class ComponentCacheTests(unittest.TestCase):
             "#!/bin/sh\n"
             "case \"$ZIG_GLOBAL_CACHE_DIR\" in */cache/zig-global) ;; *) exit 12;; esac\n"
             "printf 'component\\n' >> \"$COMPONENT_FIXTURE_LOG\"\n"
+            "case \" $* \" in *' --experimental-zero-rc '*) printf 'owned\\n' >> \"$COMPONENT_FIXTURE_LOG\";; esac\n"
             "test \"${COMPONENT_FIXTURE_FAIL:-0}\" = 0 || exit 7\n"
             "while test $# -gt 0; do\n"
             "  if test \"$1\" = -o; then shift; printf '%s' \"${COMPONENT_FIXTURE_OUTPUT:-native-component}\" > \"$1\"; exit 0; fi\n"
@@ -62,6 +68,7 @@ class ComponentCacheTests(unittest.TestCase):
             f"version) printf '%s\\n' {shlex.quote(self.version)};;\n"
             f"env) printf '%s\\n' {shlex.quote(f'.lib_dir = "{library}", .target = "test-native"')};;\n"
             "build) printf 'seed\\n' >> \"$COMPONENT_FIXTURE_LOG\"; "
+            "printf 'step:%s\\n' \"$2\" >> \"$COMPONENT_FIXTURE_LOG\"; "
             "test ! -e abandoned || exit 9; test \"$(cat src/runtime.c)\" = pinned-runtime || exit 10; "
             "mkdir -p zig-out/focus; cp src/fake-seed zig-out/focus/mylang; chmod 755 zig-out/focus/mylang;;\n"
             "*) exit 11;;\nesac\n"
@@ -98,6 +105,66 @@ class ComponentCacheTests(unittest.TestCase):
 
     def calls(self, kind="component"):
         return self.log.read_text().splitlines().count(kind)
+
+    def owned_pin(self):
+        pin = json.loads((self.root / "selfhost/component-seed.json").read_text())
+        pin.update(memory_mode="zero-rc-v1", recipe={
+            "step": "seed-compiler", "optimize": "ReleaseFast", "target": "native"})
+        path = self.root / "selfhost/component-owned-compiler.json"
+        path.write_text(json.dumps(pin))
+        return path
+
+    def test_owned_route_builds_independent_compiler_and_separates_component_cache(self):
+        pin = self.owned_pin()
+        historical_pin = self.root / "selfhost/component-seed.json"
+        before = historical_pin.read_bytes()
+        legacy = self.invoke()
+        owned = self.invoke("--owned-compiler-pin", str(pin))
+        self.assertNotEqual(legacy, owned)
+        self.assertEqual(self.calls("step:affected-compiler"), 1)
+        self.assertEqual(self.calls("step:seed-compiler"), 1)
+        self.assertEqual(self.calls("owned"), 2)
+        receipt = json.loads((self.cache / "artifacts" / owned / "receipt.json").read_text())
+        self.assertIn("zero-rc-v1", receipt["identity"]["flags"])
+        self.assertEqual(json.loads((self.install / "test-index.json").read_text())["memory_mode"], "zero-rc-v1")
+        self.assertEqual(owned, self.invoke("--owned-compiler-pin", str(pin)))
+        self.assertEqual(self.calls("component"), 4)
+        self.assertEqual(before, historical_pin.read_bytes())
+
+    def test_owned_route_refuses_component_dependent_seed_recipe(self):
+        path = self.owned_pin()
+        pin = json.loads(path.read_text())
+        pin["recipe"]["step"] = "affected-compiler"
+        path.write_text(json.dumps(pin))
+        self.assertIn("independent", self.invoke("--owned-compiler-pin", str(path), success=False))
+        self.assertFalse(self.log.exists())
+
+    def test_owned_route_refuses_wrong_memory_mode(self):
+        path = self.owned_pin()
+        pin = json.loads(path.read_text())
+        pin["memory_mode"] = "rc"
+        path.write_text(json.dumps(pin))
+        self.assertIn("zero-rc-v1", self.invoke("--owned-compiler-pin", str(path), success=False))
+        self.assertFalse(self.log.exists())
+
+    def test_extracted_seed_cache_and_tmp_are_private_but_global_cache_is_preserved(self):
+        self.zig.write_text(self.zig.read_text().replace(
+            'build) ', 'build) test "$ZIG_LOCAL_CACHE_DIR" = "$PWD/.zig-cache" || exit 21; '
+            'test "$TMPDIR" = "$PWD/.tmp/component-compiler" || exit 22; '
+            'test -d "$TMPDIR" || exit 23; '
+            'test "$ZIG_GLOBAL_CACHE_DIR" = "$COMPONENT_FIXTURE_GLOBAL" || exit 24; '))
+        local = self.workspace / "caller-local"
+        temporary = self.workspace / "caller-tmp"
+        global_cache = self.workspace / "caller-global"
+        self.environment.update(ZIG_LOCAL_CACHE_DIR=str(local), TMPDIR=str(temporary),
+                                ZIG_GLOBAL_CACHE_DIR=str(global_cache), COMPONENT_FIXTURE_GLOBAL=str(global_cache))
+        binary = Path(self.invoke("--seed-only", "--owned-compiler-pin", str(self.owned_pin())))
+        receipt = json.loads((binary.parents[3] / "receipt.json").read_text())
+        self.assertEqual(receipt["recipe"]["build_environment"], "private-local-and-tmp-v1")
+        self.assertFalse(local.exists())
+        self.assertFalse(temporary.exists())
+        self.assertEqual(Path(self.invoke("--seed-only", "--owned-compiler-pin", str(self.owned_pin()))), binary)
+        self.assertEqual(self.calls("seed"), 1)
 
     def artifact(self, key):
         return self.cache / "artifacts" / key / "test-index"
@@ -263,6 +330,55 @@ class ComponentCacheTests(unittest.TestCase):
         binary.write_bytes(b"corrupt seed")
         self.invoke("--seed-only", success=False)
         self.assertEqual(self.calls("seed"), 1)
+
+
+class NativeQualificationTests(unittest.TestCase):
+    def report(self, statuses):
+        names = ("passed", "cached", "failed", "skipped", "unsupported")
+        return dict(version="native-tests-v1", tests=[dict(name=f"test_{index}", status=status)
+                    for index, status in enumerate(statuses)], **{name: statuses.count(name) for name in names})
+
+    def test_completed_native_tests_qualify(self):
+        require_completed_tests(json.dumps(self.report(["passed", "passed"])))
+
+    def test_unsupported_or_incomplete_native_tests_never_qualify(self):
+        for statuses in (["unsupported"], ["passed", "unsupported"], ["failed"], ["skipped"], []):
+            with self.subTest(statuses=statuses), self.assertRaises(RuntimeError):
+                require_completed_tests(json.dumps(self.report(statuses)))
+
+    def test_malformed_or_inconsistent_native_test_reports_refuse(self):
+        valid = self.report(["passed"])
+        for change in (dict(version="unknown"), dict(passed=0), dict(unsupported=None), dict(tests=[dict(status="unknown")])):
+            with self.subTest(change=change), self.assertRaises(RuntimeError):
+                require_completed_tests(json.dumps(dict(valid, **change)))
+
+    def test_owned_qualification_uses_one_pin_archive_and_installed_component_set(self):
+        with tempfile.TemporaryDirectory(prefix="component-qualification-routing-") as temporary:
+            directory = Path(temporary)
+            for name in ("test-index", "cache-plan"):
+                artifact = directory / name
+                artifact.write_bytes(name.encode())
+                (directory / f"{name}.json").write_text(json.dumps(dict(
+                    artifact=name, sha256=digest(artifact), memory_mode="zero-rc-v1")))
+            pin, archive = directory / "owned-pin.json", directory / "source.tar"
+            args = ["test_component_native.py", "--zig", "pinned-zig", "--builder", "independent-builder",
+                    "--component-dir", str(directory), "--owned-compiler-pin", str(pin), "--seed-source", str(archive)]
+            outputs = ["/qualified-source/zig-out/focus/mylang\n"] + [json.dumps(self.report(["passed"]))] * 4
+            with mock.patch.object(native_qualification.sys, "argv", args), \
+                 mock.patch.object(native_qualification.subprocess, "check_output", side_effect=outputs) as checked, \
+                 mock.patch.object(native_qualification.subprocess, "run") as executed, \
+                 contextlib.redirect_stdout(io.StringIO()):
+                native_qualification.main()
+            request = checked.call_args_list[0].args[0]
+            self.assertEqual(request[request.index("--owned-compiler-pin") + 1], pin)
+            self.assertEqual(request[request.index("--seed-source") + 1], archive)
+            for call in checked.call_args_list[1:]:
+                self.assertIn("--experimental-zero-rc", call.args[0])
+                self.assertIn("--json", call.args[0])
+                self.assertEqual(call.kwargs["env"]["MYLANG_COMPONENT_DIR"], str(directory))
+            self.assertEqual(executed.call_count, 6)
+            for call in executed.call_args_list:
+                self.assertEqual(call.kwargs["env"]["MYLANG_COMPONENT_DIR"], str(directory))
 
 
 if __name__ == "__main__":

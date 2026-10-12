@@ -89,7 +89,7 @@ public func test_a_row_copied_from_the_same_nested_array_lands_intact() -> bool:
 
 public func test_a_traced_element_type_survives_an_element_write() -> bool:
     mut names: FixedArray[str, 3] = FixedArray[str, 3](["alpha", "beta", "gamma"])
-    mut before: FixedArray[str, 3] = names
+    mut before: FixedArray[str, 3] = names.copy()
     names = replace(names, 1, "delta")
     return names[0] == "alpha" and names[1] == "delta" and names[2] == "gamma" and before[1] == "beta"
 

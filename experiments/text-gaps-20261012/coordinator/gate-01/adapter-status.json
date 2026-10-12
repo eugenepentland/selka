@@ -1,0 +1,8 @@
+{
+  "underlying_verification_status": 1,
+  "underlying_inputs_stable": true,
+  "confirmed_gate_failure": "my_format: missing blank separator before main in test/core/textgap_snapshot.my",
+  "adapter_error": "attempted to copy obsolete verification-v1 report path; main uses verification-v2",
+  "recovered_report": ".mylang-cache/verification-v2/last-run.json",
+  "fix": "verify.py now copies verification-v2 report"
+}

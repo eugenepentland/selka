@@ -52,7 +52,7 @@ public func test_unknown_parameter_copy_and_replace_keep_their_lengths() -> bool
 
 
 func bump_text(mut counts: dict[str, i64], key: str) -> Unit:
-    counts[key] = counts.get(key, 0) + 1
+    counts[key.copy()] = counts.get(key, 0) + 1
 
 
 # Original S2-X dictionary_hashing failure, copied without editing tests/lang.

@@ -1,0 +1,586 @@
+{
+  "method": "counted-release-native-replay-v1",
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "source_commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "cases": [
+    {
+      "id": "array",
+      "args": [],
+      "env": {},
+      "cpus": [
+        10
+      ],
+      "allocs": 12001554,
+      "alloc_bytes": 1280151792,
+      "reallocs": 2,
+      "realloc_added_bytes": 3072,
+      "peak_live_bytes": 75408,
+      "live_bytes_at_exit": 0,
+      "direct_frees": 4000777,
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "list_copies": 0,
+      "list_copy_bytes": 0,
+      "counter_sha256": "ce70c97781a9ad2435ac2fea0772a71a9272a4c8b28e70953d0a1d50249b39b3",
+      "binary_sha256": "67ae5d58aa825af725d5363cafa69416412086fb105bf3fcf9d883986aa7ad81",
+      "llvm_sha256": "19df30161f07e9df7a649501a10066dcea549f902de9507f2d6f55bcfb67e4ae"
+    },
+    {
+      "id": "object",
+      "args": [],
+      "env": {},
+      "cpus": [
+        10
+      ],
+      "allocs": 12002200,
+      "alloc_bytes": 1280196480,
+      "reallocs": 0,
+      "realloc_added_bytes": 0,
+      "peak_live_bytes": 90264,
+      "live_bytes_at_exit": 0,
+      "direct_frees": 4001164,
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "list_copies": 0,
+      "list_copy_bytes": 0,
+      "counter_sha256": "3140b1b3345ca5bc0c01184cb42f9deec0a4d04452214cc6956942be419b7e7a",
+      "binary_sha256": "d73e6dd52d093bb00b9385dd9155e2e941d7e4f7b093e338197b7db0a65c135e",
+      "llvm_sha256": "acfb595fe078cb652511e7067ebe1cb500fa1470a1b0c2c3ccf7bc19156d957c"
+    },
+    {
+      "id": "record",
+      "args": [],
+      "env": {},
+      "cpus": [
+        10
+      ],
+      "allocs": 21000000,
+      "alloc_bytes": 2496000000,
+      "reallocs": 0,
+      "realloc_added_bytes": 0,
+      "peak_live_bytes": 1536,
+      "live_bytes_at_exit": 0,
+      "direct_frees": 9000000,
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "list_copies": 0,
+      "list_copy_bytes": 0,
+      "counter_sha256": "62fd863d796268cd9164188f3820e5316d34cc86bf24c49d73ede381b2fc389c",
+      "binary_sha256": "ab10380dee2011d11034371e567f9d61daaef362d359b580f04f517158d851fc",
+      "llvm_sha256": "f7b2042c3d3791dbf7ec4227c0dedece0c5aa664da7acb3d3bedc92b3e544cb5"
+    },
+    {
+      "id": "parallel_cheap_1",
+      "args": [
+        "513",
+        "65536",
+        "cheap"
+      ],
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "cpus": [
+        10
+      ],
+      "allocs": 101318666,
+      "alloc_bytes": 7949257096,
+      "reallocs": 196611,
+      "realloc_added_bytes": 469769216,
+      "peak_live_bytes": 103096,
+      "live_bytes_at_exit": 0,
+      "direct_frees": 65537,
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "list_copies": 0,
+      "list_copy_bytes": 0,
+      "counter_sha256": "9c62d2a1ee44d487f7006bd9c2a243120990f1b90e72246c25b731eab28b7690",
+      "binary_sha256": "0f395ee72d4b64005bd056498724ddf711208413711118cebc90ee465f8d051d",
+      "llvm_sha256": "6ba1b6e35515ec018204a32c456ad2951152c40b26b63933d7eea20d159363a6"
+    },
+    {
+      "id": "parallel_cheap_2",
+      "args": [
+        "513",
+        "16384",
+        "cheap"
+      ],
+      "env": {
+        "MYLANG_THREADS": "2"
+      },
+      "cpus": [
+        8,
+        10
+      ],
+      "allocs": 25329674,
+      "alloc_bytes": 1987316104,
+      "reallocs": 49155,
+      "realloc_added_bytes": 117447680,
+      "peak_live_bytes": 103160,
+      "live_bytes_at_exit": 0,
+      "direct_frees": 16385,
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "list_copies": 0,
+      "list_copy_bytes": 0,
+      "counter_sha256": "51a55429410126ed575a6c7607d66073698acb5e79e0f7ba19f569d71404d35c",
+      "binary_sha256": "0f395ee72d4b64005bd056498724ddf711208413711118cebc90ee465f8d051d",
+      "llvm_sha256": "6ba1b6e35515ec018204a32c456ad2951152c40b26b63933d7eea20d159363a6"
+    },
+    {
+      "id": "parallel_cheap_8",
+      "args": [
+        "513",
+        "8192",
+        "cheap"
+      ],
+      "env": {
+        "MYLANG_THREADS": "8"
+      },
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "allocs": 12664842,
+      "alloc_bytes": 993659272,
+      "reallocs": 24579,
+      "realloc_added_bytes": 58727424,
+      "peak_live_bytes": 103160,
+      "live_bytes_at_exit": 0,
+      "direct_frees": 8193,
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "list_copies": 0,
+      "list_copy_bytes": 0,
+      "counter_sha256": "9e4bfe3349441ede05623ffb1732ae381fcbd9c148b3d82123070d5112c6bf42",
+      "binary_sha256": "0f395ee72d4b64005bd056498724ddf711208413711118cebc90ee465f8d051d",
+      "llvm_sha256": "6ba1b6e35515ec018204a32c456ad2951152c40b26b63933d7eea20d159363a6"
+    },
+    {
+      "id": "parallel_expensive_1",
+      "args": [
+        "8193",
+        "32",
+        "expensive"
+      ],
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "cpus": [
+        10
+      ],
+      "allocs": 786762,
+      "alloc_bytes": 60900232,
+      "reallocs": 231,
+      "realloc_added_bytes": 4295600,
+      "peak_live_bytes": 1643112,
+      "live_bytes_at_exit": 0,
+      "direct_frees": 33,
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "list_copies": 0,
+      "list_copy_bytes": 0,
+      "counter_sha256": "826a5b5911b0e5f18befb83201dfa4acaea5dcdd394fe921369ab57f91213b9f",
+      "binary_sha256": "0f395ee72d4b64005bd056498724ddf711208413711118cebc90ee465f8d051d",
+      "llvm_sha256": "6ba1b6e35515ec018204a32c456ad2951152c40b26b63933d7eea20d159363a6"
+    },
+    {
+      "id": "parallel_expensive_2",
+      "args": [
+        "8193",
+        "32",
+        "expensive"
+      ],
+      "env": {
+        "MYLANG_THREADS": "2"
+      },
+      "cpus": [
+        8,
+        10
+      ],
+      "allocs": 786762,
+      "alloc_bytes": 60900232,
+      "reallocs": 231,
+      "realloc_added_bytes": 4295600,
+      "peak_live_bytes": 1643048,
+      "live_bytes_at_exit": 0,
+      "direct_frees": 33,
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "list_copies": 0,
+      "list_copy_bytes": 0,
+      "counter_sha256": "1b6cce6a277a0782cc8d1d5a1ac8b587b8d0e57a863069c79e5a24472ceccc3a",
+      "binary_sha256": "0f395ee72d4b64005bd056498724ddf711208413711118cebc90ee465f8d051d",
+      "llvm_sha256": "6ba1b6e35515ec018204a32c456ad2951152c40b26b63933d7eea20d159363a6"
+    },
+    {
+      "id": "parallel_expensive_8",
+      "args": [
+        "8193",
+        "32",
+        "expensive"
+      ],
+      "env": {
+        "MYLANG_THREADS": "8"
+      },
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "allocs": 786762,
+      "alloc_bytes": 60900232,
+      "reallocs": 231,
+      "realloc_added_bytes": 4295600,
+      "peak_live_bytes": 1643048,
+      "live_bytes_at_exit": 0,
+      "direct_frees": 33,
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "list_copies": 0,
+      "list_copy_bytes": 0,
+      "counter_sha256": "a57944a2b1bf8b234ff7ed4aad8891904f13132c7ccf18994507a7ac3d5e0202",
+      "binary_sha256": "0f395ee72d4b64005bd056498724ddf711208413711118cebc90ee465f8d051d",
+      "llvm_sha256": "6ba1b6e35515ec018204a32c456ad2951152c40b26b63933d7eea20d159363a6"
+    },
+    {
+      "id": "a06_word_count",
+      "args": [
+        "200"
+      ],
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "cpus": [
+        10
+      ],
+      "allocs": 13113602,
+      "alloc_bytes": 891555328,
+      "reallocs": 0,
+      "realloc_added_bytes": 0,
+      "peak_live_bytes": 99152,
+      "live_bytes_at_exit": 0,
+      "direct_frees": 9829200,
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "list_copies": 0,
+      "list_copy_bytes": 0,
+      "counter_sha256": "28577a4d469e74f47f69c5f58ec81d79aaa12ed0d1aa377034480aef5d3a84fa",
+      "binary_sha256": "262216aad139d6adc6818f7d6f8aa30025684d768055fde0e7a7d49c0281f9d7",
+      "llvm_sha256": "65588e2fb9f92a0c32e115bcc8c70305fdf81fc5549500d24e0eef1a529eecf8"
+    },
+    {
+      "id": "a06_nested_json",
+      "args": [
+        "80"
+      ],
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "cpus": [
+        10
+      ],
+      "allocs": 3403682,
+      "alloc_bytes": 266812928,
+      "reallocs": 880,
+      "realloc_added_bytes": 3686400,
+      "peak_live_bytes": 828184,
+      "live_bytes_at_exit": 0,
+      "direct_frees": 1639840,
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "list_copies": 0,
+      "list_copy_bytes": 0,
+      "counter_sha256": "d8deb67168f131d2b052b6300f32ad37e9c36fc10904f94b5ec3c3242c073ce0",
+      "binary_sha256": "8103354237d9eb7bf59c29050727a1a21d3386a91a320f9c4fbef40907776689",
+      "llvm_sha256": "733c28562cba57c090e40d8537e62fb7da3e7a4d9fbe25a8e08e74175b2ea4fe"
+    },
+    {
+      "id": "a06_file_processing",
+      "args": [
+        "150"
+      ],
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "cpus": [
+        10
+      ],
+      "allocs": 2464352,
+      "alloc_bytes": 185360528,
+      "reallocs": 0,
+      "realloc_added_bytes": 0,
+      "peak_live_bytes": 49680,
+      "live_bytes_at_exit": 0,
+      "direct_frees": 1232100,
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "list_copies": 0,
+      "list_copy_bytes": 0,
+      "counter_sha256": "c3377d0c9984c18c880fc6d56028908f8885dc7966aface9a68102639296751f",
+      "binary_sha256": "a36326739b5eb3f864b93655e45c57af477fb2fbd060103aa0c0125f8a0ee98a",
+      "llvm_sha256": "dbdd928dce236cafc957c8b6506f68708230143a03b49b98937cec40260dc7c5"
+    },
+    {
+      "id": "a06_parallel_t1",
+      "args": [
+        "40"
+      ],
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "cpus": [
+        10
+      ],
+      "allocs": 62842,
+      "alloc_bytes": 4664128,
+      "reallocs": 80,
+      "realloc_added_bytes": 81920,
+      "peak_live_bytes": 65976,
+      "live_bytes_at_exit": 0,
+      "direct_frees": 10520,
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "list_copies": 0,
+      "list_copy_bytes": 0,
+      "counter_sha256": "39f450bcfd81cfcd37197eea9b5f58ee7d42b96dfae254fb220cfeec979edb65",
+      "binary_sha256": "ab041c987498d2589cadf429102d6b8e8c5e884c0397a5828ecae2ed121d73ee",
+      "llvm_sha256": "1918ae5baa92bc2c0c2557c7c57c9a8d01f589c336ec8e0bc54795c302f8cf2c"
+    },
+    {
+      "id": "a06_parallel_t2",
+      "args": [
+        "40"
+      ],
+      "env": {
+        "MYLANG_THREADS": "2"
+      },
+      "cpus": [
+        8,
+        10
+      ],
+      "allocs": 62842,
+      "alloc_bytes": 4664128,
+      "reallocs": 80,
+      "realloc_added_bytes": 81920,
+      "peak_live_bytes": 56440,
+      "live_bytes_at_exit": 0,
+      "direct_frees": 10520,
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "list_copies": 0,
+      "list_copy_bytes": 0,
+      "counter_sha256": "809a4d30e50a76b0f51f91ca54831236fcad62c65695b039ff7d037abaab47dd",
+      "binary_sha256": "ab041c987498d2589cadf429102d6b8e8c5e884c0397a5828ecae2ed121d73ee",
+      "llvm_sha256": "1918ae5baa92bc2c0c2557c7c57c9a8d01f589c336ec8e0bc54795c302f8cf2c"
+    },
+    {
+      "id": "a06_parallel_t8",
+      "args": [
+        "40"
+      ],
+      "env": {
+        "MYLANG_THREADS": "8"
+      },
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "allocs": 62842,
+      "alloc_bytes": 4664128,
+      "reallocs": 80,
+      "realloc_added_bytes": 81920,
+      "peak_live_bytes": 52216,
+      "live_bytes_at_exit": 0,
+      "direct_frees": 10520,
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "list_copies": 0,
+      "list_copy_bytes": 0,
+      "counter_sha256": "712b54d0779d140b21d7356f49515866eb2b205743e43f9f33bb06beec3f9211",
+      "binary_sha256": "ab041c987498d2589cadf429102d6b8e8c5e884c0397a5828ecae2ed121d73ee",
+      "llvm_sha256": "1918ae5baa92bc2c0c2557c7c57c9a8d01f589c336ec8e0bc54795c302f8cf2c"
+    }
+  ],
+  "admitted_seconds": 35.373652428,
+  "queue_seconds": 75.878731661,
+  "scope": "Single whole-program counted observation per exact-sized input; not RSS or runtime measurements."
+}

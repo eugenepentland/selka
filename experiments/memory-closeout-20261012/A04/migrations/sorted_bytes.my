@@ -1,0 +1,5 @@
+func main() -> int:
+    const values = [b"b", b"a"]
+    const ordered = sorted(values)
+    assert ordered == [b"a", b"b"] and values == [b"b", b"a"]
+    return 0

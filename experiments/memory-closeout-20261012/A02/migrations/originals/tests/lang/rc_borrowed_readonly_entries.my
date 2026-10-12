@@ -1,0 +1,46 @@
+record Item:
+    text: bytes
+    number: int
+
+
+func empty() -> Item:
+    return Item(text=b"fallback", number=5)
+
+
+func pick(items: Item[], index: int) -> Item:
+    if index < 0:
+        return empty()
+    return items[index]
+
+
+func fold(items: Item[], count: int) -> int:
+    mut saved = pick(items, -1)
+    mut total = 0
+    mut i = 0
+    while i < count:
+        mut current = pick(items, i % 2)
+        total += saved.number + current.number + int(saved.text[0])
+        i += 1
+    return total
+
+
+func indirect(callback: func() -> Item) -> Item:
+    return callback()
+
+
+public func test_saved_borrowed_and_immortal_results_survive_repeated_calls() -> bool:
+    mut items = [Item(text=b"left", number=3), Item(text=b"right", number=7)]
+    mut saved = items
+    return fold(items, 4) == 448 and saved[1].text == b"right"
+
+
+public func test_canonical_function_value_keeps_ordinary_owned_result() -> bool:
+    mut first = indirect(empty)
+    mut second = indirect(empty)
+    return first.number == 5 and second.text == b"fallback"
+
+
+func main(out: Stream) -> int:
+    out.print(test_saved_borrowed_and_immortal_results_survive_repeated_calls())
+    out.print(test_canonical_function_value_keeps_ordinary_owned_result())
+    return 0

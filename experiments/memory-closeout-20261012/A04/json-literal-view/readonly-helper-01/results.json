@@ -1,0 +1,3327 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "source_commit": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "harness_sha256": "21e7a5e83a7016a3a0bc2b91eccf62477b1be0a176b2c8d4f453ab4eb6321e8c",
+  "fixture_sha256": "719b92b423c61aa83133b1dbb392a064c774139961da97b5b04eb87c89673a56",
+  "cases": {
+    "original/release": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "719b92b423c61aa83133b1dbb392a064c774139961da97b5b04eb87c89673a56",
+      "binary_sha256": "fe98fcd53045cd47d9b2639da40b13ac4939c7ea72f1edfa9a212724bc72d2d0",
+      "llvm_sha256": "49e1c4204464e9ad870ece9d652504cfa6cf72d0755bd08471365b98535789f2",
+      "build_ns": 350092751,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/original/release/program"
+          ],
+          "status": 42,
+          "elapsed_ns": 1435104,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/original/release/counts-1.json",
+            "counter_sha256": "b62728ea5587667cdd69105e491440a621c120f5ed86b4dbe5dcf3fb5daeeaf8",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 339,
+            "memory": {
+              "allocs": 541,
+              "alloc_bytes": 38912,
+              "frees": 541,
+              "reallocs": 0,
+              "peak_live_bytes": 9952,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 2765,
+            "allocs": 541,
+            "alloc_bytes": 38912,
+            "frees": 541,
+            "free_bytes": 38912,
+            "list_grows": 68,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 8,
+            "list_copy_bytes": 224,
+            "dict_copies": 4,
+            "dict_copy_bytes": 320,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 126,
+            "text_copy_bytes": 1333,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 36,
+            "buffer_grow_bytes": 100,
+            "text_grows": 30,
+            "text_grow_bytes": 892,
+            "text_appends": 257,
+            "text_append_bytes": 415,
+            "buffer_pushes": 76,
+            "buffer_appends": 28,
+            "buffer_append_bytes": 72,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 9952,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed",
+      "library_source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b"
+    },
+    "original/debug": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "719b92b423c61aa83133b1dbb392a064c774139961da97b5b04eb87c89673a56",
+      "binary_sha256": "f76588dd76012c85c8d5e27093cbeb151a302a1e9eb6f12a93d9264d86e1d366",
+      "llvm_sha256": "74e684005d7e98e22ce1ceac6d9a30c5d2d09683c4a14af6ef4c580bb688a728",
+      "build_ns": 128850053,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/original/debug/program"
+          ],
+          "status": 42,
+          "elapsed_ns": 1498770,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/original/debug/counts-1.json",
+            "counter_sha256": "65f8d3e2991a6cea3e18ebe1306f7cbae8ddd3fe4bb3c082c0d7d25859dd1682",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 362,
+            "memory": {
+              "allocs": 542,
+              "alloc_bytes": 39008,
+              "frees": 542,
+              "reallocs": 0,
+              "peak_live_bytes": 10048,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 4858,
+            "allocs": 542,
+            "alloc_bytes": 39008,
+            "frees": 542,
+            "free_bytes": 39008,
+            "list_grows": 68,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 8,
+            "list_copy_bytes": 224,
+            "dict_copies": 4,
+            "dict_copy_bytes": 320,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 126,
+            "text_copy_bytes": 1333,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 36,
+            "buffer_grow_bytes": 100,
+            "text_grows": 30,
+            "text_grow_bytes": 892,
+            "text_appends": 257,
+            "text_append_bytes": 415,
+            "buffer_pushes": 76,
+            "buffer_appends": 28,
+            "buffer_append_bytes": 72,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 10048,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed",
+      "library_source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b"
+    },
+    "original/verify": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "719b92b423c61aa83133b1dbb392a064c774139961da97b5b04eb87c89673a56",
+      "binary_sha256": "e7728f43df1bf1f7e71d6bf7b0f03d74e6f39e76f89e8decebb5bef1ef525b0d",
+      "llvm_sha256": "f0829e20c11274a0bc8eea061fec8f71fe529d9bea880262f0447ee96ac8519c",
+      "build_ns": 380829289,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/original/verify/program"
+          ],
+          "status": 42,
+          "elapsed_ns": 1943299,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/original/verify/counts-1.json",
+            "counter_sha256": "16beda95e4ac981a25b6741102a76598a00405c70147a4fe7cdc84ee538d3b17",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 339,
+            "memory": {
+              "allocs": 541,
+              "alloc_bytes": 38912,
+              "frees": 541,
+              "reallocs": 0,
+              "peak_live_bytes": 9952,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 2765,
+            "allocs": 541,
+            "alloc_bytes": 38912,
+            "frees": 541,
+            "free_bytes": 38912,
+            "list_grows": 68,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 8,
+            "list_copy_bytes": 224,
+            "dict_copies": 4,
+            "dict_copy_bytes": 320,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 126,
+            "text_copy_bytes": 1333,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 36,
+            "buffer_grow_bytes": 100,
+            "text_grows": 30,
+            "text_grow_bytes": 892,
+            "text_appends": 257,
+            "text_append_bytes": 415,
+            "buffer_pushes": 76,
+            "buffer_appends": 28,
+            "buffer_append_bytes": 72,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 9952,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed",
+      "library_source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b"
+    },
+    "original/optimized_debug": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "719b92b423c61aa83133b1dbb392a064c774139961da97b5b04eb87c89673a56",
+      "binary_sha256": "dd0f218118dba1289785aefac6adb39e66a88347a8fd5e411e8f5bc8c190b24a",
+      "llvm_sha256": "49e1c4204464e9ad870ece9d652504cfa6cf72d0755bd08471365b98535789f2",
+      "build_ns": 255811046,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/original/optimized_debug/program"
+          ],
+          "status": 42,
+          "elapsed_ns": 1443011,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/original/optimized_debug/counts-1.json",
+            "counter_sha256": "1fd1537f2a5a1376c92f18c46a5c47e8be0bf2eb5b5d1ad8256e85642b846ac1",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 339,
+            "memory": {
+              "allocs": 541,
+              "alloc_bytes": 38912,
+              "frees": 541,
+              "reallocs": 0,
+              "peak_live_bytes": 9952,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 2765,
+            "allocs": 541,
+            "alloc_bytes": 38912,
+            "frees": 541,
+            "free_bytes": 38912,
+            "list_grows": 68,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 8,
+            "list_copy_bytes": 224,
+            "dict_copies": 4,
+            "dict_copy_bytes": 320,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 126,
+            "text_copy_bytes": 1333,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 36,
+            "buffer_grow_bytes": 100,
+            "text_grows": 30,
+            "text_grow_bytes": 892,
+            "text_appends": 257,
+            "text_append_bytes": 415,
+            "buffer_pushes": 76,
+            "buffer_appends": 28,
+            "buffer_append_bytes": 72,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 9952,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed",
+      "library_source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b"
+    },
+    "original/no_facts": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "719b92b423c61aa83133b1dbb392a064c774139961da97b5b04eb87c89673a56",
+      "binary_sha256": "61e28fc2a3770a057d7f9fdb3c3cd556884b7f1e4219c8bf9ac199986a6faee3",
+      "llvm_sha256": "15c6456ef970d84823b70feaa370592194a598332688c3652953c4d3902a41cd",
+      "build_ns": 316486912,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/original/no_facts/program"
+          ],
+          "status": 42,
+          "elapsed_ns": 1568809,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/original/no_facts/counts-1.json",
+            "counter_sha256": "fa942bc97997883a334dca74952d1586c24bb43d50962ecec13eaa4927938df9",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 340,
+            "memory": {
+              "allocs": 542,
+              "alloc_bytes": 39008,
+              "frees": 542,
+              "reallocs": 0,
+              "peak_live_bytes": 10048,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 2765,
+            "allocs": 542,
+            "alloc_bytes": 39008,
+            "frees": 542,
+            "free_bytes": 39008,
+            "list_grows": 68,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 8,
+            "list_copy_bytes": 224,
+            "dict_copies": 4,
+            "dict_copy_bytes": 320,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 126,
+            "text_copy_bytes": 1333,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 36,
+            "buffer_grow_bytes": 100,
+            "text_grows": 30,
+            "text_grow_bytes": 892,
+            "text_appends": 257,
+            "text_append_bytes": 415,
+            "buffer_pushes": 76,
+            "buffer_appends": 28,
+            "buffer_append_bytes": 72,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 10048,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed",
+      "library_source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b"
+    },
+    "original/ordinary": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "719b92b423c61aa83133b1dbb392a064c774139961da97b5b04eb87c89673a56",
+      "binary_sha256": "465ae88c2f2c406213c98c01042e2e005fae075707a6eebcec8f1896330ff297",
+      "llvm_sha256": "a06dc1cf6e1e7d2a3d83edea53669c5cff97da20113bec7df6cdaeb6ea42432f",
+      "build_ns": 445560596,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/original/ordinary/program"
+          ],
+          "status": 42,
+          "elapsed_ns": 1612414,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/original/ordinary/counts-1.json",
+            "counter_sha256": "d58dadb31f85ed9a63c9243dcc2d879e66f0bbdb16700a1672f80a042e437ecd",
+            "observed_rc_free": false,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 257,
+              "release": 479,
+              "unique_test": 218
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 72,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 67,
+            "memory": {
+              "allocs": 446,
+              "alloc_bytes": 32032,
+              "frees": 446,
+              "reallocs": 0,
+              "peak_live_bytes": 9792,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 20,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 22,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 24,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 22,
+                "column": 41,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 26,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 28,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 30,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 32,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 30,
+                "column": 41,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 34,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::depth",
+                "origin": "main::depth",
+                "path": "main.my",
+                "line": 80,
+                "column": 21,
+                "kind": "unique_test",
+                "count": 70
+              },
+              {
+                "function": "main::depth",
+                "origin": "main::depth",
+                "path": "main.my",
+                "line": 76,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::depth",
+                "origin": "main::depth",
+                "path": "main.my",
+                "line": 87,
+                "column": 25,
+                "kind": "unique_test",
+                "count": 60
+              },
+              {
+                "function": "main::depth",
+                "origin": "main::depth",
+                "path": "main.my",
+                "line": 89,
+                "column": 21,
+                "kind": "unique_test",
+                "count": 1
+              },
+              {
+                "function": "main::depth",
+                "origin": "main::depth",
+                "path": "main.my",
+                "line": 76,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::depth",
+                "origin": "main::depth",
+                "path": "main.my",
+                "line": 80,
+                "column": 21,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::depth",
+                "origin": "main::depth",
+                "path": "main.my",
+                "line": 87,
+                "column": 25,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::navigation",
+                "origin": "main::navigation",
+                "path": "main.my",
+                "line": 102,
+                "column": 16,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::navigation",
+                "origin": "main::navigation",
+                "path": "main.my",
+                "line": 100,
+                "column": 11,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::navigation",
+                "origin": "main::navigation",
+                "path": "main.my",
+                "line": 109,
+                "column": 19,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "a04_json::object",
+                "path": "main.my",
+                "line": 141,
+                "column": 6,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "a04_json.my",
+                "line": 69,
+                "column": 12,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "main.my",
+                "line": 146,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "a04_json.my",
+                "line": 64,
+                "column": 12,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "a04_json.my",
+                "line": 69,
+                "column": 12,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "main.my",
+                "line": 167,
+                "column": 11,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "main.my",
+                "line": 179,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "main.my",
+                "line": 173,
+                "column": 11,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "a04_json.my",
+                "line": 59,
+                "column": 12,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "main.my",
+                "line": 181,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "main.my",
+                "line": 179,
+                "column": 56,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "a04_json.my",
+                "line": 59,
+                "column": 12,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "main.my",
+                "line": 183,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::roundtrip",
+                "origin": "main::roundtrip",
+                "path": "main.my",
+                "line": 4,
+                "column": 11,
+                "kind": "release",
+                "count": 2
+              },
+              {
+                "function": "main::roundtrip",
+                "origin": "main::roundtrip",
+                "path": "main.my",
+                "line": 4,
+                "column": 11,
+                "kind": "release",
+                "count": 2
+              },
+              {
+                "function": "main::roundtrip",
+                "origin": "main::roundtrip",
+                "path": "main.my",
+                "line": 4,
+                "column": 11,
+                "kind": "release",
+                "count": 3
+              },
+              {
+                "function": "main::rejects",
+                "origin": "main::rejects",
+                "path": "main.my",
+                "line": 12,
+                "column": 11,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::rejects",
+                "origin": "main::rejects",
+                "path": "main.my",
+                "line": 12,
+                "column": 11,
+                "kind": "release",
+                "count": 22
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 613,
+                "column": 32,
+                "kind": "retain",
+                "count": 35
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 614,
+                "column": 21,
+                "kind": "release",
+                "count": 20
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 614,
+                "column": 17,
+                "kind": "retain",
+                "count": 20
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 614,
+                "column": 21,
+                "kind": "release",
+                "count": 20
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 614,
+                "column": 21,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 615,
+                "column": 5,
+                "kind": "release",
+                "count": 2
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 615,
+                "column": 5,
+                "kind": "release",
+                "count": 13
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 614,
+                "column": 17,
+                "kind": "retain",
+                "count": 2
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 614,
+                "column": 17,
+                "kind": "retain",
+                "count": 3
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 614,
+                "column": 17,
+                "kind": "retain",
+                "count": 4
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 614,
+                "column": 21,
+                "kind": "release",
+                "count": 2
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 614,
+                "column": 21,
+                "kind": "release",
+                "count": 3
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 614,
+                "column": 21,
+                "kind": "release",
+                "count": 4
+              },
+              {
+                "function": "a04_json::get",
+                "origin": "a04_json::get",
+                "path": "a04_json.my",
+                "line": 230,
+                "column": 25,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "a04_json::get",
+                "origin": "a04_json::get",
+                "path": "a04_json.my",
+                "line": 230,
+                "column": 25,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "main::reach",
+                "origin": "main::reach",
+                "path": "main.my",
+                "line": 119,
+                "column": 11,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::dumps",
+                "origin": "a04_json::dumps",
+                "path": "a04_json.my",
+                "line": 724,
+                "column": 24,
+                "kind": "release",
+                "count": 15
+              },
+              {
+                "function": "a04_json::dumps",
+                "origin": "a04_json::dumps",
+                "path": "a04_json.my",
+                "line": 726,
+                "column": 5,
+                "kind": "release",
+                "count": 15
+              },
+              {
+                "function": "a04_json::dumps",
+                "origin": "a04_json::dumps",
+                "path": "a04_json.my",
+                "line": 727,
+                "column": 11,
+                "kind": "release",
+                "count": 15
+              },
+              {
+                "function": "a04_json::dumps",
+                "origin": "a04_json::dumps",
+                "path": "a04_json.my",
+                "line": 727,
+                "column": 5,
+                "kind": "retain",
+                "count": 15
+              },
+              {
+                "function": "a04_json::dumps",
+                "origin": "a04_json::dumps",
+                "path": "a04_json.my",
+                "line": 723,
+                "column": 13,
+                "kind": "release",
+                "count": 15
+              },
+              {
+                "function": "a04_json::as_list",
+                "origin": "a04_json::as_list",
+                "path": "a04_json.my",
+                "line": 189,
+                "column": 31,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "a04_json::as_dict",
+                "origin": "a04_json::as_dict",
+                "path": "a04_json.my",
+                "line": 208,
+                "column": 32,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_value",
+                "origin": "a04_json::read_value",
+                "path": "a04_json.my",
+                "line": 596,
+                "column": 23,
+                "kind": "retain",
+                "count": 6
+              },
+              {
+                "function": "a04_json::read_value",
+                "origin": "a04_json::read_value",
+                "path": "a04_json.my",
+                "line": 596,
+                "column": 27,
+                "kind": "release",
+                "count": 6
+              },
+              {
+                "function": "a04_json::read_value",
+                "origin": "a04_json::read_value",
+                "path": "a04_json.my",
+                "line": 596,
+                "column": 23,
+                "kind": "retain",
+                "count": 3
+              },
+              {
+                "function": "a04_json::read_value",
+                "origin": "a04_json::read_value",
+                "path": "a04_json.my",
+                "line": 596,
+                "column": 27,
+                "kind": "release",
+                "count": 3
+              },
+              {
+                "function": "a04_json::parse_error",
+                "origin": "a04_json::parse_error",
+                "path": "a04_json.my",
+                "line": 296,
+                "column": 11,
+                "kind": "release",
+                "count": 22
+              },
+              {
+                "function": "a04_json::write_value",
+                "origin": "a04_json::write_value",
+                "path": "a04_json.my",
+                "line": 677,
+                "column": 17,
+                "kind": "unique_test",
+                "count": 2
+              },
+              {
+                "function": "a04_json::write_value",
+                "origin": "a04_json::write_value",
+                "path": "a04_json.my",
+                "line": 680,
+                "column": 21,
+                "kind": "unique_test",
+                "count": 2
+              },
+              {
+                "function": "a04_json::write_value",
+                "origin": "a04_json::write_value",
+                "path": "a04_json.my",
+                "line": 684,
+                "column": 17,
+                "kind": "unique_test",
+                "count": 6
+              },
+              {
+                "function": "a04_json::read_object",
+                "origin": "a04_json::read_object",
+                "path": "a04_json.my",
+                "line": 573,
+                "column": 17,
+                "kind": "release",
+                "count": 4
+              },
+              {
+                "function": "a04_json::read_object",
+                "origin": "a04_json::read_object",
+                "path": "a04_json.my",
+                "line": 573,
+                "column": 13,
+                "kind": "retain",
+                "count": 4
+              },
+              {
+                "function": "a04_json::read_object",
+                "origin": "a04_json::read_object",
+                "path": "a04_json.my",
+                "line": 573,
+                "column": 17,
+                "kind": "release",
+                "count": 4
+              },
+              {
+                "function": "a04_json::read_array",
+                "origin": "a04_json::read_array",
+                "path": "a04_json.my",
+                "line": 534,
+                "column": 22,
+                "kind": "retain",
+                "count": 66
+              },
+              {
+                "function": "a04_json::read_array",
+                "origin": "a04_json::read_array",
+                "path": "a04_json.my",
+                "line": 534,
+                "column": 26,
+                "kind": "release",
+                "count": 66
+              },
+              {
+                "function": "a04_json::read_array",
+                "origin": "a04_json::read_array",
+                "path": "a04_json.my",
+                "line": 534,
+                "column": 22,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_array",
+                "origin": "a04_json::read_array",
+                "path": "a04_json.my",
+                "line": 534,
+                "column": 22,
+                "kind": "retain",
+                "count": 61
+              },
+              {
+                "function": "a04_json::read_array",
+                "origin": "a04_json::read_array",
+                "path": "a04_json.my",
+                "line": 534,
+                "column": 26,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_array",
+                "origin": "a04_json::read_array",
+                "path": "a04_json.my",
+                "line": 534,
+                "column": 26,
+                "kind": "release",
+                "count": 61
+              },
+              {
+                "function": "a04_json::read_string",
+                "origin": "a04_json::read_string",
+                "path": "a04_json.my",
+                "line": 421,
+                "column": 24,
+                "kind": "release",
+                "count": 18
+              },
+              {
+                "function": "a04_json::read_string",
+                "origin": "a04_json::read_string",
+                "path": "a04_json.my",
+                "line": 419,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_string",
+                "origin": "a04_json::read_string",
+                "path": "a04_json.my",
+                "line": 430,
+                "column": 17,
+                "kind": "unique_test",
+                "count": 12
+              },
+              {
+                "function": "a04_json::read_string",
+                "origin": "a04_json::read_string",
+                "path": "a04_json.my",
+                "line": 419,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_string",
+                "origin": "a04_json::read_string",
+                "path": "a04_json.my",
+                "line": 437,
+                "column": 17,
+                "kind": "unique_test",
+                "count": 10
+              },
+              {
+                "function": "a04_json::read_string",
+                "origin": "a04_json::read_string",
+                "path": "a04_json.my",
+                "line": 438,
+                "column": 21,
+                "kind": "release",
+                "count": 4
+              },
+              {
+                "function": "a04_json::read_string",
+                "origin": "a04_json::read_string",
+                "path": "a04_json.my",
+                "line": 438,
+                "column": 17,
+                "kind": "retain",
+                "count": 4
+              },
+              {
+                "function": "a04_json::read_string",
+                "origin": "a04_json::read_string",
+                "path": "a04_json.my",
+                "line": 438,
+                "column": 21,
+                "kind": "release",
+                "count": 4
+              },
+              {
+                "function": "a04_json::read_string",
+                "origin": "a04_json::read_string",
+                "path": "a04_json.my",
+                "line": 430,
+                "column": 17,
+                "kind": "release",
+                "count": 12
+              },
+              {
+                "function": "a04_json::read_number",
+                "origin": "a04_json::read_number",
+                "path": "a04_json.my",
+                "line": 496,
+                "column": 9,
+                "kind": "retain",
+                "count": 3
+              },
+              {
+                "function": "a04_json::read_number",
+                "origin": "a04_json::read_number",
+                "path": "a04_json.my",
+                "line": 496,
+                "column": 13,
+                "kind": "release",
+                "count": 3
+              },
+              {
+                "function": "a04_json::read_number",
+                "origin": "a04_json::read_number",
+                "path": "a04_json.my",
+                "line": 497,
+                "column": 20,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_number",
+                "origin": "a04_json::read_number",
+                "path": "a04_json.my",
+                "line": 497,
+                "column": 24,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_number",
+                "origin": "a04_json::read_number",
+                "path": "a04_json.my",
+                "line": 498,
+                "column": 22,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_number",
+                "origin": "a04_json::read_number",
+                "path": "a04_json.my",
+                "line": 498,
+                "column": 26,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "strings::format_int",
+                "origin": "strings::format_int",
+                "path": "@stdlib/strings.my",
+                "line": 209,
+                "column": 53,
+                "kind": "unique_test",
+                "count": 22
+              },
+              {
+                "function": "strings::format_int",
+                "origin": "strings::format_int",
+                "path": "@stdlib/strings.my",
+                "line": 196,
+                "column": 13,
+                "kind": "release",
+                "count": 22
+              },
+              {
+                "function": "strings::format_int",
+                "origin": "strings::format_int",
+                "path": "@stdlib/strings.my",
+                "line": 209,
+                "column": 53,
+                "kind": "release",
+                "count": 22
+              },
+              {
+                "function": "a04_json::write_number",
+                "origin": "a04_json::write_number",
+                "path": "a04_json.my",
+                "line": 667,
+                "column": 13,
+                "kind": "unique_test",
+                "count": 2
+              },
+              {
+                "function": "a04_json::write_number",
+                "origin": "a04_json::write_number",
+                "path": "a04_json.my",
+                "line": 669,
+                "column": 13,
+                "kind": "unique_test",
+                "count": 3
+              },
+              {
+                "function": "a04_json::write_quoted",
+                "origin": "a04_json::write_quoted",
+                "path": "a04_json.my",
+                "line": 659,
+                "column": 9,
+                "kind": "unique_test",
+                "count": 12
+              },
+              {
+                "function": "a04_json::write_quoted",
+                "origin": "a04_json::write_quoted",
+                "path": "a04_json.my",
+                "line": 651,
+                "column": 17,
+                "kind": "unique_test",
+                "count": 6
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 552,
+                "column": 19,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 552,
+                "column": 19,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 552,
+                "column": 19,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 559,
+                "column": 19,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 559,
+                "column": 23,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 560,
+                "column": 5,
+                "kind": "unique_test",
+                "count": 6
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 552,
+                "column": 15,
+                "kind": "retain",
+                "count": 6
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 559,
+                "column": 19,
+                "kind": "retain",
+                "count": 2
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 559,
+                "column": 19,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 552,
+                "column": 19,
+                "kind": "release",
+                "count": 6
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 559,
+                "column": 23,
+                "kind": "release",
+                "count": 2
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 559,
+                "column": 23,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::decoded",
+                "origin": "a04_json::decoded",
+                "path": "a04_json.my",
+                "line": 345,
+                "column": 11,
+                "kind": "release",
+                "count": 12
+              },
+              {
+                "function": "a04_json::decoded",
+                "origin": "a04_json::decoded",
+                "path": "a04_json.my",
+                "line": 345,
+                "column": 5,
+                "kind": "retain",
+                "count": 12
+              },
+              {
+                "function": "a04_json::decoded",
+                "origin": "a04_json::decoded",
+                "path": "a04_json.my",
+                "line": 344,
+                "column": 6,
+                "kind": "release",
+                "count": 12
+              },
+              {
+                "function": "a04_json::write_control",
+                "origin": "a04_json::write_control",
+                "path": "a04_json.my",
+                "line": 626,
+                "column": 13,
+                "kind": "unique_test",
+                "count": 1
+              },
+              {
+                "function": "a04_json::write_control",
+                "origin": "a04_json::write_control",
+                "path": "a04_json.my",
+                "line": 628,
+                "column": 13,
+                "kind": "unique_test",
+                "count": 1
+              },
+              {
+                "function": "a04_json::write_control",
+                "origin": "a04_json::write_control",
+                "path": "a04_json.my",
+                "line": 635,
+                "column": 13,
+                "kind": "unique_test",
+                "count": 2
+              },
+              {
+                "function": "a04_json::read_unicode_escape",
+                "origin": "a04_json::read_unicode_escape",
+                "path": "a04_json.my",
+                "line": 370,
+                "column": 17,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_unicode_escape",
+                "origin": "a04_json::read_unicode_escape",
+                "path": "a04_json.my",
+                "line": 370,
+                "column": 21,
+                "kind": "release",
+                "count": 1
+              }
+            ],
+            "runtime_rc_functions": [
+              {
+                "function": "main::navigation",
+                "runtime_retains": 0,
+                "runtime_releases": 4,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "main::accessors",
+                "runtime_retains": 0,
+                "runtime_releases": 1,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "main::roundtrip",
+                "runtime_retains": 0,
+                "runtime_releases": 7,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "main::rejects",
+                "runtime_retains": 0,
+                "runtime_releases": 59,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "a04_json::read_object",
+                "runtime_retains": 0,
+                "runtime_releases": 1,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              }
+            ]
+          },
+          "memory": {
+            "calls": 2758,
+            "allocs": 446,
+            "alloc_bytes": 32032,
+            "frees": 446,
+            "free_bytes": 32032,
+            "list_grows": 68,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 46,
+            "text_copy_bytes": 724,
+            "runtime_retains": 0,
+            "runtime_releases": 72,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 36,
+            "buffer_grow_bytes": 100,
+            "text_grows": 30,
+            "text_grow_bytes": 892,
+            "text_appends": 257,
+            "text_append_bytes": 415,
+            "buffer_pushes": 76,
+            "buffer_appends": 28,
+            "buffer_append_bytes": 72,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 9792,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed",
+      "library_source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b"
+    },
+    "helper/release": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "719b92b423c61aa83133b1dbb392a064c774139961da97b5b04eb87c89673a56",
+      "binary_sha256": "bc26858854eab4cf9ce7a1e24a6af5add0db6d90b1962c7e459941cc3a4eca6d",
+      "llvm_sha256": "622d87f8d6307326c62d09ff71c18e89e2d4bb29234e467c21df70f5635a95fe",
+      "build_ns": 330972482,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/helper/release/program"
+          ],
+          "status": 42,
+          "elapsed_ns": 1330197,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/helper/release/counts-1.json",
+            "counter_sha256": "49df1112d3e5e1681753ee9b03b9ba9d2c35c364c124fb4bbb6cbb52def59c1e",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 336,
+            "memory": {
+              "allocs": 538,
+              "alloc_bytes": 38720,
+              "frees": 538,
+              "reallocs": 0,
+              "peak_live_bytes": 9952,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 2768,
+            "allocs": 538,
+            "alloc_bytes": 38720,
+            "frees": 538,
+            "free_bytes": 38720,
+            "list_grows": 68,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 8,
+            "list_copy_bytes": 224,
+            "dict_copies": 4,
+            "dict_copy_bytes": 320,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 126,
+            "text_copy_bytes": 1333,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 36,
+            "buffer_grow_bytes": 100,
+            "text_grows": 30,
+            "text_grow_bytes": 892,
+            "text_appends": 257,
+            "text_append_bytes": 415,
+            "buffer_pushes": 76,
+            "buffer_appends": 28,
+            "buffer_append_bytes": 72,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 9952,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed",
+      "library_source_sha256": "1d56302fb19dbebd3c6b801e7e31c7520cc6ff7b8a52f333f33536682259d627"
+    },
+    "helper/debug": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "719b92b423c61aa83133b1dbb392a064c774139961da97b5b04eb87c89673a56",
+      "binary_sha256": "2096f9ffe2b205c995d42bdc93a94d14cb52447767d66064a2b72b7919b52ce6",
+      "llvm_sha256": "413e41f9eeeed8f748e4d7f4f96e7d9525d31826b1971798c0c418cc4c342461",
+      "build_ns": 127772633,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/helper/debug/program"
+          ],
+          "status": 42,
+          "elapsed_ns": 1644014,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/helper/debug/counts-1.json",
+            "counter_sha256": "103a0b04acdd8a57122d72199a8283f5eba3067b14d517b791bf7ee006c24caf",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 362,
+            "memory": {
+              "allocs": 542,
+              "alloc_bytes": 39008,
+              "frees": 542,
+              "reallocs": 0,
+              "peak_live_bytes": 10048,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 4861,
+            "allocs": 542,
+            "alloc_bytes": 39008,
+            "frees": 542,
+            "free_bytes": 39008,
+            "list_grows": 68,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 8,
+            "list_copy_bytes": 224,
+            "dict_copies": 4,
+            "dict_copy_bytes": 320,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 126,
+            "text_copy_bytes": 1333,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 36,
+            "buffer_grow_bytes": 100,
+            "text_grows": 30,
+            "text_grow_bytes": 892,
+            "text_appends": 257,
+            "text_append_bytes": 415,
+            "buffer_pushes": 76,
+            "buffer_appends": 28,
+            "buffer_append_bytes": 72,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 10048,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed",
+      "library_source_sha256": "1d56302fb19dbebd3c6b801e7e31c7520cc6ff7b8a52f333f33536682259d627"
+    },
+    "helper/verify": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "719b92b423c61aa83133b1dbb392a064c774139961da97b5b04eb87c89673a56",
+      "binary_sha256": "bcb2377c699a5fdf09113a852623c079dd81a50ff4b25ac3f9087fcf47bbece3",
+      "llvm_sha256": "97d39147ab7c86d69daf44e020e22a41f87649f8940877bf52e8852ab13fb456",
+      "build_ns": 371297937,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/helper/verify/program"
+          ],
+          "status": 42,
+          "elapsed_ns": 1726404,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/helper/verify/counts-1.json",
+            "counter_sha256": "0589b10c08d3cec20d6ece52df276d65070039065a980e645d8f98f66f34e0a2",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 336,
+            "memory": {
+              "allocs": 538,
+              "alloc_bytes": 38720,
+              "frees": 538,
+              "reallocs": 0,
+              "peak_live_bytes": 9952,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 2768,
+            "allocs": 538,
+            "alloc_bytes": 38720,
+            "frees": 538,
+            "free_bytes": 38720,
+            "list_grows": 68,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 8,
+            "list_copy_bytes": 224,
+            "dict_copies": 4,
+            "dict_copy_bytes": 320,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 126,
+            "text_copy_bytes": 1333,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 36,
+            "buffer_grow_bytes": 100,
+            "text_grows": 30,
+            "text_grow_bytes": 892,
+            "text_appends": 257,
+            "text_append_bytes": 415,
+            "buffer_pushes": 76,
+            "buffer_appends": 28,
+            "buffer_append_bytes": 72,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 9952,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed",
+      "library_source_sha256": "1d56302fb19dbebd3c6b801e7e31c7520cc6ff7b8a52f333f33536682259d627"
+    },
+    "helper/optimized_debug": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "719b92b423c61aa83133b1dbb392a064c774139961da97b5b04eb87c89673a56",
+      "binary_sha256": "5cb59f494399b6bec8d84e604993e372e77b977e70d6cac6c5f64e08e653fc8a",
+      "llvm_sha256": "622d87f8d6307326c62d09ff71c18e89e2d4bb29234e467c21df70f5635a95fe",
+      "build_ns": 258296054,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/helper/optimized_debug/program"
+          ],
+          "status": 42,
+          "elapsed_ns": 1267057,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/helper/optimized_debug/counts-1.json",
+            "counter_sha256": "d4ed4ef97a9131f99fe557ce99f428938c92f7f0dab9e7f23127098eca9d2040",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 336,
+            "memory": {
+              "allocs": 538,
+              "alloc_bytes": 38720,
+              "frees": 538,
+              "reallocs": 0,
+              "peak_live_bytes": 9952,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 2768,
+            "allocs": 538,
+            "alloc_bytes": 38720,
+            "frees": 538,
+            "free_bytes": 38720,
+            "list_grows": 68,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 8,
+            "list_copy_bytes": 224,
+            "dict_copies": 4,
+            "dict_copy_bytes": 320,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 126,
+            "text_copy_bytes": 1333,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 36,
+            "buffer_grow_bytes": 100,
+            "text_grows": 30,
+            "text_grow_bytes": 892,
+            "text_appends": 257,
+            "text_append_bytes": 415,
+            "buffer_pushes": 76,
+            "buffer_appends": 28,
+            "buffer_append_bytes": 72,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 9952,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed",
+      "library_source_sha256": "1d56302fb19dbebd3c6b801e7e31c7520cc6ff7b8a52f333f33536682259d627"
+    },
+    "helper/no_facts": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "719b92b423c61aa83133b1dbb392a064c774139961da97b5b04eb87c89673a56",
+      "binary_sha256": "d987415820411523d9909531e39563ba59cf4808a70bbf519ccd0789123fd200",
+      "llvm_sha256": "0f0c725386d135379116694a56640f651b1f8a339c628d9a17e646553c637c97",
+      "build_ns": 317100934,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/helper/no_facts/program"
+          ],
+          "status": 42,
+          "elapsed_ns": 1535034,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/helper/no_facts/counts-1.json",
+            "counter_sha256": "3cb7e82641e81db237c2f4d5a8e1c1545c26fbac6ff386f9e73663dc857b2aa4",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 337,
+            "memory": {
+              "allocs": 539,
+              "alloc_bytes": 38816,
+              "frees": 539,
+              "reallocs": 0,
+              "peak_live_bytes": 10048,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 2768,
+            "allocs": 539,
+            "alloc_bytes": 38816,
+            "frees": 539,
+            "free_bytes": 38816,
+            "list_grows": 68,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 8,
+            "list_copy_bytes": 224,
+            "dict_copies": 4,
+            "dict_copy_bytes": 320,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 126,
+            "text_copy_bytes": 1333,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 36,
+            "buffer_grow_bytes": 100,
+            "text_grows": 30,
+            "text_grow_bytes": 892,
+            "text_appends": 257,
+            "text_append_bytes": 415,
+            "buffer_pushes": 76,
+            "buffer_appends": 28,
+            "buffer_append_bytes": 72,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 10048,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed",
+      "library_source_sha256": "1d56302fb19dbebd3c6b801e7e31c7520cc6ff7b8a52f333f33536682259d627"
+    },
+    "helper/ordinary": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "719b92b423c61aa83133b1dbb392a064c774139961da97b5b04eb87c89673a56",
+      "binary_sha256": "22be4831ceea43993d981cefb0f1f298fa94c7d40425fc134535e7cf0ee744c1",
+      "llvm_sha256": "8cf8128e9ad927c84490e6734d5fe44d2f594caa12076abb7d2d75008fe41645",
+      "build_ns": 454909459,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/helper/ordinary/program"
+          ],
+          "status": 42,
+          "elapsed_ns": 1590150,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/json-literal-view/readonly-helper-01/helper/ordinary/counts-1.json",
+            "counter_sha256": "855e85c0837c7c0fd2aebcb7a96c807e180a35e53d0603522dcec011d1f694b8",
+            "observed_rc_free": false,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 257,
+              "release": 479,
+              "unique_test": 218
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 72,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 67,
+            "memory": {
+              "allocs": 446,
+              "alloc_bytes": 32032,
+              "frees": 446,
+              "reallocs": 0,
+              "peak_live_bytes": 9792,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 20,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 22,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 24,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 22,
+                "column": 41,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 26,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 28,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 30,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 32,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 30,
+                "column": 41,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::shapes",
+                "origin": "main::shapes",
+                "path": "main.my",
+                "line": 34,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::depth",
+                "origin": "main::depth",
+                "path": "main.my",
+                "line": 80,
+                "column": 21,
+                "kind": "unique_test",
+                "count": 70
+              },
+              {
+                "function": "main::depth",
+                "origin": "main::depth",
+                "path": "main.my",
+                "line": 76,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::depth",
+                "origin": "main::depth",
+                "path": "main.my",
+                "line": 87,
+                "column": 25,
+                "kind": "unique_test",
+                "count": 60
+              },
+              {
+                "function": "main::depth",
+                "origin": "main::depth",
+                "path": "main.my",
+                "line": 89,
+                "column": 21,
+                "kind": "unique_test",
+                "count": 1
+              },
+              {
+                "function": "main::depth",
+                "origin": "main::depth",
+                "path": "main.my",
+                "line": 76,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::depth",
+                "origin": "main::depth",
+                "path": "main.my",
+                "line": 80,
+                "column": 21,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::depth",
+                "origin": "main::depth",
+                "path": "main.my",
+                "line": 87,
+                "column": 25,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::navigation",
+                "origin": "main::navigation",
+                "path": "main.my",
+                "line": 102,
+                "column": 16,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::navigation",
+                "origin": "main::navigation",
+                "path": "main.my",
+                "line": 100,
+                "column": 11,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::navigation",
+                "origin": "main::navigation",
+                "path": "main.my",
+                "line": 109,
+                "column": 19,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "a04_json::object",
+                "path": "main.my",
+                "line": 141,
+                "column": 6,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "a04_json.my",
+                "line": 69,
+                "column": 12,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "main.my",
+                "line": 146,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "a04_json.my",
+                "line": 64,
+                "column": 12,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "a04_json.my",
+                "line": 69,
+                "column": 12,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "main.my",
+                "line": 167,
+                "column": 11,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "main.my",
+                "line": 179,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "main.my",
+                "line": 173,
+                "column": 11,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "a04_json.my",
+                "line": 59,
+                "column": 12,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "main.my",
+                "line": 181,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "main.my",
+                "line": 179,
+                "column": 56,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "a04_json.my",
+                "line": 59,
+                "column": 12,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::accessors",
+                "origin": "main::accessors",
+                "path": "main.my",
+                "line": 183,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::roundtrip",
+                "origin": "main::roundtrip",
+                "path": "main.my",
+                "line": 4,
+                "column": 11,
+                "kind": "release",
+                "count": 2
+              },
+              {
+                "function": "main::roundtrip",
+                "origin": "main::roundtrip",
+                "path": "main.my",
+                "line": 4,
+                "column": 11,
+                "kind": "release",
+                "count": 2
+              },
+              {
+                "function": "main::roundtrip",
+                "origin": "main::roundtrip",
+                "path": "main.my",
+                "line": 4,
+                "column": 11,
+                "kind": "release",
+                "count": 3
+              },
+              {
+                "function": "main::rejects",
+                "origin": "main::rejects",
+                "path": "main.my",
+                "line": 12,
+                "column": 11,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main::rejects",
+                "origin": "main::rejects",
+                "path": "main.my",
+                "line": 12,
+                "column": 11,
+                "kind": "release",
+                "count": 22
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 618,
+                "column": 32,
+                "kind": "retain",
+                "count": 35
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 619,
+                "column": 21,
+                "kind": "release",
+                "count": 20
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 619,
+                "column": 17,
+                "kind": "retain",
+                "count": 20
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 619,
+                "column": 21,
+                "kind": "release",
+                "count": 20
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 619,
+                "column": 21,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 620,
+                "column": 5,
+                "kind": "release",
+                "count": 2
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 620,
+                "column": 5,
+                "kind": "release",
+                "count": 13
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 619,
+                "column": 17,
+                "kind": "retain",
+                "count": 2
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 619,
+                "column": 17,
+                "kind": "retain",
+                "count": 3
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 619,
+                "column": 17,
+                "kind": "retain",
+                "count": 4
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 619,
+                "column": 21,
+                "kind": "release",
+                "count": 2
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 619,
+                "column": 21,
+                "kind": "release",
+                "count": 3
+              },
+              {
+                "function": "a04_json::loads",
+                "origin": "a04_json::loads",
+                "path": "a04_json.my",
+                "line": 619,
+                "column": 21,
+                "kind": "release",
+                "count": 4
+              },
+              {
+                "function": "a04_json::get",
+                "origin": "a04_json::get",
+                "path": "a04_json.my",
+                "line": 230,
+                "column": 25,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "a04_json::get",
+                "origin": "a04_json::get",
+                "path": "a04_json.my",
+                "line": 230,
+                "column": 25,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "main::reach",
+                "origin": "main::reach",
+                "path": "main.my",
+                "line": 119,
+                "column": 11,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::dumps",
+                "origin": "a04_json::dumps",
+                "path": "a04_json.my",
+                "line": 729,
+                "column": 24,
+                "kind": "release",
+                "count": 15
+              },
+              {
+                "function": "a04_json::dumps",
+                "origin": "a04_json::dumps",
+                "path": "a04_json.my",
+                "line": 731,
+                "column": 5,
+                "kind": "release",
+                "count": 15
+              },
+              {
+                "function": "a04_json::dumps",
+                "origin": "a04_json::dumps",
+                "path": "a04_json.my",
+                "line": 732,
+                "column": 11,
+                "kind": "release",
+                "count": 15
+              },
+              {
+                "function": "a04_json::dumps",
+                "origin": "a04_json::dumps",
+                "path": "a04_json.my",
+                "line": 732,
+                "column": 5,
+                "kind": "retain",
+                "count": 15
+              },
+              {
+                "function": "a04_json::dumps",
+                "origin": "a04_json::dumps",
+                "path": "a04_json.my",
+                "line": 728,
+                "column": 13,
+                "kind": "release",
+                "count": 15
+              },
+              {
+                "function": "a04_json::as_list",
+                "origin": "a04_json::as_list",
+                "path": "a04_json.my",
+                "line": 189,
+                "column": 31,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "a04_json::as_dict",
+                "origin": "a04_json::as_dict",
+                "path": "a04_json.my",
+                "line": 208,
+                "column": 32,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_value",
+                "origin": "a04_json::read_value",
+                "path": "a04_json.my",
+                "line": 601,
+                "column": 23,
+                "kind": "retain",
+                "count": 6
+              },
+              {
+                "function": "a04_json::read_value",
+                "origin": "a04_json::read_value",
+                "path": "a04_json.my",
+                "line": 601,
+                "column": 27,
+                "kind": "release",
+                "count": 6
+              },
+              {
+                "function": "a04_json::read_value",
+                "origin": "a04_json::read_value",
+                "path": "a04_json.my",
+                "line": 601,
+                "column": 23,
+                "kind": "retain",
+                "count": 3
+              },
+              {
+                "function": "a04_json::read_value",
+                "origin": "a04_json::read_value",
+                "path": "a04_json.my",
+                "line": 601,
+                "column": 27,
+                "kind": "release",
+                "count": 3
+              },
+              {
+                "function": "a04_json::parse_error",
+                "origin": "a04_json::parse_error",
+                "path": "a04_json.my",
+                "line": 296,
+                "column": 11,
+                "kind": "release",
+                "count": 22
+              },
+              {
+                "function": "a04_json::write_value",
+                "origin": "a04_json::write_value",
+                "path": "a04_json.my",
+                "line": 682,
+                "column": 17,
+                "kind": "unique_test",
+                "count": 2
+              },
+              {
+                "function": "a04_json::write_value",
+                "origin": "a04_json::write_value",
+                "path": "a04_json.my",
+                "line": 685,
+                "column": 21,
+                "kind": "unique_test",
+                "count": 2
+              },
+              {
+                "function": "a04_json::write_value",
+                "origin": "a04_json::write_value",
+                "path": "a04_json.my",
+                "line": 689,
+                "column": 17,
+                "kind": "unique_test",
+                "count": 6
+              },
+              {
+                "function": "a04_json::read_object",
+                "origin": "a04_json::read_object",
+                "path": "a04_json.my",
+                "line": 578,
+                "column": 17,
+                "kind": "release",
+                "count": 4
+              },
+              {
+                "function": "a04_json::read_object",
+                "origin": "a04_json::read_object",
+                "path": "a04_json.my",
+                "line": 578,
+                "column": 13,
+                "kind": "retain",
+                "count": 4
+              },
+              {
+                "function": "a04_json::read_object",
+                "origin": "a04_json::read_object",
+                "path": "a04_json.my",
+                "line": 578,
+                "column": 17,
+                "kind": "release",
+                "count": 4
+              },
+              {
+                "function": "a04_json::read_array",
+                "origin": "a04_json::read_array",
+                "path": "a04_json.my",
+                "line": 539,
+                "column": 22,
+                "kind": "retain",
+                "count": 66
+              },
+              {
+                "function": "a04_json::read_array",
+                "origin": "a04_json::read_array",
+                "path": "a04_json.my",
+                "line": 539,
+                "column": 26,
+                "kind": "release",
+                "count": 66
+              },
+              {
+                "function": "a04_json::read_array",
+                "origin": "a04_json::read_array",
+                "path": "a04_json.my",
+                "line": 539,
+                "column": 22,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_array",
+                "origin": "a04_json::read_array",
+                "path": "a04_json.my",
+                "line": 539,
+                "column": 22,
+                "kind": "retain",
+                "count": 61
+              },
+              {
+                "function": "a04_json::read_array",
+                "origin": "a04_json::read_array",
+                "path": "a04_json.my",
+                "line": 539,
+                "column": 26,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_array",
+                "origin": "a04_json::read_array",
+                "path": "a04_json.my",
+                "line": 539,
+                "column": 26,
+                "kind": "release",
+                "count": 61
+              },
+              {
+                "function": "a04_json::read_string",
+                "origin": "a04_json::read_string",
+                "path": "a04_json.my",
+                "line": 421,
+                "column": 24,
+                "kind": "release",
+                "count": 18
+              },
+              {
+                "function": "a04_json::read_string",
+                "origin": "a04_json::read_string",
+                "path": "a04_json.my",
+                "line": 419,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_string",
+                "origin": "a04_json::read_string",
+                "path": "a04_json.my",
+                "line": 430,
+                "column": 17,
+                "kind": "unique_test",
+                "count": 12
+              },
+              {
+                "function": "a04_json::read_string",
+                "origin": "a04_json::read_string",
+                "path": "a04_json.my",
+                "line": 419,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_string",
+                "origin": "a04_json::read_string",
+                "path": "a04_json.my",
+                "line": 437,
+                "column": 17,
+                "kind": "unique_test",
+                "count": 10
+              },
+              {
+                "function": "a04_json::read_string",
+                "origin": "a04_json::read_string",
+                "path": "a04_json.my",
+                "line": 438,
+                "column": 21,
+                "kind": "release",
+                "count": 4
+              },
+              {
+                "function": "a04_json::read_string",
+                "origin": "a04_json::read_string",
+                "path": "a04_json.my",
+                "line": 438,
+                "column": 17,
+                "kind": "retain",
+                "count": 4
+              },
+              {
+                "function": "a04_json::read_string",
+                "origin": "a04_json::read_string",
+                "path": "a04_json.my",
+                "line": 438,
+                "column": 21,
+                "kind": "release",
+                "count": 4
+              },
+              {
+                "function": "a04_json::read_string",
+                "origin": "a04_json::read_string",
+                "path": "a04_json.my",
+                "line": 430,
+                "column": 17,
+                "kind": "release",
+                "count": 12
+              },
+              {
+                "function": "a04_json::read_number",
+                "origin": "a04_json::read_number",
+                "path": "a04_json.my",
+                "line": 496,
+                "column": 9,
+                "kind": "retain",
+                "count": 3
+              },
+              {
+                "function": "a04_json::read_number",
+                "origin": "a04_json::read_number",
+                "path": "a04_json.my",
+                "line": 496,
+                "column": 13,
+                "kind": "release",
+                "count": 3
+              },
+              {
+                "function": "a04_json::read_number",
+                "origin": "a04_json::read_number",
+                "path": "a04_json.my",
+                "line": 497,
+                "column": 20,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_number",
+                "origin": "a04_json::read_number",
+                "path": "a04_json.my",
+                "line": 497,
+                "column": 24,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_number",
+                "origin": "a04_json::read_number",
+                "path": "a04_json.my",
+                "line": 498,
+                "column": 22,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_number",
+                "origin": "a04_json::read_number",
+                "path": "a04_json.my",
+                "line": 498,
+                "column": 26,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "strings::format_int",
+                "origin": "strings::format_int",
+                "path": "@stdlib/strings.my",
+                "line": 209,
+                "column": 53,
+                "kind": "unique_test",
+                "count": 22
+              },
+              {
+                "function": "strings::format_int",
+                "origin": "strings::format_int",
+                "path": "@stdlib/strings.my",
+                "line": 196,
+                "column": 13,
+                "kind": "release",
+                "count": 22
+              },
+              {
+                "function": "strings::format_int",
+                "origin": "strings::format_int",
+                "path": "@stdlib/strings.my",
+                "line": 209,
+                "column": 53,
+                "kind": "release",
+                "count": 22
+              },
+              {
+                "function": "a04_json::write_number",
+                "origin": "a04_json::write_number",
+                "path": "a04_json.my",
+                "line": 672,
+                "column": 13,
+                "kind": "unique_test",
+                "count": 2
+              },
+              {
+                "function": "a04_json::write_number",
+                "origin": "a04_json::write_number",
+                "path": "a04_json.my",
+                "line": 674,
+                "column": 13,
+                "kind": "unique_test",
+                "count": 3
+              },
+              {
+                "function": "a04_json::write_quoted",
+                "origin": "a04_json::write_quoted",
+                "path": "a04_json.my",
+                "line": 664,
+                "column": 9,
+                "kind": "unique_test",
+                "count": 12
+              },
+              {
+                "function": "a04_json::write_quoted",
+                "origin": "a04_json::write_quoted",
+                "path": "a04_json.my",
+                "line": 656,
+                "column": 17,
+                "kind": "unique_test",
+                "count": 6
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 557,
+                "column": 19,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 557,
+                "column": 19,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 557,
+                "column": 19,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 564,
+                "column": 19,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 564,
+                "column": 23,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 565,
+                "column": 5,
+                "kind": "unique_test",
+                "count": 6
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 557,
+                "column": 15,
+                "kind": "retain",
+                "count": 6
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 564,
+                "column": 19,
+                "kind": "retain",
+                "count": 2
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 564,
+                "column": 19,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 557,
+                "column": 19,
+                "kind": "release",
+                "count": 6
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 564,
+                "column": 23,
+                "kind": "release",
+                "count": 2
+              },
+              {
+                "function": "a04_json::read_member",
+                "origin": "a04_json::read_member",
+                "path": "a04_json.my",
+                "line": 564,
+                "column": 23,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "a04_json::decoded",
+                "origin": "a04_json::decoded",
+                "path": "a04_json.my",
+                "line": 345,
+                "column": 11,
+                "kind": "release",
+                "count": 12
+              },
+              {
+                "function": "a04_json::decoded",
+                "origin": "a04_json::decoded",
+                "path": "a04_json.my",
+                "line": 345,
+                "column": 5,
+                "kind": "retain",
+                "count": 12
+              },
+              {
+                "function": "a04_json::decoded",
+                "origin": "a04_json::decoded",
+                "path": "a04_json.my",
+                "line": 344,
+                "column": 6,
+                "kind": "release",
+                "count": 12
+              },
+              {
+                "function": "a04_json::write_control",
+                "origin": "a04_json::write_control",
+                "path": "a04_json.my",
+                "line": 631,
+                "column": 13,
+                "kind": "unique_test",
+                "count": 1
+              },
+              {
+                "function": "a04_json::write_control",
+                "origin": "a04_json::write_control",
+                "path": "a04_json.my",
+                "line": 633,
+                "column": 13,
+                "kind": "unique_test",
+                "count": 1
+              },
+              {
+                "function": "a04_json::write_control",
+                "origin": "a04_json::write_control",
+                "path": "a04_json.my",
+                "line": 640,
+                "column": 13,
+                "kind": "unique_test",
+                "count": 2
+              },
+              {
+                "function": "a04_json::read_unicode_escape",
+                "origin": "a04_json::read_unicode_escape",
+                "path": "a04_json.my",
+                "line": 370,
+                "column": 17,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "a04_json::read_unicode_escape",
+                "origin": "a04_json::read_unicode_escape",
+                "path": "a04_json.my",
+                "line": 370,
+                "column": 21,
+                "kind": "release",
+                "count": 1
+              }
+            ],
+            "runtime_rc_functions": [
+              {
+                "function": "main::navigation",
+                "runtime_retains": 0,
+                "runtime_releases": 4,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "main::accessors",
+                "runtime_retains": 0,
+                "runtime_releases": 1,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "main::roundtrip",
+                "runtime_retains": 0,
+                "runtime_releases": 7,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "main::rejects",
+                "runtime_retains": 0,
+                "runtime_releases": 59,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "a04_json::read_object",
+                "runtime_retains": 0,
+                "runtime_releases": 1,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              }
+            ]
+          },
+          "memory": {
+            "calls": 2761,
+            "allocs": 446,
+            "alloc_bytes": 32032,
+            "frees": 446,
+            "free_bytes": 32032,
+            "list_grows": 68,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 46,
+            "text_copy_bytes": 724,
+            "runtime_retains": 0,
+            "runtime_releases": 72,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 36,
+            "buffer_grow_bytes": 100,
+            "text_grows": 30,
+            "text_grow_bytes": 892,
+            "text_appends": 257,
+            "text_append_bytes": 415,
+            "buffer_pushes": 76,
+            "buffer_appends": 28,
+            "buffer_append_bytes": 72,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 9792,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed",
+      "library_source_sha256": "1d56302fb19dbebd3c6b801e7e31c7520cc6ff7b8a52f333f33536682259d627"
+    }
+  },
+  "production_changed": false,
+  "limits": "Same compiler, controlled local library-source change; no runtime/RSS claim. All original fixture assertions retained.",
+  "summary": {
+    "lanes": 12,
+    "failed": 0
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "status": "independent_pinned_releasefast_compiler_components_passed",
+  "compiler_revision": "5167c588be79dd43d21d5013c36db15110bf239b",
+  "compiler_sha256": "29cfbd13390692757ce3add9cf61d8398eff283760d16cedb3c5b9addaa03e26",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/component-cache/seeds/e52b4e7ef5dfda4c79290757c9c889f4a3bf1d0b3be68a5f250b38c37d41b89d/source/zig-out/focus/mylang",
+  "all_passed": true,
+  "total_executions": 688,
+  "components": [
+    {
+      "component": "cache_plan",
+      "passed": true,
+      "runs": 560,
+      "exit_status_counts": {
+        "2": 36,
+        "0": 523,
+        "1": 1
+      },
+      "binary_sha256": "44cf164990de93468addf576e18af792ebcbd593f95748aa8059b388e1766f7f",
+      "llvm_sha256": "2d538f7cb3e43aaeda72cc89d29a2035be99f638cfa43dd61cf1f9d28f6a1b3d",
+      "sources": {
+        "codec.my": "fa0592f90fad2ac0efb7f1ca955e63a1a9059e03559e1c0c2bf97417c15102e5",
+        "incremental.my": "e797876683a7483ab32f40c1578f2a49c12948f1ece9c22fd9396d9b25122472",
+        "main.my": "03222396a6df8346c8dfe1396b384ba43adf63f370a536ad9bebf59e412cfda7",
+        "tests.my": "1cdf4d70dd5397ec9f97ed111e39f5c003ee35c5851c3469f7f69054ed96d829",
+        "graph.my": "ae55b3f4e713a1e86cee87e2e870e2fe65ca11e7604e0000759fcbaa0145a5a7",
+        "codec_v2.my": "409a84cfb78d309421e855f97f24d674913213a8ae748e8de4a848970ba6eb05"
+      },
+      "source_hashes_match_prior_support6": true,
+      "binary_matches_prior_support6": true,
+      "oracle_source_sha256": "3b88c6a85b1f4bb7a5e508abf6eca35532ae4de88b1f8164d7c13bcef089a99c",
+      "all_observed_rc_free": true,
+      "returned_runs_leak_free": true,
+      "llvm_rc_clean": true,
+      "symbols_rc_clean": true
+    },
+    {
+      "component": "test_index",
+      "passed": true,
+      "runs": 128,
+      "exit_status_counts": {
+        "2": 21,
+        "0": 106,
+        "1": 1
+      },
+      "binary_sha256": "1734efefa37d2f17678dca227d51401c269a5028b4e6867bf91535989e79c28a",
+      "llvm_sha256": "299f3fc186a1d19cef3c5727bedb7b24623938b2bf7f05b18ca58532dbeda889",
+      "sources": {
+        "codec.my": "e81c6d9535dbe66b704733d26462579057ae6798040eb3beeceb7790285bbdd2",
+        "main.my": "365f56a9f40de9658fed629427a43ba8bcad59f2b4c9b144654a66b1e90cf6b4",
+        "tests.my": "f4786bf0334689801af9ce7b8dfe9f7b5a7bade785f707c704f16d58862a4140",
+        "graph.my": "8dec40f8e2e15e5d796b4c13262e21d1d9f22e8cdd6ed139060e6679c9fc2139"
+      },
+      "source_hashes_match_prior_support6": true,
+      "binary_matches_prior_support6": true,
+      "oracle_source_sha256": "4e3965d9f20c0237632d08621780ae17b0ef4f7e8d54b155ee599204173de87c",
+      "all_observed_rc_free": true,
+      "returned_runs_leak_free": true,
+      "llvm_rc_clean": true,
+      "symbols_rc_clean": true
+    }
+  ],
+  "raw": "experiments/memory-closeout-20261012/A08/components-owned-pin-support6.json",
+  "raw_sha256": "abf3fea2cab5f68c45c02ffc035d7d6d421080cf66a675be895c542911618797",
+  "provisioning_snapshot": "owned-pin-support6-provisioning-snapshot.json",
+  "scope": "Fresh private project caches and counted component builds against independently provisioned source-pinned RF compiler; native/toolchain runtime object caches may be warm. This compiler source remains Support6, not C1/C2/C3.",
+  "boundaries": [
+    "Counted binaries differ from separately installed uninstrumented artifacts; A10 owns installed package/native qualification.",
+    "Hard output-failure traps remain included; managed cleanup applies only to normal and handled-error returns.",
+    "Oracle elapsed values are instrumented/nonexclusive correctness telemetry, not controlled runtime timings.",
+    "Immutable historical bootstrap seed was not changed."
+  ]
+}

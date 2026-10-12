@@ -1,0 +1,966 @@
+diff --git a/src/core/buffers.zig b/src/core/buffers.zig
+index e8c7ee274..537180bb4 100644
+--- a/src/core/buffers.zig
++++ b/src/core/buffers.zig
+@@ -18,6 +18,7 @@ pub const Error = std.mem.Allocator.Error;
+ 
+ /// The runtime append the builder calls, and the slow path of `buffer_append`.
+ pub const append_symbol = "myl_core_buffer_append_checked";
++pub const append_span_symbol = "myl_core_buffer_append_span_checked";
+ /// The runtime range test the builder calls.
+ const valid_symbol = "myl_core_buffer_range_valid";
+ 
+@@ -38,7 +39,8 @@ pub fn appends(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Functi
+             // A buffer appended to itself stays a call: the call retains the source it borrows
+             // (the same block it takes over), so the runtime copies the buffer before growing it.
+             const into_itself = arguments.len == 4 and f.resolve(arguments[0]) == f.resolve(arguments[1]);
+-            if (std.mem.eql(u8, callee.name, append_symbol) and arguments.len == 4 and !into_itself) {
++            const span_append = std.mem.eql(u8, callee.name, append_span_symbol) and callee.signature.linkage == .runtime_c and callee.signature.views == 2 and callee.signature.owned == 1 and callee.signature.consumes == 0;
++            if ((std.mem.eql(u8, callee.name, append_symbol) or span_append) and arguments.len == 4 and !into_itself) {
+                 // Copied out first: appending may move `f.extra`, which `arguments` points into.
+                 const operands = [4]ir.Ref{ arguments[0], arguments[1], arguments[2], arguments[3] };
+                 const extra: u32 = @intCast(f.extra.items.len);
+@@ -46,7 +48,9 @@ pub fn appends(arena: std.mem.Allocator, module: *const ir.Module, f: *ir.Functi
+                 f.insts.items[ref.index()] = .{ .op = .buffer_append, .ty = .byte_buffer, .a = operands[0], .b = operands[1], .data = (ir.ExtraSlice{ .start = extra, .len = 2 }).pack(), .span = inst.span };
+                 rewritten += 1;
+                 changed = true;
+-            } else if (std.mem.eql(u8, callee.name, valid_symbol) and arguments.len == 3 and inst.ty == .bool) {
++            } else if ((std.mem.eql(u8, callee.name, valid_symbol) or
++                (std.mem.eql(u8, callee.name, "myl_core_span_buffer_range_valid") and callee.signature.linkage == .runtime_c and callee.signature.views == 1 and callee.signature.owned == 0 and callee.signature.consumes == 0)) and arguments.len == 3 and inst.ty == .bool)
++            {
+                 try rangeTest(arena, f, .{ .ref = ref, .source = arguments[0], .start = arguments[1], .end = arguments[2], .span = inst.span }, &rebuilt);
+                 changed = true;
+                 continue;
+@@ -68,7 +72,7 @@ fn rangeTest(arena: std.mem.Allocator, f: *ir.Function, t: Test, into: *std.Arra
+     const source_type = f.inst(f.resolve(t.source)).ty;
+     const nonnegative = try emit(arena, f, into, .{ .op = .cmp, .ty = .bool, .a = t.start, .b = zero, .data = @backingInt(ir.Predicate.ge), .span = t.span });
+     const ordered = try emit(arena, f, into, .{ .op = .cmp, .ty = .bool, .a = t.end, .b = t.start, .data = @backingInt(ir.Predicate.ge), .span = t.span });
+-    const length = try emit(arena, f, into, .{ .op = if (source_type == .str) .str_len else .list_len, .ty = .u64, .a = t.source, .span = t.span });
++    const length = try emit(arena, f, into, .{ .op = if (source_type == .str or source_type == .str_view) .str_len else .list_len, .ty = .u64, .a = t.source, .span = t.span });
+     const wide = try emit(arena, f, into, .{ .op = .convert, .ty = .i64, .a = length, .span = t.span });
+     const inside = try emit(arena, f, into, .{ .op = .cmp, .ty = .bool, .a = t.end, .b = wide, .data = @backingInt(ir.Predicate.le), .span = t.span });
+     const both = try emit(arena, f, into, .{ .op = .bit_and, .ty = .bool, .a = nonnegative, .b = ordered, .span = t.span });
+diff --git a/src/core/build_bytes.zig b/src/core/build_bytes.zig
+index 330a53e03..e5ec5c5ee 100644
+--- a/src/core/build_bytes.zig
++++ b/src/core/build_bytes.zig
+@@ -147,7 +147,10 @@ fn appendFragment(comptime Context: type, context: Context, node: Operation, spa
+     const start = if (node.kind == .buffer_append_range) try context.expression(node.arguments[1]) else try context.constant(.i64, 0);
+     const stop = if (node.kind == .buffer_append_range) try context.expression(node.arguments[2]) else try context.emit(.{ .op = if (context.typeOfRef(source) == .str) .str_len else .list_len, .ty = .u64, .a = source, .span = span });
+     const end = if (context.typeOfRef(stop) == .i64) stop else try context.emit(.{ .op = .convert, .ty = .i64, .a = stop, .span = span });
+-    const valid = try context.runtimeCall("myl_core_buffer_range_valid", &.{ context.typeOfRef(source), .i64, .i64 }, .bool, &.{ source, start, end }, span);
++    const valid = if (context.module().zero_rc)
++        try context.effectCall("myl_core_buffer_range_valid", &.{ context.typeOfRef(source), .i64, .i64 }, .bool, &.{ source, start, end }, span)
++    else
++        try context.runtimeCall("myl_core_buffer_range_valid", &.{ context.typeOfRef(source), .i64, .i64 }, .bool, &.{ source, start, end }, span);
+     // Text is encoded once; the encoding borrows the text's own octets.
+     const octets = if (context.typeOfRef(source) == .str) encoded: {
+         if (context.module().zero_rc) break :encoded try context.effectCall("myl_core_text_encode", &.{.str}, .bytes, &.{source}, span);
+@@ -163,6 +166,8 @@ fn appendFragment(comptime Context: type, context: Context, node: Operation, spa
+ /// runtime updates the buffer in place when it holds the only reference and copies it
+ /// otherwise, and returns the updated buffer.
+ fn handedOver(comptime Context: type, context: Context, symbol: []const u8, params: []const ir.Type, arguments: []const ir.Ref, span: u32) Error!ir.Ref {
++    if (context.module().zero_rc and @import("std").mem.eql(u8, symbol, "myl_core_buffer_append_checked"))
++        return context.effectCall(symbol, params, .byte_buffer, arguments, span);
+     const callee = try context.mb.runtimeFunction(symbol, params, .byte_buffer, .extern_c);
+     context.mb.module.functions.items[callee].signature.owned = 1;
+     return context.emit(.{ .op = .call, .ty = .byte_buffer, .a = @fromBackingInt(callee), .data = try context.extraSlice(arguments), .span = span });
+diff --git a/src/core/build_text.zig b/src/core/build_text.zig
+index 977a4ff36..0aa1855d8 100644
+--- a/src/core/build_text.zig
++++ b/src/core/build_text.zig
+@@ -99,8 +99,11 @@ pub fn literal(comptime Context: type, context: Context, items: []const typed.No
+     }
+     const index = context.mb.module.strings.items.len;
+     try context.mb.module.strings.append(context.allocator(), try bytes.toOwnedSlice(context.allocator()));
++    // Immutable octets use the existing static byte-literal layout. No writable
++    // buffer or independently requested copy aliases this storage.
++    if (context.module().zero_rc) return context.detached(.{ .op = .str_const, .ty = .bytes, .data = index, .span = span });
+     const source = try context.detached(.{ .op = .str_const, .ty = .str, .data = index });
+-    return if (context.module().zero_rc) context.effectCall(encode_symbol, &.{.str}, .bytes, &.{source}, span) else context.runtimeCall(encode_symbol, &.{.str}, .bytes, &.{source}, span);
++    return context.runtimeCall(encode_symbol, &.{.str}, .bytes, &.{source}, span);
+ }
+ 
+ /// Index a non-place string/bytes expression; the offset helper normalizes negatives.
+diff --git a/src/core/build_text_more.zig b/src/core/build_text_more.zig
+index 2f90a6b05..eaf98f273 100644
+--- a/src/core/build_text_more.zig
++++ b/src/core/build_text_more.zig
+@@ -113,7 +113,10 @@ fn decoded(comptime Context: type, b: Context, input: ir.Ref, node: Operation, t
+ 
+ /// Construct the built-in Result from one validation result, with a located error origin.
+ pub fn checkedDecode(comptime Context: type, b: Context, receiver: ir.Ref, ty: ir.Type, text: bool, span: u32) Error!ir.Ref {
+-    const count = try b.runtimeCall("myl_core_bytes_utf8_count", &.{b.typeOfRef(receiver)}, .i64, &.{receiver}, span);
++    const count = if (b.module().zero_rc)
++        try b.effectCall("myl_core_bytes_utf8_count", &.{b.typeOfRef(receiver)}, .i64, &.{receiver}, span)
++    else
++        try b.runtimeCall("myl_core_bytes_utf8_count", &.{b.typeOfRef(receiver)}, .i64, &.{receiver}, span);
+     return decodeResult(Context, b, .{ .receiver = receiver, .ty = ty, .text = text, .count = count, .span = span });
+ }
+ 
+@@ -133,7 +136,10 @@ fn decodeResult(comptime Context: type, b: Context, site: DecodeSite) Error!ir.R
+     try b.seal(good);
+     try b.seal(bad);
+     b.current = good;
+-    const value = if (text) try b.runtimeCall("myl_core_bytes_decode_text", &.{b.typeOfRef(receiver)}, .str, &.{receiver}, span) else count;
++    const value = if (!text) count else if (b.module().zero_rc)
++        try b.effectCall("myl_core_bytes_decode_text", &.{b.typeOfRef(receiver)}, .str, &.{receiver}, span)
++    else
++        try b.runtimeCall("myl_core_bytes_decode_text", &.{b.typeOfRef(receiver)}, .str, &.{receiver}, span);
+     try b.write(slot, good, try b.emit(.{ .op = .union_make, .ty = ty, .a = value, .data = 0, .span = span }));
+     try b.jump(join);
+     b.current = bad;
+diff --git a/src/core/emit_bytes.zig b/src/core/emit_bytes.zig
+index 028d25b7f..0b1dce016 100644
+--- a/src/core/emit_bytes.zig
++++ b/src/core/emit_bytes.zig
+@@ -100,12 +100,22 @@ fn append(comptime Context: type, context: Context, out: *std.ArrayList(u8), sit
+     const source = try context.value(inst.b);
+     const start = try context.value(range[0]);
+     const end = try context.value(range[1]);
+-    try declare(Context, context, buffers.append_symbol, "ptr, ptr, i64, i64");
++    const view = context.function.inst(context.function.resolve(inst.b)).ty == .str_view;
++    const symbol = if (view) buffers.append_span_symbol else buffers.append_symbol;
++    try declare(Context, context, symbol, if (view) "ptr, ptr, i64, i64, i64" else "ptr, ptr, i64, i64");
+     // A buffer a loop appends to keeps its length and capacity in slots (NEW-CORE-U1-STATE-2).
+     const slots = context.memory.states.of(context.current);
+     const len = if (slots) |kept| try slotField(Context, context, out, kept.len) else try header(Context, context, out, .{ .block = buffer, .offset = 8 });
+     const cap = if (slots) |kept| try slotField(Context, context, out, kept.cap) else try header(Context, context, out, .{ .block = buffer, .offset = 16 });
+-    const source_len = try header(Context, context, out, .{ .block = source, .offset = 8 });
++    const source_len: []const u8 = if (view) extract: {
++        const length = try context.fresh("%aplen");
++        try out.print(a, "  {s} = extractvalue {{ ptr, i64 }} {s}, 1\n", .{ length, source });
++        break :extract length;
++    } else (try header(Context, context, out, .{ .block = source, .offset = 8 })).value;
++    const source_data = try context.fresh("%apdata");
++    if (view) {
++        try out.print(a, "  {s} = extractvalue {{ ptr, i64 }} {s}, 0\n", .{ source_data, source });
++    } else try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n", .{ source_data, source });
+     const count = try context.fresh("%apn");
+     const room = try context.fresh("%apr");
+     try out.print(a, "  {s} = sub i64 {s}, {s}\n  {s} = sub i64 {s}, {s}\n", .{ count, end, start, room, cap.value, len.value });
+@@ -113,7 +123,7 @@ fn append(comptime Context: type, context: Context, out: *std.ArrayList(u8), sit
+     const tests = [_][4][]const u8{
+         .{ "sgt", count, "0", "" },
+         .{ "sge", start, "0", "" },
+-        .{ "sle", end, source_len.value, "" },
++        .{ "sle", end, source_len, "" },
+         .{ "sle", count, room, "" },
+     };
+     var fast_test: []const u8 = "true";
+@@ -131,7 +141,7 @@ fn append(comptime Context: type, context: Context, out: *std.ArrayList(u8), sit
+     const from = try context.fresh("%apf");
+     const grown = try context.fresh("%apg");
+     try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n  {s}.at = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{ to, buffer, to, to, len.value });
+-    try out.print(a, "  {s} = getelementptr inbounds i8, ptr {s}, i64 32\n  {s}.at = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{ from, source, from, from, start });
++    try out.print(a, "  {s}.at = getelementptr inbounds i8, ptr {s}, i64 {s}\n", .{ from, source_data, start });
+     try out.print(a, "  call void @llvm.memmove.p0.p0.i64(ptr {s}.at, ptr {s}.at, i64 {s}, i1 false)\n", .{ to, from, count });
+     const tag = if (slots == null) ", !tbaa !5" else "";
+     try out.print(a, "  {s} = add i64 {s}, {s}\n  store i64 {s}, ptr {s}, align 8{s}\n  br label %{s}\n", .{ grown, len.value, count, grown, len.at, tag, join });
+@@ -140,7 +150,9 @@ fn append(comptime Context: type, context: Context, out: *std.ArrayList(u8), sit
+     // buffer whose length is in slots has it stored back first and the result's loaded after.
+     try out.print(a, "{s}:\n", .{slow});
+     if (slots) |kept| try emit_state.store(Context, context, out, buffer, kept);
+-    try out.print(a, "  {s} = call ptr @{s}(ptr {s}, ptr {s}, i64 {s}, i64 {s}){s}\n", .{ called, buffers.append_symbol, buffer, source, start, end, try context.callLocation(inst.span) });
++    if (view) {
++        try out.print(a, "  {s} = call ptr @{s}(ptr {s}, ptr {s}, i64 {s}, i64 {s}, i64 {s}){s}\n", .{ called, symbol, buffer, source_data, source_len, start, end, try context.callLocation(inst.span) });
++    } else try out.print(a, "  {s} = call ptr @{s}(ptr {s}, ptr {s}, i64 {s}, i64 {s}){s}\n", .{ called, symbol, buffer, source, start, end, try context.callLocation(inst.span) });
+     if (slots) |kept| try emit_state.load(Context, context, out, called, kept);
+     try out.print(a, "  br label %{s}\n", .{join});
+     try out.print(a, "{s}:\n  {s} = phi ptr [ {s}, %{s} ], [ {s}, %{s} ]\n", .{ join, name, buffer, fast, called, slow });
+diff --git a/src/core/fuse_encode.zig b/src/core/fuse_encode.zig
+index 34a843880..1121b0383 100644
+--- a/src/core/fuse_encode.zig
++++ b/src/core/fuse_encode.zig
+@@ -5,7 +5,7 @@ const slices = @import("fuse_slice_key.zig");
+ 
+ /// Borrow complete local octet read sets, recording runtime declarations for the cache.
+ pub fn runRecording(a: std.mem.Allocator, module: *ir.Module, requests: ?[]std.ArrayList(u32)) std.mem.Allocator.Error!u32 {
+-    if (!module.zero_rc or !offsetAvailable(module)) return 0;
++    if (!module.zero_rc or !offsetAvailable(module) or !bufferHelpersAvailable(module)) return 0;
+     var changed: u32 = 0;
+     const count = module.functions.items.len;
+     for (0..count) |fi| {
+@@ -41,6 +41,12 @@ pub fn runRecording(a: std.mem.Allocator, module: *ir.Module, requests: ?[]std.A
+                     f.insts.items[j].a = callee;
+                     try recordRequest(a, requests, fi, callee);
+                 }
++                if (bufferReader(module, &f, use)) |form| {
++                    if (f.resolve(f.operands(use.data)[form.source]) != ref) continue;
++                    const callee = try bufferCallee(a, module, form);
++                    f.insts.items[j].a = callee;
++                    try recordRequest(a, requests, fi, callee);
++                }
+             }
+             changed += 1;
+         }
+@@ -69,12 +75,68 @@ fn reads(module: *const ir.Module, f: *const ir.Function, ref: ir.Ref) bool {
+             found = true;
+             if (at == 0 and (inst.op == .list_len or (inst.op == .list_get and inst.ty == .u8))) continue;
+             if (at == 0 and named(module, inst, "myl_core_bytes_index_offset") and f.operands(inst.data).len == 2) continue;
++            if (bufferReader(module, f, inst)) |form| if (at == form.source) continue;
+             return false;
+         }
+     }
+     return found;
+ }
+ 
++const BufferForm = struct {
++    original: []const u8,
++    symbol: []const u8,
++    params: []const ir.Type,
++    ret: ir.Type,
++    source: usize,
++    owned: u64,
++};
++const buffer_forms = [_]BufferForm{
++    .{ .original = "myl_core_buffer_range_valid", .symbol = "myl_core_span_buffer_range_valid", .params = &.{ .bytes, .i64, .i64 }, .ret = .bool, .source = 0, .owned = 0 },
++    .{ .original = "myl_core_buffer_append_checked", .symbol = "myl_core_buffer_append_span_checked", .params = &.{ .byte_buffer, .bytes, .i64, .i64 }, .ret = .byte_buffer, .source = 1, .owned = 1 },
++};
++
++fn bufferSignature(sig: ir.Signature, form: BufferForm, span: bool) bool {
++    if (sig.linkage != .runtime_c or sig.ret != form.ret or sig.owned != form.owned or sig.consumes != 0 or
++        sig.views != @as(u64, if (span) @as(u64, 1) << @intCast(form.source) else 0) or sig.params.len != form.params.len) return false;
++    for (sig.params, form.params, 0..) |actual, expected, at| {
++        if (actual != (if (span and at == form.source) ir.Type.str else expected)) return false;
++    }
++    return true;
++}
++
++fn bufferReader(module: *const ir.Module, f: *const ir.Function, inst: ir.Inst) ?BufferForm {
++    if (inst.op != .call or inst.a.index() >= module.functions.items.len) return null;
++    const callee = module.functions.items[inst.a.index()];
++    for (buffer_forms) |form| {
++        if (std.mem.eql(u8, callee.name, form.original) and bufferSignature(callee.signature, form, false) and f.operands(inst.data).len == form.params.len) return form;
++    }
++    return null;
++}
++
++fn bufferHelpersAvailable(module: *const ir.Module) bool {
++    for (module.functions.items) |f| for (buffer_forms) |form| {
++        if (std.mem.eql(u8, f.name, form.symbol) and !bufferSignature(f.signature, form, true)) return false;
++    };
++    return true;
++}
++
++fn bufferCallee(a: std.mem.Allocator, module: *ir.Module, form: BufferForm) !ir.Ref {
++    for (module.functions.items, 0..) |f, i| {
++        if (std.mem.eql(u8, f.name, form.symbol)) return @fromBackingInt(@intCast(i));
++    }
++    const params = try a.dupe(ir.Type, form.params);
++    params[form.source] = .str;
++    const ref: ir.Ref = @fromBackingInt(@intCast(module.functions.items.len));
++    try module.functions.append(a, .{ .name = form.symbol, .signature = .{
++        .params = params,
++        .ret = form.ret,
++        .linkage = .runtime_c,
++        .owned = form.owned,
++        .views = @as(u64, 1) << @intCast(form.source),
++    } });
++    return ref;
++}
++
+ fn offsetCallee(a: std.mem.Allocator, module: *ir.Module) !ir.Ref {
+     const symbol = "myl_core_span_bytes_index_offset";
+     for (module.functions.items, 0..) |f, i| {
+diff --git a/src/core/fuse_slice_key.zig b/src/core/fuse_slice_key.zig
+index 0d70597c8..62e9e8db8 100644
+--- a/src/core/fuse_slice_key.zig
++++ b/src/core/fuse_slice_key.zig
+@@ -253,6 +253,7 @@ fn spanForm(module: *const ir.Module, call: ir.Inst) ?SpanForm {
+     if (call.a.index() >= module.functions.items.len) return null;
+     const callee = module.functions.items[call.a.index()];
+     const signature = callee.signature;
++    if (decodeForm(module, callee)) |form| return form;
+     if (signature.linkage == .internal or signature.owned != 0) return null;
+     for (signature.params) |param| if (param != .str and param != .bytes) return null;
+     for (span_forms) |form| {
+@@ -268,6 +269,31 @@ fn spanForm(module: *const ir.Module, call: ir.Inst) ?SpanForm {
+     return null;
+ }
+ 
++// Validation borrows exactly the selected octets; successful decoding constructs
++// an independent string. Admit only compiler-declared one-argument readers.
++fn decodeForm(module: *const ir.Module, callee: ir.Function) ?SpanForm {
++    const sig = callee.signature;
++    if (!module.zero_rc or sig.linkage != .runtime_c or sig.owned != 0 or sig.consumes != 0) return null;
++    const forms = [_]SpanForm{
++        .{ .text = "myl_core_bytes_utf8_count", .span = "myl_core_span_utf8_count" },
++        .{ .text = "myl_core_bytes_decode_text", .span = "myl_core_span_decode_text" },
++    };
++    for (forms, 0..) |form, i| {
++        const span = std.mem.eql(u8, callee.name, form.span);
++        if (!span and !std.mem.eql(u8, callee.name, form.text)) continue;
++        const ret: ir.Type = if (i == 0) .i64 else .str;
++        if (sig.ret != ret or sig.views != @as(u64, if (span) 1 else 0)) return null;
++        if (!std.mem.eql(ir.Type, sig.params, if (span) &.{.str} else &.{.bytes})) return null;
++        for (module.functions.items) |decl| {
++            if (!std.mem.eql(u8, decl.name, form.span)) continue;
++            const candidate = decl.signature;
++            if (candidate.linkage != .runtime_c or candidate.owned != 0 or candidate.consumes != 0 or candidate.views != 1 or candidate.ret != ret or !std.mem.eql(ir.Type, candidate.params, &.{.str})) return null;
++        }
++        return form;
++    }
++    return null;
++}
++
+ /// The span form's declaration, added on first use: the text form's signature with every
+ /// parameter a span.
+ fn spanCallee(arena: std.mem.Allocator, module: *ir.Module, text: ir.Signature, symbol: []const u8) std.mem.Allocator.Error!ir.Ref {
+diff --git a/src/core/inline.zig b/src/core/inline.zig
+index 95f809311..994cf8808 100644
+--- a/src/core/inline.zig
++++ b/src/core/inline.zig
+@@ -72,11 +72,12 @@ pub fn cfgCallerDemandWithScratch(arena: std.mem.Allocator, scratch: std.mem.All
+             const callee = &module.functions.items[call.a.index()];
+             if (@import("borrowed_provider.zig").contains(module, callee)) continue;
+             const helper = cfg.qualifies(callee);
++            const reader = @import("inline_reader.zig").qualifies(module, callee);
+             if (!helper) {
++                // Readers and constructors share one fixed cloning budget.
+                 // Each clone adds at most the callee's instructions and a jump.
+-                // Do not let many small builders cause unbounded caller growth.
+                 if (callee.insts.items.len + 1 > destination.max_caller_instructions - constructor_instructions) continue;
+-                const constructs = try destination.qualifies(trials.allocator(), module, callee);
++                const constructs = reader or @import("inline_snapshot.zig").qualifies(module, callee) or try destination.qualifies(trials.allocator(), module, callee);
+                 _ = trials.reset(.retain_capacity);
+                 if (!constructs) continue;
+             }
+@@ -87,6 +88,7 @@ pub fn cfgCallerDemandWithScratch(arena: std.mem.Allocator, scratch: std.mem.All
+             break;
+         }
+     }
++    _ = try @import("inline_reader.zig").cleanup(arena, module, caller);
+     return count;
+ }
+ 
+diff --git a/src/core/inline_cfg.zig b/src/core/inline_cfg.zig
+index b9f733749..d859dd520 100644
+--- a/src/core/inline_cfg.zig
++++ b/src/core/inline_cfg.zig
+@@ -72,7 +72,8 @@ pub fn splice(arena: std.mem.Allocator, caller: *ir.Function, callee: *const ir.
+                 try caller.blocks.items[tail.index()].preds.append(arena, @fromBackingInt(@intCast(base + index)));
+                 inst = .{ .op = .jump, .ty = .void, .data = @backingInt(tail), .span = inst.span };
+             } else {
+-                inst.a = remap(callee, map, inst.a);
++                // A direct callee is a module reference; only its arguments are SSA.
++                if (inst.op != .call) inst.a = remap(callee, map, inst.a);
+                 inst.b = remap(callee, map, inst.b);
+                 if (inst.op.hasExtra()) inst.data = try extra(arena, caller, callee, map, callee.operands(inst.data));
+                 if (inst.op == .jump) inst.data += base;
+diff --git a/src/core/own.zig b/src/core/own.zig
+index fdd2228cc..b24dd9bc5 100644
+--- a/src/core/own.zig
++++ b/src/core/own.zig
+@@ -182,6 +182,12 @@ pub fn functionWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator,
+     try hoistTests(arena, scratch, module, f, &marks);
+     var phase_a = try Analysis.of(scratch, arena, module, f, &marks);
+     try phase_a.analyze();
++    if (try elideDeadCopies(&phase_a)) {
++        // Forwarded copies change the source's lifetime; all subsequent ownership
++        // decisions use a fresh analysis, including borrowed child liveness.
++        phase_a = try Analysis.of(scratch, arena, module, f, &marks);
++        try phase_a.analyze();
++    }
+     try copyOnWrite(&phase_a, options, &stats);
+     var phase_b = try Analysis.of(scratch, arena, module, f, &marks);
+     try phase_b.analyze();
+@@ -193,6 +199,33 @@ pub fn functionWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator,
+     return stats;
+ }
+ 
++/// A checked owner whose final use is an independent copy can move into the
++/// result. Any later use of it or a borrowed child keeps the explicit copy.
++fn elideDeadCopies(a: *Analysis) Error!bool {
++    const f = a.f;
++    if (!a.module.zero_rc or f.insts.items.len > 4096) return false;
++    const Site = struct { ref: ir.Ref, source: ir.Ref };
++    var sites: std.ArrayList(Site) = .empty;
++    var candidates: usize = 0;
++    outer: for (f.blocks.items, 0..) |block, b| {
++        if (!a.present(b)) continue;
++        for (block.insts.items, 0..) |ref, pos| {
++            const source = @import("inline_snapshot.zig").source(a.module, f, f.inst(ref)) orelse continue;
++            if (candidates == 32) break :outer;
++            candidates += 1;
++            if (a.class[source.index()] != .owned or a.promoted[source.index()] or
++                a.marks.stack.contains(@intCast(source.index())) or a.live[source.index()] == null or
++                a.liveAfter(source, @intCast(b), @intCast(pos))) continue;
++            try sites.append(a.storage.scratch, .{ .ref = ref, .source = source });
++        }
++    }
++    for (sites.items) |site| {
++        const old = f.inst(site.ref);
++        f.insts.items[site.ref.index()] = .{ .op = .copy, .ty = old.ty, .a = site.source, .span = old.span };
++    }
++    return sites.items.len != 0;
++}
++
+ /// Reserve known counted fills after stack promotion. Only detached i64/u64
+ /// parameters qualify, so the bound always dominates the empty constructor.
+ fn reserveFills(f: *ir.Function, known: *const facts.Facts) void {
+diff --git a/src/core/root_test.zig b/src/core/root_test.zig
+index 5f5215968..8cd87b7ee 100644
+--- a/src/core/root_test.zig
++++ b/src/core/root_test.zig
+@@ -139,6 +139,8 @@ comptime {
+     _ = @import("iteration_test.zig");
+     _ = @import("text_test.zig");
+     _ = @import("fuse_encode_test.zig");
++    _ = @import("textgap_decode_test.zig");
++    _ = @import("textgap_buffer_span_test.zig");
+     _ = @import("s1_views_test.zig");
+     _ = @import("byte_index_test.zig");
+     _ = @import("function_build_test.zig");
+diff --git a/src/core/runtime/core_bytes.c b/src/core/runtime/core_bytes.c
+index 459a50344..dff914bac 100644
+--- a/src/core/runtime/core_bytes.c
++++ b/src/core/runtime/core_bytes.c
+@@ -158,6 +158,16 @@ myl_block *myl_core_buffer_append_checked(myl_block *buffer, myl_block *source,
+     buffer = core_buffer_owned(buffer);
+     return myl_core_buffer_append_spelled(buffer, block_data(source) + start, (size_t)(end - start));
+ }
++/* Synchronous immutable octets: the destination is the sole transferred owner. */
++bool myl_core_span_buffer_range_valid(const unsigned char *data, uint64_t length, int64_t start, int64_t end) {
++    (void)data;
++    return start >= 0 && end >= start && (uint64_t)end <= length;
++}
++myl_block *myl_core_buffer_append_span_checked(myl_block *buffer, const unsigned char *data, uint64_t length, int64_t start, int64_t end) {
++    if (start < 0 || end <= start || (uint64_t)end > length) return buffer;
++    buffer = core_buffer_owned(buffer);
++    return myl_core_buffer_append_spelled(buffer, data + start, (size_t)(end - start));
++}
+ /* `buffer.append_byte(value)`: one octet when `value` is in 0..255, else nothing. */
+ myl_block *myl_core_buffer_push_checked(myl_block *buffer, int64_t value) {
+     if (value < 0 || value > 255) return buffer;
+diff --git a/src/core/runtime/core_rt.c b/src/core/runtime/core_rt.c
+index 80e8d6caa..02e7a33f1 100644
+--- a/src/core/runtime/core_rt.c
++++ b/src/core/runtime/core_rt.c
+@@ -925,6 +925,13 @@ void myl_core_release(myl_block *block) {
+    The pending chain reuses dying headers and requires no allocation or count. */
+ static void core_owned_child(myl_block *child, void *context) {
+     if (!child || (child->kind & MYL_STATIC_STORAGE)) return;
++    /* Leaves have no provider cleanup or children. Reclaim them directly,
++       without writing a pending-chain link into their capacity word. */
++    unsigned kind = kind_of(child);
++    if (kind == MYL_KIND_STR || kind == MYL_KIND_BYTES) {
++        block_free(child);
++        return;
++    }
+     myl_block **pending = context;
+     child->cap = (int64_t)(intptr_t)*pending;
+     *pending = child;
+diff --git a/src/core/runtime/core_text.c b/src/core/runtime/core_text.c
+index 0aa9779dc..982214c43 100644
+--- a/src/core/runtime/core_text.c
++++ b/src/core/runtime/core_text.c
+@@ -1080,6 +1080,7 @@ int64_t myl_core_bytes_utf8_count_range(myl_block *bytes, int64_t start, int64_t
+     return myl_core_span_utf8_count(block_data(bytes) + first, last > first ? last - first : 0);
+ }
+ myl_block *myl_core_bytes_decode_text(myl_block *bytes) { return str_from((const char *)block_data(bytes), (size_t)bytes->len); }
++myl_block *myl_core_span_decode_text(const unsigned char *bytes, uint64_t length) { return str_from((const char *)bytes, (size_t)length); }
+ myl_block *myl_core_bytes_utf8_error(void) { return str_from("invalid UTF-8 in byte string", sizeof("invalid UTF-8 in byte string") - 1); }
+ 
+ /* Packed PY-FSTRING-SPEC-1 text layout, ported from format_spec.zig.
+diff --git a/src/core/verify_ir.zig b/src/core/verify_ir.zig
+index 6ccb82fbd..b5e961624 100644
+--- a/src/core/verify_ir.zig
++++ b/src/core/verify_ir.zig
+@@ -449,6 +449,7 @@ const Verifier = struct {
+             const admitted = switch (s.inst.op) {
+                 .str_from_view, .str_len, .list_len, .str_parse_int, .str_view_of, .copy => i == 0,
+                 .list_get => i == 0 and s.inst.ty == .u8,
++                .buffer_append => self.module.zero_rc and i == 1,
+                 .ret, .print => self.module.zero_rc,
+                 .dict_find => i == 1 and if (self.compoundOf(s.a, .dict)) |dict| dict.key == .str else false,
+                 .call => s.inst.a.index() < self.module.functions.items.len and admittedView(self.module.functions.items[s.inst.a.index()].signature, i),
+@@ -574,7 +575,7 @@ const Verifier = struct {
+             .list_set => if (self.compoundOf(s.a, .list)) |element| inst.ty == s.a and isInteger(s.b) and s.extra.len == 1 and self.typeOf(s.extra[0]) == element else false,
+             .list_get_field => self.fieldSignature(s),
+             .list_set_field => self.setFieldSignature(s),
+-            .buffer_append => inst.ty == .byte_buffer and s.a == .byte_buffer and (s.b == .bytes or s.b == .byte_buffer) and s.extra.len == 2 and self.typeOf(s.extra[0]) == .i64 and self.typeOf(s.extra[1]) == .i64,
++            .buffer_append => inst.ty == .byte_buffer and s.a == .byte_buffer and (s.b == .bytes or s.b == .byte_buffer or (self.module.zero_rc and s.b == .str_view)) and s.extra.len == 2 and self.typeOf(s.extra[0]) == .i64 and self.typeOf(s.extra[1]) == .i64,
+             .union_make, .union_tag, .union_payload, .union_take => self.unionSignature(s),
+             .record_make => if (self.compoundOf(inst.ty, .record)) |fields| self.typesMatch(s.extra, fields) else if (self.compoundOf(inst.ty, .array)) |array| blk: {
+                 if (s.extra.len != array.n) break :blk false;
+diff --git a/src/core/zero_rc.zig b/src/core/zero_rc.zig
+index 5d7e42c44..5f1bd68c8 100644
+--- a/src/core/zero_rc.zig
++++ b/src/core/zero_rc.zig
+@@ -61,10 +61,10 @@ pub fn contract(symbol: []const u8) ?Contract {
+     if (std.mem.eql(u8, symbol, "myl_core_test_read_text") or std.mem.eql(u8, symbol, "myl_core_test_read_bytes")) return .{ .result = .fresh };
+     if (callableDigest(symbol) or std.mem.startsWith(u8, symbol, @import("emit_values.zig").copy_prefix)) return .{ .result = .fresh };
+     if (std.mem.eql(u8, symbol, "myl_core_view_slice")) return .{ .views = 1, .result = .borrowed };
+-    for ([_][]const u8{ "myl_core_view_chars", "myl_core_view_index", "myl_core_view_byte", "myl_core_span_bytes_index_offset" }) |name| {
++    for ([_][]const u8{ "myl_core_view_chars", "myl_core_view_index", "myl_core_view_byte", "myl_core_span_bytes_index_offset", "myl_core_span_utf8_count" }) |name| {
+         if (std.mem.eql(u8, symbol, name)) return .{ .views = 1 };
+     }
+-    for ([_][]const u8{ "myl_core_view_char", "myl_core_view_copy_text", "myl_core_view_copy_bytes" }) |name| {
++    for ([_][]const u8{ "myl_core_view_char", "myl_core_view_copy_text", "myl_core_view_copy_bytes", "myl_core_span_decode_text" }) |name| {
+         if (std.mem.eql(u8, symbol, name)) return .{ .views = 1, .result = .fresh };
+     }
+     const readers = [_][]const u8{
+@@ -132,6 +132,8 @@ pub fn contract(symbol: []const u8) ?Contract {
+         "myl_core_bytes_to_list",
+     };
+     for (constructors) |name| if (std.mem.eql(u8, symbol, name)) return .{ .result = .fresh };
++    if (std.mem.eql(u8, symbol, "myl_core_span_buffer_range_valid")) return .{ .views = 1 };
++    if (std.mem.eql(u8, symbol, "myl_core_buffer_append_span_checked")) return .{ .views = 2, .owned = 1, .result = .transferred };
+     const mutations = [_][]const u8{
+         "myl_core_buffer_push_checked", "myl_core_buffer_append_checked",
+         "myl_core_buffer_append_i64",   "myl_core_buffer_append_f64",
+diff --git a/src/core/inline_reader.zig b/src/core/inline_reader.zig
+new file mode 100644
+index 000000000..ab92b7774
+--- /dev/null
++++ b/src/core/inline_reader.zig
+@@ -0,0 +1,118 @@
++//! Bounded scalar readers expose local views to existing CFG cloning and cleanup.
++const std = @import("std");
++const ir = @import("ir.zig");
++const views = @import("fuse_slice_key.zig");
++
++fn scalar(ty: ir.Type) bool {
++    return ty.integer() != null or ty == .bool or ty == .f64;
++}
++
++fn offsetReader(module: *const ir.Module, inst: ir.Inst) bool {
++    if (inst.op != .call or inst.a.index() >= module.functions.items.len) return false;
++    const callee = module.functions.items[inst.a.index()];
++    const signature = callee.signature;
++    return signature.linkage == .runtime_c and signature.ret == .u64 and
++        signature.owned == 0 and signature.consumes == 0 and signature.views == 1 and
++        std.mem.eql(ir.Type, signature.params, &.{ .str, .i64 }) and
++        std.mem.eql(u8, callee.name, "myl_core_span_bytes_index_offset");
++}
++
++/// Checked read-only scalar helpers qualify under fixed per-body limits; calls retain checks.
++pub fn qualifies(module: *const ir.Module, f: *const ir.Function) bool {
++    if (!module.zero_rc) return false;
++    const signature = f.signature;
++    if (signature.linkage != .internal or !scalar(signature.ret) or
++        (signature.owned | signature.consumes | signature.views) != 0 or signature.params.len > 8) return false;
++    if (f.blocks.items.len < 2 or f.blocks.items.len > 16 or f.insts.items.len > 80 or f.loops.items.len > 2) return false;
++    var reads: usize = 0;
++    var returns: usize = 0;
++    for (f.blocks.items) |block| for (block.insts.items) |ref| {
++        const inst = f.inst(ref);
++        switch (inst.op) {
++            .param,
++            .iconst,
++            .fconst,
++            .str_const,
++            .undef,
++            .copy,
++            .phi,
++            .cmp,
++            .fcmp,
++            .convert,
++            .int_to_float,
++            .float_to_int,
++            .add,
++            .sub,
++            .mul,
++            .div,
++            .rem,
++            .floor_div,
++            .floor_rem,
++            .neg,
++            .fadd,
++            .fsub,
++            .fmul,
++            .fdiv,
++            .fneg,
++            .not,
++            .bit_and,
++            .bit_or,
++            .bit_xor,
++            .branch,
++            .jump,
++            .@"unreachable",
++            => {},
++            .list_len, .str_len, .str_view_of => reads += 1,
++            .list_get => {
++                // Octet and scalar lists need no child owners or storage transfer.
++                if (!scalar(inst.ty)) return false;
++                reads += 1;
++            },
++            .call => {
++                if (!offsetReader(module, inst) or f.operands(inst.data).len != 2) return false;
++                reads += 1;
++            },
++            .ret => {
++                if (inst.a == .none or !scalar(f.inst(f.resolve(inst.a)).ty)) return false;
++                returns += 1;
++            },
++            else => return false,
++        }
++    };
++    return reads != 0 and returns != 0;
++}
++
++fn localReads(f: *const ir.Function, value: ir.Ref) bool {
++    var read = false;
++    for (f.insts.items) |inst| {
++        if (inst.op == .copy) continue;
++        const operands = f.valueOperands(inst);
++        for (0..operands.len()) |at| {
++            if (f.resolve(operands.get(at)) != value) continue;
++            if (at != 0 or (inst.op != .str_len and inst.op != .str_view_of)) return false;
++            read = true;
++        }
++    }
++    return read;
++}
++
++/// Remove token materialization after inlining exposes only local length/view readers.
++/// This edits existing instructions only, so cache catalogs and ancestry remain intact.
++pub fn cleanup(a: std.mem.Allocator, module: *const ir.Module, f: *ir.Function) std.mem.Allocator.Error!u32 {
++    if (!module.zero_rc or f.insts.items.len > 4096) return 0;
++    var candidates: u32 = 0;
++    var changed: u32 = 0;
++    for (f.insts.items, 0..) |inst, index| {
++        if (inst.op != .str_from_view) continue;
++        if (candidates == 32) break;
++        candidates += 1;
++        const ref: ir.Ref = @fromBackingInt(@intCast(index));
++        if (!localReads(f, ref) or try views.updated(a, f, module, f.resolve(inst.a))) continue;
++        f.insts.items[index] = .{ .op = .copy, .ty = .str_view, .a = inst.a, .span = inst.span };
++        for (f.insts.items) |*forward| {
++            if (forward.op == .copy and f.resolve(forward.a) == f.resolve(inst.a)) forward.ty = .str_view;
++        }
++        changed += 1;
++    }
++    return changed;
++}
+diff --git a/src/core/inline_snapshot.zig b/src/core/inline_snapshot.zig
+new file mode 100644
+index 000000000..02668aba2
+--- /dev/null
++++ b/src/core/inline_snapshot.zig
+@@ -0,0 +1,45 @@
++//! Small snapshot wrappers expose an explicit copy to ordinary owner liveness.
++const std = @import("std");
++const ir = @import("ir.zig");
++
++/// Only compiler-owned, same-type independent block copies are recognized.
++pub fn source(module: *const ir.Module, f: *const ir.Function, inst: ir.Inst) ?ir.Ref {
++    if (!module.zero_rc or inst.op != .call or inst.a.index() >= module.functions.items.len or !module.isBlock(inst.ty)) return null;
++    const callee = module.functions.items[inst.a.index()];
++    const sig = callee.signature;
++    if (sig.linkage != .runtime_c or sig.ret != inst.ty or (sig.owned | sig.consumes | sig.views) != 0 or sig.params.len != 1 or sig.params[0] != inst.ty) return null;
++    const args = f.operands(inst.data);
++    if (args.len != 1 or f.inst(f.resolve(args[0])).ty != inst.ty) return null;
++    if (inst.ty == .str or inst.ty == .bytes) {
++        if (!std.mem.eql(u8, callee.name, "myl_core_owned_octets_copy")) return null;
++    } else {
++        const prefix = @import("emit_values.zig").copy_prefix;
++        if (!std.mem.startsWith(u8, callee.name, prefix)) return null;
++        const id = std.fmt.parseInt(u32, callee.name[prefix.len..], 10) catch return null;
++        if (id != @backingInt(inst.ty)) return null;
++    }
++    return f.resolve(args[0]);
++}
++
++/// Clone at most one parameter copy and its aggregate shell; never general calls.
++pub fn qualifies(module: *const ir.Module, f: *const ir.Function) bool {
++    const sig = f.signature;
++    if (!module.zero_rc or sig.linkage != .internal or sig.params.len != 1 or (sig.owned | sig.consumes | sig.views) != 0 or !module.managed(sig.ret)) return false;
++    if (f.blocks.items.len != 1 or f.insts.items.len > 8 or f.loops.items.len != 0) return false;
++    var copies: usize = 0;
++    var returns: usize = 0;
++    for (f.blocks.items[0].insts.items) |ref| {
++        const inst = f.inst(ref);
++        switch (inst.op) {
++            .param, .copy, .union_make, .record_make => {},
++            .call => {
++                const argument = source(module, f, inst) orelse return false;
++                if (f.inst(argument).op != .param) return false;
++                copies += 1;
++            },
++            .ret => returns += 1,
++            else => return false,
++        }
++    }
++    return copies == 1 and returns == 1;
++}
+diff --git a/src/core/textgap_buffer_span_test.zig b/src/core/textgap_buffer_span_test.zig
+new file mode 100644
+index 000000000..ae38e5a7b
+--- /dev/null
++++ b/src/core/textgap_buffer_span_test.zig
+@@ -0,0 +1,129 @@
++//! Whole-use proof for local octet encodings and independent-owner fallback.
++const std = @import("std");
++const ir = @import("ir.zig");
++const support = @import("test_support.zig");
++const build = @import("build.zig");
++const passes = @import("passes.zig");
++const report = std.debug.print;
++const fusion = @import("fuse_encode.zig");
++
++fn buildSource(a: std.mem.Allocator, source: []const u8, refusal: *build.Refusal) !ir.Module {
++    var unit = try @import("mylang").Compilation.init(a, "encode.my", source);
++    unit.check() catch |err| {
++        for (unit.diagnostics.items) |d| report("{s}: {s}\n", .{ d.code, d.message });
++        return err;
++    };
++    return build.buildExecutable(a, .{ .program = unit.program.?, .single_owner = true, .zero_rc = true }, refusal);
++}
++
++fn count(module: *const ir.Module, op: ir.Op) usize {
++    var n: usize = 0;
++    for (module.functions.items) |f| for (f.insts.items) |inst| {
++        if (inst.op == op) n += 1;
++    };
++    return n;
++}
++const Lane = struct { release: bool, mode: ?passes.Mode };
++const lanes = [_]Lane{
++    .{ .release = true, .mode = .trusted },
++    .{ .release = false, .mode = null },
++    .{ .release = true, .mode = .verify },
++    .{ .release = false, .mode = .trusted },
++    .{ .release = true, .mode = .off },
++};
++
++fn execute(a: std.mem.Allocator, source: []const u8, expected: []const u8, borrow: bool) !void {
++    var unit = try @import("mylang").Compilation.init(a, "encode.my", source);
++    try unit.check();
++    const program = unit.program.?;
++    var failure: @import("single_owner.zig").Failure = .{};
++    try @import("single_owner.zig").checkMode(a, program, &failure, true);
++    for (lanes) |lane| {
++        var refusal: build.Refusal = .{};
++        var module = try build.buildExecutable(a, .{ .program = program, .single_owner = true, .zero_rc = true }, &refusal);
++        const result = if (lane.mode) |mode| try passes.run(a, &module, mode) else try passes.debug(a, &module);
++        const run = try support.runOwned(a, &module, .{ .own = false, .release = lane.release, .verify = lane.mode == .verify, .analysis = support.analysis(&result) });
++        if (run.status != 0) report("encode run: {s}{s}\n", .{ run.stdout, run.stderr });
++        try std.testing.expectEqual(@as(u8, 0), run.status);
++        try std.testing.expectEqualStrings(expected, run.stdout);
++        try std.testing.expectEqualStrings("", run.stderr);
++        try std.testing.expect(@import("zero_rc.zig").emittedClean(run.llvm));
++        if (lane.mode != null) {
++            try std.testing.expect((std.mem.indexOf(u8, run.llvm, "call ptr @myl_core_text_encode(") == null) == borrow);
++            if (borrow) try std.testing.expect(std.mem.indexOf(u8, run.llvm, "extractvalue { ptr, i64 }") != null);
++        }
++    }
++}
++// spec-case: NEW-CORE-TEXT-BYTES-1
++test "textgap_buffer_span append borrows encoded octets with valid invalid growth and independent output" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    try execute(arena.allocator(),
++        \\func collect(text: str) -> bytes:
++        \\    mut data = text.encode()
++        \\    mut out = byte_buffer([])
++        \\    assert out.append_range(data, 0, 0)
++        \\    assert not out.append_range(data, -1, 1)
++        \\    assert not out.append_range(data, 0, len(data) + 1)
++        \\    assert not out.append_range(data, 2, 1)
++        \\    assert not out.append_range(data, -9223372036854775808, 9223372036854775807)
++        \\    for i in range(17):
++        \\        assert out.append_range(data, 0, len(data))
++        \\    assert out.append_range(data, 1, 2)
++        \\    return bytes(out)
++        \\func main(out: Stream) -> int:
++        \\    mut text = "é🙂" + str(1)
++        \\    const saved = collect(text)
++        \\    text += "changed"
++        \\    out.print(len(saved), saved[0], saved[-1], len(text))
++        \\    return 0
++    , "120 195 169 10\n", true);
++}
++
++// spec-case: NEW-CORE-TEXT-BYTES-1
++test "textgap_buffer_span rejects forged helper contracts and parent replacement" {
++    const source =
++        \\func collect(text: str) -> bytes:
++        \\    const raw = text.encode()
++        \\    mut buffer = byte_buffer([])
++        \\    _ = buffer.append_range(raw, 0, len(raw))
++        \\    return bytes(buffer)
++        \\func main() -> int:
++        \\    return len(collect("abc"))
++    ;
++    for (0..6) |variant| {
++        var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++        defer arena.deinit();
++        const a = arena.allocator();
++        var refusal: build.Refusal = .{};
++        var module = try buildSource(a, source, &refusal);
++        for (module.functions.items) |*f| {
++            if (!std.mem.eql(u8, f.name, "myl_core_buffer_append_checked")) continue;
++            switch (variant) {
++                0 => f.signature.linkage = .extern_c,
++                1 => f.signature.owned = 0,
++                2 => f.signature.consumes = 2,
++                3 => f.signature.views = 2,
++                4 => f.signature.params = &.{ .byte_buffer, .str, .i64, .i64 },
++                else => {},
++            }
++        }
++        if (variant == 5) try module.functions.append(a, .{ .name = "myl_core_buffer_append_span_checked", .signature = .{ .params = &.{ .byte_buffer, .str, .i64, .i64 }, .ret = .byte_buffer, .linkage = .runtime_c, .owned = 1 } });
++        try std.testing.expectEqual(@as(u32, 0), try fusion.runRecording(a, &module, null));
++    }
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    try execute(arena.allocator(),
++        \\func collect(mut texts: str[]) -> bytes:
++        \\    const raw = texts[0].encode()
++        \\    texts[0] = "changed"
++        \\    mut buffer = byte_buffer([])
++        \\    _ = buffer.append_range(raw, 0, len(raw))
++        \\    return bytes(buffer)
++        \\func main(out: Stream) -> int:
++        \\    mut texts = ["abc" + str(7)]
++        \\    const result = collect(mut texts)
++        \\    out.print(len(result), result[0], result[-1], texts[0])
++        \\    return 0
++    , "4 97 55 changed\n", false);
++}
+diff --git a/src/core/textgap_decode_test.zig b/src/core/textgap_decode_test.zig
+new file mode 100644
+index 000000000..799bcd62f
+--- /dev/null
++++ b/src/core/textgap_decode_test.zig
+@@ -0,0 +1,138 @@
++//! UTF-8 decoding borrows private byte slices and returns independent text owners.
++const std = @import("std");
++const language = @import("mylang");
++const ir = @import("ir.zig");
++const build = @import("build.zig");
++const passes = @import("passes.zig");
++const support = @import("test_support.zig");
++const fusion = @import("fuse_slice_key.zig");
++
++const slice_source =
++    \\func part(raw: bytes, start: int, end: int) -> str:
++    \\    match raw[start:end].decode():
++    \\        case Ok(text):
++    \\            return text
++    \\        case Err(_):
++    \\            return "invalid"
++    \\func main(out: Stream) -> int:
++    \\    mut raw = b"A\xc3\xa9\xf0\x9f\x99\x82Z"
++    \\    const saved = part(raw, 1, 7)
++    \\    out.print(saved, part(raw, -1, 99), part(raw, 0, 0))
++    \\    out.print(part(raw, 2, 3), part(raw, 0, 2))
++    \\    out.print(part(raw, -9223372036854775808, 9223372036854775807))
++    \\    raw = b"replacement"
++    \\    out.print(saved, part(raw, 0, 3))
++    \\    return 0
++;
++
++fn make(a: std.mem.Allocator, source: []const u8) !ir.Module {
++    var unit = try language.Compilation.init(a, "decode.my", source);
++    try unit.check();
++    var refusal: build.Refusal = .{};
++    return build.buildExecutable(a, .{ .program = unit.program.?, .single_owner = true, .zero_rc = true }, &refusal);
++}
++
++// spec-case: NEW-CORE-TEXT-BYTES-1
++test "textgap_decode private slice borrows for validation and independently owned output" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var module = try make(a, slice_source);
++    try std.testing.expectEqual(@as(u32, 1), try fusion.run(a, &module));
++    try support.verified(a, &module, &.{});
++    for ([_][]const u8{ "myl_core_span_utf8_count", "myl_core_span_decode_text" }) |name| {
++        var found = false;
++        for (module.functions.items) |f| {
++            if (!std.mem.eql(u8, f.name, name)) continue;
++            found = true;
++            try std.testing.expectEqual(@as(u64, 1), f.signature.views);
++            const contract = @import("zero_rc.zig").contract(name).?;
++            try std.testing.expectEqual(@as(u64, 1), contract.views);
++            try std.testing.expectEqual(@as(u64, 0), contract.owned);
++        }
++        try std.testing.expect(found);
++    }
++}
++
++// spec-case: NEW-CORE-TEXT-BYTES-1
++test "textgap_decode untrusted or conflicting helper declarations cannot borrow slices" {
++    for (0..6) |mode| {
++        var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++        defer arena.deinit();
++        const a = arena.allocator();
++        var module = try make(a, slice_source);
++        for (module.functions.items) |*f| {
++            if (!std.mem.eql(u8, f.name, "myl_core_bytes_decode_text")) continue;
++            switch (mode) {
++                0 => f.signature.linkage = .extern_c,
++                1 => f.signature.owned = 1,
++                2 => f.signature.consumes = 1,
++                3 => f.signature.views = 1,
++                4 => f.signature.params = &.{.str},
++                else => {},
++            }
++        }
++        if (mode == 5) try module.functions.append(a, .{
++            .name = "myl_core_span_decode_text",
++            .signature = .{ .params = &.{.str}, .ret = .str, .linkage = .runtime_c },
++        });
++        try std.testing.expectEqual(@as(u32, 0), try fusion.run(a, &module));
++    }
++}
++
++const Lane = struct { release: bool, mode: ?passes.Mode };
++const lanes = [_]Lane{
++    .{ .release = true, .mode = .trusted },
++    .{ .release = false, .mode = null },
++    .{ .release = true, .mode = .verify },
++    .{ .release = false, .mode = .trusted },
++    .{ .release = true, .mode = .off },
++};
++
++fn execute(a: std.mem.Allocator, source: []const u8, expected: []const u8, borrowed: bool) !void {
++    for (lanes) |lane| {
++        var module = try make(a, source);
++        const result = if (lane.mode) |mode| try passes.run(a, &module, mode) else try passes.debug(a, &module);
++        const run = try support.runOwned(a, &module, .{ .own = false, .release = lane.release, .verify = lane.mode == .verify, .analysis = support.analysis(&result) });
++        if (run.status != 0) std.debug.print("decode: {s}{s}\n", .{ run.stdout, run.stderr });
++        try std.testing.expectEqual(@as(u8, 0), run.status);
++        try std.testing.expectEqualStrings(expected, run.stdout);
++        try std.testing.expectEqualStrings("", run.stderr);
++        try std.testing.expect(@import("zero_rc.zig").emittedClean(run.llvm));
++        if (lane.mode != null) {
++            try std.testing.expectEqual(borrowed, std.mem.indexOf(u8, run.llvm, "call ptr @myl_core_span_decode_text(") != null);
++        }
++    }
++}
++
++// spec-case: NEW-CORE-TEXT-BYTES-1
++test "textgap_decode native Unicode invalid boundaries and replaced input keep independent results" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    try execute(arena.allocator(), slice_source, "é🙂 Z \ninvalid invalid\nAé🙂Z\né🙂 rep\n", true);
++}
++
++// spec-case: NEW-CORE-TEXT-BYTES-1
++test "textgap_decode mutated bytes and escaping snapshot retain original bytes" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    try execute(arena.allocator(),
++        \\func snapshot(raw: bytes) -> bytes:
++        \\    return raw[0:3]
++        \\func alter(mut buffers: bytes[]) -> str:
++        \\    const selected = buffers[0][0:3]
++        \\    buffers[0] = b"replaced"
++        \\    match selected.decode():
++        \\        case Ok(text):
++        \\            return text
++        \\        case Err(_):
++        \\            return "invalid"
++        \\func main(out: Stream) -> int:
++        \\    mut raw = b"abcXYZ"
++        \\    const saved = snapshot(raw)
++        \\    raw = b"other"
++        \\    mut buffers = [saved.copy()]
++        \\    out.print(alter(mut buffers), len(buffers[0]), saved[0], len(raw))
++        \\    return 0
++    , "abc 8 97 5\n", false);
++}

@@ -66,33 +66,33 @@ func relay(mut xs: int[]) -> int:
 
 # ---- callees the summary must reject (each shares, grows or iterates) ----
 func snap(mut xs: int[]) -> int:
-    mut copy = xs
+    mut copy = xs.copy()
     xs[0] = 9
     return copy[0]
 
 
 func keep(mut xs: int[]) -> Holder:
     xs[0] = 9
-    return Holder(items=xs)
+    return Holder(items=xs.copy())
 
 
 func stash(mut xs: int[], mut into: Frame):
     xs[0] = 9
-    into.rows.append(xs)
+    into.rows.append(xs.copy())
 
 
 func index(mut xs: int[], mut table: dict[int, int[]]):
     xs[0] = 9
-    table[1] = xs
+    table[1] = xs.copy()
 
 
 func give(mut xs: int[]) -> int[]:
     xs[0] = 9
-    return xs
+    return xs.copy()
 
 
 func peek(xs: int[]) -> Holder:
-    return Holder(items=xs)
+    return Holder(items=xs.copy())
 
 
 func look(mut xs: int[]) -> Holder:
@@ -110,7 +110,10 @@ func grow(mut xs: int[]) -> int:
 
 func walk(mut xs: int[]) -> int:
     mut total = 0
-    for x in xs:
+    mut iteration_at = 0
+    while iteration_at < len(xs):
+        const x = xs[iteration_at]
+        iteration_at += 1
         xs[0] = x + 1
         total = total + x
     return total
@@ -178,7 +181,7 @@ public func test_passing_the_parameter_on_reaches_the_callee_in_place() -> bool:
 # ---- snapshots and shares taken before, during and after the call ----
 public func test_a_snapshot_taken_before_an_unpinned_call_keeps_its_value() -> bool:
     mut xs = [1, 2, 3]
-    mut before = xs
+    mut before = xs.copy()
     _ = bump(mut xs, 0)
     _ = bump(mut xs, 0)
     return before == [1, 2, 3] and xs == [3, 2, 3]
@@ -189,27 +192,28 @@ public func test_a_snapshot_taken_in_a_loop_between_unpinned_calls_keeps_each_va
     mut seen: int[][] = []
     for i in range(4):
         _ = bump(mut xs, i % 2)
-        seen.append(xs)
+        seen.append(xs.copy())
     return seen[0] == [1, 0] and seen[1] == [1, 1] and seen[2] == [2, 1] and seen[3] == [2, 2]
 
 
 public func test_a_shared_field_list_is_copied_before_an_unpinned_call_writes() -> bool:
     mut holder = Holder(items=[1, 2])
-    mut local = holder.items
+    mut local = holder.items.copy()
     _ = bump(mut local, 0)
     return holder.items == [1, 2] and local == [2, 2]
 
 
 public func test_a_list_held_in_a_list_is_copied_before_an_unpinned_call_writes() -> bool:
     mut xs = [1, 2]
-    mut rows = [xs, xs]
+    mut rows = [xs.copy(), xs.copy()]
     _ = bump(mut xs, 0)
     return rows[0] == [1, 2] and rows[1] == [1, 2] and xs == [2, 2]
 
 
 public func test_a_read_only_argument_naming_the_same_list_is_a_snapshot() -> bool:
     mut xs = [1, 2]
-    mut n = bump_and_count(mut xs, xs)
+    const input_snapshot = xs.copy()
+    mut n = bump_and_count(mut xs, input_snapshot)
     return n == 2 and xs == [2, 2]
 
 
@@ -234,7 +238,10 @@ func swap_across(mut a: int[], mut b: int[]):
 public func test_a_call_in_the_body_of_a_loop_over_the_same_list_iterates_a_snapshot() -> bool:
     mut xs = [1, 2, 3]
     mut seen = 0
-    for x in xs:
+    mut iteration_at = 0
+    while iteration_at < len(xs):
+        const x = xs[iteration_at]
+        iteration_at += 1
         _ = bump(mut xs, 0)
         seen = seen + x
     return seen == 6 and xs == [4, 2, 3]
@@ -320,7 +327,7 @@ public func test_a_recursion_that_grows_at_the_bottom_grows_the_callers_list() -
 # ---- callbacks and function values ----
 public func test_an_unpinned_callee_reached_through_a_function_value_writes_the_callers_list() -> bool:
     mut xs = [1, 2]
-    mut before = xs
+    mut before = xs.copy()
     mut n = apply(poke, mut xs)
     mut m = apply(poke, mut xs)
     return n == 2 and m == 2 and xs == [11, 2] and before == [1, 2]

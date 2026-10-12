@@ -1,0 +1,8 @@
+record Context:
+    fs: Filesystem
+    env: Environment
+
+func main(fs: Filesystem, env: Environment) -> int:
+    const ctx = Context(fs=fs, env=env)
+    const saved = ctx.copy()
+    return len(saved.env.names())

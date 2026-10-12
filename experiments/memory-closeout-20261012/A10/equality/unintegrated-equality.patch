@@ -1,0 +1,658 @@
+diff --git a/src/core/build_values.zig b/src/core/build_values.zig
+index 780838737..0a9e22633 100644
+--- a/src/core/build_values.zig
++++ b/src/core/build_values.zig
+@@ -136,8 +136,9 @@ pub fn repeat(comptime Context: type, b: Context, left: ir.Ref, right: ir.Ref, s
+     return b.read(result, end);
+ }
+ 
+-/// Compare recursive values through two managed temporary boxes and a typed adapter.
++/// Checked equality borrows canonical images; the legacy ABI uses temporary boxes.
+ pub fn equal(comptime Context: type, b: Context, left: ir.Ref, right: ir.Ref, span: u32) Error!ir.Ref {
++    if (b.module().zero_rc) return @import("build_equality.zig").equal(Context, b, left, right, span);
+     const ty = b.typeOfRef(left);
+     const box = try b.mb.module.intern(b.allocator(), .{ .box = ty });
+     const l = try b.emit(.{ .op = .box_make, .ty = box, .a = left, .span = span });
+diff --git a/src/core/canonical_ir.zig b/src/core/canonical_ir.zig
+index bfbf5107a..8f8729a7c 100644
+--- a/src/core/canonical_ir.zig
++++ b/src/core/canonical_ir.zig
+@@ -49,6 +49,10 @@ pub const Canon = struct {
+ 
+     /// The canonical form's tables, in the caller's arena `a`.
+     pub fn prepare(a: std.mem.Allocator, module: *const ir.Module, locator: emit_llvm.Locator) Error!Canon {
++        @import("build_equality.zig").validateModule(a, module) catch |err| switch (err) {
++            error.OutOfMemory => return error.OutOfMemory,
++            error.UnsupportedInstruction => return error.UnknownMetadata,
++        };
+         const types = try a.alloc(?Digest, module.compounds.items.len);
+         @memset(types, null);
+         const callees = try a.alloc(?Digest, module.functions.items.len);
+@@ -174,7 +178,10 @@ pub const Canon = struct {
+         put(&hash, u8, @intFromBool(self.module.zero_rc));
+         try self.signature(&hash, function.signature);
+         const name = function.name;
+-        if (function.signature.linkage == .runtime_c and std.mem.startsWith(u8, name, equal_prefix)) {
++        if (@import("build_equality.zig").declaration(self.module, &function) catch return error.UnknownMetadata) {
++            text(&hash, @import("build_equality.zig").prefix);
++            hash.update(&try self.typeDigest(function.signature.params[0]));
++        } else if (function.signature.linkage == .runtime_c and std.mem.startsWith(u8, name, equal_prefix)) {
+             const id = std.fmt.parseInt(u32, name[equal_prefix.len..], 10) catch return error.UnknownMetadata;
+             text(&hash, equal_prefix);
+             hash.update(&try self.typeDigest(@fromBackingInt(id)));
+diff --git a/src/core/cost.zig b/src/core/cost.zig
+index 899fa4f1c..8ad11320c 100644
+--- a/src/core/cost.zig
++++ b/src/core/cost.zig
+@@ -32,6 +32,7 @@ pub fn allocation(module: *const ir.Module, function: *const ir.Function, inst:
+ }
+ 
+ fn calleeAllocation(module: *const ir.Module, callee: *const ir.Function) Allocation {
++    if (@import("build_equality.zig").declaration(module, callee) catch return .unresolved) return .may;
+     if (@import("borrowed_provider.zig").declaration(module, callee) catch return .unresolved) return .never;
+     if (@import("borrowed_provider.zig").keepalive(module, callee) catch return .unresolved) return .never;
+     if (@import("borrow_selection.zig").declaration(module, callee) catch return .unresolved) return .never;
+diff --git a/src/core/emit_llvm.zig b/src/core/emit_llvm.zig
+index 0da95cd81..62ba9fc5f 100644
+--- a/src/core/emit_llvm.zig
++++ b/src/core/emit_llvm.zig
+@@ -317,6 +317,7 @@ fn render(allocator: std.mem.Allocator, backing: std.mem.Allocator, module: *con
+ }
+ 
+ fn renderScratch(allocator: std.mem.Allocator, module: *const ir.Module, given: Options, selection: ?Selection) Error![]u8 {
++    try @import("build_equality.zig").validateModule(allocator, module);
+     var options = given;
+     if (options.analysis.effects == null) {
+         const summaries = try allocator.create(effects.Summaries);
+@@ -361,6 +362,7 @@ fn renderFunction(state: *ModuleState, body: *Out, index: u32) Error!void {
+         } else try state.declareExtern(index);
+         return;
+     }
++    try @import("marker_validation.zig").validate(state.allocator, state.module, function);
+     var emitter: FunctionEmitter = .{ .state = state, .function = function, .index = index };
+     if (index < state.options.analysis.vectors.len) emitter.vectors.plans = state.options.analysis.vectors[index];
+     try emitter.emitFunction(body);
+@@ -448,6 +450,7 @@ const ModuleState = struct {
+     }
+ 
+     fn declareExtern(self: *ModuleState, index: u32) !void {
++        if (try @import("build_equality.zig").declaration(self.module, &self.module.functions.items[index])) return;
+         if (try @import("borrow_selection.zig").declaration(self.module, &self.module.functions.items[index])) return;
+         if (try @import("borrowed_provider.zig").declaration(self.module, &self.module.functions.items[index])) return;
+         const function = &self.module.functions.items[index];
+@@ -455,6 +458,7 @@ const ModuleState = struct {
+     }
+ 
+     fn external(self: *ModuleState, function: *const ir.Function, name: []const u8) !void {
++        if (try @import("build_equality.zig").declaration(self.module, function)) return;
+         if (try @import("aggregate_provider.zig").marker(self.module, function)) return;
+         if (self.local.selection == null and try emit_values.adapter(self.allocator, &self.externs, function)) return;
+         // Several signatures of one runtime function (`myl_core_list_sort` over lists of different
+@@ -3817,6 +3821,7 @@ const FunctionEmitter = struct {
+     }
+ 
+     fn specialRuntimeCall(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!bool {
++        if (try @import("build_equality.zig").runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return true;
+         if (try @import("aggregate_provider.zig").call(self.state.module, self.function, inst)) return true;
+         if (try @import("emit_render.zig").runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return true;
+         if (try emit_bytes.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return true;
+diff --git a/src/core/emit_values.zig b/src/core/emit_values.zig
+index dc14afb9e..c873da676 100644
+--- a/src/core/emit_values.zig
++++ b/src/core/emit_values.zig
+@@ -67,6 +67,7 @@ pub fn key(comptime Context: type, c: Context, out: *Out, ty: ir.Type, symbol: [
+ }
+ 
+ fn needed(m: *const ir.Module) bool {
++    for (m.functions.items) |*f| if (std.mem.startsWith(u8, f.name, @import("build_equality.zig").prefix)) return true;
+     for (m.functions.items) |f| {
+         if (f.signature.linkage == .runtime_c and std.mem.startsWith(u8, f.name, copy_prefix)) return true;
+         if (f.signature.linkage == .runtime_c and std.mem.startsWith(u8, f.name, equal_prefix)) return true;
+diff --git a/src/core/marker_validation.zig b/src/core/marker_validation.zig
+index 228ca6797..79d21a3f1 100644
+--- a/src/core/marker_validation.zig
++++ b/src/core/marker_validation.zig
+@@ -5,15 +5,17 @@ const selection = @import("borrow_selection.zig");
+ const providers = @import("aggregate_provider.zig");
+ const contexts = @import("borrowed_provider.zig");
+ const verify = @import("verify_ir.zig");
++const equality = @import("build_equality.zig");
+ 
+ pub const Error = std.mem.Allocator.Error || selection.Error;
+ 
+ fn present(module: *const ir.Module, function: *const ir.Function) Error!bool {
+     for (function.insts.items) |inst| {
++        try equality.reference(module, inst);
+         if (inst.op != .call) continue;
+         if (inst.a == .none or inst.a.index() >= module.functions.items.len) return error.UnsupportedInstruction;
+         const name = module.functions.items[inst.a.index()].name;
+-        if (selection.reserved(name) or std.mem.startsWith(u8, name, providers.prefix)) return true;
++        if (selection.reserved(name) or std.mem.startsWith(u8, name, providers.prefix) or std.mem.startsWith(u8, name, equality.prefix)) return true;
+     }
+     return false;
+ }
+@@ -27,6 +29,7 @@ pub fn validate(a: std.mem.Allocator, module: *const ir.Module, function: *const
+     try providers.validate(module, function);
+     try contexts.validate(a, module, function);
+     try selection.validate(a, module, function);
++    for (function.insts.items) |inst| _ = try equality.call(module, function, inst);
+     // The general verifier owns scratch tables for one invocation, not the
+     // caller's lifetime. Some ownership/cache callers pass a backing allocator.
+     var scratch = std.heap.ArenaAllocator.init(a);
+@@ -40,6 +43,7 @@ pub fn validate(a: std.mem.Allocator, module: *const ir.Module, function: *const
+ 
+ /// Fresh bodies and declarations receive the same proof as decoded cache bodies.
+ pub fn validateModule(a: std.mem.Allocator, module: *const ir.Module) Error!void {
++    try equality.validateModule(a, module);
+     for (module.functions.items) |*function| {
+         _ = try providers.marker(module, function);
+         _ = try contexts.declaration(module, function);
+diff --git a/src/core/root_test.zig b/src/core/root_test.zig
+index 748f8f687..1e82141fc 100644
+--- a/src/core/root_test.zig
++++ b/src/core/root_test.zig
+@@ -19,6 +19,7 @@ comptime {
+     _ = @import("phi_cleanup_test.zig");
+     _ = @import("single_owner_test.zig");
+     _ = @import("zero_rc_test.zig");
++    _ = @import("a10_equality_test.zig");
+     _ = @import("a01_native_driver_test.zig");
+     _ = @import("a08_zero_rc_test.zig");
+     _ = @import("a03_migration_boundaries_test.zig");
+diff --git a/src/core/verify_ir.zig b/src/core/verify_ir.zig
+index 27d77102a..0220a67bd 100644
+--- a/src/core/verify_ir.zig
++++ b/src/core/verify_ir.zig
+@@ -58,6 +58,13 @@ fn reported(arena: std.mem.Allocator, err: Error, failure: Failure, report: *std
+ 
+ /// Verify every internal function of `module`.
+ pub fn verifyModule(arena: std.mem.Allocator, module: *const ir.Module, failure: *Failure) Error!void {
++    @import("build_equality.zig").validateModule(arena, module) catch |err| switch (err) {
++        error.OutOfMemory => return error.OutOfMemory,
++        error.UnsupportedInstruction => {
++            failure.* = .{ .reason = "invalid borrowed equality declaration or descriptor type" };
++            return error.InvalidIr;
++        },
++    };
+     for (module.compounds.items) |compound| {
+         const escaped = switch (compound) {
+             .list, .box => |element| element == .str_view,
+diff --git a/src/core/build_equality.zig b/src/core/build_equality.zig
+new file mode 100644
+index 000000000..9974b90a6
+--- /dev/null
++++ b/src/core/build_equality.zig
+@@ -0,0 +1,190 @@
++//! Exact compiler declarations for synchronous structural equality of borrowed values.
++const std = @import("std");
++const ir = @import("ir.zig");
++
++pub const prefix = "myl_core_borrow_equal_v1_";
++pub const Error = error{UnsupportedInstruction};
++
++/// The canonical physical type identity, independent of source spelling.
++pub fn physical(symbol: []const u8) ?ir.Type {
++    if (!std.mem.startsWith(u8, symbol, prefix)) return null;
++    const digits = symbol[prefix.len..];
++    if (digits.len == 0 or (digits.len > 1 and digits[0] == '0')) return null;
++    for (digits) |byte| if (byte < '0' or byte > '9') return null;
++    const ty: ir.Type = @fromBackingInt(std.fmt.parseInt(u32, digits, 10) catch return null);
++    return if (ty.isCompound()) ty else null;
++}
++
++/// A source extern or malformed reserved name never grants compiler authority.
++pub fn declaration(module: *const ir.Module, function: *const ir.Function) Error!bool {
++    if (!std.mem.startsWith(u8, function.name, prefix)) return false;
++    const ty = physical(function.name) orelse return error.UnsupportedInstruction;
++    if (!module.zero_rc or !module.valid(ty) or module.kind(ty) == .@"fn") return error.UnsupportedInstruction;
++    const signature = function.signature;
++    if (signature.linkage != .runtime_c or signature.ret != .bool) return error.UnsupportedInstruction;
++    if (!std.mem.eql(ir.Type, signature.params, &.{ ty, ty })) return error.UnsupportedInstruction;
++    if ((signature.owned | signature.consumes | signature.views) != 0 or function.span != 0) return error.UnsupportedInstruction;
++    if (function.blocks.items.len != 0 or function.insts.items.len != 0 or function.extra.items.len != 0 or function.loops.items.len != 0) return error.UnsupportedInstruction;
++    return true;
++}
++
++/// Validate the physical descriptor catalog once, including boxed cycles and inline sizes.
++pub fn validateModule(a: std.mem.Allocator, module: *const ir.Module) (std.mem.Allocator.Error || Error)!void {
++    var pending: std.ArrayList(ir.Type) = .empty;
++    defer pending.deinit(a);
++    for (module.functions.items) |*function| if (try declaration(module, function)) {
++        try pending.append(a, function.signature.params[0]);
++    };
++    if (pending.items.len == 0) return;
++    // Descriptor emission includes the complete physical catalog, not just roots.
++    for (0..module.compounds.items.len) |index| try pending.append(a, @fromBackingInt(ir.Type.first_compound + @as(u32, @intCast(index))));
++    const seen = try a.alloc(bool, module.compounds.items.len);
++    defer a.free(seen);
++    @memset(seen, false);
++    while (pending.pop()) |ty| {
++        if (!module.valid(ty) or ty == .str_view) return error.UnsupportedInstruction;
++        if (!ty.isCompound()) continue;
++        const index = @backingInt(ty) - ir.Type.first_compound;
++        if (seen[index]) continue;
++        seen[index] = true;
++        switch (module.compound(ty)) {
++            .record, .@"union" => |fields| try pending.appendSlice(a, fields),
++            .box, .list => |child| try pending.append(a, child),
++            .array => |shape| try pending.append(a, shape.elem),
++            .dict => |shape| try pending.appendSlice(a, &.{ shape.key, shape.value }),
++            // Function fields compare their pointer identity, never their signature.
++            .@"fn" => {},
++        }
++    }
++    try validateLayouts(a, module, seen);
++}
++
++const Layout = struct { ty: ir.Type, leave: bool = false };
++const Size = struct { bytes: u64, alignment: u64 };
++const maximum_size = std.math.maxInt(u32) - 7;
++
++fn sizeOf(module: *const ir.Module, sizes: []const Size, ty: ir.Type) Size {
++    if (ty.isCompound()) return sizes[@backingInt(ty) - ir.Type.first_compound];
++    const bytes = module.size(ty);
++    return .{ .bytes = bytes, .alignment = @max(1, bytes) };
++}
++
++fn completedSize(module: *const ir.Module, sizes: []const Size, ty: ir.Type) Error!Size {
++    var result: Size = .{ .bytes = 8, .alignment = 8 };
++    switch (module.compound(ty)) {
++        .array => |shape| {
++            const child = sizeOf(module, sizes, shape.elem);
++            result = .{ .bytes = child.bytes * @as(u64, shape.n), .alignment = child.alignment };
++        },
++        .record => |fields| {
++            result = .{ .bytes = 0, .alignment = 1 };
++            for (fields) |field| {
++                const child = sizeOf(module, sizes, field);
++                result.bytes = std.mem.alignForward(u64, result.bytes, @intCast(child.alignment)) + child.bytes;
++                result.alignment = @max(result.alignment, child.alignment);
++                if (result.bytes > maximum_size) return error.UnsupportedInstruction;
++            }
++            result.bytes = std.mem.alignForward(u64, result.bytes, @intCast(result.alignment));
++        },
++        .@"union" => |cases| {
++            const niche = cases.len == 2 and (cases[0] == .void) != (cases[1] == .void) and module.isBlock(if (cases[0] == .void) cases[1] else cases[0]);
++            if (!niche) for (cases) |child| {
++                result.bytes = @max(result.bytes, 8 + std.mem.alignForward(u64, sizeOf(module, sizes, child).bytes, 8));
++            };
++        },
++        .box, .list, .dict, .@"fn" => {},
++    }
++    if (result.bytes > maximum_size) return error.UnsupportedInstruction;
++    return result;
++}
++
++fn validateLayouts(a: std.mem.Allocator, module: *const ir.Module, reachable: []const bool) (std.mem.Allocator.Error || Error)!void {
++    const state = try a.alloc(u8, reachable.len);
++    defer a.free(state);
++    @memset(state, 0);
++    const sizes = try a.alloc(Size, reachable.len);
++    defer a.free(sizes);
++    var pending: std.ArrayList(Layout) = .empty;
++    defer pending.deinit(a);
++    for (reachable, 0..) |used, index| {
++        if (!used or state[index] == 2) continue;
++        try pending.append(a, .{ .ty = @fromBackingInt(@as(u32, @intCast(index)) + ir.Type.first_compound) });
++        while (pending.pop()) |item| {
++            if (!item.ty.isCompound()) continue;
++            const slot = @backingInt(item.ty) - ir.Type.first_compound;
++            if (item.leave) {
++                sizes[slot] = try completedSize(module, sizes, item.ty);
++                state[slot] = 2;
++                continue;
++            }
++            if (state[slot] == 2) continue;
++            if (state[slot] == 1) return error.UnsupportedInstruction;
++            state[slot] = 1;
++            try pending.append(a, .{ .ty = item.ty, .leave = true });
++            switch (module.compound(item.ty)) {
++                .record, .@"union" => |fields| for (fields) |field| {
++                    try pending.append(a, .{ .ty = field });
++                },
++                .array => |shape| try pending.append(a, .{ .ty = shape.elem }),
++                .box, .list, .dict, .@"fn" => {},
++            }
++        }
++    }
++}
++
++/// Compiler-only equality declarations cannot escape as callable function values.
++pub fn reference(module: *const ir.Module, inst: ir.Inst) Error!void {
++    if (inst.op != .func_ref) return;
++    if (inst.data >= module.functions.items.len) return error.UnsupportedInstruction;
++    if (try declaration(module, &module.functions.items[@intCast(inst.data)])) return error.UnsupportedInstruction;
++}
++
++/// Validate argument bounds before general SSA verification or special emission.
++pub fn call(module: *const ir.Module, function: *const ir.Function, inst: ir.Inst) Error!bool {
++    if (inst.op != .call) return false;
++    if (inst.a == .none or inst.a.index() >= module.functions.items.len) return error.UnsupportedInstruction;
++    const callee = &module.functions.items[inst.a.index()];
++    if (!try declaration(module, callee)) return false;
++    if (inst.ty != .bool) return error.UnsupportedInstruction;
++    const range = ir.ExtraSlice.unpack(inst.data);
++    if (range.start > function.extra.items.len or range.len != 2 or range.len > function.extra.items.len - range.start) return error.UnsupportedInstruction;
++    for (function.extra.items[range.start..][0..range.len]) |raw| {
++        const value = try @import("borrow_selection.zig").resolve(function, raw);
++        if (function.inst(value).ty != callee.signature.params[0]) return error.UnsupportedInstruction;
++    }
++    return true;
++}
++
++/// Declare the complete borrowed contract directly; symbol-only helper allowlists do not apply.
++pub fn equal(comptime Context: type, b: Context, left: ir.Ref, right: ir.Ref, span: u32) error{ OutOfMemory, Unsupported }!ir.Ref {
++    const ty = b.typeOfRef(left);
++    if (b.typeOfRef(right) != ty) return b.mb.refuse("structural equality operand type", span);
++    const symbol = try std.fmt.allocPrint(b.allocator(), "{s}{d}", .{ prefix, @backingInt(ty) });
++    const callee: u32 = find: {
++        for (b.module().functions.items, 0..) |*function, index| {
++            if (!std.mem.eql(u8, function.name, symbol)) continue;
++            _ = declaration(b.module(), function) catch return b.mb.refuse("invalid structural equality declaration", span);
++            break :find @intCast(index);
++        }
++        const function: ir.Function = .{ .name = symbol, .signature = .{ .params = try b.allocator().dupe(ir.Type, &.{ ty, ty }), .ret = .bool, .linkage = .runtime_c } };
++        _ = declaration(b.module(), &function) catch return b.mb.refuse("structural equality type", span);
++        const index: u32 = @intCast(b.module().functions.items.len);
++        try b.module().functions.append(b.allocator(), function);
++        break :find index;
++    };
++    return b.emit(.{ .op = .call, .ty = .bool, .a = @fromBackingInt(callee), .data = try b.extraSlice(&.{ left, right }), .span = span });
++}
++
++/// Canonical stack images borrow all descendants until the synchronous comparison returns.
++pub fn runtimeCall(comptime Context: type, comptime Output: type, context: Context, out: Output, name: []const u8, inst: ir.Inst) (std.mem.Allocator.Error || Error || error{UnsupportedEntry})!bool {
++    if (!try call(context.state.module, context.function, inst)) return false;
++    const module = context.state.module;
++    const physical_type = module.functions.items[inst.a.index()].signature.params[0];
++    const operands = context.function.operands(inst.data);
++    const left = try context.stackSlot(module.size(physical_type));
++    const right = try context.stackSlot(module.size(physical_type));
++    try context.storeOperand(out, physical_type, operands[0], left);
++    try context.storeOperand(out, physical_type, operands[1], right);
++    try out.print(context.a(), "  {s} = call zeroext i1 @myl_core_values_equal(ptr @myl.value.{d}, ptr {s}, ptr {s})\n", .{ name, @backingInt(physical_type), left, right });
++    return true;
++}
+diff --git a/src/core/a10_equality_test.zig b/src/core/a10_equality_test.zig
+new file mode 100644
+index 000000000..6e6a2de4a
+--- /dev/null
++++ b/src/core/a10_equality_test.zig
+@@ -0,0 +1,277 @@
++//! Recursive equality borrows physical values without allocating owning wrappers.
++const std = @import("std");
++const ir = @import("ir.zig");
++const equality = @import("build_equality.zig");
++const canonical = @import("canonical_ir.zig");
++const llvm = @import("emit_llvm.zig");
++const verify = @import("verify_ir.zig");
++const cost = @import("cost.zig");
++const markers = @import("marker_validation.zig");
++
++fn helper(a: std.mem.Allocator, ty: ir.Type) !ir.Function {
++    return .{ .name = try std.fmt.allocPrint(a, "{s}{d}", .{ equality.prefix, @backingInt(ty) }), .signature = .{ .params = try a.dupe(ir.Type, &.{ ty, ty }), .ret = .bool, .linkage = .runtime_c } };
++}
++
++fn rejects(a: std.mem.Allocator, module: *ir.Module, bad: ir.Function) !void {
++    module.functions.items[0] = bad;
++    try std.testing.expectError(error.UnsupportedInstruction, equality.validateModule(a, module));
++    try std.testing.expectError(error.UnsupportedInstruction, llvm.emitModule(a, module, .{ .locator = locator, .source_path = "equality.my", .main = .{} }));
++    var failure: verify.Failure = .{};
++    try std.testing.expectError(error.InvalidIr, verify.verifyModule(a, module, &failure));
++}
++
++// spec-case: VALUE-EQUALITY-1
++// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
++test "A10 zero RC equality validates exact borrowed declarations and descriptor graphs" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var module: ir.Module = .{ .zero_rc = true, .single_owner = true };
++    const ty = try module.intern(a, .{ .record = &.{ .str, .i64 } });
++    const good = try helper(a, ty);
++    try module.functions.append(a, good);
++    try equality.validateModule(a, &module);
++    try std.testing.expect(try equality.declaration(&module, &good));
++    for ([_][]const u8{ equality.prefix, equality.prefix ++ "00", equality.prefix ++ "-1", equality.prefix ++ "999999999999999", equality.prefix ++ "16_more", equality.prefix ++ "99999" }) |name| {
++        var bad = good;
++        bad.name = name;
++        try rejects(a, &module, bad);
++    }
++    inline for (.{ "owned", "consumes", "views" }) |field| {
++        var bad = good;
++        @field(bad.signature, field) = 1;
++        try rejects(a, &module, bad);
++    }
++    var bad = good;
++    bad.signature.linkage = .extern_c;
++    try rejects(a, &module, bad);
++    bad = good;
++    bad.signature.ret = .i64;
++    try rejects(a, &module, bad);
++    bad = good;
++    bad.signature.params = &.{ ty, .i64 };
++    try rejects(a, &module, bad);
++    bad = good;
++    bad.span = 1;
++    try rejects(a, &module, bad);
++    bad = good;
++    try bad.insts.append(a, .{ .op = .ret, .ty = .void });
++    try rejects(a, &module, bad);
++    bad = good;
++    try bad.blocks.append(a, .{});
++    try rejects(a, &module, bad);
++    bad = good;
++    try bad.extra.append(a, .none);
++    try rejects(a, &module, bad);
++    bad = good;
++    try bad.loops.append(a, .{ .id = 0, .header = @fromBackingInt(0), .body = @fromBackingInt(0), .latch = @fromBackingInt(0), .exit = @fromBackingInt(0) });
++    try rejects(a, &module, bad);
++    module.functions.items[0] = good;
++    try std.testing.expectError(error.UnsupportedInstruction, equality.reference(&module, .{ .op = .func_ref, .ty = ty, .data = 0 }));
++    module.zero_rc = false;
++    try std.testing.expectError(error.UnsupportedInstruction, equality.validateModule(a, &module));
++    module.zero_rc = true;
++    module.compounds.items[0] = .{ .record = &.{.str_view} };
++    try std.testing.expectError(error.UnsupportedInstruction, equality.validateModule(a, &module));
++    module.compounds.items[0] = .{ .record = &.{ty} };
++    try std.testing.expectError(error.UnsupportedInstruction, equality.validateModule(a, &module));
++    module.compounds.items[0] = .{ .record = &.{@fromBackingInt(99999)} };
++    try std.testing.expectError(error.UnsupportedInstruction, equality.validateModule(a, &module));
++}
++
++// spec-case: VALUE-EQUALITY-1
++// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
++test "A10 zero RC equality rejects physical layout overflow before descriptor sizing" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var module: ir.Module = .{ .zero_rc = true, .single_owner = true };
++    const ty = try module.intern(a, .{ .array = .{ .elem = .u64, .n = std.math.maxInt(u32) } });
++    const good = try helper(a, ty);
++    try module.functions.append(a, good);
++    try rejects(a, &module, good);
++    module.compounds.items[0] = .{ .array = .{ .elem = .u64, .n = 0 } };
++    try equality.validateModule(a, &module);
++    module.compounds.items[0] = .{ .array = .{ .elem = .u8, .n = std.math.maxInt(u32) - 7 } };
++    try equality.validateModule(a, &module);
++    const record = try module.intern(a, .{ .record = &.{ ty, .u64 } });
++    module.functions.items[0] = try helper(a, record);
++    try std.testing.expectError(error.UnsupportedInstruction, equality.validateModule(a, &module));
++    module.compounds.items[1] = .{ .@"union" = &.{ ty, .void } };
++    try std.testing.expectError(error.UnsupportedInstruction, equality.validateModule(a, &module));
++}
++
++fn locate(_: *const anyopaque, _: u32) llvm.Location {
++    return .{ .path = "equality.my", .line = 1, .column = 1 };
++}
++const context: u8 = 0;
++const locator: llvm.Locator = .{ .context = &context, .locate = locate };
++
++// spec-case: NEW-CORE-TEST-KEYS-1
++test "A10 zero RC equality canonical identities ignore relocated recursive type indices" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    const t0: ir.Type = @fromBackingInt(ir.Type.first_compound);
++    const t1: ir.Type = @fromBackingInt(ir.Type.first_compound + 1);
++    const t2: ir.Type = @fromBackingInt(ir.Type.first_compound + 2);
++    var first: ir.Module = .{ .zero_rc = true, .single_owner = true };
++    try first.compounds.appendSlice(a, &.{ .{ .@"union" = &.{ .str, t1 } }, .{ .box = t0 } });
++    try first.functions.append(a, try helper(a, t0));
++    var second: ir.Module = .{ .zero_rc = true, .single_owner = true };
++    try second.compounds.appendSlice(a, &.{ .{ .list = .i32 }, .{ .@"union" = &.{ .str, t2 } }, .{ .box = t1 } });
++    try second.functions.append(a, try helper(a, t1));
++    var one = try canonical.Canon.prepare(a, &first, locator);
++    var two = try canonical.Canon.prepare(a, &second, locator);
++    const expected = try one.callee(0);
++    try std.testing.expectEqualSlices(u8, &expected, &try two.callee(0));
++    second.compounds.items[1] = .{ .@"union" = &.{ .i64, t2 } };
++    var different = try canonical.Canon.prepare(a, &second, locator);
++    try std.testing.expect(!std.mem.eql(u8, &expected, &try different.callee(0)));
++    second.functions.items[0].signature.owned = 1;
++    try std.testing.expectError(error.UnknownMetadata, canonical.Canon.prepare(a, &second, locator));
++}
++
++// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
++// spec-case: FRONTEND-CORE-NOALLOC-1
++test "A10 zero RC equality rejects malformed restored calls and preserves native allocation cost" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var module: ir.Module = .{ .zero_rc = true, .single_owner = true };
++    const ty = try module.intern(a, .{ .record = &.{ .str, .i64 } });
++    try module.functions.append(a, try helper(a, ty));
++    var function: ir.Function = .{ .name = "comparison", .signature = .{ .params = &.{ty}, .ret = .bool } };
++    try function.insts.append(a, .{ .op = .param, .ty = ty });
++    try function.extra.appendSlice(a, &.{ @fromBackingInt(0), @fromBackingInt(0) });
++    const good: ir.Inst = .{ .op = .call, .ty = .bool, .a = @fromBackingInt(0), .data = (ir.ExtraSlice{ .start = 0, .len = 2 }).pack() };
++    try std.testing.expect(try equality.call(&module, &function, good));
++    try std.testing.expectEqual(cost.Allocation.may, cost.allocation(&module, &function, good));
++    var bad = good;
++    bad.data = (ir.ExtraSlice{ .start = 1, .len = 2 }).pack();
++    try std.testing.expectError(error.UnsupportedInstruction, equality.call(&module, &function, bad));
++    bad = good;
++    bad.ty = .i64;
++    try std.testing.expectError(error.UnsupportedInstruction, equality.call(&module, &function, bad));
++    function.extra.items[1] = @fromBackingInt(1234);
++    try function.insts.append(a, good);
++    try std.testing.expectError(error.UnsupportedInstruction, markers.validate(a, &module, &function));
++    module.functions.items[0].signature.owned = 1;
++    try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, &function, good));
++}
++
++const options = @import("core_test_options");
++const zero = @import("zero_rc.zig");
++const source =
++    \\record Node:
++    \\    text: str
++    \\    next: Node?
++    \\enum Tree:
++    \\    leaf(value: float)
++    \\    branch(left: Tree, right: Tree)
++    \\func chain(n: int) -> Node?:
++    \\    mut result: Node? = None
++    \\    for i in range(n):
++    \\        result = Some(Node(text="value-" + str(i), next=result))
++    \\    return result
++    \\func compare(left: Node?, right: Node?) -> bool:
++    \\    return left == right
++    \\func main(out: Stream) -> int:
++    \\    mut left = chain(300)
++    \\    mut right = chain(300)
++    \\    const different = chain(299)
++    \\    assert compare(left, right) and compare(left, left)
++    \\    assert not compare(left, different)
++    \\    const rows = [left.copy(), different.copy()]
++    \\    assert rows[0] == right and right in rows
++    \\    const mapping = {"one": left.copy(), "two": different.copy()}
++    \\    const reordered = {"two": different.copy(), "one": right.copy()}
++    \\    assert mapping == reordered
++    \\    mut nan = Tree.leaf(value=0.0 / 0.0)
++    \\    mut negative = Tree.leaf(value=-0.0)
++    \\    mut positive = Tree.leaf(value=0.0)
++    \\    for i in range(20):
++    \\        nan = Tree.branch(left=nan, right=Tree.leaf(value=1.0))
++    \\        negative = Tree.branch(left=negative, right=Tree.leaf(value=1.0))
++    \\        positive = Tree.branch(left=positive, right=Tree.leaf(value=1.0))
++    \\    assert nan != nan and negative == positive
++    \\    left = None
++    \\    assert right == rows[0] and mapping["one"] == right
++    \\    right = None
++    \\    assert mapping["one"] == rows[0]
++    \\    out.print("equality passed")
++    \\    return 0
++;
++
++fn count(value: std.json.Value, path: []const []const u8) i64 {
++    var at = value;
++    for (path) |name| at = at.object.get(name) orelse return -1;
++    return at.integer;
++}
++
++fn inspect(a: std.mem.Allocator, binary: []const u8, llvm_path: []const u8) !void {
++    const path = try std.fmt.allocPrint(a, "{s}.json", .{binary});
++    var environment = std.process.Environ.Map.init(a);
++    try environment.put("MYLANG_COUNTERS", path);
++    const ran = try std.process.run(a, std.testing.io, .{ .argv = &.{binary}, .environ_map = &environment });
++    if (ran.term != .exited or ran.term.exited != 0) std.debug.print("equality run: {s}{s}\n", .{ ran.stdout, ran.stderr });
++    try std.testing.expect(ran.term == .exited and ran.term.exited == 0);
++    try std.testing.expectEqualStrings("equality passed\n", ran.stdout);
++    const counts = try std.json.parseFromSliceLeaky(std.json.Value, a, try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(16 << 20)), .{});
++    for ([_][]const u8{ "runtime_retains", "runtime_releases", "shared_retains", "shared_releases", "share_marks", "live_bytes_at_exit" }) |name|
++        try std.testing.expectEqual(@as(i64, 0), count(counts, &.{ "totals", name }));
++    for ([_][]const u8{ "retain", "release", "unique_test" }) |name|
++        try std.testing.expectEqual(@as(i64, 0), count(counts, &.{ "kinds", name, "count" }));
++    const text = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, llvm_path, a, .limited(16 << 20));
++    try std.testing.expect(zero.emittedClean(text));
++    try std.testing.expect(std.mem.indexOf(u8, text, "call zeroext i1 @myl_core_values_equal") != null);
++    try std.testing.expect(std.mem.indexOf(u8, text, equality.prefix) == null);
++    try std.testing.expect(std.mem.indexOf(u8, text, "myl_core_equal_") == null);
++    const symbols = try std.process.run(a, std.testing.io, .{ .argv = &.{ "nm", binary } });
++    try std.testing.expect(symbols.term == .exited and symbols.term.exited == 0);
++    for ([_][]const u8{ "myl_core_retain", "myl_core_release", "myl_core_share", "count_retain", "count_release", "count_is_unique" }) |legacy|
++        try std.testing.expect(std.mem.indexOf(u8, symbols.stdout, legacy) == null);
++}
++
++// spec-case: VALUE-EQUALITY-1
++// spec-case: NEW-CORE-S3-VALUES-1
++// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
++test "A10 zero RC equality borrows recursive operands with independent cleanup in five modes" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var directory = std.testing.tmpDir(.{});
++    defer directory.cleanup();
++    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
++    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "equality.my", .data = source });
++    const input = try std.fs.path.join(a, &.{ root, "equality.my" });
++    const modes = [_][]const []const u8{ &.{"--release"}, &.{"--unoptimized"}, &.{ "--release", "--verify-facts" }, &.{"--optimize-debug"}, &.{ "--release", "--no-facts" } };
++    for (modes, 0..) |flags, index| {
++        const binary = try std.fmt.allocPrint(a, "{s}/equality-{d}", .{ root, index });
++        const llvm_path = try std.fmt.allocPrint(a, "{s}.ll", .{binary});
++        var argv: std.ArrayList([]const u8) = .empty;
++        try argv.appendSlice(a, &.{ options.core_path, "build", input, "-o", binary, "--cache-dir", root, "--counters", "--experimental-zero-rc", "--emit-llvm", llvm_path });
++        try argv.appendSlice(a, flags);
++        const built = try std.process.run(a, std.testing.io, .{ .argv = argv.items });
++        if (built.term != .exited or built.term.exited != 0) std.debug.print("equality build: {s}{s}\n", .{ built.stdout, built.stderr });
++        try std.testing.expect(built.term == .exited and built.term.exited == 0);
++        try inspect(a, binary, llvm_path);
++    }
++}
++
++// spec-case: NEW-CORE-TEST-KEYS-1
++test "A10 zero RC equality cyclic type keys do not depend on prior canonical queries" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    const record: ir.Type = @fromBackingInt(ir.Type.first_compound);
++    const box: ir.Type = @fromBackingInt(ir.Type.first_compound + 1);
++    var module: ir.Module = .{ .zero_rc = true, .single_owner = true };
++    try module.compounds.appendSlice(a, &.{ .{ .record = &.{ .i64, box } }, .{ .box = record } });
++    var first = try canonical.Canon.prepare(a, &module, locator);
++    _ = try first.typeDigest(record);
++    const after = try first.typeDigest(box);
++    var fresh = try canonical.Canon.prepare(a, &module, locator);
++    const before = try fresh.typeDigest(box);
++    try std.testing.expectEqualSlices(u8, &before, &after);
++}

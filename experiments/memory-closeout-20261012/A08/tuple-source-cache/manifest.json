@@ -1,0 +1,12 @@
+{
+  "status": "prepared_unexecuted",
+  "source": "main.my",
+  "source_sha256": "bace27f035ed485fc988e7516c70e6747096ac55d70542eaf934cdad1b138275",
+  "source_owner": "A01",
+  "source_origin": "A01/tuple-unpack-design/sources/generic_split.my",
+  "oracle": "tuple-generic generic-9 3 2 8\n",
+  "harness": "../tuple_cache.py",
+  "harness_rows": 11,
+  "scope": "Actual generic complete tuple split through cold/warm/replay/source relocation/earlier declaration/valid edit/duplicate-move refusal. Native claims await integrated producer+Core compiler.",
+  "source_owner_commit": "01c00de44951162daeb14c36eac41b020ee633d0"
+}

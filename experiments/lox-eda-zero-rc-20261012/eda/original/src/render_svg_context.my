@@ -1,0 +1,1058 @@
+
+import byte_builder
+import eval_env as env_mod
+import eval_net_analysis as na
+import eval_rails as rails_mod
+import render_block_types
+import net_name
+import support_strs as strs
+import support_parse as parse_mod
+import support_float_fmt as ff
+import escape
+import infra_log as log
+
+# Flattened scene records and per-render tables. Packed schematic flags use
+# bit 0 for dnp and bit 1 for decouple_rail, per the port's D3 mapping.
+public record FunctionalPinRow:
+    cy: float
+    first_stub_y: float
+    last_stub_y: float
+    stub_x: float
+    first_row_y: float
+    last_row_y: float
+    produces_rail: bool = False
+
+
+public record RenderedRowSpan:
+    first_y: float
+    last_y: float
+    rows: int
+    bus_x: float
+
+
+public record FlatInstSource:
+    label: bytes
+    offset: int = 0
+
+
+public record FlatInst:
+    ref_des: bytes
+    component: bytes
+    value: bytes
+    symbol: bytes
+    footprint: bytes
+    pinout: bytes
+    parts: env_mod.Part[]
+    requirements: env_mod.Requirement[]
+    mpn: bytes
+    manufacturer: bytes
+    source: FlatInstSource
+    decouple_ic: bytes
+    decouple_pin: bytes
+    flags: int = 0
+
+
+public record FlatNet:
+    name: bytes
+    pins: env_mod.PinRef[]
+
+
+public enum Side:
+    left
+    right
+
+
+public enum Endpoint:
+    net(value: bytes)
+    pin(ref_des: bytes, pin: bytes)
+
+
+public record AdjEntry:
+    pin: bytes
+    endpoint: Endpoint
+
+
+public record Branch:
+    chain: FlatInst[]
+    terminal: bytes
+
+
+public record BranchBody:
+    end_x: float
+    cy: float
+    terminal: bytes
+    deferred_source_net: bytes
+    inline_direct_lane: bool = False
+    deferred_series: FlatInst? = None
+    deferred_start_x: float = 0.0
+
+
+public record PinGroup:
+    display_name: bytes
+    pin_numbers: bytes
+    stub_labels: bytes[]
+    stub_pins: bytes[]
+    conns: AdjEntry[]
+    group: bytes
+
+
+public enum LonePinRole:
+    boundary_port
+    internal
+
+
+public record MergeAwareSplit:
+    left: PinGroup[]
+    right: PinGroup[]
+    left_heights: float[]
+    right_heights: float[]
+
+
+public record RenderScratch:
+    hub_splits: dict[str, MergeAwareSplit]
+    deferred_branch_terminals: BranchBody[]
+    functional_left_pin_y: dict[str, FunctionalPinRow]
+    functional_right_pin_y: dict[str, FunctionalPinRow]
+    functional_inline_nets: set[str]
+    rendered_row_spans: dict[str, RenderedRowSpan]
+    defer_branch_terminals: bool = False
+    functional_layout: bool = False
+    functional_series_target_y: float? = None
+    functional_series_column_x: float? = None
+    rendered_connection_end_y: float? = None
+
+
+public record RenderCtx:
+    instances: FlatInst[]
+    nets: FlatNet[]
+    hub_order: bytes[]
+    inst_map: dict[str, FlatInst]
+    spoke_set: set[str]
+    pin_net: dict[str, bytes]
+    adjacency: dict[str, AdjEntry[]]
+    net_index: dict[str, env_mod.PinRef[]]
+    significant_nets: set[str]
+    shared_rail_nets: set[str]
+    lone_pin_nets: dict[str, LonePinRole]
+    pin_canonical_nets: dict[str, bytes]
+    rendered_spokes: set[str]
+    section_map: dict[str, int]
+    spoke_anchor_net: dict[str, bytes]
+    render_scratch: RenderScratch
+    project_dir: str = ""
+
+
+public func render_ctx_init() -> RenderCtx:
+    mut scratch = RenderScratch(hub_splits={}, deferred_branch_terminals=[], functional_left_pin_y={}, functional_right_pin_y={}, functional_inline_nets=set(), rendered_row_spans={})
+    return RenderCtx(instances=[], nets=[], hub_order=[], inst_map={}, spoke_set=set(), pin_net={}, adjacency={}, net_index={}, significant_nets=set(), shared_rail_nets=set(), lone_pin_nets={}, pin_canonical_nets={}, rendered_spokes=set(), section_map={}, spoke_anchor_net={}, render_scratch=scratch)
+
+
+public func render_ctx_setup(mut self: RenderCtx, block: env_mod.DesignBlock):
+    render_ctx_collect_flat(mut self, block, b"")
+    mut flat_sec_idx = 0
+    for sec in block.sections:
+        for inst in sec.instances:
+            self.section_map[strs.text(inst.ref_des)] = flat_sec_idx
+        for pg in sec.pin_groups:
+            mut key = strs.text(pg.ref_des)
+            if key not in self.section_map:
+                self.section_map[key] = flat_sec_idx
+        flat_sec_idx += 1
+        for sub in sec.sub_sections:
+            for inst2 in sub.instances:
+                self.section_map[strs.text(inst2.ref_des)] = flat_sec_idx
+            for pg2 in sub.pin_groups:
+                mut key2 = strs.text(pg2.ref_des)
+                if key2 not in self.section_map:
+                    self.section_map[key2] = flat_sec_idx
+            flat_sec_idx += 1
+    for sb in block.sub_blocks:
+        for inst3 in sb.block.instances:
+            self.section_map[strs.text(inst3.ref_des)] = flat_sec_idx
+        flat_sec_idx += 1
+    render_ctx_build_pin_net_map(mut self)
+    render_ctx_classify(mut self)
+    render_ctx_build_adjacency(mut self)
+    render_ctx_build_net_index(mut self)
+    render_ctx_build_significant_nets(mut self, block)
+    render_ctx_synthesize_spoke_connections(mut self)
+    render_ctx_build_pin_canonical_nets(mut self)
+
+
+public func render_ctx_collect_flat(mut self: RenderCtx, block: env_mod.DesignBlock, prefix: bytes):
+    render_ctx_collect_flat_with_renames(mut self, block, prefix, [])
+
+
+public func render_ctx_build_pin_net_map(mut self: RenderCtx):
+    for net in self.nets:
+        for pin in net.pins:
+            self.pin_net[strs.text(pin.ref_des + b"." + pin.pin)] = net.name
+
+
+public func render_ctx_classify(mut self: RenderCtx):
+    for inst in self.instances:
+        if is_hub(inst):
+            self.hub_order.append(inst.ref_des)
+        else:
+            self.spoke_set.add(strs.text(inst.ref_des))
+
+
+public func render_ctx_build_adjacency(mut self: RenderCtx):
+    for net in self.nets:
+        mut bn = base_net_name(net.name)
+        for pin in net.pins:
+            render_ctx_adj_append(mut self, pin.ref_des, AdjEntry(pin=pin.pin, endpoint=Endpoint.net(value=bn)))
+
+
+public func render_ctx_synthesize_spoke_connections(mut self: RenderCtx):
+    render_ctx_compute_spoke_anchors(mut self)
+    for net in self.nets:
+        mut bn = base_net_name(net.name)
+        if is_ground_net(bn):
+            continue
+        mut short = short_net_name(net.name)
+        mut hub_target = na.sub_net_host_ref(short)
+        mut hub_pins: env_mod.PinRef[] = []
+        mut spoke_pins: env_mod.PinRef[] = []
+        for pin in net.pins:
+            if strs.text(pin.ref_des) in self.spoke_set:
+                if not render_ctx_is_spoke_ground_pin(self, pin.ref_des, pin.pin):
+                    spoke_pins.append(pin)
+            else:
+                hub_pins.append(pin)
+        if hub_target is not None and len(hub_pins) == 0:
+            for other_net in self.nets:
+                if other_net.name == net.name or base_net_name(other_net.name) != bn:
+                    continue
+                for pin2 in other_net.pins:
+                    if strs.text(pin2.ref_des)not in self.spoke_set and pin2.ref_des == hub_target:
+                        hub_pins.append(pin2)
+        for sp in spoke_pins:
+            mut spoke_key = strs.text(sp.ref_des)
+            if spoke_key in self.spoke_anchor_net and self.spoke_anchor_net[spoke_key] != bn:
+                continue
+            mut bp = render_ctx_bound_hub_pin(self, sp.ref_des, hub_pins)
+            if bp is not None:
+                render_ctx_adj_append(mut self, bp.ref_des, AdjEntry(pin=bp.pin, endpoint=Endpoint.pin(ref_des=sp.ref_des, pin=sp.pin)))
+                render_ctx_adj_append(mut self, sp.ref_des, AdjEntry(pin=sp.pin, endpoint=Endpoint.pin(ref_des=bp.ref_des, pin=bp.pin)))
+                continue
+            mut spoke_section = self.section_map.get(spoke_key, -1)
+            mut has_same_section_hub = False
+            if spoke_section != -1:
+                for hp in hub_pins:
+                    if hub_target is not None and hp.ref_des != hub_target:
+                        continue
+                    mut hs = self.section_map.get(strs.text(hp.ref_des), -1)
+                    if hs != -1 and hs == spoke_section:
+                        has_same_section_hub = True
+                        break
+            for hp2 in hub_pins:
+                if hub_target is not None and hp2.ref_des != hub_target:
+                    continue
+                if spoke_section != -1:
+                    mut hub_section = self.section_map.get(strs.text(hp2.ref_des), -1)
+                    if hub_section != -1:
+                        if spoke_section != hub_section:
+                            continue
+                    elif has_same_section_hub:
+                        continue
+                render_ctx_adj_append(mut self, hp2.ref_des, AdjEntry(pin=hp2.pin, endpoint=Endpoint.pin(ref_des=sp.ref_des, pin=sp.pin)))
+                render_ctx_adj_append(mut self, sp.ref_des, AdjEntry(pin=sp.pin, endpoint=Endpoint.pin(ref_des=hp2.ref_des, pin=hp2.pin)))
+
+
+public func render_ctx_is_spoke_ground_pin(self: RenderCtx, ref_des: bytes, pin_id: bytes) -> bool:
+    for net in self.nets:
+        for p in net.pins:
+            if p.ref_des == ref_des and p.pin != pin_id and is_ground_net(base_net_name(net.name)):
+                return False
+    for net2 in self.nets:
+        for p2 in net2.pins:
+            if p2.ref_des == ref_des and p2.pin == pin_id and is_ground_net(base_net_name(net2.name)):
+                return True
+    return False
+
+
+public func render_ctx_build_net_index(mut self: RenderCtx):
+    for net in self.nets:
+        mut key = strs.text(base_net_name(net.name))
+        for pin in net.pins:
+            if key not in self.net_index:
+                self.net_index[key] = []
+            self.net_index[key].append(pin)
+
+
+public func render_ctx_renders_when_alone(self: RenderCtx, net: bytes) -> bool:
+    return strs.text(net) in self.lone_pin_nets
+
+
+public func render_ctx_is_boundary_port(self: RenderCtx, net: bytes) -> bool:
+    return self.lone_pin_nets.get(strs.text(net), LonePinRole.internal) == LonePinRole.boundary_port
+
+
+public func render_ctx_build_significant_nets(mut self: RenderCtx, block: env_mod.DesignBlock):
+    for port in block.ports:
+        render_ctx_mark_lone_pin_net(mut self, base_net_name(port.net), LonePinRole.boundary_port)
+    render_ctx_register_sub_block_port_nets(mut self, block)
+    for net in self.nets:
+        mut bn = base_net_name(net.name)
+        if is_ground_net(bn):
+            continue
+        for pin in net.pins:
+            if strs.text(pin.ref_des)not in self.spoke_set:
+                self.significant_nets.add(strs.text(bn))
+                break
+    # Sections are the authority after renumbering erases a hierarchy prefix.
+    mut first_origin: dict[str, bytes] = {}
+    mut first_section: dict[str, int] = {}
+    for net2 in self.nets:
+        mut bn2 = base_net_name(net2.name)
+        mut key = strs.text(bn2)
+        if is_ground_net(bn2) or key in self.shared_rail_nets:
+            continue
+        for pin2 in net2.pins:
+            mut origin = origin_of(pin2.ref_des)
+            mut sect = self.section_map.get(strs.text(pin2.ref_des), -1)
+            if key not in first_origin:
+                first_origin[key] = origin
+                first_section[key] = sect
+                continue
+            if first_section[key] != sect or first_origin[key] != origin:
+                self.shared_rail_nets.add(key)
+                self.significant_nets.add(key)
+                break
+    for g in na.schematic_ground_names():
+        self.significant_nets.add(strs.text(g))
+    self.significant_nets.add("VSS")
+
+
+public func render_ctx_build_pin_canonical_nets(mut self: RenderCtx):
+    for net in self.nets:
+        mut bn = base_net_name(net.name)
+        for pin in net.pins:
+            if strs.text(pin.ref_des)not in self.spoke_set:
+                self.pin_canonical_nets[strs.text(pin.ref_des + b"." + pin.pin)] = bn
+
+
+public func render_ctx_validate_net_consistency(err: Stream, self: RenderCtx):
+    for ref_des in self.adjacency:
+        if ref_des in self.spoke_set:
+            continue
+        for entry in self.adjacency[ref_des]:
+            match entry.endpoint:
+                case Endpoint.net(value=endpoint_net):
+                    if is_ground_net(endpoint_net):
+                        continue
+                    mut key = ref_des + "." + strs.text(entry.pin)
+                    if key not in self.pin_net:
+                        continue
+                    mut pin_bn = base_net_name(self.pin_net[key])
+                    mut ep_bn = base_net_name(endpoint_net)
+                    if pin_bn != ep_bn:
+                        log.warn(err, b"NET VALIDATE: " + ref_des.encode() + b" pin " + entry.pin + b": pin_net=\"" + pin_bn + b"\" but adjacency endpoint=\"" + ep_bn + b"\"")
+                case _:
+                    pass
+    for ref_des2 in self.adjacency:
+        if ref_des2 not in self.spoke_set:
+            continue
+        for entry2 in self.adjacency[ref_des2]:
+            match entry2.endpoint:
+                case Endpoint.pin(ref_des=pr, pin=pp):
+                    if strs.bytes_order(ref_des2.encode(), pr) > 0:
+                        continue
+                    mut key_a = ref_des2 + "." + strs.text(entry2.pin)
+                    mut key_b = strs.text(pr + b"." + pp)
+                    if key_a not in self.pin_net or key_b not in self.pin_net:
+                        continue
+                    mut bn_a = base_net_name(self.pin_net[key_a])
+                    mut bn_b = base_net_name(self.pin_net[key_b])
+                    if is_ground_net(bn_a) or is_ground_net(bn_b):
+                        continue
+                    if bn_a != bn_b:
+                        log.warn(err, b"NET VALIDATE: spoke " + ref_des2.encode() + b" pin " + entry2.pin + b" (net=\"" + bn_a + b"\") <-> " + pr + b" pin " + pp + b" (net=\"" + bn_b + b"\") \xe2\x80\x94 mismatch")
+                case _:
+                    pass
+    for key2 in self.pin_canonical_nets:
+        if key2 not in self.pin_net:
+            continue
+        mut canon_bn = base_net_name(self.pin_canonical_nets[key2])
+        mut raw_bn = base_net_name(self.pin_net[key2])
+        if not is_ground_net(canon_bn) and not is_ground_net(raw_bn) and canon_bn != raw_bn:
+            log.warn(err, b"NET VALIDATE: " + key2.encode() + b": pin_net=\"" + raw_bn + b"\" but canonical=\"" + canon_bn + b"\"")
+
+
+public func render_ctx_adj_append(mut self: RenderCtx, ref_des: bytes, entry: AdjEntry):
+    mut key = strs.text(ref_des)
+    if key not in self.adjacency:
+        self.adjacency[key] = []
+    self.adjacency[key].append(entry)
+
+
+# Private in Zig, exposed for its split-file regression.
+public func is_std_ref_des(ref: bytes) -> bool:
+    if len(ref) < 2:
+        return False
+    mut i = 0
+    while i < len(ref) and i < 2 and ref[i] >= 65 and ref[i] <= 90:
+        i += 1
+    if i == 0:
+        return False
+    mut digit_start = i
+    while i < len(ref) and strs.is_digit(ref[i]):
+        i += 1
+    return i == len(ref) and i > digit_start
+
+
+func origin_of(ref: bytes) -> bytes:
+    return net_name.parent(ref).unwrap_or(b"")
+
+
+func property_value(props: env_mod.Property[], key: bytes) -> bytes:
+    for p in props:
+        if p.key == key:
+            return p.value
+    return b""
+
+
+func render_ctx_build_net_rename_map(block: env_mod.DesignBlock, prefix: bytes) -> dict[str, bytes]:
+    mut net_rename: dict[str, bytes] = {}
+    for nt in block.net_ties:
+        mut full_b = nt.b
+        mut full_a = nt.a
+        if len(prefix) > 0:
+            full_b = prefix + b"/" + nt.b
+            full_a = prefix + b"/" + nt.a
+        net_rename[strs.text(full_b)] = full_a
+    return net_rename
+
+
+func render_ctx_resolve_net_name(name: bytes, rename_maps: dict[str, bytes][]) -> bytes:
+    mut resolved = name
+    for m in rename_maps:
+        resolved = m.get(strs.text(resolved), resolved)
+    if resolved != name:
+        return resolved
+    mut slash_idx = name.find(b"/")
+    if slash_idx >= 0:
+        mut after_slash = name[slash_idx + 1:]
+        mut leaf_base = na.base_net_name(after_slash)
+        if len(leaf_base) != len(after_slash):
+            mut base = name[0:slash_idx + 1 + len(leaf_base)]
+            mut suffix = after_slash[len(leaf_base):]
+            mut base_resolved = base
+            for m2 in rename_maps:
+                base_resolved = m2.get(strs.text(base_resolved), base_resolved)
+            if base_resolved != base:
+                return base_resolved + suffix
+    return resolved
+
+
+func render_ctx_collect_flat_with_renames(mut self: RenderCtx, block: env_mod.DesignBlock, prefix: bytes, parent_renames: dict[str, bytes][]):
+    mut all_renames = [render_ctx_build_net_rename_map(block, prefix)]
+    all_renames.extend(parent_renames)
+    for inst in block.instances:
+        mut rd = inst.ref_des
+        if len(prefix) > 0 and not is_std_ref_des(inst.ref_des):
+            rd = prefix + b"/" + inst.ref_des
+        mut flags = 0
+        if inst.dnp:
+            flags += 1
+        if inst.bind.decouple.rail:
+            flags += 2
+        mut offset = 0
+        if len(prefix) == 0:
+            offset = inst.source_offset
+        mut label = inst.ref_des
+        if len(inst.label) > 0:
+            label = inst.label
+        mut source = FlatInstSource(offset=offset, label=label)
+        mut flat = FlatInst(ref_des=rd, component=inst.component, value=inst.value, symbol=inst.symbol, footprint=inst.footprint, pinout=inst.pinout, parts=inst.parts, requirements=inst.requirements, mpn=property_value(inst.properties, b"mpn"), manufacturer=property_value(inst.properties, b"manufacturer"), flags=flags, source=source, decouple_ic=inst.bind.decouple.ic, decouple_pin=inst.bind.decouple.pin)
+        self.instances.append(flat)
+        self.inst_map[strs.text(rd)] = flat
+    for net in block.nets:
+        mut pins: env_mod.PinRef[] = []
+        for pin in net.pins:
+            mut pin_rd = pin.ref_des
+            if len(prefix) > 0 and not is_std_ref_des(pin.ref_des):
+                pin_rd = prefix + b"/" + pin.ref_des
+            pins.append(env_mod.pin_ref_default(pin_rd, pin.pin))
+        mut name = net.name
+        if len(prefix) > 0:
+            name = prefix + b"/" + net.name
+        name = render_ctx_resolve_net_name(name, all_renames)
+        self.nets.append(FlatNet(name=name, pins=pins))
+    for sb in block.sub_blocks:
+        mut np = sb.name
+        if len(prefix) > 0:
+            np = prefix + b"/" + sb.name
+        render_ctx_collect_flat_with_renames(mut self, sb.block, np, all_renames)
+
+
+record PassiveIsland:
+    refs: bytes[]
+    has_explicit_binding: bool
+
+
+record IslandAnchorChoice:
+    has_busy_boundary: bool = False
+    candidate_hub_ref: bytes? = None
+    conflicting_candidate_hubs: bool = False
+    anchor_net: bytes? = None
+    anchor_pin: env_mod.PinRef? = None
+    anchor_reaches_port: bool = False
+
+
+record IslandAnchorInputs:
+    seed_ref: bytes
+    refs: bytes[]
+    hub_count: dict[str, int]
+    sole_hub: dict[str, env_mod.PinRef]
+    spoke_nets: dict[str, bytes[]]
+
+
+# Busy rails never own a local passive island when a lone signal-side hub pin
+# can own it; a leg continuing to a declared port wins the deterministic tie.
+func render_ctx_compute_spoke_anchors(mut self: RenderCtx):
+    mut hub_count: dict[str, int] = {}
+    mut sole_hub: dict[str, env_mod.PinRef] = {}
+    for net in self.nets:
+        mut bn = base_net_name(net.name)
+        mut key = strs.text(bn)
+        for pin in net.pins:
+            if strs.text(pin.ref_des) in self.spoke_set:
+                continue
+            hub_count[key] = hub_count.get(key, 0) + 1
+            sole_hub[key] = pin
+    mut spoke_nets: dict[str, bytes[]] = {}
+    mut net_spokes: dict[str, bytes[]] = {}
+    for net2 in self.nets:
+        mut bn2 = base_net_name(net2.name)
+        if is_ground_net(bn2):
+            continue
+        mut nk = strs.text(bn2)
+        for pin2 in net2.pins:
+            mut rk = strs.text(pin2.ref_des)
+            if rk not in self.spoke_set:
+                continue
+            if rk not in spoke_nets:
+                spoke_nets[rk] = []
+            if bn2 not in spoke_nets[rk]:
+                spoke_nets[rk].append(bn2)
+            if nk not in net_spokes:
+                net_spokes[nk] = []
+            if pin2.ref_des not in net_spokes[nk]:
+                net_spokes[nk].append(pin2.ref_des)
+    for ref in spoke_nets:
+        mut nets = spoke_nets[ref]
+        if len(nets) != 2:
+            continue
+        mut c0 = hub_count.get(strs.text(nets[0]), 0)
+        mut c1 = hub_count.get(strs.text(nets[1]), 0)
+        mut anchor_net: bytes? = None
+        if c0 == 1 and c1 >= 2:
+            anchor_net = Some(nets[0])
+        elif c1 == 1 and c0 >= 2:
+            anchor_net = Some(nets[1])
+        if anchor_net is not None:
+            mut ak = strs.text(anchor_net)
+            if ak not in sole_hub:
+                continue
+            mut hp = sole_hub[ak]
+            if render_ctx_render_sections_compatible(self, ref.encode(), hp.ref_des):
+                self.spoke_anchor_net[ref] = anchor_net
+    render_ctx_anchor_passive_islands(mut self, hub_count, sole_hub, spoke_nets, net_spokes)
+
+
+func render_ctx_anchor_passive_islands(mut self: RenderCtx, hub_count: dict[str, int], sole_hub: dict[str, env_mod.PinRef], spoke_nets: dict[str, bytes[]], net_spokes: dict[str, bytes[]]):
+    mut seen_spokes: set[str] = set()
+    for seed_inst in self.instances:
+        mut seed_key = strs.text(seed_inst.ref_des)
+        if seed_key not in self.spoke_set or seed_key in seen_spokes:
+            continue
+        mut island = render_ctx_collect_passive_island(self, seed_inst.ref_des, hub_count, spoke_nets, net_spokes, mut seen_spokes)
+        if island.has_explicit_binding:
+            continue
+        mut anchor = render_ctx_passive_island_anchor(self, seed_inst.ref_des, island.refs, hub_count, sole_hub, spoke_nets)
+        if anchor is not None:
+            for ref in island.refs:
+                self.spoke_anchor_net[strs.text(ref)] = anchor
+
+
+func render_ctx_collect_passive_island(self: RenderCtx, seed_ref: bytes, hub_count: dict[str, int], spoke_nets: dict[str, bytes[]], net_spokes: dict[str, bytes[]], mut seen_spokes: set[str]) -> PassiveIsland:
+    mut pending = [seed_ref]
+    mut component: bytes[] = []
+    mut has_explicit_binding = False
+    seen_spokes.add(strs.text(seed_ref))
+    while len(pending) > 0:
+        mut ref = pending.pop()
+        component.append(ref)
+        mut key = strs.text(ref)
+        if key in self.inst_map:
+            mut inst = self.inst_map[key]
+            has_explicit_binding = has_explicit_binding or len(inst.decouple_pin) > 0 or (inst.flags // 2) % 2 == 1
+        if key not in spoke_nets:
+            continue
+        for net in spoke_nets[key]:
+            if hub_count.get(strs.text(net), 0) != 0:
+                continue
+            render_ctx_queue_island_neighbours(self, seed_ref, net, net_spokes, mut seen_spokes, mut pending)
+    return PassiveIsland(refs=component, has_explicit_binding=has_explicit_binding)
+
+
+func render_ctx_queue_island_neighbours(self: RenderCtx, seed_ref: bytes, net: bytes, net_spokes: dict[str, bytes[]], mut seen_spokes: set[str], mut pending: bytes[]):
+    mut key = strs.text(net)
+    if key not in net_spokes:
+        return
+    for other in net_spokes[key]:
+        mut other_key = strs.text(other)
+        if other_key in seen_spokes or not render_ctx_render_sections_compatible(self, seed_ref, other):
+            continue
+        seen_spokes.add(other_key)
+        pending.append(other)
+
+
+func render_ctx_passive_island_anchor(self: RenderCtx, seed_ref: bytes, refs: bytes[], hub_count: dict[str, int], sole_hub: dict[str, env_mod.PinRef], spoke_nets: dict[str, bytes[]]) -> bytes?:
+    mut boundary_seen: set[str] = set()
+    mut choice = IslandAnchorChoice()
+    mut inputs = IslandAnchorInputs(seed_ref=seed_ref, refs=refs, hub_count=hub_count, sole_hub=sole_hub, spoke_nets=spoke_nets)
+    for ref in refs:
+        mut key = strs.text(ref)
+        if key not in spoke_nets:
+            continue
+        for net in spoke_nets[key]:
+            mut nk = strs.text(net)
+            if nk in boundary_seen:
+                continue
+            boundary_seen.add(nk)
+            render_ctx_consider_island_boundary(self, inputs, net, mut choice)
+    if not choice.has_busy_boundary or choice.conflicting_candidate_hubs:
+        return None
+    mut candidate_hub = try choice.candidate_hub_ref
+    if not render_ctx_hub_touches_busy_island_boundary(self, candidate_hub, refs, hub_count, spoke_nets):
+        return None
+    return choice.anchor_net
+
+
+func render_ctx_hub_touches_busy_island_boundary(self: RenderCtx, hub_ref: bytes, refs: bytes[], hub_count: dict[str, int], spoke_nets: dict[str, bytes[]]) -> bool:
+    for ref in refs:
+        mut key = strs.text(ref)
+        if key not in spoke_nets:
+            continue
+        for net in spoke_nets[key]:
+            if hub_count.get(strs.text(net), 0) >= 2 and render_ctx_hub_has_pin_on_net(self, hub_ref, net):
+                return True
+    return False
+
+
+func render_ctx_hub_has_pin_on_net(self: RenderCtx, hub_ref: bytes, want_net: bytes) -> bool:
+    for net in self.nets:
+        if base_net_name(net.name) != want_net:
+            continue
+        for pin in net.pins:
+            if pin.ref_des == hub_ref and strs.text(pin.ref_des)not in self.spoke_set:
+                return True
+    return False
+
+
+func render_ctx_consider_island_boundary(self: RenderCtx, inputs: IslandAnchorInputs, net: bytes, mut choice: IslandAnchorChoice):
+    mut key = strs.text(net)
+    mut count = inputs.hub_count.get(key, 0)
+    if count >= 2:
+        choice.has_busy_boundary = True
+        return
+    if count != 1 or key not in inputs.sole_hub:
+        return
+    mut hp = inputs.sole_hub[key]
+    if not render_ctx_render_sections_compatible(self, inputs.seed_ref, hp.ref_des):
+        return
+    mut owner = choice.candidate_hub_ref
+    if owner is not None:
+        if owner != hp.ref_des:
+            choice.conflicting_candidate_hubs = True
+    else:
+        choice.candidate_hub_ref = Some(hp.ref_des)
+    mut reaches_port = render_ctx_island_boundary_reaches_port(self, net, inputs.refs, inputs.spoke_nets)
+    mut current = choice.anchor_pin
+    mut better = True
+    if current is not None:
+        better = (reaches_port and not choice.anchor_reaches_port) or (reaches_port == choice.anchor_reaches_port and (pin_order(hp.pin, current.pin) or (hp.pin == current.pin and strs.bytes_less(net, choice.anchor_net.unwrap_or(b"")))))
+    if better:
+        choice.anchor_pin = Some(hp)
+        choice.anchor_net = Some(net)
+        choice.anchor_reaches_port = reaches_port
+
+
+func render_ctx_island_boundary_reaches_port(self: RenderCtx, boundary_net: bytes, island_refs: bytes[], spoke_nets: dict[str, bytes[]]) -> bool:
+    for inst in self.instances:
+        mut key = strs.text(inst.ref_des)
+        if key not in self.spoke_set or inst.ref_des in island_refs or key not in spoke_nets:
+            continue
+        mut nets = spoke_nets[key]
+        if boundary_net not in nets:
+            continue
+        for candidate in nets:
+            if candidate != boundary_net and render_ctx_is_boundary_port(self, candidate):
+                return True
+    return False
+
+
+func render_ctx_render_sections_compatible(self: RenderCtx, a_ref: bytes, b_ref: bytes) -> bool:
+    mut a_section = self.section_map.get(strs.text(a_ref), -1)
+    mut b_section = self.section_map.get(strs.text(b_ref), -1)
+    return a_section == -1 or b_section == -1 or a_section == b_section
+
+
+# Explicit per-pad decoupling bindings win over inferred island ownership.
+func render_ctx_bound_hub_pin(self: RenderCtx, spoke_ref: bytes, hubs: env_mod.PinRef[]) -> env_mod.PinRef?:
+    mut key = strs.text(spoke_ref)
+    if key not in self.inst_map:
+        return None
+    mut fi = self.inst_map[key]
+    if len(fi.decouple_pin) > 0:
+        mut pad_match: env_mod.PinRef? = None
+        for hp in hubs:
+            if hp.pin != fi.decouple_pin:
+                continue
+            if len(fi.decouple_ic) > 0 and hp.ref_des == fi.decouple_ic:
+                return Some(hp)
+            if pad_match is None:
+                pad_match = Some(hp)
+        return pad_match
+    if (fi.flags // 2) % 2 == 1:
+        mut best: env_mod.PinRef? = None
+        mut best_count = 0
+        for cand in hubs:
+            mut count = 0
+            for hp2 in hubs:
+                if hp2.ref_des == cand.ref_des:
+                    count += 1
+            if count > best_count:
+                best_count = count
+                best = Some(cand)
+        return best
+    return None
+
+
+func render_ctx_mark_lone_pin_net(mut self: RenderCtx, net: bytes, role: LonePinRole):
+    mut key = strs.text(net)
+    if key not in self.lone_pin_nets or role == LonePinRole.boundary_port:
+        self.lone_pin_nets[key] = role
+    self.significant_nets.add(key)
+
+
+func render_ctx_register_sub_block_port_nets(mut self: RenderCtx, block: env_mod.DesignBlock):
+    mut maps = [render_ctx_build_net_rename_map(block, b"")]
+    for sb in block.sub_blocks:
+        for port in sb.block.ports:
+            mut path_ = sb.name + b"/" + base_net_name(port.net)
+            render_ctx_mark_lone_pin_net(mut self, path_, LonePinRole.boundary_port)
+            mut resolved = base_net_name(render_ctx_resolve_net_name(path_, maps))
+            if resolved != path_:
+                render_ctx_mark_lone_pin_net(mut self, resolved, LonePinRole.internal)
+
+
+# --- zig: render_svg/draw.zig ---
+public func hub_width() -> float:
+    return 180.0
+
+
+public func pin_stub() -> float:
+    return 40.0
+
+
+public func spoke_len() -> float:
+    return 80.0
+
+
+public func net_label_gap() -> float:
+    return 18.0
+
+
+public func hub_x() -> float:
+    return 320.0
+
+
+public func top_margin() -> float:
+    return 80.0
+
+
+public func passive_bw() -> float:
+    return 40.0
+
+
+public func passive_bh() -> float:
+    return 20.0
+
+
+public func branch_spacing() -> float:
+    return 40.0
+
+
+public func per_conn_spacing() -> float:
+    return 40.0
+
+
+public func bus_gap() -> float:
+    return 15.0
+
+
+public func draw_wire(mut w: byte_builder.Builder, x1: float, y1: float, x2: float, y2: float):
+    if y1 == y2:
+        svg_line(mut w, x1, y1, x2, y2, b"stroke=\"#4a9\" stroke-width=\"1.5\"", True)
+    else:
+        mut mid_x = (x1 + x2) / 2.0
+        mut points = point_pair(x1, y1) + b" " + point_pair(mid_x, y1) + b" " + point_pair(mid_x, y2) + b" " + point_pair(x2, y2)
+        byte_builder.append(mut w, b"<polyline points=\"" + points + b"\" fill=\"none\" stroke=\"#4a9\" stroke-width=\"1.5\"/>\n")
+
+
+public func draw_net_wire(mut w: byte_builder.Builder, x1: float, y1: float, x2: float, y2: float, net: bytes):
+    byte_builder.append(mut w, b"<g class=\"net\" data-net=\"")
+    escape.write_xml(mut w, net)
+    byte_builder.append(mut w, b"\" style=\"cursor:pointer\">")
+    if y1 == y2:
+        svg_line(mut w, x1, y1, x2, y2, b"stroke=\"transparent\" stroke-width=\"12\" class=\"hit-area\"", False)
+        svg_line(mut w, x1, y1, x2, y2, b"stroke=\"#4a9\" stroke-width=\"1.5\"", False)
+    else:
+        mut mid_x = (x1 + x2) / 2.0
+        mut points = point_pair(x1, y1) + b" " + point_pair(mid_x, y1) + b" " + point_pair(mid_x, y2) + b" " + point_pair(x2, y2)
+        byte_builder.append(mut w, b"<polyline points=\"" + points + b"\"\n fill=\"none\" stroke=\"transparent\" stroke-width=\"12\"\n stroke-linejoin=\"round\" class=\"hit-area\"/>")
+        byte_builder.append(mut w, b"<polyline points=\"" + points + b"\" fill=\"none\" stroke=\"#4a9\" stroke-width=\"1.5\"/>")
+    byte_builder.append(mut w, b"</g>\n")
+
+
+public func draw_symbol_shape(mut w: byte_builder.Builder, bx: float, bw: float, cx: float, cy: float, inst: FlatInst):
+    mut ref = short_ref(inst.ref_des)
+    mut is_ferrite = len(ref) >= 2 and ref[0] == 70 and ref[1] == 66
+    mut stroke = b"stroke=\"#8888cc\" stroke-width=\"1.5\""
+    if is_ferrite or inst.symbol == b"generic-res":
+        mut body_x = cx - 24.0 / 2.0
+        mut body_y = cy - 10.0 / 2.0
+        mut fill = b"none"
+        if is_ferrite:
+            fill = b"#3a3a5a"
+        svg_line(mut w, bx, cy, body_x, cy, stroke, True)
+        byte_builder.append(mut w, b"<rect x=\"" + f1(body_x) + b"\" y=\"" + f1(body_y) + b"\" width=\"" + f1(24.0) + b"\" height=\"" + f1(10.0) + b"\" fill=\"" + fill + b"\" " + stroke + b"/>\n")
+        svg_line(mut w, body_x + 24.0, cy, bx + bw, cy, stroke, True)
+    elif inst.symbol == b"generic-cap":
+        mut plate_l_x = cx - 6.0 / 2.0
+        mut plate_r_x = cx + 6.0 / 2.0
+        mut plate_top = cy - 12.0 / 2.0
+        mut plate_bot = cy + 12.0 / 2.0
+        svg_line(mut w, bx, cy, plate_l_x, cy, stroke, True)
+        svg_line(mut w, plate_l_x, plate_top, plate_l_x, plate_bot, b"stroke=\"#8888cc\" stroke-width=\"2\"", True)
+        svg_line(mut w, plate_r_x, plate_top, plate_r_x, plate_bot, b"stroke=\"#8888cc\" stroke-width=\"2\"", True)
+        svg_line(mut w, plate_r_x, cy, bx + bw, cy, stroke, True)
+    elif inst.symbol == b"generic-ind":
+        mut arc_w = 6.0
+        mut total_arc = arc_w * 3.0
+        mut start_x = cx - total_arc / 2.0
+        svg_line(mut w, bx, cy, start_x, cy, stroke, True)
+        for ai in range(3):
+            mut ax = start_x + float(ai) * arc_w
+            mut path_ = f1(ax) + b" " + f1(cy) + b" A " + f1(arc_w / 2.0) + b" " + f1(arc_w / 2.0) + b" 0 0 1 " + f1(ax + arc_w) + b" " + f1(cy)
+            byte_builder.append(mut w, b"<path d=\"M " + path_ + b"\" fill=\"none\" " + stroke + b"/>\n")
+        svg_line(mut w, start_x + total_arc, cy, bx + bw, cy, stroke, True)
+    else:
+        byte_builder.append(mut w, b"<rect x=\"" + f1(bx) + b"\" y=\"" + f1(cy - 8.0) + b"\" width=\"" + f1(bw) + b"\" height=\"16\" fill=\"#2a2a4a\" stroke=\"#8888cc\" stroke-width=\"1\" rx=\"3\"/>\n")
+    if inst.flags % 2 == 1:
+        svg_line(mut w, bx + 7.0, cy - 8.0, bx + bw - 7.0, cy + 8.0, b"stroke=\"#ff6b6b\" stroke-width=\"1.5\"", True)
+        svg_line(mut w, bx + bw - 7.0, cy - 8.0, bx + 7.0, cy + 8.0, b"stroke=\"#ff6b6b\" stroke-width=\"1.5\"", True)
+
+
+public func draw_gnd_symbol(mut w: byte_builder.Builder, x: float, y: float):
+    mut stroke = b"stroke=\"#e8c547\" stroke-width=\"1.5\""
+    svg_line(mut w, x, y, x, y + 6.0, stroke, True)
+    svg_line(mut w, x - 7.0, y + 6.0, x + 7.0, y + 6.0, stroke, True)
+    svg_line(mut w, x - 4.5, y + 9.0, x + 4.5, y + 9.0, stroke, True)
+    svg_line(mut w, x - 2.0, y + 12.0, x + 2.0, y + 12.0, stroke, True)
+
+
+public func draw_nc_symbol(mut w: byte_builder.Builder, x: float, y: float):
+    mut stroke = b"stroke=\"#555\" stroke-width=\"1.5\""
+    svg_line(mut w, x - 5.0, y - 5.0, x + 5.0, y + 5.0, stroke, True)
+    svg_line(mut w, x + 5.0, y - 5.0, x - 5.0, y + 5.0, stroke, True)
+
+
+public func write_debug_pin(mut w: byte_builder.Builder, x: float, y: float):
+    byte_builder.append(mut w, b"<circle class=\"debug-pin\" cx=\"" + f1(x) + b"\" cy=\"" + f1(y) + b"\" r=\"3\" fill=\"red\" opacity=\"0.8\" style=\"display:none\"/>\n")
+
+
+public func draw_block_icon(mut w: byte_builder.Builder, icon_name: bytes, cx: float, cy: float, color: bytes):
+    mut stroke = b"stroke=\"" + color + b"\" stroke-width=\"1.5\" opacity=\"0.5\""
+    if icon_name == b"amplifier":
+        mut size = 28.0
+        mut half_h = size * 0.6
+        mut lx = cx - size / 2.0
+        mut rx = cx + size / 2.0
+        mut ty = cy - half_h
+        mut by = cy + half_h
+        byte_builder.append(mut w, b"<polygon points=\"" + point_pair(lx, ty) + b" " + point_pair(lx, by) + b" " + point_pair(rx, cy) + b"\" fill=\"none\" " + stroke + b"/>\n")
+        icon_text(mut w, cx, by + 14.0, 10, color, b"Amplifier")
+    elif icon_name == b"ldo":
+        mut icon_w = 36.0
+        mut icon_h = 24.0
+        mut ldo_lx = cx - icon_w / 2.0
+        mut ldo_ty = cy - icon_h / 2.0
+        mut ldo_rx = ldo_lx + icon_w
+        byte_builder.append(mut w, b"<rect x=\"" + f1(ldo_lx) + b"\" y=\"" + f1(ldo_ty) + b"\" width=\"" + f1(icon_w) + b"\" height=\"" + f1(icon_h) + b"\" fill=\"none\" " + stroke + b" rx=\"2\"/>\n")
+        svg_line(mut w, ldo_lx - 8.0, cy, ldo_lx, cy, stroke, True)
+        icon_arrow(mut w, ldo_lx - 4.0, cy - 3.0, ldo_lx, cy, ldo_lx - 4.0, cy + 3.0, color)
+        svg_line(mut w, ldo_rx, cy, ldo_rx + 8.0, cy, stroke, True)
+        icon_arrow(mut w, ldo_rx + 4.0, cy - 3.0, ldo_rx + 8.0, cy, ldo_rx + 4.0, cy + 3.0, color)
+        icon_text(mut w, cx, cy + 4.0, 9, color, b"LDO")
+        icon_text(mut w, cx, ldo_ty + icon_h + 14.0, 10, color, b"Linear Regulator")
+    elif icon_name == b"transistor":
+        mut half = 24.0 / 2.0
+        mut ch_x = cx + 4.0
+        mut ch_top = cy - half
+        mut ch_bot = cy + half
+        mut gp_x = ch_x - 4.0
+        svg_line(mut w, ch_x, ch_top, ch_x, ch_bot, b"stroke=\"" + color + b"\" stroke-width=\"2\" opacity=\"0.5\"", True)
+        svg_line(mut w, cx - half, cy, gp_x, cy, stroke, True)
+        svg_line(mut w, gp_x, ch_top + 3.0, gp_x, ch_bot - 3.0, stroke, True)
+        svg_line(mut w, ch_x, ch_top, ch_x + 8.0, ch_top, stroke, True)
+        svg_line(mut w, ch_x, ch_bot, ch_x + 8.0, ch_bot, stroke, True)
+        icon_text(mut w, cx, ch_bot + 14.0, 10, color, b"Transistor")
+
+
+# Zig's writer.print formatting factored into byte-exact attribute helpers.
+func f1(v: float) -> bytes:
+    return ff.fmt_float_prec(v, 1).encode()
+
+
+func point_pair(x: float, y: float) -> bytes:
+    return f1(x) + b"," + f1(y)
+
+
+func svg_line(mut w: byte_builder.Builder, x1: float, y1: float, x2: float, y2: float, attrs: bytes, newline: bool):
+    byte_builder.append(mut w, b"<line x1=\"" + f1(x1) + b"\" y1=\"" + f1(y1) + b"\" x2=\"" + f1(x2) + b"\" y2=\"" + f1(y2) + b"\" " + attrs + b"/>")
+    if newline:
+        byte_builder.append(mut w, b"\n")
+
+
+func icon_arrow(mut w: byte_builder.Builder, x1: float, y1: float, x2: float, y2: float, x3: float, y3: float, color: bytes):
+    byte_builder.append(mut w, b"<polygon points=\"" + point_pair(x1, y1) + b" " + point_pair(x2, y2) + b" " + point_pair(x3, y3) + b"\" fill=\"" + color + b"\" opacity=\"0.5\"/>\n")
+
+
+func icon_text(mut w: byte_builder.Builder, x: float, y: float, size: int, color: bytes, text: bytes):
+    byte_builder.append(mut w, b"<text x=\"" + f1(x) + b"\" y=\"" + f1(y) + b"\" text-anchor=\"middle\" font-size=\"" + str(size).encode() + b"\" fill=\"" + color + b"\" opacity=\"0.5\">" + text + b"</text>\n")
+
+
+public func is_hub(inst: FlatInst) -> bool:
+    return is_hub_ref(inst.ref_des)
+
+
+public func is_hub_ref(ref_des: bytes) -> bool:
+    mut rd = short_ref(ref_des)
+    if len(rd) == 0:
+        return True
+    return rd[0]not in b"RCLFD"
+
+
+public func is_ground_net(name: bytes) -> bool:
+    for g in na.schematic_ground_names():
+        if name == g:
+            return True
+    return name.startswith(b"VSS")
+
+
+public func is_functional_signal_net(net: bytes) -> bool:
+    return len(net_name.leaf(net)) != 0 and not is_supply_like_net(net)
+
+
+public func is_supply_like_net(net: bytes) -> bool:
+    mut local = net_name.leaf(net)
+    if is_ground_net(local):
+        return True
+    for prefix in rails_mod.schematic_supply_prefixes():
+        if strs.starts_with_ignore_case(local, prefix):
+            return True
+    return False
+
+
+public func is_rail_output_pin_label(label: bytes) -> bool:
+    mut buf: int[] = []
+    for c in label:
+        if c in b"_-/ .#":
+            continue
+        if len(buf) >= 32:
+            return False
+        buf.append(strs.to_upper(c))
+    mut s = bytes(buf)
+    while len(s) > 0 and strs.is_digit(s[len(s) - 1]):
+        s = s[0:len(s) - 1]
+    mut rest = b""
+    if s.startswith(b"VOUT"):
+        rest = s[4:]
+    elif s.startswith(b"OUT"):
+        rest = s[3:]
+    else:
+        return False
+    return len(rest) == 0 or rest == b"PUT" or (len(rest) == 1 and strs.is_alphabetic(rest[0]))
+
+
+public func short_ref(ref: bytes) -> bytes:
+    return net_name.leaf(ref)
+
+
+public func short_net_name(name: bytes) -> bytes:
+    return net_name.leaf(name)
+
+
+public func base_net_name(name: bytes) -> bytes:
+    return na.base_net_name(name)
+
+
+public func display_value(inst: FlatInst) -> bytes:
+    if len(inst.value) > 0:
+        return inst.value
+    return inst.component
+
+
+public func format_short(inst: FlatInst) -> bytes:
+    if len(inst.value) > 0:
+        return inst.value
+    return inst.component
+
+
+public func endpoint_eql(a: Endpoint, b: Endpoint) -> bool:
+    match a:
+        case Endpoint.net(value=an):
+            match b:
+                case Endpoint.net(value=bn):
+                    return an == bn
+                case _:
+                    return False
+        case Endpoint.pin(ref_des=ar, pin=ap):
+            match b:
+                case Endpoint.pin(ref_des=br, pin=bp):
+                    return ar == br and ap == bp
+                case _:
+                    return False
+
+
+public func classify_component(inst: FlatInst) -> bytes?:
+    mut name_lower = inst.component
+    if render_block_types.contains_ci(name_lower, b"pma") or render_block_types.contains_ci(name_lower, b"lna") or render_block_types.contains_ci(name_lower, b"mmic"):
+        return Some(b"amplifier")
+    if render_block_types.contains_ci(name_lower, b"tpsm") or render_block_types.contains_ci(name_lower, b"tps5") or render_block_types.contains_ci(name_lower, b"lm267"):
+        return Some(b"buck")
+    if render_block_types.contains_ci(name_lower, b"lt3045") or render_block_types.contains_ci(name_lower, b"lt3042") or render_block_types.contains_ci(name_lower, b"lp5907") or render_block_types.contains_ci(name_lower, b"ams1117"):
+        return Some(b"ldo")
+    mut ref = short_ref(inst.ref_des)
+    if len(ref) > 0 and ref[0] == 81:
+        return Some(b"transistor")
+    if len(ref) > 0 and ref[0] == 68:
+        return Some(b"led")
+    return None
+
+
+public func pin_order(a: bytes, b: bytes) -> bool:
+    mut a_num = parse_mod.parse_int(strs.text(a))
+    mut b_num = parse_mod.parse_int(strs.text(b))
+    if a_num is not None and b_num is not None:
+        return a_num < b_num
+    if a_num is not None:
+        return True
+    if b_num is not None:
+        return False
+    return strs.bytes_less(a, b)

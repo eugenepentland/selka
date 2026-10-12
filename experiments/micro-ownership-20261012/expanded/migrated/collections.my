@@ -1,0 +1,226 @@
+
+extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
+enum Value:
+    integer(value: int)
+    boolean(value: bool)
+
+record Row:
+    key: int
+    ordinal: int
+    value: int
+
+record Instruction:
+    op: int
+    arg: int
+
+func integer(value: Value) -> int:
+    match value:
+        case Value.integer(value=n):
+            return n
+        case Value.boolean(value=_):
+            return 0
+
+func boolean(value: Value) -> bool:
+    match value:
+        case Value.boolean(value=b):
+            return b
+        case Value.integer(value=_):
+            return False
+
+func execute(program: Instruction[], size: int, seed: int) -> int:
+    mut stack: Value[] = []
+    mut returns: int[] = []
+    mut variables = [0, 0]
+    mut pc = 0
+    while True:
+        mut ins = program[pc]
+        pc += 1
+        if ins.op == 0:
+            stack.append(Value.integer(value=seed))
+        elif ins.op == 1:
+            stack.append(Value.integer(value=size))
+        elif ins.op == 2:
+            stack.append(Value.integer(value=ins.arg))
+        elif ins.op == 3:
+            stack.append(Value.integer(value=variables[ins.arg]))
+        elif ins.op == 4:
+            variables[ins.arg] = integer(stack.pop())
+        elif ins.op >= 5 and ins.op <= 9:
+            mut b = integer(stack.pop())
+            mut a = integer(stack.pop())
+            if ins.op == 5:
+                stack.append(Value.integer(value=a + b))
+            elif ins.op == 6:
+                stack.append(Value.integer(value=a * b))
+            elif ins.op == 7:
+                stack.append(Value.integer(value=a % b))
+            elif ins.op == 8:
+                stack.append(Value.boolean(value=a < b))
+            else:
+                stack.append(Value.boolean(value=a == b))
+        elif ins.op == 10:
+            if not boolean(stack.pop()):
+                pc = ins.arg
+        elif ins.op == 11:
+            pc = ins.arg
+        elif ins.op == 12:
+            returns.append(pc)
+            pc = ins.arg
+        elif ins.op == 13:
+            pc = returns.pop()
+        else:
+            return integer(stack.pop())
+    return 0
+
+func row_key(row: Row) -> int:
+    return row.key
+
+func fold(values: int[]) -> int:
+    mut total = 0
+    for j in range(len(values)):
+        total += (j + 1) * values[j]
+    return total
+
+func batch_result(kind: int, size: int, batch: int, seed: int, values: int[], keys: str[], lookup: dict[int, int], lookup_str: dict[str, int], mut nested: int[][], program: Instruction[]) -> int:
+    mut total = 0
+    if kind == 0:
+        for value in values:
+            total += (value + batch) % 1009
+        return total
+    elif kind == 1:
+        mut appended: int[] = []
+        for j in range(size):
+            appended.append((seed + batch + j * 13) % 1009)
+        return fold(appended)
+    elif kind == 2:
+        mut input_values = [for j in range(size) yield (seed + batch + j * 13) % 1009]
+        mut filtered = [for value in input_values if value % 3 == 0 yield value]
+        return fold(filtered)
+    elif kind == 3:
+        for j in range(size):
+            mut key = (seed + j * 17 + batch) % (size * 2)
+            total += lookup.get(key, 17)
+        return total
+    elif kind == 4:
+        for j in range(size):
+            mut key = (seed + j * 17 + batch) % (size * 2)
+            total += lookup_str.get(keys[key], 17)
+        return total
+    elif kind == 5:
+        mut mapping: dict[int, int] = {}
+        for j in range(size):
+            mapping[j] = values[j]
+        for j in range(size * 2):
+            mut key = (seed + j * 17 + batch) % (size * 2)
+            mapping[key] = (mapping.get(key, 17) + j + batch + 1) % 1000003
+        for stored_key, value in mapping.items():
+            total += stored_key + value
+        return total
+    elif kind == 6:
+        mut text_mapping: dict[str, int] = {}
+        for j in range(size):
+            text_mapping[keys[j].copy()] = values[j]
+        for j in range(size * 2):
+            mut key = (seed + j * 17 + batch) % (size * 2)
+            text_mapping[keys[key].copy()] = (text_mapping.get(keys[key], 17) + j + batch + 1) % 1000003
+        for j in range(size * 2):
+            if keys[j] in text_mapping:
+                total += j + text_mapping[keys[j]]
+        return total
+    elif kind == 7:
+        mut dedup: set[int] = set()
+        mut limit = max(2, size // 4)
+        for j in range(size):
+            dedup.add((seed + batch + j * 13) % limit)
+        for value in dedup:
+            total += value
+        return total
+    elif kind == 8:
+        for j in range(size):
+            mut short = [for k in range(4) yield seed + batch + j + k]
+            for value in short:
+                total += value
+            short = []
+        return total
+    elif kind == 9:
+        mut retained: int[][] = []
+        for j in range(size):
+            retained.append([for k in range(4) yield seed + batch + j + k])
+        for inner in retained:
+            for value in inner:
+                total += value
+        return total
+    elif kind == 10:
+        mut snapshot = nested.copy()
+        mut index = (seed + batch * 17) % size
+        nested[index][1] = (nested[index][1] + batch + 1) % 1000003
+        return snapshot[index][1] + nested[index][1]
+    elif kind == 11:
+        mut ordered = [for j in range(size) yield (seed + batch + j * 13) % 1009]
+        ordered.sort()
+        return fold(ordered)
+    elif kind == 12:
+        mut rows: Row[] = []
+        for j in range(size):
+            mut value = (seed + batch + j * 13) % 1009
+            rows.append(Row(key=value % 17, ordinal=j, value=value))
+        rows.sort(key=row_key)
+        for j in range(size):
+            total += (j + 1) * (rows[j].value * 17 + rows[j].ordinal)
+        return total
+    elif kind == 13:
+        return execute(program, size, seed + batch)
+    return -1
+
+func parse_number(text: str) -> int:
+    match parse_int(text):
+        case Some(n):
+            return n
+        case None:
+            return 0
+
+func main(args: str[], host: Host, out: Stream) -> int:
+    if len(args) != 4:
+        return 2
+    mut case_id = -1
+    mut names = ["list_scan", "list_append", "list_filter", "dict_lookup", "dict_lookup_str", "dict_update", "dict_update_str", "set_dedup", "alloc_short", "alloc_retained", "mutate_nested", "sort_int", "sort_records", "lox_eval"]
+    for j in range(len(names)):
+        if args[0] == names[j]:
+            case_id = j
+    if case_id < 0:
+        return 2
+    mut size = parse_number(args[1])
+    mut iterations = parse_number(args[2])
+    mut seed = parse_number(args[3])
+    if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
+        return 2
+    mut values = [for j in range(size) yield (seed + j * 13) % 1009]
+    mut keys: str[] = []
+    if args[0] == "dict_lookup_str" or args[0] == "dict_update_str":
+        keys = [for j in range(size * 2) yield str(j)]
+    mut lookup: dict[int, int] = {}
+    mut lookup_str: dict[str, int] = {}
+    for j in range(size):
+        if args[0] == "dict_lookup":
+            lookup[j] = values[j]
+        if args[0] == "dict_lookup_str":
+            lookup_str[keys[j].copy()] = values[j]
+    mut nested: int[][] = []
+    if args[0] == "mutate_nested":
+        nested = [for j in range(size) yield [for k in range(4) yield (seed + j * 13 + k) % 1009]]
+    mut program = [Instruction(op=0, arg=0), Instruction(op=4, arg=0), Instruction(op=2, arg=0), Instruction(op=4, arg=1), Instruction(op=3, arg=1), Instruction(op=1, arg=0), Instruction(op=8, arg=0), Instruction(op=10, arg=29), Instruction(op=3, arg=1), Instruction(op=2, arg=2), Instruction(op=7, arg=0), Instruction(op=2, arg=0), Instruction(op=9, arg=0), Instruction(op=10, arg=18), Instruction(op=3, arg=0), Instruction(op=12, arg=31), Instruction(op=4, arg=0), Instruction(op=11, arg=24), Instruction(op=3, arg=0), Instruction(op=3, arg=1), Instruction(op=5, arg=0), Instruction(op=2, arg=1000003), Instruction(op=7, arg=0), Instruction(op=4, arg=0), Instruction(op=3, arg=1), Instruction(op=2, arg=1), Instruction(op=5, arg=0), Instruction(op=4, arg=1), Instruction(op=11, arg=4), Instruction(op=3, arg=0), Instruction(op=14, arg=0), Instruction(op=2, arg=3), Instruction(op=6, arg=0), Instruction(op=2, arg=7), Instruction(op=5, arg=0), Instruction(op=2, arg=1000003), Instruction(op=7, arg=0), Instruction(op=13, arg=0)]
+    mut checksum = 0
+    mut start = runtime_bench_now(host)
+    for batch in range(iterations):
+        mut part = batch_result(case_id, size, batch, seed, values, keys, lookup, lookup_str, mut nested, program)
+        if part < 0:
+            return 2
+        checksum = (checksum + part) % 1000000007
+    mut elapsed = runtime_bench_now(host) - start
+    if args[0] == "mutate_nested":
+        for inner in nested:
+            for value in inner:
+                checksum = (checksum + value) % 1000000007
+    out.print(checksum, elapsed)
+    return 0

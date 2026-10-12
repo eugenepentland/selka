@@ -31,7 +31,7 @@ func main(args: str[], host: Host, out: Stream) -> int:
     mut lookup: dict[int, int] = {}
     mut lookup_str: dict[str, int] = {}
     for j in range(size):
-        lookup_str[keys[j]] = values[j]
+        lookup_str[keys[j].copy()] = values[j]
     mut checksum = 0
     mut start = runtime_bench_now(host)
     for batch in range(iterations):

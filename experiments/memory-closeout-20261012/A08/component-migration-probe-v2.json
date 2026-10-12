@@ -1,0 +1,58 @@
+[
+  {
+    "state": "before",
+    "component": "test_index",
+    "status": 1,
+    "stdout": "",
+    "stderr": "tests.my:25:68: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n      mut data = b\"SLKIDX01\\x01\\0\\0\\0\\x01\\0\\0\\0\\0\\0\\0\\0\\x08\\0\\0\\0\" + b\"\\xff\" * 40 + b\"\\0\" * 8\n                                                                     ^\n",
+    "args": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+      "check",
+      ".tmp/memory-closeout/A08/component-sources/before/test_index/main.my",
+      "--experimental-zero-rc",
+      "--no-cache"
+    ]
+  },
+  {
+    "state": "before",
+    "component": "cache_plan",
+    "status": 1,
+    "stdout": "",
+    "stderr": "tests.my:8:34: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n      mut roots = try graph.build([b\"a\" * 32], [[]], [[]])\n                                   ^\n",
+    "args": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+      "check",
+      ".tmp/memory-closeout/A08/component-sources/before/cache_plan/main.my",
+      "--experimental-zero-rc",
+      "--no-cache"
+    ]
+  },
+  {
+    "state": "after",
+    "component": "test_index",
+    "status": 1,
+    "stdout": "",
+    "stderr": "tests.my:25:68: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n      mut data = b\"SLKIDX01\\x01\\0\\0\\0\\x01\\0\\0\\0\\0\\0\\0\\0\\x08\\0\\0\\0\" + b\"\\xff\" * 40 + b\"\\0\" * 8\n                                                                     ^\n",
+    "args": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+      "check",
+      ".tmp/memory-closeout/A08/component-sources/after/test_index/main.my",
+      "--experimental-zero-rc",
+      "--no-cache"
+    ]
+  },
+  {
+    "state": "after",
+    "component": "cache_plan",
+    "status": 1,
+    "stdout": "",
+    "stderr": "tests.my:8:34: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n      mut roots = try graph.build([b\"a\" * 32], [[]], [[]])\n                                   ^\n",
+    "args": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+      "check",
+      ".tmp/memory-closeout/A08/component-sources/after/cache_plan/main.my",
+      "--experimental-zero-rc",
+      "--no-cache"
+    ]
+  }
+]

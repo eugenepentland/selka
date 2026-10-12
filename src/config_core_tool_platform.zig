@@ -7,6 +7,7 @@
 // reuse; this is not a generic ELF or ld.so.cache dependency parser.
 // Loader-cache refresh qualified by debug/release pthread, backtrace and libm
 // probes in experiments/development-loop-wave2-20261012/S04/native-platform-adoption/.
+// probes in experiments/memory-closeout-20261012/coordinator/native-platform/.
 pub const runtime_files = [_]struct { path: []const u8, resolved: []const u8, sha256: []const u8 }{
     .{
         .path = "/lib64/ld-linux-x86-64.so.2",

@@ -1,0 +1,12 @@
+1/11 component_protocol_test.test.component frames reject truncation, stale identity, trailing bytes and foreign test IDs...OK
+2/11 component_protocol_test.test.component launch boundary is explicit and reports missing manifests...OK
+3/11 component_protocol_test.test.component verifies artifact and bounds child failures and deadlines...OK
+4/11 component_protocol_test.test.component rejects every malformed header field and oversized list count...OK
+5/11 component_protocol_test.test.component private request directories are concurrent and cleaned; shadow compares exact answers...OK
+6/11 component_protocol_test.test.component shared empty golden frame preserves high identity bytes...OK
+7/11 component_protocol_test.test.component names remain host-only Unicode and embedded NUL byte slices...OK
+8/11 component_protocol_test.test.component rejects every reply truncation...OK
+9/11 component_protocol_test.test.component invalid mode and unusable temporary root report explicit errors...OK
+10/11 component_protocol_test.test.component runChild deadline includes wait after both output streams close...OK
+11/11 component_launch.test.component manifest refuses historical and opt-in ownership selections before artifact admission...OK
+All 11 tests passed.

@@ -1,0 +1,31 @@
+build-slot: gate slot 1, FIFO ticket 216 after 0s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10173 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/memory-closeout-20261012-A02-validation 996501f02] Preserve nested list self-extension through receiver alias checks
+ 28 files changed, 666 insertions(+), 3 deletions(-)
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/README.md
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/admission.log
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/ancestor.my
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/before/ancestor-results.json
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/before/fixed-source.json
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/before/fixed-test-driver.log
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/before/main.my
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/before/results.json
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/before/trace-results.json
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/build.stderr
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/build.stdout
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/controls-admission.log
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/controls-runner.txt
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/copied.my
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/dynamic-ancestor.my
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/native-admission.log
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/registered-runner.txt
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/registered.json
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/summary.json
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/test.stderr
+ create mode 100644 experiments/memory-closeout-20261012/A02/raw/nested-extension/test.stdout

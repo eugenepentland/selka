@@ -1,0 +1,4 @@
+func main() -> int:
+    const values: set[Result[int, int]] = {}
+    _ = values
+    return 0

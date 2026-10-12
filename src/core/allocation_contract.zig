@@ -6,6 +6,11 @@ const cost = @import("cost.zig");
 const passes = @import("passes.zig");
 const build = @import("build.zig");
 
+/// The source ownership and runtime ABI whose allocation sites are inspected.
+pub const Ownership = struct { single_owner: bool = false, zero_rc: bool = false };
+
+const selection_refusal = "invalid borrowed selection ownership marker";
+
 /// A static may-allocate site, including unresolved foreign/callback calls.
 pub const Violation = struct { function: []const u8, callee: []const u8, span: u32, unresolved: bool, unsupported: ?[]const u8 = null, bound: language.source.Span = .{ .start = 0, .end = 0 } };
 
@@ -25,8 +30,21 @@ pub fn validate(a: std.mem.Allocator, program: language.typed.Program, source: l
     defer scratch.deinit();
     const temporary = scratch.allocator();
     var owned = try snapshot(temporary, module);
-    _ = try passes.debug(temporary, &owned);
+    _ = passes.debug(temporary, &owned) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.Unsupported => return ownershipRefusal(program, source),
+    };
     return validateOwned(temporary, program, source, &owned);
+}
+
+/// A malformed ownership marker is an unresolved contract, never a noalloc proof.
+fn ownershipRefusal(program: language.typed.Program, source: language.source.Source) Violation {
+    for (program.functions) |function| {
+        const bound = function.policy.effect_bound orelse continue;
+        if (!language.effect_set.coreAllocationBound(source, bound)) continue;
+        return .{ .function = function.name, .callee = function.name, .span = @intCast(function.declaration.start), .unresolved = true, .unsupported = selection_refusal, .bound = bound.span };
+    }
+    return .{ .function = "<ownership>", .callee = "<ownership>", .span = 0, .unresolved = true, .unsupported = selection_refusal };
 }
 
 fn validateOwned(a: std.mem.Allocator, program: language.typed.Program, source: language.source.Source, module: *const ir.Module) std.mem.Allocator.Error!?Violation {
@@ -54,6 +72,11 @@ pub fn checkProgram(a: std.mem.Allocator, program: language.typed.Program, sourc
 /// Collect a witness for every violated concrete noalloc declaration, including unused roots.
 /// Unsupported lowering is retried per root so other contracts still receive diagnostics.
 pub fn collectProgram(a: std.mem.Allocator, program: language.typed.Program, source: language.source.Source) std.mem.Allocator.Error![]Violation {
+    return collectProgramWithOwnership(a, program, source, .{});
+}
+
+/// Inspect the selected lowering contract, including its explicit-copy allocations.
+pub fn collectProgramWithOwnership(a: std.mem.Allocator, program: language.typed.Program, source: language.source.Source, ownership: Ownership) std.mem.Allocator.Error![]Violation {
     var scratch = std.heap.ArenaAllocator.init(a);
     defer scratch.deinit();
     const temporary = scratch.allocator();
@@ -64,7 +87,7 @@ pub fn collectProgram(a: std.mem.Allocator, program: language.typed.Program, sou
         try roots.append(temporary, @fromBackingInt(@intCast(index)));
     }
     var failures: std.ArrayList(Violation) = .empty;
-    if (roots.items.len != 0) try collectRoots(temporary, .{ .program = program, .source = source }, roots.items, &failures);
+    if (roots.items.len != 0) try collectRoots(temporary, .{ .program = program, .source = source, .ownership = ownership }, roots.items, &failures);
     // Core names and refusal reasons belong to the scratch arena; copy all escaping text.
     const result = try a.dupe(Violation, failures.items);
     for (result) |*failure| {
@@ -75,12 +98,18 @@ pub fn collectProgram(a: std.mem.Allocator, program: language.typed.Program, sou
     return result;
 }
 
-const CheckedSource = struct { program: language.typed.Program, source: language.source.Source };
+const CheckedSource = struct { program: language.typed.Program, source: language.source.Source, ownership: Ownership };
 
 fn collectRoots(a: std.mem.Allocator, checked: CheckedSource, roots: []const language.typed.FunctionId, failures: *std.ArrayList(Violation)) std.mem.Allocator.Error!void {
     var refusal: build.Refusal = .{};
-    var module = build.buildRootsSource(a, checked.program, roots, checked.source, &refusal) catch |err| switch (err) {
+    var module = build.buildRootsCached(a, roots, .{
+        .program = checked.program,
+        .source = checked.source,
+        .single_owner = checked.ownership.single_owner,
+        .zero_rc = checked.ownership.zero_rc,
+    }, &refusal, null) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
+        error.CacheMiss => unreachable,
         error.Unsupported => {
             if (roots.len > 1) {
                 for (roots) |root| try collectRoots(a, checked, &.{root}, failures);
@@ -91,7 +120,25 @@ fn collectRoots(a: std.mem.Allocator, checked: CheckedSource, roots: []const lan
             return;
         },
     };
-    _ = try passes.debug(a, &module);
+    _ = passes.debug(a, &module) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.Unsupported => {
+            if (roots.len > 1) {
+                for (roots) |root| try collectRoots(a, checked, &.{root}, failures);
+            } else {
+                const function = checked.program.functions[@backingInt(roots[0])];
+                try appendUnique(a, failures, .{
+                    .function = function.name,
+                    .callee = function.name,
+                    .span = @intCast(function.declaration.start),
+                    .unresolved = true,
+                    .unsupported = selection_refusal,
+                    .bound = function.policy.effect_bound.?.span,
+                });
+            }
+            return;
+        },
+    };
     const summaries = try summarize(a, checked.program, &module);
     for (module.functions.items, 0..) |function, index| {
         const failure = summaries[index] orelse continue;

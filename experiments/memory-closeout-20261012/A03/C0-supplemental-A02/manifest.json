@@ -1,0 +1,36 @@
+{
+  "schema": "memory-closeout-census-manifest-v1",
+  "original_denominator": 0,
+  "scope": "New API supplement; preserves original30 and pinned81 as separate complete denominators",
+  "cases": [
+    {
+      "id": "supplemental/owned-list-methods",
+      "family": "supplemental-20261012",
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/supplemental/a02_list_methods.my",
+        "sha256": "4e1a375bd4f77675dcdc881e6edf519c2eb37acd1e616b22071f57751b4bb2c3"
+      },
+      "provenance": {
+        "owner": "A02",
+        "commit": "27861c3d7d543491556e42bdf015876e1a39f720",
+        "path": "src/core/a02_list_methods_fixture.my"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "500\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "baseline_expectation": "C0 refusal: managed list methods were not supported; refusal remains in denominator"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/debug/main.my:4:23: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper
+      mut keys = sorted(list(d.keys()))
+                        ^

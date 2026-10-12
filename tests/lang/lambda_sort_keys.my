@@ -18,7 +18,7 @@ func people() -> Person[]:
 
 
 func names(items: Person[]) -> str[]:
-    return [for item in items yield item.name]
+    return [for item in items yield item.name.copy()]
 
 
 # spec: LAMBDA-KEY-INFER-1

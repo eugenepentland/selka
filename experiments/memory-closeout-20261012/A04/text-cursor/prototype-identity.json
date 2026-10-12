@@ -1,0 +1,11 @@
+{
+  "base_commit": "78dbb358d2306a043f22c1b9fafe81641ad8ea55",
+  "compiler_sha256": "ec89910347476ceec8a50e4196292bfcb5a9206bb025423110b8fbae0a74a58d",
+  "runtime_values_sha256": "714ddaa4b4087769ac86b6f8a3477592312c71bb60cabf41ca97f4ab535ca0be",
+  "production_diff_sha256": "28605f12c9aaa8d5fbcf0507ff75b848879ab0a142d013243d474f197602c3f6",
+  "related_inputs_unchanged": [
+    "src/core/runtime/core_text.c",
+    "tests/lang/a04_repetition_ownership.my"
+  ],
+  "source_fixture": "moving-scans.my is exact verbatim decoded existing text_test.zig moving_scans; original expected output/bound unchanged"
+}

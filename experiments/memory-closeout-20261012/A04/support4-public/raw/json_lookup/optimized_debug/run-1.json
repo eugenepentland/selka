@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/support4-public/json_lookup/optimized_debug/program"
+  ],
+  "status": 0,
+  "elapsed_ns": 1104186,
+  "stdout": "null 2\n[{\"nested\":\"value-7\"}] {\"nested\":[\"value-9\"]}\n[{\"nested\":\"value-7\"}] {\"nested\":[\"value-9\"]}\n{\"target\":\"changed\"} [\"changed\"]\n",
+  "stderr": ""
+}

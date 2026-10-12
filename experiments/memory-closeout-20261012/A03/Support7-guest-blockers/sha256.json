@@ -1,0 +1,11 @@
+{
+  "direct-raw.tar.gz": "b784086f0736006b8b3b420f424d474cf43de59b2b929f72f184774956ca67f8",
+  "direct-results.json.gz": "e37ffe844989c1283fc9f1171d8e66163c7403402b408be00401f8de47d8caa1",
+  "frontend_mut-failing-functions.txt": "8e2511fd3ed70787bdfddf0a6e541daa64a77b2c2d32076055288c4e5fef7f21",
+  "frontend_mut.my": "63f4c3fe8c95224fd28e5949e413efc43aa01550a2300bfc16be945fb23594e6",
+  "rc_pin_elide-failing-functions.txt": "6e136f77dd3076d7ccc97e5e8b08e75abbec3e840f8e4af0e6c3379ca79a6426",
+  "rc_pin_elide.my": "d9d3c958d7eb444a6ad702d70a7479a9b9550848bf47a4676285d5743cf0b09b",
+  "report.json": "cd19394d0b30b321427cb097332581d365b982d762f497e29a35028612697140",
+  "value_equality-failing-functions.txt": "fb0e0ac53e77a99e1542a8c8d648e49434e0dc58e07e9af92fdd48342c0a0924",
+  "value_equality.my": "9b3ae34e56a37dc4f8996933beb3bd482d37a9ca316876dd2f84f7da63d22a26"
+}

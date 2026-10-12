@@ -85,7 +85,7 @@ func chain_sum(chain: Chain) -> int:
         case Chain.stop:
             return 0
         case Chain.link(value=pair):
-            const value, rest = pair
+            const value, rest = pair.copy()
             return value + chain_sum(rest)
 
 
@@ -206,7 +206,7 @@ func grow(mut nodes: Node[]) -> Unit:
     first.value += 10
     match first.left:
         case Some(inner):
-            mut changed = inner
+            mut changed = inner.copy()
             changed.value += 100
             first.left = Some(changed)
         case None:

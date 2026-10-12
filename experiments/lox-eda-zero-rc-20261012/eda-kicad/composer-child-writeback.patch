@@ -1,0 +1,13 @@
+--- a/kicad_sch_compose.my
++++ b/kicad_sch_compose.my
+@@ -663,7 +663,9 @@
+     mut step_x = 6350 + 1270
+     mut step_y = 2540 + 2 * 1270
+     for i in range(n):
+-        self.req.children[i].at = emit.Rect(x=1270 + (i % cols) * step_x, y=y0 + (i // cols) * step_y, w=6350, h=2540)
++        mut child = self.req.children[i].copy()
++        child.at = emit.Rect(x=1270 + (i % cols) * step_x, y=y0 + (i // cols) * step_y, w=6350, h=2540)
++        self.req.children[i] = child
+     mut rows = (n + cols - 1) // cols
+     return emit.Rect(x=0, y=y0, w=1270 + min(n, cols) * step_x, h=rows * step_y)
+ 

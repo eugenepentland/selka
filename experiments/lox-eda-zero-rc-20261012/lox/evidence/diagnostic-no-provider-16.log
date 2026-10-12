@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1379, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1379 after 10s
+interpreter.my:292:26: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper
+              mut fields = instance.fields
+                           ^

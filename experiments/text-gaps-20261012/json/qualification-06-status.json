@@ -1,0 +1,10 @@
+{
+  "status": "unchanged candidate05 repeat, not a packed-literal ablation",
+  "reason": "stdlib sources are embedded into compiler; candidate06 guest build reused candidate05 compiler without rebuilding after source edit",
+  "compiler_receipt": "build-receipt-05.json",
+  "runtime_sha256": "9bb22319e3db6d73daa9382979c717b2c8d8c04edc5ec972ec721290e2f7d67b",
+  "same_as_candidate05": true,
+  "native_passed": 70,
+  "native_failed": 0,
+  "proposed_source_qualification": "not established; literal rewrite reverted to archive05 source"
+}

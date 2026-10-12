@@ -1,0 +1,31 @@
+{
+  "status": "ordinary frontend admitted; checked native and caches not yet qualified",
+  "source_sha256": "bace27f035ed485fc988e7516c70e6747096ac55d70542eaf934cdad1b138275",
+  "expected_output": "tuple-generic generic-9 3 2 8\n",
+  "compiler_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.zig-cache/o/025dc4653a1221393765d525ba5f62ff/mylang",
+  "compiler_sha256": "4cfbbde4f21e17f5cb538059c68ef678fae3a7e1d8a53fa3a381017f105a038f",
+  "producer_source_checkpoint": "10f5e21af",
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.zig-cache/o/025dc4653a1221393765d525ba5f62ff/mylang",
+    "check",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A01/experiments/memory-closeout-20261012/A01/tuple-unpack-design/sources/generic_split.my",
+    "--cache-dir=.tmp/memory-closeout/A01/tuple-unpack/generic-cache"
+  ],
+  "exit_status": 0,
+  "raw_log": "raw/generic-check-1.log.gz",
+  "native_pending": true,
+  "semantic_specializations": [
+    "str",
+    "list[str]",
+    "int"
+  ],
+  "edit_case": "change final first((8,0)) call to first((9,0)); stdout last scalar becomes9",
+  "pending_result_frontend_controls": {
+    "passed": 4,
+    "failed": 0,
+    "scope": "ordinary frontend only; checked Core/native still pending",
+    "raw": "raw/result-front-check-1.json.gz"
+  }
+}

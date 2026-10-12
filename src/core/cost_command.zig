@@ -5,6 +5,7 @@ const project_entry = @import("project_entry.zig");
 const build = @import("build.zig");
 const passes = @import("passes.zig");
 const cost = @import("cost.zig");
+const ir = @import("ir.zig");
 const remarks = @import("cost_remarks.zig");
 const pipeline = @import("pipeline.zig");
 const driver = @import("driver.zig");
@@ -14,6 +15,7 @@ const query = @import("cost_query.zig");
 const lowering_cache = @import("lowering_cache.zig");
 const stage_metrics = @import("stage_metrics.zig");
 const dynamic = @import("cost_dynamic.zig");
+const zero_rc_flag = @import("mylang").zero_rc_flag;
 
 /// A malformed request is rendered as usage, with exit 2.
 pub const Request = struct {
@@ -26,7 +28,8 @@ pub const Request = struct {
     /// `--counters FILE.json`: a counting run's counts, added after the static report.
     counters: ?[]const u8 = null,
 };
-const usage = "usage: mylang cost <entry.my> [function] [--json] [--debug | --no-facts | --verify-facts] [--llvm-remarks FILE.opt.yaml] [--counters FILE.json] [--cache-dir DIR] [--no-cache | --verify-cache] [--cache-report]\n";
+const usage = "usage: mylang cost <entry.my> [function] [--json] [--debug | --no-facts | --verify-facts] " ++
+    "[--llvm-remarks FILE.opt.yaml] [--counters FILE.json] [--cache-dir DIR] [--no-cache | --verify-cache] [--cache-report] [--experimental-zero-rc]\n";
 
 /// Parse supported modes and reject flags rather than silently changing the analysis.
 pub fn parse(args: []const []const u8) ?Request {
@@ -54,7 +57,7 @@ pub fn parse(args: []const []const u8) ?Request {
         } else if (std.mem.eql(u8, arg, "--cache-dir")) {
             if (request == null or index + 1 == args.len) return null;
             index += 1;
-        } else if (std.mem.eql(u8, arg, "--no-cache") or std.mem.eql(u8, arg, "--verify-cache") or std.mem.eql(u8, arg, "--cache-report")) {
+        } else if (std.mem.eql(u8, arg, "--no-cache") or std.mem.eql(u8, arg, "--verify-cache") or std.mem.eql(u8, arg, "--cache-report") or std.mem.eql(u8, arg, zero_rc_flag)) {
             if (request == null) return null;
         } else if (std.mem.startsWith(u8, arg, "--")) return null else if (request == null) {
             request = .{ .path = arg };
@@ -93,6 +96,7 @@ pub const QueryOptions = struct {
     enabled: bool = true,
     verify: bool = false,
     report: bool = false,
+    codegen: pipeline.Codegen = .{},
 
     fn parse(args: []const []const u8) QueryOptions {
         var options: QueryOptions = .{};
@@ -109,6 +113,9 @@ pub const QueryOptions = struct {
                 options.verify = true;
             } else if (std.mem.eql(u8, args[index], "--cache-report")) {
                 options.report = true;
+            } else if (std.mem.eql(u8, args[index], zero_rc_flag)) {
+                options.codegen.single_owner = true;
+                options.codegen.zero_rc = true;
             }
         }
         return options;
@@ -128,6 +135,7 @@ pub fn outputWithQuery(given: std.process.Init, request: Request, policy: QueryO
     const entry = project_entry.resolve(a, init.io, request.path, &diagnostics) catch |err| return failure(init, diagnostics.items, err);
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
     defer session.deinit();
+    session.setOwnership(policy.codegen.single_owner, policy.codegen.zero_rc);
     entry.configure(&session);
     if (policy.enabled and !policy.verify) {
         try session.enableCache(init.gpa, policy.cache);
@@ -135,8 +143,11 @@ pub fn outputWithQuery(given: std.process.Init, request: Request, policy: QueryO
     }
     const checked = session.checkFile(a, request.path, &diagnostics) catch |err| return failure(init, diagnostics.items, err);
     entry.validate(a, &session, &diagnostics) catch |err| return failure(init, diagnostics.items, err);
+    if (policy.codegen.single_owner and !try @import("single_owner.zig").validateMode(a, checked.program, checked.src, .text, &diagnostics, policy.codegen.zero_rc)) {
+        return failure(init, diagnostics.items, error.SourceError);
+    }
     var refusal: build.Refusal = .{};
-    const input: build.Input = .{ .program = checked.program, .source = checked.src, .drop_debug = !request.debug };
+    const input = loweringInput(checked, request, policy.codegen);
     var module = (if (policy.enabled and !policy.verify) build.buildExecutableCached(a, input, &refusal, &lowering) else build.buildExecutable(a, input, &refusal)) catch |err| {
         if (err != error.Unsupported) return err;
         const at = frontend.position(checked.src, .{ .start = refusal.span, .end = refusal.span });
@@ -147,7 +158,7 @@ pub fn outputWithQuery(given: std.process.Init, request: Request, policy: QueryO
         .zig = cli_run.zigPath(init),
         .mode = if (request.debug) .debug else .release,
         .facts = if (request.mode == .verify) .verify else if (request.mode == .off) .off else .on,
-        .show = .{ .stats = true },
+        .show = .{ .stats = true, .codegen = policy.codegen },
         .cache = policy.cache,
     };
     const unit = try pipeline.unitFor(a, checked, entry.path, session.single != null);
@@ -235,4 +246,211 @@ fn failure(init: std.process.Init, text: []const u8, err: anyerror) Error!Output
     if (err == error.OutOfMemory) return error.OutOfMemory;
     try std.Io.File.stderr().writeStreamingAll(init.io, text);
     return .{ .status = if (err == error.PolicyDenied) 3 else if (err == error.ConfigurationFailed or err == error.ToolFailed or err == error.InvalidIr or err == error.WriteFailed) 2 else 1 };
+}
+
+/// Cost reports lower the same source ownership and ABI that emission verifies.
+fn loweringInput(checked: frontend.Checked, request: Request, codegen: pipeline.Codegen) build.Input {
+    return .{
+        .program = checked.program,
+        .source = checked.src,
+        .drop_debug = !request.debug,
+        .single_owner = codegen.single_owner,
+        .zero_rc = codegen.zero_rc,
+    };
+}
+
+// spec-case: NEW-CORE-ZERO-RC-3
+test "zero RC cost lowering and emission select the count-free ABI" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const arguments = [_][]const u8{ "cost.my", zero_rc_flag };
+    const request = parse(&arguments).?;
+    const policy = QueryOptions.parse(&arguments);
+    var unit = try @import("mylang").Compilation.init(a, "cost.my", "func main() -> int:\n    const value = \"value-\" + str(7)\n    return len(value)\n");
+    defer unit.deinit();
+    try unit.check();
+    const checked: frontend.Checked = .{ .program = unit.program.?, .src = unit.src };
+    var why: build.Refusal = .{};
+    var module = try build.buildExecutable(a, loweringInput(checked, request, policy.codegen), &why);
+    try std.testing.expect(module.single_owner and module.zero_rc);
+    var report: std.ArrayList(u8) = .empty;
+    const emission = try pipeline.emittedWithScratch(a, a, &module, .{ .src = checked.src, .source_path = "cost.my", .main = .{} }, .{
+        .zig = "unused",
+        .show = .{ .llvm = "unused", .codegen = policy.codegen },
+    }, &report);
+    try std.testing.expect(std.mem.indexOf(u8, emission.whole.?, "; mylang-zero-rc-v2") != null);
+    try std.testing.expect(@import("zero_rc.zig").emittedClean(emission.whole.?));
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "zero RC allocation contracts inspect borrowed views without legacy lowering" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const contracts = @import("allocation_contract.zig");
+    var compilation = try @import("mylang").Compilation.init(a, "view.my",
+        \\func prefix_length(text: str) -> int noalloc:
+        \\    const part = text.borrow(0, 2)
+        \\    return len(part)
+    );
+    const program = try compilation.checkLibraryProgram();
+    const legacy = try contracts.collectProgram(a, program, compilation.src);
+    try std.testing.expectEqual(@as(usize, 1), legacy.len);
+    try std.testing.expect(legacy[0].unsupported != null);
+    const owned = try contracts.collectProgramWithOwnership(a, program, compilation.src, .{ .single_owner = true, .zero_rc = true });
+    try std.testing.expectEqual(@as(usize, 0), owned.len);
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "zero RC allocation contracts count independent encode and buffer reverse copies" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const contracts = @import("allocation_contract.zig");
+    var compilation = try @import("mylang").Compilation.init(a, "encode.my",
+        \\func encoded(text: str) -> bytes noalloc:
+        \\    return text.encode()
+    );
+    const program = try compilation.checkLibraryProgram();
+    const legacy = try contracts.collectProgram(a, program, compilation.src);
+    try std.testing.expectEqual(@as(usize, 0), legacy.len);
+    const owned = try contracts.collectProgramWithOwnership(a, program, compilation.src, .{ .single_owner = true, .zero_rc = true });
+    try std.testing.expectEqual(@as(usize, 1), owned.len);
+    try std.testing.expect(owned[0].unsupported == null and !owned[0].unresolved);
+    var copying = try @import("mylang").Compilation.init(a, "copy.my",
+        \\func copied(text: str) -> str noalloc:
+        \\    return text.copy()
+    );
+    const copied_program = try copying.checkLibraryProgram();
+    const copies = try contracts.collectProgramWithOwnership(a, copied_program, copying.src, .{ .single_owner = true, .zero_rc = true });
+    try std.testing.expectEqual(@as(usize, 1), copies.len);
+    for ([_]bool{ false, true }) |zero_rc| {
+        var module: ir.Module = .{ .single_owner = zero_rc, .zero_rc = zero_rc };
+        try module.functions.append(a, .{ .name = "myl_core_buffer_reverse", .signature = .{ .params = &.{.byte_buffer}, .ret = .byte_buffer, .linkage = .runtime_c } });
+        const function: ir.Function = .{ .name = "caller", .signature = .{ .params = &.{}, .ret = .void } };
+        try std.testing.expectEqual(cost.Allocation.may, cost.allocation(&module, &function, .{ .op = .call, .a = @fromBackingInt(0), .ty = .byte_buffer }));
+    }
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "zero RC allocation contracts audit borrowed identity queries without source extern authority" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var module: ir.Module = .{ .single_owner = true, .zero_rc = true };
+    const list = try module.intern(a, .{ .list = .i64 });
+    try module.functions.append(a, .{ .name = "myl_core_owned_same_block", .signature = .{ .params = &.{ list, list }, .ret = .i64, .linkage = .runtime_c } });
+    const call: ir.Inst = .{ .op = .call, .a = @fromBackingInt(0), .ty = .i64 };
+    try std.testing.expectEqual(cost.Allocation.never, cost.allocation(&module, &module.functions.items[0], call));
+    // A source-spanned foreign declaration cannot claim the compiler's audit.
+    module.functions.items[0].signature.linkage = .extern_c;
+    module.functions.items[0].span = 13;
+    try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, &module.functions.items[0], call));
+    var foreign = try @import("mylang").Compilation.init(a, "foreign.my",
+        \\extern func myl_core_owned_same_block(host: Host) -> int effects(host)
+        \\func bounded(host: Host) -> int noalloc:
+        \\    return myl_core_owned_same_block(host)
+    );
+    try std.testing.expectError(error.SourceError, foreign.checkLibraryProgram());
+    try std.testing.expectEqualStrings("E_EXTERN_SYMBOL", foreign.diagnostics.items[0].code);
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "zero RC allocation contracts require validated aggregate provider pin markers" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var module: ir.Module = .{ .single_owner = true, .zero_rc = true };
+    const record = try module.intern(a, .{ .record = &.{ .i64, .capability } });
+    const canonical = try std.fmt.allocPrint(a, "{s}{d}", .{ @import("aggregate_provider.zig").prefix, @backingInt(record) });
+    const marker: ir.Function = .{ .name = canonical, .signature = .{ .params = &.{record}, .ret = .void, .linkage = .runtime_c } };
+    try module.functions.append(a, marker);
+    const call: ir.Inst = .{ .op = .call, .a = @fromBackingInt(0), .ty = .void };
+    try std.testing.expectEqual(cost.Allocation.never, cost.allocation(&module, &module.functions.items[0], call));
+    module.zero_rc = false;
+    try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, &module.functions.items[0], call));
+    module.zero_rc = true;
+    for (0..9) |invalid| {
+        module.functions.items[0] = marker;
+        const callee = &module.functions.items[0];
+        switch (invalid) {
+            0 => callee.signature.params = &.{.i64},
+            1 => callee.signature.ret = .i64,
+            2 => callee.signature.owned = 1,
+            3 => callee.signature.consumes = 1,
+            4 => callee.signature.views = 1,
+            5 => {
+                callee.signature.linkage = .extern_c;
+                callee.span = 13;
+            },
+            6 => callee.name = try std.fmt.allocPrint(a, "{s}0{d}", .{ @import("aggregate_provider.zig").prefix, @backingInt(record) }),
+            7 => callee.name = "myl_core_provider_pin_4294967295",
+            8 => callee.signature.params = &.{},
+            else => unreachable,
+        }
+        try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, callee, call));
+    }
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "zero RC allocation contracts audit scalar rounding" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var compilation = try @import("mylang").Compilation.init(a, "round.my",
+        \\func rounded(value: float, digits: int) -> float noalloc:
+        \\    return round(value, digits)
+    );
+    const program = try compilation.checkLibraryProgram();
+    const failures = try @import("allocation_contract.zig").collectProgramWithOwnership(a, program, compilation.src, .{ .single_owner = true, .zero_rc = true });
+    try std.testing.expectEqual(@as(usize, 0), failures.len);
+    var module: ir.Module = .{ .single_owner = true, .zero_rc = true };
+    try module.functions.append(a, .{ .name = "myl_core_round_float", .signature = .{ .params = &.{ .f64, .i64 }, .ret = .f64, .linkage = .runtime_c } });
+    const call: ir.Inst = .{ .op = .call, .a = @fromBackingInt(0), .ty = .f64 };
+    try std.testing.expectEqual(cost.Allocation.never, cost.allocation(&module, &module.functions.items[0], call));
+    module.functions.items[0].signature.linkage = .extern_c;
+    module.functions.items[0].span = 13;
+    try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, &module.functions.items[0], call));
+    module.functions.items[0].signature.linkage = .runtime_c;
+    module.functions.items[0].span = 0;
+    module.functions.items[0].name = "myl_core_round_float_unreviewed";
+    try std.testing.expectEqual(cost.Allocation.may, cost.allocation(&module, &module.functions.items[0], call));
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "zero RC allocation contracts require validated borrowed selection markers" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var module: ir.Module = .{ .single_owner = true, .zero_rc = true };
+    const dictionary = try module.intern(a, .{ .dict = .{ .key = .i64, .value = .str } });
+    const marker: ir.Function = .{ .name = try @import("borrow_selection.zig").name(a, dictionary, .str), .signature = .{ .params = &.{ .str, dictionary, .str }, .ret = .str, .linkage = .runtime_c } };
+    try module.functions.append(a, marker);
+    const call: ir.Inst = .{ .op = .call, .a = @fromBackingInt(0), .ty = .str };
+    try std.testing.expectEqual(cost.Allocation.never, cost.allocation(&module, &module.functions.items[0], call));
+    module.zero_rc = false;
+    try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, &module.functions.items[0], call));
+    module.zero_rc = true;
+    for (0..10) |invalid| {
+        module.functions.items[0] = marker;
+        const callee = &module.functions.items[0];
+        switch (invalid) {
+            0 => callee.signature.params = &.{ .str, dictionary },
+            1 => callee.signature.ret = .i64,
+            2 => callee.signature.owned = 1,
+            3 => callee.signature.consumes = 1,
+            4 => callee.signature.views = 1,
+            5 => {
+                callee.signature.linkage = .extern_c;
+                callee.span = 13;
+            },
+            6 => callee.name = "myl_core_borrow_select_v1_01_5",
+            7 => callee.name = "myl_core_borrow_select_v1_4294967295_5",
+            8 => callee.signature.params = &.{ .str, .i64, .str },
+            9 => try callee.blocks.append(a, .{}),
+            else => unreachable,
+        }
+        try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, callee, call));
+    }
 }

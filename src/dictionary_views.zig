@@ -98,10 +98,19 @@ pub fn construct(comptime Checker: type, checker: *Checker, span: Span, mapping:
     return b.block(&.{}, try b.node(ty, .{ .record = fields }));
 }
 
-/// Extract the retained mapping from a checked live-view expression.
+/// Extract an immediately consumed projection's mapping, preserving evaluation.
 pub fn owner(comptime Checker: type, checker: *Checker, span: Span, view: typed.NodeId) Error!typed.NodeId {
-    const ty = checker.nodes.items[@backingInt(view)].ty;
+    const expression = checker.nodes.items[@backingInt(view)];
+    const ty = expression.ty;
     const b: collections.Builder(Checker) = .{ .checker = checker, .span = span };
+    // Constructed projections need no owner-bearing intermediate record.
+    // Keep any receiver setup before the projected mapping's evaluation.
+    if (expression.data == .block_value) {
+        const block = expression.data.block_value;
+        const mapping = try owner(Checker, checker, span, block.value);
+        return b.node(checker.nodes.items[@backingInt(mapping)].ty, .{ .block_value = .{ .body = block.body, .value = mapping } });
+    }
+    if (expression.data == .record) return expression.data.record[0].value;
     return b.node(checker.catalog.records[ty.recordIndex()].fields[0].ty, .{ .field = .{ .base = view, .index = 0 } });
 }
 
@@ -132,6 +141,7 @@ pub fn at(comptime Checker: type, checker: *Checker, span: Span, mapping: typed.
 pub fn snapshot(comptime Checker: type, checker: *Checker, span: Span, view: typed.NodeId, kind: Kind) Error!typed.Node {
     const b: collections.Builder(Checker) = .{ .checker = checker, .span = span };
     const mapping = try owner(Checker, checker, span, view);
+    if (kind == .keys or kind == .values) return b.access(mapping, if (kind == .keys) .keys else .values, &.{}, false);
     const mapping_type = checker.nodes.items[@backingInt(mapping)].ty;
     const value_type = try element(&checker.catalog, mapping_type, kind, span);
     const result_type = try collections.listType(&checker.catalog, value_type, span);
@@ -140,7 +150,7 @@ pub fn snapshot(comptime Checker: type, checker: *Checker, span: Span, view: typ
     const count = try b.local(.i64);
     const cursor = try b.local(.i64);
     const i = try b.read(cursor);
-    const value = try at(Checker, checker, span, input, i, kind);
+    const value = try copiedItem(Checker, checker, span, input, i);
     const loop_id = checker.loops.next;
     checker.loops.next += 1;
     return b.block(&.{
@@ -155,6 +165,25 @@ pub fn snapshot(comptime Checker: type, checker: *Checker, span: Span, view: typ
             .step = try b.stmt(.{ .assign = .{ .slot = cursor, .value = try b.binary(.add, i, try b.integer(1), .i64) } }),
         } }),
     }, try b.read(output));
+}
+
+fn copiedItem(comptime Checker: type, checker: *Checker, span: Span, mapping: typed.LocalId, position: typed.NodeId) Error!typed.NodeId {
+    const b: collections.Builder(Checker) = .{ .checker = checker, .span = span };
+    const key = try copiedProjection(Checker, b, try b.operation(mapping, .key_at, &.{position}));
+    const value = try copiedProjection(Checker, b, try b.operation(mapping, .value_at, &.{position}));
+    const item = try element(&checker.catalog, checker.locals.items[@backingInt(mapping)].ty, .items, span);
+    const fields = try checker.allocator.dupe(typed.FieldInit, &.{
+        .{ .index = 0, .value = key },
+        .{ .index = 1, .value = value },
+    });
+    return b.node(item, .{ .record = fields });
+}
+
+/// Scalar projections already are independent values; only aggregates need copy lowering.
+fn copiedProjection(comptime Checker: type, b: collections.Builder(Checker), input: typed.NodeId) Error!typed.NodeId {
+    if (!b.checker.nodes.items[@backingInt(input)].ty.isAggregate()) return input;
+    const copied = try b.access(input, .copy, &.{}, false);
+    return b.node(copied.ty, copied.data);
 }
 
 /// Test membership in a directly consumed projection without allocating a snapshot.

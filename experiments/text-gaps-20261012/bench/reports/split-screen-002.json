@@ -1,0 +1,64 @@
+{
+  "schema": "text-gap-screen-summary-v1",
+  "rows": [
+    {
+      "case": "string_split",
+      "profile": "large",
+      "iterations": 1968,
+      "medians_ns": {
+        "checked-baseline": 65806.50152439025,
+        "checked-candidate": 28870.17886178862,
+        "rust": 27689.514227642278
+      },
+      "candidate_ratios": {
+        "checked-baseline": 0.4387131695655983,
+        "rust": 1.0426394130442236
+      },
+      "raw_ranges_ns": {
+        "checked-baseline": [
+          65622.32723577236,
+          66445.26981707317
+        ],
+        "checked-candidate": [
+          28668.595528455284,
+          28936.924796747968
+        ],
+        "rust": [
+          27364.86331300813,
+          28129.3125
+        ]
+      },
+      "receipt_sha256": "1fc568e755b9f4e570b9c00448eca9c9f29b204c0e969722a0780cec8c9680d1"
+    },
+    {
+      "case": "string_split",
+      "profile": "small",
+      "iterations": 103519,
+      "medians_ns": {
+        "checked-baseline": 1131.0146832948542,
+        "checked-candidate": 501.38911697369565,
+        "rust": 541.2497512533931
+      },
+      "candidate_ratios": {
+        "checked-baseline": 0.44330911382428456,
+        "rust": 0.9263544524733902
+      },
+      "raw_ranges_ns": {
+        "checked-baseline": [
+          1121.7908113486412,
+          1144.3305480153401
+        ],
+        "checked-candidate": [
+          499.5352543977434,
+          517.9822061650518
+        ],
+        "rust": [
+          528.454187154049,
+          550.8382808952946
+        ]
+      },
+      "receipt_sha256": "ee879ad8be013dda04a59d9d41bc7d9a0c8dc9d8aebc6f17379d47df210bb3cd"
+    }
+  ],
+  "limitation": "Exploratory5round paired screen only,1warmup,3arms,noRSS/count phase. No final target claim or pooling with15round final evidence."
+}

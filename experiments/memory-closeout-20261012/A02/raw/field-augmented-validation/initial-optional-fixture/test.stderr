@@ -1,0 +1,17 @@
+guardian/test: 1 test(s) selected by filter: "zero RC A02 field augmentation"
+A02 field augmentation build: /home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/tmp/0Ja5b-trT7TQ7ae7/methods.my:46:11: error[E_TYPE]: operation requires a record value
+      maybe.items += ["optional"]
+            ^
+
+1 a02_field_augmented_test.test.zero RC A02 field augmentation preserves exact receiver ownership...FAIL (TestUnexpectedResult)
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x1281079 in expect (std.zig)
+    if (!ok) return error.TestUnexpectedResult;
+             ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/src/core/a02_field_augmented_test.zig:28:9: 0x1282391 in test.zero RC A02 field augmentation preserves exact receiver ownership (root_test.zig)
+        try std.testing.expect(built.term == .exited and built.term.exited == 0);
+        ^
+0 passed; 0 skipped; 1 failed.
+guardian/test: test wall 0.09s; slowest over 50ms:
+guardian/test:   0.09s  a02_field_augmented_test.test.zero RC A02 field augmentation preserves exact receiver ownership
+guardian/test: FAIL — 1 failed of 1
+guardian/test: RESULT {"passed":0,"failed":1,"skipped":0}

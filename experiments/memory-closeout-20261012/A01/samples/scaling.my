@@ -1,0 +1,36 @@
+import parallel
+
+func number(text: str) -> int:
+    match parse_int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+func cheap(value: int) -> int:
+    return value * 3 + 1
+
+func expensive(value: int) -> int:
+    mut result = value
+    for i in range(1000 + value % 17):
+        result = (result * 17 + i) % 1000003
+    return result
+
+func main(args: str[], out: Stream) -> int:
+    const size = number(args[0])
+    const repetitions = number(args[1])
+    mut values: int[] = []
+    for i in range(size):
+        values.append(i)
+    mut checksum = 0
+    for repetition in range(repetitions):
+        if args[2] == "expensive":
+            const result = parallel.map(values, expensive)
+            for value in result:
+                checksum += value
+        else:
+            const result = parallel.map(values, cheap)
+            for value in result:
+                checksum += value
+    out.print(checksum)
+    return 0

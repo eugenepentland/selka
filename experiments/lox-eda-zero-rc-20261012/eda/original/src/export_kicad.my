@@ -1,0 +1,285 @@
+
+import eval_env as env_mod
+import flat_netlist as flat_netlist
+import export_kicad_model as model_mod
+import zipfile as zipfile
+import export_kicad_sch as sch_mod
+import export_kicad_footprint as footprint_mod
+import export_kicad_netlist as netlist_mod
+import infra_fs
+import infra_log as log
+import lib_limits
+import stdlib
+import support_strs as strs
+import byte_builder
+export flat_netlist.FlatInstance
+export flat_netlist.FlatNet
+export flat_netlist.FlatPin
+export flat_netlist.uuid_from_id
+export flat_netlist.flatten_and_merge_nets
+export flat_netlist.flatten_and_merge_nets_mapped
+export model_mod.ModelTransform
+export model_mod.load_model_config
+export model_mod.export_section_layout
+export model_mod.export_footprints
+export model_mod.parse_float3
+
+public record BundleOptions:
+    schematic: bool = False
+
+# Private Zig helper exports retained for original sibling tests.
+export flat_netlist.collect_instances
+export netlist_mod.write_netlist
+export footprint_mod.export_footprint_mod
+
+public func kicad_name_is_unsafe(name: bytes) -> bool:
+    return len(name) == 0 or name.find(b"/") >= 0 or name.find(b"\\") >= 0 or name.find(b"..") >= 0
+
+
+public func sanitize_kicad_name(err: Stream, kicad_name: bytes) -> bytes:
+    if not kicad_name_is_unsafe(kicad_name):
+        return kicad_name
+    mut w = byte_builder.create()
+    if len(kicad_name) == 0:
+        byte_builder.append(mut w, b"_")
+    else:
+        for c in kicad_name:
+            mut replacement = c
+            if c == 47 or c == 92 or c == 46:
+                replacement = 95
+            _ = byte_builder.append_byte(mut w, replacement)
+    mut safe = byte_builder.finish(w)
+    log.warn(err, b"export-kicad: unsafe footprint name '" + kicad_name + b"' sanitized to '" + safe + b"' (path-traversal guard)")
+    return safe
+
+
+func build_pad_map(fs: Filesystem, instances: flat_netlist.FlatInstance[], project_dir: str) -> dict[str, bytes[]]:
+    mut fp_pad_map: dict[str, bytes[]] = {}
+    for inst in instances:
+        mut key = strs.text(inst.footprint)
+        if len(inst.footprint) == 0 or key in fp_pad_map:
+            continue
+        mut fp_src = stdlib.read(fs, project_dir, "lib/footprints/" + key + ".sexp", lib_limits.max_footprint_bytes)
+        if fp_src is None:
+            continue
+        match netlist_mod.extract_pad_names(fp_src):
+            case Err(_):
+                continue
+            case Ok(pads):
+                fp_pad_map[key] = pads
+    return fp_pad_map
+
+
+public func export_kicad(fs: Filesystem, err: Stream, block: env_mod.DesignBlock, project_dir: str, output_dir: str, design_name: bytes, opts: BundleOptions) -> Result[Unit, str]:
+    mut fp_dir = output_dir + "/footprints.pretty"
+    mut model_dir = output_dir + "/models"
+    match infra_fs.make_path(fs, output_dir):
+        case Err(e):
+            log.warn(err, f"Failed to create output dir {output_dir}: {e}".encode())
+            return Err(e)
+        case Ok(_):
+            pass
+    match infra_fs.make_path(fs, fp_dir):
+        case Err(e2):
+            log.warn(err, f"Failed to create footprints dir: {e2}".encode())
+            return Err(e2)
+        case Ok(_):
+            pass
+    match infra_fs.make_path(fs, model_dir):
+        case Err(e3):
+            log.warn(err, f"Failed to create models dir: {e3}".encode())
+            return Err(e3)
+        case Ok(_):
+            pass
+    mut instances: flat_netlist.FlatInstance[] = []
+    mut nets: flat_netlist.FlatNet[] = []
+    flat_netlist.collect_instances(block, b"", mut instances)
+    flat_netlist.flatten_and_merge_nets(block, mut nets)
+    mut fp_name_map: dict[str, bytes] = {}
+    mut processed_fps: set[str] = set()
+    mut fp_components: dict[str, bytes] = {}
+    mut seen_kicad_names: dict[str, bytes] = {}
+    mut model_cfg = model_mod.load_model_config(fs, project_dir)
+    for inst in instances:
+        mut key = strs.text(inst.footprint)
+        if len(inst.footprint) == 0 or key in processed_fps:
+            continue
+        processed_fps.add(key)
+        fp_components[key] = inst.component
+        mut fp_sub = "lib/footprints/" + key + ".sexp"
+        mut fp_source = stdlib.read(fs, project_dir, fp_sub, lib_limits.max_footprint_bytes)
+        if fp_source is None:
+            log.warn(err, f"cannot read footprint {fp_sub} under {project_dir} or the standard library".encode())
+            fp_name_map[key] = inst.footprint
+            continue
+        mut declared_name = inst.footprint
+        match netlist_mod.extract_footprint_name(fp_source):
+            case Ok(name):
+                declared_name = name
+            case Err(_):
+                pass
+        mut kicad_name = sanitize_kicad_name(err, declared_name)
+        mut nk = strs.text(kicad_name)
+        if nk in seen_kicad_names:
+            mut first = seen_kicad_names[nk]
+            if first != inst.footprint:
+                log.warn(err, b"export-kicad: footprints '" + first + b"' and '" + inst.footprint + b"' both declare KiCad name '" + kicad_name + b"' \xe2\x80\x94 the .kicad_mod will be overwritten")
+        else:
+            seen_kicad_names[nk] = inst.footprint
+        fp_name_map[key] = kicad_name
+        mut model_name: bytes? = None
+        mut model_offset: float[]? = None
+        mut model_rotation: float[]? = None
+        if key in model_cfg:
+            mut cfg = model_cfg[key]
+            model_name = cfg.model
+            model_offset = Some(cfg.offset)
+            model_rotation = Some(cfg.rotation)
+        if model_name is None:
+            model_name = footprint_mod.find_model_file(fs, project_dir, inst.footprint, inst.component)
+        mut mod_output = b""
+        match model_mod.build_kicad_mod(fs, err, project_dir, inst.footprint, fp_source, model_name, model_offset, model_rotation):
+            case Err(e4):
+                log.warn(err, b"failed to convert footprint " + inst.footprint + b": " + e4.encode())
+                continue
+            case Ok(converted):
+                mod_output = converted
+        mut mod_path = fp_dir + "/" + nk + ".kicad_mod"
+        try infra_fs.write_file(fs, mod_path, mod_output)
+        log.progress(err, f"  Wrote {mod_path}".encode())
+        if model_name is not None:
+            mut src_path = project_dir + "/lib/models/" + strs.text(model_name)
+            mut dst_path = model_dir + "/" + strs.text(model_name)
+            match infra_fs.copy_file(fs, src_path, dst_path):
+                case Err(e5):
+                    log.warn(err, b"failed to copy model " + model_name + b": " + e5.encode())
+                case Ok(_):
+                    pass
+            log.progress(err, b"  Copied model " + model_name)
+    mut net_path = output_dir + "/" + strs.text(design_name) + ".net"
+    mut fp_pad_map = build_pad_map(fs, instances, project_dir)
+    mut netlist = netlist_mod.write_netlist(design_name, instances, nets, fp_name_map, fp_pad_map)
+    try infra_fs.write_file(fs, net_path, netlist)
+    log.progress(err, f"  Wrote {net_path}".encode())
+    if opts.schematic:
+        try write_schematic_into(fs, err, block, project_dir, output_dir, design_name)
+    return Ok(())
+
+
+func write_schematic_into(fs: Filesystem, err: Stream, block: env_mod.DesignBlock, project_dir: str, output_dir: str, design_name: bytes) -> Result[Unit, str]:
+    mut output = try sch_mod.export_sch(fs, err, block, project_dir, design_name, sch_mod.Options())
+    for f in output.files:
+        mut path = strs.path_join([output_dir, strs.text(f.name)])
+        try infra_fs.write_file(fs, path, f.bytes)
+        log.progress(err, f"  Wrote {path}".encode())
+    for f2 in output.sidecars:
+        mut path2 = strs.path_join([output_dir, strs.text(f2.name)])
+        if fs.exists(path2):
+            continue
+        try infra_fs.write_file(fs, path2, f2.bytes)
+        log.progress(err, f"  Wrote {path2}".encode())
+    return Ok(())
+
+
+public func export_netlist_only(fs: Filesystem, block: env_mod.DesignBlock, project_dir: str, design_name: bytes) -> Result[bytes, str]:
+    mut instances: flat_netlist.FlatInstance[] = []
+    mut nets: flat_netlist.FlatNet[] = []
+    flat_netlist.collect_instances(block, b"", mut instances)
+    flat_netlist.flatten_and_merge_nets(block, mut nets)
+    mut fp_name_map: dict[str, bytes] = {}
+    mut processed_fps: set[str] = set()
+    for inst in instances:
+        mut key = strs.text(inst.footprint)
+        if len(inst.footprint) == 0 or key in processed_fps:
+            continue
+        processed_fps.add(key)
+        mut fp_source = stdlib.read(fs, project_dir, "lib/footprints/" + key + ".sexp", lib_limits.max_footprint_bytes)
+        if fp_source is None:
+            fp_name_map[key] = inst.footprint
+            continue
+        mut kicad_name = inst.footprint
+        match netlist_mod.extract_footprint_name(fp_source):
+            case Ok(name):
+                kicad_name = name
+            case Err(_):
+                pass
+        fp_name_map[key] = kicad_name
+    mut fp_pad_map = build_pad_map(fs, instances, project_dir)
+    return Ok(netlist_mod.write_netlist(design_name, instances, nets, fp_name_map, fp_pad_map))
+
+
+public func export_kicad_entries(fs: Filesystem, err: Stream, block: env_mod.DesignBlock, project_dir: str, design_name: bytes, opts: BundleOptions) -> Result[zipfile.Entry[], str]:
+    mut instances: flat_netlist.FlatInstance[] = []
+    mut nets: flat_netlist.FlatNet[] = []
+    flat_netlist.collect_instances(block, b"", mut instances)
+    flat_netlist.flatten_and_merge_nets(block, mut nets)
+    mut fp_name_map: dict[str, bytes] = {}
+    mut processed_fps: set[str] = set()
+    mut seen_kicad_names: dict[str, bytes] = {}
+    mut zip_files: zipfile.Entry[] = []
+    mut model_cfg = model_mod.load_model_config(fs, project_dir)
+    for inst in instances:
+        mut key = strs.text(inst.footprint)
+        if len(inst.footprint) == 0 or key in processed_fps:
+            continue
+        processed_fps.add(key)
+        mut fp_source = stdlib.read(fs, project_dir, "lib/footprints/" + key + ".sexp", lib_limits.max_footprint_bytes)
+        if fp_source is None:
+            fp_name_map[key] = inst.footprint
+            continue
+        mut declared_name = inst.footprint
+        match netlist_mod.extract_footprint_name(fp_source):
+            case Ok(name):
+                declared_name = name
+            case Err(_):
+                pass
+        mut kicad_name = sanitize_kicad_name(err, declared_name)
+        mut nk = strs.text(kicad_name)
+        if nk in seen_kicad_names:
+            mut first = seen_kicad_names[nk]
+            if first != inst.footprint:
+                log.warn(err, b"export-kicad: footprints '" + first + b"' and '" + inst.footprint + b"' both declare KiCad name '" + kicad_name + b"' \xe2\x80\x94 the .kicad_mod will be overwritten in the zip")
+        else:
+            seen_kicad_names[nk] = inst.footprint
+        fp_name_map[key] = kicad_name
+        mut model_name: bytes? = None
+        mut model_offset: float[]? = None
+        mut model_rotation: float[]? = None
+        if key in model_cfg:
+            mut cfg = model_cfg[key]
+            model_name = cfg.model
+            model_offset = Some(cfg.offset)
+            model_rotation = Some(cfg.rotation)
+        if model_name is None:
+            model_name = footprint_mod.find_model_file(fs, project_dir, inst.footprint, inst.component)
+        mut mod_output = b""
+        match model_mod.build_kicad_mod(fs, err, project_dir, inst.footprint, fp_source, model_name, model_offset, model_rotation):
+            case Err(_):
+                continue
+            case Ok(converted):
+                mod_output = converted
+        zip_files.append(zipfile.Entry(name=b"footprints.pretty/" + kicad_name + b".kicad_mod", data=mod_output))
+        if model_name is not None:
+            mut src_path = project_dir + "/lib/models/" + strs.text(model_name)
+            match infra_fs.read_file_alloc(fs, src_path, 20971520):
+                case Err(_):
+                    continue
+                case Ok(model_data):
+                    zip_files.append(zipfile.Entry(name=b"models/" + model_name, data=model_data))
+    mut fp_pad_map = build_pad_map(fs, instances, project_dir)
+    mut netlist = netlist_mod.write_netlist(design_name, instances, nets, fp_name_map, fp_pad_map)
+    zip_files.append(zipfile.Entry(name=design_name + b".net", data=netlist))
+    if opts.schematic:
+        mut sch = try sch_mod.export_sch(fs, err, block, project_dir, design_name, sch_mod.Options())
+        for f in sch.files:
+            zip_files.append(zipfile.Entry(name=f.name, data=f.bytes))
+        for f2 in sch.sidecars:
+            zip_files.append(zipfile.Entry(name=f2.name, data=f2.bytes))
+    return Ok(zip_files)
+
+
+public func export_kicad_zip(fs: Filesystem, err: Stream, block: env_mod.DesignBlock, project_dir: str, design_name: bytes, opts: BundleOptions) -> Result[bytes, str]:
+    mut zip_files = try export_kicad_entries(fs, err, block, project_dir, design_name, opts)
+    mut zw = byte_builder.create()
+    try zipfile.write(mut zw, zip_files)
+    return Ok(byte_builder.finish(zw))

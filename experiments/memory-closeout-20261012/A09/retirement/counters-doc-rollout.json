@@ -1,0 +1,48 @@
+{
+  "current_status": "Audited opt-in documentation; no default or retirement claim",
+  "patches": [
+    {
+      "path": "experiments/memory-closeout-20261012/A09/retirement/counters-doc-c2.patch",
+      "phase": "C2 after qualified default promotion",
+      "applied": false,
+      "before_sha256": "ac4e628842ea66601fca7de1cf558f05880fc7c5149390572d31bbc0a2f8cc1c",
+      "after_sha256": "ea9b236ebe4f4dac8e2b706148a37d1f81a876abd9769f9a7eaa9f7218942dff",
+      "patch_sha256": "762845b1a23bd66fd17ce018318f633e7ae028b401e03ff2c07bd01cd714c3be",
+      "sequential_apply_check": "passed"
+    },
+    {
+      "path": "experiments/memory-closeout-20261012/A09/retirement/counters-doc-c3.patch",
+      "phase": "C3 after selector retirement",
+      "applied": false,
+      "before_sha256": "ea9b236ebe4f4dac8e2b706148a37d1f81a876abd9769f9a7eaa9f7218942dff",
+      "after_sha256": "872067ba23dc7dae670b1ff55f2a8ab5b1a15e43d7a9ab287d0c6a0e48817d47",
+      "patch_sha256": "f01c1f5811eb05b5a4961f4962140e148b5058e6158b7307c63eab0d0ef0a9d7",
+      "sequential_apply_check": "passed"
+    }
+  ],
+  "contract_files": [
+    "src/core/count_runtime.zig",
+    "src/core/runtime/core_count.h",
+    "src/core/runtime/core_count.c",
+    "src/core/emit_count.zig",
+    "src/core/emit_llvm.zig",
+    "src/core/cost_dynamic.zig",
+    "src/core/cost_command.zig",
+    "src/core/count_test.zig"
+  ],
+  "production_changes": false,
+  "source_revision": "b24dc1af6d8615985280fd78a311443ccb6b3949",
+  "contract_sha256": {
+    "src/core/count_runtime.zig": "1f98dd5f443cb411cb12a5adae0fdc2107342932089d1dc4b90b72de8d7870cc",
+    "src/core/runtime/core_count.h": "3a39d1ece245f90d88a9812e29bb59467d95d34566e33da2c384d41622eaaee7",
+    "src/core/runtime/core_count.c": "e7497cd9feb3ea3d98898223777dc805f3e56f78cbeaa6cfc6cf4d86a090a891",
+    "src/core/emit_count.zig": "ddd351ca49a3ea9248594b7a18a432c2fe84dd5323e4ecc45f226155382adf42",
+    "src/core/emit_llvm.zig": "80539b648e57a1cf4b22860ec71eb6bb608c794dd91958ffe843523638da12a8",
+    "src/core/cost_dynamic.zig": "2de580bbf78193703fdcf000ec051b7e4736e090789a140a68069b0c07a86862",
+    "src/core/cost_command.zig": "55f6889a739d909c41d48ee4f7651eb726fe2d66be49a4e9c7c0a99e4dd4bc8a",
+    "src/core/count_test.zig": "91e5f5d58d1401934a1342f96835ce56e795c721478a55c05623d35af143aab3"
+  },
+  "current_doc_sha256": "ac4e628842ea66601fca7de1cf558f05880fc7c5149390572d31bbc0a2f8cc1c",
+  "existing_validation": "count_test checked runtime tests positively assert release_unique while RC fields are zero; archived A09 counter and six-test list qualification remain separate evidence",
+  "new_tests": "None: documentation and unapplied selector patches only; source/schema/CLI audit and sequential patch checks"
+}

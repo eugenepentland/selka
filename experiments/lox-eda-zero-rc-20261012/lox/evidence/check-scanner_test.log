@@ -1,0 +1,3 @@
+scanner_test.my:12:12: error[E_SINGLE_OWNER_MOVED]: 'token' was moved or is unavailable on this path; use .copy() when both values are needed
+          if token.kind == scanner.TokenKind.EOF:
+             ^

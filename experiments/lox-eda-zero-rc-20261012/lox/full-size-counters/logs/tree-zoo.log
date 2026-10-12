@@ -1,0 +1,11 @@
+build-slot: FIFO ticket 105, position 1; waiting for memory-accounting settle delay or another measurement; waiting (0s so far)
+build-slot: FIFO ticket 105, position 1; draining active work (build1.lock); waiting (60s so far)
+build-slot: FIFO ticket 105, position 1; draining active work (build1.lock); waiting (120s so far)
+build-slot: timing slot 1, FIFO ticket 105 after 165s
+{
+  "zig-safe": {},
+  "mylang-original-rc": {},
+  "mylang-migrated-rc": {},
+  "mylang-zero-rc": {}
+}
+counted lox/tree/zoo /home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/experiments/lox-eda-zero-rc-20261012/lox/full-size-counters/tree-zoo.counted.spec.summary.json

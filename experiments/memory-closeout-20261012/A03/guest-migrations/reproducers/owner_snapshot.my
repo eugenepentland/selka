@@ -1,0 +1,25 @@
+record State:
+    names: int[]
+func replace(mut rows: int[][]) -> int:
+    rows = [[9]]
+    return 2
+func change(mut child: int[], value: int) -> int:
+    child.append(value)
+    return child[0] * 100 + len(child)
+func replace_state(mut state: State) -> int:
+    state = State(names=[8])
+    return 3
+func observe(names: int[], value: int) -> int:
+    return names[0] * 100 + value
+func main(out: Stream) -> int:
+    mut rows = [[1]]
+    const selected_index = 0
+    mut selected = rows[selected_index].copy()
+    const replacement = replace(mut rows)
+    out.print(change(mut selected, replacement))
+    out.print(rows[0][0])
+    mut state = State(names=[4])
+    const saved = state.names.copy()
+    out.print(observe(saved, replace_state(mut state)))
+    out.print(state.names[0])
+    return 0

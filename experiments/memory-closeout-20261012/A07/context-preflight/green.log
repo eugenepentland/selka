@@ -1,0 +1,8 @@
+build-slot: FIFO ticket 1111, position 11; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1111, position 3; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 1111 after 80s
+guardian/test: 1 test(s) selected by filter: "context-only"
+All 1 tests passed.
+guardian/test: test wall 0.00s
+guardian/test: PASS — 1 passed
+guardian/test: RESULT {"passed":1,"failed":0,"skipped":0}

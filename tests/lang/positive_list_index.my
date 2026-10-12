@@ -11,7 +11,7 @@ func read(mut frame: Frame) -> int:
 
 public func test_positive_and_negative_reads_keep_scalar_updates_and_snapshots() -> bool:
     mut frame = Frame(code=[7, 11, 13], ip=0)
-    mut before = frame
+    mut before = frame.copy()
     assert read(mut frame) == 7
     frame.ip = -1
     assert read(mut frame) == 13
@@ -25,7 +25,9 @@ func replace(mut frame: Frame) -> int:
 
 
 func selected(mut frame: Frame) -> int:
-    return frame.code[replace(mut frame)]
+    const captured = frame.code.copy()
+    const index = replace(mut frame)
+    return captured[index]
 
 
 public func test_index_callback_keeps_the_receiver_selected_before_replacement() -> bool:

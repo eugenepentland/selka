@@ -1,0 +1,2243 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+  "compiler_sha256": "3aa1647fd499c237083289c5d44e22efa0ceb37937ad974865275e5cfd80d65c",
+  "source_commit": "92edc7a99e6ca2c03928586bc66f6f563a93b3b2",
+  "prototype_diff": "diff --git a/src/core/fuse_slice_key.zig b/src/core/fuse_slice_key.zig\nindex 4c826492f..0d70597c8 100644\n--- a/src/core/fuse_slice_key.zig\n+++ b/src/core/fuse_slice_key.zig\n@@ -66,6 +66,7 @@ fn rewriteRecording(arena: std.mem.Allocator, module: *ir.Module, f: *ir.Functio\n     for (0..count) |index| {\n         const inst = f.insts.items[index];\n         if (inst.op == .str_from_view and onlyReads(f, module, @fromBackingInt(@intCast(index)))) {\n+            if (module.zero_rc and try updated(arena, f, module, f.resolve(inst.a))) continue;\n             f.insts.items[index] = .{ .op = .copy, .ty = .str_view, .a = inst.a, .span = inst.span };\n             try rewriteUsesRecording(arena, f, module, f.resolve(inst.a), requests);\n             changed += 1;\n@@ -132,6 +133,7 @@ pub fn onlyReads(f: *const ir.Function, module: *const ir.Module, slice: ir.Ref)\n /// source live, so an update while the view is live would copy the whole source instead\n /// of updating it in place: such a slice stays a copy.\n pub fn updated(arena: std.mem.Allocator, f: *const ir.Function, module: *const ir.Module, source: ir.Ref) std.mem.Allocator.Error!bool {\n+    if (module.zero_rc) return ownedUpdated(arena, f, module, source);\n     const aliases = try arena.alloc(bool, f.insts.items.len);\n     defer arena.free(aliases);\n     @memset(aliases, false);\n@@ -163,6 +165,86 @@ pub fn updated(arena: std.mem.Allocator, f: *const ir.Function, module: *const i\n     return false;\n }\n \n+// A checked owner cannot be retained to keep an optimizer-created view alive.\n+// Follow its borrowed parent chain and phi aliases, and leave the source slice\n+// materialized if any of those owners transfers into storage or an owning call.\n+const AliasEdge = struct { target: ir.Ref, next: u32 };\n+const no_edge = std.math.maxInt(u32);\n+\n+fn ownedUpdated(arena: std.mem.Allocator, f: *const ir.Function, module: *const ir.Module, source: ir.Ref) std.mem.Allocator.Error!bool {\n+    const length = f.insts.items.len;\n+    const heads = try arena.alloc(u32, length);\n+    defer arena.free(heads);\n+    @memset(heads, no_edge);\n+    var edges: std.ArrayList(AliasEdge) = .empty;\n+    defer edges.deinit(arena);\n+    // Reverse phi edges let each alias be visited once, including loop backedges.\n+    for (f.insts.items, 0..) |inst, index| {\n+        if (inst.op != .phi) continue;\n+        for (f.operands(inst.data)) |operand| {\n+            const owner = f.resolve(operand).index();\n+            try edges.append(arena, .{ .target = @fromBackingInt(@intCast(index)), .next = heads[owner] });\n+            heads[owner] = @intCast(edges.items.len - 1);\n+        }\n+    }\n+    const aliases = try arena.alloc(bool, length);\n+    defer arena.free(aliases);\n+    @memset(aliases, false);\n+    var pending: std.ArrayList(ir.Ref) = .empty;\n+    defer pending.deinit(arena);\n+    try alias(arena, f, aliases, &pending, source);\n+    while (pending.pop()) |ref| {\n+        const inst = f.inst(ref);\n+        if (borrowedParent(f, module, inst)) |parent| try alias(arena, f, aliases, &pending, parent);\n+        if (inst.op == .phi) for (f.operands(inst.data)) |operand| try alias(arena, f, aliases, &pending, operand);\n+        var edge = heads[ref.index()];\n+        while (edge != no_edge) : (edge = edges.items[edge].next) try alias(arena, f, aliases, &pending, edges.items[edge].target);\n+    }\n+    for (f.insts.items) |inst| {\n+        const operands = f.valueOperands(inst);\n+        for (0..operands.len()) |at| {\n+            const operand = f.resolve(operands.get(at));\n+            if (aliases[operand.index()] and f.inst(operand).op != .str_const and takesOwner(f, module, inst, at)) return true;\n+        }\n+    }\n+    return false;\n+}\n+\n+fn alias(arena: std.mem.Allocator, f: *const ir.Function, aliases: []bool, pending: *std.ArrayList(ir.Ref), value: ir.Ref) std.mem.Allocator.Error!void {\n+    const ref = f.resolve(value);\n+    if (aliases[ref.index()]) return;\n+    aliases[ref.index()] = true;\n+    try pending.append(arena, ref);\n+}\n+\n+fn borrowedParent(f: *const ir.Function, module: *const ir.Module, inst: ir.Inst) ?ir.Ref {\n+    return switch (inst.op) {\n+        .list_get, .list_get_field, .record_get, .union_payload, .box_get, .dict_entry_key, .dict_entry_value, .array_get, .str_view_of, .str_slice_view => inst.a,\n+        .call => if (module.functions.items[inst.a.index()].signature.viewSource()) |at| f.operands(inst.data)[at] else null,\n+        else => null,\n+    };\n+}\n+\n+fn takesOwner(f: *const ir.Function, module: *const ir.Module, inst: ir.Inst, at: usize) bool {\n+    if (at == 0 and inst.op.consumesOperand0()) return true;\n+    const signature: ?ir.Signature = switch (inst.op) {\n+        .call => module.functions.items[inst.a.index()].signature,\n+        .call_indirect => module.compound(f.inst(f.resolve(inst.a)).ty).@\"fn\",\n+        else => null,\n+    };\n+    if (signature) |sig| {\n+        // valueOperands includes the indirect callee before the arguments.\n+        const first: usize = if (inst.op == .call_indirect) 1 else 0;\n+        if (at < first or at - first >= 64) return false;\n+        return (sig.owned | sig.consumes) & (@as(u64, 1) << @intCast(at - first)) != 0;\n+    }\n+    return switch (inst.op) {\n+        .list_push, .record_set, .union_make, .union_take, .box_make, .box_take, .ret, .release, .record_make => true,\n+        .list_set, .list_set_field, .array_set, .dict_set_value, .dict_insert => at >= 2,\n+        else => false,\n+    };\n+}\n+\n /// The span form of a direct call of a reading helper, every parameter a borrowed `str`.\n /// The builder declares these helpers `runtime_c` (`str_eq`) or `extern_c` (the others);\n /// either way the symbol is the runtime's own, since a second definition of a `myl_core_`\ndiff --git a/src/core/root_test.zig b/src/core/root_test.zig\nindex 439f90c3e..af032209a 100644\n--- a/src/core/root_test.zig\n+++ b/src/core/root_test.zig\n@@ -131,4 +131,5 @@ comptime {\n     _ = @import(\"fuse_text_scalar_test.zig\");\n     _ = @import(\"emit_text_split_test.zig\");\n     _ = @import(\"s5_units_test.zig\");\n+    _ = @import(\"a04_slice_lifetime_test.zig\");\n }\n",
+  "harness_sha256": "2171e2bf1c871884216916de153ffa9e4bc9f3182037d51789319869936355c0",
+  "cases": {
+    "regressions/release": {
+      "compiler_sha256": "3aa1647fd499c237083289c5d44e22efa0ceb37937ad974865275e5cfd80d65c",
+      "source_sha256": "4172d60d9a1f4eb207cdc83b550ee35c309d00b9b463f1e6feac6cd083abe8b2",
+      "binary_sha256": "f97b8a53be32fad5bd99b4b82621607f8038c4daf025b05cbcbaf8b4a43c42ea",
+      "llvm_sha256": "2a6f1b9ed11245b06ba574e2c54fc72681e5f1f152569e7ca9ab7583f3d8a5da",
+      "build_ns": 5643241774,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/regressions/release/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1134082,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/slices/prototype-01/regressions/release/counts-1.json",
+            "counter_sha256": "d5a04a6fa1bdc00074ff45033be8e9033ae817aa6cefc054d1c4773b03b16f4b",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 14,
+            "memory": {
+              "allocs": 23,
+              "alloc_bytes": 1568,
+              "frees": 23,
+              "reallocs": 0,
+              "peak_live_bytes": 416,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 4,
+            "allocs": 23,
+            "alloc_bytes": 1568,
+            "frees": 23,
+            "free_bytes": 1568,
+            "list_grows": 1,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 6,
+            "text_copy_bytes": 18,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 5,
+            "text_grow_bytes": 15,
+            "text_appends": 5,
+            "text_append_bytes": 5,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 416,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "regressions/debug": {
+      "compiler_sha256": "3aa1647fd499c237083289c5d44e22efa0ceb37937ad974865275e5cfd80d65c",
+      "source_sha256": "4172d60d9a1f4eb207cdc83b550ee35c309d00b9b463f1e6feac6cd083abe8b2",
+      "binary_sha256": "3d08af8ca274c5ba9ee02c35d07a4158e9a3443cb8f1d3cbef74062e15c01d94",
+      "llvm_sha256": "eb83662c319c7e9f7dcc192fb1f086db113358465c8d0256438189b28e1f7479",
+      "build_ns": 5823552273,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/regressions/debug/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1335096,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/slices/prototype-01/regressions/debug/counts-1.json",
+            "counter_sha256": "beff037734588c6eae1534332f35b496458aa5658dba938b94cc40f6810757e6",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 14,
+            "memory": {
+              "allocs": 23,
+              "alloc_bytes": 1568,
+              "frees": 23,
+              "reallocs": 0,
+              "peak_live_bytes": 416,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 4,
+            "allocs": 23,
+            "alloc_bytes": 1568,
+            "frees": 23,
+            "free_bytes": 1568,
+            "list_grows": 1,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 6,
+            "text_copy_bytes": 18,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 5,
+            "text_grow_bytes": 15,
+            "text_appends": 5,
+            "text_append_bytes": 5,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 416,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "regressions/verify": {
+      "compiler_sha256": "3aa1647fd499c237083289c5d44e22efa0ceb37937ad974865275e5cfd80d65c",
+      "source_sha256": "4172d60d9a1f4eb207cdc83b550ee35c309d00b9b463f1e6feac6cd083abe8b2",
+      "binary_sha256": "e55f003fd74501bc0603a452017896a012c7a89757b6ca8e366260c874061203",
+      "llvm_sha256": "e0ea7867b75b8b08c3feeaad280167ab2ca42a472b1b975f7278eb9427b95eb7",
+      "build_ns": 5760013985,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/regressions/verify/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1175364,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/slices/prototype-01/regressions/verify/counts-1.json",
+            "counter_sha256": "76f9f708e0d4c2eb423590ee685ecdf86ee2a714bb28ad0c7ba394972aa9d3fd",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 14,
+            "memory": {
+              "allocs": 23,
+              "alloc_bytes": 1568,
+              "frees": 23,
+              "reallocs": 0,
+              "peak_live_bytes": 416,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 4,
+            "allocs": 23,
+            "alloc_bytes": 1568,
+            "frees": 23,
+            "free_bytes": 1568,
+            "list_grows": 1,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 6,
+            "text_copy_bytes": 18,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 5,
+            "text_grow_bytes": 15,
+            "text_appends": 5,
+            "text_append_bytes": 5,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 416,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "regressions/optimized_debug": {
+      "compiler_sha256": "3aa1647fd499c237083289c5d44e22efa0ceb37937ad974865275e5cfd80d65c",
+      "source_sha256": "4172d60d9a1f4eb207cdc83b550ee35c309d00b9b463f1e6feac6cd083abe8b2",
+      "binary_sha256": "55f51c5343bf67412d234f20a46a2ec28540b48361ebe714021e870c6b71ec02",
+      "llvm_sha256": "a55f26928b58e6288e9fc615b0e4c5e24749e965b656de91f601b0340d5dcf76",
+      "build_ns": 5936393506,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/regressions/optimized_debug/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1216545,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/slices/prototype-01/regressions/optimized_debug/counts-1.json",
+            "counter_sha256": "d3c2a18799197fa316a342e6aac6cd3ca49f7ec5fdc1d61fa8e88ea9a25aba30",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 14,
+            "memory": {
+              "allocs": 23,
+              "alloc_bytes": 1568,
+              "frees": 23,
+              "reallocs": 0,
+              "peak_live_bytes": 416,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 4,
+            "allocs": 23,
+            "alloc_bytes": 1568,
+            "frees": 23,
+            "free_bytes": 1568,
+            "list_grows": 1,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 6,
+            "text_copy_bytes": 18,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 5,
+            "text_grow_bytes": 15,
+            "text_appends": 5,
+            "text_append_bytes": 5,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 416,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "regressions/no_facts": {
+      "compiler_sha256": "3aa1647fd499c237083289c5d44e22efa0ceb37937ad974865275e5cfd80d65c",
+      "source_sha256": "4172d60d9a1f4eb207cdc83b550ee35c309d00b9b463f1e6feac6cd083abe8b2",
+      "binary_sha256": "21400d88d241bc7fecf995e2d1df842ed555242ac7f0188b0e19adae2965aeab",
+      "llvm_sha256": "fc5e6dcaa37c2ee7711aa252e4bcb1b1cd86ad10b7fabb9b536fb70b2f32cd8d",
+      "build_ns": 5642594031,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/regressions/no_facts/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1064340,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/slices/prototype-01/regressions/no_facts/counts-1.json",
+            "counter_sha256": "86ffc7891c9d062922034b063fde94d0eabe4dc68d7b1818f6adeeea383d65a9",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 14,
+            "memory": {
+              "allocs": 23,
+              "alloc_bytes": 1568,
+              "frees": 23,
+              "reallocs": 0,
+              "peak_live_bytes": 416,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 4,
+            "allocs": 23,
+            "alloc_bytes": 1568,
+            "frees": 23,
+            "free_bytes": 1568,
+            "list_grows": 1,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 6,
+            "text_copy_bytes": 18,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 5,
+            "text_grow_bytes": 15,
+            "text_appends": 5,
+            "text_append_bytes": 5,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 416,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "s1_reads/release": {
+      "compiler_sha256": "3aa1647fd499c237083289c5d44e22efa0ceb37937ad974865275e5cfd80d65c",
+      "source_sha256": "b17c73ef673004b6bacc36e59a45886d2ff70bc1f142ce4039af6a35b817a654",
+      "binary_sha256": "af09952649b337ff78338bf65c28c3d2eee0151ba53152e3a2de7091f07a977b",
+      "llvm_sha256": "28ddee70f17419e4c5a9da22a16dfb11f559df556506803004bc5419f23bf2c2",
+      "build_ns": 5713934269,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/release/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1172787,
+          "stdout": "0:66,0:66,1:2,0:2,0:66,0:66,0:66,1:2,2:55,2:55,2:55,0:66,0:66,0:2,0:2,0:66,0:66,0:66,1:16,1:16,1:16,4:42,0:2,1:10,2:10,3:58,4:42,5:58,5:58,5:58,0:2,0:2,1:2,2:55,3:34,4:50,4:50,4:50,0:2,0:2,1:16,2:2,3:50,3:50,3:50,0:2,0:2,1:2,2:55,2:55,2:55,0:2,0:2,1:16,1:16,1:16,0:2,0:66,0:66,0:66,0:66,0:66,0:66\n0:66,0:66,1:10,0:2,0:66,0:66,0:66,1:10,2:15,2:15,2:15,0:66,0:66,0:2,0:2,0:66,0:66,0:66,1:2,1:2,1:2,4:10,0:2,1:10,2:15,3:10,4:10,5:10,5:10,5:10,0:2,0:2,1:2,2:2,3:2,4:2,4:2,4:2,0:2,0:2,1:2,2:2,3:2,3:2,3:2,0:2,0:2,1:10,2:15,2:15,2:15,0:2,0:2,1:2,1:2,1:2,0:2,0:66,0:66,0:66,0:66,0:66,0:66\n0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71\n614 300\nba\n2\nsame+abcdef!?3 x\u00e9!?3\n",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/slices/prototype-01/s1_reads/release/counts-1.json",
+            "counter_sha256": "8cd5e9c9132b39b755912841dde892269858c97c7e05282b91784c6976cef584",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 176,
+            "memory": {
+              "allocs": 487,
+              "alloc_bytes": 33696,
+              "frees": 487,
+              "reallocs": 0,
+              "peak_live_bytes": 4928,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 9,
+            "allocs": 487,
+            "alloc_bytes": 33696,
+            "frees": 487,
+            "free_bytes": 33696,
+            "list_grows": 13,
+            "list_grow_bytes": 1088,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 8,
+            "text_copy_bytes": 35,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 152,
+            "text_grow_bytes": 179,
+            "text_appends": 306,
+            "text_append_bytes": 413,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 4928,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "s1_reads/debug": {
+      "compiler_sha256": "3aa1647fd499c237083289c5d44e22efa0ceb37937ad974865275e5cfd80d65c",
+      "source_sha256": "b17c73ef673004b6bacc36e59a45886d2ff70bc1f142ce4039af6a35b817a654",
+      "binary_sha256": "4e0ef3e0bfdbffec81fcef8252a2f2198f20c39f87442bb37c02f9572ae71464",
+      "llvm_sha256": "dd3914acaab6dee859289773a03c66e76ae2c8ed02f8a7fc6c3acdc4ff9e619d",
+      "build_ns": 6030820167,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/debug/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1329319,
+          "stdout": "0:66,0:66,1:2,0:2,0:66,0:66,0:66,1:2,2:55,2:55,2:55,0:66,0:66,0:2,0:2,0:66,0:66,0:66,1:16,1:16,1:16,4:42,0:2,1:10,2:10,3:58,4:42,5:58,5:58,5:58,0:2,0:2,1:2,2:55,3:34,4:50,4:50,4:50,0:2,0:2,1:16,2:2,3:50,3:50,3:50,0:2,0:2,1:2,2:55,2:55,2:55,0:2,0:2,1:16,1:16,1:16,0:2,0:66,0:66,0:66,0:66,0:66,0:66\n0:66,0:66,1:10,0:2,0:66,0:66,0:66,1:10,2:15,2:15,2:15,0:66,0:66,0:2,0:2,0:66,0:66,0:66,1:2,1:2,1:2,4:10,0:2,1:10,2:15,3:10,4:10,5:10,5:10,5:10,0:2,0:2,1:2,2:2,3:2,4:2,4:2,4:2,0:2,0:2,1:2,2:2,3:2,3:2,3:2,0:2,0:2,1:10,2:15,2:15,2:15,0:2,0:2,1:2,1:2,1:2,0:2,0:66,0:66,0:66,0:66,0:66,0:66\n0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71\n614 300\nba\n2\nsame+abcdef!?3 x\u00e9!?3\n",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/slices/prototype-01/s1_reads/debug/counts-1.json",
+            "counter_sha256": "6d4390626314caca5310ff122c7fef0766b8c2323a8a02c3071ab0e197a69914",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 1486,
+            "memory": {
+              "allocs": 1797,
+              "alloc_bytes": 117536,
+              "frees": 1797,
+              "reallocs": 0,
+              "peak_live_bytes": 4928,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 9,
+            "allocs": 1797,
+            "alloc_bytes": 117536,
+            "frees": 1797,
+            "free_bytes": 117536,
+            "list_grows": 13,
+            "list_grow_bytes": 1088,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 8,
+            "text_copy_bytes": 35,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 152,
+            "text_grow_bytes": 179,
+            "text_appends": 306,
+            "text_append_bytes": 413,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 4928,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "s1_reads/verify": {
+      "compiler_sha256": "3aa1647fd499c237083289c5d44e22efa0ceb37937ad974865275e5cfd80d65c",
+      "source_sha256": "b17c73ef673004b6bacc36e59a45886d2ff70bc1f142ce4039af6a35b817a654",
+      "binary_sha256": "5529ec07663f2e6a002fb9cd443e174f4a00a65760108fdab3c05f43e0117817",
+      "llvm_sha256": "56346cff4eab65d1c9da6b7ebcb91c5f5ab904d7985b8aa682c38216b4a35d87",
+      "build_ns": 5660695744,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/verify/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1211133,
+          "stdout": "0:66,0:66,1:2,0:2,0:66,0:66,0:66,1:2,2:55,2:55,2:55,0:66,0:66,0:2,0:2,0:66,0:66,0:66,1:16,1:16,1:16,4:42,0:2,1:10,2:10,3:58,4:42,5:58,5:58,5:58,0:2,0:2,1:2,2:55,3:34,4:50,4:50,4:50,0:2,0:2,1:16,2:2,3:50,3:50,3:50,0:2,0:2,1:2,2:55,2:55,2:55,0:2,0:2,1:16,1:16,1:16,0:2,0:66,0:66,0:66,0:66,0:66,0:66\n0:66,0:66,1:10,0:2,0:66,0:66,0:66,1:10,2:15,2:15,2:15,0:66,0:66,0:2,0:2,0:66,0:66,0:66,1:2,1:2,1:2,4:10,0:2,1:10,2:15,3:10,4:10,5:10,5:10,5:10,0:2,0:2,1:2,2:2,3:2,4:2,4:2,4:2,0:2,0:2,1:2,2:2,3:2,3:2,3:2,0:2,0:2,1:10,2:15,2:15,2:15,0:2,0:2,1:2,1:2,1:2,0:2,0:66,0:66,0:66,0:66,0:66,0:66\n0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71\n614 300\nba\n2\nsame+abcdef!?3 x\u00e9!?3\n",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/slices/prototype-01/s1_reads/verify/counts-1.json",
+            "counter_sha256": "36a156ee621f3409df5a445ede04715cce6e68dbc98af160d2f30b0817e2a7cd",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 176,
+            "memory": {
+              "allocs": 487,
+              "alloc_bytes": 33696,
+              "frees": 487,
+              "reallocs": 0,
+              "peak_live_bytes": 4928,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 9,
+            "allocs": 487,
+            "alloc_bytes": 33696,
+            "frees": 487,
+            "free_bytes": 33696,
+            "list_grows": 13,
+            "list_grow_bytes": 1088,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 8,
+            "text_copy_bytes": 35,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 152,
+            "text_grow_bytes": 179,
+            "text_appends": 306,
+            "text_append_bytes": 413,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 4928,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "s1_reads/optimized_debug": {
+      "compiler_sha256": "3aa1647fd499c237083289c5d44e22efa0ceb37937ad974865275e5cfd80d65c",
+      "source_sha256": "b17c73ef673004b6bacc36e59a45886d2ff70bc1f142ce4039af6a35b817a654",
+      "binary_sha256": "3b8d1039c3c99a54a1f7fb2253509df38fa6c7d74bed3015ff4af2bea80f2392",
+      "llvm_sha256": "b1cd7839611793314fba0c247f03cb07705ca3514c005406fd203367681e555f",
+      "build_ns": 5693861994,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/optimized_debug/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1113250,
+          "stdout": "0:66,0:66,1:2,0:2,0:66,0:66,0:66,1:2,2:55,2:55,2:55,0:66,0:66,0:2,0:2,0:66,0:66,0:66,1:16,1:16,1:16,4:42,0:2,1:10,2:10,3:58,4:42,5:58,5:58,5:58,0:2,0:2,1:2,2:55,3:34,4:50,4:50,4:50,0:2,0:2,1:16,2:2,3:50,3:50,3:50,0:2,0:2,1:2,2:55,2:55,2:55,0:2,0:2,1:16,1:16,1:16,0:2,0:66,0:66,0:66,0:66,0:66,0:66\n0:66,0:66,1:10,0:2,0:66,0:66,0:66,1:10,2:15,2:15,2:15,0:66,0:66,0:2,0:2,0:66,0:66,0:66,1:2,1:2,1:2,4:10,0:2,1:10,2:15,3:10,4:10,5:10,5:10,5:10,0:2,0:2,1:2,2:2,3:2,4:2,4:2,4:2,0:2,0:2,1:2,2:2,3:2,3:2,3:2,0:2,0:2,1:10,2:15,2:15,2:15,0:2,0:2,1:2,1:2,1:2,0:2,0:66,0:66,0:66,0:66,0:66,0:66\n0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71\n614 300\nba\n2\nsame+abcdef!?3 x\u00e9!?3\n",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/slices/prototype-01/s1_reads/optimized_debug/counts-1.json",
+            "counter_sha256": "bdab031140416ce8f6b6c0121700265a8f227650c02b6dae2cdeaf49124624f1",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 176,
+            "memory": {
+              "allocs": 487,
+              "alloc_bytes": 33696,
+              "frees": 487,
+              "reallocs": 0,
+              "peak_live_bytes": 4928,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 9,
+            "allocs": 487,
+            "alloc_bytes": 33696,
+            "frees": 487,
+            "free_bytes": 33696,
+            "list_grows": 13,
+            "list_grow_bytes": 1088,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 8,
+            "text_copy_bytes": 35,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 152,
+            "text_grow_bytes": 179,
+            "text_appends": 306,
+            "text_append_bytes": 413,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 4928,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "s1_reads/no_facts": {
+      "compiler_sha256": "3aa1647fd499c237083289c5d44e22efa0ceb37937ad974865275e5cfd80d65c",
+      "source_sha256": "b17c73ef673004b6bacc36e59a45886d2ff70bc1f142ce4039af6a35b817a654",
+      "binary_sha256": "31f8c62a66101330185dc2f4f721d854d380e6cb5d12296d7bba3e6d541f958e",
+      "llvm_sha256": "65521f6acbb6093a71572176ea61a9a8cdab6f05143c7866c4dd1a093c4dd00b",
+      "build_ns": 5490292660,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/no_facts/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1263888,
+          "stdout": "0:66,0:66,1:2,0:2,0:66,0:66,0:66,1:2,2:55,2:55,2:55,0:66,0:66,0:2,0:2,0:66,0:66,0:66,1:16,1:16,1:16,4:42,0:2,1:10,2:10,3:58,4:42,5:58,5:58,5:58,0:2,0:2,1:2,2:55,3:34,4:50,4:50,4:50,0:2,0:2,1:16,2:2,3:50,3:50,3:50,0:2,0:2,1:2,2:55,2:55,2:55,0:2,0:2,1:16,1:16,1:16,0:2,0:66,0:66,0:66,0:66,0:66,0:66\n0:66,0:66,1:10,0:2,0:66,0:66,0:66,1:10,2:15,2:15,2:15,0:66,0:66,0:2,0:2,0:66,0:66,0:66,1:2,1:2,1:2,4:10,0:2,1:10,2:15,3:10,4:10,5:10,5:10,5:10,0:2,0:2,1:2,2:2,3:2,4:2,4:2,4:2,0:2,0:2,1:2,2:2,3:2,3:2,3:2,0:2,0:2,1:10,2:15,2:15,2:15,0:2,0:2,1:2,1:2,1:2,0:2,0:66,0:66,0:66,0:66,0:66,0:66\n0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71\n614 300\nba\n2\nsame+abcdef!?3 x\u00e9!?3\n",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/slices/prototype-01/s1_reads/no_facts/counts-1.json",
+            "counter_sha256": "bf161e175992b2d1c6c9440fb7fa447c809a94811fd39b38ebbb8c7d96255890",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 176,
+            "memory": {
+              "allocs": 487,
+              "alloc_bytes": 33696,
+              "frees": 487,
+              "reallocs": 0,
+              "peak_live_bytes": 4928,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 9,
+            "allocs": 487,
+            "alloc_bytes": 33696,
+            "frees": 487,
+            "free_bytes": 33696,
+            "list_grows": 13,
+            "list_grow_bytes": 1088,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 8,
+            "text_copy_bytes": 35,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 152,
+            "text_grow_bytes": 179,
+            "text_appends": 306,
+            "text_append_bytes": 413,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 4928,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "s1_reads/ordinary": {
+      "compiler_sha256": "3aa1647fd499c237083289c5d44e22efa0ceb37937ad974865275e5cfd80d65c",
+      "source_sha256": "b17c73ef673004b6bacc36e59a45886d2ff70bc1f142ce4039af6a35b817a654",
+      "binary_sha256": "aed2faefad1ea43fbd0a49e6120e98b7159d4953058887a7994efcc9666e2a94",
+      "llvm_sha256": "97da9597170ec802ad58d02002fde5bc585a777930f00803e53264b79f29e035",
+      "build_ns": 5713613433,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1156113,
+          "stdout": "0:66,0:66,1:2,0:2,0:66,0:66,0:66,1:2,2:55,2:55,2:55,0:66,0:66,0:2,0:2,0:66,0:66,0:66,1:16,1:16,1:16,4:42,0:2,1:10,2:10,3:58,4:42,5:58,5:58,5:58,0:2,0:2,1:2,2:55,3:34,4:50,4:50,4:50,0:2,0:2,1:16,2:2,3:50,3:50,3:50,0:2,0:2,1:2,2:55,2:55,2:55,0:2,0:2,1:16,1:16,1:16,0:2,0:66,0:66,0:66,0:66,0:66,0:66\n0:66,0:66,1:10,0:2,0:66,0:66,0:66,1:10,2:15,2:15,2:15,0:66,0:66,0:2,0:2,0:66,0:66,0:66,1:2,1:2,1:2,4:10,0:2,1:10,2:15,3:10,4:10,5:10,5:10,5:10,0:2,0:2,1:2,2:2,3:2,4:2,4:2,4:2,0:2,0:2,1:2,2:2,3:2,3:2,3:2,0:2,0:2,1:10,2:15,2:15,2:15,0:2,0:2,1:2,1:2,1:2,0:2,0:66,0:66,0:66,0:66,0:66,0:66\n0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71\n614 300\nba\n2\nsame+abcdef!?3 x\u00e9!?3\n",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/counts-1.json",
+            "counter_sha256": "03e95d7dacfb76dc9013178377a852488e0fc11c6b984f108d29c0533ab30f47",
+            "observed_rc_free": false,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 4,
+              "release": 187,
+              "unique_test": 156
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 146,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 2,
+            "memory": {
+              "allocs": 494,
+              "alloc_bytes": 34144,
+              "frees": 494,
+              "reallocs": 0,
+              "peak_live_bytes": 4928,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 71,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 72,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 73,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 76,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 76,
+                "column": 33,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "reads",
+                "origin": "reads",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 4,
+                "column": 6,
+                "kind": "release",
+                "count": 3
+              },
+              {
+                "function": "reads",
+                "origin": "reads",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 24,
+                "column": 41,
+                "kind": "unique_test",
+                "count": 144
+              },
+              {
+                "function": "reads",
+                "origin": "reads",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 24,
+                "column": 49,
+                "kind": "release",
+                "count": 144
+              },
+              {
+                "function": "rebound",
+                "origin": "rebound",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 29,
+                "column": 6,
+                "kind": "retain",
+                "count": 2
+              },
+              {
+                "function": "rebound",
+                "origin": "rebound",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 34,
+                "column": 15,
+                "kind": "unique_test",
+                "count": 9
+              },
+              {
+                "function": "rebound",
+                "origin": "rebound",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 29,
+                "column": 6,
+                "kind": "release",
+                "count": 2
+              },
+              {
+                "function": "rebound",
+                "origin": "rebound",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 33,
+                "column": 20,
+                "kind": "release",
+                "count": 9
+              },
+              {
+                "function": "rebound",
+                "origin": "rebound",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 37,
+                "column": 20,
+                "kind": "release",
+                "count": 9
+              },
+              {
+                "function": "rebound",
+                "origin": "rebound",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 34,
+                "column": 15,
+                "kind": "release",
+                "count": 2
+              },
+              {
+                "function": "mixed",
+                "origin": "mixed",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 62,
+                "column": 20,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "mixed",
+                "origin": "mixed",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 62,
+                "column": 20,
+                "kind": "release",
+                "count": 4
+              },
+              {
+                "function": "stored",
+                "origin": "stored",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 46,
+                "column": 15,
+                "kind": "retain",
+                "count": 2
+              },
+              {
+                "function": "stored",
+                "origin": "stored",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 49,
+                "column": 5,
+                "kind": "release",
+                "count": 2
+              },
+              {
+                "function": "stored",
+                "origin": "stored",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 54,
+                "column": 13,
+                "kind": "unique_test",
+                "count": 1
+              },
+              {
+                "function": "stored",
+                "origin": "stored",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 55,
+                "column": 16,
+                "kind": "unique_test",
+                "count": 2
+              },
+              {
+                "function": "stored",
+                "origin": "stored",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 54,
+                "column": 13,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "stored",
+                "origin": "stored",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 46,
+                "column": 15,
+                "kind": "release",
+                "count": 2
+              },
+              {
+                "function": "stored",
+                "origin": "stored",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 55,
+                "column": 26,
+                "kind": "release",
+                "count": 2
+              },
+              {
+                "function": "stored",
+                "origin": "stored",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_reads/ordinary/main.my",
+                "line": 55,
+                "column": 16,
+                "kind": "release",
+                "count": 1
+              }
+            ],
+            "runtime_rc_functions": [
+              {
+                "function": "reads",
+                "runtime_retains": 0,
+                "runtime_releases": 144,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "stored",
+                "runtime_retains": 0,
+                "runtime_releases": 2,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              }
+            ]
+          },
+          "memory": {
+            "calls": 9,
+            "allocs": 494,
+            "alloc_bytes": 34144,
+            "frees": 494,
+            "free_bytes": 34144,
+            "list_grows": 13,
+            "list_grow_bytes": 1088,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 8,
+            "text_copy_bytes": 35,
+            "runtime_retains": 0,
+            "runtime_releases": 146,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 152,
+            "text_grow_bytes": 179,
+            "text_appends": 306,
+            "text_append_bytes": 413,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 4928,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "s1_views/release": {
+      "status": "failed",
+      "error": "{'argv': ['/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang', 'build', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/release/main.my', '--zig', '/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig', '--cache-dir', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/cache', '--experimental-zero-rc', '--release', '--counters', '-o', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/release/program', '--emit-llvm', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/release/program.ll'], 'status': 1, 'elapsed_ns': 29379605, 'stdout': '', 'stderr': '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/release/main.my:4:23: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\\n      mut keys = sorted(list(d.keys()))\\n                        ^\\n'}",
+      "source_sha256": "bb33e24fa121112f51a7df46a6db6b59010f8753970b23b1bc6ce4ca0cdb75d7"
+    },
+    "s1_views/debug": {
+      "status": "failed",
+      "error": "{'argv': ['/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang', 'build', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/debug/main.my', '--zig', '/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig', '--cache-dir', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/cache', '--experimental-zero-rc', '--unoptimized', '--counters', '-o', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/debug/program', '--emit-llvm', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/debug/program.ll'], 'status': 1, 'elapsed_ns': 30015760, 'stdout': '', 'stderr': '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/debug/main.my:4:23: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\\n      mut keys = sorted(list(d.keys()))\\n                        ^\\n'}",
+      "source_sha256": "bb33e24fa121112f51a7df46a6db6b59010f8753970b23b1bc6ce4ca0cdb75d7"
+    },
+    "s1_views/verify": {
+      "status": "failed",
+      "error": "{'argv': ['/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang', 'build', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/verify/main.my', '--zig', '/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig', '--cache-dir', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/cache', '--experimental-zero-rc', '--release', '--verify-facts', '--counters', '-o', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/verify/program', '--emit-llvm', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/verify/program.ll'], 'status': 1, 'elapsed_ns': 28496721, 'stdout': '', 'stderr': '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/verify/main.my:4:23: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\\n      mut keys = sorted(list(d.keys()))\\n                        ^\\n'}",
+      "source_sha256": "bb33e24fa121112f51a7df46a6db6b59010f8753970b23b1bc6ce4ca0cdb75d7"
+    },
+    "s1_views/optimized_debug": {
+      "status": "failed",
+      "error": "{'argv': ['/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang', 'build', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/optimized_debug/main.my', '--zig', '/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig', '--cache-dir', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/cache', '--experimental-zero-rc', '--counters', '-o', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/optimized_debug/program', '--emit-llvm', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/optimized_debug/program.ll'], 'status': 1, 'elapsed_ns': 29380290, 'stdout': '', 'stderr': '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/optimized_debug/main.my:4:23: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\\n      mut keys = sorted(list(d.keys()))\\n                        ^\\n'}",
+      "source_sha256": "bb33e24fa121112f51a7df46a6db6b59010f8753970b23b1bc6ce4ca0cdb75d7"
+    },
+    "s1_views/no_facts": {
+      "status": "failed",
+      "error": "{'argv': ['/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang', 'build', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/no_facts/main.my', '--zig', '/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig', '--cache-dir', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/cache', '--experimental-zero-rc', '--release', '--no-facts', '--counters', '-o', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/no_facts/program', '--emit-llvm', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/no_facts/program.ll'], 'status': 1, 'elapsed_ns': 29578958, 'stdout': '', 'stderr': '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/no_facts/main.my:4:23: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\\n      mut keys = sorted(list(d.keys()))\\n                        ^\\n'}",
+      "source_sha256": "bb33e24fa121112f51a7df46a6db6b59010f8753970b23b1bc6ce4ca0cdb75d7"
+    },
+    "s1_views/ordinary": {
+      "compiler_sha256": "3aa1647fd499c237083289c5d44e22efa0ceb37937ad974865275e5cfd80d65c",
+      "source_sha256": "bb33e24fa121112f51a7df46a6db6b59010f8753970b23b1bc6ce4ca0cdb75d7",
+      "binary_sha256": "1c8c65beb6cc4811dc71e0bbcfdc13276af7059410cffd51107afb09b7e17696",
+      "llvm_sha256": "2e12a8445727c24c1f25e938bed00042d013c1c9bc1eadfc4c35a1eb0e22f853",
+      "build_ns": 6474616147,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1942796,
+          "stdout": "A=10,C=2,G=7,T=19 AA=2,AC=2,AG=1,AT=5,CG=2,GG=2,GT=5,TA=8,TG=1,TT=9\n26 22 0 0\nab=39,bc=25,ca=27|abcabcab!0123456\n=1,alp=2,be=1,bet=1|zz0,zz1,zz2,zz3,zz4 zz0\nab=2,ac=1,ad=1,br=2,ca=1,da=1,ra=2|ab=0,ac=3,ad=5,br=1,ca=4,da=6,ra=2\n=6,a=3,h=1,h\u00e9=1,h\u00e9\u00e9=1,\u00e9=2,\u00e9\u00e9=1,\u00e9\u00e9\u20ac=1,\u00e9\u20ac=1,\u00e9\u20ac\ud83d\ude00=1,\u20ac=1,\u20ac\ud83d\ude00=1,\u20ac\ud83d\ude00a=1,\ud83d\ude00=1,\ud83d\ude00a=2\n=74,a=5,abc=5,abcd=10,abcd\u00e9=10,bc=2,bcd=4,bcd\u00e9=4,c=2,cd=4,cd\u00e9=4,d=4,d\u00e9=4,\u00e9=4\n0:0=2,s0:0=2,s0:2=1,s0:8=3,s0:15=4,s0:16=5,s0:17=6,1:1=2,s1:1=2,1:3=1,1:9=3,1:16=4,1:17=5,1:18=6,2:2=2,s2:2=2,3:3=2,s3:3=2,4:4=2,s4:4=2,5:5=2,s5:5=2,6:6=2,s6:6=2,7:7=2,s7:7=2,8:8=2,s8:8=2,9:9=2,s9:9=2,10:10=2,s10:10=2,11:11=2,s11:11=2,12:12=2,s12:12=2,13:13=2,s13:13=2,14:14=2,s14:14=2,15:15=2,s15:15=2,16:16=2,s16:16=2,17:17=2,s17:17=2\n21 210\n997290 4 99 25022 20 99\nab=21,bc=11,bd=11,ca=11,d=1\nab=8,bc=4,ca=4\nab=4,ba=3 ab=3,bc=3,ca=2 ab=2,bc=2,cd=1,de=1,ef=1,fa=1\nzz=0|abc=2,bca=2,cab=2,zz=0\n1160 644 1\n622\n",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/counts-1.json",
+            "counter_sha256": "6558f9764cd9f6b17971597b7cc09fa8e424cb43fc0bc7d49d96e4439a9b8e60",
+            "observed_rc_free": false,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 198,
+              "release": 527,
+              "unique_test": 255
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 1962,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 244,
+            "memory": {
+              "allocs": 2933,
+              "alloc_bytes": 265120,
+              "frees": 2933,
+              "reallocs": 0,
+              "peak_live_bytes": 116056,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 209,
+                "column": 23,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 209,
+                "column": 48,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 209,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 209,
+                "column": 40,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 210,
+                "column": 19,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 210,
+                "column": 41,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 210,
+                "column": 63,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 210,
+                "column": 85,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 211,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 213,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 213,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 214,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 215,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 216,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 217,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 218,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 219,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 219,
+                "column": 69,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 220,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 221,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 222,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 222,
+                "column": 41,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 222,
+                "column": 66,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 223,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 224,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "main",
+                "origin": "main",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 207,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "summary",
+                "origin": "summary",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 3,
+                "column": 6,
+                "kind": "retain",
+                "count": 15
+              },
+              {
+                "function": "summary",
+                "origin": "summary",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 4,
+                "column": 23,
+                "kind": "retain",
+                "count": 88
+              },
+              {
+                "function": "summary",
+                "origin": "summary",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 4,
+                "column": 23,
+                "kind": "release",
+                "count": 15
+              },
+              {
+                "function": "summary",
+                "origin": "summary",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 4,
+                "column": 16,
+                "kind": "retain",
+                "count": 88
+              },
+              {
+                "function": "summary",
+                "origin": "summary",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 3,
+                "column": 6,
+                "kind": "release",
+                "count": 15
+              },
+              {
+                "function": "summary",
+                "origin": "summary",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 7,
+                "column": 34,
+                "kind": "release",
+                "count": 88
+              },
+              {
+                "function": "rebound",
+                "origin": "rebound",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 26,
+                "column": 15,
+                "kind": "unique_test",
+                "count": 7
+              },
+              {
+                "function": "rebound",
+                "origin": "rebound",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 21,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "rebound",
+                "origin": "rebound",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 28,
+                "column": 23,
+                "kind": "unique_test",
+                "count": 1
+              },
+              {
+                "function": "rebound",
+                "origin": "rebound",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 25,
+                "column": 19,
+                "kind": "release",
+                "count": 4
+              },
+              {
+                "function": "rebound",
+                "origin": "rebound",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 26,
+                "column": 17,
+                "kind": "release",
+                "count": 7
+              },
+              {
+                "function": "rebound",
+                "origin": "rebound",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 21,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "element_source",
+                "origin": "element_source",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 32,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "element_source",
+                "origin": "element_source",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 38,
+                "column": 23,
+                "kind": "unique_test",
+                "count": 1
+              },
+              {
+                "function": "element_source",
+                "origin": "element_source",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 35,
+                "column": 19,
+                "kind": "retain",
+                "count": 5
+              },
+              {
+                "function": "element_source",
+                "origin": "element_source",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 36,
+                "column": 27,
+                "kind": "release",
+                "count": 5
+              },
+              {
+                "function": "element_source",
+                "origin": "element_source",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 36,
+                "column": 9,
+                "kind": "release",
+                "count": 5
+              },
+              {
+                "function": "element_source",
+                "origin": "element_source",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 35,
+                "column": 19,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "element_source",
+                "origin": "element_source",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 35,
+                "column": 19,
+                "kind": "release",
+                "count": 4
+              },
+              {
+                "function": "element_source",
+                "origin": "element_source",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 32,
+                "column": 6,
+                "kind": "unique_test",
+                "count": 1
+              },
+              {
+                "function": "element_source",
+                "origin": "element_source",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 38,
+                "column": 31,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "two_dicts",
+                "origin": "two_dicts",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 42,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "two_dicts",
+                "origin": "two_dicts",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 50,
+                "column": 23,
+                "kind": "unique_test",
+                "count": 1
+              },
+              {
+                "function": "two_dicts",
+                "origin": "two_dicts",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 42,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "two_dicts",
+                "origin": "two_dicts",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 50,
+                "column": 31,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "scalars",
+                "origin": "scalars",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 54,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "bounds",
+                "origin": "bounds",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 64,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "foreign",
+                "origin": "foreign",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 75,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "foreign",
+                "origin": "foreign",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 82,
+                "column": 38,
+                "kind": "unique_test",
+                "count": 23
+              },
+              {
+                "function": "foreign",
+                "origin": "foreign",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 82,
+                "column": 62,
+                "kind": "release",
+                "count": 23
+              },
+              {
+                "function": "foreign",
+                "origin": "foreign",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 85,
+                "column": 36,
+                "kind": "release",
+                "count": 23
+              },
+              {
+                "function": "foreign",
+                "origin": "foreign",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 85,
+                "column": 52,
+                "kind": "release",
+                "count": 23
+              },
+              {
+                "function": "foreign",
+                "origin": "foreign",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 85,
+                "column": 68,
+                "kind": "release",
+                "count": 23
+              },
+              {
+                "function": "foreign",
+                "origin": "foreign",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 82,
+                "column": 46,
+                "kind": "release",
+                "count": 23
+              },
+              {
+                "function": "near_misses",
+                "origin": "near_misses",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 106,
+                "column": 22,
+                "kind": "unique_test",
+                "count": 1
+              },
+              {
+                "function": "near_misses",
+                "origin": "near_misses",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 99,
+                "column": 38,
+                "kind": "unique_test",
+                "count": 210
+              },
+              {
+                "function": "near_misses",
+                "origin": "near_misses",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 106,
+                "column": 30,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "near_misses",
+                "origin": "near_misses",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 99,
+                "column": 46,
+                "kind": "release",
+                "count": 210
+              },
+              {
+                "function": "deletions",
+                "origin": "deletions",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 123,
+                "column": 23,
+                "kind": "unique_test",
+                "count": 2
+              },
+              {
+                "function": "deletions",
+                "origin": "deletions",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 123,
+                "column": 51,
+                "kind": "release",
+                "count": 2
+              },
+              {
+                "function": "deletions",
+                "origin": "deletions",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 123,
+                "column": 31,
+                "kind": "release",
+                "count": 2
+              },
+              {
+                "function": "across_call",
+                "origin": "across_call",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 131,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "across_call",
+                "origin": "add_one",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 136,
+                "column": 24,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "escaping",
+                "origin": "escaping",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 146,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "escaping",
+                "origin": "escaping",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 149,
+                "column": 19,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "control",
+                "origin": "control",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 155,
+                "column": 6,
+                "kind": "release",
+                "count": 3
+              },
+              {
+                "function": "shared",
+                "origin": "shared",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 172,
+                "column": 6,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "shared",
+                "origin": "shared",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 172,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "shared",
+                "origin": "shared",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 178,
+                "column": 23,
+                "kind": "unique_test",
+                "count": 1
+              },
+              {
+                "function": "shared",
+                "origin": "shared",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 177,
+                "column": 9,
+                "kind": "unique_test",
+                "count": 3
+              },
+              {
+                "function": "shared",
+                "origin": "shared",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 177,
+                "column": 9,
+                "kind": "unique_test",
+                "count": 3
+              },
+              {
+                "function": "shared",
+                "origin": "shared",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 172,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "shared",
+                "origin": "shared",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 178,
+                "column": 31,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "shared",
+                "origin": "shared",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 177,
+                "column": 9,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "growth",
+                "origin": "growth",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 182,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "growth",
+                "origin": "growth",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 182,
+                "column": 6,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "growth",
+                "origin": "growth",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 192,
+                "column": 5,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "growth",
+                "origin": "growth",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 194,
+                "column": 24,
+                "kind": "unique_test",
+                "count": 1
+              },
+              {
+                "function": "growth",
+                "origin": "growth",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 182,
+                "column": 6,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "growth",
+                "origin": "growth",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 194,
+                "column": 51,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "growth",
+                "origin": "growth",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 194,
+                "column": 32,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "growth",
+                "origin": "growth",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/slices/prototype-01/s1_views/ordinary/main.my",
+                "line": 186,
+                "column": 15,
+                "kind": "release",
+                "count": 1
+              }
+            ],
+            "runtime_rc_functions": [
+              {
+                "function": "main",
+                "runtime_retains": 0,
+                "runtime_releases": 67,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "summary",
+                "runtime_retains": 0,
+                "runtime_releases": 260,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "rebound",
+                "runtime_retains": 0,
+                "runtime_releases": 3,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "element_source",
+                "runtime_retains": 0,
+                "runtime_releases": 4,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "two_dicts",
+                "runtime_retains": 0,
+                "runtime_releases": 14,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "scalars",
+                "runtime_retains": 0,
+                "runtime_releases": 15,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "bounds",
+                "runtime_retains": 0,
+                "runtime_releases": 14,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "foreign",
+                "runtime_retains": 0,
+                "runtime_releases": 46,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "near_misses",
+                "runtime_retains": 0,
+                "runtime_releases": 21,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "deletions",
+                "runtime_retains": 0,
+                "runtime_releases": 36,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "across_call",
+                "runtime_retains": 0,
+                "runtime_releases": 5,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "escaping",
+                "runtime_retains": 0,
+                "runtime_releases": 3,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "control",
+                "runtime_retains": 0,
+                "runtime_releases": 11,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "shared",
+                "runtime_retains": 0,
+                "runtime_releases": 3,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "growth",
+                "runtime_retains": 0,
+                "runtime_releases": 1460,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              }
+            ]
+          },
+          "memory": {
+            "calls": 43,
+            "allocs": 2933,
+            "alloc_bytes": 265120,
+            "frees": 2933,
+            "free_bytes": 265120,
+            "list_grows": 22,
+            "list_grow_bytes": 640,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 1,
+            "dict_copy_bytes": 24,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 1458,
+            "text_copy_bytes": 7256,
+            "runtime_retains": 0,
+            "runtime_releases": 1962,
+            "dict_grows": 19,
+            "dict_grow_bytes": 51840,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 358,
+            "text_grow_bytes": 1710,
+            "text_appends": 838,
+            "text_append_bytes": 2094,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 116056,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    }
+  },
+  "limitations": "Correctness, managed counters and structural audits; no timing/RSS or allocation-saving claim.",
+  "summary": {
+    "lanes": 17,
+    "failed": 5
+  }
+}

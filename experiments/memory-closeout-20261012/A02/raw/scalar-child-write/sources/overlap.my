@@ -1,0 +1,13 @@
+record Item:
+    code: int
+    payload: int[]
+record Box:
+    items: Item[]
+func inspect(values: int[], ignored: int) -> int:
+    return len(values)
+func change(mut box: Box) -> int:
+    box.items[0].code = 9
+    return 0
+func main() -> int:
+    mut box = Box(items=[Item(code=1, payload=[1])])
+    return inspect(box.items[0].payload, change(mut box))

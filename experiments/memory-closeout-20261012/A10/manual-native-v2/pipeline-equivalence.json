@@ -1,0 +1,19 @@
+{
+  "scope": "adapter code structure; runtime output equality is qualified separately",
+  "v1_sha256": "5e24265f502d59c4e0e3520f3f4fb0466d657cd84e02968199b577a24336679a",
+  "v2_sha256": "62bffd95c9c40f1388447f78ba8f5a87365a4881277f9842ecca3179a4d416c9",
+  "identical_function_asts": [
+    "sha",
+    "digest",
+    "save",
+    "environment",
+    "run",
+    "link"
+  ],
+  "source_extraction_changes": [
+    "optional exact build object with complete ELF proof",
+    "ET_REL extent and expected helper exports",
+    "versioned input provenance receipt"
+  ],
+  "native_compile_and_link_policy": "unchanged target, CPU, C/LLVM/link flags and object selection"
+}

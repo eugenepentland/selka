@@ -1,0 +1,10 @@
+record Context:
+    fs: Filesystem
+    env: Environment
+
+record Nested:
+    ctx: Context
+func main(fs: Filesystem, env: Environment) -> int:
+    const ctx = Context(fs=fs, env=env)
+    const outer = Nested(ctx=ctx)
+    return len(outer.ctx.env.names())

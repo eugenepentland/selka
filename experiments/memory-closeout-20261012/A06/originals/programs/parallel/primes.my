@@ -1,0 +1,20 @@
+public record Batch:
+    count: int
+    label: str
+
+func prime(n: int) -> bool:
+    if n < 2:
+        return False
+    mut divisor = 2
+    while divisor * divisor <= n:
+        if n % divisor == 0:
+            return False
+        divisor += 1
+    return True
+
+public func count(batch: int) -> Batch:
+    mut total = 0
+    for offset in range(1024):
+        if prime(batch * 1024 + offset):
+            total += 1
+    return Batch(count=total, label="batch-" + str(batch))

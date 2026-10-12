@@ -8,8 +8,8 @@ public func test_dynamic_repeat_list_context_and_cow() -> bool:
     mut small = filled(width)
     mut large = filled(4097)
     mut negative = filled(-width)
-    mut rows = [a] * width
-    mut saved = rows
+    mut rows = [a.copy()] * width
+    mut saved = rows.copy()
     rows[1][2] = 7
     return len(negative) == 0 and small == [0, 1, 2] and len(large) == 4097 and large[4096] == 4096 and a == b and len(octets) == 3 and len(empty) == 0 and rows[0][2] == 0 and rows[1][2] == 7 and rows[2][2] == 0 and saved[1][2] == 0
 

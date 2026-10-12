@@ -28,7 +28,7 @@ func reads(s: str, t: str) -> str:
 # A view read after its source is rebound in the same iteration.
 func rebound(s: str) -> int:
     mut total = 0
-    mut t = s
+    mut t = s.copy()
     for i in range(len(s)):
         mut head = t[0:i]
         t = t + "x"

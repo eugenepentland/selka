@@ -1,0 +1,86 @@
+{
+  "allowed_cpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "historical_spec": "experiments/parity-confirm-20261009/lox/spec.json",
+  "files": {
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/zig-release-safe/out-release-safe/bin/lox": {
+      "exists": true,
+      "sha256": "96c97215aaddd5f90ebb61a80b388289a763bf9b8e976009c09b98a3068b4b03"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/step.10000000.lox": {
+      "exists": true,
+      "sha256": "41ce85d9fb2900f55714f97a592a0797acb5e641868d277fbd550db45e93f6b9"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/zig-release/out-release/bin/lox": {
+      "exists": true,
+      "sha256": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/rust-release/target/release/lox": {
+      "exists": true,
+      "sha256": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/fib.34.lox": {
+      "exists": true,
+      "sha256": "e5c412ecb35cb4bcda97ac05f47f7cd8267f23deb0403bc5dd31126980216f45"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/string_equality.100000.lox": {
+      "exists": true,
+      "sha256": "f02eaa1982294f880a80075bc2d0eb7d5a06011d1e8e1aeb3f6b9a8dca5cfc25"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.tmp/pm/lox/invocation.1500000.lox": {
+      "exists": true,
+      "sha256": "8c24d8e0b271c1635580ce8e992c0926f67da931ebc0ea71f454559c78c6c2d3"
+    },
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/go-release/bin/lox": {
+      "exists": true,
+      "sha256": "4d458b9e5305a2be24360a9d5d9c58f7bc828c9f9433eb6bae984066c4081b63"
+    },
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/zig-safe/bin/eda-sch": {
+      "exists": true,
+      "sha256": "d520d6a084a49d9962d240a2c6effc84ccd40321ff0c46ff6422b84110971771"
+    },
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/zig-fast/bin/eda-sch": {
+      "exists": true,
+      "sha256": "a67a28006cf5815b76ff658564118cbb13d22df729ad4df19a8f6ac73a129138"
+    },
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/rust-target/release/eda-sch": {
+      "exists": true,
+      "sha256": "c63f2735c1f6799264e3839a93e0c23c6b50c5ca07b8b40bce45c5dd01f69c22"
+    },
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/go/eda-sch": {
+      "exists": true,
+      "sha256": "0ea7d48bc5aff1b7952d9572ae0beb169316df674287b9de537b51d2b4b1054e"
+    }
+  },
+  "toolchains": {
+    "/home/epentland/.cargo/bin/rustc": "rustc 1.98.1 (48a229cea 2026-09-01)",
+    "/home/epentland/.local/bin/go": "go version go1.27.0 linux/amd64",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig": "0.17.0-dev.1683+5ceec001b"
+  },
+  "go_vm_evidence": "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/ports/go/cmd/lox/main.go",
+  "go_embedded_build_info": {
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/go-release/bin/lox": "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/go-release/bin/lox: go1.27.0\n\tpath\tlox/cmd/lox\n\tmod\tlox\t(devel)\t\n\tbuild\t-buildmode=exe\n\tbuild\t-compiler=gc\n\tbuild\tCGO_ENABLED=1\n\tbuild\tCGO_CFLAGS=\n\tbuild\tCGO_CPPFLAGS=\n\tbuild\tCGO_CXXFLAGS=\n\tbuild\tCGO_LDFLAGS=\n\tbuild\tGOARCH=amd64\n\tbuild\tGOOS=linux\n\tbuild\tGOAMD64=v1\n\tbuild\tvcs=git\n\tbuild\tvcs.revision=5c8decfd4217c68ac086abc1368653f76530161a\n\tbuild\tvcs.time=2026-10-09T13:36:18Z\n\tbuild\tvcs.modified=true\n",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/go/eda-sch": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/go/eda-sch: go1.27.0\n\tpath\teda-sch/cmd/eda-sch\n\tmod\teda-sch\t(devel)\t\n\tbuild\t-buildmode=exe\n\tbuild\t-compiler=gc\n\tbuild\tCGO_ENABLED=1\n\tbuild\tCGO_CFLAGS=\n\tbuild\tCGO_CPPFLAGS=\n\tbuild\tCGO_CXXFLAGS=\n\tbuild\tCGO_LDFLAGS=\n\tbuild\tGOARCH=amd64\n\tbuild\tGOOS=linux\n\tbuild\tGOAMD64=v1\n\tbuild\tvcs=git\n\tbuild\tvcs.revision=d45e0cd472d183bb8ac64e1a3dbbf073e9c0be00\n\tbuild\tvcs.time=2026-10-08T19:49:02Z\n\tbuild\tvcs.modified=false\n"
+  },
+  "provenance_limit": "Surviving release paths match historical commands, but no old binary hashes were recorded; embedded Lox Go revision postdates fs-x runtime receipt. These are surviving executable identities, not attested original historical executables. Current source hashes are separately captured; workload oracles are checked freshly."
+}

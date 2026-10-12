@@ -6,13 +6,13 @@ record Packet:
 public func test_byte_buffer_snapshots_copies_and_places() -> bool:
     mut source = [1, 2, 3]
     mut buffer = byte_buffer(source)
-    mut copy = buffer
+    mut copy = buffer.copy()
     mut snapshot = bytes(buffer)
     if not buffer.append_byte(4):
         return False
     if copy != b"\x01\x02\x03" or snapshot != copy or len(source) != 3 or source[0] != 1 or source[1] != 2 or source[2] != 3:
         return False
-    mut packet = Packet(body=buffer)
+    mut packet = Packet(body=buffer.copy())
     if not packet.body.append_byte(5):
         return False
     return packet.body == b"\x01\x02\x03\x04\x05" and buffer == b"\x01\x02\x03\x04"

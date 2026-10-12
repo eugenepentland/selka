@@ -1,0 +1,3 @@
+experiments/text-gaps-20261012/json/textgap_json_empty_probe.my:2:28: error[E_LIST_TYPE]: operation requires a managed list
+      mut out: byte_buffer = []
+                             ^

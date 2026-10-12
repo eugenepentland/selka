@@ -1,0 +1,27 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-verify-02/zig-out/bin/mylang",
+  "compiler_sha256": "178de446d467e61aa6f7f60e3f74715f1ed5efde555f62f11f6e5e6bbba3ca26",
+  "checks_passed": 20,
+  "checks_total": 20,
+  "native_release_tests_passed": 62,
+  "native_release_tests_total": 62,
+  "native_suite_count": 10,
+  "public_api_declarations_unchanged": true,
+  "source_added_lines_vs_original": 173,
+  "source_removed_lines_vs_original": 166,
+  "extra_copy_sites_vs_original": 180,
+  "original_baseline": "EDA original/src (includes initial coordinator preparation burden in this comparison)",
+  "costs": [
+    "Owned snapshot returns/storage of managed fields use explicit copies; AST accessors return owned copies through coordinator migration.",
+    "EnvScope lookup reads fields directly instead of cloning entire scope.",
+    "Power rail comparison reads port name/net in a borrowed helper, and capacity reads scalar fields directly.",
+    "Updating indexed rail aliases copies the rail record and aliases, then replaces its dictionary entry.",
+    "Sorting rails invokes shared support_sort: coordinator chose explicit managed-element merge copies; O(n log n) copy paths remain."
+  ],
+  "reproduce": [
+    "source /home/epentland/.config/mylang/dev-env.sh",
+    "scripts/build-slot.sh build python3 experiments/lox-eda-zero-rc-20261012/eda-eval/check.py COMPILER",
+    "MYL_CORE_LEAKCHECK=1 scripts/build-slot.sh build python3 experiments/lox-eda-zero-rc-20261012/eda-eval/test.py COMPILER"
+  ],
+  "scope": "20 board_layers/diagram_membership/design_model/eval_*/flat_netlist/placement_* source and test modules; broader310tests34goldens and benchmark qualification belong to root/EDA coordinator."
+}

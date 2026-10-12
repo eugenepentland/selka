@@ -1,0 +1,96 @@
+fn main #0 params=0 ret=i64 cabi=false host=false
+  local %0 holder: Node mut
+  local %1 <collection>: Option<Node> mut
+  local %2 child: Option<Node> mut
+  local %3 <collection>: bool mut
+  local %4 <collection>: Node mut
+  local %5 <collection>: Node mut
+  local %6 <collection>: i64 mut
+  local %7 <collection>: Node mut
+  block
+    initialize %0
+      record : Node
+        field .0
+          integer : i64 0
+        field .1
+          variant : Option<Node> tag=1
+            record : Node
+              field .0
+                integer : i64 1
+              field .1
+                variant : Option<Node> tag=0
+              field .2
+                variant : Option<Node> tag=0
+        field .2
+          variant : Option<Node> tag=0
+    initialize %2
+      block_value : Option<Node>
+        block
+          initialize %1
+            field : Option<Node> .1
+              local : Node %0
+        buffer_operation : Option<Node> copy owner=%1
+    branch
+      unary : bool not
+        block_value : bool
+          block
+            match borrowed=false
+              local : Option<Node> %2
+              arm tag=1
+                initialize %3
+                  boolean : bool false
+              arm tag=0
+                initialize %3
+                  boolean : bool true
+          local : bool %3
+      block
+        discard
+          block_value : unit
+            block
+              initialize %6
+                integer : i64 20
+              initialize %5
+                block_value : Node
+                  block
+                    match borrowed=false
+                      local : Option<Node> %2
+                      arm tag=1 bind=%4
+                        block
+                      arm tag=0
+                        assertion invalidated Option narrowing
+                          boolean : bool false
+                  local : Node %4
+              initialize %5
+                block_value : Node
+                  block
+                    match borrowed=false
+                      local : Option<Node> %2
+                      arm tag=1 bind=%4
+                        block
+                      arm tag=0
+                        assertion invalidated Option narrowing
+                          boolean : bool false
+                  local : Node %4
+              assign %2
+                variant : Option<Node> tag=1
+                  update : Node
+                    local : Node %5
+                    field .0
+                      local : i64 %6
+            unit : unit ...
+        ret
+          binary : i64 sub
+            field : i64 .0
+              block_value : Node
+                block
+                  match borrowed=false
+                    local : Option<Node> %2
+                    arm tag=1 bind=%7
+                      block
+                    arm tag=0
+                      assertion invalidated Option narrowing
+                        boolean : bool false
+                local : Node %7
+            integer : i64 20
+    ret
+      integer : i64 1

@@ -1,0 +1,18 @@
+build-slot: build slot 1, FIFO ticket 915 after 0s
+release passed
+debug passed
+verify passed
+optimized_debug passed
+no_facts passed
+ordinary passed
+build-slot: FIFO ticket 916, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 916 after 5s
+first_argument_invalidated passed
+optional_receiver_invalidated passed
+first_parent_invalidated passed
+second_parent_invalidated passed
+fresh_escape passed
+selected_view passed
+affine_optional passed
+pending_result_optional passed
+{'native_lanes': 6, 'negative_cases': 8, 'failed': 0}

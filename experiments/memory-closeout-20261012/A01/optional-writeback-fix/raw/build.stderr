@@ -1,0 +1,6 @@
+/home/epentland/ai/canopy/mylang-memory-20261012-A01-optional/experiments/memory-closeout-20261012/A01/optional-writeback-fix/main.my:101:17: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          case Ok(value):
+                  ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A01-optional/experiments/memory-closeout-20261012/A01/optional-writeback-fix/main.my:106:17: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          case Ok(value):
+                  ^

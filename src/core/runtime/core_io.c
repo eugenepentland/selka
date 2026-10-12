@@ -1213,6 +1213,11 @@ void myl_core_owned_cap_scope_end(myl_block *owner, myl_block *provider) {
     (void)provider;
     myl_core_drop_owned(owner);
 }
+/* NEW-CORE-ZERO-RC-RESOURCES-1: an IR lifetime use, never an extra owner.
+   Generated cleanup uses this after destroying dependent resource values. */
+void myl_core_provider_keepalive(myl_block *provider) {
+    (void)provider;
+}
 myl_block *myl_core_result_take_pointer(myl_block *box, uint32_t field) {
     if (field != 1 && field != 2) abort();
     myl_block **slot = (myl_block **)(block_data(box) + (size_t)field * 8);

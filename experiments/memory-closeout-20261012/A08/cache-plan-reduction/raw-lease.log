@@ -1,0 +1,3 @@
+build-slot: FIFO ticket 655, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 3, FIFO ticket 655 after 10s
+[{"name": "original-raw", "command": ["/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang", "dump-ir", "/home/epentland/ai/canopy/mylang-memory-20261012-A08/selfhost/components/cache_plan/main.my", "--experimental-zero-rc"], "status": 0, "elapsed_incidental": 0.06839338387362659, "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789", "ir_sha256": "5994b63bf09d4b77c8cb3d48519c9b5e009504423faa2b4ec5b60c7afd0193c2", "bytes": 159875}]

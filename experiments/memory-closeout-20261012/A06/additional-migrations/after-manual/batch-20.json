@@ -1,0 +1,52 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+  "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7",
+  "harness_sha256": "479192191eaeb27bbafca7a851b197048022d27811f58124f18b2d4e4b007639",
+  "cases": [
+    {
+      "source": "test/core/v_row_cow.my",
+      "source_sha256": "35cfeebcaadcbff0a1d2140a5a6dc70fb3fcf0be6db95f2fd9c45328f094c552",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/v_row_cow.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "changes": []
+    },
+    {
+      "source": "test/core/v_snapshot.my",
+      "source_sha256": "83b001420922ec16368f8cc3d2188a9ab34c7f4b19d8b4a66fefd171a509bd38",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/v_snapshot.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "changes": []
+    },
+    {
+      "source": "test/core/v_wide_managed.my",
+      "source_sha256": "9539e6ce2067b6598d1f6fe647799ab01dfe9c2bfb5376fb83aa9de2eeaa5f63",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/v_wide_managed.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/v_wide_managed.my:61:5: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      bigs[1].a = 50\n      ^\n",
+      "changes": []
+    }
+  ]
+}

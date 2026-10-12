@@ -1,0 +1,90 @@
+diff --git a/build.zig b/build.zig
+--- a/build.zig
++++ b/build.zig
+@@ -549,14 +549,20 @@
+     const install_component_tool = b.addInstallFileWithDir(component_tool.getEmittedBin(), .{ .custom = "tools" }, "selka-components");
+     b.getInstallStep().dependOn(&install_component_tool.step);
+     b.step("component-builder", "Build the native bootstrap coordinator without provisioning a seed").dependOn(&install_component_tool.step);
++    const component_owned_pin = b.option([]const u8, "component-owned-compiler-pin", "Independent checked-owned component compiler source pin (optional qualification route)");
++    const component_seed_source = b.option([]const u8, "component-seed-source", "Verified source archive for provisioning the selected component compiler pin");
+     const component_build = b.addRunArtifact(component_tool);
+     component_build.addArg("--root");
+     component_build.addDirectoryArg2(b.path("."), .{ .make_absolute = true });
+     component_build.addArgs(&.{ "--zig", b.graph.zig_exe, "--install-dir" });
+     component_build.addDirectoryArg2(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components" } }, .{ .make_absolute = true });
+-    if (b.option([]const u8, "component-seed-source", "Verified source archive for provisioning the pinned component seed")) |archive| {
++    if (component_owned_pin) |pin| {
++        component_build.addArg("--owned-compiler-pin");
++        component_build.addFileArg(if (std.fs.path.isAbsolute(pin)) b.graph.cwdRelativePath(pin) else b.path(pin));
++    }
++    if (component_seed_source) |archive| {
+         component_build.addArg("--seed-source");
+-        component_build.addFileArg(b.path(archive));
++        component_build.addFileArg(if (std.fs.path.isAbsolute(archive)) b.graph.cwdRelativePath(archive) else b.path(archive));
+     }
+     component_build.setCwd(b.path("."));
+     component_build.has_side_effects = true;
+@@ -822,6 +828,14 @@
+     native_component_tests.addArtifactArg(component_tool);
+     native_component_tests.addArgs(&.{ "--zig", b.graph.zig_exe, "--component-dir" });
+     native_component_tests.addDirectoryArg2(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components" } }, .{ .make_absolute = true });
++    if (component_owned_pin) |pin| {
++        native_component_tests.addArg("--owned-compiler-pin");
++        native_component_tests.addFileArg(if (std.fs.path.isAbsolute(pin)) b.graph.cwdRelativePath(pin) else b.path(pin));
++    }
++    if (component_seed_source) |archive| {
++        native_component_tests.addArg("--seed-source");
++        native_component_tests.addFileArg(if (std.fs.path.isAbsolute(archive)) b.graph.cwdRelativePath(archive) else b.path(archive));
++    }
+     const component_test_step = b.step("test-components", "Test pure Selka, native protocol, cache and failure boundaries");
+     const component_support_tests = b.addTest(.{
+         .max_rss = rss.compile,
+diff --git a/build_test_inputs.zig b/build_test_inputs.zig
+--- a/build_test_inputs.zig
++++ b/build_test_inputs.zig
+@@ -38,12 +38,12 @@
+ 
+ /// `src/root_test.zig`, the unit root. Its guest programs also read the
+ /// runtime sources the compiler embeds, which `src/` covers.
+-pub const component_inputs = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-seed.json" };
++pub const component_inputs = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-*.json" };
+ 
+ pub const unit = [_][]const u8{
+     "selfhost/components/",
+     "selfhost/*.zig",
+-    "selfhost/component-seed.json",
++    "selfhost/component-*.json",
+     "src/",
+     "bench/parity/micro/dict_count.my",
+     "bench/parity/suite/knucleotide.my",
+@@ -71,7 +71,7 @@
+ pub const cli = [_][]const u8{
+     "selfhost/components/",
+     "selfhost/*.zig",
+-    "selfhost/component-seed.json",
++    "selfhost/component-*.json",
+     "src/",
+     "examples/",
+     "tests/guest/",
+@@ -94,7 +94,7 @@
+ 
+ /// `test/golden_parity.zig` (`test-golden`): the golden corpora and the
+ /// repository fixtures their entries name.
+-pub const golden = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-seed.json", "src/", "tests/goldens/", "examples/", "test/fixtures/" };
++pub const golden = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-*.json", "src/", "tests/goldens/", "examples/", "test/fixtures/" };
+ 
+ /// `tests/idiom_probes.py --compiler`: the probe corpus and its manifest.
+ pub const idioms = [_][]const u8{ "tests/idiom_probes.py", "tests/fixtures/idioms/" };
+@@ -245,10 +245,10 @@
+ pub const selfhost_numeric = [_][]const u8{"selfhost/"};
+ 
+ /// The independent component cache and qualification builder.
+-pub const component_builder = [_][]const u8{ "selfhost/*.zig", "selfhost/test_components.py", "selfhost/component-seed.json" };
++pub const component_builder = [_][]const u8{ "selfhost/*.zig", "selfhost/test_components.py", "selfhost/test_component_native.py", "selfhost/component-*.json" };
+ 
+ /// Qualified-seed pure tests and native protocol oracle.
+-pub const component_native = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-seed.json", "selfhost/test_component_native.py", "selfhost/tests/run_test_index_component.py", "selfhost/tests/run_cache_plan_component.py" };
++pub const component_native = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-*.json", "selfhost/test_component_native.py", "selfhost/tests/run_test_index_component.py", "selfhost/tests/run_cache_plan_component.py" };
+ 
+ /// The live .my formatting corpus, selection script and deliberate exclusions.
+ pub const my_format = [_][]const u8{

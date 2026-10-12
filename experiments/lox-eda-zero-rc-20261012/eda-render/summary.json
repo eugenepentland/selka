@@ -1,0 +1,39 @@
+{
+  "scope": "4 render_*.my modules and tests",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-verify-02/zig-out/bin/mylang",
+  "checks_passed": 4,
+  "native_release_tests_passed": 7,
+  "native_release_test_suites": 2,
+  "public_declarations_unchanged": true,
+  "original_burden": {
+    "added_lines": 140,
+    "removed_lines": 100,
+    "extra_copy_sites": 93
+  },
+  "transferred_worker_burden": {
+    "added_lines": 130,
+    "removed_lines": 92,
+    "extra_copy_sites": 78
+  },
+  "retained_behavior": [
+    "Accumulate existing output maps/sets as before, preserving public RenderCtx mutators.",
+    "Build owned output snapshots while borrowing source instances/nets; write back after loops.",
+    "Store independent FlatInst snapshots in both instances and inst_map.",
+    "Construct owned adjacency endpoints directly from borrowed bytes.",
+    "Private island-boundary helper borrows maps directly; no owned IslandAnchorInputs bundle is instantiated.",
+    "Readonly FlatInst lookup uses a borrowed helper; readonly anchor list lookups use direct field/index reads."
+  ],
+  "costs": [
+    "Output map/set snapshot cloning preserves existing contents because record-field moves are outside the checked prototype.",
+    "Instance/index snapshots and stored endpoints explicitly copy their managed fields.",
+    "Renaming map .get fallback selection copies returned bytes before changing the local selected name.",
+    "Broader EDA scene rendering and root benchmark runs measure these costs; no performance claim is made by these focused tests."
+  ],
+  "prior_eval_commit": "4397fea57",
+  "prior_guardian_resolution": "Tracked .guardian/baselines/type-size.txt was missing from sparse checkout; restoring tracked baseline allowed88/88 checks and first EVAL commit. No baseline changes or gate bypass.",
+  "reproduce": [
+    "source /home/epentland/.config/mylang/dev-env.sh",
+    "scripts/build-slot.sh build python3 experiments/lox-eda-zero-rc-20261012/eda-render/check.py COMPILER",
+    "MYL_CORE_LEAKCHECK=1 scripts/build-slot.sh build python3 experiments/lox-eda-zero-rc-20261012/eda-render/test.py COMPILER"
+  ]
+}

@@ -1,0 +1,10 @@
+build-slot: FIFO ticket 456, position 1; draining active work (gate1.lock); waiting (0s so far)
+build-slot: FIFO ticket 456, position 1; draining active work (gate1.lock); waiting (60s so far)
+build-slot: FIFO ticket 456, position 1; draining active work (gate1.lock); waiting (120s so far)
+build-slot: FIFO ticket 456, position 1; draining active work (gate1.lock); waiting (180s so far)
+build-slot: FIFO ticket 456, position 1; draining active work (gate1.lock); waiting (240s so far)
+build-slot: FIFO ticket 456, position 1; draining active work (gate1.lock); waiting (301s so far)
+build-slot: FIFO ticket 456, position 1; draining active work (gate1.lock); waiting (361s so far)
+build-slot: FIFO ticket 456, position 1; draining active work (gate1.lock); waiting (421s so far)
+build-slot: timing slot 1, FIFO ticket 456 after 451s
+text-gaps/csv-screen-002/csv_aggregate/large {'checked-baseline': True, 'checked-candidate': True, 'zig-fast': True}

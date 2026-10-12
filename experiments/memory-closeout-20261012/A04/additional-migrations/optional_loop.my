@@ -1,0 +1,17 @@
+record Labelled:
+    name: str
+    next: Labelled?
+
+
+func length(item: Labelled) -> int:
+    mut total = 1
+    mut current = item.next.copy()
+    while current is not None:
+        if len(current.name) > 0:
+            total += 1
+        current = current.next.copy()
+    return total
+
+
+func main() -> int:
+    return length(Labelled(name="a", next=Some(Labelled(name="b", next=None)))) - 2

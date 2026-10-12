@@ -500,6 +500,8 @@ fn addCore(b: *std.Build, inputs: CoreInputs) *std.Build.Step {
         module.addAnonymousImport("core_number_text_object", .{ .root_source_file = number_text.getEmittedBin() });
     }
     const step = b.step("test-core", "Run the new core's unit tests and its end-to-end slice");
+    const test_binary = b.addInstallFileWithDir(unit.getEmittedBin(), .{ .custom = "focus" }, "core-tests");
+    b.step("core-test-binary", "Compile the registered Core tests without provisioning components").dependOn(&test_binary.step);
     // Most of the root's time is end-to-end builds of guest programs, so shards
     // of the one binary run concurrently; each test uses its own temporary tree.
     const requested = b.option(usize, "core-shards", "test-core: concurrent shards of the core test root (default 8)") orelse 8;
@@ -604,14 +606,20 @@ pub fn build(b: *std.Build) void {
     const install_component_tool = b.addInstallFileWithDir(component_tool.getEmittedBin(), .{ .custom = "tools" }, "selka-components");
     b.getInstallStep().dependOn(&install_component_tool.step);
     b.step("component-builder", "Build the native bootstrap coordinator without provisioning a seed").dependOn(&install_component_tool.step);
+    const component_owned_pin = b.option([]const u8, "component-owned-compiler-pin", "Independent checked-owned component compiler source pin (optional qualification route)");
+    const component_seed_source = b.option([]const u8, "component-seed-source", "Verified source archive for provisioning the selected component compiler pin");
     const component_build = b.addRunArtifact(component_tool);
     component_build.addArg("--root");
     component_build.addDirectoryArg2(b.path("."), .{ .make_absolute = true });
     component_build.addArgs(&.{ "--zig", b.graph.zig_exe, "--install-dir" });
     component_build.addDirectoryArg2(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components" } }, .{ .make_absolute = true });
-    if (b.option([]const u8, "component-seed-source", "Verified source archive for provisioning the pinned component seed")) |archive| {
+    if (component_owned_pin) |pin| {
+        component_build.addArg("--owned-compiler-pin");
+        component_build.addFileArg(if (std.fs.path.isAbsolute(pin)) b.graph.cwdRelativePath(pin) else b.path(pin));
+    }
+    if (component_seed_source) |archive| {
         component_build.addArg("--seed-source");
-        component_build.addFileArg(b.path(archive));
+        component_build.addFileArg(if (std.fs.path.isAbsolute(archive)) b.graph.cwdRelativePath(archive) else b.path(archive));
     }
     component_build.setCwd(b.path("."));
     component_build.has_side_effects = true;
@@ -638,6 +646,8 @@ pub fn build(b: *std.Build) void {
     const affected_compiler = b.step("affected-compiler", "Install only mylang to zig-out/focus, for scripts/affected_tests.py");
     affected_compiler.dependOn(&focus_exe_step.step);
     affected_compiler.dependOn(&component_build.step);
+    const seed_compiler = b.step("seed-compiler", "Install only mylang to zig-out/focus without provisioning components");
+    seed_compiler.dependOn(&focus_exe_step.step);
     install_all = b.getInstallStep();
     const guardian_dep = b.dependency("guardian", .{ .target = target, .optimize = optimize });
     const guardian_exe = guardian_dep.artifact("guardian-check");
@@ -702,7 +712,13 @@ pub fn build(b: *std.Build) void {
     boundedChecks(b.getInstallStep());
     // The compiler and component builder arrive at run time (`withTestPaths`).
     const options = b.addOptions();
+    // The optional component pins reach the bootstrap test as given, never as a
+    // path this build resolves: a relative one names a file under the build
+    // root, the test's working directory (TEST-PATHS-1).
+    options.addOption([]const u8, "component_owned_compiler_pin", component_owned_pin orelse "");
+    options.addOption([]const u8, "component_seed_source", component_seed_source orelse "");
     options.addOption([]const u8, "zig_path", b.graph.zig_exe);
+    options.addOption([]const u8, "semantic_cache_version", @import("src/semantic_store.zig").format_version);
     const integration = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .filters = test_filters, .root_module = b.createModule(.{
         .root_source_file = b.path("test/integration.zig"),
         .target = target,
@@ -916,6 +932,14 @@ pub fn build(b: *std.Build) void {
     native_component_tests.addArtifactArg(component_tool);
     native_component_tests.addArgs(&.{ "--zig", b.graph.zig_exe, "--component-dir" });
     native_component_tests.addDirectoryArg2(.{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components" } }, .{ .make_absolute = true });
+    if (component_owned_pin) |pin| {
+        native_component_tests.addArg("--owned-compiler-pin");
+        native_component_tests.addFileArg(if (std.fs.path.isAbsolute(pin)) b.graph.cwdRelativePath(pin) else b.path(pin));
+    }
+    if (component_seed_source) |archive| {
+        native_component_tests.addArg("--seed-source");
+        native_component_tests.addFileArg(if (std.fs.path.isAbsolute(archive)) b.graph.cwdRelativePath(archive) else b.path(archive));
+    }
     const component_test_step = b.step("test-components", "Test pure Selka, native protocol, cache and failure boundaries");
     const component_support_tests = b.addTest(.{
         .max_rss = rss.compile,

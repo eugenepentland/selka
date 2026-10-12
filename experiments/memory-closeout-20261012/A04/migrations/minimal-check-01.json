@@ -1,0 +1,50 @@
+[
+  {
+    "source": "experiments/memory-closeout-20261012/A04/migrations/temporary_encode.my",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+      "check",
+      "experiments/memory-closeout-20261012/A04/migrations/temporary_encode.my",
+      "--experimental-zero-rc"
+    ],
+    "status": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "source": "experiments/memory-closeout-20261012/A04/migrations/repeat_temporary.my",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+      "check",
+      "experiments/memory-closeout-20261012/A04/migrations/repeat_temporary.my",
+      "--experimental-zero-rc"
+    ],
+    "status": 1,
+    "stdout": "",
+    "stderr": "repeat_temporary.my:2:12: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n      return text.copy() * count\n             ^\n"
+  },
+  {
+    "source": "experiments/memory-closeout-20261012/A04/migrations/sorted_bytes.my",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+      "check",
+      "experiments/memory-closeout-20261012/A04/migrations/sorted_bytes.my",
+      "--experimental-zero-rc"
+    ],
+    "status": 1,
+    "stdout": "",
+    "stderr": "sorted_bytes.my:3:21: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      const ordered = sorted(values)\n                      ^\n"
+  },
+  {
+    "source": "experiments/memory-closeout-20261012/A04/migrations/list_dict_keys.my",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+      "check",
+      "experiments/memory-closeout-20261012/A04/migrations/list_dict_keys.my",
+      "--experimental-zero-rc"
+    ],
+    "status": 1,
+    "stdout": "",
+    "stderr": "list_dict_keys.my:3:18: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      const keys = list(values.keys())\n                   ^\n"
+  }
+]

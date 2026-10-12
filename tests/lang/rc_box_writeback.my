@@ -4,7 +4,7 @@ record Node:
 
 
 func through(value: Node?) -> Node?:
-    return value
+    return value.copy()
 
 
 public func test_heap_option_mapping_write_updates_the_owner_after_a_snapshot() -> bool:

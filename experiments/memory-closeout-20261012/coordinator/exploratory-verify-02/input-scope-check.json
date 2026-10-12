@@ -1,0 +1,15 @@
+{
+  "status": "pass",
+  "recipes": [
+    "selfhost/components/",
+    "selfhost/*.zig",
+    "selfhost/*.json"
+  ],
+  "files": 16,
+  "pin_files": [
+    "selfhost/component-seed.json",
+    "selfhost/stage0-pin.json"
+  ],
+  "source": "build_test_inputs.zig component input declarations; all six lists use supported suffix glob",
+  "initial_probe": "An initial manual API probe used nonexistent Snapshot.stable; corrected to the existing unchanged API before this successful check."
+}

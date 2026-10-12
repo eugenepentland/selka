@@ -1,0 +1,85 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support2-install/bin/mylang",
+  "compiler_sha256": "3e9f7f2cd7e1ff7dc13b342dc812cb64b340cddc02b8b2b4b1ae8008cb203c7c",
+  "overlay": true,
+  "check_only": false,
+  "harness_sha256": "c1d95cd5ebafebeef8f59d2d17821e48c1a19133427086d88895ecdf33424c66",
+  "cases": {
+    "public_values": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/public_values.my",
+        "original_sha256": "f32e2fb852ec09c428d6725a2d40241ea0c216fc8d7735f46a02db17e7464888",
+        "source_sha256": "3c4989b052b06d511b59b2ec060ca25c72e2d3641e7536b39cafb295d4abccb0",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support2-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support2-public-values/public_values/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support2-public-values/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support2-public-values/public_values/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support2-public-values/public_values/release/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "4cae0603306d7aa88e260b0c603a8f37b932ddd7b7716a227fcf56e32920cb97",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "c129a1311b4b69cc681778efc5fb4a08b3066988b3c8ecedde9d022011371bc3",
+          "a05_persistent_memo.my": "db59a0e9c561a34586d79e754bc1aa931ae4dbbabe493eb97904c80ad62c9924",
+          "main.my": "3c4989b052b06d511b59b2ec060ca25c72e2d3641e7536b39cafb295d4abccb0"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "ee554ec6b1ae5bd22dd2b82da81b5534205a909f9924d99a07659d36bfb683f8",
+        "llvm_sha256": "fe806f1eb1e1bb3b5252a863e30c66fdde824a6cb5cc1a4493d51c26a7119043",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support2-public-values/public_values/release/counts.json",
+          "counter_sha256": "55c8c3bad17e9d04f95ec84ef65b53d66645ea79007e9f901d1d280ca0327406",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 21,
+          "memory": {
+            "allocs": 22,
+            "alloc_bytes": 1376,
+            "frees": 22,
+            "reallocs": 0,
+            "peak_live_bytes": 640,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      }
+    }
+  },
+  "compiler_source_revision": "245e892f8518943ee44a0cc6009ab4b4fa6bca43",
+  "failures": 0
+}

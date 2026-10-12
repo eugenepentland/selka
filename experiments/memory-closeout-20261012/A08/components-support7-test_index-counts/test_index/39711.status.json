@@ -1,0 +1,1 @@
+{"arguments": ["--request", "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/work/tmps7q2n3bp/missing"], "request_sha256": null, "status": 2, "stderr": "test-index: open '/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/work/tmps7q2n3bp/missing': failed: the path does not exist or could not be used\n"}

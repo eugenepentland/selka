@@ -1,0 +1,117 @@
+define internal fastcc i64 @"my.text::score"(ptr %p0) nounwind uwtable !dbg !1000466 {
+entry:
+  %slot = alloca i64, align 8
+  %myl.cnt.saved = load ptr, ptr @myl_count_current, align 8
+  %myl.cnt.active = call ptr @myl_count_function_local(ptr @myl.cf.14)
+  store ptr %myl.cnt.active, ptr @myl_count_current, align 8
+  %myl.cnt.calls.at = getelementptr inbounds i8, ptr %myl.cnt.active, i64 8
+  %myl.cnt.calls = load i64, ptr %myl.cnt.calls.at, align 8
+  %myl.cnt.calls.1 = add i64 %myl.cnt.calls, 1
+  store i64 %myl.cnt.calls.1, ptr %myl.cnt.calls.at, align 8
+  br label %b0
+b0:
+  %h.1 = getelementptr inbounds i8, ptr %p0, i64 8
+  %v23 = load i64, ptr %h.1, align 8, !tbaa !5
+  %view.3 = getelementptr inbounds i8, ptr %p0, i64 32
+  %view.2 = getelementptr inbounds i8, ptr %view.3, i64 0
+  %view.4 = insertvalue { ptr, i64 } poison, ptr %view.2, 0
+  %v1 = insertvalue { ptr, i64 } %view.4, i64 %v23, 1
+  %v2 = extractvalue { ptr, i64 } %v1, 1
+  %v3 = add i64 %v2, 0
+  %v5 = extractvalue { ptr, i64 } %v1, 1
+  %v6 = add i64 %v5, 0
+  br label %b8
+b1:
+  %v8 = phi i64 [ 0, %b10 ], [ %v19, %b3 ]
+  %v15 = phi i64 [ %v3, %b10 ], [ %v16, %b3 ]
+  %v10 = icmp ult i64 %v8, %v6
+  br i1 %v10, label %b2, label %b4
+b2:
+  %bytelen.5 = extractvalue { ptr, i64 } %v1, 1
+  %byteoob.8 = icmp uge i64 %v8, %bytelen.5
+  %cnt.9.record = call ptr @myl_count_site_local(ptr @myl.cs.263)
+  %cnt.9.at = getelementptr inbounds i8, ptr %cnt.9.record, i64 48
+  %cnt.9 = load i64, ptr %cnt.9.at, align 8
+  %cnt.10 = add i64 %cnt.9, 1
+  store i64 %cnt.10, ptr %cnt.9.at, align 8
+  br i1 %byteoob.8, label %trap.11, label %b2.12, !prof !0
+trap.11:
+  call void @myl_core_trap(ptr @myl.site.140, i64 %v8, i64 %bytelen.5) #2, !dbg !1000468
+  unreachable
+b2.12:
+  %bytedata.6 = extractvalue { ptr, i64 } %v1, 0
+  %byteslot.7 = getelementptr inbounds i8, ptr %bytedata.6, i64 %v8
+  %v13 = load i8, ptr %byteslot.7, align 1
+  %v14 = zext i8 %v13 to i64
+  %v16 = add nuw nsw i64 %v15, %v14
+  br label %b3
+b3:
+  %v19 = add nuw nsw i64 %v8, 1
+  br label %b1
+b4:
+  %v46 = phi i64 [ %v15, %b1 ], [ %v34, %b5 ]
+  store ptr %myl.cnt.saved, ptr @myl_count_current, align 8
+  ret i64 %v46
+b5:
+  %v31 = phi i64 [ %vc2, %vexit2 ], [ %v41, %b7 ]
+  %v34 = phi i64 [ %va2, %vexit2 ], [ %v39, %b7 ]
+  %v35 = icmp ult i64 %v31, %v6
+  br i1 %v35, label %b6, label %b4
+b6:
+  %bytelen.13 = extractvalue { ptr, i64 } %v1, 1
+  %bytedata.14 = extractvalue { ptr, i64 } %v1, 0
+  %byteslot.15 = getelementptr inbounds i8, ptr %bytedata.14, i64 %v31
+  %v37 = load i8, ptr %byteslot.15, align 1
+  %v38 = zext i8 %v37 to i64
+  %v39 = add nuw nsw i64 %v34, %v38
+  br label %b7
+b7:
+  %v41 = add nuw nsw i64 %v31, 1
+  br label %b5
+b8:
+  %v26 = extractvalue { ptr, i64 } %v1, 1
+  %v27 = add i64 %v26, 0
+  %v29 = icmp ule i64 %v6, %v27
+  %v30 = and i1 true, %v29
+  br i1 %v30, label %b9, label %b10
+b9:
+  %vn2 = sub i64 %v6, 0
+  %vpos2 = icmp sgt i64 %vn2, 0
+  %vt2 = select i1 %vpos2, i64 %vn2, i64 0
+  %vnv2 = and i64 %vt2, -32
+  %vend2 = add i64 0, %vnv2
+  %vd2.1 = extractvalue { ptr, i64 } %v1, 0
+  %vp2.1 = getelementptr inbounds i8, ptr %vd2.1, i64 0
+  %vhas2 = icmp sgt i64 %vnv2, 0
+  br i1 %vhas2, label %vblock2, label %vexit2
+vblock2:
+  %vb2 = phi i64 [ 0, %b9 ], [ %vlim2, %vbend2 ]
+  %vtot2 = phi i64 [ %v3, %b9 ], [ %vtot22, %vbend2 ]
+  %vcap2 = add nuw i64 %vb2, 1099511627776
+  %vover2 = icmp ult i64 %vcap2, %vnv2
+  %vlim2 = select i1 %vover2, i64 %vcap2, i64 %vnv2
+  br label %vloop2
+vloop2:
+  %vj2 = phi i64 [ %vb2, %vblock2 ], [ %vj22, %vloop2 ]
+  %vacc2 = phi <4 x i64> [ zeroinitializer, %vblock2 ], [ %vacc22, %vloop2 ]
+  %vl2.37.p = getelementptr inbounds i8, ptr %vp2.1, i64 %vj2
+  %vl2.37.b = load <32 x i8>, ptr %vl2.37.p, align 1
+  %vl2.37 = add <32 x i8> %vl2.37.b, zeroinitializer
+  %vl2.38 = add <32 x i8> %vl2.37, zeroinitializer
+  %vps2 = call <4 x i64> @llvm.x86.avx2.psad.bw(<32 x i8> %vl2.38, <32 x i8> zeroinitializer)
+  %vacc22 = add <4 x i64> %vacc2, %vps2
+  %vj22 = add nuw nsw i64 %vj2, 32
+  %vmore2 = icmp ult i64 %vj22, %vlim2
+  br i1 %vmore2, label %vloop2, label %vbend2
+vbend2:
+  %vr642 = call i64 @llvm.vector.reduce.add.v4i64(<4 x i64> %vacc22)
+  %vtot22 = add nuw nsw i64 %vtot2, %vr642
+  %vbm2 = icmp ult i64 %vlim2, %vnv2
+  br i1 %vbm2, label %vblock2, label %vexit2
+vexit2:
+  %vc2 = phi i64 [ 0, %b9 ], [ %vend2, %vbend2 ]
+  %va2 = phi i64 [ %v3, %b9 ], [ %vtot22, %vbend2 ]
+  br label %b5
+b10:
+  br label %b1
+}

@@ -60,7 +60,7 @@ func new_machine() -> Machine:
 # is positive (decrementing it), 4 duplicate, 5 log a call's view, 6 copy the frame,
 # 7 a trap when asked, 8 a jump through a `mut` call, 9 return early.
 func run(mut m: Machine, code: int[], trap: bool) -> int:
-    mut frame = Frame(code=code, ip=0, base=0, name="main", hits=0, seen=[])
+    mut frame = Frame(code=code.copy(), ip=0, base=0, name="main", hits=0, seen=[])
     mut copies: Frame[] = []
     while True:
         mut op = read(mut frame)
@@ -89,7 +89,7 @@ func run(mut m: Machine, code: int[], trap: bool) -> int:
         elif op == 5:
             m.log.append(peek_sum(m, frame))
         elif op == 6:
-            mut kept = frame
+            mut kept = frame.copy()
             kept.hits = kept.hits + 1
             copies.append(kept)
             frame.hits = frame.hits + 2
@@ -97,7 +97,8 @@ func run(mut m: Machine, code: int[], trap: bool) -> int:
             if trap:
                 m.log.append(m.stack[m.top + 100])
         elif op == 8:
-            jump(mut m, mut frame, frame.code[frame.ip])
+            const target = frame.code[frame.ip]
+            jump(mut m, mut frame, target)
         elif op == 9:
             if m.top > 3:
                 return m.top * 100000 + frame.ip * 100 + frame.hits

@@ -1,0 +1,13 @@
+{
+  "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9",
+  "cases": [
+    {
+      "source": "tests/lang/rc_site_eliminations.my",
+      "source_sha256": "cffd35f88f723a8f273a6b9e695f3c788352241e7e955858ba747d054b5bfcf6",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_site_eliminations.my:64:5: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      m.stack[-1] = item\n      ^\n",
+      "copy_changes": []
+    }
+  ]
+}

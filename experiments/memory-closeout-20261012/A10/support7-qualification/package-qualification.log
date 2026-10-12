@@ -1,0 +1,13 @@
+test-index-debug-pure PASS
+test-index-release-pure PASS
+test-index-fresh-release PASS
+test-index-fresh-protocol PASS
+test-index-installed-protocol PASS
+test-index-installed-symbols PASS
+cache-plan-debug-pure PASS
+cache-plan-release-pure PASS
+cache-plan-fresh-release PASS
+cache-plan-fresh-protocol PASS
+cache-plan-installed-protocol PASS
+cache-plan-installed-symbols PASS
+PASS 42 pure tests and fresh/installed protocols; installed identities unchanged

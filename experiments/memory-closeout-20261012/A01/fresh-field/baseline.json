@@ -1,0 +1,84 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.zig-cache/o/4ac1234b9a4bc96beb20a8c5de01bd5f/mylang",
+  "compiler_sha256": "1d66b78b71e464204b3e7793b574eacd87df1dd3d1a75a8554057ed29f082c9a",
+  "cases": [
+    {
+      "case": "minimal",
+      "source_sha256": "f65f5cfa16a4626f9484e59ab63b8c2176ba20b4942c73f6ddff4af6a6d5ee1d",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.zig-cache/o/4ac1234b9a4bc96beb20a8c5de01bd5f/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A01/fresh-field/sources/minimal.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "minimal.my:7:18: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      const text = make().name.copy()\n                   ^\n"
+    },
+    {
+      "case": "named_control",
+      "source_sha256": "cba21f00ade6bdaa8bd6396393ae4ebd32d6acaff2332962429e836f08029481",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.zig-cache/o/4ac1234b9a4bc96beb20a8c5de01bd5f/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A01/fresh-field/sources/named_control.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "case": "partial_move",
+      "source_sha256": "19bc893415dc9482a95e927b31758b9afda82a5df455a72f9c24c1a9c1f17651",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.zig-cache/o/4ac1234b9a4bc96beb20a8c5de01bd5f/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A01/fresh-field/sources/partial_move.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "partial_move.my:7:18: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      const text = make().name\n                   ^\n"
+    },
+    {
+      "case": "retained_view",
+      "source_sha256": "e1724bf76e802025466af2a8293b343473562e5c139a4433cef7e7a8cfc31650",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.zig-cache/o/4ac1234b9a4bc96beb20a8c5de01bd5f/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A01/fresh-field/sources/retained_view.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "retained_view.my:7:18: error[E_ARITY]: `str.borrow(start: int, end: int) -> TextView` takes 2 arguments, but this call passes 0\n      const view = make().name.borrow()\n                   ^\n"
+    },
+    {
+      "case": "mutating_temporary",
+      "source_sha256": "3c2ee60ec208df7f338dbb5ded8d342b9d36d567f3a901575d2778c02329e155",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.zig-cache/o/4ac1234b9a4bc96beb20a8c5de01bd5f/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A01/fresh-field/sources/mutating_temporary.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "mutating_temporary.my:7:5: error[E_ASSIGNMENT_TARGET]: a write requires a writable variable, field or element\n      make().rows.append([\"changed\"])\n      ^\n"
+    },
+    {
+      "case": "positive",
+      "source_sha256": "0efa6e97b2e9b8ae3fc9b78a73b99c6079bc3a687adb625ea683b467980156a5",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.zig-cache/o/4ac1234b9a4bc96beb20a8c5de01bd5f/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A01/fresh-field/sources/positive.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "positive.my:10:6: error[E_SYNTAX]: unexpected token; expected a name\n  func wrap(mut calls: int, value: int) -> Envelope:\n       ^\npositive.my:26:24: error[E_SYNTAX]: unexpected token; expected [\n      const nested = wrap(mut calls, 19).cell.name.copy()\n                         ^\npositive.my:30:9: error[E_SYNTAX]: unexpected token; expected case\n          Ok(value): assert False\n          ^\n"
+    }
+  ]
+}

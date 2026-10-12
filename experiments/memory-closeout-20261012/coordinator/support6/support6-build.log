@@ -1,0 +1,11 @@
+build-slot: FIFO ticket 719, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 719, position 2; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 719, position 2; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 719, position 2; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 719, position 2; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 719, position 2; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 719, position 2; earlier build tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 719, position 2; earlier build tickets must run first; waiting (421s so far)
+build-slot: FIFO ticket 719, position 2; earlier build tickets must run first; waiting (481s so far)
+build-slot: FIFO ticket 719, position 2; earlier build tickets must run first; waiting (541s so far)
+build-slot: build slot 2, FIFO ticket 719 after 602s

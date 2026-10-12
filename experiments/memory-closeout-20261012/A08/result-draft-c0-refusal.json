@@ -1,0 +1,10 @@
+{
+  "status": "draft source probe; final fixture not frozen",
+  "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A01/experiments/memory-closeout-20261012/A01/samples/result_list.my",
+  "source_sha256": "6c5ad78bda5b1908889e1a32956456bacbf615ecbc5d36b2fbc7100875865cf6",
+  "compiler_source": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "status_code": 1,
+  "diagnostic": "E_GENERIC_REQUIREMENT",
+  "evidence": "result-draft-c0-refusal.log"
+}

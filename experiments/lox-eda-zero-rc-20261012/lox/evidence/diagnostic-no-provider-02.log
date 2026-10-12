@@ -1,0 +1,4 @@
+build-slot: build slot 1, FIFO ticket 1327 after 0s
+heap.my:72:79: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper
+          frames.append(CallFrame(closure=value.NO_OBJ, function=function, code=function.code.code, upvalues=[], ip=0, base=0))
+                                                                                ^

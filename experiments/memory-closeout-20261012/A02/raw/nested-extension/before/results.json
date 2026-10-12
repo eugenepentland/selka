@@ -1,0 +1,39 @@
+{
+  "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+  "source_sha256": "dcfb006e4ddcff083dbb4f44b6e005d7b89e03b1e23b6900689b2734f51ef8b2",
+  "ir": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/nested-self-extend/main.my",
+      "--experimental-zero-rc"
+    ],
+    "status": 0,
+    "stdout": "fn main(cap) -> i64\nb0:\n  %2 = list_new list[list[list[i64]]] 1:i64\n  %4 = list_new list[list[i64]] 0:i64\n  %5 = list_push list[list[list[i64]]] %2, %4\n  jump b1\nb1: ; preds b0 b3\n  %9 = phi i64 0:i64, %36\n  %13 = phi list[list[list[i64]]] %5, %33\n  %11 = cmp.lt bool %9, 16:i64\n  branch %11, b2, b4\nb2: ; preds b1\n  %16 = cmp.lt bool 0:i64, 0:i64\n  branch %16, b5, b6\nb3: ; preds b6\n  %36 = add.exact i64 %9, 1:i64\n  jump b1\nb4: ; preds b1\n  %41 = cmp.lt bool 0:i64, 0:i64\n  branch %41, b7, b8\nb5: ; preds b2\n  %18 = list_len u64 %13\n  %19 = convert.exact i64 %18\n  %20 = add.exact i64 %19, 0:i64\n  jump b6\nb6: ; preds b2 b5\n  %22 = phi i64 0:i64, %20\n  %24 = list_get.exact list[list[i64]] %13, %22\n  %26 = list_new list[i64] 1:i64\n  %28 = list_push list[i64] %26, %9\n  %30 = list_copy list[list[list[i64]]] %13\n  %31 = list_get.exact list[list[i64]] %30, %22\n  %32 = list_push list[list[i64]] %31, %28\n  %33 = list_set.exact list[list[list[i64]]] %30, %22, %32\n  jump b3\nb7: ; preds b4\n  %43 = list_len u64 %13\n  %44 = convert.exact i64 %43\n  %45 = add.exact i64 %44, 0:i64\n  jump b8\nb8: ; preds b4 b7\n  %47 = phi i64 0:i64, %45\n  %49 = list_get.exact list[list[i64]] %13, %47\n  %53 = cmp.lt bool 0:i64, 0:i64\n  branch %53, b9, b10\nb9: ; preds b8\n  %55 = list_len u64 %13\n  %56 = convert.exact i64 %55\n  %57 = add.exact i64 %56, 0:i64\n  jump b10\nb10: ; preds b8 b9\n  %59 = phi i64 0:i64, %57\n  %61 = list_get.exact list[list[i64]] %13, %59\n  %64 = list_copy list[list[list[i64]]] %13\n  %65 = list_get.exact list[list[i64]] %64, %47\n  %66 = list_len u64 %61\n  jump b11\nb11: ; preds b10 b12\n  %69 = phi u64 0:u64, %77\n  %74 = phi list[list[i64]] %65, %75\n  %70 = cmp.lt bool %69, %66\n  branch %70, b12, b13\nb12: ; preds b11\n  %72 = list_get.exact list[i64] %61, %69\n  %73 = list_copy list[i64] %72\n  %75 = list_push list[list[i64]] %74, %73\n  %77 = add u64 %69, 1:u64\n  jump b11\nb13: ; preds b11\n  %79 = list_set.exact list[list[list[i64]]] %64, %47, %74\n  %82 = cmp.lt bool 0:i64, 0:i64\n  branch %82, b14, b15\nb14: ; preds b13\n  %84 = list_len u64 %79\n  %85 = convert.exact i64 %84\n  %86 = add.exact i64 %85, 0:i64\n  jump b15\nb15: ; preds b13 b14\n  %88 = phi i64 0:i64, %86\n  %90 = list_get.exact list[list[i64]] %79, %88\n  %91 = list_len u64 %90\n  %92 = convert.exact i64 %91\n  %94 = cmp.eq bool %92, 32:i64\n  branch %94, b17, b16\nb16: ; preds b15\n  unreachable\nb17: ; preds b15\n  jump b18\nb18: ; preds b17 b20\n  %100 = phi i64 0:i64, %188\n  %102 = cmp.lt bool %100, 16:i64\n  branch %102, b19, b21\nb19: ; preds b18\n  %107 = cmp.lt bool 0:i64, 0:i64\n  branch %107, b22, b23\nb20: ; preds b37\n  %188 = add.exact i64 %100, 1:i64\n  jump b18\nb21: ; preds b18\n  %202 = cmp.lt bool 0:i64, 0:i64\n  branch %202, b38, b39\nb22: ; preds b19\n  %109 = list_len u64 %79\n  %110 = convert.exact i64 %109\n  %111 = add.exact i64 %110, 0:i64\n  jump b23\nb23: ; preds b19 b22\n  %113 = phi i64 0:i64, %111\n  %115 = list_get.exact list[list[i64]] %79, %113\n  %118 = cmp.lt bool %100, 0:i64\n  branch %118, b24, b25\nb24: ; preds b23\n  %120 = list_len u64 %115\n  %121 = convert.exact i64 %120\n  %122 = add.exact i64 %121, %100\n  jump b25\nb25: ; preds b23 b24\n  %124 = phi i64 %100, %122\n  %126 = list_get.exact list[i64] %115, %124\n  %129 = cmp.lt bool 0:i64, 0:i64\n  branch %129, b26, b27\nb26: ; preds b25\n  %131 = list_len u64 %126\n  %132 = convert.exact i64 %131\n  %133 = add.exact i64 %132, 0:i64\n  jump b27\nb27: ; preds b25 b26\n  %135 = phi i64 0:i64, %133\n  %137 = list_get.exact i64 %126, %135\n  %140 = cmp.eq bool %137, %100\n  branch %140, b29, b28\nb28: ; preds b27\n  unreachable\nb29: ; preds b27\n  %148 = cmp.lt bool 0:i64, 0:i64\n  branch %148, b30, b31\nb30: ; preds b29\n  %150 = list_len u64 %79\n  %151 = convert.exact i64 %150\n  %152 = add.exact i64 %151, 0:i64\n  jump b31\nb31: ; preds b29 b30\n  %154 = phi i64 0:i64, %152\n  %156 = list_get.exact list[list[i64]] %79, %154\n  %159 = add.exact i64 %100, 16:i64\n  %161 = cmp.lt bool %159, 0:i64\n  branch %161, b32, b33\nb32: ; preds b31\n  %163 = list_len u64 %156\n  %164 = convert.exact i64 %163\n  %165 = add.exact i64 %164, %159\n  jump b33\nb33: ; preds b31 b32\n  %167 = phi i64 %159, %165\n  %169 = list_get.exact list[i64] %156, %167\n  %172 = cmp.lt bool 0:i64, 0:i64\n  branch %172, b34, b35\nb34: ; preds b33\n  %174 = list_len u64 %169\n  %175 = convert.exact i64 %174\n  %176 = add.exact i64 %175, 0:i64\n  jump b35\nb35: ; preds b33 b34\n  %178 = phi i64 0:i64, %176\n  %180 = list_get.exact i64 %169, %178\n  %183 = cmp.eq bool %180, %100\n  branch %183, b37, b36\nb36: ; preds b35\n  unreachable\nb37: ; preds b35\n  jump b20\nb38: ; preds b21\n  %204 = list_len u64 %79\n  %205 = convert.exact i64 %204\n  %206 = add.exact i64 %205, 0:i64\n  jump b39\nb39: ; preds b21 b38\n  %208 = phi i64 0:i64, %206\n  %210 = list_get.exact list[list[i64]] %79, %208\n  %213 = cmp.lt bool 0:i64, 0:i64\n  branch %213, b40, b41\nb40: ; preds b39\n  %215 = list_len u64 %210\n  %216 = convert.exact i64 %215\n  %217 = add.exact i64 %216, 0:i64\n  jump b41\nb41: ; preds b39 b40\n  %219 = phi i64 0:i64, %217\n  %221 = list_get.exact list[i64] %210, %219\n  %225 = list_copy list[list[list[i64]]] %79\n  %226 = list_get.exact list[list[i64]] %225, %208\n  %227 = list_copy list[list[i64]] %226\n  %228 = list_get.exact list[i64] %227, %219\n  %229 = list_push list[i64] %228, 99:i64\n  %230 = list_set.exact list[list[i64]] %227, %219, %229\n  %231 = list_set.exact list[list[list[i64]]] %225, %208, %230\n  %234 = cmp.lt bool 0:i64, 0:i64\n  branch %234, b42, b43\nb42: ; preds b41\n  %236 = list_len u64 %231\n  %237 = convert.exact i64 %236\n  %238 = add.exact i64 %237, 0:i64\n  jump b43\nb43: ; preds b41 b42\n  %240 = phi i64 0:i64, %238\n  %242 = list_get.exact list[list[i64]] %231, %240\n  %245 = cmp.lt bool 16:i64, 0:i64\n  branch %245, b44, b45\nb44: ; preds b43\n  %247 = list_len u64 %242\n  %248 = convert.exact i64 %247\n  %249 = add.exact i64 %248, 16:i64\n  jump b45\nb45: ; preds b43 b44\n  %251 = phi i64 16:i64, %249\n  %253 = list_get.exact list[i64] %242, %251\n  %254 = list_len u64 %253\n  %255 = convert.exact i64 %254\n  %257 = cmp.eq bool %255, 1:i64\n  branch %257, b47, b46\nb46: ; preds b45\n  unreachable\nb47: ; preds b45\n  print param0, str4\n  ret 0:i64\n",
+    "stderr": ""
+  },
+  "build": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/nested-self-extend/main.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--counters",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/nested-self-extend/cache",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/nested-self-extend/main"
+    ],
+    "status": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "run": {
+    "status": -6,
+    "stdout": "",
+    "stderr": ""
+  }
+}

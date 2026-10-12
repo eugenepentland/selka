@@ -1,0 +1,65 @@
+[
+  {
+    "argv": [
+      "/usr/bin/python3",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/take-fields-worklist/diagnostic.py",
+      "--compiler",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/996ba6e9ee40f947c47a9f97fbc2ef69/mylang",
+      "--output",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/take-fields-worklist/diagnostic"
+    ],
+    "status": 0
+  },
+  {
+    "argv": [
+      "/usr/bin/python3",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/take-fields-worklist/matrix.py",
+      "--compiler",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/996ba6e9ee40f947c47a9f97fbc2ef69/mylang",
+      "--case",
+      "augmented",
+      "--output",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/take-fields-worklist/augmented"
+    ],
+    "status": 0
+  },
+  {
+    "argv": [
+      "/usr/bin/python3",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/take-fields-worklist/matrix.py",
+      "--compiler",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/996ba6e9ee40f947c47a9f97fbc2ef69/mylang",
+      "--case",
+      "method",
+      "--output",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/take-fields-worklist/method"
+    ],
+    "status": 0
+  },
+  {
+    "argv": [
+      "/usr/bin/python3",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/take-fields-worklist/matrix.py",
+      "--compiler",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/996ba6e9ee40f947c47a9f97fbc2ef69/mylang",
+      "--case",
+      "field_augmented",
+      "--output",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/take-fields-worklist/field_augmented"
+    ],
+    "status": 0
+  },
+  {
+    "argv": [
+      "/usr/bin/python3",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/take-fields-worklist/matrix.py",
+      "--compiler",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/996ba6e9ee40f947c47a9f97fbc2ef69/mylang",
+      "--case",
+      "rc_semantic_publication",
+      "--output",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/take-fields-worklist/rc_semantic_publication"
+    ],
+    "status": 0
+  }
+]

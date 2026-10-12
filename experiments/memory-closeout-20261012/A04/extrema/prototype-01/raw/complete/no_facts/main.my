@@ -1,0 +1,65 @@
+func smallest(words: str[]) -> str:
+    return min(words).copy()
+
+
+func is_smallest_a(words: str[]) -> bool noalloc:
+    return min(words) == "a7"
+
+
+func make_words(mut calls: int) -> str[]:
+    calls += 1
+    return ["z" + str(calls), "a" + str(calls)]
+
+
+func next_value(mut calls: int) -> int:
+    calls += 1
+    return calls
+
+
+# spec-case: PRELUDE-EXTREME-1
+public func test_dynamic_list_extrema_borrow_and_copy_independently() -> bool:
+    mut words = ["z" + str(7), "é" + str(7), "a" + str(7), "a" + str(7), "😀" + str(7)]
+    if not is_smallest_a(words) or max(words) != "😀7":
+        return False
+    const low = smallest(words)
+    const high = max(words).copy()
+    words[2] = "changed"
+    words.clear()
+    return low == "a7" and high == "😀7" and len(words) == 0
+
+
+# spec-case: PRELUDE-EXTREME-1
+public func test_list_extrema_keep_scalar_ordering_and_first_ties() -> bool:
+    if min([7, -2, 4, -2]) != -2 or max([7, -2, 4, 7]) != 7:
+        return False
+    if min([1.5, -2.0, 4.0]) != -2.0 or max([1.5, -2.0, 4.0]) != 4.0:
+        return False
+    const nan = 0.0 / 0.0
+    const first_nan = min([nan, 2.0, 1.0])
+    if first_nan == first_nan or min([2.0, nan, 1.0]) != 1.0:
+        return False
+    if repr(min([-0.0, 0.0])) != "-0.0" or repr(max([0.0, -0.0])) != "0.0":
+        return False
+    return min([9]) == 9 and max(["solo"]) == "solo"
+
+
+# spec-case: PRELUDE-EXTREME-2
+public func test_list_input_and_scalar_arguments_evaluate_once() -> bool:
+    mut calls = 0
+    const low = min(make_words(mut calls)).copy()
+    const high = max(make_words(mut calls)).copy()
+    if calls != 2 or low != "a1" or high != "z2":
+        return False
+    if min(next_value(mut calls), next_value(mut calls)) != 3 or calls != 4:
+        return False
+    return max(next_value(mut calls), next_value(mut calls)) == 6 and calls == 6
+
+
+func main() -> int:
+    if not test_dynamic_list_extrema_borrow_and_copy_independently():
+        return 1
+    if not test_list_extrema_keep_scalar_ordering_and_first_ties():
+        return 2
+    if not test_list_input_and_scalar_arguments_evaluate_once():
+        return 3
+    return 0

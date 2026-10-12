@@ -1,0 +1,77 @@
+fn main #0 params=0 ret=i64 cabi=false host=false
+  local %0 words: dict<str,i64> mut
+  local %1 keys: set<str> mut
+  local %2 <collection>: dict<str,i64> mut
+  local %3 <collection>: i64 mut
+  local %4 <collection>: i64 mut
+  local %5 word: str
+  local %6 <collection>: set<str> mut
+  local %7 <collection>: unit mut
+  local %8 <conditional>: i64
+  block
+    initialize %0
+      array : dict<str,i64>
+        array : str
+          integer : u32 98
+        integer : i64 1
+        array : str
+          integer : u32 97
+        integer : i64 2
+    initialize %1
+      array : set<str>
+    block
+      initialize %2
+        local : dict<str,i64> %0
+      initialize %3
+        integer : i64 0
+      initialize %4
+        cast : i64
+          buffer_operation : i64 length owner=%2
+      loop id=0
+        binary : bool lt
+          local : i64 %3
+          local : i64 %4
+        block
+          block
+            discard
+              buffer_operation : unit iteration_check owner=%2
+                local : i64 %4
+          initialize %5
+            buffer_operation : str key_at owner=%2
+              local : i64 %3
+          block
+            discard
+              block_value : unit
+                block
+                  initialize %7
+                    unit : unit ...
+                  initialize %6
+                    local : set<str> %1
+                buffer_operation : unit write owner=%6
+                  buffer_operation : str copy owner=%5
+                  local : unit %7
+        step:
+          block
+            block
+              discard
+                buffer_operation : unit iteration_check owner=%2
+                  local : i64 %4
+            assign %3
+              binary : i64 add
+                local : i64 %3
+                integer : i64 1
+    discard
+      buffer_operation : unit clear owner=%0
+    ret
+      block_value : i64
+        block
+          branch
+            binary : bool eq
+              length : i64
+                local : set<str> %1
+              integer : i64 2
+            assign %8
+              integer : i64 0
+            assign %8
+              integer : i64 1
+        local : i64 %8

@@ -16,7 +16,7 @@ record FieldHolder:
 
 
 func bump(counter: FieldCounter) -> FieldCounter:
-    mut updated = counter
+    mut updated = counter.copy()
     updated.n += 1
     updated.n *= 3
     updated.n -= 1
@@ -75,7 +75,7 @@ public func test_augmented_addition_to_a_list_field_extends_in_place() -> bool:
 # spec-case: AUGMENTED-FIELD-1
 public func test_augmented_field_reads_the_current_field_after_the_mut_call() -> bool:
     mut c = new_counter()
-    mut before = c
+    mut before = c.copy()
     mut added = reset(mut c)
     c.n += added
     return c.n == 100 and c.items == [1, 100] and before.n == 1 and before.items == [1]
@@ -88,7 +88,7 @@ func main() -> int:
 # spec-case: AUGMENTED-FIELD-1
 public func test_augmented_list_field_writeback_preserves_record_snapshot() -> bool:
     mut c = new_counter()
-    mut before = c
+    mut before = c.copy()
     c.items += [9, 8]
     return c.items == [1, 9, 8] and before.items == [1]
 

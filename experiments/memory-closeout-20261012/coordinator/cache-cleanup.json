@@ -1,0 +1,6 @@
+{
+  "removed_disposable_cache": "/home/epentland/ai/canopy/mylang-memory-20261012/.zig-cache",
+  "reason": "Recover disk for ongoing verification; no build active in integration tree",
+  "preserved": "All frozen baseline/Support7 installations, worker and gate caches, raw evidence and tracked files",
+  "completed_unix": 1791785162.1875403
+}

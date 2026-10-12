@@ -1,0 +1,56 @@
+{
+  "base": "93b48efcc89360b2e04633e1dab865879a7bd784",
+  "source_sha256": {
+    "src/core/build.zig": "aadaf09a2ddcf3bed5fa3ddc638cbb1f7fb4b219a60c617cdcf733de62f31818",
+    "src/core/a02_mut_call_test.zig": "48ccad36e9d99ebf51446fd261e456cb91994232f0672f44b337ea49c7890c00",
+    "src/core/a02_mut_call_fixture.my": "918b2d793588833459cb8228949cd279b824d70872970a734cfc6770049a0d2d",
+    "src/core/own.zig": "7a9765df601d167e62564249fa1dbde1893b64c68211ec631c72d4387287dd06",
+    "src/core/single_owner.zig": "dee8c1342e5c01be33726b5dfac12e1c90a7205a0484a27b57235614db4895ed",
+    "src/core/flags.zig": "0d755cfaf8459362b87a12d41b4ad3e4e61e605b9cec9d7daafb4e1781981c8c",
+    "src/core/root_test.zig": "b57f321acd2353db5207ab91f5c2b1e6dde5f6211807349030186f161dc0cc1e",
+    "SPEC.md": "9989fcab9ef6483e89c9de1da793f5bc5a6a96b55ab5cc03c806b8f1f0d4c223"
+  },
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "components": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/libexec/mylang/components",
+  "component_boundary": "Support6 staged compiler components are legacy interim; this is guest ownership qualification, not an RC-free installed package claim",
+  "steps": [
+    {
+      "name": "build",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build",
+        "core-test-binary",
+        "-Dtest-filter=zero RC A02 interior mut calls",
+        "-j4",
+        "--maxrss",
+        "8589934592",
+        "--prefix",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-call-validation/install"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 0.4350451130885631,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "test",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-call-validation/install/focus/core-tests",
+        "--guardian-filter=zero RC A02 interior mut calls"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 2.145015069982037,
+      "stdout": "",
+      "stderr": "guardian/test: 2 test(s) selected by filter: \"zero RC A02 interior mut calls\"\nAll 2 tests passed.\nguardian/test: test wall 2.13s; slowest over 50ms:\nguardian/test:   2.13s  a02_mut_call_test.test.zero RC A02 interior mut calls preserve child ownership and selected places\nguardian/test: PASS \u2014 2 passed\nguardian/test: RESULT {\"passed\":2,\"failed\":0,\"skipped\":0}\n"
+    }
+  ],
+  "complete": true,
+  "compiler": {
+    "path": ".zig-cache/o/5f80b64beac5c8623b77f4ff053db32d/mylang",
+    "sha256": "a6f14d70934bc8aa73ac095ad3996bc9e60bbd39d319a3fa5a7814378d4c3d79",
+    "options": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/2fbbdba74986df79ab2e0143ebe2427a/options.zig"
+  },
+  "test_binary_sha256": "198aebbb4508843093783fcd44e5b6eae8dfe4048701ab0baac1381fb7140e04",
+  "pass": true
+}

@@ -1,5 +1,5 @@
 func snapshot(xs: int[]) -> int[]:
-    return xs
+    return xs.copy()
 
 
 func keep_then_grow(mut xs: int[], survivor: int[]) -> int[]:

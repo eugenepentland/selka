@@ -1,0 +1,86 @@
+{
+  "schema": "a03-assigned-migrations-v1",
+  "original_census_denominator_unchanged": 30,
+  "assigned_files": [
+    "tests/lang/rc_owning_element_borrows.my",
+    "test/core/row_cow.my",
+    "test/core/v_nested.my"
+  ],
+  "cases": [
+    {
+      "id": "rc_owning_element_borrows",
+      "source_file": "tests/lang/rc_owning_element_borrows.my",
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/transferred-a06/incoming/tests/lang/rc_owning_element_borrows.my",
+        "sha256": "7c17e23f37e5548ec55dcc039691f89bbe9e49601015b88e04812cbf7ce648f7",
+        "copy_calls": 21
+      },
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "public_tests": [
+        "test_borrowed_entry_returns_an_owning_element_read_in_place",
+        "test_owned_result_keeps_fields_of_elements_read_in_place",
+        "test_nested_element_reads_through_a_captured_parameter",
+        "test_a_reassigned_element_local_returns_its_latest_element",
+        "test_mut_list_element_read_keeps_its_snapshot",
+        "test_read_only_and_mut_views_of_one_list_stay_distinct",
+        "test_local_list_and_iteration_elements_keep_their_copies",
+        "test_inlined_arguments_read_out_of_elements_compare_in_place"
+      ],
+      "expected_stdout": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+      "expected_exit": 0
+    },
+    {
+      "id": "row_cow",
+      "source_file": "test/core/row_cow.my",
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/transferred-a06/incoming/test/core/row_cow.my",
+        "sha256": "8b42132bc86babc93cddbd9360504e50e468c56fdd0138edf3f7ae2866abe364",
+        "copy_calls": 31
+      },
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "expected_stdout": "8.0 4.0\n8.0 4.0\n16.0 4.0\nreadwrite-const 6 3\nloop-write 7 3\nloop-readwrite 6 3\nvar-readwrite 13 3\n7 3 7 1\n3 9 9 9\n4 1\n3 7\n3 7\n3 7 3\n2 2\n1 5\n2 3\n3 13\n3 7\n3 7\n3 7\n3 7\n3 7 0\n3 7 1\n3 14 3\n3 14\n3 7\n3 7\n3 7\n3 0\n3 7\n5 9\n5 9\nc z\nFalse True\n1.5 9.0\n3 7\n3 7\n3 7\n3 7\n3 7\n1 7\n3 9\n5 7\n5 7\n3 7 4\n1 7\n1 7\n1 7\n5 9\n5 9\n3 7\n4 9\n10 9\n10 9\n7 3\n7 1\n7 1\n",
+      "oracle": {
+        "commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+        "path": "test/core/row_cow.expected",
+        "sha256": "456c04fc9d53502eb38b1186f2f88a32c2569d645b1e2fa56fdaa4f84a5f9cdf"
+      },
+      "expected_exit": 0
+    },
+    {
+      "id": "v_nested",
+      "source_file": "test/core/v_nested.my",
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/transferred-a06/incoming/test/core/v_nested.my",
+        "sha256": "d76cdd501472e7a458e274765f147dd59ee193fb2e08a39f493a3c49d05e6b5c",
+        "copy_calls": 3
+      },
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "expected_stdout": "302 2\n550278 1 1\n",
+      "oracle": {
+        "commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+        "path": "src/core/value_e2e_test.zig",
+        "constant": "v_nested_output",
+        "sha256": "a4cf1a923b573f644eb1c8f499f2dc27639caca3b77c46f711c507728be3f9ff"
+      },
+      "expected_exit": 0
+    }
+  ]
+}

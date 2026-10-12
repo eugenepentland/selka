@@ -1,0 +1,425 @@
+{
+  "binaries": {
+    "original-rc": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/original-rc",
+      "sha256": "a476b06325c927157e99719fd3dd7adbc85661f0a8b1924ae28f585f8717140a"
+    },
+    "migrated-rc": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/migrated-rc",
+      "sha256": "1774b721b091b419d768e621d4d7a3cbf5671a84c7984afaad2ab55829b83115"
+    },
+    "zero-rc": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/zero-rc",
+      "sha256": "4a4edebac4ed58a4849301096c019cd85761939ca9732fd15ae5a4705f988bfb"
+    },
+    "zero-verified": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/zero-verified",
+      "sha256": "4e77a8455722909c4f8990e11e186f8314b015a0ba1dea567b04db91ce77382c"
+    },
+    "zero-debug": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/zero-debug",
+      "sha256": "a90ce4a96c19dc6bc0808ba2bace80006881c17770ca049a2a9519b102dead75"
+    }
+  },
+  "cases": [
+    {
+      "case": "no-args",
+      "args": [],
+      "expected_status": 2,
+      "outputs_identical": true,
+      "expected_status_matches": true,
+      "arms": [
+        {
+          "arm": "original-rc",
+          "status": 2,
+          "stdout": "",
+          "stderr": "usage: eda-sch --model <model.sexp> --project-dir <dir> --out-dir <dir> [--flat] [--no-vendor-symbols]\n"
+        },
+        {
+          "arm": "migrated-rc",
+          "status": 2,
+          "stdout": "",
+          "stderr": "usage: eda-sch --model <model.sexp> --project-dir <dir> --out-dir <dir> [--flat] [--no-vendor-symbols]\n"
+        },
+        {
+          "arm": "zero-rc",
+          "status": 2,
+          "stdout": "",
+          "stderr": "usage: eda-sch --model <model.sexp> --project-dir <dir> --out-dir <dir> [--flat] [--no-vendor-symbols]\n"
+        },
+        {
+          "arm": "zero-verified",
+          "status": 2,
+          "stdout": "",
+          "stderr": "usage: eda-sch --model <model.sexp> --project-dir <dir> --out-dir <dir> [--flat] [--no-vendor-symbols]\n"
+        },
+        {
+          "arm": "zero-debug",
+          "status": 2,
+          "stdout": "",
+          "stderr": "usage: eda-sch --model <model.sexp> --project-dir <dir> --out-dir <dir> [--flat] [--no-vendor-symbols]\n"
+        }
+      ]
+    },
+    {
+      "case": "unknown-option",
+      "args": [
+        "--unknown"
+      ],
+      "expected_status": 2,
+      "outputs_identical": true,
+      "expected_status_matches": true,
+      "arms": [
+        {
+          "arm": "original-rc",
+          "status": 2,
+          "stdout": "",
+          "stderr": "usage: eda-sch --model <model.sexp> --project-dir <dir> --out-dir <dir> [--flat] [--no-vendor-symbols]\n"
+        },
+        {
+          "arm": "migrated-rc",
+          "status": 2,
+          "stdout": "",
+          "stderr": "usage: eda-sch --model <model.sexp> --project-dir <dir> --out-dir <dir> [--flat] [--no-vendor-symbols]\n"
+        },
+        {
+          "arm": "zero-rc",
+          "status": 2,
+          "stdout": "",
+          "stderr": "usage: eda-sch --model <model.sexp> --project-dir <dir> --out-dir <dir> [--flat] [--no-vendor-symbols]\n"
+        },
+        {
+          "arm": "zero-verified",
+          "status": 2,
+          "stdout": "",
+          "stderr": "usage: eda-sch --model <model.sexp> --project-dir <dir> --out-dir <dir> [--flat] [--no-vendor-symbols]\n"
+        },
+        {
+          "arm": "zero-debug",
+          "status": 2,
+          "stdout": "",
+          "stderr": "usage: eda-sch --model <model.sexp> --project-dir <dir> --out-dir <dir> [--flat] [--no-vendor-symbols]\n"
+        }
+      ]
+    },
+    {
+      "case": "missing-value",
+      "args": [
+        "--model"
+      ],
+      "expected_status": 2,
+      "outputs_identical": true,
+      "expected_status_matches": true,
+      "arms": [
+        {
+          "arm": "original-rc",
+          "status": 2,
+          "stdout": "",
+          "stderr": "usage: eda-sch --model <model.sexp> --project-dir <dir> --out-dir <dir> [--flat] [--no-vendor-symbols]\n"
+        },
+        {
+          "arm": "migrated-rc",
+          "status": 2,
+          "stdout": "",
+          "stderr": "usage: eda-sch --model <model.sexp> --project-dir <dir> --out-dir <dir> [--flat] [--no-vendor-symbols]\n"
+        },
+        {
+          "arm": "zero-rc",
+          "status": 2,
+          "stdout": "",
+          "stderr": "usage: eda-sch --model <model.sexp> --project-dir <dir> --out-dir <dir> [--flat] [--no-vendor-symbols]\n"
+        },
+        {
+          "arm": "zero-verified",
+          "status": 2,
+          "stdout": "",
+          "stderr": "usage: eda-sch --model <model.sexp> --project-dir <dir> --out-dir <dir> [--flat] [--no-vendor-symbols]\n"
+        },
+        {
+          "arm": "zero-debug",
+          "status": 2,
+          "stdout": "",
+          "stderr": "usage: eda-sch --model <model.sexp> --project-dir <dir> --out-dir <dir> [--flat] [--no-vendor-symbols]\n"
+        }
+      ]
+    },
+    {
+      "case": "missing-file",
+      "args": [
+        "--model",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/absent.sexp",
+        "--project-dir",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+        "--out-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/out"
+      ],
+      "expected_status": 1,
+      "outputs_identical": true,
+      "expected_status_matches": true,
+      "arms": [
+        {
+          "arm": "original-rc",
+          "status": 1,
+          "stdout": "",
+          "stderr": "eda-sch: cannot read /home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/absent.sexp: read '/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/absent.sexp': failed: the path does not exist or could not be used\neda-sch: read '/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/absent.sexp': failed: the path does not exist or could not be used\n"
+        },
+        {
+          "arm": "migrated-rc",
+          "status": 1,
+          "stdout": "",
+          "stderr": "eda-sch: cannot read /home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/absent.sexp: read '/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/absent.sexp': failed: the path does not exist or could not be used\neda-sch: read '/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/absent.sexp': failed: the path does not exist or could not be used\n"
+        },
+        {
+          "arm": "zero-rc",
+          "status": 1,
+          "stdout": "",
+          "stderr": "eda-sch: cannot read /home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/absent.sexp: read '/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/absent.sexp': failed: the path does not exist or could not be used\neda-sch: read '/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/absent.sexp': failed: the path does not exist or could not be used\n"
+        },
+        {
+          "arm": "zero-verified",
+          "status": 1,
+          "stdout": "",
+          "stderr": "eda-sch: cannot read /home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/absent.sexp: read '/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/absent.sexp': failed: the path does not exist or could not be used\neda-sch: read '/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/absent.sexp': failed: the path does not exist or could not be used\n"
+        },
+        {
+          "arm": "zero-debug",
+          "status": 1,
+          "stdout": "",
+          "stderr": "eda-sch: cannot read /home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/absent.sexp: read '/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/absent.sexp': failed: the path does not exist or could not be used\neda-sch: read '/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/absent.sexp': failed: the path does not exist or could not be used\n"
+        }
+      ]
+    },
+    {
+      "case": "unterminated-form",
+      "args": [
+        "--model",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/unterminated-form.sexp",
+        "--project-dir",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+        "--out-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/out"
+      ],
+      "expected_status": 1,
+      "outputs_identical": true,
+      "expected_status_matches": true,
+      "arms": [
+        {
+          "arm": "original-rc",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/unterminated-form.sexp:1: error: unexpected end of input \u2014 a '(' was never closed\neda-sch: UnexpectedEof\n"
+        },
+        {
+          "arm": "migrated-rc",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/unterminated-form.sexp:1: error: unexpected end of input \u2014 a '(' was never closed\neda-sch: UnexpectedEof\n"
+        },
+        {
+          "arm": "zero-rc",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/unterminated-form.sexp:1: error: unexpected end of input \u2014 a '(' was never closed\neda-sch: UnexpectedEof\n"
+        },
+        {
+          "arm": "zero-verified",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/unterminated-form.sexp:1: error: unexpected end of input \u2014 a '(' was never closed\neda-sch: UnexpectedEof\n"
+        },
+        {
+          "arm": "zero-debug",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/unterminated-form.sexp:1: error: unexpected end of input \u2014 a '(' was never closed\neda-sch: UnexpectedEof\n"
+        }
+      ]
+    },
+    {
+      "case": "wrong-root",
+      "args": [
+        "--model",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/wrong-root.sexp",
+        "--project-dir",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+        "--out-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/out"
+      ],
+      "expected_status": 1,
+      "outputs_identical": true,
+      "expected_status_matches": true,
+      "arms": [
+        {
+          "arm": "original-rc",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/wrong-root.sexp:1: error: unexpected form\neda-sch: BadModel\n"
+        },
+        {
+          "arm": "migrated-rc",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/wrong-root.sexp:1: error: unexpected form\neda-sch: BadModel\n"
+        },
+        {
+          "arm": "zero-rc",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/wrong-root.sexp:1: error: unexpected form\neda-sch: BadModel\n"
+        },
+        {
+          "arm": "zero-verified",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/wrong-root.sexp:1: error: unexpected form\neda-sch: BadModel\n"
+        },
+        {
+          "arm": "zero-debug",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/wrong-root.sexp:1: error: unexpected form\neda-sch: BadModel\n"
+        }
+      ]
+    },
+    {
+      "case": "unsupported-version",
+      "args": [
+        "--model",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/unsupported-version.sexp",
+        "--project-dir",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+        "--out-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/out"
+      ],
+      "expected_status": 1,
+      "outputs_identical": true,
+      "expected_status_matches": true,
+      "arms": [
+        {
+          "arm": "original-rc",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/unsupported-version.sexp:1: error: unsupported model version\neda-sch: BadModel\n"
+        },
+        {
+          "arm": "migrated-rc",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/unsupported-version.sexp:1: error: unsupported model version\neda-sch: BadModel\n"
+        },
+        {
+          "arm": "zero-rc",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/unsupported-version.sexp:1: error: unsupported model version\neda-sch: BadModel\n"
+        },
+        {
+          "arm": "zero-verified",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/unsupported-version.sexp:1: error: unsupported model version\neda-sch: BadModel\n"
+        },
+        {
+          "arm": "zero-debug",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/unsupported-version.sexp:1: error: unsupported model version\neda-sch: BadModel\n"
+        }
+      ]
+    },
+    {
+      "case": "empty-model",
+      "args": [
+        "--model",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/empty-model.sexp",
+        "--project-dir",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+        "--out-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/out"
+      ],
+      "expected_status": 1,
+      "outputs_identical": true,
+      "expected_status_matches": true,
+      "arms": [
+        {
+          "arm": "original-rc",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/empty-model.sexp:0: error: expected exactly one (sch-model \u2026) form\neda-sch: BadModel\n"
+        },
+        {
+          "arm": "migrated-rc",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/empty-model.sexp:0: error: expected exactly one (sch-model \u2026) form\neda-sch: BadModel\n"
+        },
+        {
+          "arm": "zero-rc",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/empty-model.sexp:0: error: expected exactly one (sch-model \u2026) form\neda-sch: BadModel\n"
+        },
+        {
+          "arm": "zero-verified",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/empty-model.sexp:0: error: expected exactly one (sch-model \u2026) form\neda-sch: BadModel\n"
+        },
+        {
+          "arm": "zero-debug",
+          "status": 1,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/empty-model.sexp:0: error: expected exactly one (sch-model \u2026) form\neda-sch: BadModel\n"
+        }
+      ]
+    },
+    {
+      "case": "invalid-output-dir",
+      "args": [
+        "--model",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/rds3+flat/model.sexp",
+        "--project-dir",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+        "--out-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/blocked-output",
+        "--flat"
+      ],
+      "expected_status": 1,
+      "outputs_identical": true,
+      "expected_status_matches": true,
+      "arms": [
+        {
+          "arm": "original-rc",
+          "status": 1,
+          "stdout": "",
+          "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\neda-sch: write '/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/blocked-output/rds3.kicad_sch': denied: outside the granted directories, or the mode needs a write grant\n"
+        },
+        {
+          "arm": "migrated-rc",
+          "status": 1,
+          "stdout": "",
+          "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\neda-sch: write '/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/blocked-output/rds3.kicad_sch': denied: outside the granted directories, or the mode needs a write grant\n"
+        },
+        {
+          "arm": "zero-rc",
+          "status": 1,
+          "stdout": "",
+          "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\neda-sch: write '/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/blocked-output/rds3.kicad_sch': denied: outside the granted directories, or the mode needs a write grant\n"
+        },
+        {
+          "arm": "zero-verified",
+          "status": 1,
+          "stdout": "",
+          "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\neda-sch: write '/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/blocked-output/rds3.kicad_sch': denied: outside the granted directories, or the mode needs a write grant\n"
+        },
+        {
+          "arm": "zero-debug",
+          "status": 1,
+          "stdout": "",
+          "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\neda-sch: write '/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/error-paths/blocked-output/rds3.kicad_sch': denied: outside the granted directories, or the mode needs a write grant\n"
+        }
+      ]
+    }
+  ],
+  "pass": true
+}

@@ -1,0 +1,25 @@
+build-slot: FIFO ticket 722, position 5; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 722, position 5; earlier build tickets must run first; waiting (61s so far)
+build-slot: FIFO ticket 722, position 5; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 722, position 5; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 722, position 5; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 722, position 5; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 722, position 4; earlier build tickets must run first; waiting (361s so far)
+build-slot: build slot 1, FIFO ticket 722 after 401s
+component-builder
++- install generated to selka-components
+   +- compile exe selka-components safe native 1 errors
+selfhost/components.zig:174:9: error: redeclaration of local constant 'environment'
+    var environment = try seedEnvironment(ctx, source);
+        ^~~~~~~~~~~
+selfhost/components.zig:126:11: note: previous declaration here
+    const environment = try ctx.checked(&.{ config.zig, "env" }, null, null);
+          ^~~~~~~~~~~
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -fllvm -OReleaseSafe -Mroot=selfhost/components.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/ai/canopy/.zig-global-cache --name selka-components --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 0/3 steps succeeded (1 failed)
+component-builder transitive failure
++- install generated to selka-components transitive failure
+   +- compile exe selka-components safe native 1 errors
+

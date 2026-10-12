@@ -1,0 +1,44 @@
+{
+  "kind": "private source overlay, not integrated qualification",
+  "base_revision": "07f16c65415819c36c46eb0657530abce734e395",
+  "helper_sha256": "44091bbe2064d7894fb9d3026b4f1abe2f1ef75f644ab8f538084eedb606f963",
+  "compiler_sha256": "0fdd1d8afa9e7e833d5508888b3da0065b89935dbee4d6bb3aafb47e7254bc24",
+  "components": "A10 qualified owned Support6 compiler pin/source, supplied by coordinator",
+  "overlay_shared_inputs": {
+    "src/core/single_owner.zig": "3f9895c94820f98a490c5694d991ec184e1b92cb395497647cb0714d2f76a854",
+    "src/core/build.zig": "dda9c2c2f8547e0a4ef581ac08a2cec91a0cd89e3ba5bff46d3f1689c5a98d13",
+    "src/core/own.zig": "6b7e788d559c90c78c0223a301fcc95dbbb0978034313fc732b356b0ed7d69a2",
+    "src/core/emit_llvm.zig": "42aa497254c06f677e61eae8013e16c671800e97ebd6d2aab9823cadb57ba25e",
+    "src/core/verify_ir.zig": "7d8607b75f5046baf1c0d8856edc69287ade035dc329d6838e09f28336c984d3",
+    "src/core/inline.zig": "ad0514cfd7e00144039a725a0934b0add2f4005fdca63075bd98d1169cab89e6",
+    "src/core/marker_validation.zig": "6282a149bc54633aa43bc9f8dfc0c5437b77bbc8e35a7846baea40955df48255",
+    "src/core/cost.zig": "d8c1b38b33a5636a8eb09e6f28bedcae070b03a48bd97247d1c4108f047b2a5a"
+  },
+  "overlay_shared_patch_sha256": "c0948b84ff82b5cbf814097f1e4c7afdda8968caa7a00bbc745a76179899da39",
+  "validation_note": "Includes A07 central marker validator arena fix",
+  "shared_hooks_sha256": "c0948b84ff82b5cbf814097f1e4c7afdda8968caa7a00bbc745a76179899da39",
+  "owned_component_pin": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+  "owned_component_pin_sha256": "32f37baa2509b01c231a104d7e9ba224a7193399201d0f87ec8a5db8fa6f039b",
+  "source_files": {
+    "src/core/borrowed_provider.zig": "44091bbe2064d7894fb9d3026b4f1abe2f1ef75f644ab8f538084eedb606f963",
+    "src/core/borrowed_provider_cache_test.zig": "ea74aeb87239d9a1c318fb4aa329415bf79852a6d21845fa96c89f2ef7b5cac8",
+    "src/core/borrowed_provider_test.zig": "fb53a45d82ef9f4f2fdbc3bbd124b7e4a6aaa147b8770094dee21ab45ec94c25"
+  },
+  "focused_test_status": {
+    "selected": 8,
+    "passed": 8,
+    "failed": 0,
+    "build_exit": 0,
+    "note": "Eight named tests; comptime test-root registrations add no test case. Raw log contains a known runner failed-command print despite process exit 0 and RESULT passed8/failed0."
+  },
+  "final_evidence": {
+    "wrapper": "80a22a92abd1839a7d58dbb8166773d2c2ea83f70c5284ef3ded7a0a3f1b7aed",
+    "owned-regressions": "bac342a54abd7d0b411b7d0efb5d5b9142a85cc9690918d0ba95b8496c2d3e43",
+    "entry": "c99a69620844f0049e3d3f8f266455be431f3d570a996bc2c8cfe04925ade3a4",
+    "negative": "7fed07ad29b1d36325bfbd79383ca718879697cf55c5db91eb6ba7c2ad07bf15",
+    "cache": "54151f04c83f7e301b8f11d72d7dd4ca50cfb354518cd335eebfed82d550bd8c"
+  },
+  "overlay_reproduction_sha256": "375e49f10dc7563da01bdad3d8baa87e460f610ae9e42f281f3063b65b21d53c",
+  "new_files_patch_sha256": "4efadc800884c6730fc077bb1df88a8d5aa85cf0759d949c3ebdd7b2a7b005c7",
+  "registration_patch_sha256": "56d15a3d5f71c0dd0b89638b48be03abdea516d0a36b5c6b7e76bbee94556b48"
+}

@@ -448,11 +448,14 @@ const ModuleState = struct {
     }
 
     fn declareExtern(self: *ModuleState, index: u32) !void {
+        if (try @import("borrow_selection.zig").declaration(self.module, &self.module.functions.items[index])) return;
+        if (try @import("borrowed_provider.zig").declaration(self.module, &self.module.functions.items[index])) return;
         const function = &self.module.functions.items[index];
         return self.external(function, self.functionName(index));
     }
 
     fn external(self: *ModuleState, function: *const ir.Function, name: []const u8) !void {
+        if (try @import("aggregate_provider.zig").marker(self.module, function)) return;
         if (self.local.selection == null and try emit_values.adapter(self.allocator, &self.externs, function)) return;
         // Several signatures of one runtime function (`myl_core_list_sort` over lists of different
         // elements) are one declaration.
@@ -750,7 +753,8 @@ const ModuleState = struct {
         try body.appendSlice(self.allocator, "failed.main:\n");
         try helper.unionPayload(&body, .{ .result = "%error", .union_type = ret, .value = "%r", .case = shape.error_tag });
         if (error_type == .str) {
-            try body.print(self.allocator, "  call void @myl_core_main_error_str(ptr %error)\n  call void @myl_core_release(ptr %error)\n{s}  %e = call i32 @myl_core_exit(i64 1)\n", .{release_args});
+            const destroy = if (self.module.zero_rc) "myl_core_drop_owned" else "myl_core_release";
+            try body.print(self.allocator, "  call void @myl_core_main_error_str(ptr %error)\n  call void @{s}(ptr %error)\n{s}  %e = call i32 @myl_core_exit(i64 1)\n", .{ destroy, release_args });
         } else if (error_type == .bool) {
             try body.print(self.allocator, "  call void @myl_core_main_error_bool(i1 zeroext %error)\n{s}  %e = call i32 @myl_core_exit(i64 1)\n", .{release_args});
         } else {
@@ -2018,6 +2022,7 @@ const FunctionEmitter = struct {
     }
 
     fn instruction(self: *FunctionEmitter, out: *Out, ref: ir.Ref, inst: ir.Inst) !void {
+        if (zero_rc.shallowManagedCopy(self.state.module, inst)) return error.UnsupportedInstruction;
         const name = try std.fmt.allocPrint(self.a(), "%v{d}", .{ref.index()});
         if (self.count_fn != null) try self.countBefore(out, inst);
         switch (inst.op) {
@@ -2527,6 +2532,7 @@ const FunctionEmitter = struct {
     }
 
     fn listGet(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+        if (self.typeOf(inst.a) == .str_view) return emit_text.byteRead(@TypeOf(self), @TypeOf(out), self, out, name, inst);
         const list = try self.value(inst.a);
         const index = try self.checkedIndex(out, inst, list, try self.value(inst.b));
         // A read nothing uses is only its bounds check: the element is never loaded (a verify
@@ -3811,17 +3817,52 @@ const FunctionEmitter = struct {
         if (inst.ty != .void) try out.print(self.a(), "  {s} = freeze {s} poison\n", .{ name, try self.ty(inst.ty) });
     }
 
+    fn specialRuntimeCall(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!bool {
+        if (try @import("aggregate_provider.zig").call(self.state.module, self.function, inst)) return true;
+        if (try @import("emit_render.zig").runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return true;
+        if (try emit_bytes.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return true;
+        if (try emit_text.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return true;
+        return emit_text_split.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst);
+    }
+
+    fn borrowedSelection(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!bool {
+        const selection = (try @import("borrow_selection.zig").call(self.state.module, self.function, inst)) orelse return false;
+        if (self.state.module.isBlock(inst.ty)) {
+            try out.print(self.a(), same_pointer, .{ name, try self.value(selection.value) });
+        } else {
+            const slot = try self.stackSlot(self.state.module.size(inst.ty));
+            try self.storeOperand(out, inst.ty, selection.value, slot);
+            try self.loadValue(out, inst.ty, slot, name);
+        }
+        return true;
+    }
+
     /// Emit a direct or indirect call under the internal aggregate ABI.
     pub fn call(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!void {
+        if (try @import("borrowed_provider.zig").call(self.state.module, self.function, inst)) |args| {
+            var construction = inst;
+            if (self.state.module.kind(inst.ty) == .@"union") {
+                construction.op = .union_make;
+                construction.a = args[0];
+                construction.data = 1;
+                try self.unionMake(out, name, construction);
+            } else {
+                construction.op = .record_make;
+                construction.a = .none;
+                try self.recordMake(out, name, construction);
+            }
+            return;
+        }
+        if (try self.borrowedSelection(out, name, inst)) return;
         const m = self.state.module;
         const signature = if (inst.op == .call_indirect) m.compound(self.typeOf(inst.a)).@"fn" else m.functions.items[inst.a.index()].signature;
         const external = signature.linkage != .internal;
         const program = !external or (inst.op == .call and emit_values.generated(&m.functions.items[inst.a.index()]));
-        if (inst.op == .call) try self.state.dependency(@intCast(inst.a.index()));
-        if (inst.op == .call) try emit_cap.beforeCall(@TypeOf(self), self, out, inst);
-        if (try emit_bytes.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
-        if (try emit_text.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
-        if (try emit_text_split.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
+        if (inst.op == .call) {
+            try self.state.dependency(@intCast(inst.a.index()));
+            try emit_cap.beforeCall(@TypeOf(self), self, out, inst);
+        }
+        if (try self.specialRuntimeCall(out, name, inst)) return;
         const borrowed_bytes = external and signature.ret == .bytes and signature.owned == 0;
         const text_parameter = signature.params.len == 1 and signature.params[0] == .str;
         // Zero-RC encode returns fresh owned bytes; only the RC ABI aliases text.

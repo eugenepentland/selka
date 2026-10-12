@@ -1,0 +1,261 @@
+{
+  "schema": "memory-closeout-applications-v1",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "harness_sha256": "777781a46ad67a425e719d3dd7cf5d6f8635d26552f6656448b42c621c4eb4cc",
+  "ownership": "zero",
+  "counted": true,
+  "cases": {
+    "word_count": {
+      "source_sha256": {
+        "programs/word_count/main.my": "754f348c9fe5e2aa38618077ffed2464f623ea7ae3a0be66a72c4a289dd8ac2c",
+        "programs/word_count/words.my": "61569e71ae3a0723d2f123720f78d32a33df465cdd5be1e2f76d9b8c7203ef6e"
+      },
+      "modes": {
+        "release": {
+          "build": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/scripts/build-slot.sh",
+              "build",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+              "build",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/programs/word_count/main.my",
+              "--zig",
+              "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+              "--cache-dir",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/c0-release/cache",
+              "--release",
+              "--experimental-zero-rc",
+              "--counters",
+              "-o",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/c0-release/word_count/release/program",
+              "--emit-llvm",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/c0-release/word_count/release/program.ll"
+            ],
+            "status": 0,
+            "elapsed_ns_including_admission": 61221622084,
+            "stdout": "",
+            "stderr": "build-slot: FIFO ticket 8, position 4; earlier build tickets must run first; waiting (0s so far)\nbuild-slot: build slot 1, FIFO ticket 8 after 61s\n"
+          },
+          "admitted": true,
+          "runs": [
+            {
+              "argv": [
+                "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/c0-release/word_count/release/program"
+              ],
+              "status": 0,
+              "elapsed_ns_including_admission": 997705,
+              "stdout": "64 7 302\n",
+              "stderr": "",
+              "size": "small",
+              "threads": 1,
+              "correct": true,
+              "audit": {
+                "counter_file": ".tmp/memory-closeout/A06/c0-release/word_count/release/counts-small-threads-1.json",
+                "counter_sha256": "14927831f17a45efc15116725c622372cdf52e6abd5b9fa9c601225c2dbaba3a",
+                "observed_rc_free": true,
+                "managed_leak_free": true,
+                "emitted_rc": {
+                  "retain": 0,
+                  "release": 0,
+                  "unique_test": 0
+                },
+                "runtime_rc": {
+                  "runtime_retains": 0,
+                  "runtime_releases": 0,
+                  "shared_retains": 0,
+                  "shared_releases": 0,
+                  "share_marks": 0
+                },
+                "direct_frees": 380,
+                "memory": {
+                  "allocs": 533,
+                  "alloc_bytes": 36096,
+                  "frees": 533,
+                  "reallocs": 0,
+                  "peak_live_bytes": 1920,
+                  "live_bytes_at_exit": 0
+                },
+                "executed_rc_sites": [],
+                "runtime_rc_functions": []
+              }
+            },
+            {
+              "argv": [
+                "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/c0-release/word_count/release/program",
+                "large"
+              ],
+              "status": 0,
+              "elapsed_ns_including_admission": 3578545,
+              "stdout": "8192 7 38618\n",
+              "stderr": "",
+              "size": "large",
+              "threads": 1,
+              "correct": true,
+              "audit": {
+                "counter_file": ".tmp/memory-closeout/A06/c0-release/word_count/release/counts-large-threads-1.json",
+                "counter_sha256": "d29afab60914949a774a55326fc194e94cee8e0aa5a0d35d9507810d3eeb976e",
+                "observed_rc_free": true,
+                "managed_leak_free": true,
+                "emitted_rc": {
+                  "retain": 0,
+                  "release": 0,
+                  "unique_test": 0
+                },
+                "runtime_rc": {
+                  "runtime_retains": 0,
+                  "runtime_releases": 0,
+                  "shared_retains": 0,
+                  "shared_releases": 0,
+                  "share_marks": 0
+                },
+                "direct_frees": 49148,
+                "memory": {
+                  "allocs": 65572,
+                  "alloc_bytes": 4458128,
+                  "frees": 65572,
+                  "reallocs": 0,
+                  "peak_live_bytes": 99152,
+                  "live_bytes_at_exit": 0
+                },
+                "executed_rc_sites": [],
+                "runtime_rc_functions": []
+              }
+            }
+          ],
+          "binary_sha256": "f0db5f1afc18fb4f45e95f14144c66c679ef26998f8ac58e59dd8989446598a3",
+          "llvm_sha256": "b47af4899340bcbdd77a8820308085082fe9d7dd22d3277a010c028cd648db0b",
+          "structural_rc_free": true
+        }
+      }
+    },
+    "nested_json": {
+      "source_sha256": {
+        "programs/nested_json/main.my": "c37319aadc2db25b3b312187279a27a7292556692b32ed9c096ceabd9fbde22b",
+        "programs/nested_json/transform.my": "731d621883eee8968c0a0fb49353de3908f16e711442d2199b73104d05c99f74"
+      },
+      "modes": {
+        "release": {
+          "build": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/scripts/build-slot.sh",
+              "build",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+              "build",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/programs/nested_json/main.my",
+              "--zig",
+              "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+              "--cache-dir",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/c0-release/cache",
+              "--release",
+              "--experimental-zero-rc",
+              "--counters",
+              "-o",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/c0-release/nested_json/release/program",
+              "--emit-llvm",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/c0-release/nested_json/release/program.ll"
+            ],
+            "status": 0,
+            "elapsed_ns_including_admission": 202034684519,
+            "stdout": "",
+            "stderr": "build-slot: FIFO ticket 17, position 9; earlier build tickets must run first; waiting (0s so far)\nbuild-slot: FIFO ticket 17, position 4; earlier build tickets must run first; waiting (60s so far)\nbuild-slot: FIFO ticket 17, position 1; all 1 build slot(s) busy; waiting (120s so far)\nbuild-slot: FIFO ticket 17, position 1; waiting for measurement or memory-accounting settle delay; waiting (180s so far)\nbuild-slot: build slot 1, FIFO ticket 17 after 200s\n"
+          },
+          "admitted": true,
+          "runs": [
+            {
+              "argv": [
+                "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/c0-release/nested_json/release/program"
+              ],
+              "status": 0,
+              "elapsed_ns_including_admission": 2591733,
+              "stdout": "8 370\n",
+              "stderr": "",
+              "size": "small",
+              "threads": 1,
+              "correct": true,
+              "audit": {
+                "counter_file": ".tmp/memory-closeout/A06/c0-release/nested_json/release/counts-small-threads-1.json",
+                "counter_sha256": "90f022a79ddcc797158245d99ac3750c98fc5841ba6f3c7082aba1923931bf77",
+                "observed_rc_free": true,
+                "managed_leak_free": true,
+                "emitted_rc": {
+                  "retain": 0,
+                  "release": 0,
+                  "unique_test": 0
+                },
+                "runtime_rc": {
+                  "runtime_retains": 0,
+                  "runtime_releases": 0,
+                  "shared_retains": 0,
+                  "shared_releases": 0,
+                  "share_marks": 0
+                },
+                "direct_frees": 363,
+                "memory": {
+                  "allocs": 750,
+                  "alloc_bytes": 59360,
+                  "frees": 750,
+                  "reallocs": 0,
+                  "peak_live_bytes": 13344,
+                  "live_bytes_at_exit": 0
+                },
+                "executed_rc_sites": [],
+                "runtime_rc_functions": []
+              }
+            },
+            {
+              "argv": [
+                "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/c0-release/nested_json/release/program",
+                "large"
+              ],
+              "status": 0,
+              "elapsed_ns_including_admission": 6256475,
+              "stdout": "512 24597\n",
+              "stderr": "",
+              "size": "large",
+              "threads": 1,
+              "correct": true,
+              "audit": {
+                "counter_file": ".tmp/memory-closeout/A06/c0-release/nested_json/release/counts-large-threads-1.json",
+                "counter_sha256": "c0b67876d6093e7b5dfdbe04cc4b28e053432989d91b5e43e719e23c4965fe4b",
+                "observed_rc_free": true,
+                "managed_leak_free": true,
+                "emitted_rc": {
+                  "retain": 0,
+                  "release": 0,
+                  "unique_test": 0
+                },
+                "runtime_rc": {
+                  "runtime_retains": 0,
+                  "runtime_releases": 0,
+                  "shared_retains": 0,
+                  "shared_releases": 0,
+                  "share_marks": 0
+                },
+                "direct_frees": 20523,
+                "memory": {
+                  "allocs": 42596,
+                  "alloc_bytes": 3339576,
+                  "frees": 42596,
+                  "reallocs": 11,
+                  "peak_live_bytes": 828184,
+                  "live_bytes_at_exit": 0
+                },
+                "executed_rc_sites": [],
+                "runtime_rc_functions": []
+              }
+            }
+          ],
+          "binary_sha256": "685883c645d124792fb5e8cd0d89bd45b5d3b64e9871d867f035e28e8a082579",
+          "llvm_sha256": "9d0b6752ceab64c491be4da8ffd572a0d333d1571483a7300599a0177947b523",
+          "structural_rc_free": true
+        }
+      }
+    }
+  },
+  "limitations": [
+    "Build elapsed time includes admission wait and is not compile-time evidence.",
+    "Managed counters do not measure RSS or native provider storage."
+  ]
+}

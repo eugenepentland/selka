@@ -6,6 +6,7 @@ const ir = @import("ir.zig");
 const support = @import("test_support.zig");
 const options = @import("core_test_options");
 const Hand = support.Hand;
+const report = std.debug.print;
 
 fn contains(text: []const u8, needle: []const u8) bool {
     return std.mem.indexOf(u8, text, needle) != null;
@@ -25,6 +26,15 @@ fn functionText(llvm: []const u8, name: []const u8) []const u8 {
 /// Copies of records over four words in a function's text.
 fn copies(text: []const u8) usize {
     return std.mem.count(u8, text, "call void @llvm.memcpy") + std.mem.count(u8, text, "call void @llvm.memmove");
+}
+
+fn reportUnexpectedWritebackCopies(a: std.mem.Allocator, llvm: []const u8) !void {
+    if (copies(functionText(llvm, "@\"my.write_backs\"")) == 0) return;
+    report("A02 raw Core:\n{s}\nA02 write_backs LLVM:\n{s}\nA02 pushes LLVM:\n{s}\n", .{
+        try support.irText(a, cursor),
+        functionText(llvm, "@\"my.write_backs\""),
+        functionText(llvm, "@\"my.pushes\""),
+    });
 }
 
 const cursor =
@@ -213,6 +223,7 @@ test "a record whose old value has no later reader is updated in place; a snapsh
     const kept = functionText(llvm, "@\"my.kept\"");
     try std.testing.expectEqual(@as(usize, 1), copies(kept));
     // `wb = it.rt; ...; it.rt = wb`: the write-back's value is built in the field itself.
+    try reportUnexpectedWritebackCopies(arena.allocator(), llvm);
     try std.testing.expectEqual(@as(usize, 0), copies(functionText(llvm, "@\"my.write_backs\"")));
 }
 
@@ -329,6 +340,86 @@ const fixture_expected =
     \\17911032713
     \\
 ;
+
+const loop_writeback_windows =
+    \\record Runtime:
+    \\    stack: int[]
+    \\    top: int
+    \\    a: int
+    \\    b: int
+    \\    c: int
+    \\record Interp:
+    \\    name: str
+    \\    rt: Runtime
+    \\    depth: int
+    \\func make() -> Interp:
+    \\    return Interp(name="loop", rt=Runtime(stack=[4], top=5, a=0, b=0, c=0), depth=0)
+    \\func readonly(input: Interp, n: int) -> int:
+    \\    mut it = input
+    \\    for i in range(n):
+    \\        mut wb = it.rt
+    \\        wb.top += 1
+    \\        it.rt = wb
+    \\    return input.rt.top * 100 + it.rt.top
+    \\func snapshot(n: int) -> int:
+    \\    mut it = make()
+    \\    const before = it
+    \\    for i in range(n):
+    \\        mut wb = it.rt
+    \\        wb.top += 1
+    \\        it.rt = wb
+    \\    return before.rt.top * 100 + it.rt.top
+    \\func different_fields(n: int) -> int:
+    \\    mut it = make()
+    \\    for i in range(n):
+    \\        mut wb = it.rt
+    \\        wb.top += 2
+    \\        if i % 2 == 0:
+    \\            it.rt = wb
+    \\        else:
+    \\            it.depth += 1
+    \\    return it.rt.top * 10 + it.depth
+    \\func old_field(n: int) -> int:
+    \\    mut it = make()
+    \\    mut total = 0
+    \\    for i in range(n):
+    \\        const before = it.rt
+    \\        mut wb = it.rt
+    \\        wb.top += 1
+    \\        it.rt = wb
+    \\        total += before.top
+    \\    return total * 100 + it.rt.top
+    \\func main(out: Stream) -> int:
+    \\    const input = make()
+    \\    out.print(readonly(input, 4), input.rt.top, snapshot(4), different_fields(4), old_field(4))
+    \\    return 0
+;
+
+// spec-case: NEW-CORE-CE-RECORDS-3
+// spec-case: NEW-CORE-CE2-EFFECTS-2
+test "record loop writeback keeps readonly roots snapshots branch fields and later old reads independent" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const llvm = try support.llvmText(a, loop_writeback_windows);
+    try expectWindowCopies(llvm);
+    for ([_]enum { debug, release, verify }{ .debug, .release, .verify }) |mode| {
+        var refusal: @import("build.zig").Refusal = .{};
+        var module = try support.buildSource(a, loop_writeback_windows, &refusal);
+        const ran = if (mode == .debug) try support.runOwned(a, &module, .{}) else blk: {
+            const result = try support.runPasses(a, &module, if (mode == .verify) .verify else .trusted);
+            break :blk try support.runOwned(a, &module, .{ .release = true, .verify = mode == .verify, .own = false, .analysis = support.analysis(&result) });
+        };
+        try std.testing.expectEqual(@as(u8, 0), ran.status);
+        try std.testing.expectEqualStrings("509 5 509 92 2609\n", ran.stdout);
+        try std.testing.expectEqualStrings("", ran.stderr);
+    }
+}
+
+fn expectWindowCopies(llvm: []const u8) !void {
+    for ([_][]const u8{ "@\"my.readonly\"", "@\"my.snapshot\"", "@\"my.different_fields\"", "@\"my.old_field\"" }) |name|
+        try std.testing.expect(copies(functionText(llvm, name)) != 0);
+}
 
 /// Build `test/core/ce_records.my` with `flags` and run it under the leak check, with `args`.
 fn fixtureRun(arena: std.mem.Allocator, root: []const u8, tag: []const u8, flags: []const []const u8, args: []const []const u8) !std.process.RunResult {

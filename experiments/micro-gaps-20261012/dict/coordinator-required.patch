@@ -1,0 +1,24 @@
+diff --git a/src/core/lowering_finish.zig b/src/core/lowering_finish.zig
+index c351802e3..ff6768514 100644
+--- a/src/core/lowering_finish.zig
++++ b/src/core/lowering_finish.zig
+@@ -10,5 +10,6 @@ pub fn function(a: std.mem.Allocator, module: *ir.Module, index: usize) std.mem.
+     _ = try @import("slices.zig").loops(a, module, f);
+     _ = try @import("fuse_text.zig").cursors(a, module, f);
+     _ = try @import("build_fn.zig").specialize(a, f);
++    _ = try @import("fuse_dict.zig").updateCopies(a, module, f);
+     _ = try @import("fuse_dict.zig").probes(a, f);
+ }
+diff --git a/src/core/single_owner_copy.zig b/src/core/single_owner_copy.zig
+index 4e0fbcc25..8ca136f37 100644
+--- a/src/core/single_owner_copy.zig
++++ b/src/core/single_owner_copy.zig
+@@ -10,7 +10,7 @@ pub const Error = error{ OutOfMemory, Unsupported };
+ pub fn copy(comptime Context: type, b: Context, value: ir.Ref, span: u32) Error!ir.Ref {
+     const ty = b.typeOfRef(value);
+     if (!single_owner.containsList(b.module(), ty)) return value;
+-    if (b.module().zero_rc and (ty == .str or ty == .bytes)) return b.runtimeCall("myl_core_owned_octets_copy", &.{ty}, ty, &.{value}, span);
++    if (b.module().zero_rc and (ty == .str or ty == .bytes)) return b.effectCall("myl_core_owned_octets_copy", &.{ty}, ty, &.{value}, span);
+     if (b.module().zero_rc and ty == .byte_buffer) return b.emit(.{ .op = .buffer_copy, .ty = ty, .a = value, .span = span });
+     switch (b.module().compound(ty)) {
+         .list => |element| {

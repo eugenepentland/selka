@@ -1,0 +1,11 @@
+{
+  "source_base": "07f16c65415819c36c46eb0657530abce734e395",
+  "qualified_source_is_worktree_overlay": true,
+  "source_manifest": "../source-manifest-prototype-03.json",
+  "source_manifest_sha256": "24ce77274221297650021a4188119e34ad5270ff2bfb73e1edc88b41c2ef58df",
+  "compiler_sha256": "d4b386f88d8c85f2713a3fd7dae4de44c6d3bc69bdc81754101e42aa9be29177",
+  "guest_source": "tests/lang/a04_borrow_selections.my",
+  "guest_source_sha256": "2ee970b40ca3e130d48da34189ed0d103677b24bb6d5751ddf174852a23f15d2",
+  "schema_dependency_commit": "779ea9a62d0bdbe6f62f7fa1cb2fc243cb9ba33f",
+  "post_build_production_changes": []
+}

@@ -1,0 +1,11 @@
+func main() -> int:
+    mut words = ["pear", "fig", "kiwi"]
+    mut selected = ""
+    mut seen = False
+    for word in words:
+        if not seen or selected < word:
+            selected = word.copy()
+            seen = True
+    assert seen
+    words.clear()
+    return if selected == "pear" then 0 else 1

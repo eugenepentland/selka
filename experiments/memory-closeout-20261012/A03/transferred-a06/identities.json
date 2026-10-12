@@ -1,0 +1,142 @@
+{
+  "tests/lang/rc_owning_element_borrows.my": {
+    "base_commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+    "prior_A06_commit": "8c91c509147df46f512dc810c0fe8da3703059e0",
+    "coordinator_overlay_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_owning_element_borrows.my",
+    "snapshots": {
+      "C0": {
+        "path": "experiments/memory-closeout-20261012/A03/transferred-a06/C0/tests/lang/rc_owning_element_borrows.my",
+        "sha256": "69d382d4c61c654fcc9998578673ca7dc556004cf30492a1c3770644fba9abf9",
+        "copy_calls": 0
+      },
+      "prior-A06": {
+        "path": "experiments/memory-closeout-20261012/A03/transferred-a06/prior-A06/tests/lang/rc_owning_element_borrows.my",
+        "sha256": "1590198b404aff838777e6501d04550b1ab4a4cd08a3a7fc5524f5e7be02ae1d",
+        "copy_calls": 15
+      },
+      "incoming": {
+        "path": "experiments/memory-closeout-20261012/A03/transferred-a06/incoming/tests/lang/rc_owning_element_borrows.my",
+        "sha256": "7c17e23f37e5548ec55dcc039691f89bbe9e49601015b88e04812cbf7ce648f7",
+        "copy_calls": 21
+      },
+      "reviewed": {
+        "path": "experiments/memory-closeout-20261012/A03/transferred-a06/reviewed/tests/lang/rc_owning_element_borrows.my",
+        "sha256": "7c17e23f37e5548ec55dcc039691f89bbe9e49601015b88e04812cbf7ce648f7",
+        "copy_calls": 21
+      }
+    },
+    "diffs": {
+      "C0 -> prior-A06": {
+        "added_lines": 15,
+        "removed_lines": 15
+      },
+      "prior-A06 -> incoming": {
+        "added_lines": 6,
+        "removed_lines": 6
+      },
+      "incoming -> reviewed": {
+        "added_lines": 0,
+        "removed_lines": 0
+      },
+      "C0 -> reviewed": {
+        "added_lines": 21,
+        "removed_lines": 21
+      }
+    },
+    "all_public_signatures_unchanged": true,
+    "public_test_return_expressions_unchanged": true,
+    "printed_expressions_unchanged": true
+  },
+  "test/core/row_cow.my": {
+    "base_commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+    "prior_A06_commit": "8c91c509147df46f512dc810c0fe8da3703059e0",
+    "coordinator_overlay_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/row_cow.my",
+    "snapshots": {
+      "C0": {
+        "path": "experiments/memory-closeout-20261012/A03/transferred-a06/C0/test/core/row_cow.my",
+        "sha256": "1a6cfa9f401c9cb272272e8663292718e3aa2064bce165d5c44dd6d5e01637ae",
+        "copy_calls": 0
+      },
+      "prior-A06": {
+        "path": "experiments/memory-closeout-20261012/A03/transferred-a06/prior-A06/test/core/row_cow.my",
+        "sha256": "866ea84b8a3a0b4447ba6e040c560ae9070f84157e5554b41cb8f7045a6cf403",
+        "copy_calls": 17
+      },
+      "incoming": {
+        "path": "experiments/memory-closeout-20261012/A03/transferred-a06/incoming/test/core/row_cow.my",
+        "sha256": "8b42132bc86babc93cddbd9360504e50e468c56fdd0138edf3f7ae2866abe364",
+        "copy_calls": 31
+      },
+      "reviewed": {
+        "path": "experiments/memory-closeout-20261012/A03/transferred-a06/reviewed/test/core/row_cow.my",
+        "sha256": "e99e0b2cd0a4f45ce9fcb703a85ebb94354e56f8dd8d7fec43a590d23706fbfb",
+        "copy_calls": 58
+      }
+    },
+    "diffs": {
+      "C0 -> prior-A06": {
+        "added_lines": 17,
+        "removed_lines": 17
+      },
+      "prior-A06 -> incoming": {
+        "added_lines": 14,
+        "removed_lines": 14
+      },
+      "incoming -> reviewed": {
+        "added_lines": 30,
+        "removed_lines": 29
+      },
+      "C0 -> reviewed": {
+        "added_lines": 61,
+        "removed_lines": 60
+      }
+    },
+    "printed_expressions_unchanged": true
+  },
+  "test/core/v_nested.my": {
+    "base_commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+    "prior_A06_commit": "8c91c509147df46f512dc810c0fe8da3703059e0",
+    "coordinator_overlay_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/v_nested.my",
+    "snapshots": {
+      "C0": {
+        "path": "experiments/memory-closeout-20261012/A03/transferred-a06/C0/test/core/v_nested.my",
+        "sha256": "546721e18c02e755f5d9a9220c375287dd878e5a5a07f7bb9c002c7f09a05b58",
+        "copy_calls": 0
+      },
+      "prior-A06": {
+        "path": "experiments/memory-closeout-20261012/A03/transferred-a06/prior-A06/test/core/v_nested.my",
+        "sha256": "3ad5d50235c2c44292005870e8c0177f893bbc77acdee5cb6bd729f097a06829",
+        "copy_calls": 2
+      },
+      "incoming": {
+        "path": "experiments/memory-closeout-20261012/A03/transferred-a06/incoming/test/core/v_nested.my",
+        "sha256": "d76cdd501472e7a458e274765f147dd59ee193fb2e08a39f493a3c49d05e6b5c",
+        "copy_calls": 3
+      },
+      "reviewed": {
+        "path": "experiments/memory-closeout-20261012/A03/transferred-a06/reviewed/test/core/v_nested.my",
+        "sha256": "d76cdd501472e7a458e274765f147dd59ee193fb2e08a39f493a3c49d05e6b5c",
+        "copy_calls": 3
+      }
+    },
+    "diffs": {
+      "C0 -> prior-A06": {
+        "added_lines": 2,
+        "removed_lines": 2
+      },
+      "prior-A06 -> incoming": {
+        "added_lines": 1,
+        "removed_lines": 1
+      },
+      "incoming -> reviewed": {
+        "added_lines": 0,
+        "removed_lines": 0
+      },
+      "C0 -> reviewed": {
+        "added_lines": 3,
+        "removed_lines": 3
+      }
+    },
+    "printed_expressions_unchanged": false
+  }
+}

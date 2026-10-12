@@ -1,0 +1,115 @@
+{
+  "compiler_source": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "compiler_path": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "cases": {
+    "field": {
+      "source_sha256": "bdcbc4adf00ed2f96ca1010cf1f85702d1e66a06a287adc31f4b3b7b4cc4b40c",
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-diagnosis/sources/field.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "elapsed_admitted_seconds": 0.004298194078728557,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-diagnosis/sources/field.my:6:5: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      receiver.items += [2]\n      ^\n"
+      },
+      "typed": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "dump-typed",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-diagnosis/sources/field.my",
+          "main"
+        ],
+        "status": 0,
+        "elapsed_admitted_seconds": 0.0011933720670640469,
+        "stdout": "fn main #0 params=0 ret=i64 cabi=false host=false\n  local %0 <collection>: List<i64> mut\n  local %1 receiver: Holder mut\n  local %2 <collection>: Holder mut\n  local %3 before: Holder mut\n  local %4 <collection>: Holder mut\n  local %5 <collection>: List<i64> mut\n  local %6 <collection>: List<i64> mut\n  local %7 <collection>: List<i64> mut\n  local %8 <collection>: List<i64> mut\n  local %9 <collection>: List<i64> mut\n  block\n    initialize %1\n      record : Holder\n        field .0\n          block_value : List<i64>\n            block\n              initialize %0\n                acquire_buffer : List<i64>\n                  integer : i64 1\n              discard\n                buffer_operation : unit append owner=%0\n                  integer : i64 1\n            local : List<i64> %0\n    initialize %3\n      block_value : Holder\n        block\n          initialize %2\n            local : Holder %1\n        buffer_operation : Holder copy owner=%2\n    discard\n      block_value : unit\n        block\n          initialize %4\n            local : Holder %1\n          initialize %6\n            field : List<i64> .0\n              local : Holder %4\n          discard\n            buffer_operation : unit extend owner=%6\n              block_value : List<i64>\n                block\n                  initialize %5\n                    acquire_buffer : List<i64>\n                      integer : i64 1\n                  discard\n                    buffer_operation : unit append owner=%5\n                      integer : i64 2\n                local : List<i64> %5\n          initialize %7\n            local : List<i64> %6\n          initialize %4\n            local : Holder %1\n          assign %1\n            update : Holder\n              local : Holder %4\n              field .0\n                local : List<i64> %7\n        unit : unit ...\n    assertion receiver.items == [1, 2]\n      binary : bool eq\n        field : List<i64> .0\n          local : Holder %1\n        block_value : List<i64>\n          block\n            initialize %8\n              acquire_buffer : List<i64>\n                integer : i64 2\n            discard\n              buffer_operation : unit append owner=%8\n                integer : i64 1\n            discard\n              buffer_operation : unit append owner=%8\n                integer : i64 2\n          local : List<i64> %8\n    assertion before.items == [1]\n      binary : bool eq\n        field : List<i64> .0\n          local : Holder %3\n        block_value : List<i64>\n          block\n            initialize %9\n              acquire_buffer : List<i64>\n                integer : i64 1\n            discard\n              buffer_operation : unit append owner=%9\n                integer : i64 1\n          local : List<i64> %9\n    ret\n      integer : i64 0\n",
+        "stderr": ""
+      }
+    },
+    "method-control": {
+      "source_sha256": "fec0ff274385f278f6b60b5ab76c80f2074623b991d61c285bd484951bf86e9e",
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-diagnosis/sources/method-control.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 0,
+        "elapsed_admitted_seconds": 0.001506974920630455,
+        "stdout": "",
+        "stderr": ""
+      },
+      "typed": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "dump-typed",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-diagnosis/sources/method-control.my",
+          "main"
+        ],
+        "status": 0,
+        "elapsed_admitted_seconds": 0.0009592999704182148,
+        "stdout": "fn main #0 params=0 ret=i64 cabi=false host=false\n  local %0 <collection>: List<i64> mut\n  local %1 receiver: Holder mut\n  local %2 <collection>: Holder mut\n  local %3 before: Holder mut\n  local %4 <collection>: List<i64> mut\n  local %5 <collection>: List<i64> mut\n  local %6 <collection>: List<i64> mut\n  local %7 <collection>: List<i64> mut\n  block\n    initialize %1\n      record : Holder\n        field .0\n          block_value : List<i64>\n            block\n              initialize %0\n                acquire_buffer : List<i64>\n                  integer : i64 1\n              discard\n                buffer_operation : unit append owner=%0\n                  integer : i64 1\n            local : List<i64> %0\n    initialize %3\n      block_value : Holder\n        block\n          initialize %2\n            local : Holder %1\n        buffer_operation : Holder copy owner=%2\n    discard\n      block_value : unit\n        block\n          initialize %5\n            field : List<i64> .0\n              local : Holder %1\n        buffer_operation : unit extend owner=%5\n          block_value : List<i64>\n            block\n              initialize %4\n                acquire_buffer : List<i64>\n                  integer : i64 1\n              discard\n                buffer_operation : unit append owner=%4\n                  integer : i64 2\n            local : List<i64> %4\n    assertion receiver.items == [1, 2]\n      binary : bool eq\n        field : List<i64> .0\n          local : Holder %1\n        block_value : List<i64>\n          block\n            initialize %6\n              acquire_buffer : List<i64>\n                integer : i64 2\n            discard\n              buffer_operation : unit append owner=%6\n                integer : i64 1\n            discard\n              buffer_operation : unit append owner=%6\n                integer : i64 2\n          local : List<i64> %6\n    assertion before.items == [1]\n      binary : bool eq\n        field : List<i64> .0\n          local : Holder %3\n        block_value : List<i64>\n          block\n            initialize %7\n              acquire_buffer : List<i64>\n                integer : i64 1\n            discard\n              buffer_operation : unit append owner=%7\n                integer : i64 1\n          local : List<i64> %7\n    ret\n      integer : i64 0\n",
+        "stderr": ""
+      }
+    },
+    "no-snapshot": {
+      "source_sha256": "22874f607e5339b2a4de9f9cee804f623329798011b3432a92903d587c655aa8",
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-diagnosis/sources/no-snapshot.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "elapsed_admitted_seconds": 0.0012179079931229353,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-diagnosis/sources/no-snapshot.my:5:5: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      receiver.items += [2]\n      ^\n"
+      },
+      "typed": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "dump-typed",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-diagnosis/sources/no-snapshot.my",
+          "main"
+        ],
+        "status": 0,
+        "elapsed_admitted_seconds": 0.0009507250506430864,
+        "stdout": "fn main #0 params=0 ret=i64 cabi=false host=false\n  local %0 <collection>: List<i64> mut\n  local %1 receiver: Holder mut\n  local %2 <collection>: Holder mut\n  local %3 <collection>: List<i64> mut\n  local %4 <collection>: List<i64> mut\n  local %5 <collection>: List<i64> mut\n  local %6 <collection>: List<i64> mut\n  block\n    initialize %1\n      record : Holder\n        field .0\n          block_value : List<i64>\n            block\n              initialize %0\n                acquire_buffer : List<i64>\n                  integer : i64 1\n              discard\n                buffer_operation : unit append owner=%0\n                  integer : i64 1\n            local : List<i64> %0\n    discard\n      block_value : unit\n        block\n          initialize %2\n            local : Holder %1\n          initialize %4\n            field : List<i64> .0\n              local : Holder %2\n          discard\n            buffer_operation : unit extend owner=%4\n              block_value : List<i64>\n                block\n                  initialize %3\n                    acquire_buffer : List<i64>\n                      integer : i64 1\n                  discard\n                    buffer_operation : unit append owner=%3\n                      integer : i64 2\n                local : List<i64> %3\n          initialize %5\n            local : List<i64> %4\n          initialize %2\n            local : Holder %1\n          assign %1\n            update : Holder\n              local : Holder %2\n              field .0\n                local : List<i64> %5\n        unit : unit ...\n    assertion receiver.items == [1, 2]\n      binary : bool eq\n        field : List<i64> .0\n          local : Holder %1\n        block_value : List<i64>\n          block\n            initialize %6\n              acquire_buffer : List<i64>\n                integer : i64 2\n            discard\n              buffer_operation : unit append owner=%6\n                integer : i64 1\n            discard\n              buffer_operation : unit append owner=%6\n                integer : i64 2\n          local : List<i64> %6\n    ret\n      integer : i64 0\n",
+        "stderr": ""
+      }
+    },
+    "publication": {
+      "source_sha256": "39b1f3f52140749b7c3ea2b398b3f5bf58e6a4ac460288d58f718eaecc9516c5",
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-diagnosis/sources/publication.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "elapsed_admitted_seconds": 0.002105248160660267,
+        "stdout": "",
+        "stderr": "publication.my:42:5: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      receiver.items += [2]\n      ^\n"
+      },
+      "typed": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "dump-typed",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-diagnosis/sources/publication.my",
+          "test_augmented_field_detaches_an_owned_edge_from_a_private_capture"
+        ],
+        "status": 1,
+        "elapsed_admitted_seconds": 0.0011161540169268847,
+        "stdout": "",
+        "stderr": "publication.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main\n  public func test_repeated_optional_unwrap_replaces_a_private_loan_with_an_owner() -> bool:\n  ^\n"
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+record Holder:
+    items: int[]
+func main() -> int:
+    mut receiver = Holder(items=[1])
+    receiver.items += [2]
+    assert receiver.items == [1, 2]
+    return 0

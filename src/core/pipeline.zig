@@ -159,6 +159,7 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
         const report_start = report.items.len;
         var session = frontend.Session.init(init.gpa, init.io, entry.root);
         defer session.deinit();
+        session.setOwnership(options.show.codegen.single_owner, options.show.codegen.zero_rc);
         entry.configure(&session);
         if (options.show.diagnostics != .errors) session.setFormat(if (options.show.diagnostics == .json) .json else .text);
         const drop_debug = options.mode == .release and budget == null;
@@ -631,7 +632,11 @@ const FinalRestorer = struct {
         const context = self.context orelse return;
         var scratch = std.heap.ArenaAllocator.init(self.backing);
         defer scratch.deinit();
-        try passes.restoreDeferredFinal(self.arena, scratch.allocator(), context, index, self.result);
+        passes.restoreDeferredFinal(self.arena, scratch.allocator(), context, index, self.result) catch |err| switch (err) {
+            error.Unsupported => return error.CacheMiss,
+            error.OutOfMemory => return error.OutOfMemory,
+            error.CacheMiss => return error.CacheMiss,
+        };
     }
 };
 

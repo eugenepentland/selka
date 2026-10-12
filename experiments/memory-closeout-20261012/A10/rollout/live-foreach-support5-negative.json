@@ -1,0 +1,15 @@
+{
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "source_sha256": "6be6c16116cc4fb9c5b9ea9ade2ad885abef05054909dee3cbd04e3cabd8b8fe",
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "check",
+    "experiments/memory-closeout-20261012/A10/fixtures/live_foreach_refused.my",
+    "--experimental-zero-rc",
+    "--no-cache"
+  ],
+  "status": 1,
+  "stdout": "",
+  "stderr": "experiments/memory-closeout-20261012/A10/fixtures/live_foreach_refused.my:7:9: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          items[1] = 9\n          ^\n",
+  "success": true
+}

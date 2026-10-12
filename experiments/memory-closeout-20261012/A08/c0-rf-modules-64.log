@@ -1,0 +1,7 @@
+build-slot: FIFO ticket 23, position 1; waiting for memory-accounting settle delay or another measurement; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 23 after 5s
+{"name": "modules-64-cold", "status": 2, "passed": false, "elapsed_ns": 5509054398, "max_rss_kib": "121620"}
+{"name": "modules-64-warm", "status": 2, "passed": false, "elapsed_ns": 5910167699, "max_rss_kib": "121604"}
+{"name": "modules-64-receipt", "status": 2, "passed": false, "elapsed_ns": 6009029352, "max_rss_kib": "121608"}
+{"name": "modules-64-replay", "status": 2, "passed": false, "elapsed_ns": 6310286700, "max_rss_kib": "121608"}
+{"name": "modules-64-edit", "status": 2, "passed": false, "elapsed_ns": 4508362595, "max_rss_kib": "121600"}

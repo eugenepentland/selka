@@ -1,0 +1,194 @@
+# RC-ELEMENT-BORROW-3: an element of a read-only list parameter may be read in
+# place even when it owns references; everything else keeps its copy.
+record Span:
+    source: bytes
+    start: int
+    end: int
+
+
+record Pin:
+    part: int
+    net: Span
+    nc: bool
+    display: Span
+    net_id: int
+
+
+func pin(part: int, net: bytes, nc: bool, net_id: int) -> Pin:
+    mut span = Span(source=net.copy(), start=0, end=len(net))
+    return Pin(part=part, net=span.copy(), nc=nc, display=span, net_id=net_id)
+
+
+func sample() -> Pin[]:
+    return [pin(0, b"VCC", False, 1), pin(1, b"GND", False, 2), pin(2, b"SDA", True, 3), pin(3, b"GND", False, 2)]
+
+
+func same(a: Span, b: Span) -> bool:
+    if a.end - a.start != b.end - b.start:
+        return False
+    mut i = 0
+    while i < a.end - a.start:
+        if a.source[a.start + i] != b.source[b.start + i]:
+            return False
+        i += 1
+    return True
+
+
+# A borrowed-entry body returns the element it found in place.
+func find(pins: Pin[], part: int) -> Pin:
+    mut i = 0
+    while i < len(pins):
+        mut found = pins[i].copy()
+        if found.part == part:
+            return found
+        i += 1
+    return Pin(part=part, net=Span(source=b"", start=0, end=0), nc=True, display=Span(source=b"", start=0, end=0), net_id=-1)
+
+
+# An owned-result body allocates, calls and returns while the borrow is live.
+func matching(pins: Pin[], wanted: bytes) -> Span[]:
+    mut out: Span[] = []
+    mut target = Span(source=wanted.copy(), start=0, end=len(wanted))
+    mut i = 0
+    while i < len(pins):
+        mut current = pins[i].copy()
+        if not current.nc and same(current.net, target):
+            out.append(current.display.copy())
+            out.append(Span(source=current.net.source.copy(), start=1, end=current.net.end))
+        i += 1
+    return out
+
+
+# Nested scans through a named alias of the parameter: the alias is two
+# captures deep, so these element reads keep their copies.
+func groups(pins: Pin[]) -> int[]:
+    mut out: int[] = []
+    mut view = pins.copy()
+    mut i = 0
+    while i < len(view):
+        mut current = view[i].copy()
+        mut count = 0
+        mut j = 0
+        while j < len(view):
+            mut other = view[j].copy()
+            if not other.nc and same(other.net, current.net):
+                count += 1
+            j += 1
+        out.append(count * 10 + current.net_id)
+        i += 1
+    return out
+
+
+func last_with(pins: Pin[], net_id: int) -> Pin:
+    mut kept: bytes[] = []
+    mut result = pins[0].copy()
+    mut i = 0
+    while i < len(pins):
+        mut current = pins[i].copy()
+        kept.append(current.net.source.copy())
+        if current.net_id == net_id:
+            result = pins[i].copy()
+        i += 1
+    if len(kept) == 0:
+        return pins[0].copy()
+    return result
+
+
+public func test_borrowed_entry_returns_an_owning_element_read_in_place() -> bool:
+    mut pins = sample()
+    mut found = find(pins, 3)
+    mut missing = find(pins, 9)
+    pins[3].net = Span(source=b"CHANGED", start=0, end=7)
+    pins.append(pin(9, b"LATE", False, 7))
+    return found.net.source == b"GND" and found.part == 3 and missing.net_id == -1 and find(pins, 9).net.source == b"LATE"
+
+
+public func test_owned_result_keeps_fields_of_elements_read_in_place() -> bool:
+    mut pins = sample()
+    mut spans = matching(pins, b"GND")
+    pins[1].display = Span(source=b"X", start=0, end=1)
+    pins.clear()
+    return len(spans) == 4 and spans[0].source == b"GND" and spans[1].start == 1 and spans[3].end == 3
+
+
+public func test_nested_element_reads_through_a_captured_parameter() -> bool:
+    mut counts = groups(sample())
+    return counts == [11, 22, 3, 22]
+
+
+public func test_a_reassigned_element_local_returns_its_latest_element() -> bool:
+    mut pins = sample()
+    mut chosen = last_with(pins, 2)
+    pins[3].part = 40
+    return chosen.part == 3 and chosen.net.source == b"GND"
+
+
+# Near misses: a `mut` list, a local list and an iteration source copy.
+func rename(mut pins: Pin[]) -> int:
+    mut before = pins[0]
+    pins[0].net = Span(source=b"RENAMED", start=0, end=7)
+    pins[0].part = 50
+    return before.part * 100 + before.net.end
+
+
+func swap_first(view: Pin[], mut target: Pin[]) -> int:
+    mut first = view[0]
+    target[0] = pin(99, b"ZZ", False, 9)
+    target.append(pin(5, b"YYYY", False, 5))
+    return first.part * 10 + first.net.end
+
+
+func local_list(count: int) -> int:
+    mut pins = sample()
+    mut current = pins[1]
+    pins[1] = pin(70, b"NEW", False, 70)
+    pins.append(pin(count, b"MORE", False, 0))
+    return current.part * 1000 + current.net.end * 100 + pins[1].part
+
+
+func iterated(pins: Pin[]) -> int:
+    mut total = 0
+    for current in pins:
+        total += current.net.end
+    return total
+
+
+public func test_mut_list_element_read_keeps_its_snapshot() -> bool:
+    mut pins = sample()
+    mut result = rename(mut pins)
+    return result == 3 and pins[0].part == 50 and pins[0].net.source == b"RENAMED"
+
+
+public func test_read_only_and_mut_views_of_one_list_stay_distinct() -> bool:
+    mut pins = sample()
+    mut result = swap_first(pins, mut pins)
+    return result == 3 and pins[0].part == 99 and len(pins) == 5
+
+
+public func test_local_list_and_iteration_elements_keep_their_copies() -> bool:
+    return local_list(8) == 1370 and iterated(sample()) == 12
+
+
+# RC-READONLY-ANCHOR-2: the first argument of an inlined comparison, read out
+# of a read-only element, is bound in place; a local copy as the first
+# argument keeps its own.
+func matching_parts(pins: Pin[], net: Span) -> int[]:
+    mut base = net
+    base.end = net.end - 1
+    mut out: int[] = []
+    mut i = 0
+    while i < len(pins):
+        mut current = pins[i]
+        if same(current.net, base):
+            out.append(current.part)
+        if same(base, current.display):
+            out.append(current.part + 100)
+        i += 1
+    return out
+
+
+public func test_inlined_arguments_read_out_of_elements_compare_in_place() -> bool:
+    mut pins = sample()
+    pins.append(pin(7, b"GN", False, 4))
+    mut found = matching_parts(pins, Span(source=b"GNDX", start=0, end=4))
+    return found == [1, 101, 3, 103]

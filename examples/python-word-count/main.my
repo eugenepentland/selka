@@ -2,7 +2,7 @@ func histogram(text: str) -> dict[str, int]:
     mut counts: dict[str, int] = {}
     for word in text.split(" "):
         if word != "":
-            counts[word] = counts.get(word, 0) + 1
+            counts[word.copy()] = counts.get(word, 0) + 1
     return counts
 
 

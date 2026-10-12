@@ -1,0 +1,7 @@
+record Node:
+    value: Result[int, int]
+    children: Node[]
+func main() -> int:
+    const node = Node(value=Ok(3),children=[])
+    _ = node
+    return 0

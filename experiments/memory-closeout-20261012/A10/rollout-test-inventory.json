@@ -1,0 +1,2653 @@
+{
+  "note": "Static inventory, categories overlap; lexical RC mentions require semantic review, no passing claim.",
+  "pipeline_options": [
+    {
+      "file": "src/core/cli_args.zig",
+      "hits": [
+        {
+          "line": 12,
+          "text": "build: pipeline.Options,"
+        }
+      ],
+      "registered_tests_in_file": 3
+    },
+    {
+      "file": "src/core/cost_command.zig",
+      "hits": [
+        {
+          "line": 146,
+          "text": "const options: pipeline.Options = .{"
+        }
+      ],
+      "registered_tests_in_file": 0
+    },
+    {
+      "file": "src/core/main.zig",
+      "hits": [
+        {
+          "line": 181,
+          "text": "fn sabotageFlag(arg: []const u8) ?@FieldType(pipeline.Options, \"facts\") {"
+        },
+        {
+          "line": 182,
+          "text": "const flags = [_]struct { []const u8, @FieldType(pipeline.Options, \"facts\") }{"
+        },
+        {
+          "line": 200,
+          "text": "var options: pipeline.Options = .{ .zig = init.environ_map.get(\"ZIG\") orelse \"zig\" };"
+        },
+        {
+          "line": 281,
+          "text": "fn buildOutputFlag(options: *pipeline.Options, no_cache: *bool, arg: []const u8) bool {"
+        }
+      ],
+      "registered_tests_in_file": 0
+    },
+    {
+      "file": "src/core/test_runner_options.zig",
+      "hits": [
+        {
+          "line": 71,
+          "text": "build: pipeline.Options,"
+        }
+      ],
+      "registered_tests_in_file": 3
+    }
+  ],
+  "pipeline_emit_helpers": [
+    {
+      "file": "src/core/backend_owned_test.zig",
+      "hits": [
+        {
+          "line": 27,
+          "text": "return pipeline.emittedWithScratch(arena, backing, module, unit, .{"
+        }
+      ],
+      "registered_tests_in_file": 2
+    },
+    {
+      "file": "src/core/cost_command.zig",
+      "hits": [
+        {
+          "line": 154,
+          "text": "const emission = (if (policy.enabled) pipeline.emittedQuery(.{ .arena = a, .backing = init.gpa }, &module, unit, options, .{"
+        },
+        {
+          "line": 160,
+          "text": "}, &diagnostics) else pipeline.emittedWithScratch(a, init.gpa, &module, unit, options, &diagnostics)) catch |err| return failure(init, diagnostics.items, err);"
+        }
+      ],
+      "registered_tests_in_file": 0
+    },
+    {
+      "file": "src/core/pipeline_emission_test.zig",
+      "hits": [
+        {
+          "line": 23,
+          "text": "const emitted = try pipeline.emittedWithScratch(a, scratch, &module, .{ .src = checked.src, .source_path = \"app.my\", .main = .{} }, .{"
+        }
+      ],
+      "registered_tests_in_file": 2
+    },
+    {
+      "file": "src/core/test_runner.zig",
+      "hits": [
+        {
+          "line": 1447,
+          "text": "_ = pipeline.finish(init, &module, unit, request, &log) catch |err| switch (err) {"
+        }
+      ],
+      "registered_tests_in_file": 7
+    }
+  ],
+  "external_compiler_tests": [
+    {
+      "file": "src/core/byte_index_test.zig",
+      "hits": [
+        {
+          "line": 88,
+          "text": "try argv.appendSlice(a, &.{ options.core_path, \"build\", source, \"-o\", output, \"--cache-dir\", root });"
+        }
+      ],
+      "registered_tests_in_file": 7
+    },
+    {
+      "file": "src/core/cap_test.zig",
+      "hits": [
+        {
+          "line": 134,
+          "text": "try argv.appendSlice(a, &.{ options.core_path, \"build\", source, \"-o\", binary, \"--cache-dir\", root });"
+        }
+      ],
+      "registered_tests_in_file": 5
+    },
+    {
+      "file": "src/core/ce2_effects_test.zig",
+      "hits": [
+        {
+          "line": 208,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"build\", source, \"-o\", output, \"--cache-dir\", cache });"
+        }
+      ],
+      "registered_tests_in_file": 8
+    },
+    {
+      "file": "src/core/ce2_results_test.zig",
+      "hits": [
+        {
+          "line": 452,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"build\", source, \"-o\", output, \"--cache-dir\", try std.fmt.allocPrint(arena, \"{s}/cache\", .{root}) });"
+        }
+      ],
+      "registered_tests_in_file": 7
+    },
+    {
+      "file": "src/core/ce_lists_test.zig",
+      "hits": [
+        {
+          "line": 74,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"build\", source, \"-o\", output, \"--cache-dir\", cache });"
+        },
+        {
+          "line": 462,
+          "text": "try argv.appendSlice(a, &.{ options.core_path, \"run\", source, \"--max-memory=1M\", \"--cache-dir\", try std.fmt.allocPrint(a, \"{s}/run-cache\", .{root}) });"
+        }
+      ],
+      "registered_tests_in_file": 6
+    },
+    {
+      "file": "src/core/ce_records_test.zig",
+      "hits": [
+        {
+          "line": 338,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"build\", source, \"-o\", output, \"--cache-dir\", try std.fmt.allocPrint(arena, \"{s}/cache\", .{root}) });"
+        }
+      ],
+      "registered_tests_in_file": 9
+    },
+    {
+      "file": "src/core/conformance_test.zig",
+      "hits": [
+        {
+          "line": 81,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"test\", source, \"--json\", \"--cache-dir\", cache });"
+        }
+      ],
+      "registered_tests_in_file": 3
+    },
+    {
+      "file": "src/core/count_test.zig",
+      "hits": [
+        {
+          "line": 31,
+          "text": "try argv.appendSlice(a, &.{ options.core_path, \"build\", source, \"-o\", binary, \"--cache-dir\", root });"
+        }
+      ],
+      "registered_tests_in_file": 14
+    },
+    {
+      "file": "src/core/dict_scalar_store_test.zig",
+      "hits": [
+        {
+          "line": 15,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"test\", source, \"--json\", \"--cache-dir\", root });"
+        }
+      ],
+      "registered_tests_in_file": 1
+    },
+    {
+      "file": "src/core/dict_test.zig",
+      "hits": [
+        {
+          "line": 65,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"test\", source_path, \"--json\", \"--cache-dir\", root });"
+        },
+        {
+          "line": 163,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"build\", program, \"-o\", output, \"--cache-dir\", cache });"
+        }
+      ],
+      "registered_tests_in_file": 7
+    },
+    {
+      "file": "src/core/e2e_test.zig",
+      "hits": [
+        {
+          "line": 103,
+          "text": "const debug = try sliceChecksums(arena.allocator(), try buildFixture(arena.allocator(), root, \"int_math\", .{ .compiler = options.core_path, .release = false }));"
+        },
+        {
+          "line": 104,
+          "text": "const release_build = try buildFixture(arena.allocator(), root, \"int_math\", .{ .compiler = options.core_path, .release = true });"
+        },
+        {
+          "line": 123,
+          "text": "const debug = try controlRuns(arena.allocator(), try buildFixture(arena.allocator(), root, \"control\", .{ .compiler = options.core_path, .release = false }));"
+        },
+        {
+          "line": 124,
+          "text": "const release = try controlRuns(arena.allocator(), try buildFixture(arena.allocator(), root, \"control\", .{ .compiler = options.core_path, .release = true }));"
+        },
+        {
+          "line": 143,
+          "text": "const debug = try run(arena.allocator(), try buildFixture(arena.allocator(), root, \"list_alias\", .{ .compiler = options.core_path, .release = false }), &.{});"
+        },
+        {
+          "line": 144,
+          "text": "const release = try run(arena.allocator(), try buildFixture(arena.allocator(), root, \"list_alias\", .{ .compiler = options.core_path, .release = true }), &.{});"
+        },
+        {
+          "line": 156,
+          "text": "const overflow = try run(arena.allocator(), try buildFixture(arena.allocator(), root, \"overflow\", .{ .compiler = options.core_path, .release = false }), &.{});"
+        },
+        {
+          "line": 157,
+          "text": "const bounds = try run(arena.allocator(), try buildFixture(arena.allocator(), root, \"bounds\", .{ .compiler = options.core_path, .release = true }), &.{});"
+        },
+        {
+          "line": 179,
+          "text": "const program = try buildFixture(a, root, \"negative_index\", .{ .compiler = options.core_path, .release = release });"
+        },
+        {
+          "line": 199,
+          "text": "const new = try run(arena, try buildFixture(arena, root, name, .{ .compiler = options.core_path, .release = true }), args);"
+        },
+        {
+          "line": 200,
+          "text": "const old = try run(arena, try buildFixture(arena, root, name, .{ .compiler = options.old_path, .release = true, .old = true }), args);"
+        },
+        {
+          "line": 229,
+          "text": "const executable = try buildFixture(arena, root, name, .{ .compiler = options.core_path, .release = release });"
+        },
+        {
+          "line": 264,
+          "text": "const result = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.core_path, \"build\", source, \"-o\", output, mode, flag, \"--link\", options.clock_path, cache_flag, cache } });"
+        },
+        {
+          "line": 291,
+          "text": "const result = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.core_path, \"build\", source, \"-o\", output, optimize_flag, flag, \"--link\", options.clock_path, cache_flag, cache } });"
+        },
+        {
+          "line": 339,
+          "text": "const debug = try computeChecksums(arena.allocator(), try buildFixture(arena.allocator(), root, \"compute_s0\", .{ .compiler = options.core_path, .release = false }));"
+        },
+        {
+          "line": 340,
+          "text": "const release = try computeChecksums(arena.allocator(), try buildFixture(arena.allocator(), root, \"compute_s0\", .{ .compiler = options.core_path, .release = true }));"
+        },
+        {
+          "line": 361,
+          "text": "const result = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.core_path, \"build\", source, \"-o\", output, optimize_flag, \"--generic-vectors\", \"--link\", options.clock_path, cache_flag, cache } });"
+        }
+      ],
+      "registered_tests_in_file": 11
+    },
+    {
+      "file": "src/core/environment_names_test.zig",
+      "hits": [
+        {
+          "line": 36,
+          "text": "try argv.appendSlice(a, &.{ options.core_path, \"build\", source, \"-o\", binary, \"--link\", provider, \"--cache-dir\", root });"
+        }
+      ],
+      "registered_tests_in_file": 1
+    },
+    {
+      "file": "src/core/f1_facts_test.zig",
+      "hits": [
+        {
+          "line": 43,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"build\", source, \"-o\", output, \"--cache-dir\", cache });"
+        }
+      ],
+      "registered_tests_in_file": 11
+    },
+    {
+      "file": "src/core/f2_index_test.zig",
+      "hits": [
+        {
+          "line": 51,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"build\", source, \"-o\", output, \"--cache-dir\", cache });"
+        }
+      ],
+      "registered_tests_in_file": 18
+    },
+    {
+      "file": "src/core/fuse_text_scalar_test.zig",
+      "hits": [
+        {
+          "line": 121,
+          "text": "try argv.appendSlice(a, &.{ options.core_path, \"test\", source, \"--json\", \"--cache-dir\", root });"
+        }
+      ],
+      "registered_tests_in_file": 7
+    },
+    {
+      "file": "src/core/iteration_test.zig",
+      "hits": [
+        {
+          "line": 15,
+          "text": "try argv.appendSlice(a, &.{ options.core_path, \"test\", try std.fs.path.join(a, &.{ options.fixtures, \"i_live_place.my\" }), \"--cache-dir\", root });"
+        }
+      ],
+      "registered_tests_in_file": 1
+    },
+    {
+      "file": "src/core/number_test.zig",
+      "hits": [
+        {
+          "line": 15,
+          "text": "try argv.appendSlice(a, &.{ options.core_path, \"test\", try std.fs.path.join(a, &.{ options.fixtures, \"n_numbers.my\" }), \"--cache-dir\", root });"
+        }
+      ],
+      "registered_tests_in_file": 1
+    },
+    {
+      "file": "src/core/own_test.zig",
+      "hits": [
+        {
+          "line": 459,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"build\", source, \"-o\", output, \"--link\", options.clock_path, \"--cache-dir\", cache });"
+        },
+        {
+          "line": 516,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"build\", source, \"-o\", output, \"--cache-dir\", cache, \"--stats\" });"
+        },
+        {
+          "line": 1002,
+          "text": "try argv.appendSlice(arena.allocator(), &.{ options.core_path, \"build\", source, \"-o\", output, \"--cache-dir\", try std.fmt.allocPrint(arena.allocator(), \"{s}/cache\", .{root}) });"
+        },
+        {
+          "line": 1031,
+          "text": "try argv.appendSlice(arena.allocator(), &.{ options.core_path, \"build\", source, \"-o\", output, \"--cache-dir\", try std.fmt.allocPrint(arena.allocator(), \"{s}/cache\", .{root}) });"
+        },
+        {
+          "line": 1051,
+          "text": "try argv.appendSlice(arena.allocator(), &.{ options.core_path, \"build\", source, \"-o\", output, \"--cache-dir\", try std.fmt.allocPrint(arena.allocator(), \"{s}/cache\", .{root}) });"
+        },
+        {
+          "line": 1086,
+          "text": "try argv.appendSlice(arena.allocator(), &.{ options.core_path, \"test\", try std.fs.path.join(arena.allocator(), &.{ root, \"taken.my\" }), \"--cache-dir\", try std.fs.path.join(arena.allocator(), &.{ root, \"cache\" }) });"
+        },
+        {
+          "line": 1219,
+          "text": "const built = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.core_path, \"build\", source, \"-o\", output, \"--release\", \"--link\", options.clock_path, \"--cache-dir\", cache } });"
+        }
+      ],
+      "registered_tests_in_file": 30
+    },
+    {
+      "file": "src/core/row_cow_test.zig",
+      "hits": [
+        {
+          "line": 110,
+          "text": "try argv.appendSlice(a, &.{ options.core_path, \"build\", source, \"-o\", output, \"--cache-dir\", root });"
+        },
+        {
+          "line": 120,
+          "text": "try test_argv.appendSlice(a, &.{ options.core_path, \"test\", try std.fs.path.join(a, &.{ options.fixtures, \"v_row_cow.my\" }), \"--cache-dir\", try std.fmt.allocPrint(a, \"{s}/tests-{d}\", .{ root, index }) });"
+        }
+      ],
+      "registered_tests_in_file": 4
+    },
+    {
+      "file": "src/core/rows_test.zig",
+      "hits": [
+        {
+          "line": 50,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"build\", source, \"-o\", output, \"--link\", options.clock_path, \"--cache-dir\", cache });"
+        }
+      ],
+      "registered_tests_in_file": 2
+    },
+    {
+      "file": "src/core/runner_batch_test.zig",
+      "hits": [
+        {
+          "line": 25,
+          "text": "try argv.appendSlice(a, &.{ options.core_path, \"test\", try std.fs.path.join(a, &.{ options.fixtures, fixture }), \"--json\", \"--jobs\", \"1\", \"--cache-dir\", root });"
+        }
+      ],
+      "registered_tests_in_file": 3
+    },
+    {
+      "file": "src/core/runner_property_campaign_test.zig",
+      "hits": [
+        {
+          "line": 53,
+          "text": "try args.appendSlice(self.arena, &.{ options.core_path, \"test\", try self.path(relative), \"--json\", \"--seed\", \"42\" });"
+        }
+      ],
+      "registered_tests_in_file": 9
+    },
+    {
+      "file": "src/core/runner_property_test.zig",
+      "hits": [
+        {
+          "line": 14,
+          "text": "try argv.appendSlice(a, &.{ options.core_path, \"test\", try std.fs.path.join(a, &.{ options.fixtures, fixture }), \"--json\", \"--seed\", \"7\", \"--property-runs\", \"12\", \"--cache-dir\", root });"
+        }
+      ],
+      "registered_tests_in_file": 4
+    },
+    {
+      "file": "src/core/s1_views_test.zig",
+      "hits": [
+        {
+          "line": 24,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"build\", source, \"-o\", output, \"--cache-dir\", cache });"
+        }
+      ],
+      "registered_tests_in_file": 7
+    },
+    {
+      "file": "src/core/s2_views_test.zig",
+      "hits": [
+        {
+          "line": 28,
+          "text": "try argv.appendSlice(a, &.{ options.core_path, \"build\", input, \"-o\", output, \"--cache-dir\", cache });"
+        }
+      ],
+      "registered_tests_in_file": 13
+    },
+    {
+      "file": "src/core/s3_list_methods_test.zig",
+      "hits": [
+        {
+          "line": 15,
+          "text": "try argv.appendSlice(a, &.{ options.core_path, \"test\", source, \"--json\", \"--cache-dir\", root });"
+        }
+      ],
+      "registered_tests_in_file": 1
+    },
+    {
+      "file": "src/core/s3_none_keys_test.zig",
+      "hits": [
+        {
+          "line": 15,
+          "text": "try argv.appendSlice(a, &.{ options.core_path, \"test\", source, \"--json\", \"--cache-dir\", root });"
+        }
+      ],
+      "registered_tests_in_file": 1
+    },
+    {
+      "file": "src/core/s3_number_test.zig",
+      "hits": [
+        {
+          "line": 58,
+          "text": "try argv.appendSlice(a, &.{ options.core_path, \"test\", try std.fs.path.join(a, &.{ options.fixtures, fixture }), \"--cache-dir\", root });"
+        }
+      ],
+      "registered_tests_in_file": 4
+    },
+    {
+      "file": "src/core/s3_values_test.zig",
+      "hits": [
+        {
+          "line": 19,
+          "text": "try argv.appendSlice(a, &.{ options.core_path, \"test\", fixture, \"--json\", \"--cache-dir\", root });"
+        }
+      ],
+      "registered_tests_in_file": 4
+    },
+    {
+      "file": "src/core/s5_units_test.zig",
+      "hits": [
+        {
+          "line": 21,
+          "text": "const compiler = try std.Io.Dir.cwd().realPathFileAlloc(std.testing.io, options.core_path, a);"
+        }
+      ],
+      "registered_tests_in_file": 7
+    },
+    {
+      "file": "src/core/test_runner_test.zig",
+      "hits": [
+        {
+          "line": 168,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"test\", source, \"--json\", \"--cache-dir\", cache });"
+        },
+        {
+          "line": 277,
+          "text": "try argv.appendSlice(self.arena, &.{ options.core_path, \"test\", try self.path(relative), \"--json\", \"--cache-dir\", try self.path(\"cache\") });"
+        }
+      ],
+      "registered_tests_in_file": 13
+    },
+    {
+      "file": "src/core/text_test.zig",
+      "hits": [
+        {
+          "line": 17,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"test\", source, \"--json\", cache_argument, cache });"
+        },
+        {
+          "line": 86,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"build\", source, \"-o\", output, cache_argument, cache });"
+        },
+        {
+          "line": 123,
+          "text": "try argv.appendSlice(allocator, &.{ options.core_path, \"test\", source, \"--json\", cache_argument, root });"
+        },
+        {
+          "line": 359,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"build\", try std.fmt.allocPrint(arena, \"{s}/scan.my\", .{root}), \"-o\", output, cache_argument, try std.fmt.allocPrint(arena, cache_pattern, .{root}) });"
+        }
+      ],
+      "registered_tests_in_file": 9
+    },
+    {
+      "file": "src/core/trace_test.zig",
+      "hits": [
+        {
+          "line": 25,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"build\", source, \"-o\", output, \"--cache-dir\", cache });"
+        }
+      ],
+      "registered_tests_in_file": 5
+    },
+    {
+      "file": "src/core/u1_state_test.zig",
+      "hits": [
+        {
+          "line": 19,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"build\", source, \"-o\", output, \"--cache-dir\", cache });"
+        },
+        {
+          "line": 292,
+          "text": "const ran = try std.process.run(a, std.testing.io, .{ .argv = &.{ options.core_path, \"test\", source, \"--release\", \"--verify-facts\", \"--cache-dir\", cache }, .environ_map = &environment });"
+        }
+      ],
+      "registered_tests_in_file": 11
+    },
+    {
+      "file": "src/core/u2_test.zig",
+      "hits": [
+        {
+          "line": 60,
+          "text": "try argv.appendSlice(a, &.{ options.core_path, \"build\", source, \"-o\", output, \"--cache-dir\", root });"
+        }
+      ],
+      "registered_tests_in_file": 13
+    },
+    {
+      "file": "src/core/value_e2e_test.zig",
+      "hits": [
+        {
+          "line": 29,
+          "text": "try argv.appendSlice(arena, &.{ if (mode == .old) options.old_path else options.core_path, \"build\", source, \"-o\", output, \"--link\", options.clock_path, \"--cache-dir\", cache });"
+        },
+        {
+          "line": 295,
+          "text": "try argv.appendSlice(arena, &.{ options.core_path, \"build\", source, \"-o\", output, \"--link\", options.clock_path, \"--cache-dir\", cache });"
+        }
+      ],
+      "registered_tests_in_file": 32
+    },
+    {
+      "file": "test/golden_parity.zig",
+      "hits": [
+        {
+          "line": 7,
+          "text": "//! selected by `test_options.compiler_path` \u2014 `mylang`, on the new core since"
+        },
+        {
+          "line": 61,
+          "text": "const compiler_path = test_options.compiler_path;"
+        }
+      ],
+      "registered_tests_in_file": 2
+    }
+  ],
+  "explicit_ownership_modes": [
+    {
+      "file": "src/core/build.zig",
+      "hits": [
+        {
+          "line": 98,
+          "text": "mb.module.single_owner = input.single_owner or input.zero_rc;"
+        },
+        {
+          "line": 99,
+          "text": "mb.module.zero_rc = input.zero_rc;"
+        }
+      ],
+      "registered_tests_in_file": 0
+    },
+    {
+      "file": "src/core/check_command.zig",
+      "hits": [
+        {
+          "line": 91,
+          "text": "options.single_owner = true;"
+        },
+        {
+          "line": 93,
+          "text": "options.single_owner = true;"
+        },
+        {
+          "line": 94,
+          "text": "options.zero_rc = true;"
+        }
+      ],
+      "registered_tests_in_file": 0
+    },
+    {
+      "file": "src/core/cli_args.zig",
+      "hits": [
+        {
+          "line": 170,
+          "text": "build.show.codegen.single_owner = true;"
+        },
+        {
+          "line": 172,
+          "text": "build.show.codegen.single_owner = true;"
+        },
+        {
+          "line": 173,
+          "text": "build.show.codegen.zero_rc = true;"
+        }
+      ],
+      "registered_tests_in_file": 3
+    },
+    {
+      "file": "src/core/driver.zig",
+      "hits": [
+        {
+          "line": 189,
+          "text": ".zero_rc = needs.zero_rc or unit.dependencies.zero_rc,"
+        }
+      ],
+      "registered_tests_in_file": 10
+    },
+    {
+      "file": "src/core/emit_llvm.zig",
+      "hits": [
+        {
+          "line": 495,
+          "text": "try emit_release.emit(self.allocator, &self.layouts.text, name, @max(1, self.module.size(ty)), .{ .refs = parts.refs.items, .guards = parts.guards.items, .zero_rc = self.module.zero_rc });"
+        },
+        {
+          "line": 1051,
+          "text": "try emit_release.emit(self.a(), &self.state.layouts.text, layout_name, stride, .{ .refs = parts.refs.items, .guards = parts.guards.items, .split = value_offset, .zero_rc = self.module().zero_rc });"
+        }
+      ],
+      "registered_tests_in_file": 0
+    },
+    {
+      "file": "src/core/emit_units.zig",
+      "hits": [
+        {
+          "line": 259,
+          "text": ".zero_rc = std.mem.indexOf(u8, text, \"; mylang-zero-rc-v2\\n\") != null,"
+        },
+        {
+          "line": 266,
+          "text": "return .{ .text = text, .number = dependencies.dependencies.number, .math = dependencies.dependencies.math, .counting = dependencies.dependencies.counting, .zero_rc = dependencies.dependencies.zero_rc };"
+        },
+        {
+          "line": 327,
+          "text": ".dependencies = .{ .number = artifact.number, .math = artifact.math, .counting = artifact.counting, .zero_rc = artifact.zero_rc },"
+        },
+        {
+          "line": 356,
+          "text": "return .{ .artifact = key, .text_digest = text_digest, .dependencies = .{ .number = artifact.number, .math = artifact.math, .counting = artifact.counting, .zero_rc = artifact.zero_rc } };"
+        },
+        {
+          "line": 499,
+          "text": "self.artifact = .{ .text = \"\", .number = record.dependencies.number, .math = record.dependencies.math, .counting = record.dependencies.counting, .zero_rc = record.dependencies.zero_rc };"
+        }
+      ],
+      "registered_tests_in_file": 0
+    },
+    {
+      "file": "src/core/lowering_cache_test.zig",
+      "hits": [
+        {
+          "line": 907,
+          "text": "var module: ir.Module = .{ .zero_rc = true, .single_owner = true };"
+        }
+      ],
+      "registered_tests_in_file": 28
+    },
+    {
+      "file": "src/core/main.zig",
+      "hits": [
+        {
+          "line": 131,
+          "text": "var module = build.buildExecutable(allocator, .{ .program = checked.program, .source = checked.src, .single_owner = single_owner, .zero_rc = zero_rc }, &refusal) catch |err| switch (err) {"
+        },
+        {
+          "line": 212,
+          "text": "options.show.codegen.single_owner = true;"
+        },
+        {
+          "line": 214,
+          "text": "options.show.codegen.single_owner = true;"
+        },
+        {
+          "line": 215,
+          "text": "options.show.codegen.zero_rc = true;"
+        },
+        {
+          "line": 367,
+          "text": "options.build.show.codegen.single_owner = true;"
+        },
+        {
+          "line": 368,
+          "text": "options.build.show.codegen.zero_rc = true;"
+        }
+      ],
+      "registered_tests_in_file": 0
+    },
+    {
+      "file": "src/core/owned_payload_test.zig",
+      "hits": [
+        {
+          "line": 12,
+          "text": "var module: ir.Module = .{ .zero_rc = true, .single_owner = true };"
+        },
+        {
+          "line": 21,
+          "text": "module.zero_rc = false;"
+        },
+        {
+          "line": 23,
+          "text": "module.zero_rc = true;"
+        },
+        {
+          "line": 42,
+          "text": "var module: ir.Module = .{ .zero_rc = true, .single_owner = true };"
+        }
+      ],
+      "registered_tests_in_file": 2
+    },
+    {
+      "file": "src/core/owned_record_test.zig",
+      "hits": [
+        {
+          "line": 47,
+          "text": "var module = build.buildExecutable(a, .{ .program = program, .single_owner = true, .zero_rc = true }, &refusal) catch |err| {"
+        },
+        {
+          "line": 220,
+          "text": "var module: ir.Module = .{ .zero_rc = true, .single_owner = true };"
+        },
+        {
+          "line": 228,
+          "text": "module.zero_rc = false;"
+        },
+        {
+          "line": 230,
+          "text": "module.zero_rc = true;"
+        }
+      ],
+      "registered_tests_in_file": 5
+    },
+    {
+      "file": "src/core/pipeline.zig",
+      "hits": [
+        {
+          "line": 188,
+          "text": "const input: build_ir.Input = .{ .program = checked.program, .source = checked.src, .drop_debug = drop_debug, .single_owner = options.show.codegen.single_owner, .zero_rc = options.show.codegen.zero_rc };"
+        },
+        {
+          "line": 317,
+          "text": ".single_owner = options.show.codegen.single_owner,"
+        },
+        {
+          "line": 318,
+          "text": ".zero_rc = options.show.codegen.zero_rc,"
+        }
+      ],
+      "registered_tests_in_file": 1
+    },
+    {
+      "file": "src/core/single_owner.zig",
+      "hits": [
+        {
+          "line": 109,
+          "text": ".zero_rc = zero_rc,"
+        }
+      ],
+      "registered_tests_in_file": 0
+    },
+    {
+      "file": "src/core/single_owner_test.zig",
+      "hits": [
+        {
+          "line": 170,
+          "text": "var module = try build.buildExecutable(a, .{ .program = program, .single_owner = true }, &refusal);"
+        },
+        {
+          "line": 421,
+          "text": "var module: ir.Module = .{ .single_owner = true };"
+        }
+      ],
+      "registered_tests_in_file": 22
+    },
+    {
+      "file": "src/core/test_runner.zig",
+      "hits": [
+        {
+          "line": 679,
+          "text": ".ownership = .{ .single_owner = options.build.show.codegen.single_owner, .zero_rc = options.build.show.codegen.zero_rc },"
+        },
+        {
+          "line": 1731,
+          "text": ".single_owner = options.build.show.codegen.single_owner,"
+        },
+        {
+          "line": 1732,
+          "text": ".zero_rc = options.build.show.codegen.zero_rc,"
+        },
+        {
+          "line": 1749,
+          "text": "const options: Options = .{ .path = \"owned.my\", .build = .{ .zig = \"zig\", .show = .{ .codegen = .{ .single_owner = true, .zero_rc = true } } } };"
+        }
+      ],
+      "registered_tests_in_file": 7
+    },
+    {
+      "file": "src/core/test_runner_affected.zig",
+      "hits": [
+        {
+          "line": 104,
+          "text": ".single_owner = request.ownership.single_owner,"
+        },
+        {
+          "line": 105,
+          "text": ".zero_rc = request.ownership.zero_rc,"
+        }
+      ],
+      "registered_tests_in_file": 0
+    },
+    {
+      "file": "src/core/test_runner_directory.zig",
+      "hits": [
+        {
+          "line": 984,
+          "text": "fanout.controls.build.show.codegen.single_owner = true;"
+        },
+        {
+          "line": 985,
+          "text": "fanout.controls.build.show.codegen.zero_rc = true;"
+        }
+      ],
+      "registered_tests_in_file": 12
+    },
+    {
+      "file": "src/core/test_runner_receipt.zig",
+      "hits": [
+        {
+          "line": 63,
+          "text": ".single_owner = context.options.build.show.codegen.single_owner,"
+        },
+        {
+          "line": 64,
+          "text": ".zero_rc = context.options.build.show.codegen.zero_rc,"
+        },
+        {
+          "line": 110,
+          "text": ".single_owner = context.options.build.show.codegen.single_owner,"
+        },
+        {
+          "line": 111,
+          "text": ".zero_rc = context.options.build.show.codegen.zero_rc,"
+        },
+        {
+          "line": 801,
+          "text": "context.options.build.show.codegen.single_owner = true;"
+        },
+        {
+          "line": 804,
+          "text": "context.options.build.show.codegen.zero_rc = true;"
+        }
+      ],
+      "registered_tests_in_file": 7
+    },
+    {
+      "file": "src/core/zero_rc_cache_test.zig",
+      "hits": [
+        {
+          "line": 64,
+          "text": "const input: build.Input = .{ .program = unit.program.?, .source = unit.src, .single_owner = mode != 0, .zero_rc = mode == 2 };"
+        },
+        {
+          "line": 79,
+          "text": "var module: ir.Module = .{ .single_owner = true, .zero_rc = true };"
+        }
+      ],
+      "registered_tests_in_file": 2
+    },
+    {
+      "file": "src/core/zero_rc_task_program.zig",
+      "hits": [
+        {
+          "line": 113,
+          "text": "var m: ir.Module = .{ .single_owner = true, .zero_rc = true };"
+        }
+      ],
+      "registered_tests_in_file": 0
+    },
+    {
+      "file": "src/core/zero_rc_task_test.zig",
+      "hits": [
+        {
+          "line": 143,
+          "text": "const module = try @import(\"build.zig\").buildExecutable(a, .{ .program = checked, .source = project.compilation.src, .single_owner = true, .zero_rc = true }, &refusal);"
+        }
+      ],
+      "registered_tests_in_file": 5
+    },
+    {
+      "file": "src/core/zero_rc_test.zig",
+      "hits": [
+        {
+          "line": 186,
+          "text": "var module = build.buildExecutable(a, .{ .program = program, .single_owner = true, .zero_rc = true }, &refusal) catch |err| {"
+        },
+        {
+          "line": 370,
+          "text": "try std.testing.expectError(error.Unsupported, build.buildExecutable(a, .{ .program = program, .zero_rc = true }, &refusal));"
+        }
+      ],
+      "registered_tests_in_file": 50
+    },
+    {
+      "file": "src/doctest_command.zig",
+      "hits": [
+        {
+          "line": 185,
+          "text": "options.zero_rc = true;"
+        },
+        {
+          "line": 285,
+          "text": ".zero_rc = options.zero_rc,"
+        }
+      ],
+      "registered_tests_in_file": 17
+    },
+    {
+      "file": "src/main.zig",
+      "hits": [
+        {
+          "line": 852,
+          "text": "parser.single_owner = true;"
+        },
+        {
+          "line": 853,
+          "text": "parser.zero_rc = parser.zero_rc or std.mem.eql(u8, arg, \"--experimental-zero-rc\");"
+        },
+        {
+          "line": 1230,
+          "text": ".single_owner = self.single_owner,"
+        },
+        {
+          "line": 1231,
+          "text": ".zero_rc = self.zero_rc,"
+        }
+      ],
+      "registered_tests_in_file": 0
+    }
+  ],
+  "rc_cow_test_mentions": [
+    {
+      "file": "src/check_cache_test.zig",
+      "hits": [
+        {
+          "line": 60,
+          "text": "try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);"
+        },
+        {
+          "line": 88,
+          "text": "try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);"
+        }
+      ],
+      "registered_tests_in_file": 6
+    },
+    {
+      "file": "src/core/backend_owned_test.zig",
+      "hits": [
+        {
+          "line": 55,
+          "text": "const retained = try pipeline.retainUnit(a, &detached, borrowed);"
+        },
+        {
+          "line": 91,
+          "text": "const unit = try pipeline.retainUnit(a, &module, .{"
+        }
+      ],
+      "registered_tests_in_file": 2
+    },
+    {
+      "file": "src/core/borrow_summary_test.zig",
+      "hits": [
+        {
+          "line": 110,
+          "text": ".retain, .release => .void,"
+        },
+        {
+          "line": 120,
+          "text": "for ([_]ir.Op{ .retain, .release, .is_unique, .list_copy, .list_push }) |op| _ = try forbiddenUse(a, module, list, op);"
+        },
+        {
+          "line": 229,
+          "text": "const retained = try effects.retain(a, .{ .params = eager.params[leaf], .may = eager.may[leaf] });"
+        }
+      ],
+      "registered_tests_in_file": 8
+    },
+    {
+      "file": "src/core/ce2_effects_test.zig",
+      "hits": [
+        {
+          "line": 695,
+          "text": "slot.* = if (index == caller) null else try effects.retain(a, .{ .params = params, .may = answers });"
+        }
+      ],
+      "registered_tests_in_file": 8
+    },
+    {
+      "file": "src/core/consume_test.zig",
+      "hits": [
+        {
+          "line": 71,
+          "text": "\\\\func snapshot() -> int:"
+        },
+        {
+          "line": 100,
+          "text": "\\\\    out.print(replacement(4), snapshot(), duplicate(), field(Bag(label=\"bag\", items=[1, 2])))"
+        },
+        {
+          "line": 121,
+          "text": "try std.testing.expectEqual(@as(usize, 0), countOp(callee, .retain));"
+        },
+        {
+          "line": 125,
+          "text": "try std.testing.expectEqual(@as(usize, 0), countOp(caller, .retain));"
+        },
+        {
+          "line": 126,
+          "text": "try std.testing.expect(countOp(named(&module, \"snapshot\"), .retain) != 0);"
+        },
+        {
+          "line": 127,
+          "text": "try std.testing.expect(countOp(named(&module, \"duplicate\"), .retain) != 0);"
+        },
+        {
+          "line": 128,
+          "text": "try std.testing.expect(countOp(named(&module, \"field\"), .retain) != 0);"
+        },
+        {
+          "line": 269,
+          "text": ".counted => try f.insts.append(a, .{ .op = .retain, .ty = .void, .a = @fromBackingInt(0) }),"
+        },
+        {
+          "line": 297,
+          "text": "const retained = try effects.retain(a, .{ .params = eager.params[index], .may = eager.may[index] });"
+        }
+      ],
+      "registered_tests_in_file": 9
+    },
+    {
+      "file": "src/core/cost_test.zig",
+      "hits": [
+        {
+          "line": 49,
+          "text": "try std.testing.expectEqual(result.own.retains, report.totals.rc.retains);"
+        },
+        {
+          "line": 72,
+          "text": "try std.testing.expect(debug.totals.rc.retains > 0);"
+        },
+        {
+          "line": 310,
+          "text": "_ = try h.emit(.{ .op = .retain, .ty = .void, .a = p });"
+        },
+        {
+          "line": 322,
+          "text": "try std.testing.expectEqual(@as(u32, 0), report.totals.rc.retains);"
+        }
+      ],
+      "registered_tests_in_file": 13
+    },
+    {
+      "file": "src/core/count_test.zig",
+      "hits": [
+        {
+          "line": 308,
+          "text": "snapshotSource(\"copy\", \"    const shared = rows.snapshot()\\n    assert len(shared) == len(rows)\\n\"),"
+        },
+        {
+          "line": 490,
+          "text": "try std.testing.expectEqual(@as(u64, 10), section[1].run.rc.retains);"
+        }
+      ],
+      "registered_tests_in_file": 14
+    },
+    {
+      "file": "src/core/destination_test.zig",
+      "hits": [
+        {
+          "line": 70,
+          "text": "\\\\func snapshot(n: int) -> int:"
+        },
+        {
+          "line": 88,
+          "text": "\\\\    out.print(probe(4), looped(4), snapshot(4), joined(4))"
+        }
+      ],
+      "registered_tests_in_file": 5
+    },
+    {
+      "file": "src/core/emit_units_test.zig",
+      "hits": [
+        {
+          "line": 116,
+          "text": "fn snapshot(a: std.mem.Allocator, sources: [3][]const u8, release: bool) ![]units.Unit {"
+        },
+        {
+          "line": 195,
+          "text": "const first = try snapshot(a, .{ app, leaf, other }, false);"
+        },
+        {
+          "line": 197,
+          "text": "try changed(first, try snapshot(a, .{ app, leaf, other }, false), &.{});"
+        },
+        {
+          "line": 199,
+          "text": "try changed(first, try snapshot(a, .{ app, body, other }, false), &.{\"leaf.my\"});"
+        },
+        {
+          "line": 201,
+          "text": "try changed(first, try snapshot(a, .{ app, check, other }, false), &.{\"leaf.my\"});"
+        },
+        {
+          "line": 203,
+          "text": "try changed(first, try snapshot(a, .{ app, shifted, other }, false), &.{\"leaf.my\"});"
+        },
+        {
+          "line": 215,
+          "text": "const release = try snapshot(a, .{ app, leaf, other }, true);"
+        },
+        {
+          "line": 220,
+          "text": "try std.testing.expectEqualStrings(text, try programText(try snapshot(a, .{ app, leaf, other }, true)));"
+        },
+        {
+          "line": 222,
+          "text": "try std.testing.expect(!std.mem.eql(u8, text, try programText(try snapshot(a, .{ app, leaf, updated }, true))));"
+        },
+        {
+          "line": 223,
+          "text": "const debug = try snapshot(a, .{ app, leaf, other }, false);"
+        },
+        {
+          "line": 284,
+          "text": "const emitted = try snapshot(a, .{ integer_caller, integer, other }, false);"
+        },
+        {
+          "line": 298,
+          "text": "const result = try native(a, try snapshot(a, .{ app, failing, other }, false));"
+        },
+        {
+          "line": 311,
+          "text": "const result = try native(a, try snapshot(a, .{ caller, failing, other }, true));"
+        },
+        {
+          "line": 325,
+          "text": "const result = try native(a, try snapshot(a, .{ caller, failing, other }, release));"
+        },
+        {
+          "line": 341,
+          "text": "const emitted = try snapshot(a, .{ caller, failing, other }, release);"
+        },
+        {
+          "line": 373,
+          "text": "const before = try snapshot(a, .{ app, rendering, other }, false);"
+        },
+        {
+          "line": 383,
+          "text": "const after = try snapshot(a, .{ app, rendering, noise }, false);"
+        },
+        {
+          "line": 396,
+          "text": "const emitted = try snapshot(a, .{ app, rendering, other }, false);"
+        },
+        {
+          "line": 416,
+          "text": "const emitted = try snapshot(a, .{ caller, left, right }, false);"
+        },
+        {
+          "line": 457,
+          "text": "const emitted = try snapshot(a, .{ caller, aggregate, indirect }, false);"
+        },
+        {
+          "line": 474,
+          "text": "const emitted = try snapshot(a, .{ caller, failing, other }, true);"
+        },
+        {
+          "line": 496,
+          "text": "const result = try native(a, try snapshot(a, .{ caller, failing, other }, release));"
+        },
+        {
+          "line": 535,
+          "text": "const emitted = try snapshot(a, .{ caller, callee, other }, true);"
+        },
+        {
+          "line": 553,
+          "text": "const ran = try nativeArgs(a, try snapshot(a, .{ caller, callee, other }, true), arguments);"
+        }
+      ],
+      "registered_tests_in_file": 26
+    },
+    {
+      "file": "src/core/own_test.zig",
+      "hits": [
+        {
+          "line": 280,
+          "text": "_ = try h.emit(.{ .op = .retain, .ty = .void, .a = p });"
+        },
+        {
+          "line": 284,
+          "text": "_ = try h.emit(.{ .op = .retain, .ty = .void, .a = q });"
+        },
+        {
+          "line": 305,
+          "text": "_ = try h.emit(.{ .op = .retain, .ty = .void, .a = list });"
+        },
+        {
+          "line": 359,
+          "text": "\\\\    myl_core_release(head);"
+        },
+        {
+          "line": 360,
+          "text": "\\\\    myl_core_release(copy);"
+        },
+        {
+          "line": 361,
+          "text": "\\\\    myl_core_release(immortal);"
+        },
+        {
+          "line": 405,
+          "text": "\\\\    myl_core_release(a);"
+        },
+        {
+          "line": 412,
+          "text": "\\\\    myl_core_release(b);"
+        },
+        {
+          "line": 413,
+          "text": "\\\\    myl_core_release(big);"
+        },
+        {
+          "line": 593,
+          "text": "\\\\func snapshot(seed: int) -> int:"
+        },
+        {
+          "line": 644,
+          "text": "\\\\    out.print(borrowed_caller(3), looped(3), read_then_fill(3), snapshot(3))"
+        },
+        {
+          "line": 1305,
+          "text": "_ = backing.reset(.retain_capacity);"
+        }
+      ],
+      "registered_tests_in_file": 30
+    },
+    {
+      "file": "src/core/pipeline_emission_test.zig",
+      "hits": [
+        {
+          "line": 11,
+          "text": "fn snapshot(a: std.mem.Allocator, scratch: std.mem.Allocator, mode: @import(\"build_mode.zig\").Mode, whole: bool) !pipeline.Emission {"
+        },
+        {
+          "line": 39,
+          "text": "const split = try snapshot(a, std.testing.allocator, mode, false);"
+        },
+        {
+          "line": 40,
+          "text": "const both = try snapshot(a, std.testing.allocator, mode, true);"
+        },
+        {
+          "line": 78,
+          "text": "const emission = try snapshot(a, std.testing.allocator, .release, true);"
+        },
+        {
+          "line": 88,
+          "text": "const development = try native(a, try snapshot(a, std.testing.allocator, .optimized_debug, false), true, .optimized_debug);"
+        }
+      ],
+      "registered_tests_in_file": 2
+    },
+    {
+      "file": "src/core/shared_counts_test.zig",
+      "hits": [
+        {
+          "line": 49,
+          "text": "\\\\    myl_core_retain_slow((myl_block *)&immortal);"
+        },
+        {
+          "line": 50,
+          "text": "\\\\    myl_core_release_slow((myl_block *)&immortal);"
+        },
+        {
+          "line": 72,
+          "text": "\\\\    myl_core_release_slow(head);"
+        },
+        {
+          "line": 73,
+          "text": "\\\\    myl_core_release(copy);"
+        },
+        {
+          "line": 132,
+          "text": "try std.testing.expect(std.mem.indexOf(u8, text, \"call preserve_mostcc void @myl_core_retain_slow(ptr\") != null);"
+        },
+        {
+          "line": 133,
+          "text": "try std.testing.expect(std.mem.indexOf(u8, text, \"call preserve_mostcc void @myl_core_release_slow(ptr\") != null);"
+        },
+        {
+          "line": 163,
+          "text": "const allowed = [_][]const u8{ \"count_load\", \"count_saturate_plain\", \"core_share_child\", \"myl_core_retain_slow\", \"count_release_shared\", \"count_retain\", \"count_release\", \"block_alloc\" };"
+        }
+      ],
+      "registered_tests_in_file": 5
+    },
+    {
+      "file": "src/core/single_owner_test.zig",
+      "hits": [
+        {
+          "line": 371,
+          "text": "\\\\    mut saved = rows.snapshot()"
+        },
+        {
+          "line": 385,
+          "text": "\\\\    return packet.values.snapshot()"
+        },
+        {
+          "line": 387,
+          "text": "\\\\    return values.snapshot()"
+        },
+        {
+          "line": 406,
+          "text": "\\\\    const saved = rows.snapshot()"
+        },
+        {
+          "line": 444,
+          "text": "\\\\    const saved = xs.snapshot()"
+        },
+        {
+          "line": 450,
+          "text": "\\\\    const saved = xs.snapshot()"
+        },
+        {
+          "line": 464,
+          "text": "\\\\    return values.snapshot()"
+        },
+        {
+          "line": 482,
+          "text": "\\\\    return rows[0].snapshot()"
+        },
+        {
+          "line": 487,
+          "text": "\\\\    const saved = empty.snapshot()"
+        }
+      ],
+      "registered_tests_in_file": 22
+    },
+    {
+      "file": "src/core/u2_test.zig",
+      "hits": [
+        {
+          "line": 25,
+          "text": "\\\\func snapshot(mut f: Frame) -> int:"
+        },
+        {
+          "line": 31,
+          "text": "\\\\    out.print(snapshot(mut f), f.function.chunk.values[1])"
+        },
+        {
+          "line": 50,
+          "text": "const changed = try functionText(text, \"fn snapshot(\");"
+        },
+        {
+          "line": 141,
+          "text": "try std.testing.expect(std.mem.indexOf(u8, text, \"call void @myl_core_release_child_pending\") != null);"
+        },
+        {
+          "line": 242,
+          "text": "\\\\    myl_core_release_child_pending(value, pending);"
+        },
+        {
+          "line": 261,
+          "text": "\\\\        myl_core_release(alias);"
+        },
+        {
+          "line": 263,
+          "text": "\\\\    myl_core_release(alias);"
+        },
+        {
+          "line": 280,
+          "text": "\\\\    myl_core_share(head);"
+        },
+        {
+          "line": 282,
+          "text": "\\\\    myl_core_release(head);"
+        },
+        {
+          "line": 283,
+          "text": "\\\\    myl_core_release(head);"
+        },
+        {
+          "line": 291,
+          "text": "\\\\    myl_core_release(root);"
+        },
+        {
+          "line": 294,
+          "text": "\\\\    myl_core_release(alias);"
+        },
+        {
+          "line": 303,
+          "text": "\\\\    myl_core_share(root);"
+        },
+        {
+          "line": 309,
+          "text": "\\\\    myl_core_release(root);"
+        },
+        {
+          "line": 319,
+          "text": "\\\\    myl_core_release(root);"
+        },
+        {
+          "line": 323,
+          "text": "\\\\    myl_core_release(alias);"
+        }
+      ],
+      "registered_tests_in_file": 13
+    },
+    {
+      "file": "src/core/value_facts_test.zig",
+      "hits": [
+        {
+          "line": 263,
+          "text": "_ = work.reset(.retain_capacity);"
+        },
+        {
+          "line": 274,
+          "text": "_ = transient.reset(.retain_capacity);"
+        },
+        {
+          "line": 313,
+          "text": "_ = transient.reset(.retain_capacity);"
+        },
+        {
+          "line": 314,
+          "text": "_ = work.reset(.retain_capacity);"
+        }
+      ],
+      "registered_tests_in_file": 8
+    },
+    {
+      "file": "src/core/values_test.zig",
+      "hits": [
+        {
+          "line": 217,
+          "text": "_ = try h.emit(.{ .op = .retain, .ty = .void, .a = b });"
+        },
+        {
+          "line": 222,
+          "text": "_ = try h.emit(.{ .op = .retain, .ty = .void, .a = b });"
+        },
+        {
+          "line": 233,
+          "text": "_ = try h.emit(.{ .op = .retain, .ty = .void, .a = s });"
+        },
+        {
+          "line": 239,
+          "text": "_ = try h.emit(.{ .op = .retain, .ty = .void, .a = r });"
+        },
+        {
+          "line": 244,
+          "text": "_ = try h.emit(.{ .op = .retain, .ty = .void, .a = some });"
+        },
+        {
+          "line": 245,
+          "text": "_ = try h.emit(.{ .op = .retain, .ty = .void, .a = none });"
+        },
+        {
+          "line": 252,
+          "text": "_ = try h.emit(.{ .op = .retain, .ty = .void, .a = number });"
+        },
+        {
+          "line": 253,
+          "text": "_ = try h.emit(.{ .op = .retain, .ty = .void, .a = pointer });"
+        }
+      ],
+      "registered_tests_in_file": 9
+    },
+    {
+      "file": "src/core/zero_rc_test.zig",
+      "hits": [
+        {
+          "line": 261,
+          "text": "\\\\    const saved = values.snapshot()"
+        },
+        {
+          "line": 356,
+          "text": "try std.testing.expect(!zero.emittedClean(\"  call void @myl_core_release(ptr %p)\\n\"));"
+        },
+        {
+          "line": 357,
+          "text": "try std.testing.expect(!zero.emittedClean(\"  call preserve_mostcc void @myl_core_retain_slow(ptr %p)\\n\"));"
+        }
+      ],
+      "registered_tests_in_file": 50
+    },
+    {
+      "file": "src/frontend_cache_test.zig",
+      "hits": [
+        {
+          "line": 556,
+          "text": "try t.expect(cold.retention() > cold.statistics.retained_bytes);"
+        },
+        {
+          "line": 573,
+          "text": "try t.expect(narrow.statistics.retained_bytes <= narrow.retention());"
+        }
+      ],
+      "registered_tests_in_file": 14
+    },
+    {
+      "file": "src/invalidation_test.zig",
+      "hits": [
+        {
+          "line": 424,
+          "text": ".retained_bytes = 4096,"
+        }
+      ],
+      "registered_tests_in_file": 16
+    },
+    {
+      "file": "src/semantic_cache_test.zig",
+      "hits": [
+        {
+          "line": 49,
+          "text": "cache.context.retain_summary_trees = true;"
+        },
+        {
+          "line": 1043,
+          "text": "try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);"
+        },
+        {
+          "line": 1154,
+          "text": "try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);"
+        },
+        {
+          "line": 1194,
+          "text": "try t.expect(budget < seed.statistics.retained_bytes);"
+        },
+        {
+          "line": 1202,
+          "text": "try t.expect(warm.statistics.retained_bytes <= budget);"
+        },
+        {
+          "line": 1301,
+          "text": "try t.expectEqual(@as(usize, 1), store.statistics.retained.inventories);"
+        },
+        {
+          "line": 1311,
+          "text": "try t.expectEqual(@as(usize, 0), warm_store.statistics.retained.inventories);"
+        },
+        {
+          "line": 1883,
+          "text": "try t.expectEqual(@as(usize, 0), below.statistics.retained_bytes);"
+        },
+        {
+          "line": 1895,
+          "text": "try t.expectEqual(exact, cache.statistics.retained_bytes);"
+        },
+        {
+          "line": 1896,
+          "text": "try t.expect(cache.statistics.retained_bytes <= cache.reuse.max_bytes);"
+        },
+        {
+          "line": 1903,
+          "text": "try t.expect(cache.statistics.retained_bytes <= cache.reuse.max_bytes);"
+        },
+        {
+          "line": 1910,
+          "text": "try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);"
+        },
+        {
+          "line": 1911,
+          "text": "try t.expect(cache.statistics.retained_bytes <= cache.reuse.max_bytes);"
+        },
+        {
+          "line": 1932,
+          "text": "try t.expect(cache.statistics.retained_bytes <= cache.reuse.max_bytes);"
+        },
+        {
+          "line": 1933,
+          "text": "try t.expectEqual(budget, cache.statistics.retained_bytes);"
+        },
+        {
+          "line": 1939,
+          "text": "try t.expect(cache.statistics.retained_bytes <= cache.reuse.max_bytes);"
+        },
+        {
+          "line": 1953,
+          "text": "try t.expectEqual(failures.allocated_bytes - failures.freed_bytes, cache.statistics.retained_bytes);"
+        },
+        {
+          "line": 1967,
+          "text": "try t.expectEqual(failures.allocated_bytes - failures.freed_bytes, cache.statistics.retained_bytes);"
+        },
+        {
+          "line": 1983,
+          "text": "full.reuse.max_bytes = full.statistics.retained_bytes - last_cost;"
+        },
+        {
+          "line": 1987,
+          "text": "try t.expect(full.statistics.retained_bytes <= prefix_budget);"
+        },
+        {
+          "line": 2059,
+          "text": "try t.expect(cache.statistics.retained_bytes != 0);"
+        },
+        {
+          "line": 2075,
+          "text": "try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);"
+        },
+        {
+          "line": 2148,
+          "text": "try t.expect(cache.statistics.retained_bytes <= cache.reuse.max_bytes);"
+        },
+        {
+          "line": 2150,
+          "text": "const retained_after = cache.statistics.retained_bytes;"
+        },
+        {
+          "line": 2185,
+          "text": "try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);"
+        },
+        {
+          "line": 2199,
+          "text": "try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);"
+        },
+        {
+          "line": 2228,
+          "text": "try t.expect(cache.statistics.retained_bytes <= budget);"
+        },
+        {
+          "line": 2265,
+          "text": "const symbolic_unit = probe.reuse.symbolic.retainedBytes();"
+        },
+        {
+          "line": 2266,
+          "text": "const ordinary_bytes = probe.statistics.retained_bytes - symbolic_unit;"
+        },
+        {
+          "line": 2272,
+          "text": "try t.expect(cache.statistics.retained_bytes <= budget);"
+        },
+        {
+          "line": 2282,
+          "text": "try t.expect(cache.statistics.retained_bytes <= budget);"
+        },
+        {
+          "line": 2285,
+          "text": "cache.statistics.retained_bytes,"
+        }
+      ],
+      "registered_tests_in_file": 82
+    },
+    {
+      "file": "src/surface_collections_test.zig",
+      "hits": [
+        {
+          "line": 58,
+          "text": "\\\\    return values.snapshot()"
+        },
+        {
+          "line": 74,
+          "text": "\\\\    const saved = values.snapshot(2)"
+        },
+        {
+          "line": 80,
+          "text": "\\\\    const saved = values.snapshot()"
+        },
+        {
+          "line": 85,
+          "text": "\\\\    const saved = \"text\".snapshot()"
+        }
+      ],
+      "registered_tests_in_file": 3
+    },
+    {
+      "file": "src/syntax_cache_large_test.zig",
+      "hits": [
+        {
+          "line": 91,
+          "text": "try t.expect(cache.statistics.retained_bytes <= cache.limits.max_bytes);"
+        }
+      ],
+      "registered_tests_in_file": 1
+    },
+    {
+      "file": "src/syntax_cache_test.zig",
+      "hits": [
+        {
+          "line": 66,
+          "text": "try t.expect(cache.statistics.retained_bytes > 0);"
+        },
+        {
+          "line": 75,
+          "text": "try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);"
+        },
+        {
+          "line": 90,
+          "text": "try t.expect(cache.statistics.retained_bytes <= cache.limits.max_bytes);"
+        },
+        {
+          "line": 95,
+          "text": "try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);"
+        },
+        {
+          "line": 99,
+          "text": "try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);"
+        },
+        {
+          "line": 156,
+          "text": "try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);"
+        }
+      ],
+      "registered_tests_in_file": 7
+    }
+  ],
+  "guest_fixture_roots": {
+    "test/core": [
+      {
+        "file": "test/core/b_buffer_values.my",
+        "sha256": "4bc9302b966705c8c62e9583ab21afd5f12bc50df713df1963a7bf58f3e71ace"
+      },
+      {
+        "file": "test/core/b_embedded_assets.my",
+        "sha256": "d9be34bf41babfa5c987d2470614348a781b6cb47eedf6c7b86b81c5690371a0"
+      },
+      {
+        "file": "test/core/b_packet_decode.my",
+        "sha256": "5afb8ad33e4e687c8947d8d6d1c3d4ea2f1beb5f413144e9d39272d1cd4391d1"
+      },
+      {
+        "file": "test/core/binary_search.my",
+        "sha256": "e8eb9f81d5c56cc44db177cc6c6f6fd0f4e4aec455dfdb50450a064b391daf26"
+      },
+      {
+        "file": "test/core/bounds.my",
+        "sha256": "68728802e240569a24d3e5f3f0f051df6915161d5a6ae0a805d94e09d270704d"
+      },
+      {
+        "file": "test/core/branch_mixed.my",
+        "sha256": "83e8139e3cd500704556c3f43c02ddc0428b2a6669b79c2c6d8fcd5d3fd0806b"
+      },
+      {
+        "file": "test/core/branch_predictable.my",
+        "sha256": "deb50bda2aa8a63229c80dbb22cac9edf6e74209008c6112faf513b061ca10b6"
+      },
+      {
+        "file": "test/core/c_capabilities.my",
+        "sha256": "299358cb4e461d014068e16832f0bcc48eb1f60a979a057303f32c8ccf7d491b"
+      },
+      {
+        "file": "test/core/c_environment_context.my",
+        "sha256": "3e1a3cbfa6d6c10748a50b4c983a45faa81be91163dec39c4b1ec9568e334586"
+      },
+      {
+        "file": "test/core/c_grants.my",
+        "sha256": "e5b41232dd814d719a0faee2f2e4eb8f5f7f30c9a2569bf82666663f9f075586"
+      },
+      {
+        "file": "test/core/c_raw.my",
+        "sha256": "1eebe663edad7e15429df85fbf8310bb6f3001da2dde6104d9e914f67ecf21f9"
+      },
+      {
+        "file": "test/core/c_runner_batch.my",
+        "sha256": "e5b72ec9006559faec3812f0ae0bcc10f3a4b0e51056c025f75ae00dd6a54118"
+      },
+      {
+        "file": "test/core/c_runner_batch_probe.my",
+        "sha256": "4de086b0da797025f6a36afe9f8c3048222e4ed16c6cc4ddfe851740645768a0"
+      },
+      {
+        "file": "test/core/c_runner_byte_buffer.my",
+        "sha256": "0d7f50f4a91975cac741a3437f3dd0abd8f3fd89d997074b6c75d69f5a613167"
+      },
+      {
+        "file": "test/core/c_runner_failures.my",
+        "sha256": "69f3032c38ab4f507869f997e887567774be8ca6c1dc10a4b27a1182989a735c"
+      },
+      {
+        "file": "test/core/c_runner_properties.my",
+        "sha256": "d36f198310319e5988322743eea32ee321e4b25bd6bff2eb3aa2b72b85ab21de"
+      },
+      {
+        "file": "test/core/c_runner_signal.my",
+        "sha256": "938aff8a5869d69d397b1f0d1e05bbbb2d598eacb18581cf2aebd374f59c8503"
+      },
+      {
+        "file": "test/core/c_runner_standins.my",
+        "sha256": "261455127872c46f3aa9e9f02b6c08ab16ef1de35f03595f30c6bccc610153ef"
+      },
+      {
+        "file": "test/core/c_runner_state_capture.my",
+        "sha256": "688942b6284734a69d6e3837f7afeecf19548146123d3dde60566f7e95f50759"
+      },
+      {
+        "file": "test/core/c_stack_handles.my",
+        "sha256": "2183b9980f2e939618fea4bd776545f899f927f02f67d556bd8ae9c6266ae291"
+      },
+      {
+        "file": "test/core/c_trap_handles.my",
+        "sha256": "6bd1ec61ef835e7559b594212b5efaed764f807ff2f946662acdf5ec8592d93c"
+      },
+      {
+        "file": "test/core/call_direct.my",
+        "sha256": "ce0560656f58858b7d8140db3e8faa6e88cf1c161479210e18649a862494efe9"
+      },
+      {
+        "file": "test/core/ce2_effects.my",
+        "sha256": "2950d850ba8ff2a15b7be3b1b456f05a105622a12c8b58db0df9718475b55e16"
+      },
+      {
+        "file": "test/core/ce2_results.my",
+        "sha256": "8b672a3a706e6c8332a4b181908a5a62d1e0f5fd4326b383eb311419dd930b3f"
+      },
+      {
+        "file": "test/core/ce_appends.my",
+        "sha256": "9b3d4291265e08c81430bc2979346eb80d0c601b82c832fb05ac04550b537e52"
+      },
+      {
+        "file": "test/core/ce_cow.my",
+        "sha256": "b0f1a86b886b609ba870ecb5d5248a5327e76851f87a1235ffefa5f6eec858b3"
+      },
+      {
+        "file": "test/core/ce_elements.my",
+        "sha256": "7b04e1b5a271158db44e78b556b5affe8ea092b437b014a02bd3a4ffd6f1368a"
+      },
+      {
+        "file": "test/core/ce_records.my",
+        "sha256": "9e96ce61618bd5c18b09225d60abe9ae4aa1cdedbcc006ddae535322e04d467e"
+      },
+      {
+        "file": "test/core/ce_slices.my",
+        "sha256": "b791a8e4a01b0650934edd72c85437f22775e06fe9b9beec008f9735584890c8"
+      },
+      {
+        "file": "test/core/compute_s0.my",
+        "sha256": "80ee1fa32251a3ecda938cff7c15944f46addcb006b962c5c032443b0cdd80b9"
+      },
+      {
+        "file": "test/core/control.my",
+        "sha256": "92feff22212c199bf81a5d717d6c2144bdc8008ca49ed5feaaa479d3efc7ead4"
+      },
+      {
+        "file": "test/core/counters.my",
+        "sha256": "a2ce0c71dce95433aed04294c153ff8da1f29abc999d1d37b1f1c83655e5cb4f"
+      },
+      {
+        "file": "test/core/counters_checks.my",
+        "sha256": "61eb25971ed81fdf592420da5935cf7c93b0ac0f51a32ac38c0533c64b7d335b"
+      },
+      {
+        "file": "test/core/d_basic.my",
+        "sha256": "467210e6eab505704de656650ac5b61d888500f79866cdebce2d7d4a3713bfc6"
+      },
+      {
+        "file": "test/core/d_collections.my",
+        "sha256": "84834fca4e5116bdfa343d833b793a079e4a11a67c0c21dd1431f96367128ff0"
+      },
+      {
+        "file": "test/core/d_fact_inputs.my",
+        "sha256": "2904498a93f98a88b501d3a60d27ad536f80bda4196e0eb2bc74d7549f53ab32"
+      },
+      {
+        "file": "test/core/d_scalar_stores.my",
+        "sha256": "7a1bc5ad6aa8af39155f280f63e46e6bacd4c60447a4452d62a67362f1da38fc"
+      },
+      {
+        "file": "test/core/d_view_identity.my",
+        "sha256": "bf21544d03da7b44715df11908efa06340227c9e1a11f53794877f4cc1351fd7"
+      },
+      {
+        "file": "test/core/f1_overflow.my",
+        "sha256": "261ec3666ea04c83b0a417deba4bfe5a0eb66120d55f2cccfef29b6502ca0acc"
+      },
+      {
+        "file": "test/core/f1_storeback.my",
+        "sha256": "d4090d769e5ecf106a2be635daad9c910002b4c74b81eb120ed3e32ed63a74d2"
+      },
+      {
+        "file": "test/core/f1_tbaa.my",
+        "sha256": "065c187358ae8a9d7b5c4d101873baea20d04ef5cf5955738ab9e93e40ccf325"
+      },
+      {
+        "file": "test/core/f2_fields.my",
+        "sha256": "3fcb33c89415d1f4b32eda4f99f6690dc12eaae2d1a74ba6194e1aab9430223f"
+      },
+      {
+        "file": "test/core/f2_header.my",
+        "sha256": "96cba3e007e882cb2d745fe199bb4faf3f49ed80573d68bb55d447198484c78b"
+      },
+      {
+        "file": "test/core/f2_index.my",
+        "sha256": "73d7f7e1abc917d9e8186af01998c14beadef72a4cf333e6990427f731826c70"
+      },
+      {
+        "file": "test/core/f2_version.my",
+        "sha256": "496e3db82a27ff52b7c34ed66f8aad11e0d37eb18f3b178c869045c41e9b0a1d"
+      },
+      {
+        "file": "test/core/f_features.my",
+        "sha256": "6edbc9f2f4056a37dc4c6c280992fedb0952f131b1ea916a15fd2ce88e8e17ee"
+      },
+      {
+        "file": "test/core/float_math.my",
+        "sha256": "615fe94aa9d23b9e604516011b647c934f2a4f74f33ec79dd41c88b1c717a69b"
+      },
+      {
+        "file": "test/core/i_live_place.my",
+        "sha256": "c18ac8fe2ac528e63baa38532cc0a65ca3820d664db8ba75471f5f33ac252c8d"
+      },
+      {
+        "file": "test/core/int_math.my",
+        "sha256": "7fbc2d9c0c46cce9cd5687a17ee80eab2fbf0f393879a83520c77ddc667b237e"
+      },
+      {
+        "file": "test/core/list_alias.my",
+        "sha256": "bd3f40772f562ffe788eb164ecb16522ce6dcb404e359f19e73f06473a216f9d"
+      },
+      {
+        "file": "test/core/m_list_methods.my",
+        "sha256": "0796bcc93b1765c6bf507b72cc9ee851ba11e96fe091cd9e4be2126ab38bb258"
+      },
+      {
+        "file": "test/core/m_none_keys.my",
+        "sha256": "da1a2f0f40b79e557cde167c027b5a72f705d9f402c6005d060e30dcb5eb587c"
+      },
+      {
+        "file": "test/core/m_recursive_values.my",
+        "sha256": "314e5f4ffad8cb3abc1608f49ed8353fe32aa968567212d9c9143a8fe0f29944"
+      },
+      {
+        "file": "test/core/n_float_text.my",
+        "sha256": "38698b762ee6a21f20655bd72a7ab424e179730c1a89a1432711dbd16a7729ec"
+      },
+      {
+        "file": "test/core/n_numbers.my",
+        "sha256": "9d36ed72111b40f83f28741e336d3a2b4fee6cf66c3e38e3012ace96c1f5a575"
+      },
+      {
+        "file": "test/core/n_scalar_parse_abi.my",
+        "sha256": "a5e7b8450115d6dcfded07969c236e244babf6317cd05eec530771b5a6ac5fbe"
+      },
+      {
+        "file": "test/core/negative_index.my",
+        "sha256": "ac5643b852ea7694156f2172f16cd254217bd403511ac11b2657083732525bec"
+      },
+      {
+        "file": "test/core/overflow.my",
+        "sha256": "95a146e2a1c7039f3f7e519cdcfd9b9ca3e9c6fe6f8a6fda2f9d6b55e6bd5be7"
+      },
+      {
+        "file": "test/core/projects/propagation/propagation.my",
+        "sha256": "e8bf0cf33a85831aee7655b66d0d76a718a8481d53490f9c43f925fca13d990a"
+      },
+      {
+        "file": "test/core/projects/propagation/propagation_case_1.my",
+        "sha256": "a16f75af72a22ac0dba2bfd8484699aa2197a1c667e893ab70fb687908e3e6b0"
+      },
+      {
+        "file": "test/core/projects/propagation/propagation_case_2.my",
+        "sha256": "c3c72ba5824539975cfea06ae30b5d328b165f3a1092194c988bca82b648489f"
+      },
+      {
+        "file": "test/core/projects/propagation/propagation_case_3.my",
+        "sha256": "3d6aeef019b58ef452abbbf5ad0d24713acdc08bb2e66b9d2b1caa17d58622d6"
+      },
+      {
+        "file": "test/core/projects/propagation/propagation_case_4.my",
+        "sha256": "7fa2c6b741aa7804b226733f3876ac7fd6f2d487ed74d08aaec375747623c278"
+      },
+      {
+        "file": "test/core/projects/propagation/propagation_case_5.my",
+        "sha256": "dade6e8d0aa6cfd7f64219906d5240cfec41a521b4a627e93ab793f3cd75d323"
+      },
+      {
+        "file": "test/core/projects/propagation/propagation_case_6.my",
+        "sha256": "1432c6ca647a2323a367790de8e91ad0ce27c71a3c279a4022871234c92769ea"
+      },
+      {
+        "file": "test/core/projects/propagation/propagation_case_7.my",
+        "sha256": "23477207950903772e7d62fc43720b53edcaf9b1c423754865a3f9c9b0f082af"
+      },
+      {
+        "file": "test/core/projects/propagation/propagation_case_8.my",
+        "sha256": "0324bea90b3d9b40542b124a325c9746f9a37838afd3be6339903366fb350881"
+      },
+      {
+        "file": "test/core/projects/propagation/propagation_case_9.my",
+        "sha256": "3c80159660dba0c7a58c7419605b301aeb6f5ab9a79498381a8087fededa79ea"
+      },
+      {
+        "file": "test/core/rc_alias_paths.my",
+        "sha256": "6ddfcfac6bfa2f4ab1a2af000e4ac25e0e641626b57319025e47b0de7bddb656"
+      },
+      {
+        "file": "test/core/rc_field_take.my",
+        "sha256": "9ab03db93ba902bc9ad00c9b722aee53886c70d8183ee0421284c8bba9e5005d"
+      },
+      {
+        "file": "test/core/rc_lists.my",
+        "sha256": "50a0c3423c131ac88c8b6397cf62de85419295a1ca65dbae98408d5661ff53cd"
+      },
+      {
+        "file": "test/core/rc_mut.my",
+        "sha256": "e62557cd2f309793913581736715d7dd739d63e8e7aa898ac98227656c88672e"
+      },
+      {
+        "file": "test/core/rc_phi_fields.my",
+        "sha256": "c1b324eb245227a33010c66f859f9ef6bb447870d8c43b57eca0d72cd3f99214"
+      },
+      {
+        "file": "test/core/rc_promote_order.my",
+        "sha256": "4532c278888bc3409173dc6f21a0ba4f4ca824520607b42761716e15519f4aa6"
+      },
+      {
+        "file": "test/core/rc_shared_loops.my",
+        "sha256": "0ebf0412311e8ee8f39998916749039f8cd20f433ee3b9f0837a7f4f7289da04"
+      },
+      {
+        "file": "test/core/rc_stack.my",
+        "sha256": "a24e38157981f0e3fc3414c4baaf1cd8052d5c9fa5d41b793a5f437e11453474"
+      },
+      {
+        "file": "test/core/row_alloc_retained.my",
+        "sha256": "c1f12d655b2b2055524dfa95429e57d9ad5af0ef3594b528912df394b15a2d4d"
+      },
+      {
+        "file": "test/core/row_alloc_short.my",
+        "sha256": "852dac555ca7dcf1bf57d67dd78448b7d4b4288e97d39024309f70f8dd58b8c1"
+      },
+      {
+        "file": "test/core/row_buffer_write.my",
+        "sha256": "4369409726abc39da302f837127c8ee7a48db1759e74e293ded571f967d7fce7"
+      },
+      {
+        "file": "test/core/row_bytes_scan.my",
+        "sha256": "8da090d70b019eef3f053b87c2ac074955a265e64ccd63918fb134e774dca84b"
+      },
+      {
+        "file": "test/core/row_call_indirect.my",
+        "sha256": "2106c9f7f7873d306247cc92d9284a249297b8b7ce2b5e768b11bd0c553d7f2a"
+      },
+      {
+        "file": "test/core/row_cow.my",
+        "sha256": "1a6cfa9f401c9cb272272e8663292718e3aa2064bce165d5c44dd6d5e01637ae"
+      },
+      {
+        "file": "test/core/row_csv_aggregate.my",
+        "sha256": "65f86d527f48a01d6fa005862c214a6d29d1dc7d46291136400864593add1f24"
+      },
+      {
+        "file": "test/core/row_dict_lookup.my",
+        "sha256": "aef015904597bca08038238c65b74d939b003cc63d84ded7cf0c9881dee21d3f"
+      },
+      {
+        "file": "test/core/row_dict_lookup_str.my",
+        "sha256": "7e08d43510abb33d31dd5d12befb522be02e1ca758680f7a5e467fb042a3de21"
+      },
+      {
+        "file": "test/core/row_dict_update.my",
+        "sha256": "bb0457b1b9617cbdc4615de402ec4942cfb78e2d97fd1c3d1c96c4a4c36fbcb2"
+      },
+      {
+        "file": "test/core/row_dict_update_str.my",
+        "sha256": "2a889bffcb00003d82a4a5f816d0c36d69073c32abf1bc072f2d354c6f6cf123"
+      },
+      {
+        "file": "test/core/row_float_format.my",
+        "sha256": "b634693e794f78ea66431a323d035fe36cef426d25e0ae05cd119af33807ad92"
+      },
+      {
+        "file": "test/core/row_grid_dp.my",
+        "sha256": "9b3f87730e06ca5434441ad31a9d7a8135a945e04c1cec2fd5c862bfbb165995"
+      },
+      {
+        "file": "test/core/row_int_format.my",
+        "sha256": "93a2a53d2dd129b128e6bf49e715701eaaf39e0adbf3717c60f50ce820ebd1f0"
+      },
+      {
+        "file": "test/core/row_int_parse.my",
+        "sha256": "4d7fe91dbb9f497709ddca32717bb8e74d0abfbafaa370c6ebc372307eae0154"
+      },
+      {
+        "file": "test/core/row_json_transform.my",
+        "sha256": "08d3c91a38139316c23cf1402629863db9e0194efa91d881652896df85b97154"
+      },
+      {
+        "file": "test/core/row_list_append.my",
+        "sha256": "feb5cc5adfd9753594310ce14d698f9ef619500a15a1824948b8030fd12c1d1f"
+      },
+      {
+        "file": "test/core/row_list_filter.my",
+        "sha256": "7836c1afd11e99787b6e9e4a93e875ab3f3f1290608bc3c24f8f08f73c8da4ca"
+      },
+      {
+        "file": "test/core/row_list_scan.my",
+        "sha256": "97615e1cb976a86e706dc7842dd37f6ad1526e4cab7fcee22a2268d544ac2984"
+      },
+      {
+        "file": "test/core/row_lox_eval.my",
+        "sha256": "8a78496d58441a75aec787a15e86715320b283fa3ee0b7888550a4070e6866a2"
+      },
+      {
+        "file": "test/core/row_mutate_nested.my",
+        "sha256": "3c9c921f4ec3f1dfa6422c998e2b4586e44047b3efd69ac495bda7fc907713bc"
+      },
+      {
+        "file": "test/core/row_mutate_shared.my",
+        "sha256": "5efc0bd4694858c148d4c0b69f21fc92aa79a8cdf53a0839dbe923fa5c7d3437"
+      },
+      {
+        "file": "test/core/row_mutate_unique.my",
+        "sha256": "3554c276d72ede9b123831e3df4adac11cd2f3888b2265a0776b197313901257"
+      },
+      {
+        "file": "test/core/row_option_handle.my",
+        "sha256": "99042bc340f54699d9aac69d9af18a1131df4c867fca5f62623becf5e31afc29"
+      },
+      {
+        "file": "test/core/row_packet_decode.my",
+        "sha256": "108b7f600a41e3e8dab825ecee3b2c4ee927920bc8ebcb1fde5ba0fb50c3c47d"
+      },
+      {
+        "file": "test/core/row_record_construct.my",
+        "sha256": "02a954481a1e529a2c6105ccb3089b94c6fa25df5151bfa5bfb4326232b85558"
+      },
+      {
+        "file": "test/core/row_record_pass.my",
+        "sha256": "28e0d67c20b1b5b71ab3a000dee059e718bbe4bc59f356e85ffbd09b8f80797d"
+      },
+      {
+        "file": "test/core/row_record_reads.my",
+        "sha256": "6b478a3eaa3019c28875f43a73da2b1a90f830b183c69b9165bbc3b23ed57177"
+      },
+      {
+        "file": "test/core/row_record_update.my",
+        "sha256": "c4b47c5a5ef8ec6032fb04902f0e5d3baa37b92d74fe45761d71fbc24df80ae7"
+      },
+      {
+        "file": "test/core/row_result_propagate.my",
+        "sha256": "a3a6ae4df4a803e43a1febcbe5bb07f7411661241749a80014828b80904a4578"
+      },
+      {
+        "file": "test/core/row_set_dedup.my",
+        "sha256": "4b929f7cb0b721fbfeefee717c2a265db34852a54a4373760952481901a35777"
+      },
+      {
+        "file": "test/core/row_sort_int.my",
+        "sha256": "4bb3bec82b052ac76e50ccb02f53b92455a8e83f00af5af82bbe19282fec055c"
+      },
+      {
+        "file": "test/core/row_sort_records.my",
+        "sha256": "c8dd72483ef29267fef3b69560da6c4a3422a1f62f888c3a9fe8d04fdf1b8ebc"
+      },
+      {
+        "file": "test/core/row_string_equal.my",
+        "sha256": "8b7bae34fabbff70789cf355f89db753627e9833ad8268ecdce3c1ff932e18de"
+      },
+      {
+        "file": "test/core/row_string_join.my",
+        "sha256": "fbc884596e2884d63766eb12a883e2a0e69ec2a37b5a8a6252a0553f2b3f2964"
+      },
+      {
+        "file": "test/core/row_string_search.my",
+        "sha256": "39fc64f48087597f6fb19b4e27338d46c733db05cb560fda806456920bc050df"
+      },
+      {
+        "file": "test/core/row_string_split.my",
+        "sha256": "3abcd95f46ef2e20f2a554cc1ea50292d459504f5046c4d519ebcc3d0d7d968e"
+      },
+      {
+        "file": "test/core/row_tagged_stack.my",
+        "sha256": "860f13dccd8a04836cda639737a4e296a9828f540cb3519a12e5930c59ffbc16"
+      },
+      {
+        "file": "test/core/row_tree_build_walk.my",
+        "sha256": "50dabc8fc3307f043fa3b7ae039e97cfc44d80633c538e4b1192362059b7a28e"
+      },
+      {
+        "file": "test/core/row_union_find.my",
+        "sha256": "ca3392160f12fb52455e726311a1cfe6f8ee9c7e8d50c444e280a0b98009c40d"
+      },
+      {
+        "file": "test/core/row_word_count.my",
+        "sha256": "84a7eebdd8900e79480a8faa8795f948c7492b902ca641998d7d6b80ea41447d"
+      },
+      {
+        "file": "test/core/runner_cases.my",
+        "sha256": "1b89d25475bce7a2337b105bb5819d773dd4271fe96ac95b1778b2b82e10c408"
+      },
+      {
+        "file": "test/core/s1_ascii.my",
+        "sha256": "ef966f7f75891080a7dc0b78ed397b30662b1903044f62ad569f90ccc9101b58"
+      },
+      {
+        "file": "test/core/s1_bytes.my",
+        "sha256": "5576c6c7e20e64456e520c0871a2cb00e7e62f738bcd315aa9f4826fbdbd38d1"
+      },
+      {
+        "file": "test/core/s1_collisions.my",
+        "sha256": "e4cb39b87fc3d31506cf04e2696ece5161015a65f50769e846aa87f41eaa8821"
+      },
+      {
+        "file": "test/core/s1_reads.my",
+        "sha256": "754c854a3b1a744f877fe23ed9463d9ec5b69b9d617cabefb5bca037977b8d1e"
+      },
+      {
+        "file": "test/core/s1_view_counts.my",
+        "sha256": "582b9ebd228be2356fe17bb9a57d4f2967500a5f0ac5682ba80e7af2739a92cd"
+      },
+      {
+        "file": "test/core/s1_views.my",
+        "sha256": "4499e2e9b6eaabf7003be4de59501c5fb203088d41b362833e7403693fc0ba85"
+      },
+      {
+        "file": "test/core/t_methods.my",
+        "sha256": "ea6ad0bdec8d3bb4e53984d47205d0207b921f7acc18330ca8967a45cdd08172"
+      },
+      {
+        "file": "test/core/t_scalar_fusion.my",
+        "sha256": "6c827a089aa6bc21b58f68a5fee84110595c76485912c2baea0fae2889a76bf2"
+      },
+      {
+        "file": "test/core/t_text.my",
+        "sha256": "1fead4a9adc3567f8d18786b10fd14a88830addf37bb7b0c8f8b67da77bb325e"
+      },
+      {
+        "file": "test/core/trap_frames.my",
+        "sha256": "3f68caa713d64421b2f261ebbd399ef41c36a49a53bdc3829bf1421b7dc31055"
+      },
+      {
+        "file": "test/core/u1_appends.my",
+        "sha256": "c4cb6b628a36501cb003887ab73d0fccd2a377129839c38aebd4c479d4aa2ee3"
+      },
+      {
+        "file": "test/core/u1_growth.my",
+        "sha256": "db3a32e8c7903db94113b18045ff6aebbf05537a4669151ae730a3fbb2687262"
+      },
+      {
+        "file": "test/core/u1_hoist.my",
+        "sha256": "087a5a54dd751c673bf969b3b9d1a66fa77f7b75918f024f4e906c37593bd816"
+      },
+      {
+        "file": "test/core/u1_sink.my",
+        "sha256": "0568c2428132b9ad345c15f52e8783da10501968e98cbed991e4d22902e2dc54"
+      },
+      {
+        "file": "test/core/u1_state.my",
+        "sha256": "d0a14567ec8556b5a654ed2bb4a8d022b12f272eff586f8968d1babbafc0d911"
+      },
+      {
+        "file": "test/core/v_arena.my",
+        "sha256": "2fe7cac72175004a7250acadd3e6947f03b17db9696fda217dbcea26ac82e406"
+      },
+      {
+        "file": "test/core/v_assert.my",
+        "sha256": "1e8c42a7981bbe93c5d833fe2d95f1aa1d28bb4f4a792a8fb15e06455c45f9aa"
+      },
+      {
+        "file": "test/core/v_assert_message.my",
+        "sha256": "ff5f1a5ef208a788dc5bbf69b67bbe7452193d3c408af93f2b650e58a5f8c971"
+      },
+      {
+        "file": "test/core/v_assert_message_err.my",
+        "sha256": "8be65c9eadb6dab444d69b369ea3d8838b18c96aa76428008606257c92088233"
+      },
+      {
+        "file": "test/core/v_buffer_format.my",
+        "sha256": "62b308c773d20b55d697c035479c0d2836840b596a794f90a9284db7d06520bc"
+      },
+      {
+        "file": "test/core/v_buffer_mut.my",
+        "sha256": "15c0e86ec4f31a49a4ba146fdd87d87bacd93738853a0f2713a2391dcef3f358"
+      },
+      {
+        "file": "test/core/v_capability_arrays.my",
+        "sha256": "abb0dd17341301a450de9b05989568a3a908b721250e4520be194de36d636e2a"
+      },
+      {
+        "file": "test/core/v_dict_view_len.my",
+        "sha256": "0ed03a0f313dddeaa0f1431d59950c8b0c4a7e5accb951da3b513b1e37918a57"
+      },
+      {
+        "file": "test/core/v_domain.my",
+        "sha256": "8ddf46e771332e11aee640307d6fc894ff5777bc35a8d2a8a028cfab04e91e0b"
+      },
+      {
+        "file": "test/core/v_dynamic_repeat.my",
+        "sha256": "308d0a775bdb7a7ecbac44aac8b237ed1b056d31013464ea2c2341c787a6db24"
+      },
+      {
+        "file": "test/core/v_equality.my",
+        "sha256": "ef5dcef1b8f9f58d4f69d199149c6e661fca861c651098100ad77fd5c7d40413"
+      },
+      {
+        "file": "test/core/v_extern_narrow.my",
+        "sha256": "097a4d326e4b2f4324566568a3e567acc617ef41788a42de31b88321d9b9a744"
+      },
+      {
+        "file": "test/core/v_hull.my",
+        "sha256": "d16bbb8aafa90cd71f4e64b685e5341bd857837c664baf971b8c8aec0fae0a68"
+      },
+      {
+        "file": "test/core/v_inline_loops.my",
+        "sha256": "aa72b2bef873044660980f926cc15af9342c82682c4d04c0685d724724377b91"
+      },
+      {
+        "file": "test/core/v_lists.my",
+        "sha256": "c58a859115792ea7baf822380d054fe2a2a78692a67608d7837a69b336716d83"
+      },
+      {
+        "file": "test/core/v_loops.my",
+        "sha256": "fca2e3160e5d2d113898e450cd4533d3e08198d2c8feedde3f0bfaf741bac1a3"
+      },
+      {
+        "file": "test/core/v_methods.my",
+        "sha256": "78a07384e1301fa07bcc76e510554e8934f20eaf9379f650292b8576fd1ce59d"
+      },
+      {
+        "file": "test/core/v_mut.my",
+        "sha256": "bbf13966efb1aee82b0a4314b8e3ff1dd0db64e7282ff720a3b2c196d03d85b8"
+      },
+      {
+        "file": "test/core/v_mut_rebind.my",
+        "sha256": "20761f7d4a8570a6f8e62780be5562ca10d0b4c42d2ac69059a01281cb653fc5"
+      },
+      {
+        "file": "test/core/v_mut_window.my",
+        "sha256": "4eaa45609ab758c8d99e763eea232f49ec0afcd20824f717b9b2f0f7d7314f01"
+      },
+      {
+        "file": "test/core/v_narrow.my",
+        "sha256": "f0a41855714a7a2c6719f160719a5e0cd0dcfbe6f87d71cfec2a79018d3d2c23"
+      },
+      {
+        "file": "test/core/v_nested.my",
+        "sha256": "546721e18c02e755f5d9a9220c375287dd878e5a5a07f7bb9c002c7f09a05b58"
+      },
+      {
+        "file": "test/core/v_nested_lengths.my",
+        "sha256": "e6ca1a8a792de3f089aad3d00830534be316175f1b5ef3d21f34d92f2002406e"
+      },
+      {
+        "file": "test/core/v_nested_places.my",
+        "sha256": "6d19d13aa76d47936ca706795d8845cbc7552780637e6e75f48b97a5085cb165"
+      },
+      {
+        "file": "test/core/v_numeric.my",
+        "sha256": "77e814cf9b907ad8e97dfd59a22c64c4e8dd9900d0c0d9cc7b373d8fc9d1097d"
+      },
+      {
+        "file": "test/core/v_records.my",
+        "sha256": "005ec1158ccc049fa2205ab006b823137da4ad86ae0f8ee8672305f09d4d13d4"
+      },
+      {
+        "file": "test/core/v_row_cow.my",
+        "sha256": "d00e354d343dae3886da6cfe75ef661dddbb195838ae61206b7a7c07bf79353e"
+      },
+      {
+        "file": "test/core/v_snapshot.my",
+        "sha256": "60f359dad2ebd828de8ed2ecd8170258b80fbf720178a57a1d07450c03906640"
+      },
+      {
+        "file": "test/core/v_sort.my",
+        "sha256": "c80835365551fcb68bd7fc035349d931ada8b744bc2b1ba7969d201347e208aa"
+      },
+      {
+        "file": "test/core/v_str_eq.my",
+        "sha256": "e0cf5397e0fb8929e60462862f94f7e2b536607f3ecd72d11afc8913610d7c52"
+      },
+      {
+        "file": "test/core/v_text.my",
+        "sha256": "74dae6ff0f0853efbddfa542c824ea7e0b23b881bd58c99c9cdcefed850c8d96"
+      },
+      {
+        "file": "test/core/v_trace.my",
+        "sha256": "695f20bdb1ef22efa47c527d973500e0f524966c3a166f5fed9a1760dc40a81f"
+      },
+      {
+        "file": "test/core/v_trap_pop.my",
+        "sha256": "3f7fa66d25d1724d2f8caaa945623c059434f7bbaaa060f6af39946a151c9f05"
+      },
+      {
+        "file": "test/core/v_trap_set.my",
+        "sha256": "7976c63e3a3544987d39f8f63b9bf70f28e70b1117aa3f46bd0228659cd15411"
+      },
+      {
+        "file": "test/core/v_udiv.my",
+        "sha256": "3ab3a852ddc2745f8d61e1c9316e918c124b5b77fe2638745660d4f1b9e9fb34"
+      },
+      {
+        "file": "test/core/v_unions.my",
+        "sha256": "e2292c29ac7863654b714ff975dda660fe074c55ef5fe96136d640bb8ace55ab"
+      },
+      {
+        "file": "test/core/v_units.my",
+        "sha256": "8fda0ae568eca67885c1a1a98e3778695ac20ff83d96e9383390d27402893bc0"
+      },
+      {
+        "file": "test/core/v_wide.my",
+        "sha256": "d236c360c7b19058af1870dda5d60ddb9a39205cbec7761816ec6cf9a8f5aaf0"
+      },
+      {
+        "file": "test/core/v_wide_managed.my",
+        "sha256": "7179bc569fd928cd949f12ba6ecb459f4a7325c1d667620917aaea81d3fe4e89"
+      },
+      {
+        "file": "test/core/zero_rc_json_lookup.my",
+        "sha256": "9c734b251643b28c10f0dc12ae215cc8a162f4b2cc08d1adddb53c7d0fb4215d"
+      },
+      {
+        "file": "test/core/zero_rc_match_box.my",
+        "sha256": "39bda1e0910d74de424cb978d916fed53d0b06df07b4cab3aa7b615f0bf6f1e3"
+      },
+      {
+        "file": "test/core/zero_rc_payload_box.my",
+        "sha256": "f05a2ffa1cacfe2169d393fd2aa3d3a54c1edea890236803f13419952af5a4c3"
+      }
+    ],
+    "test/fixtures": [
+      {
+        "file": "test/fixtures/application-cache/application.my",
+        "sha256": "aa94c91bc1c0948330948d57c88e624328b21b3775158c31f351a5e279a4821e"
+      },
+      {
+        "file": "test/fixtures/arithmetic.my",
+        "sha256": "f519beeb69e0c31dc97762072a0138af00d733562a0bbd8dcc82b310067ba412"
+      },
+      {
+        "file": "test/fixtures/arrays.my",
+        "sha256": "aa1241a29e3e38060381b40832410a94f58b9aa86cf4388fe49452ffb3b9a53a"
+      },
+      {
+        "file": "test/fixtures/attenuation.my",
+        "sha256": "671fa2694449bcc50510f8cf5e536faebf16f37abce8eb171dab3efab043e2e1"
+      },
+      {
+        "file": "test/fixtures/conversions.my",
+        "sha256": "2bd1c416422ffcccbb673a9ed23786200569c69e524e7f8285f14bb8f8365d3d"
+      },
+      {
+        "file": "test/fixtures/domains.my",
+        "sha256": "f56820d61cf9c47ef0267c5240589e1004637632af29177a5a2135e75f49217b"
+      },
+      {
+        "file": "test/fixtures/environment.my",
+        "sha256": "da330b647a7dadf291040c24bbbfcf1d1e1bca2bed8876a08375ac2f20b1b0bc"
+      },
+      {
+        "file": "test/fixtures/external-capabilities.my",
+        "sha256": "4b547d561a17ab7e66fe15c2bb1d21c83ec4802b48ab9a57de670cedb4977a6e"
+      },
+      {
+        "file": "test/fixtures/file-methods.my",
+        "sha256": "a3930446048cab840ea2f38c7045794fb8ce89ef743f97ba9017cb7f54a6eada"
+      },
+      {
+        "file": "test/fixtures/fix-migration/arenas.my",
+        "sha256": "88f673b0e16b53c5a861f49962e8b9f09720007de5b76d4ce530500a5c50ca7a"
+      },
+      {
+        "file": "test/fixtures/fix-migration/capture.my",
+        "sha256": "13a1c6718f69dfdec82d74b4208519874a937d7014f6793fdcac2ac479eb3f93"
+      },
+      {
+        "file": "test/fixtures/fix-migration/dictionary-views.my",
+        "sha256": "dc8be1fbea10f901b4ca767ff9087798811684fa110b58d8bef25fc631d35d70"
+      },
+      {
+        "file": "test/fixtures/fix-migration/frontend.my",
+        "sha256": "ba67bb73f53b43bfeb7dc4c8d7239678e315c5dd6b0d4ca72fb052087830f8cf"
+      },
+      {
+        "file": "test/fixtures/fix-migration/lox/chunk.my",
+        "sha256": "b4f6e7ae6531b224f99e026f53fee3692c90d8f2b15d3c76ca5962f1803e4b66"
+      },
+      {
+        "file": "test/fixtures/fix-migration/lox/heap.my",
+        "sha256": "205c546b024c3081488cf644f6307db7643cb8a6d7b5137a9c16af438ca5a97c"
+      },
+      {
+        "file": "test/fixtures/fix-migration/lox/heap_test.my",
+        "sha256": "6d927fb0ab505d90e3b34da282613c4a11b64893cd91df56b6555dd81f39ffa5"
+      },
+      {
+        "file": "test/fixtures/fix-migration/lox/lox_strings.my",
+        "sha256": "cb24f30177e05857ae356bdd909893d87dac18db83161ad602888962d0276bf6"
+      },
+      {
+        "file": "test/fixtures/fix-migration/lox/lox_strings_test.my",
+        "sha256": "fc71bcee0a01473e26f30450808bffcd2abb2a2c68832733fcba11f709a0064c"
+      },
+      {
+        "file": "test/fixtures/fix-migration/lox/object.my",
+        "sha256": "08c0d5c6ae304ef4d0e1f5929f52b5d1dd47cd46e6c409392c0b5b1df9567ad7"
+      },
+      {
+        "file": "test/fixtures/fix-migration/lox/table.my",
+        "sha256": "a818ab4cf772ac36fd830cdcbf636a2b4ee6453e6afa82c57e576dba6a85344f"
+      },
+      {
+        "file": "test/fixtures/fix-migration/lox/table_test.my",
+        "sha256": "ff87caaec824863e0a6a02bc7cb144d1d94c7c5337dc72509ee00139b9e5b161"
+      },
+      {
+        "file": "test/fixtures/fix-migration/lox/value.my",
+        "sha256": "3b2a444e77c6a703b1aedad3c89ef38cad70aa3bb6cba1716b623980ff9a76b0"
+      },
+      {
+        "file": "test/fixtures/fix-migration/port-defects/main.my",
+        "sha256": "79e59335fdd71f4369a39f363b20a1ae6bf9b8738e7e9ad7997450ee960a37f7"
+      },
+      {
+        "file": "test/fixtures/fix-migration/port-defects/parsing.my",
+        "sha256": "ca798f57ee90228166316a9efdc0e5263ea551058e5847e15be1b5184722f74c"
+      },
+      {
+        "file": "test/fixtures/fix-migration/port-defects/shapes.my",
+        "sha256": "6b407325802d4d0afc740f216f33cb6b740a556216294501aa3817442f683751"
+      },
+      {
+        "file": "test/fixtures/fix-migration/receiver-overlap.my",
+        "sha256": "2c76e54b16b7b33e9ac1167103bc595fabde9e2878f5b9990c330526ff7a92ef"
+      },
+      {
+        "file": "test/fixtures/gcd.my",
+        "sha256": "b505a8ee44f4240432dde1a40356faba6217fb98fd22a5a165e115b43aa539b5"
+      },
+      {
+        "file": "test/fixtures/integers.my",
+        "sha256": "7355448fa3fc92d1dece928827bcc8046297be1eeb6a1e421d80f77f76d44749"
+      },
+      {
+        "file": "test/fixtures/mutation-markers.my",
+        "sha256": "ee9fcaaf9629f0e5bb9e96565e2c42a8489e05cb85aa22e09943e3ef6c685597"
+      },
+      {
+        "file": "test/fixtures/python-calls.my",
+        "sha256": "2fff7c72311b91a59a947ca0714c4f4981111aa0c3440a7de506befde3d51ed3"
+      },
+      {
+        "file": "test/fixtures/records.my",
+        "sha256": "903c427078656e950640ddeeebdec78f571fac59f5796153e43a1b24b10dafe3"
+      },
+      {
+        "file": "test/fixtures/rejected.my",
+        "sha256": "f458021e2818dcec9482431fc856e311fa47e84ed26d78b5e2b20c28806657db"
+      },
+      {
+        "file": "test/fixtures/resource-io.my",
+        "sha256": "8c4ec0b7beaf77edc985234d65734c68f8923e19641a81bc0e906e86b2bc0a6a"
+      },
+      {
+        "file": "test/fixtures/resources.my",
+        "sha256": "3374e649f9c27e068beefee98ce24789fb949b90f735f9734f004c2fdeac5315"
+      },
+      {
+        "file": "test/fixtures/results.my",
+        "sha256": "b09a492f093dcf4cd4c504c6ca028a7d5ed010e48b5b9cac5b3910bd6f822f45"
+      },
+      {
+        "file": "test/fixtures/sum.my",
+        "sha256": "08d2d983685584bd8f0f1efdcee32f6b2678771debde966e7dbd05d0ec151e57"
+      },
+      {
+        "file": "test/fixtures/tables.my",
+        "sha256": "784e9b4270825c4bfe50b721d53f960699cbf700c6793b9100024812c6a00e16"
+      },
+      {
+        "file": "test/fixtures/trap.my",
+        "sha256": "d3e393909ea05497d2fa68aff3193aa676454141330e7a1027289086089ad13d"
+      },
+      {
+        "file": "test/fixtures/variants.my",
+        "sha256": "46dbf146566768f6d5aaa4e55958100e9b2849a6b7df9dd48360876d8506d57b"
+      },
+      {
+        "file": "test/fixtures/view-storage/live_view_snapshots.my",
+        "sha256": "bb4189df61f42261e12ece82a014a99e056af47cd017d43be16fa92917bac878"
+      },
+      {
+        "file": "test/fixtures/view-storage/rc_dictionary_views.my",
+        "sha256": "9607d7ca7fb56e1b715fbf6f2537bf9164d297a4d235a68b4dc61f536d11af5e"
+      },
+      {
+        "file": "test/fixtures/view-storage/rc_semantic_history.my",
+        "sha256": "6fe4681f07de5e4d420285ef0f5da44873683ad819cb908e83578c0715ea0ef8"
+      },
+      {
+        "file": "test/fixtures/view-storage/rc_view_receivers.my",
+        "sha256": "800ded473d49c839b802580074a2b33f47ce4be8f6b996698e89e85e71fe2aee"
+      },
+      {
+        "file": "test/fixtures/warnings.my",
+        "sha256": "d311140dd1c59b1e068a8c8a755fffab8e1bbeae48a384d412db13f02ad4ec0b"
+      }
+    ]
+  }
+}

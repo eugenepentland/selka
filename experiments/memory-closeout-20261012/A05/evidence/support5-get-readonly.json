@@ -1,0 +1,40 @@
+{
+  "compiler_source_revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "source": "experiments/memory-closeout-20261012/A05/boundaries/dictionary_get_readonly.my",
+  "source_sha256": "0fe0ea9b0014516c37998c38d5306da0bb5c2767c0c3b7a4b361cb992c414a72",
+  "executed": false,
+  "phases": {
+    "check": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/boundaries/dictionary_get_readonly.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support5-get-readonly/cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "build": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/boundaries/dictionary_get_readonly.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support5-get-readonly/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support5-get-readonly/program"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/boundaries/dictionary_get_readonly.my:9:16: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression\n      return len(items.get(key, fallback(key)))\n                 ^\n"
+    }
+  }
+}

@@ -20,7 +20,7 @@ func pick(mut values: int[], count: int) -> int:
 # spec-case: NEW-CORE-INLINE-S4-1
 public func test_mut_loop_returns_and_shared_snapshots() -> bool:
     mut parent = [0, 0, 1]
-    mut saved = parent
+    mut saved = parent.copy()
     mut root = find(mut parent, 2)
     mut values = [0]
     mut empty_arm = pick(mut values, 0)

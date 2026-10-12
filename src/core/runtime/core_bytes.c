@@ -25,7 +25,7 @@ __attribute__((noinline)) static myl_block *core_buffer_regrow(myl_block *buffer
            large block instead of copying it, so neither its octets nor fresh pages are
            touched again; it moves to a fresh aligned block when `realloc` loses the
            alignment (NEW-CORE-U1-GROW-1). */
-        size_t bytes = MYL_HEADER + (size_t)capacity;
+        size_t bytes = MYL_HEADER + block_data_size(capacity, 1, false);
         if (heap_ceiling) heap_refund(malloc_usable_size(buffer));
         myl_block *grown = realloc(buffer, bytes);
         if (!grown) out_of_memory();
@@ -158,6 +158,16 @@ myl_block *myl_core_buffer_append_checked(myl_block *buffer, myl_block *source, 
     buffer = core_buffer_owned(buffer);
     return myl_core_buffer_append_spelled(buffer, block_data(source) + start, (size_t)(end - start));
 }
+/* Synchronous immutable octets: the destination is the sole transferred owner. */
+bool myl_core_span_buffer_range_valid(const unsigned char *data, uint64_t length, int64_t start, int64_t end) {
+    (void)data;
+    return start >= 0 && end >= start && (uint64_t)end <= length;
+}
+myl_block *myl_core_buffer_append_span_checked(myl_block *buffer, const unsigned char *data, uint64_t length, int64_t start, int64_t end) {
+    if (start < 0 || end <= start || (uint64_t)end > length) return buffer;
+    buffer = core_buffer_owned(buffer);
+    return myl_core_buffer_append_spelled(buffer, data + start, (size_t)(end - start));
+}
 /* `buffer.append_byte(value)`: one octet when `value` is in 0..255, else nothing. */
 myl_block *myl_core_buffer_push_checked(myl_block *buffer, int64_t value) {
     if (value < 0 || value > 255) return buffer;
@@ -172,4 +182,10 @@ myl_block *myl_core_buffer_append_i64(myl_block *buffer, int64_t value) {
     core_number_write(bytes + length, magnitude);
     if (negative) bytes[0] = '-';
     return myl_core_buffer_append_spelled(buffer, bytes, length);
+}
+
+/* A synchronous borrowed octet reader; identical negative-index normalization. */
+uint64_t myl_core_span_bytes_index_offset(const unsigned char *data, uint64_t len, int64_t index) {
+    (void)data;
+    return index < 0 ? (uint64_t)index + len : (uint64_t)index;
 }

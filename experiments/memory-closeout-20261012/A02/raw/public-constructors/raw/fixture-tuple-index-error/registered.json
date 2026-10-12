@@ -1,0 +1,56 @@
+{
+  "base": "c3909f2c0fbb97b67acb94714567abe4be33a1ec",
+  "source_sha256": {
+    "src/sema_collections.zig": "15241695f34361189b3b09a713746cccf3d4eaa604a8e715611629abde44cdbc",
+    "src/sema_gathers.zig": "5170d745ad5d887e9c707117a2444c79e6f1303a5423efe09300536a2e42724e",
+    "src/core/single_owner.zig": "c33a77f3cc11d761b841db8b8f342b6228940a73bd5436346db81be2a94d1ec4",
+    "src/core/a02_public_constructors_test.zig": "2c6163efe016917ea0ac146e47c2cbb312bd422a8f290a898e34d317a6ccb25d",
+    "src/core/a02_public_constructors_fixture.my": "abce9f3304bb5baca85335ef7c79d38f4767e0554ebc523b29fd7687c4220ae3",
+    "src/core/root_test.zig": "f2f11aad93822b9b9ccbd48c6a464c4be75a42bb26739eabd313d052bd5dfa51"
+  },
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "components": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/install/libexec/mylang/components",
+  "component_boundary": "Support6 independent owned pin supplies components; final default/retirement package qualification is separate",
+  "steps": [
+    {
+      "name": "build",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build",
+        "core-test-binary",
+        "-Dtest-filter=zero RC A02 public constructors",
+        "-j4",
+        "--maxrss",
+        "8589934592",
+        "--prefix",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/public-constructors-validation/install",
+        "-Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+        "-Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 4.117771211080253,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "test",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/public-constructors-validation/install/focus/core-tests",
+        "--guardian-filter=zero RC A02 public constructors"
+      ],
+      "status": 1,
+      "elapsed_admitted_seconds": 0.09624942485243082,
+      "stdout": "",
+      "stderr": "guardian/test: 1 test(s) selected by filter: \"zero RC A02 public constructors\"\nA02 public constructors build: /home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/tmp/G0gnvheEOmzDB8Xq/methods.my:54:12: error[E_TUPLE_INDEX]: a tuple has no elements to index; bind its values with `head, rest = ...`\n      assert original_pairs[0][1] == [\"one\"] and gathered[\"key-1\"] == [\"one\", \"changed\"]\n             ^\n\n1 a02_public_constructors_test.test.zero RC A02 public constructors preserve owned keys and generator results...FAIL (TestUnexpectedResult)\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x1281079 in expect (std.zig)\n    if (!ok) return error.TestUnexpectedResult;\n             ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/src/core/a02_public_constructors_test.zig:34:9: 0x128241d in qualifies (root_test.zig)\n        try std.testing.expect(built.term == .exited and built.term.exited == 0);\n        ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/src/core/a02_public_constructors_test.zig:11:5: 0x1285525 in test.zero RC A02 public constructors preserve owned keys and generator results (root_test.zig)\n    try qualifies(std.testing.allocator, @embedFile(\"a02_public_constructors_fixture.my\"), \"3 2 2 pear-1 value-4 value-5\\n\");\n    ^\n0 passed; 0 skipped; 1 failed.\nguardian/test: test wall 0.08s; slowest over 50ms:\nguardian/test:   0.08s  a02_public_constructors_test.test.zero RC A02 public constructors preserve owned keys and generator results\nguardian/test: FAIL \u2014 1 failed of 1\nguardian/test: RESULT {\"passed\":0,\"failed\":1,\"skipped\":0}\n"
+    }
+  ],
+  "complete": true,
+  "compiler": {
+    "path": ".zig-cache/o/18cf6b88aa5e383fb1ac32405e80fdf0/mylang",
+    "sha256": "1797caa0087594aee4a74c6726e20d4ddac443d70cf48a7f8ebd752035f28dcb",
+    "options": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/8af64cc3fe4c9606b930193b954ccfda/options.zig"
+  },
+  "test_binary_sha256": "ebee1154339aa6f64b243b262dc3d5f50cc842514d10eac9776c925a087eba54",
+  "pass": false
+}

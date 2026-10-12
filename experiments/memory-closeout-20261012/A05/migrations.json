@@ -1,0 +1,141 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "semantics": "Preserve assertions and independent snapshots through explicit copies; bind mutation inputs before loans; scope derived capabilities; ordinary borrowed helpers preserve shared clock/filesystem observations. Capability-field migration awaits bounded aggregate-root implementation; original returned-file fixture now passes on support4.",
+  "fixtures": [
+    {
+      "path": "src/stdlib/fixtures/pool.my",
+      "original_sha256": "3abc9fed9e74b68f1317d59d9dd18e8a1c4b45d17041b847d0d6658864a020f1",
+      "migrated_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
+      "changed": true,
+      "inserted_lines": 3,
+      "deleted_lines": 2,
+      "explicit_copy_count_original": 0,
+      "explicit_copy_count_migrated": 1,
+      "original_source_command": [
+        "git",
+        "show",
+        "fbfcaa7a923186a8e773c3760f81c10aa345a432:src/stdlib/fixtures/pool.my"
+      ]
+    },
+    {
+      "path": "src/stdlib/fixtures/time_random.my",
+      "original_sha256": "5ea19319d282f9eb98ac0430600387558cf249999b6ad6039865cd5b4fd8ca95",
+      "migrated_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+      "changed": true,
+      "inserted_lines": 1,
+      "deleted_lines": 1,
+      "explicit_copy_count_original": 0,
+      "explicit_copy_count_migrated": 1,
+      "original_source_command": [
+        "git",
+        "show",
+        "fbfcaa7a923186a8e773c3760f81c10aa345a432:src/stdlib/fixtures/time_random.my"
+      ]
+    },
+    {
+      "path": "tests/lang/application_cache.my",
+      "original_sha256": "0c8277f041134839c9780969f9098c529916a8235c500db8ae8e548d3c216d35",
+      "migrated_sha256": "d27bdb4039f9a4a753c4796bfd4a6ad525fd2598954dfa044c108555f10ba397",
+      "changed": true,
+      "inserted_lines": 4,
+      "deleted_lines": 3,
+      "explicit_copy_count_original": 0,
+      "explicit_copy_count_migrated": 3,
+      "original_source_command": [
+        "git",
+        "show",
+        "fbfcaa7a923186a8e773c3760f81c10aa345a432:tests/lang/application_cache.my"
+      ]
+    },
+    {
+      "path": "tests/lang/capability_fields.my",
+      "original_sha256": "fcc03d5095e7fa4068abb5557d295d174cf2e6186d4bf041888819848a1f9807",
+      "migrated_sha256": "68bb3d79776a5bdbd3c10359d06b5119afdceb03f6755eefbc1c1c37b9ad5efd",
+      "changed": true,
+      "inserted_lines": 26,
+      "deleted_lines": 20,
+      "explicit_copy_count_original": 0,
+      "explicit_copy_count_migrated": 3,
+      "original_source_command": [
+        "git",
+        "show",
+        "fbfcaa7a923186a8e773c3760f81c10aa345a432:tests/lang/capability_fields.my"
+      ]
+    },
+    {
+      "path": "tests/lang/memo_cache.my",
+      "original_sha256": "973d611157cd6d360a5d4e32cd8696278a61403606236a04681f37c68629f2c7",
+      "migrated_sha256": "a6d7d945b0f5d7a2a62c1363900fd381dad9caedb059c6de8c3806902234439f",
+      "changed": true,
+      "inserted_lines": 1,
+      "deleted_lines": 1,
+      "explicit_copy_count_original": 0,
+      "explicit_copy_count_migrated": 1,
+      "original_source_command": [
+        "git",
+        "show",
+        "fbfcaa7a923186a8e773c3760f81c10aa345a432:tests/lang/memo_cache.my"
+      ]
+    },
+    {
+      "path": "tests/lang/rc_capability_values.my",
+      "original_sha256": "d151504ed8ae3e636bfa10be9a64e5a22a26cd6db59b15623bf82fa445d340ad",
+      "migrated_sha256": "d151504ed8ae3e636bfa10be9a64e5a22a26cd6db59b15623bf82fa445d340ad",
+      "changed": false,
+      "inserted_lines": 0,
+      "deleted_lines": 0,
+      "explicit_copy_count_original": 0,
+      "explicit_copy_count_migrated": 0,
+      "original_source_command": [
+        "git",
+        "show",
+        "fbfcaa7a923186a8e773c3760f81c10aa345a432:tests/lang/rc_capability_values.my"
+      ]
+    },
+    {
+      "path": "tests/lang/rc_contract_results.my",
+      "original_sha256": "5f6451472ba46a531cc2cffa8116dda0dd961d3df63b235d5996e9887651d03e",
+      "migrated_sha256": "5f6451472ba46a531cc2cffa8116dda0dd961d3df63b235d5996e9887651d03e",
+      "changed": false,
+      "inserted_lines": 0,
+      "deleted_lines": 0,
+      "explicit_copy_count_original": 0,
+      "explicit_copy_count_migrated": 0,
+      "original_source_command": [
+        "git",
+        "show",
+        "fbfcaa7a923186a8e773c3760f81c10aa345a432:tests/lang/rc_contract_results.my"
+      ]
+    },
+    {
+      "path": "tests/lang/test_capabilities.my",
+      "original_sha256": "104b56f7a7040f66bdcf46a5265bc17ba8f633484f3310d2046b7e979367f9ea",
+      "migrated_sha256": "2a9cc33b7b141e8540afcfdc092883c33604c0ae3f29700bddd2f5e298bab3bc",
+      "changed": true,
+      "inserted_lines": 34,
+      "deleted_lines": 28,
+      "explicit_copy_count_original": 0,
+      "explicit_copy_count_migrated": 4,
+      "original_source_command": [
+        "git",
+        "show",
+        "fbfcaa7a923186a8e773c3760f81c10aa345a432:tests/lang/test_capabilities.my"
+      ]
+    },
+    {
+      "path": "tests/value_semantics/stdlib.my",
+      "original_sha256": "68ee1ffa14d3470dcebbb538e86bc708647d447e49435d9a42241165e169eb80",
+      "migrated_sha256": "bb8a1c40b247cc767b7652b89c27885a964f28ab55d19224ed4e607e29fbbe61",
+      "changed": true,
+      "inserted_lines": 2,
+      "deleted_lines": 2,
+      "explicit_copy_count_original": 0,
+      "explicit_copy_count_migrated": 2,
+      "original_source_command": [
+        "git",
+        "show",
+        "fbfcaa7a923186a8e773c3760f81c10aa345a432:tests/value_semantics/stdlib.my"
+      ]
+    }
+  ]
+}

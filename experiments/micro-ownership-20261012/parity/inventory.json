@@ -1,0 +1,267 @@
+[
+  {
+    "path": "bench/parity/micro/alloc_churn.expected",
+    "sha256": "52b8ac479aedeaea1e9da11e3d85b1828bc0ca8b06c48875723325d749fb9f70",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/alloc_churn.my",
+    "sha256": "74825863337c73076d95dbfd0cf3ac44e5b96e33b0d2c983a00c568bd8b7d708",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/alloc_churn.rs",
+    "sha256": "ba5ecd482fba542236dcdb56634527f160491665ed0b50a2e9cd2d71b085ec7c",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/alloc_churn.zig",
+    "sha256": "a4a68a180425ea9bba947d22de3733862564f2dd7cade042a4c12eb80660152a",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/alloc_churn_arena.my",
+    "sha256": "7d6dc4f8ffcf94fb590f874ab5a4cf1f9806835a4de7ce8b39253c47bab0b47d",
+    "core": false
+  },
+  {
+    "path": "bench/parity/micro/alloc_churn_gpa.zig",
+    "sha256": "786d7f300a244d0b9bd82d28f10fddd4163243cc2c661399417ebdb17ac3c58b",
+    "core": false
+  },
+  {
+    "path": "bench/parity/micro/alloc_churn_reuse.rs",
+    "sha256": "cef851dfd279a32e2edda4081b3acf55f57405498048175f126cd4d28659f637",
+    "core": false
+  },
+  {
+    "path": "bench/parity/micro/bytes_scan.expected",
+    "sha256": "6bad0207281a4d36c465d56f11f4cb248fa0b9c7dedba4591d717f815e861c7a",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/bytes_scan.my",
+    "sha256": "b779e133330f885a7e58c58d8f1d768486bd2d89f55221592ce1af4e8e0eefc5",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/bytes_scan.rs",
+    "sha256": "8f45dcafca42881b0f8a44ba5183b2ad4b0d0f87abe08d0276f58532aac371e1",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/bytes_scan.zig",
+    "sha256": "90665b14c966a12a24fe2cf2731130a787836838d95b45860eb5155bf02fcdf3",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/bytes_scan_wrapping.my",
+    "sha256": "9ac2c34cb970e68fc46dd0814b6de2778ee43754fc07a410b84e111e01473c62",
+    "core": false
+  },
+  {
+    "path": "bench/parity/micro/calls.expected",
+    "sha256": "93acd367386ad3b42a26b3815a580aae055ca2f18ea40258ccaa29f7e6921380",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/calls.my",
+    "sha256": "6fe0ef85e1021d50912f0ffdb7f019a01138d72d1d177dfeb3d7f8455d96e824",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/calls.rs",
+    "sha256": "544989690283a79e153e0af8cc4cffcf0938a598c486830a951429f165da8fa0",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/calls.zig",
+    "sha256": "4f58d6ba8f3d693e3a23a41d59f0a754102792df646cb20af14ed200223a218f",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/calls_inline.zig",
+    "sha256": "fa9e14a3dbd31621064ca2e79e821d4ff35f8db580a4e65a12e0fd724f46a0f5",
+    "core": false
+  },
+  {
+    "path": "bench/parity/micro/common.zig",
+    "sha256": "ecd17fc37b07935bdb749dea072f4d2fe7f9141635887285e339a2b265d70552",
+    "core": false
+  },
+  {
+    "path": "bench/parity/micro/dict_count.expected",
+    "sha256": "4561c81a11a51b8dc19629f530cf4b4d5f27edb937a404d61e9c1ecea9ad7a04",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/dict_count.my",
+    "sha256": "a131ce57bad43436a65ae39e614bc713baf7e0efed6207070b3239c4d0a33167",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/dict_count.rs",
+    "sha256": "adb850c7af66caa8dfa8737589e7c10acd1451a4f31b0709952e0ea05a47536f",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/dict_count.zig",
+    "sha256": "d0b6a32d08f2594ab93dbe9be0de0c99c963ca927d21dba4ceee5caa8b0df01d",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/dict_count_entry.rs",
+    "sha256": "fa11a21970be33e096f33082ce508f795aeb92d7783551c3f3bd8d4cb92f4199",
+    "core": false
+  },
+  {
+    "path": "bench/parity/micro/dict_count_getorput.zig",
+    "sha256": "73535890371aba2daf3d20a3a739aa9cd4c404ebf1b6d3f28b9903646a479cce",
+    "core": false
+  },
+  {
+    "path": "bench/parity/micro/fib.expected",
+    "sha256": "653226562ad6143cebbec0872e5596358984edb431588afde338b77586d860c6",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/fib.my",
+    "sha256": "eda7b11e070094793744e3a79dbc43feb7ab889c188d402f2ab341f43d93ae4c",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/fib.rs",
+    "sha256": "e53574605f32aac1f90b42b9ab5123b5ff77a648f990d2c2977f919b432e5186",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/fib.zig",
+    "sha256": "4a738b02973667be9290d9e432fb1b9cfce89a025886dc28fb4a0c3f2e7bb616",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/float_loop.expected",
+    "sha256": "18857ead20b4390f11fa3f83075eac1fe493a9c167053a4e4f2986f603cd3d38",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/float_loop.my",
+    "sha256": "973bd81919329b101f45fa0e64502fc437ca073fc49aa69ba89c5908c085315b",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/float_loop.rs",
+    "sha256": "3cfa3f56c59236d2a8b6a15bfbe0228d6852e455149af527f7c693f14d342e3a",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/float_loop.zig",
+    "sha256": "1bc2b707fb032d9ccc3213563cb683abfbd739036ef7c43a0debbabd416791d2",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/intloop.expected",
+    "sha256": "3e7f5ece27d4e9e45a39c15df220019984badbca4a8e78992344f1ade32b2714",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/intloop.my",
+    "sha256": "c6432be48323cea6c2acd9fda6f30e07e130d9231a82340fa89ff55f58b18768",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/intloop.rs",
+    "sha256": "c29ae458b7c328de0ef4598cfb7baa6892ca344395559e3d02444b4ec04269fd",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/intloop.zig",
+    "sha256": "23c6694a91a23ee0e97e0880f3a4f916ba264a8305e6a1b0de5fae711b95b8d5",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/list_append_sum.expected",
+    "sha256": "ecea822e423e436f316f3a4402edf9858cd7c64191481740276675bd6abacc71",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/list_append_sum.my",
+    "sha256": "77f823a390a0fa510dc7c17abd7906d887760097a48d6ab8ef1d9c8555a10edd",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/list_append_sum.rs",
+    "sha256": "dc6d19b711ea34dde32a074c6a0e7812d3750c0cfd6e07b040e272344bba95c9",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/list_append_sum.zig",
+    "sha256": "7151cf1b547bd9a6872758a9b148c6657d0313c77dbda7cb5dd40dad96d998f2",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/list_records.expected",
+    "sha256": "8a4d740c5439703ae4eb250524b47c5352b838feece3f8ca42055ce22f1ffa9f",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/list_records.my",
+    "sha256": "3ade2abc5b66d5d708db598a0c972d7b6e0200cab88941cf895609d16d6f456d",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/list_records.rs",
+    "sha256": "2097b64b3c480fb684f0dbde4cccf35b49f20aa04ff1f9bf115281862c489a0b",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/list_records.zig",
+    "sha256": "d511ae012bef9d94f0eef39400615a10259474d03a751d914b4503bbfa95f7aa",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/list_records_wrapping.my",
+    "sha256": "4c0f8de7eb614a02766fc58ab07dd9f33669bedc8f889d0db3bc1049e43fa961",
+    "core": false
+  },
+  {
+    "path": "bench/parity/micro/records.expected",
+    "sha256": "0ff7e248711867ad5a1bfa1f13922a0de635c92a8ed527363e232827ab66c6c0",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/records.my",
+    "sha256": "1a2dcd6b8c1a546b9c74716dee041c6e25925aaa773f2f5f534e167cd13c50cd",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/records.rs",
+    "sha256": "9e282bbc642872ad02bd2ebe84acd7ca3707a0efe7c83985d10e5930205ac4c2",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/records.zig",
+    "sha256": "e5de40329bc2f121d008b3b8fe06785db25d640a249f80320b1b023c5ab9aa8e",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/str_build.expected",
+    "sha256": "e8e4291ddf65fcad3e471a7587aada2668080c48b025d42dbd6c7ec2b9453b34",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/str_build.my",
+    "sha256": "eb61c114af4b7c34567680b21726b6676d599d864658db586290bb21ebbd53ce",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/str_build.rs",
+    "sha256": "84a37170089d56f91d7b6b38a5ae69830c391b277d6319fc58248e45d2091b75",
+    "core": true
+  },
+  {
+    "path": "bench/parity/micro/str_build.zig",
+    "sha256": "f3bd4eea5a629b27a72253bf276c7431e148c35c0036b90c108449022cba5e48",
+    "core": true
+  }
+]

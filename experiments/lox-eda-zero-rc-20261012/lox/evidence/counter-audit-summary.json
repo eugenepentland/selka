@@ -1,0 +1,22 @@
+{
+  "arm_runs": 78,
+  "checked_cases": 26,
+  "all_exit_live_bytes_zero": true,
+  "checked_all_managed_rc_zero": true,
+  "direct_destruction_range": {
+    "min": 43498,
+    "max": 14529136
+  },
+  "checked_peak_live_bytes": {
+    "min": 831536,
+    "max": 7171088
+  },
+  "counter_semantics": {
+    "release_unique": "Direct destruction with no RC count test; positive counts are expected and separate from managed RC traffic.",
+    "implementation": [
+      "src/core/emit_count.zig:30",
+      "src/core/emit_llvm.zig:3448",
+      "src/core/count_test.zig:691"
+    ]
+  }
+}

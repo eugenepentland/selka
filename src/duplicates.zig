@@ -11,7 +11,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v29";
+pub const version = "exact-v31";
 /// Declared origin of the functions included in a duplicate discovery report.
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const near = @import("near_duplicates.zig");
@@ -77,6 +77,16 @@ fn recordFields(allocator: std.mem.Allocator, writer: *std.Io.Writer, work: *std
         i -= 1;
         try work.append(allocator, .{ .expression = fields[i].value });
     }
+}
+
+/// Complete tuple extraction includes ignored positions and destination identity.
+fn unpackSlots(writer: *std.Io.Writer, slots: ?[]const ?typed.LocalId) error{OutOfMemory}!void {
+    const fields = slots orelse {
+        writer.writeAll("unpack none\n") catch return error.OutOfMemory;
+        return;
+    };
+    writer.print("unpack {d}\n", .{fields.len}) catch return error.OutOfMemory;
+    for (fields, 0..) |slot, index| writer.print("field {d} slot {?d}\n", .{ index, if (slot) |id| @as(?usize, @backingInt(id)) else null }) catch return error.OutOfMemory;
 }
 
 /// Keys include the complete canonical structure: the hash map compares bytes
@@ -206,6 +216,11 @@ const CanonicalWriter = struct {
             .propagate => |propagate| {
                 writer.print("propagate to {s}\n", .{typed.typeName(propagate.output, program.records)}) catch return error.OutOfMemory;
                 try work.append(allocator, .{ .expression = propagate.value });
+            },
+            .borrow_selection => |selection| {
+                writer.print("selection {s}\n", .{@tagName(selection.kind)}) catch return error.OutOfMemory;
+                try work.append(allocator, .{ .expression = selection.second });
+                try work.append(allocator, .{ .expression = selection.first });
             },
             .block_value => |block| {
                 try work.append(allocator, .{ .expression = block.value });
@@ -382,6 +397,7 @@ const CanonicalWriter = struct {
             .ret, .discard => |value| try work.append(allocator, .{ .expression = value }),
             .initialize, .assign => |store| {
                 writer.print("slot {d}\n", .{@backingInt(store.slot)}) catch return error.OutOfMemory;
+                try unpackSlots(writer, store.unpack);
                 try work.append(allocator, .{ .expression = store.value });
             },
             .match => |match| {

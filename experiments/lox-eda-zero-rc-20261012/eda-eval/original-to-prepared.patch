@@ -1,0 +1,1142 @@
+--- original/board_layers.my
++++ source/board_layers.my
+@@ -196,8 +196,8 @@
+     mut twins: bytes[][] = [[f_cu, b_cu], [f_paste, b_paste], [f_mask, b_mask], [f_silks, b_silks], [f_fab, b_fab], [f_crtyd, b_crtyd], [f_adhes, b_adhes]]
+     for twin in twins:
+         if name == twin[0]:
+-            return twin[1]
+-    return name
++            return twin[1].copy()
++    return name.copy()
+ 
+ 
+ public func signal_layer_colors() -> bytes[]:
+@@ -212,20 +212,20 @@
+     mut v = signal_index_int(sig)
+     mut colors = signal_layer_colors()
+     if v < len(colors):
+-        return colors[v]
++        return colors[v].copy()
+     mut inner = inner_layer_colors()
+-    return inner[(v - 2) % len(inner)]
++    return inner[(v - 2) % len(inner)].copy()
+ 
+ 
+ public func stack_color(stack: StackIndex, count: int) -> bytes:
+     mut i = stack_index_int(stack)
+     mut colors = signal_layer_colors()
+     if i == 1:
+-        return colors[0]
++        return colors[0].copy()
+     if count > 1 and i == count:
+-        return colors[1]
++        return colors[1].copy()
+     mut inner = inner_layer_colors()
+-    return inner[max(i - 2, 0) % len(inner)]
++    return inner[max(i - 2, 0) % len(inner)].copy()
+ 
+ 
+ # Zig's scratch buffer has no surviving alias; return owned bytes directly.
+@@ -274,7 +274,7 @@
+ 
+ 
+ public func row_color(self: Row) -> bytes:
+-    return self.naming.color
++    return self.naming.color.copy()
+ 
+ 
+ public func row_gerber_suffix(self: Row) -> bytes:
+@@ -299,7 +299,7 @@
+ public func stack_declared_plane_at(self: Stack, stack: StackIndex) -> bytes?:
+     for pl in self.planes:
+         if pl.index == stack_index_int(stack):
+-            return Some(pl.net)
++            return Some(pl.net.copy())
+     return None
+ 
+ 
+@@ -391,14 +391,14 @@
+     mut i = stack_index_int(stack)
+     if i < 1 or i > self.len:
+         return None
+-    return Some(self.rows_buf[i - 1])
++    return Some(self.rows_buf[i - 1].copy())
+ 
+ 
+ public func layer_table_row_of_signal(self: LayerTable, sig: SignalIndex) -> Row?:
+     for row in layer_table_rows(self):
+         mut signal = row.signal
+         if signal is not None and signal == sig:
+-            return Some(row)
++            return Some(row.copy())
+     return None
+ 
+ 
+@@ -431,11 +431,11 @@
+         mut kind = Kind.signal
+         if carry.is_plane:
+             kind = Kind.plane
+-        rows.append(Row(stack=stack, signal=signal_of_stack(s, stack), kind=kind, side=copper_side(stack, count), plane_net=carry.net, naming=Naming(kicad=layer_name, ui=layer_name, color=stack_color(stack, count)), gerber=GerberId(suffix=gerber_suffix(stack, count), function=gerber_function(stack, count))))
++        rows.append(Row(stack=stack, signal=signal_of_stack(s, stack), kind=kind, side=copper_side(stack, count), plane_net=carry.net.copy(), naming=Naming(kicad=layer_name.copy(), ui=layer_name.copy(), color=stack_color(stack, count)), gerber=GerberId(suffix=gerber_suffix(stack, count), function=gerber_function(stack, count))))
+         i += 1
+     for spec in tech_specs():
+         rows.append(Row(stack=stack_index_of(1), kind=spec.kind, side=spec.side, naming=Naming(kicad=text_from(spec.kicad), ui=text_from(spec.ui), color=b""), gerber=GerberId(suffix=text_from(spec.suffix), function=text_from(spec.function))))
+-    return LayerTable(rows_buf=rows, len=count, stack=s)
++    return LayerTable(rows_buf=rows, len=count, stack=s.copy())
+ 
+ 
+ func copper_side(stack: StackIndex, count: int) -> Side?:
+@@ -460,7 +460,7 @@
+     if i == implicit_ground_stack:
+         return PlaneCarry(is_plane=True, net=None)
+     if i == implicit_rail_stack:
+-        return PlaneCarry(is_plane=True, net=s.implicit_rail)
++        return PlaneCarry(is_plane=True, net=s.implicit_rail.copy())
+     return PlaneCarry(is_plane=False, net=None)
+ 
+ 
+@@ -500,7 +500,7 @@
+     self.over += 1
+     if self.over == 1 or layer > self.worst:
+         self.worst = layer
+-        self.net = net
++        self.net = net.copy()
+ 
+ 
+ public func layer_audit_clean(self: LayerAudit) -> bool:
+--- original/board_layers_test.my
++++ source/board_layers_test.my
+@@ -7,7 +7,7 @@
+ 
+ 
+ func declared(count: int, planes: m.PlaneAt[]) -> m.Stack:
+-    return m.Stack(copper_layers=count, declared=True, planes=planes)
++    return m.Stack(copper_layers=count, declared=True, planes=planes.copy())
+ 
+ 
+ func signal_is(row: m.Row, index: int) -> bool:
+@@ -18,7 +18,7 @@
+ func row_named(t: m.LayerTable, kicad_name: bytes) -> m.Row?:
+     for row in m.layer_table_fab_rows(t):
+         if m.row_kicad_name(row) == kicad_name:
+-            return Some(row)
++            return Some(row.copy())
+     return None
+ 
+ 
+@@ -170,7 +170,7 @@
+     mut suffixes = [b"F_Mask.gts", b"B_Mask.gbs", b"F_Paste.gtp", b"B_Paste.gbp", b"F_Silkscreen.gto", b"B_Silkscreen.gbo", b"Edge_Cuts.gm1"]
+     mut functions = [b"Soldermask,Top", b"Soldermask,Bot", b"Paste,Top", b"Paste,Bot", b"Legend,Top", b"Legend,Bot", b"Profile,NP"]
+     for i in range(len(tech)):
+-        mut row = tech[i]
++        mut row = tech[i].copy()
+         if not ex.ok(out, "not copper", not m.kind_is_copper(row.kind)):
+             return False
+         if not ex.ok(out, "not signal", row.signal.is_none()):
+--- original/design_model.my
++++ source/design_model.my
+@@ -34,48 +34,48 @@
+     if len(nodes) != 1:
+         mut offending: ast.Node? = None
+         if len(nodes) > 1:
+-            offending = Some(nodes[1])
++            offending = Some(nodes[1].copy())
+         return Err(fail(mut diag, offending, b"expected exactly one (sch-model \xe2\x80\xa6) form"))
+-    mut top = nodes[0]
++    mut top = nodes[0].copy()
+     mut items = try form(mut diag, top, b"sch-model", 2)
+     mut version = 0
+     match items[1].tag:
+         case ast.Tag.int(value=v):
+             version = v
+         case _:
+-            return Err(fail(mut diag, Some(items[1]), b"model version must be an integer"))
++            return Err(fail(mut diag, Some(items[1].copy()), b"model version must be an integer"))
+     if version != format_version:
+-        return Err(fail(mut diag, Some(items[1]), b"unsupported model version"))
++        return Err(fail(mut diag, Some(items[1].copy()), b"unsupported model version"))
+     mut design: bytes? = None
+     mut block: env_mod.DesignBlock? = None
+     for child in items[2:]:
+         mut head = head_of(child)
+         if head is None:
+-            return Err(fail(mut diag, Some(child), b"expected a form"))
++            return Err(fail(mut diag, Some(child.copy()), b"expected a form"))
+         if head == b"design":
+             if design is not None:
+-                return Err(fail(mut diag, Some(child), b"duplicate (design \xe2\x80\xa6)"))
++                return Err(fail(mut diag, Some(child.copy()), b"duplicate (design \xe2\x80\xa6)"))
+             mut design_value = try string_arg(mut diag, child, b"design")
+             design = Some(design_value)
+         elif head == b"block":
+             if block is not None:
+-                return Err(fail(mut diag, Some(child), b"duplicate root (block \xe2\x80\xa6)"))
++                return Err(fail(mut diag, Some(child.copy()), b"duplicate root (block \xe2\x80\xa6)"))
+             mut block_value = try read_block(mut diag, child)
+             block = Some(block_value)
+         else:
+-            return Err(fail(mut diag, Some(child), b"unknown top-level form"))
++            return Err(fail(mut diag, Some(child.copy()), b"unknown top-level form"))
+     if design is None:
+         return Err(fail(mut diag, Some(top), b"missing (design \xe2\x80\xa6)"))
+     if block is None:
+         return Err(fail(mut diag, Some(top), b"missing (block \xe2\x80\xa6)"))
+-    return Ok(Model(design=design, block=block))
++    return Ok(Model(design=design.copy(), block=block.copy()))
+ 
+ 
+ func fail(mut diag: Diag, node: ast.Node?, message: bytes) -> str:
+     mut line = 0
+     if node is not None:
+         line = node.span.line
+-    diag = Diag(line=line, message=message)
++    diag = Diag(line=line, message=message.copy())
+     return err_bad_model
+ 
+ 
+@@ -91,32 +91,32 @@
+ func form(mut diag: Diag, node: ast.Node, name: bytes, min_: int) -> Result[ast.Node[], str]:
+     mut items = ast.as_list(node)
+     if items is None:
+-        return Err(fail(mut diag, Some(node), b"expected a list"))
++        return Err(fail(mut diag, Some(node.copy()), b"expected a list"))
+     if len(items) == 0:
+-        return Err(fail(mut diag, Some(node), b"unexpected form"))
++        return Err(fail(mut diag, Some(node.copy()), b"unexpected form"))
+     mut head = ast.as_atom(items[0])
+     if head is None:
+-        return Err(fail(mut diag, Some(node), b"unexpected form"))
++        return Err(fail(mut diag, Some(node.copy()), b"unexpected form"))
+     if head != name:
+-        return Err(fail(mut diag, Some(node), b"unexpected form"))
++        return Err(fail(mut diag, Some(node.copy()), b"unexpected form"))
+     if len(items) < min_:
+-        return Err(fail(mut diag, Some(node), b"form has too few arguments"))
+-    return Ok(items)
++        return Err(fail(mut diag, Some(node.copy()), b"form has too few arguments"))
++    return Ok(items.copy())
+ 
+ 
+ # Zig's private `str` helper is `str_`: a function named str shadows the type.
+ func str_(mut diag: Diag, node: ast.Node) -> Result[bytes, str]:
+     mut text = ast.as_string(node)
+     if text is None:
+-        return Err(fail(mut diag, Some(node), b"expected a quoted string"))
+-    return Ok(text)
++        return Err(fail(mut diag, Some(node.copy()), b"expected a quoted string"))
++    return Ok(text.copy())
+ 
+ 
+ # The single quoted string in (name "value").
+ func string_arg(mut diag: Diag, node: ast.Node, name: bytes) -> Result[bytes, str]:
+     mut items = try form(mut diag, node, name, 2)
+     if len(items) != 2:
+-        return Err(fail(mut diag, Some(node), b"expected exactly one string"))
++        return Err(fail(mut diag, Some(node.copy()), b"expected exactly one string"))
+     return str_(mut diag, items[1])
+ 
+ 
+@@ -130,7 +130,7 @@
+     for child in items[2:]:
+         mut head = head_of(child)
+         if head is None:
+-            return Err(fail(mut diag, Some(child), b"expected a form"))
++            return Err(fail(mut diag, Some(child.copy()), b"expected a form"))
+         if head == b"instance":
+             mut instances_item = try read_instance(mut diag, child)
+             instances.append(instances_item)
+@@ -140,7 +140,7 @@
+         elif head == b"net-tie":
+             mut t = try form(mut diag, child, b"net-tie", 3)
+             if len(t) != 3:
+-                return Err(fail(mut diag, Some(child), b"(net-tie A B) takes two strings"))
++                return Err(fail(mut diag, Some(child.copy()), b"(net-tie A B) takes two strings"))
+             mut a = try str_(mut diag, t[1])
+             mut b = try str_(mut diag, t[2])
+             ties.append(env_mod.NetTie(a=a, b=b))
+@@ -150,12 +150,12 @@
+         elif head == b"sub-block":
+             mut s = try form(mut diag, child, b"sub-block", 3)
+             if len(s) != 3:
+-                return Err(fail(mut diag, Some(child), b"(sub-block NAME (block \xe2\x80\xa6)) takes a name and one block"))
++                return Err(fail(mut diag, Some(child.copy()), b"(sub-block NAME (block \xe2\x80\xa6)) takes a name and one block"))
+             mut sub_name = try str_(mut diag, s[1])
+             mut sub_block = try read_block(mut diag, s[2])
+             subs.append(env_mod.SubBlock(name=sub_name, block=sub_block, source=b""))
+         else:
+-            return Err(fail(mut diag, Some(child), b"unknown block form"))
++            return Err(fail(mut diag, Some(child.copy()), b"unknown block form"))
+     mut name = try str_(mut diag, items[1])
+     mut block = env_mod.design_block_default(name)
+     block.instances = instances
+@@ -175,7 +175,7 @@
+     for child in items[2:]:
+         mut head = head_of(child)
+         if head is None:
+-            return Err(fail(mut diag, Some(child), b"expected a form"))
++            return Err(fail(mut diag, Some(child.copy()), b"expected a form"))
+         if head == b"component":
+             mut component_value = try string_arg(mut diag, child, head)
+             inst.component = component_value
+@@ -203,21 +203,21 @@
+         elif head == b"dnp":
+             mut dnp_items = ast.as_list(child)
+             if dnp_items is None:
+-                return Err(fail(mut diag, Some(child), b"expected a list"))
++                return Err(fail(mut diag, Some(child.copy()), b"expected a list"))
+             if len(dnp_items) != 1:
+-                return Err(fail(mut diag, Some(child), b"(dnp) takes no arguments"))
++                return Err(fail(mut diag, Some(child.copy()), b"(dnp) takes no arguments"))
+             inst.dnp = True
+         elif head == b"decouple":
+             mut d = try form(mut diag, child, b"decouple", 3)
+             if len(d) != 3:
+-                return Err(fail(mut diag, Some(child), b"(decouple IC PIN) takes two strings"))
++                return Err(fail(mut diag, Some(child.copy()), b"(decouple IC PIN) takes two strings"))
+             mut ic = try str_(mut diag, d[1])
+             mut pin = try str_(mut diag, d[2])
+             inst.bind.decouple = env_mod.DecoupleBind(ic=ic, pin=pin)
+         elif head == b"property":
+             mut p = try form(mut diag, child, b"property", 3)
+             if len(p) != 3:
+-                return Err(fail(mut diag, Some(child), b"(property KEY VALUE) takes two strings"))
++                return Err(fail(mut diag, Some(child.copy()), b"(property KEY VALUE) takes two strings"))
+             mut prop_key = try str_(mut diag, p[1])
+             mut prop_value = try str_(mut diag, p[2])
+             props.append(env_mod.Property(key=prop_key, value=prop_value))
+@@ -225,7 +225,7 @@
+             mut parts_item = try read_part(mut diag, child)
+             parts.append(parts_item)
+         else:
+-            return Err(fail(mut diag, Some(child), b"unknown instance field"))
++            return Err(fail(mut diag, Some(child.copy()), b"unknown instance field"))
+     inst.properties = props
+     inst.parts = parts
+     return Ok(inst)
+@@ -238,7 +238,7 @@
+     for child in items[2:]:
+         mut p = try form(mut diag, child, b"pin", 2)
+         if len(p) != 2:
+-            return Err(fail(mut diag, Some(child), b"(pin PAD) takes one string"))
++            return Err(fail(mut diag, Some(child.copy()), b"(pin PAD) takes one string"))
+         mut pin = try str_(mut diag, p[1])
+         pins.append(env_mod.PartPin(pin=pin, net=b"", pin_name=b"", group=b""))
+     mut name = try str_(mut diag, items[1])
+@@ -251,7 +251,7 @@
+     for child in items[2:]:
+         mut p = try form(mut diag, child, b"pin", 3)
+         if len(p) != 3:
+-            return Err(fail(mut diag, Some(child), b"(pin REF PAD) takes two strings"))
++            return Err(fail(mut diag, Some(child.copy()), b"(pin REF PAD) takes two strings"))
+         mut ref_des = try str_(mut diag, p[1])
+         mut pin = try str_(mut diag, p[2])
+         pins.append(env_mod.pin_ref_default(ref_des, pin))
+@@ -269,7 +269,7 @@
+     for child in items[2:]:
+         mut head = head_of(child)
+         if head is None:
+-            return Err(fail(mut diag, Some(child), b"expected a form"))
++            return Err(fail(mut diag, Some(child.copy()), b"expected a form"))
+         if head == b"member":
+             mut ref_des = try string_arg(mut diag, child, head)
+             members.append(env_mod.instance_default(ref_des))
+@@ -279,13 +279,13 @@
+         elif head == b"port":
+             mut p = try form(mut diag, child, b"port", 3)
+             if len(p) != 3:
+-                return Err(fail(mut diag, Some(child), b"(port NAME TYPE) takes a string and a type"))
++                return Err(fail(mut diag, Some(child.copy()), b"(port NAME TYPE) takes a string and a type"))
+             mut tag = ast.as_atom(p[2])
+             if tag is None:
+-                return Err(fail(mut diag, Some(p[2]), b"port type must be an atom"))
++                return Err(fail(mut diag, Some(p[2].copy()), b"port type must be an atom"))
+             mut signal_type = parse_signal_type(tag)
+             if signal_type is None:
+-                return Err(fail(mut diag, Some(p[2]), b"unknown port signal type"))
++                return Err(fail(mut diag, Some(p[2].copy()), b"unknown port signal type"))
+             mut port_name = try str_(mut diag, p[1])
+             # Direction is not modelled; exporters do not read it.
+             mut port = env_mod.section_port_default(port_name)
+@@ -298,7 +298,7 @@
+             mut subs_item = try read_section(mut diag, child)
+             subs.append(subs_item)
+         else:
+-            return Err(fail(mut diag, Some(child), b"unknown section form"))
++            return Err(fail(mut diag, Some(child.copy()), b"unknown section form"))
+     mut name = try str_(mut diag, items[1])
+     mut section = env_mod.section_default(name)
+     section.instances = members
+@@ -332,7 +332,7 @@
+     for child in items[2:]:
+         mut p = try form(mut diag, child, b"pin", 3)
+         if len(p) != 3:
+-            return Err(fail(mut diag, Some(child), b"(pin PAD NET) takes two strings"))
++            return Err(fail(mut diag, Some(child.copy()), b"(pin PAD NET) takes two strings"))
+         mut pin = try str_(mut diag, p[1])
+         mut net = try str_(mut diag, p[2])
+         pins.append(env_mod.PartPin(pin=pin, net=net, pin_name=b"", group=b""))
+--- original/design_model_test.my
++++ source/design_model_test.my
+@@ -17,12 +17,12 @@
+         case Ok(model):
+             if not ex.eq_bytes(out, "design", model.design, b"demo"):
+                 return False
+-            mut b = model.block
++            mut b = model.block.copy()
+             if not ex.eq_bytes(out, "block", b.name, b"Demo Board"):
+                 return False
+             if not ex.eq_int(out, "instances", len(b.instances), 2):
+                 return False
+-            mut reg = b.instances[0]
++            mut reg = b.instances[0].copy()
+             if not ex.eq_bytes(out, "ref", reg.ref_des, b"U1"):
+                 return False
+             if not ex.eq_bytes(out, "component", reg.component, b"ldo"):
+@@ -35,7 +35,7 @@
+                 return False
+             if not ex.eq_bytes(out, "part pin", reg.parts[0].pins[1].pin, b"5"):
+                 return False
+-            mut c1 = b.instances[1]
++            mut c1 = b.instances[1].copy()
+             if not ex.ok(out, "dnp", c1.dnp):
+                 return False
+             if not ex.eq_bytes(out, "decouple ic", c1.bind.decouple.ic, b"U1"):
+@@ -46,7 +46,7 @@
+                 return False
+             if not ex.eq_bytes(out, "tie", b.net_ties[0].b, b"ldo/VIN"):
+                 return False
+-            mut sec = b.sections[0]
++            mut sec = b.sections[0].copy()
+             if not ex.eq_bytes(out, "member", sec.instances[0].ref_des, b"U1"):
+                 return False
+             if not ex.eq_bytes(out, "pin group", sec.pin_groups[0].pins[0].net, b"VIN"):
+@@ -57,7 +57,7 @@
+                 return False
+             if not ex.eq_bytes(out, "nested section", sec.sub_sections[0].instances[0].ref_des, b"C1"):
+                 return False
+-            mut sub = b.sub_blocks[0]
++            mut sub = b.sub_blocks[0].copy()
+             if not ex.eq_bytes(out, "sub-block", sub.name, b"ldo"):
+                 return False
+             if not ex.eq_bytes(out, "sub-block name", sub.block.name, b"ldo-module"):
+@@ -70,7 +70,7 @@
+         case Ok(_):
+             return ""
+         case Err(error):
+-            return error
++            return error.copy()
+ 
+ 
+ # test "design-model: a malformed model names the offending line"
+--- original/diagram_membership.my
++++ source/diagram_membership.my
+@@ -29,7 +29,7 @@
+     mut sub_to_node: dict[str, int] = {}
+     mut si = 0
+     while si < len(block.sections):
+-        mut sec = block.sections[si]
++        mut sec = block.sections[si].copy()
+         mut nid = sec_node[si]
+         if nid is not None:
+             add_section_refs(mut ref_to_node, sec, nid)
+@@ -87,16 +87,16 @@
+         mut parent = b""
+         mut sub = b""
+         if a_slash < 0 and b_slash >= 0:
+-            parent = nt.a
++            parent = nt.a.copy()
+             sub = nt.b[:b_slash]
+         elif b_slash < 0 and a_slash >= 0:
+-            parent = nt.b
++            parent = nt.b.copy()
+             sub = nt.a[:a_slash]
+         else:
+             continue
+         mut key = strs.text(parent)
+         if key not in net_to_subs:
+-            net_to_subs[key] = set()
++            net_to_subs[key.copy()] = set()
+         net_to_subs[key].add(strs.text(sub))
+     mut sb_name_to_idx: dict[str, int] = {}
+     mut idx = 0
+@@ -127,7 +127,7 @@
+         count_idx += 1
+     mut sec_idx2 = 0
+     while sec_idx2 < sec_count:
+-        mut sec2 = block.sections[sec_idx2]
++        mut sec2 = block.sections[sec_idx2].copy()
+         mut sec_nets: set[str] = set()
+         for pg in sec2.pin_groups:
+             for p in pg.pins:
+@@ -137,7 +137,7 @@
+         for net in sec_nets:
+             if net in power_nets or net not in net_to_subs:
+                 continue
+-            mut subs = net_to_subs[net]
++            mut subs = net_to_subs[net].copy()
+             if len(subs) != 1:
+                 continue
+             for sub_name in subs:
+@@ -147,7 +147,7 @@
+         sec_idx2 += 1
+     mut sb_idx2 = 0
+     while sb_idx2 < sb_count:
+-        mut sb2 = block.sub_blocks[sb_idx2]
++        mut sb2 = block.sub_blocks[sb_idx2].copy()
+         mut sb_key = strs.text(sb2.name)
+         if sb_key in explicit_host:
+             result[sb_idx2] = Some(explicit_host[sb_key])
+@@ -158,7 +158,7 @@
+         mut best_is_conn = True
+         mut sec_idx3 = 0
+         while sec_idx3 < sec_count:
+-            mut sec3 = block.sections[sec_idx3]
++            mut sec3 = block.sections[sec_idx3].copy()
+             mut c = counts[sb_idx2 * sec_count + sec_idx3]
+             if c > 0:
+                 mut is_conn = rb.classify_by_name(sec3.name, sec3.instances) == rb.Category.connector
+--- original/eval_electrical.my
++++ source/eval_electrical.my
+@@ -97,7 +97,7 @@
+         elif head == b"domain":
+             mut a = ast.as_atom(items[1])
+             if a is not None:
+-                decl.domain_ = a
++                decl.domain_ = a.copy()
+ 
+ 
+ # Unknown sub-forms ignored.
+--- original/eval_env.my
++++ source/eval_env.my
+@@ -1599,7 +1599,7 @@
+ public func value_as_string(self: Value) -> bytes?:
+     match self:
+         case Value.string(value=s):
+-            return Some(s)
++            return Some(s.copy())
+         case _:
+             return None
+ 
+@@ -1683,21 +1683,21 @@
+         elif sub_head == b"quote":
+             mut s = ast.as_string(subs[1])
+             if s is not None:
+-                quote = Some(s)
++                quote = Some(s.copy())
+     return Some(NoteRef(pdf=pdf, page=page, quote=quote))
+ 
+ 
+ public func instance_variants_base_value(self: InstanceVariants, value: bytes) -> bytes:
+     if len(self.base_value) > 0:
+-        return self.base_value
+-    return value
++        return self.base_value.copy()
++    return value.copy()
+ 
+ 
+ public func variant_scope_active_name(self: VariantScope) -> bytes:
+     mut active = self.active
+     if active is None:
+         return b""
+-    return self.decls[active].name
++    return self.decls[active].name.copy()
+ 
+ 
+ public func variant_scope_find(self: VariantScope, name: bytes) -> int?:
+@@ -1764,15 +1764,14 @@
+ 
+ 
+ public func env_put(mut pool: EnvPool, self: Env, name: bytes, value: Value):
+-    pool.scopes[self.index].bindings[strs.text(name)] = value
++    pool.scopes[self.index].bindings[strs.text(name)] = value.copy()
+ 
+ 
+ public func env_get(pool: EnvPool, self: Env, name: bytes) -> Value?:
+-    mut scope = pool.scopes[self.index]
+     mut key = strs.text(name)
+-    if key in scope.bindings:
+-        return Some(scope.bindings[key])
+-    mut parent = scope.parent
++    if key in pool.scopes[self.index].bindings:
++        return Some(pool.scopes[self.index].bindings[key].copy())
++    mut parent = pool.scopes[self.index].parent
+     if parent is None:
+         return None
+     return env_get(pool, parent, name)
+@@ -1780,28 +1779,28 @@
+ 
+ # Construction helpers supply Zig's non-scalar defaults explicitly (guide D6).
+ public func instance_default(ref_des: bytes) -> Instance:
+-    return Instance(ref_des=ref_des, label=b"", origin_key=b"", component=b"", value=b"", footprint=b"", symbol=b"", pinout=b"", properties=[], docs=ComponentDocs(datasheets=[]), requirements=[], electrical=[], attrs=[], typed_attrs=[], distance_rules=[], parts=[], id=b"", uuid=b"", variants=InstanceVariants(rules=[], base_value=b""), bind=InstanceBinds(decouple=DecoupleBind(ic=b"", pin=b""), near=NearBind(ref=b"", pin=b"", own=b"")), strap_oks=[], nc_oks=[], thermal=InstanceThermal(), pinout_facts=PinoutFacts())
++    return Instance(ref_des=ref_des.copy(), label=b"", origin_key=b"", component=b"", value=b"", footprint=b"", symbol=b"", pinout=b"", properties=[], docs=ComponentDocs(datasheets=[]), requirements=[], electrical=[], attrs=[], typed_attrs=[], distance_rules=[], parts=[], id=b"", uuid=b"", variants=InstanceVariants(rules=[], base_value=b""), bind=InstanceBinds(decouple=DecoupleBind(ic=b"", pin=b""), near=NearBind(ref=b"", pin=b"", own=b"")), strap_oks=[], nc_oks=[], thermal=InstanceThermal(), pinout_facts=PinoutFacts())
+ 
+ 
+ public func section_default(name: bytes) -> Section:
+-    return Section(name=name, description=b"", category=b"", notes=[], instances=[], pin_groups=[], ports=[], protocols=[], calcs=[], sub_sections=[], status=SectionStatus.implemented, block_role=BlockRole.auto, hosts=[])
++    return Section(name=name.copy(), description=b"", category=b"", notes=[], instances=[], pin_groups=[], ports=[], protocols=[], calcs=[], sub_sections=[], status=SectionStatus.implemented, block_role=BlockRole.auto, hosts=[])
+ 
+ 
+ public func port_default(name: bytes, net: bytes, direction: bytes) -> Port:
+-    return Port(name=name, net=net, direction=direction, enable_net=b"", kind=b"", side=b"", diff_pair_of=b"")
++    return Port(name=name.copy(), net=net.copy(), direction=direction.copy(), enable_net=b"", kind=b"", side=b"", diff_pair_of=b"")
+ 
+ 
+ public func section_port_default(name: bytes) -> SectionPort:
+-    return SectionPort(name=name, direction=PortDirection.io, signal_type=SignalType.signal, group=[], role=b"", protocol=b"", class_=b"")
++    return SectionPort(name=name.copy(), direction=PortDirection.io, signal_type=SignalType.signal, group=[], role=b"", protocol=b"", class_=b"")
+ 
+ 
+ public func pin_ref_default(ref_des: bytes, pin: bytes) -> PinRef:
+-    return PinRef(ref_des=ref_des, pin=pin, asserted_fns=[], load_label=b"")
++    return PinRef(ref_des=ref_des.copy(), pin=pin.copy(), asserted_fns=[], load_label=b"")
+ 
+ 
+ public func power_rail_default(name: bytes) -> PowerRail:
+-    return PowerRail(name=name, aliases=[], rated_voltage=PowerRailRatedVoltage(), source_ref_des=b"", source_port=b"", source_path=b"", enable_net=b"")
++    return PowerRail(name=name.copy(), aliases=[], rated_voltage=PowerRailRatedVoltage(), source_ref_des=b"", source_port=b"", source_path=b"", enable_net=b"")
+ 
+ 
+ public func design_block_default(name: bytes) -> DesignBlock:
+-    return DesignBlock(name=name, instances=[], nets=[], ports=[], notes=[], groups=[], sub_blocks=[], sections=[], port_groups=[], functions=[], origin=BlockOrigin.design_root, module_name=b"", net_ties=[], verifications=[], authored_rules=[], rails=[], envelopes=NetEnvelopeTable(published=[], declared=[]), net_class_pins=[], pdn_intents=[], test_points=[], deprecations=[], parts=[], layout=LayoutSpec(placements=[], rows=[], groups=[], edges=[]), board=BoardSpec(part_number=b"", outline_approved=b"", sides=[], corners=[], perimeter_fence=PerimeterFenceSpec(net=b"GND", keepout=PerimeterKeepoutSpec(blocks=PerimeterKeepoutBlocks(), allow_nets=[])), keepouts=[], thermal=BoardThermalAssemblySpec(), role=BoardRole.subcircuit), revision=Revision(id=b"", date=b"", changes=[]), rough=RoughSpec(anchor=b"", groups=[], critical_loops=[]), stackup=StackupSpec(planes=[], copper=[], dielectrics=[], soldermasks=[], preset=b""), fabrication_layers=[], net_classes=[], design_rules=DesignRulesSpec(mask=MaskRules(margin=0.0, web=0.0), edge=EdgeRules(copper=0.0, component=0.0), via=ViaRules(dia=0.0, drill=0.0), pour=PourRules()), variants=VariantScope(decls=[]))
++    return DesignBlock(name=name.copy(), instances=[], nets=[], ports=[], notes=[], groups=[], sub_blocks=[], sections=[], port_groups=[], functions=[], origin=BlockOrigin.design_root, module_name=b"", net_ties=[], verifications=[], authored_rules=[], rails=[], envelopes=NetEnvelopeTable(published=[], declared=[]), net_class_pins=[], pdn_intents=[], test_points=[], deprecations=[], parts=[], layout=LayoutSpec(placements=[], rows=[], groups=[], edges=[]), board=BoardSpec(part_number=b"", outline_approved=b"", sides=[], corners=[], perimeter_fence=PerimeterFenceSpec(net=b"GND", keepout=PerimeterKeepoutSpec(blocks=PerimeterKeepoutBlocks(), allow_nets=[])), keepouts=[], thermal=BoardThermalAssemblySpec(), role=BoardRole.subcircuit), revision=Revision(id=b"", date=b"", changes=[]), rough=RoughSpec(anchor=b"", groups=[], critical_loops=[]), stackup=StackupSpec(planes=[], copper=[], dielectrics=[], soldermasks=[], preset=b""), fabrication_layers=[], net_classes=[], design_rules=DesignRulesSpec(mask=MaskRules(margin=0.0, web=0.0), edge=EdgeRules(copper=0.0, component=0.0), via=ViaRules(dia=0.0, drill=0.0), pour=PourRules()), variants=VariantScope(decls=[]))
+--- original/eval_net_analysis.my
++++ source/eval_net_analysis.my
+@@ -95,7 +95,7 @@
+     mut idx = name.find(b".")
+     if idx >= 0:
+         return name[:idx]
+-    return name
++    return name.copy()
+ 
+ 
+ public func is_sub_net_name(name: bytes) -> bool:
+@@ -170,9 +170,9 @@
+                 continue
+             mut prefix = ref_des_local_prefix(pin.ref_des)
+             if prefix == 85:
+-                rails_with_ic.add(key)
++                rails_with_ic.add(key.copy())
+             elif prefix == 67 and cap_bridges_base_to_ground(block, pin.ref_des, base):
+-                rails_with_cap.add(key)
++                rails_with_cap.add(key.copy())
+     mut missing: bytes[] = []
+     mut emitted: set[str] = set()
+     for net2 in block.nets:
+@@ -233,9 +233,9 @@
+     for tie in block.net_ties:
+         mut other: bytes? = None
+         if tie.a == base:
+-            other = Some(tie.b)
++            other = Some(tie.b.copy())
+         elif tie.b == base:
+-            other = Some(tie.a)
++            other = Some(tie.a.copy())
+         if other is not None:
+             if other.find(b"/") >= 0 and sub_block_net_has_cap(block, other):
+                 return True
+@@ -245,9 +245,9 @@
+ # Union-find shared by rail construction and power budgeting. findRoot reads
+ # its map, so unlike Zig's pointer spelling the mylang argument is plain.
+ public func find_root(parent: dict[str, bytes], name: bytes) -> bytes:
+-    mut cur = name
++    mut cur = name.copy()
+     while strs.text(cur) in parent:
+-        mut p = parent[strs.text(cur)]
++        mut p = parent[strs.text(cur)].copy()
+         if p == cur:
+             return cur
+         cur = p
+@@ -283,16 +283,16 @@
+                     continue
+                 touches = True
+                 if p.pin == b"1":
+-                    net_a = Some(base)
++                    net_a = Some(base.copy())
+                 if p.pin == b"2":
+-                    net_b = Some(base)
++                    net_b = Some(base.copy())
+             if not touches:
+                 continue
+             if d0 is None:
+-                d0 = Some(base)
++                d0 = Some(base.copy())
+             elif d0 != base:
+                 if d1 is None:
+-                    d1 = Some(base)
++                    d1 = Some(base.copy())
+                 elif d1 != base:
+                     multi = True
+         if net_a is not None and net_b is not None:
+--- original/eval_rails.my
++++ source/eval_rails.my
+@@ -43,12 +43,11 @@
+             mut root_key = strs.text(root)
+             mut existing_cap = -1.0
+             if root_key in by_root:
+-                mut existing = by_root[root_key]
+-                existing_cap = existing.capacity_max.unwrap_or(existing.capacity_typ.unwrap_or(0.0))
++                existing_cap = by_root[root_key].capacity_max.unwrap_or(by_root[root_key].capacity_typ.unwrap_or(0.0))
+             mut incoming_cap = port.current_max.unwrap_or(port.current_typ.unwrap_or(0.0))
+             if incoming_cap <= existing_cap:
+                 continue
+-            mut incoming = env_mod.PowerRail(name=base, aliases=[], nominal=nominal, rated_voltage=resolve_rail_rated_voltage(block, base, port), source_ref_des=sb.name, source_port=port.name, source_path=path_temp, capacity_typ=port.current_typ, capacity_max=port.current_max, enable_net=port.enable_net)
++            mut incoming = env_mod.PowerRail(name=base.copy(), aliases=[], nominal=nominal, rated_voltage=resolve_rail_rated_voltage(block, base, port), source_ref_des=sb.name.copy(), source_port=port.name.copy(), source_path=path_temp, capacity_typ=port.current_typ, capacity_max=port.current_max, enable_net=port.enable_net.copy())
+             by_root[root_key] = incoming
+     # External board-edge inputs are sources when no on-board source won root.
+     for port2 in block.ports:
+@@ -56,9 +55,9 @@
+             continue
+         if env_mod.port_is_declared_non_power(port2) or not env_mod.port_is_power_source(port2):
+             continue
+-        mut port_name = port2.name
++        mut port_name = port2.name.copy()
+         if len(port2.net) > 0:
+-            port_name = port2.net
++            port_name = port2.net.copy()
+         mut base2 = na.base_net_name(port_name)
+         if base2 == gnd_name:
+             continue
+@@ -69,7 +68,7 @@
+         mut nominal2 = port2.nominal
+         if nominal2 is None:
+             nominal2 = midpoint(port2.rated_min, port2.rated_max)
+-        by_root[root_key2] = env_mod.PowerRail(name=base2, aliases=[], nominal=nominal2, rated_voltage=env_mod.PowerRailRatedVoltage(min=port2.rated_min, max=port2.rated_max), source_ref_des=b"", source_port=port2.name, source_path=b"@external/" + port2.name, capacity_typ=port2.current_typ, capacity_max=port2.current_max, enable_net=b"")
++        by_root[root_key2] = env_mod.PowerRail(name=base2, aliases=[], nominal=nominal2, rated_voltage=env_mod.PowerRailRatedVoltage(min=port2.rated_min, max=port2.rated_max), source_ref_des=b"", source_port=port2.name.copy(), source_path=b"@external/" + port2.name, capacity_typ=port2.current_typ, capacity_max=port2.current_max, enable_net=b"")
+     # Group ferrite child names by root, then attach the aliases to that source.
+     mut aliases_by_root: dict[str, bytes[]] = {}
+     for child in net_parent:
+@@ -79,11 +78,19 @@
+             continue
+         mut key = strs.text(child_root)
+         if key not in aliases_by_root:
+-            aliases_by_root[key] = []
++            aliases_by_root[key.copy()] = []
+         aliases_by_root[key].append(child_name)
+-    for key2 in by_root:
++    # Replace owned rail snapshots; indexed records remain borrowed for reads.
++    mut rail_keys = list(by_root.keys()).copy()
++    mut rail_idx = 0
++    while rail_idx < len(rail_keys):
++        mut key2 = rail_keys[rail_idx].copy()
+         if key2 in aliases_by_root:
+-            by_root[key2].aliases = aliases_by_root[key2]
++            mut aliases = aliases_by_root[key2].copy()
++            mut rail = by_root[key2].copy()
++            rail.aliases = aliases
++            by_root[key2] = rail
++        rail_idx += 1
+     # Stable bytewise name sorting makes builds deterministic.
+     mut out = list(by_root.values())
+     srt.sort_by(mut out, less_than_rail)
+@@ -166,9 +173,9 @@
+ func find_top_net(block: env_mod.DesignBlock, path: bytes) -> bytes?:
+     for nt in block.net_ties:
+         if nt.a == path:
+-            return Some(nt.b)
++            return Some(nt.b.copy())
+         if nt.b == path:
+-            return Some(nt.a)
++            return Some(nt.a.copy())
+     return None
+ 
+ 
+@@ -180,10 +187,7 @@
+             return Some(v)
+     # Third tier: top-level nominal, then the midpoint of a complete rating.
+     for p in block.ports:
+-        mut port_net = p.name
+-        if len(p.net) > 0:
+-            port_net = p.net
+-        if port_net != rail_name:
++        if not port_matches_rail(p, rail_name):
+             continue
+         mut nominal = p.nominal
+         if nominal is not None:
+@@ -207,12 +211,16 @@
+     if source.rated_min is not None or source.rated_max is not None:
+         return env_mod.PowerRailRatedVoltage(min=source.rated_min, max=source.rated_max)
+     for port in block.ports:
+-        mut port_net = port.name
+-        if len(port.net) > 0:
+-            port_net = port.net
+-        if port_net == rail_name:
++        if port_matches_rail(port, rail_name):
+             return env_mod.PowerRailRatedVoltage(min=port.rated_min, max=port.rated_max)
+     return env_mod.PowerRailRatedVoltage()
++
++
++# The selected port name is only compared; borrow the fields without a snapshot.
++func port_matches_rail(port: env_mod.Port, rail_name: bytes) -> bool:
++    if len(port.net) > 0:
++        return port.net == rail_name
++    return port.name == rail_name
+ 
+ 
+ func section_voltage(sec: env_mod.Section, rail_name: bytes) -> float?:
+--- original/eval_rails_test.my
++++ source/eval_rails_test.my
+@@ -41,10 +41,10 @@
+ 
+ func outer_with_source(name: bytes, port: env.Port, net: bytes) -> env.DesignBlock:
+     mut inner = env.design_block_default(name)
+-    inner.ports = [port]
++    inner.ports = [port.copy()]
+     mut outer = env.design_block_default(b"outer")
+-    outer.sub_blocks = [env.SubBlock(name=name, block=inner, source=b"")]
+-    outer.net_ties = [env.NetTie(a=name + b"/" + port.name, b=net)]
++    outer.sub_blocks = [env.SubBlock(name=name.copy(), block=inner, source=b"")]
++    outer.net_ties = [env.NetTie(a=name + b"/" + port.name, b=net.copy())]
+     return outer
+ 
+ 
+--- original/flat_netlist.my
++++ source/flat_netlist.my
+@@ -47,7 +47,7 @@
+ 
+ func prefixed(prefix: bytes, name: bytes) -> bytes:
+     if len(prefix) == 0:
+-        return name
++        return name.copy()
+     return prefix + b"/" + name
+ 
+ 
+@@ -61,20 +61,20 @@
+ # Every candidate is a sibling in the naming part's own block.
+ func prefixed_distance_rules(prefix: bytes, rules: env_mod.DistanceRule[]) -> env_mod.DistanceRule[]:
+     if len(rules) == 0 or len(prefix) == 0:
+-        return rules
++        return rules.copy()
+     mut result: env_mod.DistanceRule[] = []
+     for rule in rules:
+         mut refs: bytes[] = []
+         for ref in rule.candidates:
+             refs.append(prefixed(prefix, ref))
+-        mut slot = rule
++        mut slot = rule.copy()
+         slot.candidates = refs
+         result.append(slot)
+     return result
+ 
+ 
+ public func flat_instance_default(ref_des: bytes, component: bytes, value: bytes, footprint: bytes, properties: env_mod.Property[], uuid_: bytes) -> FlatInstance:
+-    return FlatInstance(ref_des=ref_des, component=component, value=value, footprint=footprint, properties=properties, uuid=uuid_, symbol=b"", pinout=b"", origin_key=b"", variants=env_mod.InstanceVariants(rules=[], base_value=b""), bind=env_mod.InstanceBinds(decouple=env_mod.DecoupleBind(ic=b"", pin=b""), near=env_mod.NearBind(ref=b"", pin=b"", own=b"")), distance_rules=[])
++    return FlatInstance(ref_des=ref_des.copy(), component=component.copy(), value=value.copy(), footprint=footprint.copy(), properties=properties.copy(), uuid=uuid_.copy(), symbol=b"", pinout=b"", origin_key=b"", variants=env_mod.InstanceVariants(rules=[], base_value=b""), bind=env_mod.InstanceBinds(decouple=env_mod.DecoupleBind(ic=b"", pin=b""), near=env_mod.NearBind(ref=b"", pin=b"", own=b"")), distance_rules=[])
+ 
+ 
+ # BOM-assigned identity wins; otherwise derive it from the stable source id.
+@@ -83,10 +83,10 @@
+         mut ref = prefixed(prefix, inst.ref_des)
+         mut effective_uuid = b""
+         if len(inst.uuid) > 0:
+-            effective_uuid = inst.uuid
++            effective_uuid = inst.uuid.copy()
+         elif len(inst.id) > 0:
+             effective_uuid = uuid_from_id(inst.id)
+-        list_.append(FlatInstance(ref_des=ref, component=inst.component, symbol=inst.symbol, pinout=inst.pinout, origin_key=inst.origin_key, value=inst.value, footprint=inst.footprint, properties=inst.properties, uuid=effective_uuid, dnp=inst.dnp, variants=inst.variants, bind=env_mod.InstanceBinds(decouple=env_mod.DecoupleBind(pin=inst.bind.decouple.pin, ic=prefixed_or_empty(prefix, inst.bind.decouple.ic), rail=inst.bind.decouple.rail), near=env_mod.NearBind(ref=prefixed_or_empty(prefix, inst.bind.near.ref), pin=inst.bind.near.pin, own=inst.bind.near.own)), distance_rules=prefixed_distance_rules(prefix, inst.distance_rules)))
++        list_.append(FlatInstance(ref_des=ref, component=inst.component.copy(), symbol=inst.symbol.copy(), pinout=inst.pinout.copy(), origin_key=inst.origin_key.copy(), value=inst.value.copy(), footprint=inst.footprint.copy(), properties=inst.properties.copy(), uuid=effective_uuid, dnp=inst.dnp, variants=inst.variants.copy(), bind=env_mod.InstanceBinds(decouple=env_mod.DecoupleBind(pin=inst.bind.decouple.pin.copy(), ic=prefixed_or_empty(prefix, inst.bind.decouple.ic), rail=inst.bind.decouple.rail), near=env_mod.NearBind(ref=prefixed_or_empty(prefix, inst.bind.near.ref), pin=inst.bind.near.pin.copy(), own=inst.bind.near.own.copy())), distance_rules=prefixed_distance_rules(prefix, inst.distance_rules)))
+     for sb in block.sub_blocks:
+         mut sub_prefix = prefixed(prefix, sb.name)
+         collect_instances(sb.block, sub_prefix, mut list_)
+@@ -97,7 +97,7 @@
+         mut net_name = prefixed(prefix, net.name)
+         mut pins: FlatPin[] = []
+         for pin in net.pins:
+-            pins.append(FlatPin(ref_des=prefixed(prefix, pin.ref_des), pin=pin.pin))
++            pins.append(FlatPin(ref_des=prefixed(prefix, pin.ref_des), pin=pin.pin.copy()))
+         list_.append(FlatNet(name=net_name, pins=pins))
+     for sb in block.sub_blocks:
+         mut sub_prefix = prefixed(prefix, sb.name)
+@@ -134,7 +134,7 @@
+     if key in self.index:
+         return self.index[key]
+     mut i = len(self.names)
+-    self.names.append(name)
++    self.names.append(name.copy())
+     self.parent.append(i)
+     self.index[key] = i
+     return i
+@@ -155,15 +155,15 @@
+ func write_canonical_aliases(mut out: dict[str, bytes], mut sets: NetTieSets, canonical: dict[int, int], nets: FlatNet[], per_pin: dict[str, bytes]):
+     mut i = 0
+     while i < len(sets.names):
+-        mut name = sets.names[i]
++        mut name = sets.names[i].copy()
+         mut root = net_tie_sets_find(mut sets, i)
+         if root in canonical:
+-            out[strs.text(name)] = sets.names[canonical[root]]
++            out[strs.text(name)] = sets.names[canonical[root]].copy()
+         i += 1
+     for net in nets:
+         mut key = strs.text(net.name)
+         if key in per_pin:
+-            out[key] = per_pin[key]
++            out[key] = per_pin[key].copy()
+ 
+ 
+ # Merge electrical aliases while keeping per-pin micro-nets separate and
+@@ -197,7 +197,7 @@
+     mut canonical: dict[int, int] = {}
+     mut i = 0
+     while i < len(sets.names):
+-        mut nm = sets.names[i]
++        mut nm = sets.names[i].copy()
+         if strs.text(nm) in live_names:
+             mut root = net_tie_sets_find(mut sets, i)
+             if root in canonical:
+@@ -211,10 +211,10 @@
+     mut rename_map: dict[str, bytes] = {}
+     mut j = 0
+     while j < len(sets.names):
+-        mut nm2 = sets.names[j]
++        mut nm2 = sets.names[j].copy()
+         mut root2 = net_tie_sets_find(mut sets, j)
+         if root2 in canonical:
+-            mut canon_name = sets.names[canonical[root2]]
++            mut canon_name = sets.names[canonical[root2]].copy()
+             if nm2 != canon_name:
+                 rename_map[strs.text(nm2)] = canon_name
+         j += 1
+@@ -233,19 +233,19 @@
+     mut merged: dict[str, FlatPin[]] = {}
+     for net3 in nets:
+         mut key3 = strs.text(net3.name)
+-        mut canon = net3.name
++        mut canon = net3.name.copy()
+         if key3 in per_pin_renames:
+-            canon = per_pin_renames[key3]
++            canon = per_pin_renames[key3].copy()
+         elif key3 in rename_map:
+-            canon = rename_map[key3]
++            canon = rename_map[key3].copy()
+         mut canon_key = strs.text(canon)
+         if canon_key not in merged:
+-            merged[canon_key] = []
++            merged[canon_key.copy()] = []
+         for p in net3.pins:
+-            merged[canon_key].append(p)
++            merged[canon_key].append(p.copy())
+     nets.clear()
+     for name3 in merged:
+-        nets.append(FlatNet(name=name3.encode(), pins=merged[name3]))
++        nets.append(FlatNet(name=name3.encode(), pins=merged[name3].copy()))
+ 
+ 
+ public func flatten_and_merge_nets(block: env_mod.DesignBlock, mut nets: FlatNet[]):
+--- original/placement_geometry.my
++++ source/placement_geometry.my
+@@ -124,11 +124,11 @@
+         if ast.is_form(sub, b"pad"):
+             mut p = parse_pad(sub)
+             if p is not None:
+-                pads.append(p)
++                pads.append(p.copy())
+         elif ast.is_form(sub, b"copper-pour-keepout"):
+             mut k = parse_copper_pour_keepout(sub)
+             if k is not None:
+-                keepouts.append(k)
++                keepouts.append(k.copy())
+         elif ast.is_form(sub, b"courtyard"):
+             mut ext = parse_courtyard(sub)
+             if ext is not None:
+@@ -224,9 +224,9 @@
+     mut ptype = b"smd"
+     mut shape = b"rect"
+     if len(cl) >= 3:
+-        ptype = ast.as_atom(cl[2]).unwrap_or(b"smd")
++        ptype = ast.as_atom(cl[2]).unwrap_or(b"smd").copy()
+     if len(cl) >= 4:
+-        shape = ast.as_atom(cl[3]).unwrap_or(b"rect")
++        shape = ast.as_atom(cl[3]).unwrap_or(b"rect").copy()
+     mut p = Pad(number=number, shape=shape, poly=[], slot_half=[0.0, 0.0], overrides=PadOverrides(rf_min_size=[0.0, 0.0]), npth=ptype == b"npth", thru=ptype == b"npth" or ptype == b"thru")
+     for c in cl[2:]:
+         if ast.as_atom(c).unwrap_or(b"") == b"no-paste":
+@@ -254,7 +254,7 @@
+         elif ast.is_form(c, b"rf-min-size"):
+             p.overrides.rf_min_size = parse_rf_min_size(c)
+         elif ast.is_form(c, b"poly"):
+-            p.poly = parse_pad_poly(c).unwrap_or(p.poly)
++            p.poly = parse_pad_poly(c).unwrap_or(p.poly).copy()
+         elif ast.is_form(c, b"roundrect_rratio"):
+             mut rl = ast.as_list(c)
+             if rl is not None and len(rl) >= 2:
+@@ -308,7 +308,7 @@
+     for pn in cl[1:]:
+         mut xy = parse_point(pn)
+         if xy is not None:
+-            pts.append(xy)
++            pts.append(xy.copy())
+     if len(pts) < 3:
+         return None
+     return Some(pts)
+@@ -326,7 +326,7 @@
+     mut cl = try ast.as_list(node)
+     if len(cl) < 2:
+         return None
+-    mut shape = cl[1]
++    mut shape = cl[1].copy()
+     if ast.is_form(shape, b"rect"):
+         return parse_rect_ext(shape)
+     if ast.is_form(shape, b"circle"):
+@@ -377,7 +377,7 @@
+     mut r = try ast.as_number(cc[len(cc) - 1])
+     mut c = [0.0, 0.0]
+     if len(cc) >= 3:
+-        c = parse_point(cc[1]).unwrap_or(c)
++        c = parse_point(cc[1]).unwrap_or(c).copy()
+     return Some(Ext(hw=abs(r), hh=abs(r), cx=c[0], cy=c[1], circular=True))
+ 
+ 
+@@ -402,7 +402,7 @@
+ func node_text(n: ast.Node) -> bytes:
+     mut text = ast.as_text(n)
+     if text is not None:
+-        return text
++        return text.copy()
+     mut num = ast.as_number(n)
+     if num is not None:
+         mut i = numeric.checked_i64(num)
+--- original/placement_geometry_test.my
++++ source/placement_geometry_test.my
+@@ -9,7 +9,7 @@
+     match parser.parse(source):
+         case Ok(nodes):
+             if len(nodes) > 0:
+-                return ast.as_list(nodes[0]).unwrap_or([])
++                return ast.as_list(nodes[0]).unwrap_or([]).copy()
+         case Err(_):
+             assert False, "fixture parses"
+     return []
+@@ -18,7 +18,7 @@
+ func first(source: bytes) -> ast.Node:
+     match parser.parse(source):
+         case Ok(nodes):
+-            return nodes[0]
++            return nodes[0].copy()
+         case Err(_):
+             assert False, "fixture parses"
+     return ast.node_atom(ast.span_zero(), b"")
+@@ -33,7 +33,7 @@
+         if ast.is_form(sub, b"pad"):
+             mut p = m.parse_pad(sub)
+             if p is not None:
+-                pads.append(p)
++                pads.append(p.copy())
+         elif ast.is_form(sub, b"courtyard"):
+             ext = m.parse_courtyard(sub)
+     if not ex.eq_int(out, "pads", len(pads), 2) or not ex.eq_bytes(out, "pad id", pads[0].number, b"1") or not ex.near(out, "pad x", pads[0].x, -0.48, 1e-9):
+@@ -94,7 +94,7 @@
+     for sub in cl[2:]:
+         mut p = m.parse_pad(sub)
+         if p is not None:
+-            pads.append(p)
++            pads.append(p.copy())
+     if not ex.eq_int(out, "pad count", len(pads), 3):
+         return False
+     if not ex.ok(out, "slot", m.pad_is_slot(pads[0])) or not ex.near(out, "tool minor axis", pads[0].drill, 0.50, 1e-9) or not ex.near(out, "slot x", pads[0].slot_half[0], 0.0, 1e-9) or not ex.near(out, "slot y", pads[0].slot_half[1], 0.30, 1e-9) or not ex.near(out, "rotation", pads[0].rot, 30.0, 1e-9):
+--- original/placement_pin_roles.my
++++ source/placement_pin_roles.my
+@@ -35,7 +35,7 @@
+     if len(component) == 0:
+         return PartRoles(map={})
+     mut elec: dict[str, env.ElectricalType] = {}
+-    mut pinout_name = component
++    mut pinout_name = component.copy()
+     mut children = load_list(fs, project_dir, "components", component)
+     if children is not None:
+         for child in children:
+@@ -50,7 +50,7 @@
+             if head == b"pinout":
+                 mut p = ast.as_text(cl[1])
+                 if p is not None:
+-                    pinout_name = p
++                    pinout_name = p.copy()
+             elif head == b"electrical":
+                 mut decl = electrical.parse(cl)
+                 if decl is None:
+@@ -97,7 +97,7 @@
+     if len(component) == 0:
+         return []
+     mut elec: dict[str, env.ElectricalType] = {}
+-    mut pinout_name = component
++    mut pinout_name = component.copy()
+     mut children = load_list(fs, project_dir, "components", component)
+     if children is not None:
+         for child in children:
+@@ -112,7 +112,7 @@
+             if head == b"pinout":
+                 mut p = ast.as_text(cl[1])
+                 if p is not None:
+-                    pinout_name = p
++                    pinout_name = p.copy()
+             elif head == b"electrical":
+                 mut decl = electrical.parse(cl)
+                 if decl is None:
+@@ -144,7 +144,7 @@
+         mut fn_key = strs.text(fn_name)
+         if fn_key in elec:
+             elec_type = Some(elec[fn_key])
+-        result.append(PadFunction(pad=pad_id, fn_name=fn_name, class_=function_class(elec_type, fn_name)))
++        result.append(PadFunction(pad=pad_id.copy(), fn_name=fn_name.copy(), class_=function_class(elec_type, fn_name)))
+     return result
+ 
+ 
+@@ -183,7 +183,7 @@
+ func node_text(n: ast.Node) -> bytes?:
+     mut text = ast.as_text(n)
+     if text is not None:
+-        return Some(text)
++        return Some(text.copy())
+     mut num = ast.as_number(n)
+     if num is not None:
+         mut i = numeric.checked_i64(num)
+@@ -291,7 +291,7 @@
+ # Shared component-file half for ERC strap and floating-pad classification.
+ func load_component_elec(fs: Filesystem, project_dir: str, component: bytes) -> ComponentElec:
+     mut elec: dict[str, env.ElectricalType] = {}
+-    mut pinout_name = component
++    mut pinout_name = component.copy()
+     mut children = load_list(fs, project_dir, "components", component)
+     if children is not None:
+         for child in children:
+@@ -306,7 +306,7 @@
+             if head == b"pinout":
+                 mut p = ast.as_text(cl[1])
+                 if p is not None:
+-                    pinout_name = p
++                    pinout_name = p.copy()
+             elif head == b"electrical":
+                 mut decl = electrical.parse(cl)
+                 if decl is None:
+@@ -351,7 +351,7 @@
+             elec_type = Some(ce.elec[fn_key])
+         mut strap = classify(elec_type, fn_name) == PinClass.strap or is_strap_fn(fn_name)
+         if strap:
+-            result[strs.text(pad_id)] = fn_name
++            result[strs.text(pad_id)] = fn_name.copy()
+     return result
+ 
+ 
+@@ -448,7 +448,7 @@
+         if req == NcRequirement.suspect or req == NcRequirement.required:
+             if is_translator_channel(fn_name, fn_set):
+                 continue
+-            result[strs.text(pad_id)] = PadReq(fn_name=fn_name, req=req)
++            result[strs.text(pad_id)] = PadReq(fn_name=fn_name.copy(), req=req)
+     return result
+ 
+ 
+--- original/placement_pin_roles_test.my
++++ source/placement_pin_roles_test.my
+@@ -190,9 +190,9 @@
+         return False
+     if "2" not in reqs or "3" not in reqs or "6" not in reqs:
+         return ex.ok(out, "pads 2,3,6", False)
+-    mut r2 = reqs["2"]
+-    mut r3 = reqs["3"]
+-    mut r6 = reqs["6"]
++    mut r2 = reqs["2"].copy()
++    mut r3 = reqs["3"].copy()
++    mut r6 = reqs["6"].copy()
+     if not ex.ok(out, "2 suspect", r2.req == m.NcRequirement.suspect):
+         return False
+     if not ex.ok(out, "3 suspect", r3.req == m.NcRequirement.suspect):

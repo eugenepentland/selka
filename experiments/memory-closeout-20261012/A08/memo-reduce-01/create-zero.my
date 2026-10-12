@@ -1,0 +1,17 @@
+import memo
+
+func compute(key: memo.Key) -> str[]:
+    match key:
+        case memo.Key.Number(value=value):
+            return ["number-" + str(value)]
+        case memo.Key.Text(value=value):
+            return ["text-" + value]
+        case memo.Key.Data(value=value):
+            return ["data-" + value.hex()]
+
+func main() -> int:
+    match memo.create[str[]](0, compute):
+        case Ok(_):
+            return 0
+        case Err(_):
+            return 1

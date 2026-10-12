@@ -1,0 +1,6 @@
+guardian/test: 2 test(s) selected by filter: "zero RC A02 field augmentation"
+All 2 tests passed.
+guardian/test: test wall 2.08s; slowest over 50ms:
+guardian/test:   2.06s  a02_field_augmented_test.test.zero RC A02 field augmentation preserves exact receiver ownership
+guardian/test: PASS — 2 passed
+guardian/test: RESULT {"passed":2,"failed":0,"skipped":0}

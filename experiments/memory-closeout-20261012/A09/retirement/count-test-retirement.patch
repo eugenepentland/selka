@@ -1,0 +1,186 @@
+--- a/src/core/count_test.zig
++++ b/src/core/count_test.zig
+@@ -213,9 +213,9 @@
+     try directory.dir.writeFile(std.testing.io, .{ .sub_path = "tree.my", .data = unique_tree_source });
+     const source = try std.fs.path.join(a, &.{ root, "tree.my" });
+     const modes = [_][]const []const u8{
+-        &.{ "--counters", "--unoptimized", "--experimental-single-owner" },
+-        &.{ "--counters", "--release", "--experimental-single-owner" },
+-        &.{ "--counters", "--release", "--verify-facts", "--experimental-single-owner" },
++        &.{ "--counters", "--unoptimized" },
++        &.{ "--counters", "--release" },
++        &.{ "--counters", "--release", "--verify-facts" },
+     };
+     for (modes) |flags| {
+         for ([_][]const []const u8{ &.{ "x", "x" }, &.{ "x", "x", "x" } }, [_][]const u8{ "23\n", "124\n" }) |arguments, answer| {
+@@ -261,8 +261,8 @@
+     });
+     const source = try std.fs.path.join(a, &.{ root, "owned.my" });
+     for ([_][]const []const u8{
+-        &.{ "--counters", "--unoptimized", "--experimental-zero-rc" },
+-        &.{ "--counters", "--release", "--verify-facts", "--experimental-zero-rc" },
++        &.{ "--counters", "--unoptimized" },
++        &.{ "--counters", "--release", "--verify-facts" },
+     }) |flags| {
+         const result = try counted(a, root, source, flags, &.{ "hello", "λ" });
+         try std.testing.expectEqual(@as(u8, 0), result.status);
+@@ -279,49 +279,50 @@
+     }
+ }
+ 
+-fn snapshotSource(comptime method: []const u8, comptime sharing: []const u8) []const u8 {
+-    return
++const independent_copy_source =
+     \\func main(args: str[], out: Stream) -> int:
+     \\    mut rows: int[][] = []
+     \\    for i in range(len(args) * 10):
+     \\        rows.append([i, i + 1])
+-    \\
+-    ++ sharing ++ "    mut saved = rows." ++ method ++ "()\n" ++
+-        \\    saved[0].append(9)
+-        \\    out.print(len(rows[0]), len(saved[0]))
+-        \\    return 0
+-        \\
+-    ;
+-}
++    \\    mut saved = rows.copy()
++    \\    saved[0].append(9)
++    \\    rows[1][0] = 99
++    \\    assert saved[1][0] == 1
++    \\    out.print(len(rows[0]), len(saved[0]))
++    \\    return 0
++;
+ 
+ // spec-case: NEW-CORE-SINGLE-OWNER-4
+-test "single owner snapshots avoid eager child allocations while copy stays eager in shared families" {
+-    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+-    defer arena.deinit();
+-    const a = arena.allocator();
+-    var directory = std.testing.tmpDir(.{});
+-    defer directory.cleanup();
+-    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+-    const sources = [_][]const u8{
+-        snapshotSource("snapshot", ""),
+-        snapshotSource("copy", ""),
+-        snapshotSource("copy", "    const shared = rows.snapshot()\n    assert len(shared) == len(rows)\n"),
++test "checked copies own every child and remain independent through growth and replacement" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var directory = std.testing.tmpDir(.{});
++    defer directory.cleanup();
++    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
++    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "independent-copy.my", .data = independent_copy_source });
++    const source = try std.fs.path.join(a, &.{ root, "independent-copy.my" });
++    const modes = [_][]const []const u8{
++        &.{ "--counters", "--unoptimized" },
++        &.{ "--counters", "--release" },
++        &.{ "--counters", "--release", "--verify-facts" },
++        &.{ "--counters", "--optimize-debug" },
++        &.{ "--counters", "--release", "--no-facts" },
+     };
+-    var results: [3]Counted = undefined;
+-    for (sources, &results, 0..) |source, *result, index| {
+-        const name = try std.fmt.allocPrint(a, "snapshot-{d}.my", .{index});
+-        try directory.dir.writeFile(std.testing.io, .{ .sub_path = name, .data = source });
+-        result.* = try counted(a, root, try std.fs.path.join(a, &.{ root, name }), &.{ "--counters", "--release", "--experimental-single-owner" }, &.{ "x", "x", "x", "x" });
++    for (modes) |flags| {
++        const result = try counted(a, root, source, flags, &.{ "x", "x", "x", "x" });
+         try std.testing.expectEqual(@as(u8, 0), result.status);
+         try std.testing.expectEqualStrings("2 3\n", result.stdout);
+         try std.testing.expectEqualStrings("", result.stderr);
++        // Forty two-element children plus the outer list are independently copied.
++        try std.testing.expectEqual(@as(i64, 41), field(result.counts, &.{ "totals", "list_copies" }));
++        try std.testing.expectEqual(@as(i64, 960), field(result.counts, &.{ "totals", "list_copy_bytes" }));
++        try std.testing.expectEqual(@as(i64, 91), field(result.counts, &.{ "totals", "allocs" }));
++        try std.testing.expectEqual(@as(i64, 91), field(result.counts, &.{ "totals", "frees" }));
+         try std.testing.expectEqual(@as(i64, 0), field(result.counts, &.{ "totals", "live_bytes_at_exit" }));
+-    }
+-    const path = &.{ "totals", "allocs" };
+-    try std.testing.expect(field(results[0].counts, path) < field(results[1].counts, path));
+-    try std.testing.expectEqual(field(results[1].counts, path), field(results[2].counts, path));
+-    try std.testing.expectEqual(@as(i64, 2), field(results[0].counts, &.{ "totals", "list_copies" }));
+-    try std.testing.expectEqual(@as(i64, 40), field(results[2].counts, &.{ "totals", "list_copies" }));
++        for ([_][]const u8{ "runtime_retains", "runtime_releases", "shared_retains", "shared_releases", "share_marks" }) |name|
++            try std.testing.expectEqual(@as(i64, 0), field(result.counts, &.{ "totals", name }));
++    }
+ }
+ 
+ // spec: NEW-CORE-COUNTERS-1
+@@ -337,11 +338,11 @@
+     try std.testing.expectEqualStrings("", plain.stderr);
+     try std.testing.expectEqual(@as(u8, 0), plain.status);
+     const modes = [_][]const []const u8{
+-        &.{ "--counters", "--experimental-zero-rc", "--unoptimized" },
+-        &.{ "--counters", "--experimental-zero-rc", "--release" },
+-        &.{ "--counters", "--experimental-zero-rc", "--release", "--verify-facts" },
+-        &.{ "--counters", "--experimental-zero-rc", "--optimize-debug" },
+-        &.{ "--counters", "--experimental-zero-rc", "--release", "--no-facts" },
++        &.{ "--counters", "--unoptimized" },
++        &.{ "--counters", "--release" },
++        &.{ "--counters", "--release", "--verify-facts" },
++        &.{ "--counters", "--optimize-debug" },
++        &.{ "--counters", "--release", "--no-facts" },
+     };
+     for (modes) |flags| {
+         const result = try counted(a, root, "counters.my", flags, &.{});
+@@ -352,7 +353,7 @@
+     }
+     // A fatal bounds error still writes all traffic accumulated before the trap.
+     // Fatal termination does not unwind the live owners; do not call this leak-free.
+-    const trapped = try counted(a, root, "counters.my", &.{ "--counters", "--experimental-zero-rc" }, &.{"trap"});
++    const trapped = try counted(a, root, "counters.my", &.{ "--counters" }, &.{"trap"});
+     try std.testing.expectEqualStrings(plain.stdout, trapped.stdout);
+     try std.testing.expectEqual(@as(u8, 1), trapped.status);
+     try std.testing.expect(contains(trapped.stderr, "R_LIST_BOUNDS"));
+@@ -429,8 +430,8 @@
+     try directory.dir.writeFile(std.testing.io, .{ .sub_path = "recursive-copy-counts.my", .data = source });
+     const path = try std.fs.path.join(a, &.{ root, "recursive-copy-counts.my" });
+     const modes = [_][]const []const u8{
+-        &.{ "--counters", "--experimental-zero-rc", "--unoptimized" },
+-        &.{ "--counters", "--experimental-zero-rc", "--release" },
++        &.{ "--counters", "--unoptimized" },
++        &.{ "--counters", "--release" },
+     };
+     for (modes) |flags| {
+         const result = try counted(a, root, path, flags, &.{});
+@@ -482,7 +483,7 @@
+     const a = arena.allocator();
+     const program =
+         \\func twice(xs: int[]) -> int[]:
+-        \\    mut ys = xs
++        \\    mut ys = xs.copy()
+         \\    ys.append(1)
+         \\    return ys
+         \\func main(out: Stream) -> int:
+@@ -663,8 +664,8 @@
+     });
+     const source = try std.fs.path.join(a, &.{ root, "views.my" });
+     for ([_][]const []const u8{
+-        &.{ "--counters", "--unoptimized", "--experimental-zero-rc" },
+-        &.{ "--counters", "--release", "--verify-facts", "--experimental-zero-rc" },
++        &.{ "--counters", "--unoptimized" },
++        &.{ "--counters", "--release", "--verify-facts" },
+     }) |flags| {
+         const result = try counted(a, root, source, flags, &.{});
+         try std.testing.expectEqual(@as(u8, 0), result.status);
+@@ -687,7 +688,7 @@
+     var directory = std.testing.tmpDir(.{});
+     defer directory.cleanup();
+     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+-    const result = try counted(a, root, "zero_rc_payload_box.my", &.{ "--experimental-zero-rc", "--release", "--counters" }, &.{});
++    const result = try counted(a, root, "zero_rc_payload_box.my", &.{ "--release", "--counters" }, &.{});
+     try std.testing.expectEqual(@as(u8, 0), result.status);
+     try std.testing.expectEqualStrings("none\n15\n15\n", result.stdout);
+     try std.testing.expectEqualStrings("", result.stderr);
+@@ -708,8 +709,8 @@
+     defer directory.cleanup();
+     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+     for ([_][]const []const u8{
+-        &.{ "--experimental-zero-rc", "--unoptimized", "--counters" },
+-        &.{ "--experimental-zero-rc", "--release", "--verify-facts", "--counters" },
++        &.{ "--unoptimized", "--counters" },
++        &.{ "--release", "--verify-facts", "--counters" },
+     }) |flags| {
+         const result = try counted(a, root, "zero_rc_match_box.my", flags, &.{});
+         try std.testing.expectEqual(@as(u8, 0), result.status);

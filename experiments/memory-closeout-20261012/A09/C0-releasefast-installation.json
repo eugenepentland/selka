@@ -1,0 +1,20 @@
+{
+  "source_commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "worktree_commit": "35bab5be43172cffb6a57eec063f4dd202132ed9",
+  "source_equality": "git diff C0 -- src build.zig build.zig.zon build_identity.zig docs was empty; only A09 experiment evidence differs",
+  "installation": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-releasefast",
+  "compiler_optimize": "ReleaseFast",
+  "build_command": "scripts/build-slot.sh build \"$ZIG\" build -Doptimize=ReleaseFast -p \"$PWD/.tmp/memory-closeout/A09/C0-releasefast\" -j4 --maxrss 8589934592",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "files": {
+    "bin/mylang": "78ac31605c7505c7cb330d41bdf2d3a232043e032f487e599f454b3bc6f2bd37",
+    "libexec/mylang/components/cache-plan-14501451340ebbb82684c4108f35b9a71cc2d407333ed50f6f90bc321954261e": "14501451340ebbb82684c4108f35b9a71cc2d407333ed50f6f90bc321954261e",
+    "libexec/mylang/components/cache-plan.json": "44e7c8ed5cb9698221a185056651e3dbe38ea3e5167f59859b49e10a09df1fce",
+    "libexec/mylang/components/test-index-b3ad0140096fa33d2775a7f74bf4385b0750ee09ce885d5c0c23453a7d6c285e": "b3ad0140096fa33d2775a7f74bf4385b0750ee09ce885d5c0c23453a7d6c285e",
+    "libexec/mylang/components/test-index.json": "81006c7e1c24629159943474e4d0d0a7a5125d18c40f124b7274403fbad6f295",
+    "tools/selka-components": "69c222bf0361ea763cab6222d9e9279b77bc380bc27ef6ee3ad56a1480a930c1"
+  },
+  "compiler_sha256": "78ac31605c7505c7cb330d41bdf2d3a232043e032f487e599f454b3bc6f2bd37",
+  "frozen_utc": "2026-10-12T00:57:47.111296+00:00"
+}

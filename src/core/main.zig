@@ -18,12 +18,15 @@ const cli_run = @import("cli_run.zig");
 
 /// The flag naming the build cache directory.
 const cache_dir_flag = "--cache-dir";
+const single_owner_flag = "--experimental-single-owner";
+const zero_rc_flag = @import("mylang").zero_rc_flag;
 const shared_cache_dir_flag = "--shared-cache-dir";
 
 const usage =
     \\usage: mylang build FILE.my -o OUT [--release | --unoptimized | --optimize-debug] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR] [--verify-cache] [--cache-report]
     \\Default: optimized debug; --optimize-debug is a compatibility alias; --unoptimized disables optimization.
     \\Experimental: --experimental-single-owner or --experimental-zero-rc on build, run, check and dump-ir.
+    \\              --experimental-zero-rc also applies to test.
     \\       mylang check FILE.my [--typed] [--stats] [--timings=json] [--cache-dir DIR] [--no-cache]
     \\       mylang test FILE.my|DIR [options]   (`mylang test` alone lists them)
     \\       mylang coverage FILE.my...   (one line per function: ok with its checks, or the refusal reason)
@@ -38,6 +41,7 @@ const test_usage =
     \\Default: optimized debug; --optimize-debug and --mode Debug select the same mode.
     \\  --release | --unoptimized | --optimize-debug           --mode Debug|ReleaseFast
     \\  --no-facts | --verify-facts
+    \\  --experimental-zero-rc                checked moves and borrows, direct destruction
     \\  --affected --against REF                run only tests reaching a declaration changed since REF
     \\  --jobs N                                tests at once (default: CPUs, capped by free memory)
     \\  --max-steps N --max-frames N --max-memory SIZE --timeout-ms N   per-test budgets
@@ -76,9 +80,9 @@ pub fn developer(init: std.process.Init, args: []const []const u8) Error!u8 {
         for (args[3..]) |arg| {
             if (std.mem.eql(u8, arg, "--facts")) {
                 with_facts = true;
-            } else if (std.mem.eql(u8, arg, "--experimental-single-owner")) {
+            } else if (std.mem.eql(u8, arg, single_owner_flag)) {
                 single_owner = true;
-            } else if (std.mem.eql(u8, arg, "--experimental-zero-rc")) {
+            } else if (std.mem.eql(u8, arg, zero_rc_flag)) {
                 single_owner = true;
                 zero_rc = true;
             } else return 2;
@@ -119,6 +123,7 @@ fn dumpIr(init: std.process.Init, path: []const u8, with_facts: bool, single_own
     const entry = project_entry.resolve(allocator, init.io, path, &report) catch |err| return developerFailure(init, report.items, err);
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
     defer session.deinit();
+    session.setOwnership(single_owner, zero_rc);
     const checked = entry.check(allocator, &session, &report) catch |err| return developerFailure(init, report.items, err);
     if (single_owner and !try single_owner_contract.validateMode(allocator, checked.program, checked.src, .text, &report, zero_rc)) {
         try std.Io.File.stderr().writeStreamingAll(init.io, report.items);
@@ -205,9 +210,9 @@ pub fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
         const has_value = index + 1 < args.len;
         if (std.mem.eql(u8, arg, "--release")) {
             options.mode.select(&explicit_mode, .release) catch return 2;
-        } else if (std.mem.eql(u8, arg, "--experimental-single-owner")) {
+        } else if (std.mem.eql(u8, arg, single_owner_flag)) {
             options.show.codegen.single_owner = true;
-        } else if (std.mem.eql(u8, arg, "--experimental-zero-rc")) {
+        } else if (std.mem.eql(u8, arg, zero_rc_flag)) {
             options.show.codegen.single_owner = true;
             options.show.codegen.zero_rc = true;
         } else if (std.mem.eql(u8, arg, "--optimize-debug")) {
@@ -309,19 +314,7 @@ pub fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
             no_cache = true;
         } else if (flagValue(args, &index, "--against")) |reference| {
             options.controls.against = reference;
-        } else if (std.mem.eql(u8, arg, "--release")) {
-            options.build.mode.select(&explicit_mode, .release) catch return testUsage(init, mode_conflict);
-        } else if (std.mem.eql(u8, arg, "--optimize-debug")) {
-            options.build.mode.select(&explicit_mode, .optimized_debug) catch return testUsage(init, mode_conflict);
-        } else if (std.mem.eql(u8, arg, "--unoptimized")) {
-            options.build.mode.select(&explicit_mode, .debug) catch return testUsage(init, mode_conflict);
-        } else if (std.mem.eql(u8, arg, "--json")) {
-            options.json = true;
-        } else if (std.mem.eql(u8, arg, "--no-facts")) {
-            options.build.facts = .off;
-        } else if (std.mem.eql(u8, arg, "--verify-facts")) {
-            options.build.facts = .verify;
-        } else if (std.mem.eql(u8, arg, "--link") and has_value) {
+        } else if (testBuildFlag(&options, arg, &explicit_mode) catch return testUsage(init, mode_conflict)) {} else if (std.mem.eql(u8, arg, "--link") and has_value) {
             index += 1;
             try links.append(init.arena.allocator(), args[index]);
         } else if (std.mem.eql(u8, arg, "--seed") and has_value) {
@@ -363,6 +356,26 @@ pub fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
     defer if (no_cache) cli_run.discard(init.io, options.build.cache);
     const compilation_init = try @import("compiler_sharing.zig").prepare(init, no_cache or options.build.show.verify_cache);
     return test_runner.run(compilation_init, options);
+}
+
+fn testBuildFlag(options: *test_runner.Options, arg: []const u8, explicit_mode: *bool) error{Usage}!bool {
+    if (std.mem.eql(u8, arg, "--release")) {
+        try options.build.mode.select(explicit_mode, .release);
+    } else if (std.mem.eql(u8, arg, "--optimize-debug")) {
+        try options.build.mode.select(explicit_mode, .optimized_debug);
+    } else if (std.mem.eql(u8, arg, "--unoptimized")) {
+        try options.build.mode.select(explicit_mode, .debug);
+    } else if (std.mem.eql(u8, arg, zero_rc_flag)) {
+        options.build.show.codegen.single_owner = true;
+        options.build.show.codegen.zero_rc = true;
+    } else if (std.mem.eql(u8, arg, "--json")) {
+        options.json = true;
+    } else if (std.mem.eql(u8, arg, "--no-facts")) {
+        options.build.facts = .off;
+    } else if (std.mem.eql(u8, arg, "--verify-facts")) {
+        options.build.facts = .verify;
+    } else return false;
+    return true;
 }
 
 fn propertyRuns(text: []const u8) ?u32 {
@@ -467,8 +480,21 @@ fn flagValue(args: []const []const u8, index: *usize, comptime name: []const u8)
 /// the stack), `refused REASON\tNAME` or
 /// `frontend FILE` per line.
 fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
+    var codegen: pipeline.Codegen = .{};
+    var paths: usize = 0;
+    for (arguments) |arg| {
+        if (std.mem.eql(u8, arg, zero_rc_flag)) {
+            codegen.single_owner = true;
+            codegen.zero_rc = true;
+        } else if (std.mem.eql(u8, arg, single_owner_flag)) {
+            codegen.single_owner = true;
+        } else if (std.mem.startsWith(u8, arg, "--")) return 2 else paths += 1;
+    }
+    if (paths == 0) return 2;
+    var refused = false;
     var out: std.ArrayList(u8) = .empty;
     for (arguments) |path| {
+        if (std.mem.startsWith(u8, path, "--")) continue;
         var scratch = std.heap.ArenaAllocator.init(init.gpa);
         defer scratch.deinit();
         const allocator = scratch.allocator();
@@ -476,19 +502,27 @@ fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
         const entry = project_entry.resolve(allocator, init.io, path, &report) catch |err| {
             if (err == error.OutOfMemory) return err;
             try out.print(init.arena.allocator(), "frontend {s}\t{s}\n", .{ path, std.mem.sliceTo(report.items, '\n') });
+            if (codegen.single_owner) refused = true;
             continue;
         };
         var session = frontend.Session.init(init.gpa, init.io, entry.root);
         defer session.deinit();
+        session.setOwnership(codegen.single_owner, codegen.zero_rc);
         const checked = entry.check(allocator, &session, &report) catch |err| switch (err) {
             error.OutOfMemory => return err,
             else => {
                 const first = std.mem.sliceTo(report.items, '\n');
                 try out.print(init.arena.allocator(), "frontend {s}\t{s}\n", .{ path, first });
+                if (codegen.single_owner) refused = true;
                 continue;
             },
         };
-        for (try build.coverageSource(allocator, checked.program, checked.src)) |outcome| {
+        if (codegen.single_owner and !try single_owner_contract.validateMode(allocator, checked.program, checked.src, .text, &report, codegen.zero_rc)) {
+            try out.appendSlice(init.arena.allocator(), report.items);
+            refused = true;
+            continue;
+        }
+        for (try build.coverageInput(allocator, .{ .program = checked.program, .source = checked.src, .single_owner = codegen.single_owner, .zero_rc = codegen.zero_rc })) |outcome| {
             const keep = init.arena.allocator();
             if (outcome.refusal) |reason| {
                 try out.print(keep, "refused {s}\t{s}\n", .{ reason, outcome.name });
@@ -508,7 +542,7 @@ fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
         }
     }
     try std.Io.File.stdout().writeStreamingAll(init.io, out.items);
-    return 0;
+    return @intFromBool(refused);
 }
 
 /// The mechanism `--trap-frames=NAME` names (a `target.Traps`), or null for any other argument.

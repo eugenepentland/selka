@@ -1,0 +1,9 @@
+build-slot: FIFO ticket 1083, position 16; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1083, position 7; earlier build tickets must run first; waiting (61s so far)
+build-slot: FIFO ticket 1083, position 2; earlier build tickets must run first; waiting (121s so far)
+build-slot: build slot 1, FIFO ticket 1083 after 131s
+a06_nested_json passed
+a06_file_processing passed
+a06_parallel_t1 passed
+a06_parallel_t2 passed
+a06_parallel_t8 passed

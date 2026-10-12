@@ -1,0 +1,12 @@
+{
+  "snapshot_directory": "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/ports/mylang",
+  "historical_build_reference": "experiments/parity-confirm-20261009/lox/build.sh",
+  "identity_limit": "Snapshot is the surviving source at the historical build path; stored comparison lacks a per-source hash receipt, so exact historical source identity is not asserted.",
+  "original_hash_manifest": "original-sha256.txt",
+  "compiler_source": "941bf4c18",
+  "compiler_sha256": "178de446d467e61aa6f7f60e3f74715f1ed5efde555f62f11f6e5e6bbba3ca26",
+  "compiler_binary": "/home/epentland/ai/canopy/mylang-memory-20261012-verify-02/zig-out/bin/mylang",
+  "modern_syntax_snapshot": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/lox/ports/mylang",
+  "modern_pre_port_identical_to_original": true,
+  "modern_pre_port_snapshot": "/home/epentland/ai/canopy/mylang-worktrees/claude-main-ce/.mylang-cache/lox.pre-port/ports/mylang"
+}

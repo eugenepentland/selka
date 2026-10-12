@@ -19,7 +19,7 @@ func replace(mut state: State):
 
 
 func move_result(mut state: State) -> State:
-    mut saved = state
+    mut saved = state.copy()
     state.count = state.count + 2
     return saved
 
@@ -54,8 +54,8 @@ public func test_named_rebinding_and_forwarded_mut_return_keep_ownership() -> bo
 
 public func test_record_and_list_snapshots_survive_named_scalar_write() -> bool:
     mut state = State(values=[7], code=[8], links=[9], count=2)
-    mut saved = state
-    mut children = state.values
+    mut saved = state.copy()
+    mut children = state.values.copy()
     state.count = state.count + 5
     append_child(mut state)
     state.count = state.count + 1
@@ -64,7 +64,7 @@ public func test_record_and_list_snapshots_survive_named_scalar_write() -> bool:
 
 public func test_complete_rhs_rebinding_precedes_named_scalar_commit() -> bool:
     mut state = State(values=[7], code=[8], links=[9], count=2)
-    mut saved = state
+    mut saved = state.copy()
     mut next_count = rhs(mut state)
     state.count = next_count
     return state.count == 43 and state.values == [11] and state.links == [13] and saved.count == 2 and saved.code == [8]
@@ -72,7 +72,7 @@ public func test_complete_rhs_rebinding_precedes_named_scalar_commit() -> bool:
 
 public func test_published_record_snapshot_keeps_original_scalar_bits() -> bool:
     mut state = State(values=[7], code=[8], links=[9], count=0)
-    mut published = [state]
+    mut published = [state.copy()]
     mut next_count = rhs(mut state)
     state.count = next_count
     state.count = state.count + 1

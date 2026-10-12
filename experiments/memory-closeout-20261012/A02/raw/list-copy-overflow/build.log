@@ -1,0 +1,37 @@
+build-slot: FIFO ticket 305, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 305 after 25s
+ld.lld: error: undefined symbol: __ubsan_handle_add_overflow_abort
+>>> referenced by core_rt.c:263 (.tmp/memory-closeout/A02/list-copy-overflow/core_rt.c:263)
+>>>               .zig-cache/o/43fc763ff0a5a520f09bb1fad1e56e8a/fixture.o:(block_free)
+>>> referenced by core_rt.c:753 (.tmp/memory-closeout/A02/list-copy-overflow/core_rt.c:753)
+>>>               .zig-cache/o/43fc763ff0a5a520f09bb1fad1e56e8a/fixture.o:(myl_core_list_copy)
+>>> referenced by core_rt.c:2092 (.tmp/memory-closeout/A02/list-copy-overflow/core_rt.c:2092)
+>>>               .zig-cache/o/43fc763ff0a5a520f09bb1fad1e56e8a/fixture.o:(dict_release_part)
+>>> referenced 75 more times
+
+ld.lld: error: undefined symbol: __ubsan_handle_sub_overflow_abort
+>>> referenced by core_rt.c:719 (.tmp/memory-closeout/A02/list-copy-overflow/core_rt.c:719)
+>>>               .zig-cache/o/43fc763ff0a5a520f09bb1fad1e56e8a/fixture.o:(myl_core_owned_list_rotate)
+>>> referenced by core_rt.c:713 (.tmp/memory-closeout/A02/list-copy-overflow/core_rt.c:713)
+>>>               .zig-cache/o/43fc763ff0a5a520f09bb1fad1e56e8a/fixture.o:(myl_core_owned_list_rotate)
+>>> referenced by core_rt.c:731 (.tmp/memory-closeout/A02/list-copy-overflow/core_rt.c:731)
+>>>               .zig-cache/o/43fc763ff0a5a520f09bb1fad1e56e8a/fixture.o:(myl_core_owned_list_reverse)
+>>> referenced 45 more times
+
+ld.lld: error: undefined symbol: __ubsan_handle_mul_overflow_abort
+>>> referenced by core_rt.c:846 (.tmp/memory-closeout/A02/list-copy-overflow/core_rt.c:846)
+>>>               .zig-cache/o/43fc763ff0a5a520f09bb1fad1e56e8a/fixture.o:(myl_core_drop_owned)
+>>> referenced by core_rt.c:3382 (.tmp/memory-closeout/A02/list-copy-overflow/core_rt.c:3382)
+>>>               .zig-cache/o/43fc763ff0a5a520f09bb1fad1e56e8a/fixture.o:(core_text_append_bytes)
+>>> referenced by core_rt.c:3481 (.tmp/memory-closeout/A02/list-copy-overflow/core_rt.c:3481)
+>>>               .zig-cache/o/43fc763ff0a5a520f09bb1fad1e56e8a/fixture.o:(myl_core_str_join)
+>>> referenced 11 more times
+
+ld.lld: error: undefined symbol: __ubsan_handle_negate_overflow_abort
+>>> referenced by core_rt.c:2133 (.tmp/memory-closeout/A02/list-copy-overflow/core_rt.c:2133)
+>>>               .zig-cache/o/43fc763ff0a5a520f09bb1fad1e56e8a/fixture.o:(myl_core_dict_insert)
+>>> referenced by core_rt.c:1071 (.tmp/memory-closeout/A02/list-copy-overflow/core_rt.c:1071)
+>>>               .zig-cache/o/43fc763ff0a5a520f09bb1fad1e56e8a/fixture.o:(dwarf_frames)
+>>> referenced by core_rt.c:1071 (.tmp/memory-closeout/A02/list-copy-overflow/core_rt.c:1071)
+>>>               .zig-cache/o/43fc763ff0a5a520f09bb1fad1e56e8a/fixture.o:(dw_read_entry)
+>>> referenced 1 more times

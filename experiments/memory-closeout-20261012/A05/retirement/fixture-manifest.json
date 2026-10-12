@@ -1,0 +1,15 @@
+{
+  "status": "prepared only; coordinator reservation/apply required for durable_fixture.c, coupled to unconditional owned root runtime",
+  "files": [
+    {
+      "path": "src/core/durable_fixture.c",
+      "before_sha256": "4f55cbf0ba52efa8aaae9e1106e48f9e91bba55ec773fe0076f76f0c186108a9",
+      "after_sha256": "c82a8437fa8c2649d08b58fdbd58db6f4539e23822bcb2019f9229b263af4737"
+    },
+    {
+      "path": "src/core/durable_test.zig",
+      "before_sha256": "ec0b348ec378c6b6bd6bae1e7bbf82091b05ee8ada92fa1d4b906a763fb3d739",
+      "after_sha256": "43f9c2494f6b0626cf9c73aa06aa4cebd48f0c6589558984e070f09048995ed9"
+    }
+  ]
+}

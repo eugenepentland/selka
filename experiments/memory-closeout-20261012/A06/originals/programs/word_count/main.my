@@ -1,0 +1,16 @@
+import words
+
+func main(args: str[], out: Stream) -> int:
+    mut n = 64
+    if len(args) > 0:
+        n = 8192
+    mut text = words.document(n)
+    const counts = words.histogram(text)
+    text = "replaced"
+    const again = words.histogram(words.document(n))
+    if words.checksum(counts) != words.checksum(again):
+        return 1
+    if len(words.histogram("")) != 0:
+        return 2
+    out.print(n, len(counts), words.checksum(counts))
+    return 0

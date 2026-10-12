@@ -1,0 +1,136 @@
+{
+  "shared_admission": "/home/epentland/.cache/mylang/slots",
+  "host_isolation": "cooperating builds/gates only; independent dl-closeout builds observed outside admission",
+  "windows": [
+    {
+      "owner": "A02",
+      "id": "native-policy-initial",
+      "actual_cpu": 0,
+      "completed_cases": [
+        "nested",
+        "append",
+        "reuse"
+      ],
+      "duration_s_approx": 90,
+      "status": "interrupted after complete cases; no throughput conclusion from noisy ranges",
+      "raw_path": "A02/.tmp/memory-closeout/A02/capacity/timing.json",
+      "start_end_unavailable": true
+    },
+    {
+      "owner": "A02",
+      "id": "native-policy-nested5",
+      "actual_cpu": 10,
+      "started_utc": "2026-10-12T00:46:43.317895+00:00",
+      "finished_utc": "2026-10-12T00:47:10.310418+00:00",
+      "status": "complete 2 warmup and9 measured groups; broad noise; first0.5s warmup overlapped counted harness",
+      "raw_path": "A02/.tmp/memory-closeout/A02/capacity-v2/timing-nested5.json"
+    },
+    {
+      "owner": "A02",
+      "id": "native-policy-replacement",
+      "actual_cpu": 10,
+      "status": "cancelled before admission to permit slot2 builds while RF compiler finished; no measurement lost",
+      "max_admitted_duration_s": 30
+    },
+    {
+      "owner": "A09",
+      "id": "native-policy-replacement",
+      "started_utc": "2026-10-12T00:59:13.793590+00:00",
+      "finished_utc": "2026-10-12T00:59:14.784021+00:00",
+      "cpu": 10,
+      "raw_path": "A09/raw/capacity-replacement.json",
+      "status": "complete2warmup+9measured alternating pairs",
+      "scope": "C0 native-policy experiment, not final integrated compiler"
+    },
+    {
+      "owner": "A08",
+      "id": "C0-RF-matches16",
+      "status": "completed5of5cold/warm/receipt/replay/edit builds in approximately5s admitted time",
+      "raw_path": "A08/c0-rf-matches-16/results.json",
+      "cpu": 10
+    },
+    {
+      "owner": "A09",
+      "id": "native-policy-replacement-long",
+      "started_utc": "2026-10-12T01:02:26.343725+00:00",
+      "finished_utc": "2026-10-12T01:02:30.235746+00:00",
+      "cpu": 10,
+      "raw_path": "A09/raw/capacity-replacement-long.json",
+      "status": "complete2warmup+9measured alternating pairs;10million repeats",
+      "scope": "C0 native-policy experiment; not integrated compiler"
+    },
+    {
+      "owner": "A09",
+      "id": "native-policy-buffer-long",
+      "started_utc": "2026-10-12T01:03:41.957956+00:00",
+      "finished_utc": "2026-10-12T01:03:48.504565+00:00",
+      "cpu": 10,
+      "raw_path": "experiments/memory-closeout-20261012/A09/raw/capacity-buffer-long.json",
+      "status": "complete2warmup+9measured alternating pairs;200repeats",
+      "scope": "C0 native-policy experiment; not integrated compiler"
+    },
+    {
+      "owner": "A09",
+      "id": "native-policy-reserved-long",
+      "started_utc": "2026-10-12T01:04:08.675627+00:00",
+      "finished_utc": "2026-10-12T01:04:13.348659+00:00",
+      "cpu": 10,
+      "raw_path": "experiments/memory-closeout-20261012/A09/raw/capacity-reserved-long.json",
+      "status": "complete2warmup+9measured alternating pairs;200repeats",
+      "scope": "C0 native-policy experiment; not integrated compiler"
+    },
+    {
+      "owner": "A09",
+      "id": "runtime-input-pilot",
+      "status": "complete21one-shotchecks after attempted no-op cancellation did not stop subsequent command",
+      "raw_path": "A09/raw/workload-pilot.json",
+      "scope": "input calibration only; no paired performance result",
+      "timing_admission_ticket": 13,
+      "queue_wait_s": 20,
+      "elapsed_s_approx": 7
+    },
+    {
+      "owner": "A09",
+      "id": "runtime-fixed-topology-pilot",
+      "status": "complete21 one-shot output checks; calibration only",
+      "raw_path": "A09/raw/workload-pilot-fixed-topology.json",
+      "elapsed_guest_s": 8.665786864,
+      "start_end_unavailable": true,
+      "scope": "C0 versus A01 prototype for input sizing; not final integrated compiler"
+    },
+    {
+      "owner": "A09",
+      "id": "runtime-final-input-pilot-deferred",
+      "status": "owning orchestration terminated while ordinary barrier queued, before timing wrapper; later rerun in ticket21 after gate-release notice",
+      "ordinary_barrier_ticket": 245,
+      "scope": "awaiting coordinator gate-release notification"
+    },
+    {
+      "owner": "A09",
+      "id": "runtime-final-input-pilot",
+      "status": "complete21 one-shot output checks; all samples over100ms",
+      "started_utc": "2026-10-12T01:38:38.742775+00:00",
+      "finished_utc": "2026-10-12T01:39:05.456624+00:00",
+      "timing_admission_ticket": 21,
+      "queue_wait_s": 15,
+      "raw_path": "A09/raw/workload-pilot-final-inputs.json",
+      "scope": "input sizing only; not final integrated compiler performance"
+    }
+  ],
+  "hook_admission_audit": {
+    "A10_unadmitted_hook_end_utc": [
+      "2026-10-12T01:02:36Z",
+      "2026-10-12T01:08:23Z",
+      "2026-10-12T01:16:01Z",
+      "2026-10-12T01:23:37Z",
+      "2026-10-12T01:27:30Z"
+    ],
+    "A09_commit_with_unestablished_admission": {
+      "commit": "4a700cb52",
+      "end_utc": "2026-10-12T00:46:58Z",
+      "overlaps_window": "native-policy-nested5"
+    },
+    "limitation": "Hook start times unavailable; disclose possible extra interference, do not infer whole-host isolation",
+    "future_A09_hook_command": "scripts/build-slot.sh gate git commit ..."
+  }
+}

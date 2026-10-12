@@ -38,7 +38,7 @@ func churn(rounds: i64) -> i64:
 
 
 func last[T: copy + storable, const N: u64](values: [N]T) -> T:
-    return values[-1]
+    return values[-1].copy()
 
 
 func pair(left: i64, right: i64) -> tuple[i64, i64]:
@@ -101,7 +101,7 @@ public func test_augmented_assignment_to_a_field_of_an_element_keeps_its_operato
 
 public func test_a_record_field_array_takes_a_negative_index() -> bool:
     mut grid = Grid(cells=FixedArray[int, 4]([1, 2, 3, 4]), label="g")
-    mut copy = grid
+    mut copy = grid.copy()
     grid.cells[-1] = 40
     grid.cells[-4] += 10
     return grid.cells[3] == 40 and grid.cells[0] == 11 and copy.cells[3] == 4 and copy.cells[0] == 1
@@ -225,7 +225,7 @@ public func test_a_destructuring_assignment_evaluates_the_whole_value_first() ->
 public func test_traced_list_slots_swap_while_collections_run() -> bool:
     mut words = [label(1), label(2), label(3)]
     for round in range(3):
-        words[0], words[-1] = words[-1], words[0]
+        words[0], words[-1] = words[-1].copy(), words[0].copy()
         _ = churn(3)
     return words[0] == "w3" and words[2] == "w1" and words[1] == "w2"
 

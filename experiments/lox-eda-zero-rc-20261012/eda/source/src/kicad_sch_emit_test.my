@@ -1,0 +1,93 @@
+
+import kicad_sch_emit as m
+import kicad_sch_shape as shape
+import byte_builder
+
+# test "kicad-sch: mm prints exact hundredths and str escapes"
+public func test_kicad_sch_mm_prints_exact_hundredths_and_str_escapes() -> bool:
+    mut out = byte_builder.create()
+    m.mm(mut out, 6350)
+    byte_builder.append(mut out, b" ")
+    m.mm(mut out, -1524)
+    byte_builder.append(mut out, b" ")
+    m.mm(mut out, 6858)
+    byte_builder.append(mut out, b" ")
+    m.mm(mut out, 0)
+    byte_builder.append(mut out, b" ")
+    m.str_(mut out, b"a\"b\\c")
+    assert byte_builder.finish(out) == b"63.5 -15.24 68.58 0 \"a\\\"b\\\\c\""
+    return True
+
+
+# test "kicad-sch: mm4 prints ten-thousandths of a millimetre exactly"
+public func test_kicad_sch_mm4_prints_ten_thousandths_of_a_millimetre_exactly() -> bool:
+    mut out = byte_builder.create()
+    mut nums = [25400, -1270, 8467, 0, 1000000, 1524]
+    for i in range(len(nums)):
+        if i > 0:
+            byte_builder.append(mut out, b" ")
+        m.mm4(mut out, nums[i])
+    assert byte_builder.finish(out) == b"2.54 -0.127 0.8467 0 100 0.1524"
+    return True
+
+
+# test "kicad-sch: label angle and justification mirror the pin side"
+public func test_kicad_sch_label_angle_and_justification_mirror_the_pin_side() -> bool:
+    assert m.label_angle(shape.Side.left) == 180 and m.label_angle(shape.Side.right) == 0
+    assert m.label_justify(shape.Side.left) == b"right" and m.label_justify(shape.Side.right) == b"left"
+    assert m.label_justify(shape.Side.top) == b"left" and m.label_justify(shape.Side.bottom) == b"right"
+    assert m.pin_angle(shape.Side.left) == 0 and m.pin_angle(shape.Side.right) == 180
+    assert m.rail_angle(shape.Side.bottom) == 0 and m.rail_angle(shape.Side.right) == 90
+    assert m.rail_angle(shape.Side.top) == 180 and m.rail_angle(shape.Side.left) == 270
+    return True
+
+
+# test "kicad-sch: a rail symbol's text hangs with its body and a flag's the other way"
+public func test_kicad_sch_a_rail_symbol_s_text_hangs_with_its_body_and_a_flag_s_the_other_way() -> bool:
+    mut rail = m.PowerPlacement(lib_name=b"PWR_GND", value=b"GND", ref=b"#PWR01", uuid=b"u", x=0, y=0, angle=0)
+    assert m.body_dir(rail) == [0, 1]
+    mut left = rail.copy()
+    left.angle = 270
+    assert m.body_dir(left) == [-1, 0]
+    mut right = rail.copy()
+    right.angle = 90
+    assert m.body_dir(right) == [1, 0]
+    mut flag = rail.copy()
+    flag.lib_name = m.flag_lib_name
+    assert m.body_dir(flag) == [0, -1]
+    return True
+
+
+# test "kicad-sch: labelSpan budgets what KiCad actually draws"
+public func test_kicad_sch_labelspan_budgets_what_kicad_actually_draws() -> bool:
+    assert m.label_span(b"") == 0
+    assert m.label_span(b"GND") > 3 * shape.grid
+    assert m.label_span(b"VDDCORE") >= 7 * shape.grid
+    assert m.label_span(b"VDDCOREX") > m.label_span(b"VDDCORE")
+    return True
+
+
+# test "kicad-sch: pin text shrinks on a fine-pitch edge and stays full size elsewhere"
+public func test_kicad_sch_pin_text_shrinks_on_a_fine_pitch_edge_and_stays_full_size_elsewhere() -> bool:
+    mut roomy = [shape.Pin(pad=b"1", name=b"A", side=shape.Side.left, x=-1270, y=254), shape.Pin(pad=b"2", name=b"B", side=shape.Side.left, x=-1270, y=0), shape.Pin(pad=b"3", name=b"C", side=shape.Side.right, x=1270, y=0)]
+    mut wide = shape.ShapeUnit(number=1, title=b"", pins=roomy, half_w=1016, half_h=508, graphics=[], stubs=[])
+    assert m.pin_text_size(wide, 0) == 127 and m.pin_text_size(wide, 2) == 127
+    mut want: int? = Some(254)
+    assert m.edge_spacing(wide, 0) == want and m.edge_spacing(wide, 2) is None
+    mut tight = [shape.Pin(pad=b"1", name=b"A", side=shape.Side.left, x=-1270, y=127), shape.Pin(pad=b"2", name=b"B", side=shape.Side.left, x=-1270, y=0)]
+    mut dense = shape.ShapeUnit(number=1, title=b"", pins=tight, half_w=1016, half_h=508, graphics=[], stubs=[])
+    mut size = m.pin_text_size(dense, 0)
+    assert size < 127 and size >= 50 and size % 10 == 0
+    assert size + size // 5 < 127
+    return True
+
+
+# test "kicad-sch: the instance path gains a sheet segment on a child file"
+public func test_kicad_sch_the_instance_path_gains_a_sheet_segment_on_a_child_file() -> bool:
+    mut root = m.Sheet(design=b"d", title=b"", root_uuid=b"R", sheet_uuid=b"R", page_w=1, page_h=1, is_root=True)
+    assert m.instance_path(root) == b"/R"
+    mut child = root
+    child.sheet_uuid = b"S"
+    child.is_root = False
+    assert m.instance_path(child) == b"/R/S"
+    return True

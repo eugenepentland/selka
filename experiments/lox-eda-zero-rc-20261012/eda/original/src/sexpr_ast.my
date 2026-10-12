@@ -1,0 +1,151 @@
+
+
+# Port of zig/src/sexpr/ast.zig: the typed AST for S-expressions.
+# Zig `[]const u8` is `bytes` here (a value that views the source buffer),
+# Zig `?T` is `Option[T]`, and the `Tag` union is a mylang union.
+# Source location for error reporting. `offset` is the byte offset into source.
+public record Span:
+    line: int
+    col: int
+    offset: int
+
+
+# Span.zero
+public func span_zero() -> Span:
+    return Span(line=1, col=1, offset=0)
+
+
+public enum Tag:
+    list(value: Node[])
+    atom(value: bytes)
+    string(value: bytes)
+    int(value: int)
+    float(value: float)
+    unit_val(value: float)
+
+
+# AST node. `literal` is the verbatim source spelling of a numeric literal that
+# carried a unit or scale suffix (`100nF`, `4.7k`, `10%`), else None.
+public record Node:
+    tag: Tag
+    span: Span
+    literal: bytes?
+
+
+public func node_list(span: Span, children: Node[]) -> Node:
+    return Node(tag=Tag.list(value=children), span=span, literal=None)
+
+
+public func node_atom(span: Span, name: bytes) -> Node:
+    return Node(tag=Tag.atom(value=name), span=span, literal=None)
+
+
+public func node_string(span: Span, value: bytes) -> Node:
+    return Node(tag=Tag.string(value=value), span=span, literal=None)
+
+
+public func node_int(span: Span, value: int) -> Node:
+    return Node(tag=Tag.int(value=value), span=span, literal=None)
+
+
+public func node_float(span: Span, value: float) -> Node:
+    return Node(tag=Tag.float(value=value), span=span, literal=None)
+
+
+# A numeric literal that keeps its source spelling: the same float node plus
+# the `literal` text a value renderer prefers.
+public func node_suffixed_float(span: Span, value: float, text: bytes) -> Node:
+    return Node(tag=Tag.float(value=value), span=span, literal=Some(text))
+
+
+public func node_unit_val(span: Span, mm_value: float) -> Node:
+    return Node(tag=Tag.unit_val(value=mm_value), span=span, literal=None)
+
+
+# Whether this node is a list whose first element is the given atom.
+public func is_form(n: Node, name: bytes) -> bool:
+    match n.tag:
+        case Tag.list(value=children):
+            if len(children) == 0:
+                return False
+            match children[0].tag:
+                case Tag.atom(value=a):
+                    return a == name
+                case _:
+                    return False
+        case _:
+            return False
+
+
+# List children, or None if not a list.
+public func as_list(n: Node) -> Node[]?:
+    match n.tag:
+        case Tag.list(value=children):
+            return Some(children)
+        case _:
+            return None
+
+
+# Atom value, or None if not an atom.
+public func as_atom(n: Node) -> bytes?:
+    match n.tag:
+        case Tag.atom(value=a):
+            return Some(a)
+        case _:
+            return None
+
+
+# String value, or None if not a string.
+public func as_string(n: Node) -> bytes?:
+    match n.tag:
+        case Tag.string(value=s):
+            return Some(s)
+        case _:
+            return None
+
+
+# Literal text of a node (a quoted string or a bare atom) without evaluating it.
+public func as_text(n: Node) -> bytes?:
+    match n.tag:
+        case Tag.string(value=s):
+            return Some(s)
+        case Tag.atom(value=a):
+            return Some(a)
+        case _:
+            return None
+
+
+# Like as_text, but also renders an integer node (`1` -> "1").
+public func token_text(n: Node) -> bytes?:
+    match n.tag:
+        case Tag.atom(value=a):
+            return Some(a)
+        case Tag.string(value=s):
+            return Some(s)
+        case Tag.int(value=v):
+            return Some(str(v).encode())
+        case _:
+            return None
+
+
+# The source spelling of a suffixed numeric literal (`100nF`), else the node's
+# own text (a string or atom).
+public func value_text(n: Node) -> bytes?:
+    match n.literal:
+        case Some(text):
+            return Some(text)
+        case None:
+            return as_text(n)
+
+
+# Numeric value as float (works for int, float and unit_val).
+public func as_number(n: Node) -> float?:
+    match n.tag:
+        case Tag.int(value=i):
+            return Some(float(i))
+        case Tag.float(value=f):
+            return Some(f)
+        case Tag.unit_val(value=u):
+            return Some(u)
+        case _:
+            return None

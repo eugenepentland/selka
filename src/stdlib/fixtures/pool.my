@@ -44,7 +44,7 @@ func sharing() -> int:
     mut store = pool.create([1, 2, 3])
     if pool.count(store) != 3:
         return 20
-    mut alias = store
+    mut alias = store.copy()
     _ = pool.insert(mut alias, 40)
     if pool.count(store) != 3 or pool.capacity(store) != 3:
         return 21
@@ -59,7 +59,8 @@ func sharing() -> int:
     mut other: int[] = []
     mut outside = pool.create(other)
     mut foreign = pool.insert(mut outside, 7)
-    _ = pool.remove(mut alias, pool.handles(alias)[0])
+    mut removed = pool.handles(alias)[0]
+    _ = pool.remove(mut alias, removed)
     if pool.count(alias) != 3 or pool.count(store) != 3:
         return 23
     if value_of(outside, foreign) != 7:

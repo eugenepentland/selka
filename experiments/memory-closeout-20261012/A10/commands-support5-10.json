@@ -1,0 +1,184 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "start": 10,
+  "complete_matrix_cases": 23,
+  "sources": {
+    "fixtures/guest_tests.my": "d8394afbcbd4a894fd789589109d598c207d91c6e212034b349d175011f0997d",
+    "fixtures/invalid_library.my": "8029db3178f8723c351fa15670ace43b21b555afc5a1899669e25e9fed268c29",
+    "fixtures/invalid_move.my": "a2c3901c31dcf5480baaad67dae27b31572a4711c7cda7939b72b3a861a8b2af",
+    "fixtures/library.my": "d85baad70010f92e10020bd259911651c7398eb136b7527faf63de06f4ffb40e",
+    "fixtures/result_error.my": "91171d4e047f7b861da166352ca493bc543e7455e1d4f6724da6ca6aba9c93bb",
+    "fixtures/result_ok.my": "71342f9a40f3709766e9b901bab2db90d20ff12ebb2948ac0e9d16654f22cef8"
+  },
+  "default": false,
+  "results": [
+    {
+      "name": "check-library-invalid",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/invalid_library.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/commands-support5/cache",
+        "--diagnostics=json",
+        "--experimental-zero-rc"
+      ],
+      "expected": 1,
+      "status": 1,
+      "passed": true,
+      "stdout": "",
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SINGLE_OWNER_MOVED\",\"severity\":\"error\",\"message\":\"'value' was moved or is unavailable on this path; use .copy() when both values are needed\",\"location\":{\"path\":\"invalid_library.my\",\"start\":{\"line\":4,\"column\":12},\"end\":{\"line\":4,\"column\":17},\"bytes\":{\"start\":98,\"end\":103}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n"
+    },
+    {
+      "name": "check",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/commands-support5/cache",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "dump-ir",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "fn main(cap) -> i64\nb0:\n  %3 = call str myl_core_str_from_i64(7:i64)\n  %4 = str_append str str0, %3\n  %5 = call str myl_core_owned_octets_copy(%4)\n  print param0, %5\n  ret 0:i64\nfn myl_core_str_from_i64(i64) -> str extern\nfn myl_core_owned_octets_copy(str) -> str extern\n",
+      "stderr": ""
+    },
+    {
+      "name": "build",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/commands-support5/guest",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/commands-support5/cache",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "run",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/commands-support5/cache",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "value-7\n",
+      "stderr": ""
+    },
+    {
+      "name": "run-project",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/commands-support5/cache",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "value-7\n",
+      "stderr": ""
+    },
+    {
+      "name": "result-ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/result_ok.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/commands-support5/cache",
+        "--experimental-zero-rc"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "result-error",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/result_error.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/commands-support5/cache",
+        "--experimental-zero-rc"
+      ],
+      "expected": 1,
+      "status": 1,
+      "passed": true,
+      "stdout": "",
+      "stderr": "error: bad-7\n  /home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/result_error.my:2:12  main  Err(...) created\n"
+    },
+    {
+      "name": "invalid-rc-control",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/invalid_move.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/commands-support5/cache",
+        "--seed",
+        "7"
+      ],
+      "expected": 0,
+      "status": 0,
+      "passed": true,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"invalid_move::test_moved\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"no-success-receipt\",\"key\":\"f2f42150391580e882074f5e3e026dcf8acff8e850677f921084043cb4ace5eb\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/invalid_move.my#320f5fbd3bbd99140cdcf4da118a5fd1a82c59556784231c6480e7c2b99c47e1\",\"producer\":{\"facts\":{\"fresh\":3,\"reused\":0,\"fallback\":1,\"decoded\":0},\"lowering\":{\"fresh\":1,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":3,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":12,\"index_edges\":10,\"affected_nodes\":3,\"closure_nodes\":6,\"closure_edges\":2,\"reused_tests\":0,\"planned_tests\":1},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":2098,\"save_bytes_prepared\":1782,\"sequence_locks\":9}},\"nanoseconds\":{\"lowering\":366574,\"facts\":112192,\"graph\":48279,\"planner\":100511331,\"keys\":13237,\"publication\":1025415,\"total\":102131336},\"transport\":{\"request_bytes\":264,\"reply_bytes\":176,\"startups\":1}}}}],\"passed\":1,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/invalid_move.my\"]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "invalid-cold",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/invalid_move.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/commands-support5/cache",
+        "--seed",
+        "7",
+        "--experimental-zero-rc"
+      ],
+      "expected": 1,
+      "status": 1,
+      "passed": true,
+      "stdout": "",
+      "stderr": "invalid_move.my:4:12: error[E_SINGLE_OWNER_MOVED]: 'before' was moved or is unavailable on this path; use .copy() when both values are needed\n      return before == after\n             ^\n"
+    }
+  ],
+  "success": true
+}

@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support7-01/s1_views/debug/program"
+  ],
+  "status": 0,
+  "elapsed_ns": 1998364,
+  "stdout": "A=10,C=2,G=7,T=19 AA=2,AC=2,AG=1,AT=5,CG=2,GG=2,GT=5,TA=8,TG=1,TT=9\n26 22 0 0\nab=39,bc=25,ca=27|abcabcab!0123456\n=1,alp=2,be=1,bet=1|zz0,zz1,zz2,zz3,zz4 zz0\nab=2,ac=1,ad=1,br=2,ca=1,da=1,ra=2|ab=0,ac=3,ad=5,br=1,ca=4,da=6,ra=2\n=6,a=3,h=1,h\u00e9=1,h\u00e9\u00e9=1,\u00e9=2,\u00e9\u00e9=1,\u00e9\u00e9\u20ac=1,\u00e9\u20ac=1,\u00e9\u20ac\ud83d\ude00=1,\u20ac=1,\u20ac\ud83d\ude00=1,\u20ac\ud83d\ude00a=1,\ud83d\ude00=1,\ud83d\ude00a=2\n=74,a=5,abc=5,abcd=10,abcd\u00e9=10,bc=2,bcd=4,bcd\u00e9=4,c=2,cd=4,cd\u00e9=4,d=4,d\u00e9=4,\u00e9=4\n0:0=2,s0:0=2,s0:2=1,s0:8=3,s0:15=4,s0:16=5,s0:17=6,1:1=2,s1:1=2,1:3=1,1:9=3,1:16=4,1:17=5,1:18=6,2:2=2,s2:2=2,3:3=2,s3:3=2,4:4=2,s4:4=2,5:5=2,s5:5=2,6:6=2,s6:6=2,7:7=2,s7:7=2,8:8=2,s8:8=2,9:9=2,s9:9=2,10:10=2,s10:10=2,11:11=2,s11:11=2,12:12=2,s12:12=2,13:13=2,s13:13=2,14:14=2,s14:14=2,15:15=2,s15:15=2,16:16=2,s16:16=2,17:17=2,s17:17=2\n21 210\n997290 4 99 25022 20 99\nab=21,bc=11,bd=11,ca=11,d=1\nab=8,bc=4,ca=4\nab=4,ba=3 ab=3,bc=3,ca=2 ab=2,bc=2,cd=1,de=1,ef=1,fa=1\nzz=0|abc=2,bca=2,cab=2,zz=0\n1160 644 1\n622\n",
+  "stderr": ""
+}

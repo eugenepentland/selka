@@ -70,8 +70,8 @@ func stamp(mut words: FixedArray[str, 3], round: i64) -> Unit:
 
 
 func grow(mut bags: FixedArray[Bag, 2], word: str) -> Unit:
-    bags[0].items.append(word)
-    bags[1] = Bag(items=[word, word], tag=word + "!")
+    bags[0].items.append(word.copy())
+    bags[1] = Bag(items=[word.copy(), word.copy()], tag=word + "!")
 
 
 func reverse_into(mut target: FixedArray[i64, 4], source: FixedArray[i64, 4]) -> Unit:
@@ -143,7 +143,7 @@ public func test_an_array_of_arrays_writes_one_cell_and_copies_one_row() -> bool
 # spec-case: PY-ARRAY-WRITE-1
 public func test_an_array_field_of_a_record_is_written_and_a_copy_is_not() -> bool:
     mut grid = Grid(cells=FixedArray[int, 4]([1, 2, 3, 4]), label="g")
-    mut copy = grid
+    mut copy = grid.copy()
     grid.cells[0] = 100
     return grid.cells[0] == 100 and copy.cells[0] == 1 and grid.label == "g"
 
@@ -151,7 +151,7 @@ public func test_an_array_field_of_a_record_is_written_and_a_copy_is_not() -> bo
 # spec-case: PY-ARRAY-WRITE-1
 public func test_an_array_field_of_a_record_is_copied_for_each_name() -> bool:
     mut board = Board(cells=FixedArray[int, 3]([1, 2, 3]))
-    mut alias = board
+    mut alias = board.copy()
     alias.cells[2] = 30
     return board.cells[2] == 3 and alias.cells[2] == 30 and board.cells[0] == 1
 
@@ -190,7 +190,7 @@ public func test_the_value_is_computed_before_the_array_is_read() -> bool:
 # spec-case: PY-ARRAY-WRITE-1
 public func test_traced_elements_written_one_at_a_time_survive_collection() -> bool:
     mut words: FixedArray[str, 3] = FixedArray[str, 3](["a", "b", "c"])
-    mut before = words
+    mut before = words.copy()
     for index in range(3):
         words[index] = label(index) + words[index]
         _ = churn(3)

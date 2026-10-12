@@ -1,0 +1,46 @@
+record Doc:
+    title: str
+    rows: int[][]
+
+
+func count_chars(d: Doc) -> int:
+    return len(d.title) + len(d.rows)
+
+
+func fill(mut xs: int[]) -> int:
+    xs.clear()
+    xs.append(5)
+    return len(xs)
+
+
+func pair(a: int, b: int) -> int:
+    return a * 10 + b
+
+
+func push(mut xs: int[]) -> int:
+    xs.append(9)
+    return len(xs)
+
+
+func lst(a: int[], b: int) -> int:
+    return len(a) * 100 + b
+
+
+func main(out: Stream) -> int:
+    mut d = Doc(title="héllo", rows=[[1], [2, 3]])
+    out.print(count_chars(d))
+    mut xs = [1, 2, 3]
+    mut ys = xs.copy()
+    ys.append(4)
+    out.print(len(xs), len(ys))
+    mut zs = [7, 8]
+    mut snapshot = zs
+    out.print(fill(mut zs), len(snapshot), len(zs))
+    mut rows = [[1], [2]]
+    rows.clear()
+    rows.append([3])
+    out.print(len(rows), len(rows[0]))
+    out.print(pair(b=3, a=4))
+    mut ws = [1]
+    out.print(lst(b=push(mut ws), a=ws))
+    return 0

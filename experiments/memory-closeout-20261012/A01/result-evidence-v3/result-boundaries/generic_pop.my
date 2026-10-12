@@ -1,0 +1,8 @@
+func pop[T: storable](mut values: T[]) -> T:
+    const value = values.pop()
+    _ = values
+    return value
+func main() -> int:
+    mut values: Result[int, int][] = [Ok(4)]
+    _ = pop(mut values)
+    return 0

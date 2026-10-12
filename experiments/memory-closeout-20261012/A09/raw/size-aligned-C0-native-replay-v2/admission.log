@@ -1,0 +1,22 @@
+build-slot: FIFO ticket 1080, position 18; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1080, position 10; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 1080, position 2; earlier build tickets must run first; waiting (120s so far)
+build-slot: build slot 1, FIFO ticket 1080 after 131s
+array passed
+object passed
+record passed
+parallel_cheap_1 passed
+parallel_cheap_2 passed
+parallel_cheap_8 passed
+parallel_expensive_1 passed
+parallel_expensive_2 passed
+parallel_expensive_8 passed
+build-slot: FIFO ticket 1095, position 14; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1095, position 6; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 1095 after 100s
+a06_word_count passed
+a06_nested_json passed
+a06_file_processing passed
+a06_parallel_t1 passed
+a06_parallel_t2 passed
+a06_parallel_t8 passed

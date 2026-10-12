@@ -1,0 +1,71 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+  "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "default": false,
+  "total_blocks": 23,
+  "expected_units": 1,
+  "selected_blocks": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/python-syntax.md",
+      "line": 233,
+      "source": "# doc: expect 42\nfunc main() -> int:\n    mut prices = {\"pear\": 3, \"fig\": 5, \"kiwi\": 2}\n    mut doubled = {name.copy(): price * 2 for name, price in prices.items() if price > 2}\n    mut squares = {x: x * x for x in range(5)}\n    mut paired = {k.copy(): v for k, v in zip([\"a\", \"b\"], [10, 20])}\n    return doubled[\"fig\"] + squares[4] + paired[\"a\"] + len({c for c in \"hello\"}) + 2\n",
+      "sha256": "be7846daf52ee36100b5e4c7cca222a0f54e966cb95fd0a0918a1c508e8fa28a"
+    }
+  ],
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+    "doctest",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/docs-support6-blockers-items",
+    "--jobs",
+    "1",
+    "--report",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/docs-support6-blockers-items/report.json",
+    "--experimental-zero-rc"
+  ],
+  "status": 0,
+  "stdout": "  README.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed\nDoc examples: 1 files scanned, 1 blocks found, 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed\n",
+  "stderr": "",
+  "doctest_report": {
+    "version": "doc-examples-v1",
+    "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+    "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+    "totals": {
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0
+    },
+    "files": {
+      "README.md": {
+        "blocks": 1,
+        "run": 1,
+        "checked": 0,
+        "skipped": 0,
+        "mistagged": 0,
+        "failed": 0,
+        "skips": []
+      }
+    },
+    "units": [
+      {
+        "label": "README.md:1",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '42'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-1407783e0dd6a9ae/unit000/main.my",
+          "--diagnostics=json",
+          "--print-result",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-1407783e0dd6a9ae/unit000/objects"
+        ]
+      }
+    ],
+    "mistagged": []
+  },
+  "success": true
+}

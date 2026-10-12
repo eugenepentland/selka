@@ -1,0 +1,71 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "default": false,
+  "total_blocks": 33,
+  "expected_units": 1,
+  "selected_blocks": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/python-syntax.md",
+      "line": 657,
+      "source": "# doc: expect 42\nrecord Player:\n    name: str\n    team: int\n    score: float\n\nfunc by_name(player: Player) -> str:\n    return player.name.copy()\n\nfunc main() -> int:\n    mut players = [Player(name=\"cy\", team=2, score=7.5), Player(name=\"al\", team=1, score=9.0), Player(name=\"bo\", team=2, score=9.0)]\n    players.sort(key=lambda p: p.score, reverse=True)\n    if players[0].name != \"al\" or players[1].name != \"bo\":\n        return 1\n    mut by_team = sorted(players, key=lambda p: (p.team, p.name.copy()))\n    if by_team[0].name != \"al\" or by_team[2].name != \"cy\":\n        return 2\n    mut alphabetical = sorted(players, key=by_name)\n    return len(alphabetical[2].name) * 21\n",
+      "sha256": "698254efb6811c758fdbc1de52b5d31cd6c95c2f35fad82ff69c6a524f94be37"
+    }
+  ],
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "doctest",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/docs-reference-support5-sort",
+    "--jobs",
+    "1",
+    "--report",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/docs-reference-support5-sort/report.json",
+    "--experimental-zero-rc"
+  ],
+  "status": 0,
+  "stdout": "  README.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed\nDoc examples: 1 files scanned, 1 blocks found, 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed\n",
+  "stderr": "",
+  "doctest_report": {
+    "version": "doc-examples-v1",
+    "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+    "totals": {
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0
+    },
+    "files": {
+      "README.md": {
+        "blocks": 1,
+        "run": 1,
+        "checked": 0,
+        "skipped": 0,
+        "mistagged": 0,
+        "failed": 0,
+        "skips": []
+      }
+    },
+    "units": [
+      {
+        "label": "README.md:1",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '42'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-3a7b330c3df7286b/unit000/main.my",
+          "--diagnostics=json",
+          "--print-result",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-3a7b330c3df7286b/unit000/objects"
+        ]
+      }
+    ],
+    "mistagged": []
+  },
+  "success": true
+}

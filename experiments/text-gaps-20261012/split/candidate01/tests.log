@@ -1,0 +1,10 @@
+build-slot: FIFO ticket 2075, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 2075 after 61s
+guardian/test: 4 test(s) selected
+All 4 tests passed.
+guardian/test: test wall 1.12s; slowest over 50ms:
+guardian/test:   0.99s  textgap_split_test.test.textgap_split five native modes preserve lengths Unicode escapes and early traps
+guardian/test:   0.06s  textgap_split_test.test.textgap_split reader runtime signature authority and cloned module targets
+guardian/test:   0.06s  textgap_split_test.test.textgap_split cold warm cached reader cleanup equals uncached LLVM
+guardian/test: PASS — 4 passed
+guardian/test: RESULT {"passed":4,"failed":0,"skipped":0}

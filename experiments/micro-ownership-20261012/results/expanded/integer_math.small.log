@@ -1,0 +1,2 @@
+build-slot: timing slot 1, FIFO ticket 305 after 0s
+expanded/integer_math/small {'mylang-original-rc': True, 'mylang-migrated-rc': True, 'mylang-zero-rc': True, 'rust': True, 'go': True, 'zig-safe': True, 'zig-fast': True}

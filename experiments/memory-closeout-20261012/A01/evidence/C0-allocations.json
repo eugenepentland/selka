@@ -1,0 +1,2396 @@
+{
+  "source_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "source_sha256": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a",
+  "build": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A01/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A01/experiments/memory-closeout-20261012/A01/samples/scaling.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--counters",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/cache",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program.ll",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program"
+    ],
+    "status": 0,
+    "stdout": "",
+    "stderr": "build-slot: FIFO ticket 18, position 8; earlier build tickets must run first; waiting (0s so far)\nbuild-slot: FIFO ticket 18, position 2; earlier build tickets must run first; waiting (61s so far)\nbuild-slot: FIFO ticket 18, position 2; earlier build tickets must run first; waiting (121s so far)\nbuild-slot: build slot 1, FIFO ticket 18 after 181s\n"
+  },
+  "runs": [
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program",
+        "0",
+        "1",
+        "cheap"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "size": 0,
+      "threads": 1,
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/C0-allocations/counts-0-1.json",
+        "counter_sha256": "aa198d27a855055a2bda2ec4ab12a08eb6ea5c250e4df70e3669686c33e70724",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 2,
+        "memory": {
+          "allocs": 6,
+          "alloc_bytes": 320,
+          "frees": 6,
+          "reallocs": 0,
+          "peak_live_bytes": 320,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      },
+      "counts_path": "counts-0-1.json",
+      "whole_program": {
+        "calls": 4,
+        "allocs": 6,
+        "alloc_bytes": 320,
+        "frees": 6,
+        "free_bytes": 320,
+        "list_grows": 0,
+        "list_grow_bytes": 0,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "list_copies": 0,
+        "list_copy_bytes": 0,
+        "dict_copies": 0,
+        "dict_copy_bytes": 0,
+        "buffer_copies": 0,
+        "buffer_copy_bytes": 0,
+        "text_copies": 0,
+        "text_copy_bytes": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "dict_grows": 0,
+        "dict_grow_bytes": 0,
+        "buffer_grows": 0,
+        "buffer_grow_bytes": 0,
+        "text_grows": 0,
+        "text_grow_bytes": 0,
+        "text_appends": 0,
+        "text_append_bytes": 0,
+        "buffer_pushes": 0,
+        "buffer_appends": 0,
+        "buffer_append_bytes": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0,
+        "share_bytes": 0,
+        "peak_live_bytes": 320,
+        "live_bytes_at_exit": 0
+      },
+      "functions": [
+        {
+          "name": "<outside>",
+          "allocs": 4,
+          "alloc_bytes": 256,
+          "frees": 4,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::main",
+          "allocs": 1,
+          "alloc_bytes": 32,
+          "frees": 2,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::number",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "parallel::map[i64,i64]",
+          "allocs": 1,
+          "alloc_bytes": 32,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        }
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program",
+        "0",
+        "1",
+        "cheap"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "size": 0,
+      "threads": 2,
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/C0-allocations/counts-0-2.json",
+        "counter_sha256": "aa198d27a855055a2bda2ec4ab12a08eb6ea5c250e4df70e3669686c33e70724",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 2,
+        "memory": {
+          "allocs": 6,
+          "alloc_bytes": 320,
+          "frees": 6,
+          "reallocs": 0,
+          "peak_live_bytes": 320,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      },
+      "counts_path": "counts-0-2.json",
+      "whole_program": {
+        "calls": 4,
+        "allocs": 6,
+        "alloc_bytes": 320,
+        "frees": 6,
+        "free_bytes": 320,
+        "list_grows": 0,
+        "list_grow_bytes": 0,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "list_copies": 0,
+        "list_copy_bytes": 0,
+        "dict_copies": 0,
+        "dict_copy_bytes": 0,
+        "buffer_copies": 0,
+        "buffer_copy_bytes": 0,
+        "text_copies": 0,
+        "text_copy_bytes": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "dict_grows": 0,
+        "dict_grow_bytes": 0,
+        "buffer_grows": 0,
+        "buffer_grow_bytes": 0,
+        "text_grows": 0,
+        "text_grow_bytes": 0,
+        "text_appends": 0,
+        "text_append_bytes": 0,
+        "buffer_pushes": 0,
+        "buffer_appends": 0,
+        "buffer_append_bytes": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0,
+        "share_bytes": 0,
+        "peak_live_bytes": 320,
+        "live_bytes_at_exit": 0
+      },
+      "functions": [
+        {
+          "name": "<outside>",
+          "allocs": 4,
+          "alloc_bytes": 256,
+          "frees": 4,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::main",
+          "allocs": 1,
+          "alloc_bytes": 32,
+          "frees": 2,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::number",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "parallel::map[i64,i64]",
+          "allocs": 1,
+          "alloc_bytes": 32,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        }
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program",
+        "0",
+        "1",
+        "cheap"
+      ],
+      "status": 0,
+      "stdout": "0\n",
+      "stderr": "",
+      "size": 0,
+      "threads": 8,
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/C0-allocations/counts-0-8.json",
+        "counter_sha256": "aa198d27a855055a2bda2ec4ab12a08eb6ea5c250e4df70e3669686c33e70724",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 2,
+        "memory": {
+          "allocs": 6,
+          "alloc_bytes": 320,
+          "frees": 6,
+          "reallocs": 0,
+          "peak_live_bytes": 320,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      },
+      "counts_path": "counts-0-8.json",
+      "whole_program": {
+        "calls": 4,
+        "allocs": 6,
+        "alloc_bytes": 320,
+        "frees": 6,
+        "free_bytes": 320,
+        "list_grows": 0,
+        "list_grow_bytes": 0,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "list_copies": 0,
+        "list_copy_bytes": 0,
+        "dict_copies": 0,
+        "dict_copy_bytes": 0,
+        "buffer_copies": 0,
+        "buffer_copy_bytes": 0,
+        "text_copies": 0,
+        "text_copy_bytes": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "dict_grows": 0,
+        "dict_grow_bytes": 0,
+        "buffer_grows": 0,
+        "buffer_grow_bytes": 0,
+        "text_grows": 0,
+        "text_grow_bytes": 0,
+        "text_appends": 0,
+        "text_append_bytes": 0,
+        "buffer_pushes": 0,
+        "buffer_appends": 0,
+        "buffer_append_bytes": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0,
+        "share_bytes": 0,
+        "peak_live_bytes": 320,
+        "live_bytes_at_exit": 0
+      },
+      "functions": [
+        {
+          "name": "<outside>",
+          "allocs": 4,
+          "alloc_bytes": 256,
+          "frees": 4,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::main",
+          "allocs": 1,
+          "alloc_bytes": 32,
+          "frees": 2,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::number",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "parallel::map[i64,i64]",
+          "allocs": 1,
+          "alloc_bytes": 32,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        }
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program",
+        "1",
+        "1",
+        "cheap"
+      ],
+      "status": 0,
+      "stdout": "1\n",
+      "stderr": "",
+      "size": 1,
+      "threads": 1,
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/C0-allocations/counts-1-1.json",
+        "counter_sha256": "46221ccd59680d8f68f504129e3a08f9c0c30f5386c5f11adbf8ce153ce06d09",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 2,
+        "memory": {
+          "allocs": 12,
+          "alloc_bytes": 832,
+          "frees": 12,
+          "reallocs": 0,
+          "peak_live_bytes": 800,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      },
+      "counts_path": "counts-1-1.json",
+      "whole_program": {
+        "calls": 6,
+        "allocs": 12,
+        "alloc_bytes": 832,
+        "frees": 12,
+        "free_bytes": 832,
+        "list_grows": 1,
+        "list_grow_bytes": 0,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "list_copies": 0,
+        "list_copy_bytes": 0,
+        "dict_copies": 0,
+        "dict_copy_bytes": 0,
+        "buffer_copies": 0,
+        "buffer_copy_bytes": 0,
+        "text_copies": 0,
+        "text_copy_bytes": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "dict_grows": 0,
+        "dict_grow_bytes": 0,
+        "buffer_grows": 0,
+        "buffer_grow_bytes": 0,
+        "text_grows": 0,
+        "text_grow_bytes": 0,
+        "text_appends": 0,
+        "text_append_bytes": 0,
+        "buffer_pushes": 0,
+        "buffer_appends": 0,
+        "buffer_append_bytes": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0,
+        "share_bytes": 0,
+        "peak_live_bytes": 800,
+        "live_bytes_at_exit": 0
+      },
+      "functions": [
+        {
+          "name": "<outside>",
+          "allocs": 4,
+          "alloc_bytes": 256,
+          "frees": 4,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::main",
+          "allocs": 2,
+          "alloc_bytes": 128,
+          "frees": 3,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::number",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "parallel::map[i64,i64]",
+          "allocs": 5,
+          "alloc_bytes": 384,
+          "frees": 5,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::cheap",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "<parallel.map.worker.6>",
+          "allocs": 1,
+          "alloc_bytes": 64,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        }
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program",
+        "1",
+        "1",
+        "cheap"
+      ],
+      "status": 0,
+      "stdout": "1\n",
+      "stderr": "",
+      "size": 1,
+      "threads": 2,
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/C0-allocations/counts-1-2.json",
+        "counter_sha256": "46221ccd59680d8f68f504129e3a08f9c0c30f5386c5f11adbf8ce153ce06d09",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 2,
+        "memory": {
+          "allocs": 12,
+          "alloc_bytes": 832,
+          "frees": 12,
+          "reallocs": 0,
+          "peak_live_bytes": 800,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      },
+      "counts_path": "counts-1-2.json",
+      "whole_program": {
+        "calls": 6,
+        "allocs": 12,
+        "alloc_bytes": 832,
+        "frees": 12,
+        "free_bytes": 832,
+        "list_grows": 1,
+        "list_grow_bytes": 0,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "list_copies": 0,
+        "list_copy_bytes": 0,
+        "dict_copies": 0,
+        "dict_copy_bytes": 0,
+        "buffer_copies": 0,
+        "buffer_copy_bytes": 0,
+        "text_copies": 0,
+        "text_copy_bytes": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "dict_grows": 0,
+        "dict_grow_bytes": 0,
+        "buffer_grows": 0,
+        "buffer_grow_bytes": 0,
+        "text_grows": 0,
+        "text_grow_bytes": 0,
+        "text_appends": 0,
+        "text_append_bytes": 0,
+        "buffer_pushes": 0,
+        "buffer_appends": 0,
+        "buffer_append_bytes": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0,
+        "share_bytes": 0,
+        "peak_live_bytes": 800,
+        "live_bytes_at_exit": 0
+      },
+      "functions": [
+        {
+          "name": "<outside>",
+          "allocs": 4,
+          "alloc_bytes": 256,
+          "frees": 4,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::main",
+          "allocs": 2,
+          "alloc_bytes": 128,
+          "frees": 3,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::number",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "parallel::map[i64,i64]",
+          "allocs": 5,
+          "alloc_bytes": 384,
+          "frees": 5,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::cheap",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "<parallel.map.worker.6>",
+          "allocs": 1,
+          "alloc_bytes": 64,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        }
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program",
+        "1",
+        "1",
+        "cheap"
+      ],
+      "status": 0,
+      "stdout": "1\n",
+      "stderr": "",
+      "size": 1,
+      "threads": 8,
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/C0-allocations/counts-1-8.json",
+        "counter_sha256": "0a94b15e111b7ee5bd99209646b0d4d73657793ed915248221efeb112730b78d",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 2,
+        "memory": {
+          "allocs": 12,
+          "alloc_bytes": 832,
+          "frees": 12,
+          "reallocs": 0,
+          "peak_live_bytes": 800,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      },
+      "counts_path": "counts-1-8.json",
+      "whole_program": {
+        "calls": 6,
+        "allocs": 12,
+        "alloc_bytes": 832,
+        "frees": 12,
+        "free_bytes": 832,
+        "list_grows": 1,
+        "list_grow_bytes": 0,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "list_copies": 0,
+        "list_copy_bytes": 0,
+        "dict_copies": 0,
+        "dict_copy_bytes": 0,
+        "buffer_copies": 0,
+        "buffer_copy_bytes": 0,
+        "text_copies": 0,
+        "text_copy_bytes": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "dict_grows": 0,
+        "dict_grow_bytes": 0,
+        "buffer_grows": 0,
+        "buffer_grow_bytes": 0,
+        "text_grows": 0,
+        "text_grow_bytes": 0,
+        "text_appends": 0,
+        "text_append_bytes": 0,
+        "buffer_pushes": 0,
+        "buffer_appends": 0,
+        "buffer_append_bytes": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0,
+        "share_bytes": 0,
+        "peak_live_bytes": 800,
+        "live_bytes_at_exit": 0
+      },
+      "functions": [
+        {
+          "name": "<outside>",
+          "allocs": 4,
+          "alloc_bytes": 256,
+          "frees": 5,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::main",
+          "allocs": 2,
+          "alloc_bytes": 128,
+          "frees": 3,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::number",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "parallel::map[i64,i64]",
+          "allocs": 5,
+          "alloc_bytes": 384,
+          "frees": 4,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::cheap",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "<parallel.map.worker.6>",
+          "allocs": 1,
+          "alloc_bytes": 64,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        }
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program",
+        "8",
+        "1",
+        "cheap"
+      ],
+      "status": 0,
+      "stdout": "92\n",
+      "stderr": "",
+      "size": 8,
+      "threads": 1,
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/C0-allocations/counts-8-1.json",
+        "counter_sha256": "266710d74e9b6d2247b92c8e1503135f0fde5c2bf99fb389d4dd2f7066b35e86",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 2,
+        "memory": {
+          "allocs": 33,
+          "alloc_bytes": 2432,
+          "frees": 33,
+          "reallocs": 0,
+          "peak_live_bytes": 1952,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      },
+      "counts_path": "counts-8-1.json",
+      "whole_program": {
+        "calls": 20,
+        "allocs": 33,
+        "alloc_bytes": 2432,
+        "frees": 33,
+        "free_bytes": 2432,
+        "list_grows": 1,
+        "list_grow_bytes": 0,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "list_copies": 0,
+        "list_copy_bytes": 0,
+        "dict_copies": 0,
+        "dict_copy_bytes": 0,
+        "buffer_copies": 0,
+        "buffer_copy_bytes": 0,
+        "text_copies": 0,
+        "text_copy_bytes": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "dict_grows": 0,
+        "dict_grow_bytes": 0,
+        "buffer_grows": 0,
+        "buffer_grow_bytes": 0,
+        "text_grows": 0,
+        "text_grow_bytes": 0,
+        "text_appends": 0,
+        "text_append_bytes": 0,
+        "buffer_pushes": 0,
+        "buffer_appends": 0,
+        "buffer_append_bytes": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0,
+        "share_bytes": 0,
+        "peak_live_bytes": 1952,
+        "live_bytes_at_exit": 0
+      },
+      "functions": [
+        {
+          "name": "<outside>",
+          "allocs": 4,
+          "alloc_bytes": 256,
+          "frees": 4,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::main",
+          "allocs": 2,
+          "alloc_bytes": 128,
+          "frees": 3,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::number",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "parallel::map[i64,i64]",
+          "allocs": 19,
+          "alloc_bytes": 1536,
+          "frees": 26,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::cheap",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "<parallel.map.worker.6>",
+          "allocs": 8,
+          "alloc_bytes": 512,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        }
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program",
+        "8",
+        "1",
+        "cheap"
+      ],
+      "status": 0,
+      "stdout": "92\n",
+      "stderr": "",
+      "size": 8,
+      "threads": 2,
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/C0-allocations/counts-8-2.json",
+        "counter_sha256": "ff6a9f675d490046df06e7d673457402fe83e0ec3a96ca9a9e334fca654d8d54",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 2,
+        "memory": {
+          "allocs": 33,
+          "alloc_bytes": 2432,
+          "frees": 33,
+          "reallocs": 0,
+          "peak_live_bytes": 1952,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      },
+      "counts_path": "counts-8-2.json",
+      "whole_program": {
+        "calls": 20,
+        "allocs": 33,
+        "alloc_bytes": 2432,
+        "frees": 33,
+        "free_bytes": 2432,
+        "list_grows": 1,
+        "list_grow_bytes": 0,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "list_copies": 0,
+        "list_copy_bytes": 0,
+        "dict_copies": 0,
+        "dict_copy_bytes": 0,
+        "buffer_copies": 0,
+        "buffer_copy_bytes": 0,
+        "text_copies": 0,
+        "text_copy_bytes": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "dict_grows": 0,
+        "dict_grow_bytes": 0,
+        "buffer_grows": 0,
+        "buffer_grow_bytes": 0,
+        "text_grows": 0,
+        "text_grow_bytes": 0,
+        "text_appends": 0,
+        "text_append_bytes": 0,
+        "buffer_pushes": 0,
+        "buffer_appends": 0,
+        "buffer_append_bytes": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0,
+        "share_bytes": 0,
+        "peak_live_bytes": 1952,
+        "live_bytes_at_exit": 0
+      },
+      "functions": [
+        {
+          "name": "<outside>",
+          "allocs": 4,
+          "alloc_bytes": 256,
+          "frees": 5,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::main",
+          "allocs": 2,
+          "alloc_bytes": 128,
+          "frees": 3,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::number",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "parallel::map[i64,i64]",
+          "allocs": 19,
+          "alloc_bytes": 1536,
+          "frees": 25,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::cheap",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "<parallel.map.worker.6>",
+          "allocs": 8,
+          "alloc_bytes": 512,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        }
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program",
+        "8",
+        "1",
+        "cheap"
+      ],
+      "status": 0,
+      "stdout": "92\n",
+      "stderr": "",
+      "size": 8,
+      "threads": 8,
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/C0-allocations/counts-8-8.json",
+        "counter_sha256": "469a6743605a1918e6654899d2155ab047672c46a6cd33b308086257fe762f70",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 2,
+        "memory": {
+          "allocs": 33,
+          "alloc_bytes": 2432,
+          "frees": 33,
+          "reallocs": 0,
+          "peak_live_bytes": 1952,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      },
+      "counts_path": "counts-8-8.json",
+      "whole_program": {
+        "calls": 20,
+        "allocs": 33,
+        "alloc_bytes": 2432,
+        "frees": 33,
+        "free_bytes": 2432,
+        "list_grows": 1,
+        "list_grow_bytes": 0,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "list_copies": 0,
+        "list_copy_bytes": 0,
+        "dict_copies": 0,
+        "dict_copy_bytes": 0,
+        "buffer_copies": 0,
+        "buffer_copy_bytes": 0,
+        "text_copies": 0,
+        "text_copy_bytes": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "dict_grows": 0,
+        "dict_grow_bytes": 0,
+        "buffer_grows": 0,
+        "buffer_grow_bytes": 0,
+        "text_grows": 0,
+        "text_grow_bytes": 0,
+        "text_appends": 0,
+        "text_append_bytes": 0,
+        "buffer_pushes": 0,
+        "buffer_appends": 0,
+        "buffer_append_bytes": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0,
+        "share_bytes": 0,
+        "peak_live_bytes": 1952,
+        "live_bytes_at_exit": 0
+      },
+      "functions": [
+        {
+          "name": "<outside>",
+          "allocs": 4,
+          "alloc_bytes": 256,
+          "frees": 8,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::main",
+          "allocs": 2,
+          "alloc_bytes": 128,
+          "frees": 3,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::number",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "parallel::map[i64,i64]",
+          "allocs": 19,
+          "alloc_bytes": 1536,
+          "frees": 22,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::cheap",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "<parallel.map.worker.6>",
+          "allocs": 8,
+          "alloc_bytes": 512,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        }
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program",
+        "33",
+        "1",
+        "cheap"
+      ],
+      "status": 0,
+      "stdout": "1617\n",
+      "stderr": "",
+      "size": 33,
+      "threads": 1,
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/C0-allocations/counts-33-1.json",
+        "counter_sha256": "d83738505881a50dd06222a6160226e9896d3fe5f59c5866c0b6bf391375b836",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 2,
+        "memory": {
+          "allocs": 114,
+          "alloc_bytes": 10240,
+          "frees": 114,
+          "reallocs": 0,
+          "peak_live_bytes": 7296,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      },
+      "counts_path": "counts-33-1.json",
+      "whole_program": {
+        "calls": 70,
+        "allocs": 114,
+        "alloc_bytes": 10240,
+        "frees": 114,
+        "free_bytes": 10240,
+        "list_grows": 7,
+        "list_grow_bytes": 896,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "list_copies": 0,
+        "list_copy_bytes": 0,
+        "dict_copies": 0,
+        "dict_copy_bytes": 0,
+        "buffer_copies": 0,
+        "buffer_copy_bytes": 0,
+        "text_copies": 0,
+        "text_copy_bytes": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "dict_grows": 0,
+        "dict_grow_bytes": 0,
+        "buffer_grows": 0,
+        "buffer_grow_bytes": 0,
+        "text_grows": 0,
+        "text_grow_bytes": 0,
+        "text_appends": 0,
+        "text_append_bytes": 0,
+        "buffer_pushes": 0,
+        "buffer_appends": 0,
+        "buffer_append_bytes": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0,
+        "share_bytes": 0,
+        "peak_live_bytes": 7296,
+        "live_bytes_at_exit": 0
+      },
+      "functions": [
+        {
+          "name": "<outside>",
+          "allocs": 4,
+          "alloc_bytes": 256,
+          "frees": 4,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::main",
+          "allocs": 5,
+          "alloc_bytes": 1120,
+          "frees": 6,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::number",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "parallel::map[i64,i64]",
+          "allocs": 72,
+          "alloc_bytes": 6752,
+          "frees": 104,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::cheap",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "<parallel.map.worker.6>",
+          "allocs": 33,
+          "alloc_bytes": 2112,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        }
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program",
+        "33",
+        "1",
+        "cheap"
+      ],
+      "status": 0,
+      "stdout": "1617\n",
+      "stderr": "",
+      "size": 33,
+      "threads": 2,
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/C0-allocations/counts-33-2.json",
+        "counter_sha256": "d83738505881a50dd06222a6160226e9896d3fe5f59c5866c0b6bf391375b836",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 2,
+        "memory": {
+          "allocs": 114,
+          "alloc_bytes": 10240,
+          "frees": 114,
+          "reallocs": 0,
+          "peak_live_bytes": 7296,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      },
+      "counts_path": "counts-33-2.json",
+      "whole_program": {
+        "calls": 70,
+        "allocs": 114,
+        "alloc_bytes": 10240,
+        "frees": 114,
+        "free_bytes": 10240,
+        "list_grows": 7,
+        "list_grow_bytes": 896,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "list_copies": 0,
+        "list_copy_bytes": 0,
+        "dict_copies": 0,
+        "dict_copy_bytes": 0,
+        "buffer_copies": 0,
+        "buffer_copy_bytes": 0,
+        "text_copies": 0,
+        "text_copy_bytes": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "dict_grows": 0,
+        "dict_grow_bytes": 0,
+        "buffer_grows": 0,
+        "buffer_grow_bytes": 0,
+        "text_grows": 0,
+        "text_grow_bytes": 0,
+        "text_appends": 0,
+        "text_append_bytes": 0,
+        "buffer_pushes": 0,
+        "buffer_appends": 0,
+        "buffer_append_bytes": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0,
+        "share_bytes": 0,
+        "peak_live_bytes": 7296,
+        "live_bytes_at_exit": 0
+      },
+      "functions": [
+        {
+          "name": "<outside>",
+          "allocs": 4,
+          "alloc_bytes": 256,
+          "frees": 4,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::main",
+          "allocs": 5,
+          "alloc_bytes": 1120,
+          "frees": 6,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::number",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "parallel::map[i64,i64]",
+          "allocs": 72,
+          "alloc_bytes": 6752,
+          "frees": 104,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::cheap",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "<parallel.map.worker.6>",
+          "allocs": 33,
+          "alloc_bytes": 2112,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        }
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program",
+        "33",
+        "1",
+        "cheap"
+      ],
+      "status": 0,
+      "stdout": "1617\n",
+      "stderr": "",
+      "size": 33,
+      "threads": 8,
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/C0-allocations/counts-33-8.json",
+        "counter_sha256": "576dabfaa4431a938e1147c2a36c623c3bbf72903c5d1df55b5df291e55128da",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 2,
+        "memory": {
+          "allocs": 114,
+          "alloc_bytes": 10240,
+          "frees": 114,
+          "reallocs": 0,
+          "peak_live_bytes": 7296,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      },
+      "counts_path": "counts-33-8.json",
+      "whole_program": {
+        "calls": 70,
+        "allocs": 114,
+        "alloc_bytes": 10240,
+        "frees": 114,
+        "free_bytes": 10240,
+        "list_grows": 7,
+        "list_grow_bytes": 896,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "list_copies": 0,
+        "list_copy_bytes": 0,
+        "dict_copies": 0,
+        "dict_copy_bytes": 0,
+        "buffer_copies": 0,
+        "buffer_copy_bytes": 0,
+        "text_copies": 0,
+        "text_copy_bytes": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "dict_grows": 0,
+        "dict_grow_bytes": 0,
+        "buffer_grows": 0,
+        "buffer_grow_bytes": 0,
+        "text_grows": 0,
+        "text_grow_bytes": 0,
+        "text_appends": 0,
+        "text_append_bytes": 0,
+        "buffer_pushes": 0,
+        "buffer_appends": 0,
+        "buffer_append_bytes": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0,
+        "share_bytes": 0,
+        "peak_live_bytes": 7296,
+        "live_bytes_at_exit": 0
+      },
+      "functions": [
+        {
+          "name": "<outside>",
+          "allocs": 4,
+          "alloc_bytes": 256,
+          "frees": 32,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::main",
+          "allocs": 5,
+          "alloc_bytes": 1120,
+          "frees": 6,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::number",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "parallel::map[i64,i64]",
+          "allocs": 72,
+          "alloc_bytes": 6752,
+          "frees": 76,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::cheap",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "<parallel.map.worker.6>",
+          "allocs": 33,
+          "alloc_bytes": 2112,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        }
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program",
+        "257",
+        "1",
+        "cheap"
+      ],
+      "status": 0,
+      "stdout": "98945\n",
+      "stderr": "",
+      "size": 257,
+      "threads": 1,
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/C0-allocations/counts-257-1.json",
+        "counter_sha256": "7870ff8057e701d75a46f0223292e01116eb06389b53b9922d45b5dc37e462cb",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 2,
+        "memory": {
+          "allocs": 788,
+          "alloc_bytes": 64344,
+          "frees": 788,
+          "reallocs": 4,
+          "peak_live_bytes": 51896,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      },
+      "counts_path": "counts-257-1.json",
+      "whole_program": {
+        "calls": 518,
+        "allocs": 788,
+        "alloc_bytes": 64344,
+        "frees": 788,
+        "free_bytes": 70488,
+        "list_grows": 9,
+        "list_grow_bytes": 1920,
+        "reallocs": 4,
+        "realloc_added_bytes": 6144,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "list_copies": 0,
+        "list_copy_bytes": 0,
+        "dict_copies": 0,
+        "dict_copy_bytes": 0,
+        "buffer_copies": 0,
+        "buffer_copy_bytes": 0,
+        "text_copies": 0,
+        "text_copy_bytes": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "dict_grows": 0,
+        "dict_grow_bytes": 0,
+        "buffer_grows": 0,
+        "buffer_grow_bytes": 0,
+        "text_grows": 0,
+        "text_grow_bytes": 0,
+        "text_appends": 0,
+        "text_append_bytes": 0,
+        "buffer_pushes": 0,
+        "buffer_appends": 0,
+        "buffer_append_bytes": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0,
+        "share_bytes": 0,
+        "peak_live_bytes": 51896,
+        "live_bytes_at_exit": 0
+      },
+      "functions": [
+        {
+          "name": "<outside>",
+          "allocs": 4,
+          "alloc_bytes": 256,
+          "frees": 4,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::main",
+          "allocs": 6,
+          "alloc_bytes": 2184,
+          "frees": 7,
+          "reallocs": 2,
+          "realloc_added_bytes": 3072
+        },
+        {
+          "name": "scaling::number",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "parallel::map[i64,i64]",
+          "allocs": 521,
+          "alloc_bytes": 45456,
+          "frees": 777,
+          "reallocs": 2,
+          "realloc_added_bytes": 3072
+        },
+        {
+          "name": "scaling::cheap",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "<parallel.map.worker.6>",
+          "allocs": 257,
+          "alloc_bytes": 16448,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        }
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program",
+        "257",
+        "1",
+        "cheap"
+      ],
+      "status": 0,
+      "stdout": "98945\n",
+      "stderr": "",
+      "size": 257,
+      "threads": 2,
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/C0-allocations/counts-257-2.json",
+        "counter_sha256": "19285218a47a4d737b663b97f1d00d4b931639296e5e5ec558221caf68e0164d",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 2,
+        "memory": {
+          "allocs": 788,
+          "alloc_bytes": 64344,
+          "frees": 788,
+          "reallocs": 4,
+          "peak_live_bytes": 51896,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      },
+      "counts_path": "counts-257-2.json",
+      "whole_program": {
+        "calls": 518,
+        "allocs": 788,
+        "alloc_bytes": 64344,
+        "frees": 788,
+        "free_bytes": 70488,
+        "list_grows": 9,
+        "list_grow_bytes": 1920,
+        "reallocs": 4,
+        "realloc_added_bytes": 6144,
+        "realloc_moves": 2,
+        "realloc_moved_bytes": 3136,
+        "list_copies": 0,
+        "list_copy_bytes": 0,
+        "dict_copies": 0,
+        "dict_copy_bytes": 0,
+        "buffer_copies": 0,
+        "buffer_copy_bytes": 0,
+        "text_copies": 0,
+        "text_copy_bytes": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "dict_grows": 0,
+        "dict_grow_bytes": 0,
+        "buffer_grows": 0,
+        "buffer_grow_bytes": 0,
+        "text_grows": 0,
+        "text_grow_bytes": 0,
+        "text_appends": 0,
+        "text_append_bytes": 0,
+        "buffer_pushes": 0,
+        "buffer_appends": 0,
+        "buffer_append_bytes": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0,
+        "share_bytes": 0,
+        "peak_live_bytes": 51896,
+        "live_bytes_at_exit": 0
+      },
+      "functions": [
+        {
+          "name": "<outside>",
+          "allocs": 4,
+          "alloc_bytes": 256,
+          "frees": 4,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::main",
+          "allocs": 6,
+          "alloc_bytes": 2184,
+          "frees": 7,
+          "reallocs": 2,
+          "realloc_added_bytes": 3072
+        },
+        {
+          "name": "scaling::number",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "parallel::map[i64,i64]",
+          "allocs": 521,
+          "alloc_bytes": 45456,
+          "frees": 777,
+          "reallocs": 2,
+          "realloc_added_bytes": 3072
+        },
+        {
+          "name": "scaling::cheap",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "<parallel.map.worker.6>",
+          "allocs": 257,
+          "alloc_bytes": 16448,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        }
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program",
+        "257",
+        "1",
+        "cheap"
+      ],
+      "status": 0,
+      "stdout": "98945\n",
+      "stderr": "",
+      "size": 257,
+      "threads": 8,
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/C0-allocations/counts-257-8.json",
+        "counter_sha256": "0d469fd3ed8580ba1ddd3559fc53439607fa5abea5b10bb5ba389b7b65ec210b",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 2,
+        "memory": {
+          "allocs": 788,
+          "alloc_bytes": 64344,
+          "frees": 788,
+          "reallocs": 4,
+          "peak_live_bytes": 51960,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      },
+      "counts_path": "counts-257-8.json",
+      "whole_program": {
+        "calls": 518,
+        "allocs": 788,
+        "alloc_bytes": 64344,
+        "frees": 788,
+        "free_bytes": 70488,
+        "list_grows": 9,
+        "list_grow_bytes": 1920,
+        "reallocs": 4,
+        "realloc_added_bytes": 6144,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "list_copies": 0,
+        "list_copy_bytes": 0,
+        "dict_copies": 0,
+        "dict_copy_bytes": 0,
+        "buffer_copies": 0,
+        "buffer_copy_bytes": 0,
+        "text_copies": 0,
+        "text_copy_bytes": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "dict_grows": 0,
+        "dict_grow_bytes": 0,
+        "buffer_grows": 0,
+        "buffer_grow_bytes": 0,
+        "text_grows": 0,
+        "text_grow_bytes": 0,
+        "text_appends": 0,
+        "text_append_bytes": 0,
+        "buffer_pushes": 0,
+        "buffer_appends": 0,
+        "buffer_append_bytes": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0,
+        "share_bytes": 0,
+        "peak_live_bytes": 51960,
+        "live_bytes_at_exit": 0
+      },
+      "functions": [
+        {
+          "name": "<outside>",
+          "allocs": 4,
+          "alloc_bytes": 256,
+          "frees": 261,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::main",
+          "allocs": 6,
+          "alloc_bytes": 2184,
+          "frees": 7,
+          "reallocs": 2,
+          "realloc_added_bytes": 3072
+        },
+        {
+          "name": "scaling::number",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "parallel::map[i64,i64]",
+          "allocs": 521,
+          "alloc_bytes": 45456,
+          "frees": 520,
+          "reallocs": 2,
+          "realloc_added_bytes": 3072
+        },
+        {
+          "name": "scaling::cheap",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "<parallel.map.worker.6>",
+          "allocs": 257,
+          "alloc_bytes": 16448,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        }
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program",
+        "4097",
+        "1",
+        "cheap"
+      ],
+      "status": 0,
+      "stdout": "25176065\n",
+      "stderr": "",
+      "size": 4097,
+      "threads": 1,
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/C0-allocations/counts-4097-1.json",
+        "counter_sha256": "fc0d4feeeb32f380aa107561fb74cb774d817f7674746d565c2a47956b48458c",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 2,
+        "memory": {
+          "allocs": 12308,
+          "alloc_bytes": 955224,
+          "frees": 12308,
+          "reallocs": 12,
+          "peak_live_bytes": 819896,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      },
+      "counts_path": "counts-4097-1.json",
+      "whole_program": {
+        "calls": 8198,
+        "allocs": 12308,
+        "alloc_bytes": 955224,
+        "frees": 12308,
+        "free_bytes": 1084248,
+        "list_grows": 9,
+        "list_grow_bytes": 1920,
+        "reallocs": 12,
+        "realloc_added_bytes": 129024,
+        "realloc_moves": 4,
+        "realloc_moved_bytes": 61568,
+        "list_copies": 0,
+        "list_copy_bytes": 0,
+        "dict_copies": 0,
+        "dict_copy_bytes": 0,
+        "buffer_copies": 0,
+        "buffer_copy_bytes": 0,
+        "text_copies": 0,
+        "text_copy_bytes": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "dict_grows": 0,
+        "dict_grow_bytes": 0,
+        "buffer_grows": 0,
+        "buffer_grow_bytes": 0,
+        "text_grows": 0,
+        "text_grow_bytes": 0,
+        "text_appends": 0,
+        "text_append_bytes": 0,
+        "buffer_pushes": 0,
+        "buffer_appends": 0,
+        "buffer_append_bytes": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0,
+        "share_bytes": 0,
+        "peak_live_bytes": 819896,
+        "live_bytes_at_exit": 0
+      },
+      "functions": [
+        {
+          "name": "<outside>",
+          "allocs": 4,
+          "alloc_bytes": 256,
+          "frees": 4,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::main",
+          "allocs": 6,
+          "alloc_bytes": 2184,
+          "frees": 7,
+          "reallocs": 6,
+          "realloc_added_bytes": 64512
+        },
+        {
+          "name": "scaling::number",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "parallel::map[i64,i64]",
+          "allocs": 8201,
+          "alloc_bytes": 690576,
+          "frees": 12297,
+          "reallocs": 6,
+          "realloc_added_bytes": 64512
+        },
+        {
+          "name": "scaling::cheap",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "<parallel.map.worker.6>",
+          "allocs": 4097,
+          "alloc_bytes": 262208,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        }
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program",
+        "4097",
+        "1",
+        "cheap"
+      ],
+      "status": 0,
+      "stdout": "25176065\n",
+      "stderr": "",
+      "size": 4097,
+      "threads": 2,
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/C0-allocations/counts-4097-2.json",
+        "counter_sha256": "41a6c02bd762abcd3014f8707c867ee75e17327a52bd4ebd56357550ccb09dce",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 2,
+        "memory": {
+          "allocs": 12308,
+          "alloc_bytes": 955224,
+          "frees": 12308,
+          "reallocs": 12,
+          "peak_live_bytes": 819832,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      },
+      "counts_path": "counts-4097-2.json",
+      "whole_program": {
+        "calls": 8198,
+        "allocs": 12308,
+        "alloc_bytes": 955224,
+        "frees": 12308,
+        "free_bytes": 1084248,
+        "list_grows": 9,
+        "list_grow_bytes": 1920,
+        "reallocs": 12,
+        "realloc_added_bytes": 129024,
+        "realloc_moves": 4,
+        "realloc_moved_bytes": 61568,
+        "list_copies": 0,
+        "list_copy_bytes": 0,
+        "dict_copies": 0,
+        "dict_copy_bytes": 0,
+        "buffer_copies": 0,
+        "buffer_copy_bytes": 0,
+        "text_copies": 0,
+        "text_copy_bytes": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "dict_grows": 0,
+        "dict_grow_bytes": 0,
+        "buffer_grows": 0,
+        "buffer_grow_bytes": 0,
+        "text_grows": 0,
+        "text_grow_bytes": 0,
+        "text_appends": 0,
+        "text_append_bytes": 0,
+        "buffer_pushes": 0,
+        "buffer_appends": 0,
+        "buffer_append_bytes": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0,
+        "share_bytes": 0,
+        "peak_live_bytes": 819832,
+        "live_bytes_at_exit": 0
+      },
+      "functions": [
+        {
+          "name": "<outside>",
+          "allocs": 4,
+          "alloc_bytes": 256,
+          "frees": 4101,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::main",
+          "allocs": 6,
+          "alloc_bytes": 2184,
+          "frees": 7,
+          "reallocs": 6,
+          "realloc_added_bytes": 64512
+        },
+        {
+          "name": "scaling::number",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "parallel::map[i64,i64]",
+          "allocs": 8201,
+          "alloc_bytes": 690576,
+          "frees": 8200,
+          "reallocs": 6,
+          "realloc_added_bytes": 64512
+        },
+        {
+          "name": "scaling::cheap",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "<parallel.map.worker.6>",
+          "allocs": 4097,
+          "alloc_bytes": 262208,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        }
+      ]
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.tmp/memory-closeout/A01/C0-allocations/program",
+        "4097",
+        "1",
+        "cheap"
+      ],
+      "status": 0,
+      "stdout": "25176065\n",
+      "stderr": "",
+      "size": 4097,
+      "threads": 8,
+      "passed": true,
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A01/C0-allocations/counts-4097-8.json",
+        "counter_sha256": "878b533e2b51cd45690d003992dc313377c33bda7e44429377b03ba71f5adf02",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 2,
+        "memory": {
+          "allocs": 12308,
+          "alloc_bytes": 955224,
+          "frees": 12308,
+          "reallocs": 12,
+          "peak_live_bytes": 819832,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      },
+      "counts_path": "counts-4097-8.json",
+      "whole_program": {
+        "calls": 8198,
+        "allocs": 12308,
+        "alloc_bytes": 955224,
+        "frees": 12308,
+        "free_bytes": 1084248,
+        "list_grows": 9,
+        "list_grow_bytes": 1920,
+        "reallocs": 12,
+        "realloc_added_bytes": 129024,
+        "realloc_moves": 5,
+        "realloc_moved_bytes": 63648,
+        "list_copies": 0,
+        "list_copy_bytes": 0,
+        "dict_copies": 0,
+        "dict_copy_bytes": 0,
+        "buffer_copies": 0,
+        "buffer_copy_bytes": 0,
+        "text_copies": 0,
+        "text_copy_bytes": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "dict_grows": 0,
+        "dict_grow_bytes": 0,
+        "buffer_grows": 0,
+        "buffer_grow_bytes": 0,
+        "text_grows": 0,
+        "text_grow_bytes": 0,
+        "text_appends": 0,
+        "text_append_bytes": 0,
+        "buffer_pushes": 0,
+        "buffer_appends": 0,
+        "buffer_append_bytes": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0,
+        "share_bytes": 0,
+        "peak_live_bytes": 819832,
+        "live_bytes_at_exit": 0
+      },
+      "functions": [
+        {
+          "name": "<outside>",
+          "allocs": 4,
+          "alloc_bytes": 256,
+          "frees": 4101,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "scaling::main",
+          "allocs": 6,
+          "alloc_bytes": 2184,
+          "frees": 7,
+          "reallocs": 6,
+          "realloc_added_bytes": 64512
+        },
+        {
+          "name": "scaling::number",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "parallel::map[i64,i64]",
+          "allocs": 8201,
+          "alloc_bytes": 690576,
+          "frees": 8200,
+          "reallocs": 6,
+          "realloc_added_bytes": 64512
+        },
+        {
+          "name": "scaling::cheap",
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        },
+        {
+          "name": "<parallel.map.worker.6>",
+          "allocs": 4097,
+          "alloc_bytes": 262208,
+          "frees": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0
+        }
+      ]
+    }
+  ],
+  "binary_sha256": "4fec2156d1064e65070720f9b38caf4f2e1e3d62b522195d2362ce7cde141175",
+  "llvm_sha256": "4e02b00d981de2b6f93fef4fbe808461077130e2b758ed8f469ac477673e34c8"
+}

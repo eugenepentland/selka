@@ -1,0 +1,57 @@
+{
+  "base_commit": "a9dc0edfe640b98a0869330fe6a19d21b6bbc255",
+  "source_file_hashes": {
+    "src/core/allocation_contract.zig": "739c9914c36c0d84d63b634b2842d1b631b65691501d0a1dfe99a9e0d5af7af5",
+    "src/core/build.zig": "691ca2b18c0c9d8b49602e28ca32b42e8fdfe11dd9e1710e2c6ea519d8ea9bbe",
+    "src/core/check_command.zig": "3408609f5797b0bd0f003dcd9df88c98f8bf0b8eadaa6903df0aa87e18a795c5",
+    "src/core/cli.zig": "fc511cc1a78e98bbcf2f2e18f314dee47a061dcd6eff58f6738838626dd9e29d",
+    "src/core/cost.zig": "f9dc3e1a662e2f96902037d42b9d7c404ad50f385d6013a0cbb0da8ba5e583c3",
+    "src/core/cost_command.zig": "55f6889a739d909c41d48ee4f7651eb726fe2d66be49a4e9c7c0a99e4dd4bc8a",
+    "src/core/frontend.zig": "59fa4e95389570628b766a1025799ada205df6d97ada0b96785fe2e32ba8ff51",
+    "src/core/main.zig": "3f77f361cd8479682771c31dee7ac1b36213d83dfc9b0a6000370dbd612ac671",
+    "src/core/pipeline.zig": "55465985b025f6e671db9c95444df52ca75bd6704109b4fef5a1d80e6e8dbc7c",
+    "src/core/test_runner.zig": "cfe1eec9fd3806d70a7163d622d558335427caae17574d50f5cc0c84e0c8037c",
+    "src/core/test_runner_portable.zig": "86ea1fb1c0ce5bbcde32c18943cb3df76df1baa3d2f061cdd456573239b97942",
+    "src/core/test_runner_union.zig": "f9beec114944ea80c94c629c022f805b809224ea84658146fe1dd70780730535",
+    "src/main.zig": "0e1a63bfbfea6872b854f5067dee490b8a6aed0e69ae41092ff1a071d279f796"
+  },
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-install/focus/mylang",
+  "compiler_sha256": "1e4d0146212d053a10c6c0a984c220ccb01de7069a7d32ef347745ec5f17c5c9",
+  "focused": {
+    "command": "scripts/build-slot.sh build \"$ZIG\" build test-core affected-compiler --prefix .tmp/memory-closeout/A10/analysis-install -Dtest-filter=\"zero RC allocation contracts\" -Dtest-filter=\"zero RC portable receipts\" -j\"$MYLANG_DEV_JOBS\" --maxrss \"$MYLANG_DEV_MAXRSS\"",
+    "exit_status": 0,
+    "passed": 3,
+    "failed": 0,
+    "log": "focused-final.log"
+  },
+  "earlier_attempts": [
+    "allocation-unregistered.log: zero selected tests; failure, not pass",
+    "allocation-import-failure.log: missing local import in regression",
+    "allocation-view-audit-failure.log: exposed missing view allocation allowlist",
+    "allocation-encode-audit-failure.log: exposed compiler helper treated as unresolved extern; audited exact synthetic helper now may-allocate",
+    "../analysis-paths-matrix-0.json: early frontend coverage refusal returned success; native linker could not retain uncacheable unit objects; both fixed before final matrix"
+  ],
+  "command_matrix": {
+    "reports": [
+      "analysis-paths-matrix-final-0.json",
+      "analysis-paths-matrix-final-10.json"
+    ],
+    "passed": 15,
+    "failed": 0,
+    "note": "15/15; structural owned LLVM and relocated portable shared receipt asserted; invalid unreachable helper refused. Leak instrumentation disabled for receipt eligibility; separate counted qualification remains required."
+  },
+  "approved_dependencies": [
+    "38dc781a8 (local 6ac27ce04): uncacheable native object lifetime",
+    "a2160955e (local a9dc0edfe): requalified host loader cache"
+  ],
+  "review": "A08 approved selected portable lowering, source spans and eager unreachable-helper validation; coordinator/A07 approved coverageInput shared build helper.",
+  "admission": {
+    "kind": "build",
+    "focused_log": "focused-final.log",
+    "matrix_logs": [
+      "matrix-final-0.log",
+      "matrix-final-10.log"
+    ],
+    "queue_wait": "External cooperating timing and FIFO delay; not compiler/guest runtime samples."
+  }
+}

@@ -1,0 +1,916 @@
+{
+  "schema": "micro-ownership-cell-v1",
+  "spec": {
+    "cell": "micro-gaps/parity/fib",
+    "case": "fib",
+    "protocol": "fixed",
+    "expected_stdout": "14930352\n",
+    "arms": {
+      "baseline-zero-rc": {
+        "case": "fib",
+        "arm": "baseline-zero-rc",
+        "kind": "runtime",
+        "binary": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc",
+        "sha256": "a4e9dea7542971b44cd254a1c0a8110d8f84da42b2a713cfd55644430e8a452e",
+        "status": "ok",
+        "source": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/fib.my",
+        "flags": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/fib.my",
+          "--release",
+          "--experimental-zero-rc",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/cache/fib-zero-rc"
+        ],
+        "expected": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/fib.expected"
+      },
+      "mylang-zero-rc": {
+        "case": "fib",
+        "arm": "mylang-zero-rc",
+        "kind": "runtime",
+        "binary": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-runtime",
+        "sha256": "5831131769f25695ce916e0cd7ab5c80812e55533686a31962fa456957e018c2",
+        "status": "ok",
+        "source": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/fib.my",
+        "flags": [
+          "--release",
+          "--experimental-zero-rc",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-runtime",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/cache/parity-fib-runtime"
+        ],
+        "expected": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/fib.expected",
+        "source_sha256": "eda7b11e070094793744e3a79dbc43feb7ab889c188d402f2ab341f43d93ae4c",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/fib.my",
+          "--release",
+          "--experimental-zero-rc",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-runtime",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/cache/parity-fib-runtime"
+        ],
+        "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/coordinator/build-logs/parity-fib-runtime.log",
+        "returncode": 0,
+        "elapsed_with_admission_seconds": 25.51256680302322
+      }
+    },
+    "counted": {
+      "baseline-zero-rc": {
+        "case": "fib",
+        "arm": "baseline-zero-rc",
+        "kind": "counted",
+        "binary": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc-count",
+        "sha256": "d0da0f33c79bb2dbe867b5b5cfd6ff085ec33b7fb2e5685bc3e431ea567c24c1",
+        "status": "ok",
+        "source": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/fib.my",
+        "flags": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/fib.my",
+          "--release",
+          "--experimental-zero-rc",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc-count",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/cache/fib-zero-rc-count"
+        ],
+        "expected": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/fib.expected"
+      },
+      "mylang-zero-rc": {
+        "case": "fib",
+        "arm": "mylang-zero-rc",
+        "kind": "counted",
+        "binary": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-counted",
+        "sha256": "4ad0e2443bb538d98e73e73007670383b8715436bc2269486aaeeb42bf6a2c1b",
+        "status": "ok",
+        "source": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/fib.my",
+        "flags": [
+          "--release",
+          "--experimental-zero-rc",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-counted",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/cache/parity-fib-counted",
+          "--counters"
+        ],
+        "expected": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/fib.expected",
+        "source_sha256": "eda7b11e070094793744e3a79dbc43feb7ab889c188d402f2ab341f43d93ae4c",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/fib.my",
+          "--release",
+          "--experimental-zero-rc",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-counted",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/cache/parity-fib-counted",
+          "--counters"
+        ],
+        "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/coordinator/build-logs/parity-fib-counted.log",
+        "returncode": 0,
+        "elapsed_with_admission_seconds": 25.563697814010084
+      }
+    },
+    "files": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/bench/parity/micro/MICRO.md",
+      "/home/epentland/ai/canopy/mylang-memory-20261012/bench/parity/micro/common.zig",
+      "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-ownership-20261012/parity/handoff.json",
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/bench/parity/micro/fib.rs",
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/bench/parity/micro/fib.zig",
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/fib.expected",
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/fib.my",
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/original/fib.my",
+      "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/coordinator/builds.json",
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/bin/mylang",
+      "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/coordinator/build_candidate.py"
+    ],
+    "warmups": 2,
+    "rounds": 9,
+    "rss_rounds": 3,
+    "unit": "one full canonical kernel execution",
+    "baseline_cell": "parity/fib"
+  },
+  "started_utc": "2026-10-12T14:58:30.863783+00:00",
+  "identities": {
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-counted": "4ad0e2443bb538d98e73e73007670383b8715436bc2269486aaeeb42bf6a2c1b",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-runtime": "5831131769f25695ce916e0cd7ab5c80812e55533686a31962fa456957e018c2",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/bin/mylang": "ec423f5ff7dba37f5d39489fec12b9c851754c0ad69125fc8aaafe85e31ea44e",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/bench/parity/micro/MICRO.md": "39f36859febb7dec9c8d24b89eef74cbe8d0d335bfc9a743f7554a0078cb6863",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/bench/parity/micro/common.zig": "ecd17fc37b07935bdb749dea072f4d2fe7f9141635887285e339a2b265d70552",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/coordinator/build_candidate.py": "c5df4bb701d7fabe048068217ede5596c69e225ba5636e1c8ce14f5800f146a1",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/coordinator/builds.json": "4c38c05b712932a3433e401e26fcd6923b3545042679efa3ab8441e5f5540e8f",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/tools/measure.py": "3b46106c5b8b2548bfddb9d00293bb024f4307d2f0afc2b65d79a8408be7b304",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-ownership-20261012/parity/handoff.json": "79dbf924d27ee8514c43dc3467147cec583b4da2bc769a7d90191e47c58bd57f",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc": "a4e9dea7542971b44cd254a1c0a8110d8f84da42b2a713cfd55644430e8a452e",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc-count": "d0da0f33c79bb2dbe867b5b5cfd6ff085ec33b7fb2e5685bc3e431ea567c24c1",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/bench/parity/micro/fib.rs": "e53574605f32aac1f90b42b9ab5123b5ff77a648f990d2c2977f919b432e5186",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/bench/parity/micro/fib.zig": "4a738b02973667be9290d9e432fb1b9cfce89a025886dc28fb4a0c3f2e7bb616",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/fib.expected": "653226562ad6143cebbec0872e5596358984edb431588afde338b77586d860c6",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/fib.my": "eda7b11e070094793744e3a79dbc43feb7ab889c188d402f2ab341f43d93ae4c",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/original/fib.my": "eda7b11e070094793744e3a79dbc43feb7ab889c188d402f2ab341f43d93ae4c",
+    "experiments/micro-gaps-20261012/specs-parity/fib.json": "fe80d902d8a874b260f87b4921926607b61a692de73a5f377d4d6f956bf4e836"
+  },
+  "cpu": 8,
+  "timeout_seconds": 120,
+  "loadavg_before": [
+    1.51318359375,
+    3.8603515625,
+    6.1689453125
+  ],
+  "environment": {
+    "GOMAXPROCS": "1",
+    "GOGC": "100",
+    "GOMEMLIMIT": "off",
+    "GOAMD64": "v1",
+    "GOFLAGS": "",
+    "GOEXPERIMENT": "",
+    "GOTOOLCHAIN": "local"
+  },
+  "arm_status": {
+    "baseline-zero-rc": {
+      "status": "ok"
+    },
+    "mylang-zero-rc": {
+      "status": "ok"
+    }
+  },
+  "pilots": [],
+  "warmups": [
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 54281704,
+      "phase": "warmups",
+      "round": -2
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 52904080,
+      "phase": "warmups",
+      "round": -2
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 55405898,
+      "phase": "warmups",
+      "round": -1
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 53670467,
+      "phase": "warmups",
+      "round": -1
+    }
+  ],
+  "samples": [
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 53408986,
+      "phase": "samples",
+      "round": 0
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 53414922,
+      "phase": "samples",
+      "round": 0
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 52874694,
+      "phase": "samples",
+      "round": 1
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 53115740,
+      "phase": "samples",
+      "round": 1
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 52799186,
+      "phase": "samples",
+      "round": 2
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 54348238,
+      "phase": "samples",
+      "round": 2
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 54212313,
+      "phase": "samples",
+      "round": 3
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 53451269,
+      "phase": "samples",
+      "round": 3
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 53140222,
+      "phase": "samples",
+      "round": 4
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 53259273,
+      "phase": "samples",
+      "round": 4
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 52718572,
+      "phase": "samples",
+      "round": 5
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 53574566,
+      "phase": "samples",
+      "round": 5
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 53310484,
+      "phase": "samples",
+      "round": 6
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 52388956,
+      "phase": "samples",
+      "round": 6
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 52946202,
+      "phase": "samples",
+      "round": 7
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 53506962,
+      "phase": "samples",
+      "round": 7
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 54215349,
+      "phase": "samples",
+      "round": 8
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 54277615,
+      "phase": "samples",
+      "round": 8
+    }
+  ],
+  "rss": [
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/usr/bin/time",
+        "-f",
+        "%M",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/work/tmpvo4fs858",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 53750913,
+      "peak_rss_kib": 1584,
+      "phase": "rss",
+      "round": 0
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/usr/bin/time",
+        "-f",
+        "%M",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/work/tmpqrepcmvb",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 53822915,
+      "peak_rss_kib": 1712,
+      "phase": "rss",
+      "round": 0
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/usr/bin/time",
+        "-f",
+        "%M",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/work/tmp4o11dnbl",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 53743772,
+      "peak_rss_kib": 1712,
+      "phase": "rss",
+      "round": 1
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/usr/bin/time",
+        "-f",
+        "%M",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/work/tmp4z591wqp",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 53677995,
+      "peak_rss_kib": 1712,
+      "phase": "rss",
+      "round": 1
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/usr/bin/time",
+        "-f",
+        "%M",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/work/tmpcby2wbjn",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 54143177,
+      "peak_rss_kib": 1580,
+      "phase": "rss",
+      "round": 2
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/usr/bin/time",
+        "-f",
+        "%M",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/work/tmp3wgkyspi",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 53778524,
+      "peak_rss_kib": 1712,
+      "phase": "rss",
+      "round": 2
+    }
+  ],
+  "counted": {
+    "baseline-zero-rc": {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc-count"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 238413145,
+      "counter_path": "experiments/micro-gaps-20261012/results/parity/fib.baseline-zero-rc.counters.json",
+      "counter_sha256": "49364e83a8baf91ab7a28221769cb59e1e53da8affb10dc80249134344baae68",
+      "metrics": {
+        "allocs": 0,
+        "reallocs": 0,
+        "alloc_bytes": 0,
+        "realloc_added_bytes": 0,
+        "peak_live_bytes": 0,
+        "live_bytes_at_exit": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "cumulative_allocated_bytes": 0,
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0,
+        "release_unique": 0,
+        "rc_events": 0,
+        "direct_destructions": 0
+      }
+    },
+    "mylang-zero-rc": {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-counted"
+      ],
+      "exit_status": 0,
+      "stdout": "14930352\n",
+      "stderr": "",
+      "process_wall_ns": 240429996,
+      "counter_path": "experiments/micro-gaps-20261012/results/parity/fib.mylang-zero-rc.counters.json",
+      "counter_sha256": "49364e83a8baf91ab7a28221769cb59e1e53da8affb10dc80249134344baae68",
+      "metrics": {
+        "allocs": 0,
+        "reallocs": 0,
+        "alloc_bytes": 0,
+        "realloc_added_bytes": 0,
+        "peak_live_bytes": 0,
+        "live_bytes_at_exit": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "cumulative_allocated_bytes": 0,
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0,
+        "release_unique": 0,
+        "rc_events": 0,
+        "direct_destructions": 0
+      }
+    }
+  },
+  "iterations": 1,
+  "expected": "14930352\n",
+  "summary": {
+    "baseline-zero-rc": {
+      "complete": true,
+      "status": {
+        "status": "ok"
+      },
+      "kernel_ns_per_iteration": null,
+      "process_wall_ns": {
+        "median": 53408986,
+        "min": 52799186,
+        "max": 54215349
+      },
+      "peak_rss_kib": {
+        "median": 1584,
+        "min": 1580,
+        "max": 1712
+      }
+    },
+    "mylang-zero-rc": {
+      "complete": true,
+      "status": {
+        "status": "ok"
+      },
+      "kernel_ns_per_iteration": null,
+      "process_wall_ns": {
+        "median": 53259273,
+        "min": 52388956,
+        "max": 54348238
+      },
+      "peak_rss_kib": {
+        "median": 1712,
+        "min": 1712,
+        "max": 1712
+      }
+    }
+  },
+  "identities_after": {
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-counted": "4ad0e2443bb538d98e73e73007670383b8715436bc2269486aaeeb42bf6a2c1b",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-fib-runtime": "5831131769f25695ce916e0cd7ab5c80812e55533686a31962fa456957e018c2",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/bin/mylang": "ec423f5ff7dba37f5d39489fec12b9c851754c0ad69125fc8aaafe85e31ea44e",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/bench/parity/micro/MICRO.md": "39f36859febb7dec9c8d24b89eef74cbe8d0d335bfc9a743f7554a0078cb6863",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/bench/parity/micro/common.zig": "ecd17fc37b07935bdb749dea072f4d2fe7f9141635887285e339a2b265d70552",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/coordinator/build_candidate.py": "c5df4bb701d7fabe048068217ede5596c69e225ba5636e1c8ce14f5800f146a1",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/coordinator/builds.json": "4c38c05b712932a3433e401e26fcd6923b3545042679efa3ab8441e5f5540e8f",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/tools/measure.py": "3b46106c5b8b2548bfddb9d00293bb024f4307d2f0afc2b65d79a8408be7b304",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-ownership-20261012/parity/handoff.json": "79dbf924d27ee8514c43dc3467147cec583b4da2bc769a7d90191e47c58bd57f",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc": "a4e9dea7542971b44cd254a1c0a8110d8f84da42b2a713cfd55644430e8a452e",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/fib-zero-rc-count": "d0da0f33c79bb2dbe867b5b5cfd6ff085ec33b7fb2e5685bc3e431ea567c24c1",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/bench/parity/micro/fib.rs": "e53574605f32aac1f90b42b9ab5123b5ff77a648f990d2c2977f919b432e5186",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/bench/parity/micro/fib.zig": "4a738b02973667be9290d9e432fb1b9cfce89a025886dc28fb4a0c3f2e7bb616",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/fib.expected": "653226562ad6143cebbec0872e5596358984edb431588afde338b77586d860c6",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/fib.my": "eda7b11e070094793744e3a79dbc43feb7ab889c188d402f2ab341f43d93ae4c",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/original/fib.my": "eda7b11e070094793744e3a79dbc43feb7ab889c188d402f2ab341f43d93ae4c",
+    "experiments/micro-gaps-20261012/specs-parity/fib.json": "fe80d902d8a874b260f87b4921926607b61a692de73a5f377d4d6f956bf4e836"
+  },
+  "cpu_ticks_before": {
+    "cpu0": {
+      "total": 184131437,
+      "idle": 143932783
+    },
+    "cpu1": {
+      "total": 186105801,
+      "idle": 155118357
+    },
+    "cpu2": {
+      "total": 185369834,
+      "idle": 155223009
+    },
+    "cpu3": {
+      "total": 186218021,
+      "idle": 169260296
+    },
+    "cpu4": {
+      "total": 185659289,
+      "idle": 120363394
+    },
+    "cpu5": {
+      "total": 186487631,
+      "idle": 138610904
+    },
+    "cpu6": {
+      "total": 185673589,
+      "idle": 120057186
+    },
+    "cpu7": {
+      "total": 186518879,
+      "idle": 139754017
+    },
+    "cpu8": {
+      "total": 185390672,
+      "idle": 142309729
+    },
+    "cpu9": {
+      "total": 186485109,
+      "idle": 157601488
+    },
+    "cpu10": {
+      "total": 185432693,
+      "idle": 154223273
+    },
+    "cpu11": {
+      "total": 186364765,
+      "idle": 167010924
+    },
+    "cpu12": {
+      "total": 185924423,
+      "idle": 153538232
+    },
+    "cpu13": {
+      "total": 185962279,
+      "idle": 156092648
+    },
+    "cpu14": {
+      "total": 186015668,
+      "idle": 157075185
+    },
+    "cpu15": {
+      "total": 186128400,
+      "idle": 157292838
+    },
+    "cpu16": {
+      "total": 186211557,
+      "idle": 151727472
+    },
+    "cpu17": {
+      "total": 186196967,
+      "idle": 154239994
+    },
+    "cpu18": {
+      "total": 186204286,
+      "idle": 155283732
+    },
+    "cpu19": {
+      "total": 186272638,
+      "idle": 155599693
+    }
+  },
+  "cpu_ticks_after": {
+    "cpu0": {
+      "total": 184131651,
+      "idle": 143932994
+    },
+    "cpu1": {
+      "total": 186106019,
+      "idle": 155118575
+    },
+    "cpu2": {
+      "total": 185370050,
+      "idle": 155223225
+    },
+    "cpu3": {
+      "total": 186218238,
+      "idle": 169260513
+    },
+    "cpu4": {
+      "total": 185659504,
+      "idle": 120363606
+    },
+    "cpu5": {
+      "total": 186487849,
+      "idle": 138611121
+    },
+    "cpu6": {
+      "total": 185673805,
+      "idle": 120057400
+    },
+    "cpu7": {
+      "total": 186519096,
+      "idle": 139754234
+    },
+    "cpu8": {
+      "total": 185390890,
+      "idle": 142309733
+    },
+    "cpu9": {
+      "total": 186485327,
+      "idle": 157601706
+    },
+    "cpu10": {
+      "total": 185432910,
+      "idle": 154223489
+    },
+    "cpu11": {
+      "total": 186364982,
+      "idle": 167011140
+    },
+    "cpu12": {
+      "total": 185924639,
+      "idle": 153538447
+    },
+    "cpu13": {
+      "total": 185962496,
+      "idle": 156092864
+    },
+    "cpu14": {
+      "total": 186015884,
+      "idle": 157075401
+    },
+    "cpu15": {
+      "total": 186128616,
+      "idle": 157293054
+    },
+    "cpu16": {
+      "total": 186211774,
+      "idle": 151727688
+    },
+    "cpu17": {
+      "total": 186197184,
+      "idle": 154240210
+    },
+    "cpu18": {
+      "total": 186204503,
+      "idle": 155283947
+    },
+    "cpu19": {
+      "total": 186272855,
+      "idle": 155599908
+    }
+  },
+  "loadavg_after": [
+    1.3916015625,
+    3.7958984375,
+    6.1357421875
+  ],
+  "finished_utc": "2026-10-12T14:58:33.041786+00:00"
+}

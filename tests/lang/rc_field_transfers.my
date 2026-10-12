@@ -12,29 +12,29 @@ func push(mut items: int[], value: int):
 
 
 func change(mut holder: Holder, value: int):
-    mut work = holder.items
+    mut work = holder.items.copy()
     push(mut work, value)
     holder.items = work
 
 
 func twice(mut holder: Holder):
-    mut first = holder.items
+    mut first = holder.items.copy()
     push(mut first, 2)
     holder.items = first
-    mut second = holder.items
+    mut second = holder.items.copy()
     push(mut second, 3)
     holder.items = second
 
 
 func observe(mut holder: Holder):
-    mut work = holder.items
+    mut work = holder.items.copy()
     push(mut work, 2)
     assert holder.items == [1]
     holder.items = work
 
 
 func optional(mut holder: Holder, stop: bool):
-    mut work = holder.items
+    mut work = holder.items.copy()
     push(mut work, 2)
     if stop:
         return
@@ -42,14 +42,14 @@ func optional(mut holder: Holder, stop: bool):
 
 
 func alias_argument(mut holder: Holder, other: Holder):
-    mut work = holder.items
+    mut work = holder.items.copy()
     push(mut work, 2)
     assert other.items == [1]
     holder.items = work
 
 
 func nested(mut holder: Nested):
-    mut work = holder.inner.items
+    mut work = holder.inner.items.copy()
     push(mut work, 2)
     holder.inner.items = work
 
@@ -71,7 +71,7 @@ public func test_closed_field_repeated_extractions_return_each_owner() -> bool:
 
 public func test_closed_field_preserves_caller_snapshot() -> bool:
     mut holder = Holder(items=[1], marker=7)
-    mut saved = holder
+    mut saved = holder.copy()
     twice(mut holder)
     saved.items.append(9)
     return holder.items == [1, 2, 3] and saved.items == [1, 9]
@@ -87,20 +87,21 @@ public func test_closed_field_refuses_early_exit_and_alias_argument() -> bool:
     mut holder = Holder(items=[1], marker=7)
     optional(mut holder, True)
     assert holder.items == [1]
-    alias_argument(mut holder, holder)
+    const snapshot = holder.copy()
+    alias_argument(mut holder, snapshot)
     return holder.items == [1, 2]
 
 
 public func test_nested_field_uses_existing_path_behavior() -> bool:
     mut holder = Nested(inner=Holder(items=[1], marker=7))
-    mut saved = holder
+    mut saved = holder.copy()
     nested(mut holder)
     return holder.inner.items == [1, 2] and saved.inner.items == [1]
 
 
 func initialized(mut holder: Holder):
     mut work = [8, 9]
-    work = holder.items
+    work = holder.items.copy()
     push(mut work, 2)
     holder.items = work
 
@@ -117,7 +118,7 @@ record ObservedHolder:
 
 
 func observed_root(mut holder: ObservedHolder):
-    mut work = holder.items
+    mut work = holder.items.copy()
     push(mut work, 2)
     holder.items = work
 

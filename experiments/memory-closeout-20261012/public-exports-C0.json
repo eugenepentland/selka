@@ -1,0 +1,970 @@
+{
+  "source_commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "modules": [
+    {
+      "file": "src/stdlib/base64.my",
+      "sha256": "1eefad34b7b64f0f423581bfeb50effc7f8ffceba315117d7653321d7138f94e",
+      "owner": "A04",
+      "exports": [
+        {
+          "line": 2,
+          "declaration": "public func standard_alphabet() -> bytes:"
+        },
+        {
+          "line": 7,
+          "declaration": "public func urlsafe_alphabet() -> bytes:"
+        },
+        {
+          "line": 99,
+          "declaration": "public func b64encode(data: bytes) -> bytes:"
+        },
+        {
+          "line": 104,
+          "declaration": "public func b64decode(data: bytes) -> Result[bytes, str]:"
+        },
+        {
+          "line": 109,
+          "declaration": "public func urlsafe_b64encode(data: bytes) -> bytes:"
+        },
+        {
+          "line": 114,
+          "declaration": "public func urlsafe_b64decode(data: bytes) -> Result[bytes, str]:"
+        }
+      ]
+    },
+    {
+      "file": "src/stdlib/byte_builder.my",
+      "sha256": "389b91e14ef959257f42c2ef10fcf40007d0be8dcac568e32d014aeb248e3c85",
+      "owner": "A04",
+      "exports": [
+        {
+          "line": 8,
+          "declaration": "public record Builder:"
+        },
+        {
+          "line": 13,
+          "declaration": "public func create() -> Builder:"
+        },
+        {
+          "line": 20,
+          "declaration": "public func append_byte(mut builder: Builder, value: int) -> bool:"
+        },
+        {
+          "line": 29,
+          "declaration": "public func append_range(mut builder: Builder, data: bytes, start: int, end: int) -> bool:"
+        },
+        {
+          "line": 34,
+          "declaration": "public func append(mut builder: Builder, data: bytes):"
+        },
+        {
+          "line": 40,
+          "declaration": "public func append_text(mut builder: Builder, text: str):"
+        },
+        {
+          "line": 48,
+          "declaration": "public func append_int(mut builder: Builder, value: int):"
+        },
+        {
+          "line": 57,
+          "declaration": "public func append_float(mut builder: Builder, value: float) -> bool:"
+        },
+        {
+          "line": 63,
+          "declaration": "public func append_spaces(mut builder: Builder, count: int) -> bool:"
+        },
+        {
+          "line": 81,
+          "declaration": "public func reserve(mut builder: Builder, extra: int) -> bool:"
+        },
+        {
+          "line": 89,
+          "declaration": "public func finish(builder: Builder) -> bytes:"
+        }
+      ]
+    },
+    {
+      "file": "src/stdlib/cache_record.my",
+      "sha256": "d12aae8879c0b3fdc07ff398d79d4daa44e5a45e33c6660bbecaeda7659fdd57",
+      "owner": "A05",
+      "exports": [
+        {
+          "line": 5,
+          "declaration": "public enum Error:"
+        },
+        {
+          "line": 10,
+          "declaration": "public func message(error: Error) -> str effects():"
+        },
+        {
+          "line": 18,
+          "declaration": "public func encode(fields: str[]) -> bytes:"
+        },
+        {
+          "line": 27,
+          "declaration": "public func decode(data: bytes) -> Result[str[], Error]:"
+        }
+      ]
+    },
+    {
+      "file": "src/stdlib/durable.my",
+      "sha256": "29e26521f6192d7ca16b95e23e4c46eef20a0c20db251133c5ac8f28208b5533",
+      "owner": "A05",
+      "exports": [
+        {
+          "line": 6,
+          "declaration": "public record Step:"
+        },
+        {
+          "line": 14,
+          "declaration": "public record Request:"
+        },
+        {
+          "line": 23,
+          "declaration": "public record Report:"
+        },
+        {
+          "line": 31,
+          "declaration": "public enum Error:"
+        },
+        {
+          "line": 40,
+          "declaration": "public func message(error: Error) -> str effects():"
+        },
+        {
+          "line": 151,
+          "declaration": "public func run(fs: Filesystem, request: Request, compute: func(bytes, bytes) -> Step effects(managed_allocation)) -> Result[Report, Error]:"
+        }
+      ]
+    },
+    {
+      "file": "src/stdlib/environment.my",
+      "sha256": "b2cefe6fd13933d1980d5d09740293465662875b4c35e513a650373f18ecd064",
+      "owner": "A05",
+      "exports": [
+        {
+          "line": 6,
+          "declaration": "public func fixed(values: dict[str, str]) -> Environment:"
+        }
+      ]
+    },
+    {
+      "file": "src/stdlib/filesystem.my",
+      "sha256": "454813fbe04d42fced7a9efde1813231a70fac3063c1bc259a36deab78310f67",
+      "owner": "A05",
+      "exports": [
+        {
+          "line": 6,
+          "declaration": "public func memory() -> Filesystem:"
+        }
+      ]
+    },
+    {
+      "file": "src/stdlib/hashes.my",
+      "sha256": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+      "owner": "A05",
+      "exports": [
+        {
+          "line": 66,
+          "declaration": "public func sha256(data: bytes) -> str:"
+        }
+      ]
+    },
+    {
+      "file": "src/stdlib/hex.my",
+      "sha256": "f525eb8531d12b9389bd487dec5b985d9694464d9034662779d522e4f2d4b9ad",
+      "owner": "A04",
+      "exports": [
+        {
+          "line": 4,
+          "declaration": "public func encode(data: bytes) -> str:"
+        },
+        {
+          "line": 9,
+          "declaration": "public func encode_upper(data: bytes) -> str:"
+        },
+        {
+          "line": 14,
+          "declaration": "public func decode(text: str) -> Result[bytes, str]:"
+        },
+        {
+          "line": 19,
+          "declaration": "public func is_hex(text: str) -> bool:"
+        }
+      ]
+    },
+    {
+      "file": "src/stdlib/json.my",
+      "sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+      "owner": "A04",
+      "exports": [
+        {
+          "line": 4,
+          "declaration": "public enum Json:"
+        },
+        {
+          "line": 15,
+          "declaration": "public enum Error:"
+        },
+        {
+          "line": 20,
+          "declaration": "public func message(error: Error) -> str:"
+        },
+        {
+          "line": 33,
+          "declaration": "public func max_depth() -> int effects():"
+        },
+        {
+          "line": 38,
+          "declaration": "public func null_value() -> Json effects():"
+        },
+        {
+          "line": 43,
+          "declaration": "public func boolean(value: bool) -> Json effects():"
+        },
+        {
+          "line": 48,
+          "declaration": "public func integer(value: int) -> Json effects():"
+        },
+        {
+          "line": 53,
+          "declaration": "public func number(value: float) -> Json effects():"
+        },
+        {
+          "line": 58,
+          "declaration": "public func text(value: str) -> Json:"
+        },
+        {
+          "line": 63,
+          "declaration": "public func array(items: Json[]) -> Json:"
+        },
+        {
+          "line": 68,
+          "declaration": "public func object(fields: dict[str, Json]) -> Json:"
+        },
+        {
+          "line": 73,
+          "declaration": "public func type_name(value: Json) -> str:"
+        },
+        {
+          "line": 92,
+          "declaration": "public func is_null(value: Json) -> bool effects():"
+        },
+        {
+          "line": 111,
+          "declaration": "public func as_bool(value: Json) -> bool? effects():"
+        },
+        {
+          "line": 130,
+          "declaration": "public func as_int(value: Json) -> int? effects():"
+        },
+        {
+          "line": 149,
+          "declaration": "public func as_float(value: Json) -> float? effects():"
+        },
+        {
+          "line": 168,
+          "declaration": "public func as_str(value: Json) -> str?:"
+        },
+        {
+          "line": 187,
+          "declaration": "public func as_list(value: Json) -> Json[]?:"
+        },
+        {
+          "line": 206,
+          "declaration": "public func as_dict(value: Json) -> dict[str, Json]?:"
+        },
+        {
+          "line": 225,
+          "declaration": "public func get(value: Json, key: str) -> Json?:"
+        },
+        {
+          "line": 246,
+          "declaration": "public func at(value: Json, index: int) -> Json?:"
+        },
+        {
+          "line": 612,
+          "declaration": "public func loads(source: str) -> Result[Json, Error]:"
+        },
+        {
+          "line": 723,
+          "declaration": "public func dumps(value: Json) -> str:"
+        }
+      ]
+    },
+    {
+      "file": "src/stdlib/math.my",
+      "sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "owner": "A05",
+      "exports": [
+        {
+          "line": 7,
+          "declaration": "public func pi() -> float effects():"
+        },
+        {
+          "line": 12,
+          "declaration": "public func e() -> float effects():"
+        },
+        {
+          "line": 17,
+          "declaration": "public func nan() -> float effects():"
+        },
+        {
+          "line": 22,
+          "declaration": "public func infinity() -> float effects():"
+        },
+        {
+          "line": 27,
+          "declaration": "public func is_nan(value: float) -> bool effects():"
+        },
+        {
+          "line": 32,
+          "declaration": "public func is_inf(value: float) -> bool effects():"
+        },
+        {
+          "line": 37,
+          "declaration": "public func is_finite(value: float) -> bool effects():"
+        },
+        {
+          "line": 42,
+          "declaration": "public func fabs(value: float) -> float effects():"
+        },
+        {
+          "line": 51,
+          "declaration": "public func sign(value: float) -> int effects():"
+        },
+        {
+          "line": 60,
+          "declaration": "public func trunc(value: float) -> float effects():"
+        },
+        {
+          "line": 69,
+          "declaration": "public func floor(value: float) -> float effects():"
+        },
+        {
+          "line": 77,
+          "declaration": "public func ceil(value: float) -> float effects():"
+        },
+        {
+          "line": 85,
+          "declaration": "public func round(value: float) -> float effects():"
+        },
+        {
+          "line": 100,
+          "declaration": "public func sqrt(value: float) -> float effects():"
+        },
+        {
+          "line": 111,
+          "declaration": "public func sin(value: float) -> float effects():"
+        },
+        {
+          "line": 120,
+          "declaration": "public func cos(value: float) -> float effects():"
+        },
+        {
+          "line": 151,
+          "declaration": "public func pow(base: float, exponent: int) -> float effects():"
+        },
+        {
+          "line": 161,
+          "declaration": "public func fmin(a: float, b: float) -> float effects():"
+        },
+        {
+          "line": 170,
+          "declaration": "public func fmax(a: float, b: float) -> float effects():"
+        },
+        {
+          "line": 179,
+          "declaration": "public func min[T: integer](a: T, b: T) -> T noalloc:"
+        },
+        {
+          "line": 186,
+          "declaration": "public func max[T: integer](a: T, b: T) -> T noalloc:"
+        },
+        {
+          "line": 193,
+          "declaration": "public func clamp[T: integer](value: T, low: T, high: T) -> T noalloc:"
+        },
+        {
+          "line": 204,
+          "declaration": "public func abs(value: int) -> Result[int, str]:"
+        },
+        {
+          "line": 213,
+          "declaration": "public func gcd(a: int, b: int) -> Result[int, str]:"
+        },
+        {
+          "line": 224,
+          "declaration": "public func lcm(a: int, b: int) -> Result[int, str]:"
+        },
+        {
+          "line": 237,
+          "declaration": "public func isqrt(value: int) -> Result[int, str]:"
+        }
+      ]
+    },
+    {
+      "file": "src/stdlib/memo.my",
+      "sha256": "2ee255b5d0bdb77bcdc3f3890e745cf0c0eede6fbf0b3b307f77564c563e893c",
+      "owner": "A05",
+      "exports": [
+        {
+          "line": 3,
+          "declaration": "public enum Key:"
+        },
+        {
+          "line": 10,
+          "declaration": "public enum Error:"
+        },
+        {
+          "line": 15,
+          "declaration": "public func message(error: Error) -> str effects():"
+        },
+        {
+          "line": 23,
+          "declaration": "public record Entry[V: equality + storable]:"
+        },
+        {
+          "line": 31,
+          "declaration": "public record Cache[V: equality + storable]:"
+        },
+        {
+          "line": 39,
+          "declaration": "public record Lookup[V: equality + storable]:"
+        },
+        {
+          "line": 46,
+          "declaration": "public func create[V: equality + storable](max_entries: int, compute: func(Key) -> V effects(managed_allocation)) -> Result[Cache[V], Error]:"
+        },
+        {
+          "line": 56,
+          "declaration": "public func call[V: equality + storable](mut cache: Cache[V], key: Key) -> Lookup[V]:"
+        },
+        {
+          "line": 75,
+          "declaration": "public func clear[V: equality + storable](mut cache: Cache[V]) -> Unit:"
+        },
+        {
+          "line": 81,
+          "declaration": "public func count[V: equality + storable](cache: Cache[V]) -> int effects():"
+        },
+        {
+          "line": 86,
+          "declaration": "public func capacity[V: equality + storable](cache: Cache[V]) -> int effects():"
+        }
+      ]
+    },
+    {
+      "file": "src/stdlib/network.my",
+      "sha256": "31a966bc568b692ec1b0b48382fea4e5c07614e7e50db3b01095a8c6c869fea0",
+      "owner": "A05",
+      "exports": [
+        {
+          "line": 2,
+          "declaration": "public resource Connection: network"
+        },
+        {
+          "line": 6,
+          "declaration": "public record Chunk[const N: u64]:"
+        },
+        {
+          "line": 13,
+          "declaration": "public result Connected:"
+        },
+        {
+          "line": 19,
+          "declaration": "public result Read[const N: u64]:"
+        },
+        {
+          "line": 25,
+          "declaration": "public result Written:"
+        },
+        {
+          "line": 31,
+          "declaration": "public record Failure:"
+        },
+        {
+          "line": 37,
+          "declaration": "public result Closed:"
+        },
+        {
+          "line": 45,
+          "declaration": "public func denied() -> Network:"
+        },
+        {
+          "line": 50,
+          "declaration": "public func denied_here() -> int:"
+        },
+        {
+          "line": 55,
+          "declaration": "public func describe(code: int) -> str:"
+        },
+        {
+          "line": 69,
+          "declaration": "public func connect(net: Network) -> Connected effects(network):"
+        },
+        {
+          "line": 75,
+          "declaration": "public func read[const N: u64](connection: Connection) -> Read[N] effects(network):"
+        },
+        {
+          "line": 81,
+          "declaration": "public func write[const N: u64](connection: Connection, data: FixedArray[u8, N]) -> Written effects(network):"
+        },
+        {
+          "line": 87,
+          "declaration": "public func close(connection: Connection) -> Closed effects(network):"
+        }
+      ]
+    },
+    {
+      "file": "src/stdlib/parallel.my",
+      "sha256": "cd4a7131ae0abeeb77a10130d7b5a612b79a2c00e30cde8774ab4d81ebcbc7ea",
+      "owner": "A01",
+      "exports": [
+        {
+          "line": 4,
+          "declaration": "public func map[T: copy + storable, R: copy + storable](values: T[], function: func(T) -> R) -> R[]:"
+        }
+      ]
+    },
+    {
+      "file": "src/stdlib/path.my",
+      "sha256": "fef8fbc7ec78a5c72d8ab3891ab3c2cd8592836f4b29e3aa3435508c8027de65",
+      "owner": "A04",
+      "exports": [
+        {
+          "line": 4,
+          "declaration": "public record Split:"
+        },
+        {
+          "line": 10,
+          "declaration": "public func separator() -> str:"
+        },
+        {
+          "line": 15,
+          "declaration": "public func is_absolute(value: str) -> bool:"
+        },
+        {
+          "line": 20,
+          "declaration": "public func join(left: str, right: str) -> str:"
+        },
+        {
+          "line": 31,
+          "declaration": "public func join_all(parts: str[]) -> str:"
+        },
+        {
+          "line": 39,
+          "declaration": "public func basename(value: str) -> str:"
+        },
+        {
+          "line": 47,
+          "declaration": "public func dirname(value: str) -> str:"
+        },
+        {
+          "line": 57,
+          "declaration": "public func splitext(value: str) -> Split:"
+        },
+        {
+          "line": 69,
+          "declaration": "public func stem(value: str) -> str:"
+        },
+        {
+          "line": 74,
+          "declaration": "public func extension(value: str) -> str:"
+        },
+        {
+          "line": 80,
+          "declaration": "public func components(value: str) -> str[]:"
+        },
+        {
+          "line": 89,
+          "declaration": "public func normalize(value: str) -> str:"
+        }
+      ]
+    },
+    {
+      "file": "src/stdlib/persistent_memo.my",
+      "sha256": "ba151044490ed0cdc97082127b1d2f8f55a104a7751f1670b8fd79cdc2e0a1b8",
+      "owner": "A05",
+      "exports": [
+        {
+          "line": 7,
+          "declaration": "public record Options:"
+        },
+        {
+          "line": 13,
+          "declaration": "public record Lookup:"
+        },
+        {
+          "line": 19,
+          "declaration": "public enum Error:"
+        },
+        {
+          "line": 25,
+          "declaration": "public func message(error: Error) -> str effects():"
+        },
+        {
+          "line": 83,
+          "declaration": "public func call(fs: Filesystem, options: Options, compute: func(memo.Key) -> bytes effects(managed_allocation), key: memo.Key) -> Result[Lookup, Error]:"
+        }
+      ]
+    },
+    {
+      "file": "src/stdlib/pool.my",
+      "sha256": "e65e56a72b5c065bb01858a16da07c870679b6ba9011837661c5a3658ce6b4bc",
+      "owner": "A05",
+      "exports": [
+        {
+          "line": 3,
+          "declaration": "public record Pool[T: copy + storable]:"
+        },
+        {
+          "line": 13,
+          "declaration": "public record Handle[T: copy + storable]:"
+        },
+        {
+          "line": 24,
+          "declaration": "public func create[T: copy + storable](values: T[]) -> Pool[T]:"
+        },
+        {
+          "line": 39,
+          "declaration": "public func occupied[T: copy + storable](store: Pool[T], handle: Handle[T]) -> bool effects():"
+        },
+        {
+          "line": 48,
+          "declaration": "public func insert[T: copy + storable](mut store: Pool[T], value: T) -> Handle[T]:"
+        },
+        {
+          "line": 64,
+          "declaration": "public func get[T: copy + storable](store: Pool[T], handle: Handle[T]) -> T?:"
+        },
+        {
+          "line": 71,
+          "declaration": "public func set[T: copy + storable](mut store: Pool[T], handle: Handle[T], value: T) -> bool:"
+        },
+        {
+          "line": 79,
+          "declaration": "public func remove[T: copy + storable](mut store: Pool[T], handle: Handle[T]) -> bool:"
+        },
+        {
+          "line": 96,
+          "declaration": "public func count[T: copy + storable](store: Pool[T]) -> int effects():"
+        },
+        {
+          "line": 101,
+          "declaration": "public func capacity[T: copy + storable](store: Pool[T]) -> int effects():"
+        },
+        {
+          "line": 106,
+          "declaration": "public func handles[T: copy + storable](store: Pool[T]) -> Handle[T][]:"
+        }
+      ]
+    },
+    {
+      "file": "src/stdlib/random.my",
+      "sha256": "6e5cd43641419b75257d1c3c24ba8ed6fdede3abf1b1fa822de28715e89f764c",
+      "owner": "A05",
+      "exports": [
+        {
+          "line": 2,
+          "declaration": "public record Random:"
+        },
+        {
+          "line": 20,
+          "declaration": "public func from_word(word: u64) -> Random:"
+        },
+        {
+          "line": 27,
+          "declaration": "public func seeded(seed: int) -> Random:"
+        },
+        {
+          "line": 32,
+          "declaration": "public func from_entropy(capability: Entropy) -> Result[Random, str]:"
+        },
+        {
+          "line": 47,
+          "declaration": "public func seeded_entropy(seed: int) -> Entropy:"
+        },
+        {
+          "line": 52,
+          "declaration": "public func next_word(mut generator: Random) -> u64 effects(mutation):"
+        },
+        {
+          "line": 61,
+          "declaration": "public func random(mut generator: Random) -> float effects(mutation):"
+        },
+        {
+          "line": 92,
+          "declaration": "public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):"
+        },
+        {
+          "line": 102,
+          "declaration": "public func choice[T: copy + storable](mut generator: Random, items: T[]) -> T? effects(mutation, managed_allocation):"
+        },
+        {
+          "line": 113,
+          "declaration": "public func shuffle[T: copy + storable](mut generator: Random, mut items: T[]) effects(mutation, managed_allocation):"
+        }
+      ]
+    },
+    {
+      "file": "src/stdlib/sort.my",
+      "sha256": "81837c998498b9ddb602fbc78c59c719aed4003d89af48ff659df69550129302",
+      "owner": "A05",
+      "exports": [
+        {
+          "line": 2,
+          "declaration": "public func compare_strs(a: str, b: str) -> int effects():"
+        },
+        {
+          "line": 11,
+          "declaration": "public func sort_ints(values: int[]) -> int[]:"
+        },
+        {
+          "line": 18,
+          "declaration": "public func sort_floats(values: float[]) -> float[]:"
+        },
+        {
+          "line": 25,
+          "declaration": "public func sort_strs(values: str[]) -> str[]:"
+        },
+        {
+          "line": 35,
+          "declaration": "public func sort_by_key[T: copy + storable](values: T[], key: func(T) -> int effects()) -> T[]:"
+        },
+        {
+          "line": 40,
+          "declaration": "public func is_sorted_ints(values: int[]) -> bool effects():"
+        },
+        {
+          "line": 50,
+          "declaration": "public func binary_search(values: int[], target: int) -> int? effects():"
+        },
+        {
+          "line": 65,
+          "declaration": "public func min_int(values: int[]) -> int? effects():"
+        },
+        {
+          "line": 76,
+          "declaration": "public func max_int(values: int[]) -> int? effects():"
+        },
+        {
+          "line": 87,
+          "declaration": "public func min_str(values: str[]) -> str?:"
+        },
+        {
+          "line": 98,
+          "declaration": "public func unique_ints(values: int[]) -> int[]:"
+        },
+        {
+          "line": 109,
+          "declaration": "public func unique_strs(values: str[]) -> str[]:"
+        }
+      ]
+    },
+    {
+      "file": "src/stdlib/strings.my",
+      "sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+      "owner": "A04",
+      "exports": [
+        {
+          "line": 4,
+          "declaration": "public func digits() -> str:"
+        },
+        {
+          "line": 9,
+          "declaration": "public enum Error:"
+        },
+        {
+          "line": 15,
+          "declaration": "public func message(error: Error) -> str:"
+        },
+        {
+          "line": 29,
+          "declaration": "public func letters() -> str:"
+        },
+        {
+          "line": 34,
+          "declaration": "public func whitespace() -> str:"
+        },
+        {
+          "line": 57,
+          "declaration": "public func is_digit(text: str) -> bool effects():"
+        },
+        {
+          "line": 62,
+          "declaration": "public func is_alpha(text: str) -> bool effects():"
+        },
+        {
+          "line": 67,
+          "declaration": "public func is_alnum(text: str) -> bool:"
+        },
+        {
+          "line": 72,
+          "declaration": "public func is_space(text: str) -> bool effects():"
+        },
+        {
+          "line": 77,
+          "declaration": "public func starts_with(text: str, prefix: str) -> bool effects():"
+        },
+        {
+          "line": 82,
+          "declaration": "public func ends_with(text: str, suffix: str) -> bool effects():"
+        },
+        {
+          "line": 87,
+          "declaration": "public func find(text: str, needle: str) -> int? effects():"
+        },
+        {
+          "line": 95,
+          "declaration": "public func count(text: str, needle: str) -> int effects():"
+        },
+        {
+          "line": 102,
+          "declaration": "public func lstrip(text: str) -> str:"
+        },
+        {
+          "line": 107,
+          "declaration": "public func rstrip(text: str) -> str:"
+        },
+        {
+          "line": 112,
+          "declaration": "public func strip(text: str) -> str:"
+        },
+        {
+          "line": 117,
+          "declaration": "public func lines(text: str) -> str[]:"
+        },
+        {
+          "line": 133,
+          "declaration": "public func repeat(text: str, times: int) -> Result[str, Error]:"
+        },
+        {
+          "line": 149,
+          "declaration": "public func pad_left(text: str, width: int, fill: str) -> Result[str, Error]:"
+        },
+        {
+          "line": 159,
+          "declaration": "public func pad_right(text: str, width: int, fill: str) -> Result[str, Error]:"
+        },
+        {
+          "line": 169,
+          "declaration": "public func upper(text: str) -> str:"
+        },
+        {
+          "line": 174,
+          "declaration": "public func lower(text: str) -> str:"
+        },
+        {
+          "line": 179,
+          "declaration": "public func substitute(text: str, needle: str, insertion: str) -> Result[str, Error]:"
+        },
+        {
+          "line": 186,
+          "declaration": "public func to_int(text: str) -> int?:"
+        },
+        {
+          "line": 191,
+          "declaration": "public func to_float(text: str) -> float?:"
+        },
+        {
+          "line": 196,
+          "declaration": "public func format_int(value: int, base: int) -> Result[str, Error]:"
+        },
+        {
+          "line": 230,
+          "declaration": "public func format_float(value: float, decimals: int) -> Result[str, Error]:"
+        },
+        {
+          "line": 264,
+          "declaration": "public func ord(text: str) -> Result[int, Error]:"
+        },
+        {
+          "line": 285,
+          "declaration": "public func chr(code: int) -> Result[str, Error]:"
+        }
+      ]
+    },
+    {
+      "file": "src/stdlib/time.my",
+      "sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "owner": "A05",
+      "exports": [
+        {
+          "line": 2,
+          "declaration": "public record Duration:"
+        },
+        {
+          "line": 7,
+          "declaration": "public record Instant:"
+        },
+        {
+          "line": 23,
+          "declaration": "public func nanoseconds(count: int) -> Duration effects():"
+        },
+        {
+          "line": 28,
+          "declaration": "public func microseconds(count: int) -> Result[Duration, str]:"
+        },
+        {
+          "line": 33,
+          "declaration": "public func milliseconds(count: int) -> Result[Duration, str]:"
+        },
+        {
+          "line": 38,
+          "declaration": "public func seconds(count: int) -> Result[Duration, str]:"
+        },
+        {
+          "line": 51,
+          "declaration": "public func sum(first: Duration, second: Duration) -> Result[Duration, str]:"
+        },
+        {
+          "line": 60,
+          "declaration": "public func difference(first: Duration, second: Duration) -> Result[Duration, str]:"
+        },
+        {
+          "line": 67,
+          "declaration": "public func compare(first: Duration, second: Duration) -> int effects():"
+        },
+        {
+          "line": 76,
+          "declaration": "public func to_seconds(value: Duration) -> float effects():"
+        },
+        {
+          "line": 81,
+          "declaration": "public func to_milliseconds(value: Duration) -> int effects():"
+        },
+        {
+          "line": 90,
+          "declaration": "public func now(clock: Clock) -> Result[Instant, str]:"
+        },
+        {
+          "line": 105,
+          "declaration": "public func simulated_clock(start: Instant) -> Clock:"
+        },
+        {
+          "line": 111,
+          "declaration": "public func advance(clock: Clock, duration: Duration) -> Result[Unit, str]:"
+        },
+        {
+          "line": 121,
+          "declaration": "public func from_unix_nanoseconds(count: int) -> Instant effects():"
+        },
+        {
+          "line": 126,
+          "declaration": "public func after(start: Instant, duration: Duration) -> Result[Instant, str]:"
+        },
+        {
+          "line": 135,
+          "declaration": "public func elapsed(start: Instant, end: Instant) -> Result[Duration, str]:"
+        },
+        {
+          "line": 144,
+          "declaration": "public func expired(deadline: Instant, current: Instant) -> bool effects():"
+        }
+      ]
+    }
+  ],
+  "public_declarations": 206
+}

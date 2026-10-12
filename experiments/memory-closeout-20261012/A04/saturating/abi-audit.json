@@ -1,0 +1,85 @@
+{
+  "runtime_source_sha256": "5455e1833a885320fc9c0f8aca819512d6254792b80af3379cd4cd3f4c172c8f",
+  "helper_source_sha256": "4142a2fae50fe3cee26caad93e2cec3ccc3b520d2dec509fb949b3eeb771b3fc",
+  "llvm_sha256": "9c66dfc0af076b0228234bd8b4bab5a4a0e21c1a93c9f9811cb5213fc96bb130",
+  "generated_width_mode_pairs": [
+    [
+      8,
+      0
+    ],
+    [
+      8,
+      1
+    ],
+    [
+      8,
+      2
+    ],
+    [
+      8,
+      3
+    ],
+    [
+      16,
+      0
+    ],
+    [
+      16,
+      1
+    ],
+    [
+      16,
+      2
+    ],
+    [
+      16,
+      3
+    ],
+    [
+      32,
+      0
+    ],
+    [
+      32,
+      1
+    ],
+    [
+      32,
+      2
+    ],
+    [
+      32,
+      3
+    ],
+    [
+      64,
+      0
+    ],
+    [
+      64,
+      1
+    ],
+    [
+      64,
+      2
+    ],
+    [
+      64,
+      3
+    ]
+  ],
+  "native_symbol": "0000000001028a00 T myl_core_saturating_integer",
+  "abi": {
+    "parameters": [
+      "uint64_t",
+      "uint64_t",
+      "uint32_t",
+      "uint32_t"
+    ],
+    "result": "uint64_t",
+    "core_linkage": "extern_c",
+    "source_origin": "compiler-generated saturatingFallback, not capability adapter"
+  },
+  "bounds": "Type.integer admits widths 8/16/32/64. mode= signed?1:0 | multiplication?2:0. Signed values sign-extend before bit-preserving u64 ABI; unsigned values zero-extend. Exact native LLVM covers all16 pairs.",
+  "ownership": "No pointers, callbacks, allocations, retained storage or managed results; scalar reader only."
+}

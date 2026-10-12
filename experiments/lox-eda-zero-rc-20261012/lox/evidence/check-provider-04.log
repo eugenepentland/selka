@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1450, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1450 after 5s
+lox_strings.my:43:84: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+      mut ref = heap.allocate(mut rt, object.Obj.string(value=object.StringObj(chars=chars, hash=hash)))
+                                                                                     ^

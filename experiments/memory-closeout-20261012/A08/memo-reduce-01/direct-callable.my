@@ -1,0 +1,6 @@
+func compute(n: int) -> str[]:
+    return [str(n)]
+func apply(n: int, callback: func(int) -> str[] effects(managed_allocation)) -> int:
+    return len(callback(n))
+func main() -> int:
+    return apply(7, compute) - 1

@@ -3,6 +3,7 @@
 //! with the merged source its spans index. Nothing below the checker (bytecode,
 //! QBE, the native build driver) is reached from here.
 const std = @import("std");
+const allocation_contract = @import("allocation_contract.zig");
 const language = @import("mylang");
 const reuse = @import("frontend_reuse.zig");
 
@@ -25,6 +26,7 @@ const Settings = struct {
     /// rather than by its base name (`mylang-core`).
     given_path: bool = false,
     allocation_contracts: bool = true,
+    ownership: allocation_contract.Ownership = .{},
 };
 const Graph = struct {
     index: language.interfaces.Index = undefined,
@@ -99,6 +101,11 @@ pub const Session = struct {
             return error.WriteFailed;
         };
         state.bind();
+    }
+
+    /// Keep allocation diagnostics in the caller's selected ownership ABI.
+    pub fn setOwnership(self: *Session, single_owner: bool, zero_rc: bool) void {
+        self.graph.settings.ownership = .{ .single_owner = single_owner, .zero_rc = zero_rc };
     }
 
     /// Configure loader budgets and the entry's module name for project paths.
@@ -277,10 +284,12 @@ pub const Session = struct {
     }
 
     fn checkAllocationContracts(self: *Session, allocator: std.mem.Allocator, checked: Checked, report: *std.ArrayList(u8)) Error!Checked {
+        const ownership = self.graph.settings.ownership;
+        if (ownership.single_owner and !try @import("single_owner.zig").validateMode(allocator, checked.program, checked.src, self.graph.settings.format, report, ownership.zero_rc)) return error.SourceError;
         if (!self.graph.settings.allocation_contracts) return checked;
         const start = report.items.len;
-        for (try @import("allocation_contract.zig").collectProgram(allocator, checked.program, checked.src)) |failure| {
-            const item = try @import("allocation_contract.zig").diagnostic(allocator, failure);
+        for (try allocation_contract.collectProgramWithOwnership(allocator, checked.program, checked.src, self.graph.settings.ownership)) |failure| {
+            const item = try allocation_contract.diagnostic(allocator, failure);
             try report.appendSlice(allocator, try language.diagnostic_output.render(allocator, item, checked.src, self.graph.settings.format));
         }
         var result = checked;

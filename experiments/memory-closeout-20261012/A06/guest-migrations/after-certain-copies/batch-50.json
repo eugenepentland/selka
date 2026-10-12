@@ -1,0 +1,118 @@
+{
+  "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9",
+  "cases": [
+    {
+      "source": "tests/lang/rc_fresh_returns.my",
+      "source_sha256": "e363a1401d4bd20a10e5a0ba89284960125a56a1b4904f71a3cab2df28178fd5",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_fresh_returns.my:28:41: error[E_SINGLE_OWNER_MOVED]: 'child' was moved or is unavailable on this path; use .copy() when both values are needed\n      return Link(next=child, value=total(child))\n                                          ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_named_releases.my",
+      "source_sha256": "9ac0926bd848932b26d9b8449d502b7edb11931dffc8b9c030acdf181792775d",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": [
+        {
+          "line": 38,
+          "before": "            seen.append(names[index // 2])",
+          "after": "            seen.append(names[index // 2].copy())",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/rc_nested_read_loans.my",
+      "source_sha256": "45e91f99e09a172597c2766ab2b77635303fb4b62ec3fe2d2400aad41cd49412",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_nested_read_loans.my:26:40: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      mut selected = rows[0][replace_row(mut rows)]\n                                         ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_nonheld_captures.my",
+      "source_sha256": "8bccb4cfd3b372eedbb9f929253c91fbbae16c59256455be021f349e56b6ffee",
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_nonheld_captures.my:48:21: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n          mut flags = element\n                      ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_pin_elide.my",
+      "source_sha256": "3c4735f852c3b4b92b4e3844cbd2a02351000fc662a30061090dfdeda829ec42",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_pin_elide.my:86:5: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      table[1] = xs\n      ^\n",
+      "copy_changes": [
+        {
+          "line": 76,
+          "before": "    return Holder(items=xs)",
+          "after": "    return Holder(items=xs.copy())",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 81,
+          "before": "    into.rows.append(xs)",
+          "after": "    into.rows.append(xs.copy())",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/rc_plain_appends.my",
+      "source_sha256": "3abb2fbe84af22186821aff080726be4204a3a1e168f1af95cb51946733632e8",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_plain_appends.my:47:5: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n      for index in range(9):\n      ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_plain_replacements.my",
+      "source_sha256": "905ee61e37a2302570fa9e5e81d21429a28b744c654079b32be2f0f179bd3e54",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_read_loans.my",
+      "source_sha256": "b5847a31fea367638665fefe88fc6a019984c726804ec8698f814b990d1c0887",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_read_loans.my:23:40: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      mut selected = values[change_index(mut values)]\n                                         ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_readonly_body.my",
+      "source_sha256": "f3681fd2b7a0cc555ce220f06f42e1a39e4f98f7e4c594a994d027b7f7b41955",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_readonly_body.my:37:23: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed\n      return 1 + length(tail)\n                        ^\n",
+      "copy_changes": [
+        {
+          "line": 21,
+          "before": "    mut wrapped = Wrapped.next(value=Wrapped.leaf(value=items))",
+          "after": "    mut wrapped = Wrapped.next(value=Wrapped.leaf(value=items.copy()))",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 34,
+          "before": "    mut tail = node.next",
+          "after": "    mut tail = node.next.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/rc_scalar_replacements.my",
+      "source_sha256": "ed3e72d4e6e69d53e469580debf52c75815ab9d163268e8290a1adf66ff11bfa",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_scalar_replacements.my:44:5: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      values[0].scalar = 7\n      ^\n",
+      "copy_changes": []
+    }
+  ]
+}

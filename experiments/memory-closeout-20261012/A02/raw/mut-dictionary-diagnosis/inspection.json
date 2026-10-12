@@ -1,0 +1,154 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+  "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "commands": [
+    {
+      "source": "original",
+      "mode": "check",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/original.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "seconds": 0.00975046120584011
+    },
+    {
+      "source": "original",
+      "mode": "dump-ir",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/original.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "seconds": 0.005103453062474728
+    },
+    {
+      "source": "original",
+      "mode": "dump-ir-facts",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/original.my",
+        "--experimental-zero-rc",
+        "--facts"
+      ],
+      "status": 0,
+      "seconds": 0.011436176020652056
+    },
+    {
+      "source": "child",
+      "mode": "check",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/child.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "seconds": 0.007332400185987353
+    },
+    {
+      "source": "child",
+      "mode": "dump-ir",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/child.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "seconds": 0.003615656867623329
+    },
+    {
+      "source": "child",
+      "mode": "dump-ir-facts",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/child.my",
+        "--experimental-zero-rc",
+        "--facts"
+      ],
+      "status": 0,
+      "seconds": 0.008267950033769011
+    },
+    {
+      "source": "root",
+      "mode": "check",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/root.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "seconds": 0.004973497008904815
+    },
+    {
+      "source": "root",
+      "mode": "dump-ir",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/root.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "seconds": 0.004257051972672343
+    },
+    {
+      "source": "root",
+      "mode": "dump-ir-facts",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/root.my",
+        "--experimental-zero-rc",
+        "--facts"
+      ],
+      "status": 0,
+      "seconds": 0.009155951905995607
+    },
+    {
+      "source": "list-child",
+      "mode": "check",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/list-child.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "seconds": 0.010617415886372328
+    },
+    {
+      "source": "list-child",
+      "mode": "dump-ir",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/list-child.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "seconds": 0.004347950918599963
+    },
+    {
+      "source": "list-child",
+      "mode": "dump-ir-facts",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/list-child.my",
+        "--experimental-zero-rc",
+        "--facts"
+      ],
+      "status": 0,
+      "seconds": 0.006560871843248606
+    }
+  ]
+}

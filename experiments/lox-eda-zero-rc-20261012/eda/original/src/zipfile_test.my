@@ -1,0 +1,136 @@
+
+import zipfile as m
+import byte_builder
+import strings
+import support_expect as ex
+import support_crc32 as crc_mod
+
+# Independent store-method reader: follow the central-directory local offsets
+# and lengths, verify CRC and recover each name/content. The evidence driver
+# additionally checks the archive with Python's standard zipfile extractor.
+func read_int(data: bytes, start: int, width: int) -> int:
+    mut value = 0
+    mut multiplier = 1
+    for i in range(width):
+        value += data[start + i] * multiplier
+        multiplier *= 256
+    return value
+
+
+func count(data: bytes, needle: bytes) -> int:
+    mut n = 0
+    mut pos = 0
+    while pos + len(needle) <= len(data):
+        if data[pos:pos + len(needle)] == needle:
+            n += 1
+        pos += 1
+    return n
+
+
+func error_of(result: Result[Unit, str]) -> str:
+    match result:
+        case Ok(_):
+            return ""
+        case Err(e):
+            return e
+
+
+# test "write produces an archive std.zip can extract"
+public func test_write_produces_an_archive_std_zip_can_extract(out: Stream) -> bool:
+    mut entries = [m.Entry(name=b"a-F_Cu.gtl", data=b"G04 top*\nM02*\n"), m.Entry(name=b"a-PTH.drl", data=b"M48\nM30\n")]
+    mut w = byte_builder.create()
+    if not ex.eq_str(out, "write", error_of(m.write(mut w, entries)), ""):
+        return False
+    mut data = byte_builder.finish(w)
+    if not ex.ok(out, "local header", data.startswith(b"PK\x03\x04")):
+        return False
+    if not ex.eq_int(out, "local headers", count(data, b"PK\x03\x04"), 2):
+        return False
+    if not ex.eq_int(out, "central headers", count(data, b"PK\x01\x02"), 2):
+        return False
+    if not ex.eq_int(out, "end record", count(data, b"PK\x05\x06"), 1):
+        return False
+    mut eocd = len(data) - 22
+    if not ex.eq_int(out, "end entries", read_int(data, eocd + 10, 2), 2):
+        return False
+    mut cd_off = read_int(data, eocd + 16, 4)
+    if not ex.ok(out, "central offset", data[cd_off:len(data)].startswith(b"PK\x01\x02")):
+        return False
+    if not ex.ok(out, "visible data", data.find(b"G04 top*") >= 0):
+        return False
+    mut seen = 0
+    mut pos = cd_off
+    while seen < read_int(data, eocd + 10, 2):
+        if not ex.ok(out, "store method", read_int(data, pos + 10, 2) == 0):
+            return False
+        mut name_len = read_int(data, pos + 28, 2)
+        mut extra_len = read_int(data, pos + 30, 2)
+        mut comment_len = read_int(data, pos + 32, 2)
+        mut filename = data[pos + 46:pos + 46 + name_len]
+        mut local = read_int(data, pos + 42, 4)
+        mut length = read_int(data, pos + 24, 4)
+        mut payload_at = local + 30 + read_int(data, local + 26, 2) + read_int(data, local + 28, 2)
+        mut extracted = data[payload_at:payload_at + length]
+        if not ex.eq_bytes(out, "filename", filename, entries[seen].name):
+            return False
+        if not ex.eq_bytes(out, "extracted data", extracted, entries[seen].data):
+            return False
+        if not ex.eq_int(out, "CRC", crc_mod.crc32(extracted), read_int(data, pos + 16, 4)):
+            return False
+        if not ex.eq_int(out, "valid fixed DOS date", read_int(data, local + 12, 2), 33):
+            return False
+        seen += 1
+        pos += 46 + name_len + extra_len + comment_len
+    return ex.eq_int(out, "all entries opened", seen, len(entries))
+
+
+# test "write rejects ZIP32 field overflow before producing bytes"
+public func test_write_rejects_zip32_field_overflow_before_producing_bytes(out: Stream) -> bool:
+    mut too_many: m.Entry[] = []
+    for i in range(65536):
+        too_many.append(m.Entry(name=b"a", data=b""))
+    mut w = byte_builder.create()
+    if not ex.eq_str(out, "too many entries", error_of(m.write(mut w, too_many)), "WriteFailed"):
+        return False
+    if not ex.eq_int(out, "no partial archive", len(byte_builder.finish(w)), 0):
+        return False
+    match strings.repeat("n", 65536):
+        case Err(_):
+            return False
+        case Ok(long_name):
+            if not ex.eq_str(out, "long name", error_of(m.write(mut w, [m.Entry(name=long_name.encode(), data=b"")])), "WriteFailed"):
+                return False
+    return ex.eq_int(out, "still no bytes", len(byte_builder.finish(w)), 0)
+
+
+# test "encoded size predicts the complete archive before allocation"
+public func test_encoded_size_predicts_the_complete_archive_before_allocation(out: Stream) -> bool:
+    mut entries = [m.Entry(name=b"a.txt", data=b"abc"), m.Entry(name=b"nested/b.bin", data=b"12345")]
+    mut w = byte_builder.create()
+    if not ex.eq_str(out, "write", error_of(m.write(mut w, entries)), ""):
+        return False
+    match m.encoded_size(entries):
+        case Err(_):
+            return False
+        case Ok(size):
+            return ex.eq_int(out, "complete size", len(byte_builder.finish(w)), size)
+
+
+# test "fuzz: write emits a well-formed archive for arbitrary entry bytes"
+public func test_fuzz_write_emits_a_well_formed_archive_for_arbitrary_entry_bytes(out: Stream) -> bool:
+    mut corpus = [b"", b"one", b"a/b/c.bin\nentry data", b"PK\x03\x04\x00\xff\x7f"]
+    for input_ in corpus:
+        mut split = len(input_) // 2
+        mut name0 = input_[0:min(len(input_), 8)]
+        if len(name0) == 0:
+            name0 = b"n"
+        mut entries = [m.Entry(name=name0, data=input_), m.Entry(name=b"second.bin", data=input_[split:len(input_)])]
+        mut w = byte_builder.create()
+        if not ex.eq_str(out, "write", error_of(m.write(mut w, entries)), ""):
+            return False
+        mut data = byte_builder.finish(w)
+        if not ex.ok(out, "leading local header", data.startswith(b"PK\x03\x04")):
+            return False
+        if not ex.ok(out, "end record present", data.find(b"PK\x05\x06") >= 0):
+            return False
+    return True

@@ -1,0 +1,5 @@
+{
+  "src/core/borrowed_provider.zig": "44091bbe2064d7894fb9d3026b4f1abe2f1ef75f644ab8f538084eedb606f963",
+  "src/core/borrowed_provider_cache_test.zig": "ea74aeb87239d9a1c318fb4aa329415bf79852a6d21845fa96c89f2ef7b5cac8",
+  "src/core/borrowed_provider_test.zig": "fb53a45d82ef9f4f2fdbc3bbd124b7e4a6aaa147b8770094dee21ab45ec94c25"
+}

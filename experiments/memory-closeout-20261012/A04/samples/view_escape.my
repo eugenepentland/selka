@@ -1,0 +1,7 @@
+func dangling() -> TextView:
+    const source = "é😀-" + str(42)
+    return source.borrow(0, len(source))
+
+
+func main() -> int:
+    return len(dangling())

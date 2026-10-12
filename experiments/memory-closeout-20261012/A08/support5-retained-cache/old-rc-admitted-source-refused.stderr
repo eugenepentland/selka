@@ -1,0 +1,3 @@
+main.my:5:5: error[E_SINGLE_OWNER_MOVED]: 'original' was moved or is unavailable on this path; use .copy() when both values are needed
+      original.clear()
+      ^

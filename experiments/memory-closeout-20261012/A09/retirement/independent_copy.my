@@ -1,0 +1,10 @@
+func main(args: str[], out: Stream) -> int:
+    mut rows: int[][] = []
+    for i in range(len(args) * 10):
+        rows.append([i, i + 1])
+    mut saved = rows.copy()
+    saved[0].append(9)
+    rows[1][0] = 99
+    assert saved[1][0] == 1
+    out.print(len(rows[0]), len(saved[0]))
+    return 0

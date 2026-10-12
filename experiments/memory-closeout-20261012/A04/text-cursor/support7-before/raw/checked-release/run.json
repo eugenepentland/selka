@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/text-cursor/support7-before/checked-release/program"
+  ],
+  "status": 0,
+  "elapsed_ns": 63647937,
+  "stdout": "404706899 286015030\n",
+  "stderr": "myl-core textwalk: 1201439895 octets\n"
+}

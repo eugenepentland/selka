@@ -29,7 +29,7 @@ func score(text: str) -> int:
 func word_job(text: str) -> int:
     mut counts: dict[str, int] = {}
     for word in text.split():
-        counts[word] = if (word in counts) then (counts[word] + 1) else (1)
+        counts[word.copy()] = if (word in counts) then (counts[word] + 1) else (1)
     mut result = 0
     for word in counts:
         result += score(word) * counts[word] * counts[word]

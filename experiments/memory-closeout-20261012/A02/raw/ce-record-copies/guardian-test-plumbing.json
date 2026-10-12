@@ -1,0 +1,17 @@
+{
+  "gate_ticket": 328,
+  "status": 1,
+  "check": "test-no-conditional",
+  "findings": [
+    "ce_records_test.zig:216: if at top level of test body",
+    "ce_records_test.zig:403: more than one top-level loop"
+  ],
+  "resolution": "Move diagnostic condition and structural-copy assertion loop into named helpers. No production changes or assertion removals. Rerun full record suite10/10 ticket1298.",
+  "compiler_unchanged": true,
+  "second_gate": {
+    "ticket": 330,
+    "status": 1,
+    "check": "debug-print-ban",
+    "resolution": "Use file-scope report alias, as required by repository rules. Final record suite10/10 again, ticket1300; compiler unchanged."
+  }
+}

@@ -1,0 +1,29 @@
+build-slot: build slot 1, FIFO ticket 2266 after 0s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10528 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 3/88 failed (spec, orphan-files, test-reachability)
+guardian: failures grouped by check (3):
+  spec (6 findings)
+    - tag in a never-compiled file: NEW-CORE-S2-SPLIT-2 in src/core/textgap_split_test.zig
+      fix: these tags cover nothing — their file's tests never compile. Reference it from a test root (see the test-reachability check), or the bullets above stay unverified.
+    - tag in a never-compiled file: NEW-CORE-STAGE-CACHE-8 in src/core/textgap_split_test.zig
+    - tag in a never-compiled file: NEW-CORE-S2-SPLIT-2 in src/core/textgap_split_test.zig
+    - +3 more — use --verbose for full detail
+  orphan-files (2 findings)
+    - src/core/inline_reader.zig: src/core/inline_reader.zig
+      fix: import the file from a reachable module, or add it to [orphan_files] roots in guardian.toml.
+    - src/core/textgap_split_test.zig: src/core/textgap_split_test.zig
+  test-reachability (1 finding)
+    - src/core/textgap_split_test.zig: 5 test block(s) never compile — no test root references this file
+      fix: reference the file from a test root's module graph (e.g. `_ = @import("path/to/file.zig");` in the root's test block).
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them
+Coordinator overlay bytes restored; all three hashes match.
+Traceback (most recent call last):
+  File "<stdin>", line 9, in <module>
+  File "/usr/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['git', 'commit', '-m', 'Specialize bounded two-byte split offset search']' returned non-zero exit status 1.

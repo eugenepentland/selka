@@ -1,0 +1,60 @@
+{
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "fixture_commit": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "scope": "Real guest test command with leakcheck; uninstrumented, no measured RC-event claim.",
+  "seed": 7,
+  "property_runs": 12,
+  "source_statuses": {
+    "executed": 59,
+    "blocked_source_refusal": 2,
+    "separate_main_or_importer_contract_required": 2,
+    "reused_same_artifact_execution": 1
+  },
+  "modes": {
+    "release": {
+      "passed": 412,
+      "failed": 5,
+      "skipped": 0,
+      "cached": 0,
+      "unsupported": 3,
+      "files": 60
+    },
+    "debug": {
+      "passed": 412,
+      "failed": 5,
+      "skipped": 0,
+      "cached": 0,
+      "unsupported": 3,
+      "files": 60
+    },
+    "verify": {
+      "passed": 412,
+      "failed": 5,
+      "skipped": 0,
+      "cached": 0,
+      "unsupported": 3,
+      "files": 60
+    },
+    "optimized_debug": {
+      "passed": 412,
+      "failed": 5,
+      "skipped": 0,
+      "cached": 0,
+      "unsupported": 3,
+      "files": 60
+    },
+    "no_facts": {
+      "passed": 412,
+      "failed": 5,
+      "skipped": 0,
+      "cached": 0,
+      "unsupported": 3,
+      "files": 60
+    }
+  },
+  "blocked_test_contracts_per_mode": 16,
+  "separate_contracts": [
+    "tests/lang/migrated/surface_statements_case_2.my",
+    "tests/lang/rc_nonheld_captures.my"
+  ]
+}

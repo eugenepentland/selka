@@ -1,0 +1,8 @@
+{"name": "original-release-cold", "status": 0, "passed": true, "elapsed_ns": 3848254306, "max_rss_kib": "170788"}
+{"name": "original-release-warm", "status": 0, "passed": true, "elapsed_ns": 5257180628, "max_rss_kib": "33348"}
+{"name": "original-debug-cold", "status": 2, "passed": false, "elapsed_ns": 5157429133, "max_rss_kib": "4720"}
+{"name": "original-debug-warm", "status": 2, "passed": false, "elapsed_ns": 20188514784, "max_rss_kib": "4540"}
+{"name": "original-verified-cold", "status": 0, "passed": true, "elapsed_ns": 15385038400, "max_rss_kib": "65500"}
+{"name": "original-verified-warm", "status": 0, "passed": true, "elapsed_ns": 15274785166, "max_rss_kib": "33048"}
+{"name": "original-optimized-debug-cold", "status": 2, "passed": false, "elapsed_ns": 20186823230, "max_rss_kib": "4476"}
+{"name": "original-optimized-debug-warm", "status": 2, "passed": false, "elapsed_ns": 5158949420, "max_rss_kib": "4476"}

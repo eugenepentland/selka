@@ -344,27 +344,36 @@ void myl_core_owned_group_end(myl_block *block) {
     myl_core_group_close(block);
     myl_core_drop_owned(block);
 }
-/* The source list remains borrowed until the mandatory join. Each leaf capture
-   contains a distinct element plus a function pointer; its managed pointers
-   borrow the source tree and are deliberately absent from the capture layout.
-   Callback results are independent owners, checked by the source compiler. */
+/* NEW-CORE-ZERO-RC-TASKS-2: source elements remain borrowed through join.
+   Captures hold a source pointer, callback, start and count, with no managed
+   child layout. Each thunk returns a separately owned contiguous result list.
+   Scheduling storage is bounded by the worker count, not the input length. */
 myl_block *myl_core_owned_map(myl_block *source, void *callback, void *run,
-        uint64_t input_size, uint64_t callback_offset, uint64_t env_size,
+        uint64_t callback_offset, uint64_t start_offset, uint64_t count_offset,
         myl_block *out, uint64_t output_size) {
     if (!source->len) return out;
+    int64_t chunks = myl_core_map_chunks(source->len);
+    int64_t quotient = source->len / chunks, remainder = source->len % chunks;
     myl_block *group = myl_core_group_open();
-    for (int64_t i = 0; i < source->len; ++i) {
+    int64_t start = 0;
+    for (int64_t i = 0; i < chunks; ++i) {
+        int64_t count = quotient + (i < remainder);
+        uint64_t env_size = count_offset + sizeof count;
         myl_block *env = block_new(MYL_KIND_BYTES, env_size, 1);
         env->len = (int64_t)env_size;
-        memcpy(block_data(env), block_data(source) + (size_t)i * input_size, input_size);
+        memcpy(block_data(env), &source, sizeof source);
         memcpy(block_data(env) + callback_offset, &callback, sizeof callback);
-        myl_core_owned_task_submit(group, run, env, i);
+        memcpy(block_data(env) + start_offset, &start, sizeof start);
+        memcpy(block_data(env) + count_offset, &count, sizeof count);
+        myl_core_owned_task_submit(group, run, env, start);
+        start += count;
     }
-    for (int64_t i = 0; i < source->len; ++i) {
+    for (int64_t i = 0; i < chunks; ++i) {
         myl_block *result = myl_core_owned_group_take(group, i);
-        memcpy(block_data(out) + (size_t)i * output_size, block_data(result), output_size);
-        ++out->len;
-        /* Transfer the payload into the output; free only its former box. */
+        memcpy(block_data(out) + (size_t)out->len * output_size,
+            block_data(result), (size_t)result->len * output_size);
+        out->len += result->len;
+        /* Transfer every element into the output; free only the list shell. */
         block_free(result);
     }
     myl_core_owned_group_end(group);

@@ -1,0 +1,1555 @@
+{
+  "count": 310,
+  "tests": [
+    {
+      "module": "board_layers_test",
+      "function": "test_imported_copper_spellings_are_recognized_without_minting_rows",
+      "line": 26
+    },
+    {
+      "module": "board_layers_test",
+      "function": "test_an_undeclared_board_builds_the_implicit_four_layer_table",
+      "line": 37
+    },
+    {
+      "module": "board_layers_test",
+      "function": "test_a_six_layer_declared_stackup_numbers_signals_around_its_planes",
+      "line": 68
+    },
+    {
+      "module": "board_layers_test",
+      "function": "test_layer_names_round_trip_through_the_shared_table",
+      "line": 102
+    },
+    {
+      "module": "board_layers_test",
+      "function": "test_the_layer_table_carries_each_row_s_gerber_identity",
+      "line": 129
+    },
+    {
+      "module": "board_layers_test",
+      "function": "test_the_layer_table_carries_the_technical_fabrication_rows",
+      "line": 156
+    },
+    {
+      "module": "board_layers_test",
+      "function": "test_the_named_layer_constants_are_the_spellings_the_table_itself_carries",
+      "line": 220
+    },
+    {
+      "module": "board_layers_test",
+      "function": "test_a_front_side_layer_name_flips_to_its_back_twin_and_a_sideless_one_does_not",
+      "line": 252
+    },
+    {
+      "module": "board_layers_test",
+      "function": "test_layer_rows_carry_position_colours_and_poured_outer_faces_stay_routable",
+      "line": 261
+    },
+    {
+      "module": "board_layers_test",
+      "function": "test_a_layer_set_with_no_bits_is_unrestricted",
+      "line": 278
+    },
+    {
+      "module": "decouple_key_test",
+      "function": "test_pinfromorigin_reads_value_pad_replica_and_rejects_every_other_key_shape",
+      "line": 6
+    },
+    {
+      "module": "decouple_key_test",
+      "function": "test_capfarads_parses_si_prefixes_including_the_micro_sign_and_the_bulk_threshold",
+      "line": 18
+    },
+    {
+      "module": "design_model_test",
+      "function": "test_design_model_a_model_round_trips_every_modelled_field_into_the_block",
+      "line": 12
+    },
+    {
+      "module": "design_model_test",
+      "function": "test_design_model_a_malformed_model_names_the_offending_line",
+      "line": 77
+    },
+    {
+      "module": "diagram_membership_test",
+      "function": "test_computesubblockattachments_keeps_a_power_producer_out_of_a_consuming_section",
+      "line": 7
+    },
+    {
+      "module": "diagram_membership_test",
+      "function": "test_attachedsubblocks_reports_a_section_s_own_modules_in_declaration_order",
+      "line": 34
+    },
+    {
+      "module": "escape_test",
+      "function": "test_writexml_escapes_markup_and_both_quote_styles",
+      "line": 12
+    },
+    {
+      "module": "escape_test",
+      "function": "test_writexml_neutralizes_a_script_attribute_breakout",
+      "line": 20
+    },
+    {
+      "module": "escape_test",
+      "function": "test_the_two_apostrophe_spellings_differ_in_nothing_but_the_apostrophe",
+      "line": 32
+    },
+    {
+      "module": "escape_test",
+      "function": "test_decodexmlalloc_round_trips_every_byte_writexml_can_escape",
+      "line": 50
+    },
+    {
+      "module": "escape_test",
+      "function": "test_decodexmlalloc_copies_an_entity_it_does_not_know_through_verbatim",
+      "line": 60
+    },
+    {
+      "module": "eval_electrical_test",
+      "function": "test_parse_reads_pin_function_name",
+      "line": 30
+    },
+    {
+      "module": "eval_electrical_test",
+      "function": "test_parse_returns_null_without_pin_name",
+      "line": 43
+    },
+    {
+      "module": "eval_electrical_test",
+      "function": "test_parse_rejects_an_unknown_electrical_type",
+      "line": 48
+    },
+    {
+      "module": "eval_electrical_test",
+      "function": "test_parse_recognises_all_electrical_types",
+      "line": 58
+    },
+    {
+      "module": "eval_electrical_test",
+      "function": "test_parse_captures_voltage_levels",
+      "line": 73
+    },
+    {
+      "module": "eval_electrical_test",
+      "function": "test_parsesubforms_fills_caller_supplied_decl_from_sub_form_list",
+      "line": 100
+    },
+    {
+      "module": "eval_electrical_test",
+      "function": "test_port_level_electrical_decl_carries_boundary_logic_levels",
+      "line": 128
+    },
+    {
+      "module": "eval_electrical_test",
+      "function": "test_parse_ignores_unknown_sub_forms",
+      "line": 146
+    },
+    {
+      "module": "eval_env_test",
+      "function": "test_env_get_and_put",
+      "line": 6
+    },
+    {
+      "module": "eval_env_test",
+      "function": "test_env_parent_chain",
+      "line": 22
+    },
+    {
+      "module": "eval_env_test",
+      "function": "test_ground_via_distance_protection_is_enabled_by_default",
+      "line": 59
+    },
+    {
+      "module": "eval_net_analysis_test",
+      "function": "test_the_ground_net_vocabulary_tables_keep_the_spellings_their_consumers_had",
+      "line": 9
+    },
+    {
+      "module": "eval_net_analysis_test",
+      "function": "test_isratingzerovolts_adds_only_the_chassis_node_to_the_ground_tokens",
+      "line": 33
+    },
+    {
+      "module": "eval_net_analysis_test",
+      "function": "test_isgroundbase_accepts_the_base_names_in_any_case_and_only_those",
+      "line": 57
+    },
+    {
+      "module": "eval_net_analysis_test",
+      "function": "test_top_level_input_power_ports_require_decoupling",
+      "line": 86
+    },
+    {
+      "module": "eval_net_analysis_test",
+      "function": "test_supply_capacitor_without_a_ground_leg_is_not_decoupling",
+      "line": 98
+    },
+    {
+      "module": "eval_rails_test",
+      "function": "test_the_supply_rail_vocabulary_tables_keep_the_spellings_their_consumers_had",
+      "line": 8
+    },
+    {
+      "module": "eval_rails_test",
+      "function": "test_build_derives_one_rail_per_power_output_port",
+      "line": 58
+    },
+    {
+      "module": "eval_rails_test",
+      "function": "test_build_recognizes_a_bare_vout_tied_to_a_rail_named_net",
+      "line": 68
+    },
+    {
+      "module": "eval_rails_test",
+      "function": "test_build_collapses_ferrite_bridged_nets_into_single_rail",
+      "line": 82
+    },
+    {
+      "module": "eval_rails_test",
+      "function": "test_build_uses_sub_block_port_nominal_for_voltage",
+      "line": 100
+    },
+    {
+      "module": "eval_rails_test",
+      "function": "test_build_falls_back_to_section_power_port_voltage",
+      "line": 107
+    },
+    {
+      "module": "eval_rails_test",
+      "function": "test_build_falls_back_to_top_level_design_port_nominal",
+      "line": 121
+    },
+    {
+      "module": "eval_rails_test",
+      "function": "test_build_preserves_top_level_rated_maximum",
+      "line": 131
+    },
+    {
+      "module": "eval_rails_test",
+      "function": "test_build_excludes_gnd",
+      "line": 145
+    },
+    {
+      "module": "eval_rails_test",
+      "function": "test_build_records_source_ref_des_and_source_port",
+      "line": 153
+    },
+    {
+      "module": "eval_rails_test",
+      "function": "test_build_returns_empty_slice_when_no_rails_declared",
+      "line": 164
+    },
+    {
+      "module": "export_kicad_footprint_test",
+      "function": "test_exportfootprintmod_emits_the_pad_rotation_geometry_zig_reads_mapped_into_kicad_s_frame",
+      "line": 51
+    },
+    {
+      "module": "export_kicad_footprint_test",
+      "function": "test_exportfootprintmod_leaves_a_rotated_custom_pad_s_at_unrotated",
+      "line": 75
+    },
+    {
+      "module": "export_kicad_footprint_test",
+      "function": "test_exportfootprintmod_emits_fab_geometry_on_f_fab_and_keeps_silkscreen_on_f_silks",
+      "line": 89
+    },
+    {
+      "module": "export_kicad_footprint_test",
+      "function": "test_exportfootprintmod_names_the_body_and_smd_pad_layers_with_kicad_s_own_spellings",
+      "line": 100
+    },
+    {
+      "module": "export_kicad_footprint_test",
+      "function": "test_exportfootprintmod_strokes_f_silks_at_the_fabricated_width_and_f_fab_at_the_documentation_width",
+      "line": 110
+    },
+    {
+      "module": "export_kicad_footprint_test",
+      "function": "test_exportfootprintmod_inflates_the_f_crtyd_courtyard_by_the_placement_margin",
+      "line": 119
+    },
+    {
+      "module": "export_kicad_footprint_test",
+      "function": "test_exportfootprintmod_emits_silkscreen_poly_rect_pin_1_markers_must_not_be_dropped",
+      "line": 128
+    },
+    {
+      "module": "export_kicad_footprint_test",
+      "function": "test_exportfootprintmod_emits_a_custom_pad_s_polygon_as_kicad_primitives_gr_poly",
+      "line": 139
+    },
+    {
+      "module": "export_kicad_footprint_test",
+      "function": "test_exportfootprintmod_puts_a_concave_custom_pad_anchor_on_copper",
+      "line": 151
+    },
+    {
+      "module": "export_kicad_footprint_test",
+      "function": "test_exportfootprintmod_emits_a_copper_pour_only_footprint_keepout",
+      "line": 160
+    },
+    {
+      "module": "export_kicad_footprint_test",
+      "function": "test_exportfootprintmod_escapes_a_hostile_3d_model_filename",
+      "line": 171
+    },
+    {
+      "module": "export_kicad_footprint_test",
+      "function": "test_usesourcekicadmod_replaces_a_model_block_whose_path_holds_a_parenthesis",
+      "line": 188
+    },
+    {
+      "module": "export_kicad_footprint_test",
+      "function": "test_exportfootprintmod_emits_a_footprint_keepout_that_also_blocks_vias",
+      "line": 214
+    },
+    {
+      "module": "export_kicad_footprint_test",
+      "function": "test_rotated_paste_window_keeps_its_local_size_and_transforms_its_center",
+      "line": 224
+    },
+    {
+      "module": "export_kicad_netlist_test",
+      "function": "test_writenetlist_escapes_the_raw_design_name_and_copies_tokenizer_slices_verbatim",
+      "line": 29
+    },
+    {
+      "module": "export_kicad_netlist_test",
+      "function": "test_extractpadnames_reads_bare_int_quoted_and_atom_pad_numbers",
+      "line": 65
+    },
+    {
+      "module": "export_kicad_netlist_test",
+      "function": "test_the_exported_netlist_reproduces_every_net_s_membership_exactly",
+      "line": 135
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_export_is_deterministic_across_runs",
+      "line": 213
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_export_emits_the_pinned_header_and_each_instance_s_own_uuid",
+      "line": 221
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_export_writes_hierarchical_net_names_into_labels_unchanged",
+      "line": 232
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_export_replaces_ground_labels_with_rail_symbols_and_drives_each_rail",
+      "line": 241
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_export_maps_dnp_to_kicad_s_dnp_and_in_bom_flags",
+      "line": 253
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_the_vendor_fixture_export_matches_its_committed_golden_file",
+      "line": 262
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_a_vendor_body_reaches_the_emitted_sheet_and_can_be_switched_off",
+      "line": 268
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_fixture_export_matches_the_committed_golden_file",
+      "line": 280
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_the_export_kicad_bundle_carries_the_schematic_on_request",
+      "line": 285
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_an_empty_design_still_exports_a_self_checking_sheet",
+      "line": 308
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_a_net_on_a_missing_ref_des_draws_no_label_and_does_not_fail_the_export",
+      "line": 317
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_firstundrawn_finds_an_uncovered_pin_and_passes_full_coverage",
+      "line": 326
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_qualify_re_attaches_the_sub_block_path_to_a_module_local_ref",
+      "line": 341
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_a_passive_is_emitted_as_a_real_device_glyph_rather_than_a_box",
+      "line": 349
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_bypass_stubs_of_a_rail_all_label_as_the_rail_and_its_own_dotted_net_survives",
+      "line": 357
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_caps_on_different_bypass_stubs_of_one_rail_join_one_bank",
+      "line": 366
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_a_bound_bypass_cap_and_a_three_pin_cluster_net_become_drawn_wire",
+      "line": 374
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_a_two_pin_net_spanning_two_sections_is_still_label_connected",
+      "line": 384
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_a_decoupling_bank_replaces_its_members_labels_with_one_rail_label",
+      "line": 391
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_a_ganged_cap_is_turned_upright_and_drops_its_per_pin_drawing",
+      "line": 401
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_a_hub_s_repeated_rail_pins_are_ganged_under_one_adornment",
+      "line": 410
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_a_resolved_part_number_is_shown_on_a_hub_and_hidden_on_a_passive",
+      "line": 421
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_a_displayed_part_number_clears_the_value_above_it_and_every_neighbour",
+      "line": 432
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_a_hierarchical_export_links_a_sheet_per_section_module_and_leftover",
+      "line": 446
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_child_sheets_nest_their_instance_path_under_the_root_s_uuid",
+      "line": 465
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_a_hierarchical_export_is_deterministic_across_runs",
+      "line": 483
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_the_flat_threshold_and_the_flat_option_both_collapse_the_hierarchy",
+      "line": 495
+    },
+    {
+      "module": "export_kicad_sch_test",
+      "function": "test_kicad_sch_a_multi_part_instance_emits_kicad_units_that_share_one_reference",
+      "line": 507
+    },
+    {
+      "module": "export_kicad_test",
+      "function": "test_the_export_layer_re_exports_the_flatten_currency_types_unchanged",
+      "line": 19
+    },
+    {
+      "module": "export_kicad_test",
+      "function": "test_netlist_generation",
+      "line": 31
+    },
+    {
+      "module": "export_kicad_test",
+      "function": "test_footprint_mod_export",
+      "line": 44
+    },
+    {
+      "module": "export_kicad_test",
+      "function": "test_sanitizekicadname_neutralizes_traversal_and_passes_safe_names_through",
+      "line": 65
+    },
+    {
+      "module": "export_kicad_test",
+      "function": "test_collectinstances_prefixes_a_decoupling_binding_s_target_ic_like_the_ref_des",
+      "line": 78
+    },
+    {
+      "module": "flat_netlist_test",
+      "function": "test_uuidfromid_pins_the_identity_kicad_sync_keys_on",
+      "line": 6
+    },
+    {
+      "module": "flat_netlist_test",
+      "function": "test_flatten_currency_types_default_their_optional_fields",
+      "line": 12
+    },
+    {
+      "module": "footprint_paste_test",
+      "function": "test_ic_package_paste_parsing_empty_and_malformed",
+      "line": 7
+    },
+    {
+      "module": "infra_fs_test",
+      "function": "test_read_trace_digest_sorts_canonical_paths",
+      "line": 30
+    },
+    {
+      "module": "infra_fs_test",
+      "function": "test_read_trace_reports_retained_evidence_memory",
+      "line": 41
+    },
+    {
+      "module": "infra_fs_test",
+      "function": "test_nested_read_traces_invalidate_both_scopes_without_stealing_reads",
+      "line": 52
+    },
+    {
+      "module": "infra_fs_test",
+      "function": "test_read_trace_rejects_an_end_call_away_from_its_owner_thread",
+      "line": 68
+    },
+    {
+      "module": "infra_fs_test",
+      "function": "test_read_trace_binds_child_dir_bytes_and_detects_aba_consumption",
+      "line": 83
+    },
+    {
+      "module": "infra_fs_test",
+      "function": "test_read_trace_rejects_directory_and_negative_dependency_aba",
+      "line": 114
+    },
+    {
+      "module": "infra_fs_test",
+      "function": "test_cache_probe_leaves_the_closure_alone_without_weakening_the_tamper_guard",
+      "line": 160
+    },
+    {
+      "module": "infra_fs_test",
+      "function": "test_cache_probe_rejects_an_end_call_away_from_its_owner_thread",
+      "line": 215
+    },
+    {
+      "module": "infra_fs_test",
+      "function": "test_read_trace_rejects_symlink_removal_and_retargeting",
+      "line": 230
+    },
+    {
+      "module": "json_writer_test",
+      "function": "test_escape_quotes_and_backslashes",
+      "line": 7
+    },
+    {
+      "module": "json_writer_test",
+      "function": "test_escape_control_characters",
+      "line": 14
+    },
+    {
+      "module": "json_writer_test",
+      "function": "test_writefield_surrounds_value_with_quotes",
+      "line": 21
+    },
+    {
+      "module": "json_writer_test",
+      "function": "test_script_strings_escape_closing_tags_and_javascript_line_separators",
+      "line": 28
+    },
+    {
+      "module": "json_writer_test",
+      "function": "test_one_script_context_escaper_answers_for_every_page_json_writer",
+      "line": 35
+    },
+    {
+      "module": "json_writer_test",
+      "function": "test_the_sidecar_escaper_leaves_alone_and_still_escapes_quote_backslash_and_controls",
+      "line": 42
+    },
+    {
+      "module": "kicad_pcb_format_test",
+      "function": "test_sexprunescape_inverts_sexprescape_and_is_a_no_op_on_clean_text",
+      "line": 9
+    },
+    {
+      "module": "kicad_pcb_format_test",
+      "function": "test_sexprescape_escapes_quotes_and_backslashes_passes_clean_text_through",
+      "line": 19
+    },
+    {
+      "module": "kicad_pcb_format_test",
+      "function": "test_padnumbertext_reads_quoted_bare_atom_and_bare_int_pad_numbers",
+      "line": 39
+    },
+    {
+      "module": "kicad_sch_bank_test",
+      "function": "test_kicad_sch_bank_grouping_keys_on_the_rail_and_ground_pair",
+      "line": 15
+    },
+    {
+      "module": "kicad_sch_bank_test",
+      "function": "test_kicad_sch_bank_members_sort_by_value_then_reference",
+      "line": 27
+    },
+    {
+      "module": "kicad_sch_bank_test",
+      "function": "test_kicad_sch_the_bank_frame_places_rails_clear_of_every_member_pin",
+      "line": 38
+    },
+    {
+      "module": "kicad_sch_bank_test",
+      "function": "test_kicad_sch_railpts_breaks_the_rail_at_each_member_column",
+      "line": 49
+    },
+    {
+      "module": "kicad_sch_bank_test",
+      "function": "test_kicad_sch_cellfor_budgets_the_whole_bank_and_keeps_its_origin_inside",
+      "line": 60
+    },
+    {
+      "module": "kicad_sch_bank_test",
+      "function": "test_kicad_sch_issupplynet_accepts_real_rails_and_refuses_signals",
+      "line": 69
+    },
+    {
+      "module": "kicad_sch_bank_test",
+      "function": "test_kicad_sch_anglefor_stands_a_cap_up_and_reachof_refuses_an_odd_body",
+      "line": 78
+    },
+    {
+      "module": "kicad_sch_bank_test",
+      "function": "test_kicad_sch_the_bank_caption_names_its_ic_and_rail",
+      "line": 94
+    },
+    {
+      "module": "kicad_sch_compose_test",
+      "function": "test_kicad_sch_israilnet_accepts_the_canonical_grounds_and_nothing_else",
+      "line": 5
+    },
+    {
+      "module": "kicad_sch_compose_test",
+      "function": "test_kicad_sch_a_band_heading_never_repeats_the_sheet_title",
+      "line": 14
+    },
+    {
+      "module": "kicad_sch_emit_test",
+      "function": "test_kicad_sch_mm_prints_exact_hundredths_and_str_escapes",
+      "line": 7
+    },
+    {
+      "module": "kicad_sch_emit_test",
+      "function": "test_kicad_sch_mm4_prints_ten_thousandths_of_a_millimetre_exactly",
+      "line": 23
+    },
+    {
+      "module": "kicad_sch_emit_test",
+      "function": "test_kicad_sch_label_angle_and_justification_mirror_the_pin_side",
+      "line": 35
+    },
+    {
+      "module": "kicad_sch_emit_test",
+      "function": "test_kicad_sch_a_rail_symbol_s_text_hangs_with_its_body_and_a_flag_s_the_other_way",
+      "line": 46
+    },
+    {
+      "module": "kicad_sch_emit_test",
+      "function": "test_kicad_sch_labelspan_budgets_what_kicad_actually_draws",
+      "line": 62
+    },
+    {
+      "module": "kicad_sch_emit_test",
+      "function": "test_kicad_sch_pin_text_shrinks_on_a_fine_pitch_edge_and_stays_full_size_elsewhere",
+      "line": 71
+    },
+    {
+      "module": "kicad_sch_emit_test",
+      "function": "test_kicad_sch_the_instance_path_gains_a_sheet_segment_on_a_child_file",
+      "line": 86
+    },
+    {
+      "module": "kicad_sch_gang_test",
+      "function": "test_kicad_sch_gang_planning_keys_on_the_edge_and_the_net",
+      "line": 12
+    },
+    {
+      "module": "kicad_sch_gang_test",
+      "function": "test_kicad_sch_a_gang_refuses_a_run_that_would_cross_a_foreign_tip",
+      "line": 25
+    },
+    {
+      "module": "kicad_sch_gang_test",
+      "function": "test_kicad_sch_gang_planning_gangs_each_contiguous_stretch_of_one_net",
+      "line": 37
+    },
+    {
+      "module": "kicad_sch_gang_test",
+      "function": "test_kicad_sch_gang_planning_cuts_a_net_at_a_column_change_instead_of_losing_it",
+      "line": 46
+    },
+    {
+      "module": "kicad_sch_gang_test",
+      "function": "test_kicad_sch_runpts_walks_the_gang_s_tips_in_order",
+      "line": 55
+    },
+    {
+      "module": "kicad_sch_glyph_test",
+      "function": "test_kicad_sch_classify_picks_a_glyph_per_passive_class_and_boxes_everything_else",
+      "line": 6
+    },
+    {
+      "module": "kicad_sch_glyph_test",
+      "function": "test_kicad_sch_a_glyph_unit_keeps_the_stock_pin_endpoints_and_carries_real_body_art",
+      "line": 17
+    },
+    {
+      "module": "kicad_sch_glyph_test",
+      "function": "test_kicad_sch_a_diode_glyph_orients_itself_by_pin_function_not_pad_order",
+      "line": 31
+    },
+    {
+      "module": "kicad_sch_plan_test",
+      "function": "test_kicad_sch_slugify_normalises_a_title_and_uniquename_disambiguates_collisions",
+      "line": 7
+    },
+    {
+      "module": "kicad_sch_plan_test",
+      "function": "test_kicad_sch_ispassiveref_reads_the_leaf_of_a_hierarchical_ref",
+      "line": 29
+    },
+    {
+      "module": "kicad_sch_plan_test",
+      "function": "test_kicad_sch_cluster_binds_a_declared_decap_to_its_ic_and_groups_the_rest_by_net_affinity",
+      "line": 40
+    },
+    {
+      "module": "kicad_sch_plan_test",
+      "function": "test_kicad_sch_cluster_keeps_hubless_members_in_one_bucket_in_declaration_order",
+      "line": 49
+    },
+    {
+      "module": "kicad_sch_project_test",
+      "function": "test_kicad_sch_the_sidecar_set_names_the_four_project_files",
+      "line": 23
+    },
+    {
+      "module": "kicad_sch_project_test",
+      "function": "test_kicad_sch_the_symbol_library_drops_the_lib_id_prefix",
+      "line": 39
+    },
+    {
+      "module": "kicad_sch_project_test",
+      "function": "test_kicad_sch_the_project_file_escapes_a_hostile_design_name",
+      "line": 52
+    },
+    {
+      "module": "kicad_sch_shape_test",
+      "function": "test_kicad_sch_synth_places_supply_pins_up_ground_pins_down_signals_left_and_right",
+      "line": 32
+    },
+    {
+      "module": "kicad_sch_shape_test",
+      "function": "test_kicad_sch_synth_splits_pads_into_units_and_keeps_every_pad_drawn_once",
+      "line": 51
+    },
+    {
+      "module": "kicad_sch_shape_test",
+      "function": "test_kicad_sch_synth_drops_empty_units_so_unit_numbers_stay_contiguous",
+      "line": 73
+    },
+    {
+      "module": "kicad_sch_shape_test",
+      "function": "test_kicad_sch_synth_unions_pinout_footprint_and_net_referenced_pads_without_repeats",
+      "line": 84
+    },
+    {
+      "module": "kicad_sch_shape_test",
+      "function": "test_kicad_sch_synth_draws_the_glyph_for_two_pads_and_falls_back_to_a_box_beyond_that",
+      "line": 102
+    },
+    {
+      "module": "kicad_sch_shape_test",
+      "function": "test_kicad_sch_synth_orders_an_edge_by_net_and_mutes_the_names_it_gangs",
+      "line": 116
+    },
+    {
+      "module": "kicad_sch_shape_test",
+      "function": "test_kicad_sch_a_pin_named_after_its_own_pad_does_not_draw_the_name_as_well",
+      "line": 140
+    },
+    {
+      "module": "kicad_sch_shape_test",
+      "function": "test_kicad_sch_a_wide_pad_id_lengthens_its_pin_so_the_number_clears_the_body",
+      "line": 149
+    },
+    {
+      "module": "kicad_sch_shape_test",
+      "function": "test_kicad_sch_sanitizelibname_replaces_separator_characters",
+      "line": 162
+    },
+    {
+      "module": "kicad_sch_sheet_test",
+      "function": "test_kicad_sch_packsheet_grid_snaps_every_spot_and_wraps_rather_than_running_out",
+      "line": 6
+    },
+    {
+      "module": "kicad_sch_sheet_test",
+      "function": "test_kicad_sch_packcells_reports_block_extents_and_preserves_member_order",
+      "line": 23
+    },
+    {
+      "module": "kicad_sch_sheet_test",
+      "function": "test_kicad_sch_isqrt_and_page_clamping_stay_integral",
+      "line": 41
+    },
+    {
+      "module": "kicad_sch_stagger_test",
+      "function": "test_kicad_sch_a_crowded_edge_spreads_into_two_stub_columns_and_a_roomy_one_does_not",
+      "line": 19
+    },
+    {
+      "module": "kicad_sch_stagger_test",
+      "function": "test_kicad_sch_a_same_net_run_shares_one_column_and_holds_its_neighbours_apart",
+      "line": 33
+    },
+    {
+      "module": "kicad_sch_stagger_test",
+      "function": "test_kicad_sch_spreading_repeats_exactly_and_skips_unconnected_pads",
+      "line": 43
+    },
+    {
+      "module": "kicad_sch_stagger_test",
+      "function": "test_kicad_sch_spreading_needs_the_net_map_and_leaves_a_shape_without_one_alone",
+      "line": 57
+    },
+    {
+      "module": "kicad_sch_stagger_test",
+      "function": "test_kicad_sch_a_spread_unit_keeps_every_pin_endpoint_side_and_body_it_was_given",
+      "line": 65
+    },
+    {
+      "module": "kicad_sch_stub_test",
+      "function": "test_kicad_sch_collapse_renames_a_real_bypass_stub_and_refuses_everything_else",
+      "line": 11
+    },
+    {
+      "module": "kicad_sch_stub_test",
+      "function": "test_kicad_sch_split_reads_the_last_two_dots_and_rejects_a_name_without_both",
+      "line": 25
+    },
+    {
+      "module": "kicad_sch_textbox_test",
+      "function": "test_kicad_sch_text_boxes_follow_justification_and_orientation",
+      "line": 31
+    },
+    {
+      "module": "kicad_sch_textbox_test",
+      "function": "test_kicad_sch_the_scan_finds_an_overlapping_label_pair_and_clears_a_tidy_sheet",
+      "line": 62
+    },
+    {
+      "module": "kicad_sch_textbox_test",
+      "function": "test_kicad_sch_a_zero_size_pin_name_is_not_measured_while_its_number_still_is",
+      "line": 90
+    },
+    {
+      "module": "kicad_sch_vendor_test",
+      "function": "test_kicad_sch_a_vendor_symbol_supplies_the_body_pin_sides_and_pin_names",
+      "line": 24
+    },
+    {
+      "module": "kicad_sch_vendor_test",
+      "function": "test_kicad_sch_vendor_pin_endpoints_are_snapped_onto_the_1_27_mm_grid",
+      "line": 36
+    },
+    {
+      "module": "kicad_sch_vendor_test",
+      "function": "test_kicad_sch_pads_missing_from_a_vendor_symbol_land_in_a_catch_all_unit",
+      "line": 50
+    },
+    {
+      "module": "kicad_sch_vendor_test",
+      "function": "test_kicad_sch_an_unsafe_vendor_symbol_is_rejected_in_favour_of_the_box",
+      "line": 69
+    },
+    {
+      "module": "kicad_sch_vendor_test",
+      "function": "test_kicad_sch_sideof_inverts_the_library_pin_angle_onto_an_edge",
+      "line": 86
+    },
+    {
+      "module": "kicad_sch_vendor_test",
+      "function": "test_kicad_sch_snapnearest_keeps_spacing_across_a_half_grid_pin_row",
+      "line": 91
+    },
+    {
+      "module": "kicad_sch_verify_test",
+      "function": "test_kicad_sch_verify_passes_a_good_document_and_catches_a_dropped_symbol",
+      "line": 67
+    },
+    {
+      "module": "kicad_sch_verify_test",
+      "function": "test_kicad_sch_verify_catches_label_no_connect_and_lib_id_damage",
+      "line": 79
+    },
+    {
+      "module": "kicad_sch_verify_test",
+      "function": "test_kicad_sch_verify_catches_off_grid_coordinates_and_duplicate_pads",
+      "line": 86
+    },
+    {
+      "module": "kicad_sch_verify_test",
+      "function": "test_kicad_sch_verify_passes_off_grid_body_art_but_not_an_off_grid_pin",
+      "line": 93
+    },
+    {
+      "module": "kicad_sch_verify_test",
+      "function": "test_kicad_sch_verify_catches_a_wire_through_a_pin_a_diagonal_and_a_missing_segment",
+      "line": 103
+    },
+    {
+      "module": "kicad_sch_verify_test",
+      "function": "test_kicad_sch_verify_catches_a_label_caught_mid_wire",
+      "line": 110
+    },
+    {
+      "module": "kicad_sch_verify_test",
+      "function": "test_kicad_sch_verify_matches_junction_dots_to_the_points_wire_ends_actually_meet_at",
+      "line": 116
+    },
+    {
+      "module": "kicad_sch_verify_test",
+      "function": "test_kicad_sch_verify_matches_child_sheet_files_and_rail_symbol_values",
+      "line": 123
+    },
+    {
+      "module": "kicad_sch_wire_test",
+      "function": "test_kicad_sch_route_prefers_the_straight_run_then_one_bend",
+      "line": 26
+    },
+    {
+      "module": "kicad_sch_wire_test",
+      "function": "test_kicad_sch_route_refuses_a_path_that_would_run_over_a_pin",
+      "line": 44
+    },
+    {
+      "module": "kicad_sch_wire_test",
+      "function": "test_kicad_sch_route_crosses_foreign_wire_but_avoids_tees_overlaps_and_bodies",
+      "line": 55
+    },
+    {
+      "module": "kicad_sch_wire_test",
+      "function": "test_kicad_sch_route_gives_up_beyond_the_maximum_span",
+      "line": 78
+    },
+    {
+      "module": "kicad_sch_wire_test",
+      "function": "test_kicad_sch_junctions_names_the_three_way_meeting_points_only",
+      "line": 85
+    },
+    {
+      "module": "kicad_sch_wire_test",
+      "function": "test_kicad_sch_the_junction_point_key_round_trips_both_signs",
+      "line": 97
+    },
+    {
+      "module": "kicad_sym_library_test",
+      "function": "test_kicad_sym_the_vendor_index_matches_names_case_insensitively_across_and",
+      "line": 14
+    },
+    {
+      "module": "kicad_sym_library_test",
+      "function": "test_kicad_sym_the_vendor_index_tolerates_a_missing_directory_and_a_junk_library",
+      "line": 36
+    },
+    {
+      "module": "kicad_sym_reader_test",
+      "function": "test_kicad_sym_reader_parses_a_flat_vendor_symbol_s_pins_and_body_graphics",
+      "line": 15
+    },
+    {
+      "module": "kicad_sym_reader_test",
+      "function": "test_kicad_sym_reader_splits_sub_symbols_into_units_and_keeps_sub_hundredth_coordinates",
+      "line": 50
+    },
+    {
+      "module": "kicad_sym_reader_test",
+      "function": "test_kicad_sym_reader_models_each_body_primitive_and_skips_malformed_ones",
+      "line": 72
+    },
+    {
+      "module": "kicad_sym_reader_test",
+      "function": "test_kicad_sym_reader_rejects_a_non_library_root_and_tolerates_an_empty_library",
+      "line": 97
+    },
+    {
+      "module": "kicad_sym_reader_test",
+      "function": "test_kicad_sym_unitid_reads_the_trailing_unit_and_style_numbers",
+      "line": 116
+    },
+    {
+      "module": "kicad_sym_reader_test",
+      "function": "test_fuzz_parselibrary_tolerates_arbitrary_bytes",
+      "line": 141
+    },
+    {
+      "module": "lib_limits_test",
+      "function": "test_lib_read_caps_clear_their_worst_case_part",
+      "line": 6
+    },
+    {
+      "module": "lib_limits_test",
+      "function": "test_the_synthetic_over_cap_pinout_straddles_the_retired_cap",
+      "line": 15
+    },
+    {
+      "module": "main_test",
+      "function": "test_eda_sch_the_command_line_needs_a_model_a_project_and_an_output_directory",
+      "line": 6
+    },
+    {
+      "module": "net_name_test",
+      "function": "test_leaf_removes_a_hierarchy_prefix",
+      "line": 11
+    },
+    {
+      "module": "net_name_test",
+      "function": "test_stripupper_drops_separators_and_raises_case",
+      "line": 21
+    },
+    {
+      "module": "net_name_test",
+      "function": "test_parent_removes_a_hierarchy_leaf",
+      "line": 30
+    },
+    {
+      "module": "numeric_test",
+      "function": "test_checkedint_rejects_nan_and_infinities",
+      "line": 40
+    },
+    {
+      "module": "numeric_test",
+      "function": "test_checkedint_rejects_out_of_range_and_rounds_in_range",
+      "line": 48
+    },
+    {
+      "module": "numeric_test",
+      "function": "test_checkedint_is_exact_at_each_type_s_maximum",
+      "line": 62
+    },
+    {
+      "module": "numeric_test",
+      "function": "test_tocount_collapses_non_finite_and_negative_to_zero_rounds_valid_counts",
+      "line": 96
+    },
+    {
+      "module": "placement_geometry_test",
+      "function": "test_load_parses_a_0402_footprint_s_pads_and_courtyard",
+      "line": 28
+    },
+    {
+      "module": "placement_geometry_test",
+      "function": "test_parsepad_reads_a_per_pad_mask_margin_and_the_no_paste_keyword",
+      "line": 47
+    },
+    {
+      "module": "placement_geometry_test",
+      "function": "test_parsepad_reads_an_rf_minimum_size_independently_of_nominal_size",
+      "line": 61
+    },
+    {
+      "module": "placement_geometry_test",
+      "function": "test_parsecopperpourkeepout_reads_its_face_and_polygon",
+      "line": 71
+    },
+    {
+      "module": "placement_geometry_test",
+      "function": "test_parsecopperpourkeepout_reads_a_through_via_prohibition",
+      "line": 79
+    },
+    {
+      "module": "placement_geometry_test",
+      "function": "test_load_falls_back_to_a_synthesized_box_for_a_missing_footprint",
+      "line": 85
+    },
+    {
+      "module": "placement_geometry_test",
+      "function": "test_parsepad_reads_oval_slots_pad_rotation_and_roundrect_ratio",
+      "line": 91
+    },
+    {
+      "module": "placement_geometry_test",
+      "function": "test_parsesilkscreen_collects_lines_and_circles",
+      "line": 106
+    },
+    {
+      "module": "placement_geometry_test",
+      "function": "test_circular_courtyard_survives_footprint_loading_with_an_offset_and_placement_margin",
+      "line": 117
+    },
+    {
+      "module": "placement_pin_roles_test",
+      "function": "test_istranslatorchannel_rejects_names_shorter_than_2_or_longer_than_16_chars",
+      "line": 7
+    },
+    {
+      "module": "placement_pin_roles_test",
+      "function": "test_isgroundfn_separates_real_grounds_from_config_straps",
+      "line": 17
+    },
+    {
+      "module": "placement_pin_roles_test",
+      "function": "test_optional_nc_names_stay_distinct_from_forbidden_or_reserved_pads",
+      "line": 31
+    },
+    {
+      "module": "placement_pin_roles_test",
+      "function": "test_issupplyfn_separates_real_supplies_from_grounds_and_signals",
+      "line": 44
+    },
+    {
+      "module": "placement_pin_roles_test",
+      "function": "test_classify_prefers_electrical_type_falls_back_to_ground_name",
+      "line": 63
+    },
+    {
+      "module": "placement_pin_roles_test",
+      "function": "test_isstrapfn_recognises_config_straps_but_not_supplies_grounds_or_gpio",
+      "line": 80
+    },
+    {
+      "module": "placement_pin_roles_test",
+      "function": "test_strappads_collects_strap_pads_by_name_and_by_electrical_type",
+      "line": 116
+    },
+    {
+      "module": "placement_pin_roles_test",
+      "function": "test_strappads_ignores_connector_positional_pins",
+      "line": 138
+    },
+    {
+      "module": "placement_pin_roles_test",
+      "function": "test_connectionrequirement_tiers_floating_pads_by_confidence",
+      "line": 155
+    },
+    {
+      "module": "placement_pin_roles_test",
+      "function": "test_padrequirements_maps_only_the_pads_worth_flagging",
+      "line": 182
+    },
+    {
+      "module": "poly_scanline_test",
+      "function": "test_widestinterval_picks_the_larger_lobe_and_its_midpoint",
+      "line": 6
+    },
+    {
+      "module": "render_svg_context_test",
+      "function": "test_decouples_binding_docks_each_cap_on_its_served_hub_pad",
+      "line": 38
+    },
+    {
+      "module": "render_svg_context_test",
+      "function": "test_bias_tee_island_anchors_to_the_rf_pin_that_continues_to_an_output_port",
+      "line": 51
+    },
+    {
+      "module": "render_svg_context_test",
+      "function": "test_isstdrefdes_rejects_a_ref_shorter_than_two_characters",
+      "line": 65
+    },
+    {
+      "module": "render_svg_draw_test",
+      "function": "test_rail_output_pin_labels",
+      "line": 9
+    },
+    {
+      "module": "render_svg_draw_test",
+      "function": "test_functional_signal_classification_sees_through_a_sub_block_path",
+      "line": 20
+    },
+    {
+      "module": "render_svg_draw_test",
+      "function": "test_drawnetwire_escapes_a_quote_angle_bracket_in_the_net_name",
+      "line": 31
+    },
+    {
+      "module": "render_svg_draw_test",
+      "function": "test_drawwire_emits_a_straight_line_for_a_horizontal_y1_y2_wire",
+      "line": 39
+    },
+    {
+      "module": "sexpr_ast_test",
+      "function": "test_node_constructors",
+      "line": 6
+    },
+    {
+      "module": "sexpr_paren_span_test",
+      "function": "test_matchingclose_skips_strings_and_respects_the_comment_dialect",
+      "line": 11
+    },
+    {
+      "module": "sexpr_parser_test",
+      "function": "test_parse_simple_list",
+      "line": 61
+    },
+    {
+      "module": "sexpr_parser_test",
+      "function": "test_parse_nested_lists",
+      "line": 73
+    },
+    {
+      "module": "sexpr_parser_test",
+      "function": "test_parse_numbers_and_units",
+      "line": 83
+    },
+    {
+      "module": "sexpr_parser_test",
+      "function": "test_parse_si_scaled_values",
+      "line": 93
+    },
+    {
+      "module": "sexpr_parser_test",
+      "function": "test_suffixed_literals_retain_their_spelling",
+      "line": 115
+    },
+    {
+      "module": "sexpr_parser_test",
+      "function": "test_parse_with_comments",
+      "line": 142
+    },
+    {
+      "module": "sexpr_parser_test",
+      "function": "test_parse_multiple_top_level_forms",
+      "line": 152
+    },
+    {
+      "module": "sexpr_parser_test",
+      "function": "test_parse_isform_helper",
+      "line": 161
+    },
+    {
+      "module": "sexpr_parser_test",
+      "function": "test_parse_rejects_excessively_deep_nesting",
+      "line": 169
+    },
+    {
+      "module": "sexpr_parser_test",
+      "function": "test_parsediag_locates_a_mid_file_syntax_error",
+      "line": 185
+    },
+    {
+      "module": "sexpr_parser_test",
+      "function": "test_parsediag_column_aligns_a_caret_under_the_offending_token",
+      "line": 200
+    },
+    {
+      "module": "sexpr_parser_test",
+      "function": "test_parsediag_points_an_unterminated_list_at_its_open_paren",
+      "line": 223
+    },
+    {
+      "module": "sexpr_parser_test",
+      "function": "test_fuzz_parser_never_crashes_on_arbitrary_bytes",
+      "line": 254
+    },
+    {
+      "module": "sexpr_parser_test",
+      "function": "test_fuzz_parser_property",
+      "line": 277
+    },
+    {
+      "module": "sexpr_tokenizer_test",
+      "function": "test_tokenize_parens_and_atoms",
+      "line": 29
+    },
+    {
+      "module": "sexpr_tokenizer_test",
+      "function": "test_tokenize_dollar_sign_pad_identifiers",
+      "line": 41
+    },
+    {
+      "module": "sexpr_tokenizer_test",
+      "function": "test_tokenize_unquoted_filename_with_plus",
+      "line": 59
+    },
+    {
+      "module": "sexpr_tokenizer_test",
+      "function": "test_tokenize_unquoted_filename_with_comma",
+      "line": 69
+    },
+    {
+      "module": "sexpr_tokenizer_test",
+      "function": "test_tokenize_standalone_plus_stays_as_operator_atom",
+      "line": 79
+    },
+    {
+      "module": "sexpr_tokenizer_test",
+      "function": "test_tokenize_numbers",
+      "line": 88
+    },
+    {
+      "module": "sexpr_tokenizer_test",
+      "function": "test_tokenize_si_suffixed_numbers",
+      "line": 99
+    },
+    {
+      "module": "sexpr_tokenizer_test",
+      "function": "test_tokenize_si_suffix_boundary_cases",
+      "line": 109
+    },
+    {
+      "module": "sexpr_tokenizer_test",
+      "function": "test_tokenize_percent_literals",
+      "line": 123
+    },
+    {
+      "module": "sexpr_tokenizer_test",
+      "function": "test_tokenize_si_suffix_before_rparen",
+      "line": 144
+    },
+    {
+      "module": "sexpr_tokenizer_test",
+      "function": "test_tokenize_comments",
+      "line": 155
+    },
+    {
+      "module": "sexpr_tokenizer_test",
+      "function": "test_tokenize_operators",
+      "line": 163
+    },
+    {
+      "module": "sexpr_tokenizer_test",
+      "function": "test_tokenize_comparison_operators",
+      "line": 175
+    },
+    {
+      "module": "sexpr_tokenizer_test",
+      "function": "test_records_unexpected_character_error_span",
+      "line": 185
+    },
+    {
+      "module": "sexpr_tokenizer_test",
+      "function": "test_records_unterminated_string_error_span",
+      "line": 201
+    },
+    {
+      "module": "sexpr_tokenizer_test",
+      "function": "test_tracks_line_and_column",
+      "line": 217
+    },
+    {
+      "module": "stdlib_test",
+      "function": "test_the_bundle_carries_the_whole_passives_prelude",
+      "line": 8
+    },
+    {
+      "module": "stdlib_test",
+      "function": "test_every_bundled_component_s_footprint_and_pinout_is_bundled_too",
+      "line": 24
+    },
+    {
+      "module": "stdlib_test",
+      "function": "test_a_project_file_overrides_the_bundle_and_a_missing_one_falls_through_to_it",
+      "line": 52
+    },
+    {
+      "module": "stdlib_test",
+      "function": "test_a_bundled_path_reads_back_by_path",
+      "line": 82
+    },
+    {
+      "module": "stdlib_test",
+      "function": "test_a_stdlib_root_overrides_the_embedded_table",
+      "line": 95
+    },
+    {
+      "module": "stdlib_test",
+      "function": "test_bundled_stems_list_one_sub_directory_at_a_time",
+      "line": 120
+    },
+    {
+      "module": "support_crc32_test",
+      "function": "test_empty_and_check_value",
+      "line": 7
+    },
+    {
+      "module": "support_crc32_test",
+      "function": "test_text_and_binary",
+      "line": 13
+    },
+    {
+      "module": "support_crc32_test",
+      "function": "test_running_value_continues",
+      "line": 24
+    },
+    {
+      "module": "support_expect_test",
+      "function": "test_support_expect_passing_checks_return_true_and_stay_silent",
+      "line": 5
+    },
+    {
+      "module": "support_expect_test",
+      "function": "test_support_expect_failing_checks_return_false",
+      "line": 20
+    },
+    {
+      "module": "support_float_fmt_test",
+      "function": "test_prec_rounds_the_shortest_digits_half_up",
+      "line": 6
+    },
+    {
+      "module": "support_float_fmt_test",
+      "function": "test_prec_pads_carries_and_keeps_the_sign_of_zero",
+      "line": 20
+    },
+    {
+      "module": "support_float_fmt_test",
+      "function": "test_plain_d_is_shortest_digits_without_an_exponent",
+      "line": 30
+    },
+    {
+      "module": "support_parse_test",
+      "function": "test_parse_int_accepts_what_zig_accepts",
+      "line": 17
+    },
+    {
+      "module": "support_parse_test",
+      "function": "test_parse_int_rejects_what_zig_rejects",
+      "line": 25
+    },
+    {
+      "module": "support_parse_test",
+      "function": "test_parse_u32_range",
+      "line": 33
+    },
+    {
+      "module": "support_parse_test",
+      "function": "test_parse_float_accepts_what_zig_accepts",
+      "line": 39
+    },
+    {
+      "module": "support_parse_test",
+      "function": "test_parse_float_rejects_what_zig_rejects",
+      "line": 50
+    },
+    {
+      "module": "support_sha256_test",
+      "function": "test_digest_is_thirty_two_bytes",
+      "line": 20
+    },
+    {
+      "module": "support_sha256_test",
+      "function": "test_fips_vectors",
+      "line": 24
+    },
+    {
+      "module": "support_sha256_test",
+      "function": "test_padding_boundaries",
+      "line": 30
+    },
+    {
+      "module": "support_sha256_test",
+      "function": "test_high_bytes_and_two_blocks",
+      "line": 42
+    },
+    {
+      "module": "support_sha256_test",
+      "function": "test_canopy_id_digest",
+      "line": 60
+    },
+    {
+      "module": "support_sort_test",
+      "function": "test_sort_by_is_stable_and_matches_the_keyed_sort",
+      "line": 36
+    },
+    {
+      "module": "support_sort_test",
+      "function": "test_sort_by_descending_keeps_input_order_of_equal_keys",
+      "line": 48
+    },
+    {
+      "module": "support_sort_test",
+      "function": "test_sort_by_ctx_reads_the_context_and_is_stable",
+      "line": 54
+    },
+    {
+      "module": "support_sort_test",
+      "function": "test_sort_by_handles_empty_and_single_lists",
+      "line": 61
+    },
+    {
+      "module": "support_strs_test",
+      "function": "test_text_and_byte_len_count_bytes_not_scalars",
+      "line": 7
+    },
+    {
+      "module": "support_strs_test",
+      "function": "test_ascii_classes_and_case_are_byte_wise",
+      "line": 17
+    },
+    {
+      "module": "support_strs_test",
+      "function": "test_order_is_bytewise_then_length",
+      "line": 39
+    },
+    {
+      "module": "support_strs_test",
+      "function": "test_search_from_an_offset",
+      "line": 55
+    },
+    {
+      "module": "support_strs_test",
+      "function": "test_trim_and_tokenize_take_a_byte_set",
+      "line": 73
+    },
+    {
+      "module": "support_strs_test",
+      "function": "test_path_helpers_match_zig",
+      "line": 97
+    },
+    {
+      "module": "support_strs_test",
+      "function": "test_integer_padding_matches_zig_format",
+      "line": 117
+    },
+    {
+      "module": "uuid_test",
+      "function": "test_format_stamps_version_and_variant_and_renders_the_canonical_shape",
+      "line": 6
+    },
+    {
+      "module": "zipfile_test",
+      "function": "test_write_produces_an_archive_std_zip_can_extract",
+      "line": 39
+    },
+    {
+      "module": "zipfile_test",
+      "function": "test_write_rejects_zip32_field_overflow_before_producing_bytes",
+      "line": 88
+    },
+    {
+      "module": "zipfile_test",
+      "function": "test_encoded_size_predicts_the_complete_archive_before_allocation",
+      "line": 107
+    },
+    {
+      "module": "zipfile_test",
+      "function": "test_fuzz_write_emits_a_well_formed_archive_for_arbitrary_entry_bytes",
+      "line": 120
+    }
+  ]
+}

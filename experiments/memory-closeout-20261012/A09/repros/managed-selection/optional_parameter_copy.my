@@ -1,0 +1,6 @@
+func select(value: str?) -> str:
+    return value.unwrap_or(".").copy()
+
+func main(out: Stream) -> int:
+    out.print(select(Some("a")), select(None))
+    return 0

@@ -1,0 +1,367 @@
+{
+  "baseline": {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+    "sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+    "source_commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432"
+  },
+  "candidate": {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+    "sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+    "source_commit": "bed11cf3bf3102ffec44487e431a1573fdf02ad5"
+  },
+  "source_matched_lanes": 12,
+  "unchanged_lanes": 5,
+  "rows": [
+    {
+      "case": "strings",
+      "mode": "release",
+      "source_sha256": "48e88a4c0f6003e82ee2a938fe8e6b9a312f273d5f49b7b9b0d771c6fcc78a5e",
+      "all_memory_counters_equal": true,
+      "metrics": {
+        "allocs": {
+          "C0": 103,
+          "Support7": 103
+        },
+        "reallocs": {
+          "C0": 0,
+          "Support7": 0
+        },
+        "alloc_bytes": {
+          "C0": 6816,
+          "Support7": 6816
+        },
+        "peak_live_bytes": {
+          "C0": 352,
+          "Support7": 352
+        },
+        "live_bytes_at_exit": {
+          "C0": 0,
+          "Support7": 0
+        }
+      },
+      "selected_metrics_equal": true
+    },
+    {
+      "case": "path",
+      "mode": "release",
+      "source_sha256": "aecc9799c0e114e98c5f7c78e87227f309cff7ad2a19d17c197177a90bc4a19b",
+      "all_memory_counters_equal": true,
+      "metrics": {
+        "allocs": {
+          "C0": 130,
+          "Support7": 130
+        },
+        "reallocs": {
+          "C0": 0,
+          "Support7": 0
+        },
+        "alloc_bytes": {
+          "C0": 8160,
+          "Support7": 8160
+        },
+        "peak_live_bytes": {
+          "C0": 704,
+          "Support7": 704
+        },
+        "live_bytes_at_exit": {
+          "C0": 0,
+          "Support7": 0
+        }
+      },
+      "selected_metrics_equal": true
+    },
+    {
+      "case": "codecs",
+      "mode": "release",
+      "source_sha256": "15d1be0954ea2f46abe09cf679a19c866cc7840d8bfce596c3dd3c1264982eed",
+      "all_memory_counters_equal": true,
+      "metrics": {
+        "allocs": {
+          "C0": 185,
+          "Support7": 185
+        },
+        "reallocs": {
+          "C0": 0,
+          "Support7": 0
+        },
+        "alloc_bytes": {
+          "C0": 31632,
+          "Support7": 31632
+        },
+        "peak_live_bytes": {
+          "C0": 1896,
+          "Support7": 1896
+        },
+        "live_bytes_at_exit": {
+          "C0": 0,
+          "Support7": 0
+        }
+      },
+      "selected_metrics_equal": true
+    },
+    {
+      "case": "byte_builder",
+      "mode": "release",
+      "source_sha256": "0fd97544353fef9d959ad96979865701fda873eff9e9aa4ae71fbb30eb9b2ce0",
+      "all_memory_counters_equal": true,
+      "metrics": {
+        "allocs": {
+          "C0": 93,
+          "Support7": 93
+        },
+        "reallocs": {
+          "C0": 7,
+          "Support7": 7
+        },
+        "alloc_bytes": {
+          "C0": 225000,
+          "Support7": 225000
+        },
+        "peak_live_bytes": {
+          "C0": 331256,
+          "Support7": 331256
+        },
+        "live_bytes_at_exit": {
+          "C0": 0,
+          "Support7": 0
+        }
+      },
+      "selected_metrics_equal": true
+    },
+    {
+      "case": "json",
+      "mode": "release",
+      "source_sha256": "e64f4fd7109a902bdc65936974e22b0125a8140081761b72fa0becbc6af81ba6",
+      "all_memory_counters_equal": false,
+      "metrics": {
+        "allocs": {
+          "C0": 538,
+          "Support7": 541
+        },
+        "reallocs": {
+          "C0": 0,
+          "Support7": 0
+        },
+        "alloc_bytes": {
+          "C0": 38720,
+          "Support7": 38912
+        },
+        "peak_live_bytes": {
+          "C0": 9952,
+          "Support7": 9952
+        },
+        "live_bytes_at_exit": {
+          "C0": 0,
+          "Support7": 0
+        }
+      },
+      "selected_metrics_equal": false
+    },
+    {
+      "case": "ownership_contracts",
+      "mode": "release",
+      "source_sha256": "098b000874425a9e030f449df148a39af73ad8817f285f63c7dbf45a968cbb7a",
+      "all_memory_counters_equal": false,
+      "metrics": {
+        "allocs": {
+          "C0": 1339,
+          "Support7": 1339
+        },
+        "reallocs": {
+          "C0": 0,
+          "Support7": 0
+        },
+        "alloc_bytes": {
+          "C0": 171760,
+          "Support7": 171760
+        },
+        "peak_live_bytes": {
+          "C0": 8424,
+          "Support7": 8424
+        },
+        "live_bytes_at_exit": {
+          "C0": 0,
+          "Support7": 0
+        }
+      },
+      "selected_metrics_equal": true
+    },
+    {
+      "case": "ownership_contracts",
+      "mode": "debug",
+      "source_sha256": "098b000874425a9e030f449df148a39af73ad8817f285f63c7dbf45a968cbb7a",
+      "all_memory_counters_equal": false,
+      "metrics": {
+        "allocs": {
+          "C0": 1347,
+          "Support7": 1347
+        },
+        "reallocs": {
+          "C0": 0,
+          "Support7": 0
+        },
+        "alloc_bytes": {
+          "C0": 172336,
+          "Support7": 172336
+        },
+        "peak_live_bytes": {
+          "C0": 8424,
+          "Support7": 8424
+        },
+        "live_bytes_at_exit": {
+          "C0": 0,
+          "Support7": 0
+        }
+      },
+      "selected_metrics_equal": true
+    },
+    {
+      "case": "ownership_contracts",
+      "mode": "verify",
+      "source_sha256": "098b000874425a9e030f449df148a39af73ad8817f285f63c7dbf45a968cbb7a",
+      "all_memory_counters_equal": false,
+      "metrics": {
+        "allocs": {
+          "C0": 1339,
+          "Support7": 1339
+        },
+        "reallocs": {
+          "C0": 0,
+          "Support7": 0
+        },
+        "alloc_bytes": {
+          "C0": 171760,
+          "Support7": 171760
+        },
+        "peak_live_bytes": {
+          "C0": 8424,
+          "Support7": 8424
+        },
+        "live_bytes_at_exit": {
+          "C0": 0,
+          "Support7": 0
+        }
+      },
+      "selected_metrics_equal": true
+    },
+    {
+      "case": "ownership_contracts",
+      "mode": "optimized_debug",
+      "source_sha256": "098b000874425a9e030f449df148a39af73ad8817f285f63c7dbf45a968cbb7a",
+      "all_memory_counters_equal": false,
+      "metrics": {
+        "allocs": {
+          "C0": 1339,
+          "Support7": 1339
+        },
+        "reallocs": {
+          "C0": 0,
+          "Support7": 0
+        },
+        "alloc_bytes": {
+          "C0": 171760,
+          "Support7": 171760
+        },
+        "peak_live_bytes": {
+          "C0": 8424,
+          "Support7": 8424
+        },
+        "live_bytes_at_exit": {
+          "C0": 0,
+          "Support7": 0
+        }
+      },
+      "selected_metrics_equal": true
+    },
+    {
+      "case": "ownership_contracts",
+      "mode": "no_facts",
+      "source_sha256": "098b000874425a9e030f449df148a39af73ad8817f285f63c7dbf45a968cbb7a",
+      "all_memory_counters_equal": false,
+      "metrics": {
+        "allocs": {
+          "C0": 1341,
+          "Support7": 1341
+        },
+        "reallocs": {
+          "C0": 0,
+          "Support7": 0
+        },
+        "alloc_bytes": {
+          "C0": 171952,
+          "Support7": 171952
+        },
+        "peak_live_bytes": {
+          "C0": 8424,
+          "Support7": 8424
+        },
+        "live_bytes_at_exit": {
+          "C0": 0,
+          "Support7": 0
+        }
+      },
+      "selected_metrics_equal": true
+    },
+    {
+      "case": "json_lookup",
+      "mode": "release",
+      "source_sha256": "9c734b251643b28c10f0dc12ae215cc8a162f4b2cc08d1adddb53c7d0fb4215d",
+      "all_memory_counters_equal": false,
+      "metrics": {
+        "allocs": {
+          "C0": 153,
+          "Support7": 153
+        },
+        "reallocs": {
+          "C0": 0,
+          "Support7": 0
+        },
+        "alloc_bytes": {
+          "C0": 12064,
+          "Support7": 12064
+        },
+        "peak_live_bytes": {
+          "C0": 2080,
+          "Support7": 2080
+        },
+        "live_bytes_at_exit": {
+          "C0": 0,
+          "Support7": 0
+        }
+      },
+      "selected_metrics_equal": true
+    },
+    {
+      "case": "view_contracts",
+      "mode": "release",
+      "source_sha256": "0b8cd00ef02613419bce208f6232dacdc8913d4504fa2b99cd003cd7491c02da",
+      "all_memory_counters_equal": true,
+      "metrics": {
+        "allocs": {
+          "C0": 10,
+          "Support7": 10
+        },
+        "reallocs": {
+          "C0": 0,
+          "Support7": 0
+        },
+        "alloc_bytes": {
+          "C0": 640,
+          "Support7": 640
+        },
+        "peak_live_bytes": {
+          "C0": 192,
+          "Support7": 192
+        },
+        "live_bytes_at_exit": {
+          "C0": 0,
+          "Support7": 0
+        }
+      },
+      "selected_metrics_equal": true
+    }
+  ],
+  "limits": "Managed traffic and managed peak are distinct; no RSS/runtime comparison. Whole-program instrumented counts, not new per-lookup benchmark claims.",
+  "unchanged_selected_metric_lanes": 11,
+  "analysis": "library-counter-analysis.json"
+}

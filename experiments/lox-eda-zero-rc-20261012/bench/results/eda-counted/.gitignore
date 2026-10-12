@@ -1,0 +1,3 @@
+# Exact raw JSON is checked in as SHA-bound gzip; emitted originals remain local.
+*.counters.json
+*.summary.json

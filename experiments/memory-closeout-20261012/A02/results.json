@@ -1,0 +1,359 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "items": {
+    "capacity_overflow": {
+      "status": "shipped",
+      "commit": "ac4e945c5",
+      "integrated_as": "8dfff6d31",
+      "owner": "A02",
+      "tests": "safety-validation.json"
+    },
+    "growth_policy": {
+      "status": "measured tradeoff",
+      "decision": "retain existing policy",
+      "owner": "A02"
+    },
+    "remaining_native_timing": {
+      "status": "blocked",
+      "owner": "A09",
+      "cases": [
+        "replacement",
+        "buffer",
+        "reserved"
+      ],
+      "reason": "exclusive timing awaits C0 ReleaseFast compiler build drain; coordinator explicitly reassigned measurement continuation to A09",
+      "harness": "capacity.py",
+      "artifacts": "raw/policies/artifacts.json",
+      "reproducer": "scripts/build-slot.sh timing python3 -B experiments/memory-closeout-20261012/A02/capacity.py timing --output .tmp/memory-closeout/A02/capacity-v2 --cpu 10 --cases replacement --policies baseline start_one"
+    }
+  },
+  "counted_runs": 28,
+  "counted_rc_events": 0,
+  "counted_managed_leaks": 0,
+  "allocation_results": {
+    "nested": {
+      "baseline": {
+        "checksum": 35400000,
+        "length": 60,
+        "capacity": 480,
+        "allocs": 2400000,
+        "reallocs": 0,
+        "peak_live_bytes": 13472,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 307200000,
+        "repetitions": 20000
+      },
+      "start_one": {
+        "checksum": 35400000,
+        "length": 60,
+        "capacity": 60,
+        "allocs": 2400000,
+        "reallocs": 0,
+        "peak_live_bytes": 3872,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 115200000,
+        "repetitions": 20000
+      },
+      "start_four": {
+        "checksum": 35400000,
+        "length": 60,
+        "capacity": 240,
+        "allocs": 2400000,
+        "reallocs": 0,
+        "peak_live_bytes": 7712,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 192000000,
+        "repetitions": 20000
+      },
+      "three_halves": {
+        "checksum": 35400000,
+        "length": 60,
+        "capacity": 480,
+        "allocs": 2400000,
+        "reallocs": 0,
+        "peak_live_bytes": 13472,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 307200000,
+        "repetitions": 20000
+      }
+    },
+    "nested5": {
+      "baseline": {
+        "checksum": 35400000,
+        "length": 300,
+        "capacity": 480,
+        "allocs": 2400000,
+        "reallocs": 0,
+        "peak_live_bytes": 13472,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 307200000,
+        "repetitions": 20000
+      },
+      "start_one": {
+        "checksum": 35400000,
+        "length": 300,
+        "capacity": 480,
+        "allocs": 6000000,
+        "reallocs": 0,
+        "peak_live_bytes": 13568,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 652800000,
+        "repetitions": 20000
+      },
+      "start_four": {
+        "checksum": 35400000,
+        "length": 300,
+        "capacity": 480,
+        "allocs": 3600000,
+        "reallocs": 0,
+        "peak_live_bytes": 13568,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 460800000,
+        "repetitions": 20000
+      },
+      "three_halves": {
+        "checksum": 35400000,
+        "length": 300,
+        "capacity": 480,
+        "allocs": 2400000,
+        "reallocs": 0,
+        "peak_live_bytes": 13472,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 307200000,
+        "repetitions": 20000
+      }
+    },
+    "append": {
+      "baseline": {
+        "checksum": 19999980,
+        "length": 1000000,
+        "capacity": 1048576,
+        "allocs": 120,
+        "reallocs": 260,
+        "peak_live_bytes": 8392696,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 167799376,
+        "repetitions": 20
+      },
+      "start_one": {
+        "checksum": 19999980,
+        "length": 1000000,
+        "capacity": 1048576,
+        "allocs": 140,
+        "reallocs": 260,
+        "peak_live_bytes": 8392696,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 167800656,
+        "repetitions": 20
+      },
+      "start_four": {
+        "checksum": 19999980,
+        "length": 1000000,
+        "capacity": 1048576,
+        "allocs": 140,
+        "reallocs": 260,
+        "peak_live_bytes": 8392696,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 167800656,
+        "repetitions": 20
+      },
+      "three_halves": {
+        "checksum": 19999980,
+        "length": 1000000,
+        "capacity": 1215486,
+        "allocs": 180,
+        "reallocs": 440,
+        "peak_live_bytes": 9727992,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 194535712,
+        "repetitions": 20
+      }
+    },
+    "reuse": {
+      "baseline": {
+        "checksum": 19999980,
+        "length": 1000000,
+        "capacity": 1048576,
+        "allocs": 6,
+        "reallocs": 13,
+        "peak_live_bytes": 8392664,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 8393784,
+        "repetitions": 20
+      },
+      "start_one": {
+        "checksum": 19999980,
+        "length": 1000000,
+        "capacity": 1048576,
+        "allocs": 7,
+        "reallocs": 13,
+        "peak_live_bytes": 8392664,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 8393848,
+        "repetitions": 20
+      },
+      "start_four": {
+        "checksum": 19999980,
+        "length": 1000000,
+        "capacity": 1048576,
+        "allocs": 7,
+        "reallocs": 13,
+        "peak_live_bytes": 8392664,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 8393848,
+        "repetitions": 20
+      },
+      "three_halves": {
+        "checksum": 19999980,
+        "length": 1000000,
+        "capacity": 1215486,
+        "allocs": 9,
+        "reallocs": 22,
+        "peak_live_bytes": 9727960,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 9730616,
+        "repetitions": 20
+      }
+    },
+    "replacement": {
+      "baseline": {
+        "checksum": 2000000,
+        "length": 3,
+        "capacity": 8,
+        "allocs": 2000000,
+        "reallocs": 0,
+        "peak_live_bytes": 128,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 128000000,
+        "repetitions": 1000000
+      },
+      "start_one": {
+        "checksum": 2000000,
+        "length": 3,
+        "capacity": 4,
+        "allocs": 2000000,
+        "reallocs": 0,
+        "peak_live_bytes": 96,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 96000000,
+        "repetitions": 1000000
+      },
+      "start_four": {
+        "checksum": 2000000,
+        "length": 3,
+        "capacity": 4,
+        "allocs": 2000000,
+        "reallocs": 0,
+        "peak_live_bytes": 96,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 96000000,
+        "repetitions": 1000000
+      },
+      "three_halves": {
+        "checksum": 2000000,
+        "length": 3,
+        "capacity": 8,
+        "allocs": 2000000,
+        "reallocs": 0,
+        "peak_live_bytes": 128,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 128000000,
+        "repetitions": 1000000
+      }
+    },
+    "buffer": {
+      "baseline": {
+        "checksum": 840,
+        "length": 1000001,
+        "capacity": 1048576,
+        "allocs": 200,
+        "reallocs": 200,
+        "peak_live_bytes": 2056112,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 41007424,
+        "repetitions": 20
+      },
+      "start_one": {
+        "checksum": 840,
+        "length": 1000001,
+        "capacity": 1048576,
+        "allocs": 200,
+        "reallocs": 200,
+        "peak_live_bytes": 2056112,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 41007424,
+        "repetitions": 20
+      },
+      "start_four": {
+        "checksum": 840,
+        "length": 1000001,
+        "capacity": 1048576,
+        "allocs": 200,
+        "reallocs": 200,
+        "peak_live_bytes": 2056112,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 41007424,
+        "repetitions": 20
+      },
+      "three_halves": {
+        "checksum": 840,
+        "length": 1000001,
+        "capacity": 1049868,
+        "allocs": 300,
+        "reallocs": 340,
+        "peak_live_bytes": 2056112,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 41059568,
+        "repetitions": 20
+      }
+    },
+    "reserved": {
+      "baseline": {
+        "checksum": 840,
+        "length": 1000001,
+        "capacity": 1048576,
+        "allocs": 80,
+        "reallocs": 0,
+        "peak_live_bytes": 2056112,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 40982464,
+        "repetitions": 20
+      },
+      "start_one": {
+        "checksum": 840,
+        "length": 1000001,
+        "capacity": 1048576,
+        "allocs": 80,
+        "reallocs": 0,
+        "peak_live_bytes": 2056112,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 40982464,
+        "repetitions": 20
+      },
+      "start_four": {
+        "checksum": 840,
+        "length": 1000001,
+        "capacity": 1048576,
+        "allocs": 80,
+        "reallocs": 0,
+        "peak_live_bytes": 2056112,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 40982464,
+        "repetitions": 20
+      },
+      "three_halves": {
+        "checksum": 840,
+        "length": 1000001,
+        "capacity": 1049868,
+        "allocs": 80,
+        "reallocs": 0,
+        "peak_live_bytes": 2056112,
+        "live_bytes_at_exit": 0,
+        "cumulative_bytes": 41007392,
+        "repetitions": 20
+      }
+    }
+  },
+  "performance_claim": null,
+  "final_compiler_qualification": false
+}

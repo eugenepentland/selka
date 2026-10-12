@@ -1,0 +1,9 @@
+build-slot: FIFO ticket 1862, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1862 after 46s
+guardian/test: 4 test(s) selected
+All 4 tests passed.
+guardian/test: test wall 2.42s; slowest over 50ms:
+guardian/test:   2.32s  iteration_test.test.gap_words checked split iteration preserves stored keys and control flow
+guardian/test:   0.09s  iteration_test.test.gap_words empty separator traps before loop effects and early exit
+guardian/test: PASS — 4 passed
+guardian/test: RESULT {"passed":4,"failed":0,"skipped":0}

@@ -1,0 +1,234 @@
+import base64
+import byte_builder
+import hex
+import json
+import path
+import strings
+
+func text_result(value: Result[str, strings.Error]) -> str:
+    match value:
+        case Ok(text):
+            return text.copy()
+        case Err(error):
+            return strings.message(error)
+
+
+func bytes_result(value: Result[bytes, str]) -> bytes:
+    match value:
+        case Ok(data):
+            return data.copy()
+        case Err(_):
+            assert False
+            return b""
+
+
+func parsed(source: str) -> json.Json:
+    match json.loads(source):
+        case Ok(value):
+            return value
+        case Err(_):
+            assert False
+            return json.null_value()
+
+
+func local_text() -> str:
+    const source = "  " + str(17) + "é😀  "
+    return strings.strip(source)
+
+
+# spec: NEW-CORE-ZERO-RC-LIBRARY-1
+public func test_a04_text_results_survive_replacement() -> bool:
+    mut source = "  " + str(17) + "é😀  "
+    const clean = strings.strip(source)
+    const left = strings.lstrip(source)
+    const right = strings.rstrip(source)
+    const upper = strings.upper(source)
+    const lower = strings.lower(source)
+    const repeated = text_result(strings.repeat(clean, 2))
+    const padded = text_result(strings.pad_left(clean, 7, "."))
+    const padded_right = text_result(strings.pad_right(clean, 7, "."))
+    const replaced = text_result(strings.substitute(clean, "17", "42"))
+    source = "changed-" + str(3)
+    assert clean == "17é😀" and local_text() == clean
+    assert left == "17é😀  " and right == "  17é😀"
+    assert upper == "  17é😀  " and lower == upper
+    assert repeated == "17é😀17é😀"
+    assert padded == "...17é😀" and padded_right == "17é😀..."
+    assert replaced == "42é😀" and source == "changed-3"
+    mut lines_source = "α\r\n" + str(42) + "\n"
+    const lines = strings.lines(lines_source)
+    const pieces = lines_source.split("\n")
+    const joined = "/".join(pieces)
+    lines_source = "different"
+    assert len(lines) == 3 and lines[0] == "α" and lines[1] == "42" and lines[2] == ""
+    assert joined == "α\r/42/" and len(pieces) == 3
+    assert len(strings.digits()) == 10 and len(strings.letters()) == 52
+    assert strings.whitespace() == " \t\n\r"
+    return True
+
+
+# spec-case: NEW-CORE-ZERO-RC-LIBRARY-1
+public func test_a04_unicode_and_invalid_text() -> bool:
+    for code in [0, 127, 128, 2047, 2048, 55295, 57344, 65535, 65536, 128512, 1114111]:
+        const character = text_result(strings.chr(code))
+        assert len(character) == 1
+        match strings.ord(character):
+            case Ok(value):
+                assert value == code
+            case Err(_):
+                assert False
+    for code in [0 - 1, 55296, 57343, 1114112]:
+        match strings.chr(code):
+            case Ok(_):
+                assert False
+            case Err(error):
+                assert len(strings.message(error)) > 0
+    for text in ["", "ab", "é😀"]:
+        match strings.ord(text):
+            case Ok(_):
+                assert False
+            case Err(error):
+                assert len(strings.message(error)) > 0
+    for invalid in [b"\xff", b"\xc0\x80", b"\xed\xa0\x80", b"\xf4\x90\x80\x80", b"\xf0\x9f"]:
+        match invalid.decode():
+            case Ok(_):
+                assert False
+            case Err(_):
+                pass
+    mut error = strings.Error.Invalid(value="problem-" + str(7))
+    const detail = strings.message(error)
+    error = strings.Error.Overflow(value="other")
+    assert detail == "problem-7"
+    assert strings.message(error) == "other"
+    return True
+
+
+# spec-case: NEW-CORE-ZERO-RC-LIBRARY-1
+public func test_a04_codec_results_survive_replacement() -> bool:
+    assert len(base64.standard_alphabet()) == 64
+    assert len(base64.urlsafe_alphabet()) == 64
+    for count in range(16):
+        mut source = ("hé😀-" + str(count)).encode()
+        const encoded = base64.b64encode(source)
+        const urlencoded = base64.urlsafe_b64encode(source)
+        const decoded = bytes_result(base64.b64decode(encoded))
+        const urldecoded = bytes_result(base64.urlsafe_b64decode(urlencoded))
+        const hexadecimal = hex.encode(source)
+        const uppercase = hex.encode_upper(source)
+        const unhexed = bytes_result(hex.decode(hexadecimal))
+        assert decoded == source and urldecoded == source and unhexed == source
+        assert hex.is_hex(hexadecimal) and hex.is_hex(uppercase)
+        source = b"replacement"
+        assert decoded == ("hé😀-" + str(count)).encode()
+        assert urldecoded == decoded and unhexed == decoded
+        assert bytes_result(hex.decode(uppercase)) == decoded
+        assert source == b"replacement"
+    for invalid in [b"Zg=", b"Zg=A", b"Zh==", b"Zm9=", b"Zg==Zg==", b"Zm9*"]:
+        match base64.b64decode(invalid):
+            case Ok(_):
+                assert False
+            case Err(reason):
+                assert len(reason) > 0
+    for invalid in ["0", "gg", "é0", "0g"]:
+        assert not hex.is_hex(invalid)
+        match hex.decode(invalid):
+            case Ok(_):
+                assert False
+            case Err(reason):
+                assert len(reason) > 0
+    return True
+
+
+# spec-case: NEW-CORE-ZERO-RC-LIBRARY-1
+public func test_a04_path_results_survive_replacement() -> bool:
+    mut source = "/α/./" + str(17) + ".txt"
+    const base = path.basename(source)
+    const dir = path.dirname(source)
+    const split = path.splitext(source)
+    const suffix = path.extension(source)
+    const stem = path.stem(source)
+    const parts = path.components(source)
+    const normalized = path.normalize(source)
+    const joined = path.join(source, "")
+    const right = path.join("ignored", source)
+    const all = path.join_all(parts)
+    source = "changed"
+    assert base == "17.txt" and dir == "/α/."
+    assert split.root == "/α/./17" and split.extension == ".txt"
+    assert suffix == ".txt" and stem == "17"
+    assert len(parts) == 2 and parts[0] == "α" and parts[1] == "17.txt"
+    assert normalized == "/α/17.txt" and all == "α/17.txt"
+    assert joined == "/α/./17.txt" and right == joined and source == "changed"
+    return True
+
+
+# spec-case: NEW-CORE-ZERO-RC-LIBRARY-1
+public func test_a04_json_results_survive_replacement() -> bool:
+    mut source = "{\"nested\":[{\"text\":\"hé😀-" + str(17) + "\"}],\"n\":42}"
+    mut document = parsed(source)
+    const rendered = json.dumps(document)
+    const selected = json.get(document, "nested")
+    const extracted = json.as_dict(document)
+    source = "null"
+    document = json.null_value()
+    assert json.is_null(document) and source == "null"
+    assert rendered == "{\"nested\":[{\"text\":\"hé😀-17\"}],\"n\":42}"
+    match selected:
+        case Some(items):
+            assert json.dumps(items) == "[{\"text\":\"hé😀-17\"}]"
+            match json.as_list(items):
+                case Some(values):
+                    assert len(values) == 1
+                    assert json.dumps(values[0]) == "{\"text\":\"hé😀-17\"}"
+                case None:
+                    assert False
+        case None:
+            assert False
+    match extracted:
+        case Some(fields):
+            assert len(fields) == 2
+            assert json.dumps(fields["n"]) == "42"
+        case None:
+            assert False
+    mut text = json.text("value-" + str(9))
+    const selected_text = json.as_str(text)
+    text = json.text("replaced")
+    match selected_text:
+        case Some(value):
+            assert value == "value-9"
+        case None:
+            assert False
+    assert json.dumps(text) == "\"replaced\""
+    return True
+
+
+func local_builder() -> bytes:
+    mut builder = byte_builder.create()
+    byte_builder.append_text(mut builder, "hé😀")
+    return byte_builder.finish(builder)
+
+
+# spec-case: NEW-CORE-ZERO-RC-LIBRARY-1
+public func test_a04_builder_snapshots_survive_replacement() -> bool:
+    mut builder = byte_builder.create()
+    byte_builder.append(mut builder, local_builder())
+    const first = byte_builder.finish(builder)
+    assert byte_builder.reserve(mut builder, 4096)
+    byte_builder.append(mut builder, first)
+    const second = byte_builder.finish(builder)
+    builder = byte_builder.create()
+    byte_builder.append_int(mut builder, 42)
+    assert first == "hé😀".encode()
+    assert second == "hé😀hé😀".encode()
+    assert byte_builder.finish(builder) == b"42"
+    return True
+
+
+func main() -> int:
+    assert test_a04_text_results_survive_replacement()
+    assert test_a04_unicode_and_invalid_text()
+    assert test_a04_codec_results_survive_replacement()
+    assert test_a04_path_results_survive_replacement()
+    assert test_a04_json_results_survive_replacement()
+    assert test_a04_builder_snapshots_survive_replacement()
+    return 0

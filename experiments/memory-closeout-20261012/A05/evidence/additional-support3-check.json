@@ -1,0 +1,232 @@
+{
+  "compiler_source_revision": "0d17e4e130706639c0f49e78b60502bfb2151ebc",
+  "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7",
+  "cases": {
+    "test/core/c_grants.my": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/test/core/c_grants.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/additional-support3/cache"
+      ],
+      "source_sha256": "b9cbaf5934aa44fd69bb181991d49b24167331dc04202d1de99aefd5a8074491",
+      "status": 0,
+      "stdout": "",
+      "stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+      "expected_status": 0,
+      "passed": true
+    },
+    "test/core/c_stack_handles.my": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/test/core/c_stack_handles.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/additional-support3/cache"
+      ],
+      "source_sha256": "5ec2177f1fb2dbc7d716c70c306e5412823c8cb64442afeb7ac1e8392bead746",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "expected_status": 0,
+      "passed": true
+    },
+    "test/core/c_trap_handles.my": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/test/core/c_trap_handles.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/additional-support3/cache"
+      ],
+      "source_sha256": "bdc9451fb8a1d5945052693589d15895a689867816f424557dbc096235c56fe9",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "expected_status": 0,
+      "passed": true
+    },
+    "test/core/d_basic.my": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/test/core/d_basic.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/additional-support3/cache"
+      ],
+      "source_sha256": "7173e8494e07d17f8bc252f819637682fa41005bf68dd3bfe5cb86311465e157",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "expected_status": 0,
+      "passed": true
+    },
+    "test/core/d_collections.my": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/test/core/d_collections.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/additional-support3/cache"
+      ],
+      "source_sha256": "7e6b115da8072ab3256d7f581eede51529b3aa92ff73bdc82f65715b56aff9a3",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "expected_status": 0,
+      "passed": true
+    },
+    "test/core/d_fact_inputs.my": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/test/core/d_fact_inputs.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/additional-support3/cache"
+      ],
+      "source_sha256": "89e4c15fb7890c17fce6ceef0323322cfc35e061c86d1f034d17bea60b145a9a",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "expected_status": 0,
+      "passed": true
+    },
+    "test/core/d_scalar_stores.my": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/test/core/d_scalar_stores.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/additional-support3/cache"
+      ],
+      "source_sha256": "29e734e40f454f4b27349f5b9e2a43d18cab8c9a687ae0c6ff8cde111a7af8f7",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "expected_status": 0,
+      "passed": true
+    },
+    "test/core/m_none_keys.my": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/test/core/m_none_keys.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/additional-support3/cache"
+      ],
+      "source_sha256": "7a439d0b838ce1d285600af1c491a1065e2aca63c6eba376c8d4b469873e9a44",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "expected_status": 0,
+      "passed": true
+    },
+    "test/core/row_dict_lookup_str.my": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/test/core/row_dict_lookup_str.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/additional-support3/cache"
+      ],
+      "source_sha256": "c8f3ce39b876a8e77bd6227e6bda3dbd73a8fa341afc649d0bf32c944e0c1dbe",
+      "status": 0,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/test/core/row_dict_lookup_str.my:4:53: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func batch_result(size: int, batch: int, seed: int, values: int[], keys: str[], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:\n                                                      ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A05/test/core/row_dict_lookup_str.my:4:81: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func batch_result(size: int, batch: int, seed: int, values: int[], keys: str[], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:\n                                                                                  ^\n",
+      "expected_status": 0,
+      "passed": true
+    },
+    "test/core/row_dict_update_str.my": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/test/core/row_dict_update_str.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/additional-support3/cache"
+      ],
+      "source_sha256": "04929ea1c1459d26b187574f4505bd1fc22fb5a512a4bfd21cb06c4b350fa033",
+      "status": 0,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/test/core/row_dict_update_str.my:4:81: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func batch_result(size: int, batch: int, seed: int, values: int[], keys: str[], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:\n                                                                                  ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A05/test/core/row_dict_update_str.my:4:105: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func batch_result(size: int, batch: int, seed: int, values: int[], keys: str[], lookup: dict[int, int], lookup_str: dict[str, int]) -> int:\n                                                                                                          ^\n",
+      "expected_status": 0,
+      "passed": true
+    },
+    "test/core/v_capability_arrays.my": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/test/core/v_capability_arrays.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/additional-support3/cache"
+      ],
+      "source_sha256": "18a0aecd82eab1a5a1e03b4b9347c6db8e0d356af22108b7cfe0e0edc8c325f0",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "expected_status": 0,
+      "passed": true
+    },
+    "test/fixtures/application-cache/application.my": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/test/fixtures/application-cache/application.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/additional-support3/cache"
+      ],
+      "source_sha256": "bff0742b480b5970ff71895050255f55c2563225c747417da1e8371e182b9f0a",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "expected_status": 0,
+      "passed": true
+    },
+    "test/fixtures/attenuation.my": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/test/fixtures/attenuation.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/additional-support3/cache"
+      ],
+      "source_sha256": "a4c19b5816a7aee5c27d8516eea7af1fc0266c45d0a33254195c5f3f331309d1",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "expected_status": 0,
+      "passed": true
+    },
+    "experiments/memory-closeout-20261012/A05/negative/capability_array.my": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/negative/capability_array.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/additional-support3/cache"
+      ],
+      "source_sha256": "abb0dd17341301a450de9b05989568a3a908b721250e4520be194de36d636e2a",
+      "status": 1,
+      "stdout": "",
+      "stderr": "capability_array.my:47:9: error[E_ZERO_RC_UNSUPPORTED]: store resource owners in named local scopes in the zero-RC prototype\n      mut fss: FixedArray[Filesystem, 2] = FixedArray[Filesystem, 2]([filesystem.memory(), filesystem.memory()])\n          ^\n",
+      "expected_status": 1,
+      "expected_diagnostic": "E_ZERO_RC_UNSUPPORTED",
+      "passed": true
+    }
+  },
+  "scope": "source checking only; native qualification awaits staged-link fix and final integrated compiler"
+}

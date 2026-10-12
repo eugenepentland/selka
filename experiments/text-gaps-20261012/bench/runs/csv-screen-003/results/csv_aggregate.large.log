@@ -1,0 +1,11 @@
+build-slot: FIFO ticket 463, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 463, position 2; earlier timing tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 463, position 2; earlier timing tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 463, position 2; earlier timing tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 463, position 2; earlier timing tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 463, position 2; earlier timing tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 463, position 2; earlier timing tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 463, position 2; earlier timing tickets must run first; waiting (421s so far)
+build-slot: FIFO ticket 463, position 1; waiting for memory-accounting settle delay or another measurement; waiting (481s so far)
+build-slot: timing slot 1, FIFO ticket 463 after 496s
+text-gaps/csv-screen-003/csv_aggregate/large {'checked-baseline': True, 'checked-candidate': True, 'zig-fast': True}

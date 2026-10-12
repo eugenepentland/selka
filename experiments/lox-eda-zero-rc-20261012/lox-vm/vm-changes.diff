@@ -1,0 +1,66 @@
+--- vm.my.frozen
++++ vm.my.qualified
+@@ -263,7 +263,8 @@
+ 
+ 
+ func read_constant(mut frame: heap.CallFrame) -> value.Value:
+-    return frame.function.code.constants[read_byte(mut frame)]
++    const constant_index = read_byte(mut frame)
++    return frame.function.code.constants[constant_index]
+ 
+ 
+ func read_string(mut frame: heap.CallFrame) -> value.ObjRef:
+@@ -295,7 +296,8 @@
+ 
+ 
+ func get_upvalue(mut rt: heap.Runtime, mut frame: heap.CallFrame):
+-    mut upvalue = heap.upvalue_obj(rt, frame.upvalues[read_byte(mut frame)])
++    const upvalue_index = read_byte(mut frame)
++    mut upvalue = heap.upvalue_obj(rt, frame.upvalues[upvalue_index])
+     if upvalue.slot != object.NO_SLOT:
+         const __owned_arg_7 = rt.stack[upvalue.slot]
+         heap.push(mut rt, __owned_arg_7)
+@@ -304,7 +306,8 @@
+ 
+ 
+ func set_upvalue(mut rt: heap.Runtime, mut frame: heap.CallFrame):
+-    mut ref = frame.upvalues[read_byte(mut frame)]
++    const upvalue_index = read_byte(mut frame)
++    mut ref = frame.upvalues[upvalue_index]
+     mut upvalue = heap.upvalue_obj(rt, ref)
+     if upvalue.slot != object.NO_SLOT:
+         rt.stack[upvalue.slot] = heap.peek(rt, 0)
+@@ -391,7 +394,7 @@
+     mut function_ref = read_string(mut frame)
+     mut function = heap.function_obj(rt, function_ref)
+     mut closure = object.new_closure(function_ref, function.upvalue_count)
+-    mut closure_ref = heap.allocate(mut rt, object.Obj.closure(value=closure))
++    mut closure_ref = heap.allocate(mut rt, object.Obj.closure(value=closure.copy()))
+     heap.push(mut rt, value.Value.obj(value=closure_ref))
+     mut captured = closure.upvalues.copy()
+     mut i = 0
+@@ -450,10 +453,12 @@
+         elif instruction == chunk.OP_POP:
+             _ = heap.pop(mut rt)
+         elif instruction == chunk.OP_GET_LOCAL:
+-            const __owned_arg_10 = rt.stack[frame.base + read_byte(mut frame)]
++            const local_offset = read_byte(mut frame)
++            const __owned_arg_10 = rt.stack[frame.base + local_offset]
+             heap.push(mut rt, __owned_arg_10)
+         elif instruction == chunk.OP_SET_LOCAL:
+-            rt.stack[frame.base + read_byte(mut frame)] = heap.peek(rt, 0)
++            const local_offset = read_byte(mut frame)
++            rt.stack[frame.base + local_offset] = heap.peek(rt, 0)
+         elif instruction == chunk.OP_GET_GLOBAL:
+             ok = get_global(mut rt, mut o, mut frame)
+         elif instruction == chunk.OP_DEFINE_GLOBAL:
+@@ -488,7 +493,8 @@
+         elif instruction == chunk.OP_NEGATE:
+             ok = negate(mut rt, mut o)
+         elif instruction == chunk.OP_PRINT:
+-            output.print_value(rt, mut o, heap.pop(mut rt))
++            const printed_value = heap.pop(mut rt)
++            output.print_value(rt, mut o, printed_value)
+         elif instruction == chunk.OP_JUMP:
+             mut offset = read_short(mut frame)
+             frame.ip = frame.ip + offset

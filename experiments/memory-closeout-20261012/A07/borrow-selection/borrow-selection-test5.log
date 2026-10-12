@@ -1,0 +1,72 @@
+build-slot: FIFO ticket 764, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: FIFO ticket 764, position 1; waiting for measurement or memory-accounting settle delay; waiting (60s so far)
+build-slot: FIFO ticket 764, position 1; waiting for measurement or memory-accounting settle delay; waiting (120s so far)
+build-slot: FIFO ticket 764, position 1; waiting for measurement or memory-accounting settle delay; waiting (180s so far)
+build-slot: FIFO ticket 764, position 1; waiting for measurement or memory-accounting settle delay; waiting (241s so far)
+build-slot: FIFO ticket 764, position 1; waiting for measurement or memory-accounting settle delay; waiting (301s so far)
+build-slot: build slot 1, FIFO ticket 764 after 346s
+9860b781455ba0fff0277654eea23ec3a893cb3614551f277cbf67d7850f6cf7
+d7c7a2468458d4cddf08970071fd85e6b6c3ff126b450eb15d8f1628fe38d91f
+test-core
++- verification action core member 0 3 pass, 1 crash (4 total)
+guardian/test: 4 test(s) selected by filter: "zero RC borrowed defaults"
+guardian/test: SLOW  11.27s  zero_rc_test.test.zero RC borrowed defaults release fresh fallback on success and error exits
+guardian/test: test wall 11.27s; slowest over 50ms:
+guardian/test:   11.27s  zero_rc_test.test.zero RC borrowed defaults release fresh fallback on success and error exits
+guardian/test: PASS — 1 passed
+guardian/test: RESULT {"passed":1,"failed":0,"skipped":0}
+error: 'zero_rc_test.test.zero RC borrowed defaults reject malformed and consuming IR markers' terminated with signal ABRT with stderr:
+       guardian/test: 4 test(s) selected by filter: "zero RC borrowed defaults"
+       guardian/test: SLOW  12.25s  zero_rc_test.test.zero RC borrowed defaults keep both roots through readonly and nested uses
+       thread 3851497 panic: index out of bounds: index 8589934590, len 5
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/ir.zig:557:47: 0x14ac82c in operands (root_test.zig)
+               return self.extra.items[slice.start..][0..slice.len];
+                                                     ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/ir.zig:573:65: 0x14c0ac4 in valueOperands (root_test.zig)
+               if (instruction.op.hasExtra()) out.extra = self.operands(instruction.data);
+                                                                       ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/effects.zig:357:45: 0x14c2e3d in usersOf (root_test.zig)
+                   const operands = f.valueOperands(inst);
+                                                   ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/effects.zig:320:61: 0x148e229 in analyzeReused (root_test.zig)
+               if (users[index] == null) users[index] = try usersOf(arena, f);
+                                                                   ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/effects.zig:263:25: 0x162d488 in analyze (root_test.zig)
+           return analyzeReused(arena, module, &.{});
+                               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/passes.zig:86:42: 0x1c04bc8 in debugInternal (root_test.zig)
+           const summaries = try effects.analyze(arena, module);
+                                                ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/passes.zig:72:25: 0x1c04405 in debugWithScratch (root_test.zig)
+           return debugInternal(arena, backing, module, null);
+                               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/passes.zig:67:28: 0x1c03f98 in debug (root_test.zig)
+           return debugWithScratch(arena, arena, module);
+                                  ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/allocation_contract.zig:28:21: 0x2989970 in validate (root_test.zig)
+           _ = passes.debug(temporary, &owned) catch |err| switch (err) {
+                           ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/zero_rc_test.zig:2080:79: 0x2986fe9 in test.zero RC borrowed defaults reject malformed and consuming IR markers (root_test.zig)
+                   const violation = (try @import("allocation_contract.zig").validate(a, program, unit.src, &module)).?;
+                                                                                     ^
+       /home/epentland/ai/canopy/guardian-zig/src/test_runner.zig:685:39: 0x139b073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/ai/canopy/guardian-zig/src/test_runner.zig:610:42: 0x139b8c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/ai/canopy/guardian-zig/src/test_runner.zig:306:39: 0x139bf6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x13987ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x13981d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A07/zig-out/libexec/mylang/components ./.tmp/memory-closeout/A07/zig-cache/o/b8e92d7cd0e33e6b62c65f1141c59740/test "--guardian-filter=zero RC borrowed defaults" --cache-dir=./.tmp/memory-closeout/A07/zig-cache --seed=0xa3fa1550 --listen=-
+
+Build Summary: 10/12 steps succeeded (1 failed); 3/4 tests passed (1 crashed)
+test-core transitive failure
++- verification action core member 0 3 pass, 1 crash (4 total)
+

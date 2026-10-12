@@ -1,0 +1,1868 @@
+{
+  "started_utc": "2026-10-12T09:15:30.016415+00:00",
+  "measurement_harness_sha256": "2e24cadd16dc9eb5a711b8c100249d76ab8c1b31ab74c138eaae5f76273e0011",
+  "prior_receipt": null,
+  "host": [
+    "Linux",
+    "linuxserver",
+    "7.0.0-31-generic",
+    "#31-Ubuntu SMP PREEMPT_DYNAMIC Sat Aug  1 04:26:38 UTC 2026",
+    "x86_64"
+  ],
+  "loadavg_start": [
+    1.30908203125,
+    3.18115234375,
+    4.140625
+  ],
+  "spec": {
+    "cell": "eda/blinky-breakout",
+    "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+    "arms": {
+      "zig-safe": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-zig-safe",
+        "--model",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp",
+        "--project-dir",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout",
+        "--out-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/blinky-breakout"
+      ],
+      "zig-fast": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-zig-fast",
+        "--model",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp",
+        "--project-dir",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout",
+        "--out-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/blinky-breakout"
+      ],
+      "rust": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-rust",
+        "--model",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp",
+        "--project-dir",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout",
+        "--out-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/blinky-breakout"
+      ],
+      "go": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-go",
+        "--model",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp",
+        "--project-dir",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout",
+        "--out-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/blinky-breakout"
+      ],
+      "mylang-original-rc": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/original-rc",
+        "--model",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp",
+        "--project-dir",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout",
+        "--out-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/blinky-breakout"
+      ],
+      "mylang-migrated-rc": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/migrated-rc",
+        "--model",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp",
+        "--project-dir",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout",
+        "--out-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/blinky-breakout"
+      ],
+      "mylang-zero-rc": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/zero-rc",
+        "--model",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp",
+        "--project-dir",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout",
+        "--out-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/blinky-breakout"
+      ]
+    },
+    "oracle": "zig-safe",
+    "files": [
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/manifest.json"
+    ],
+    "out_dir": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/blinky-breakout",
+    "golden_dir": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/expected",
+    "identity_dirs": [
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/expected"
+    ]
+  },
+  "spec_sha256": "016e41380c75a9a1e924d0863e2ed857074c91b2c4acb74fcc8229522f63ef2f",
+  "cpu": 8,
+  "identities": {
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp": "8a86e635b60cac0c8b859c225db5716a60fab236d078c5413e305cd867687a23",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/manifest.json": "4077dc7240898167b9080063bb811e11a54f52d1f486fdbec9f07138975109c0",
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/migrated-rc": "1774b721b091b419d768e621d4d7a3cbf5671a84c7984afaad2ab55829b83115",
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/original-rc": "a476b06325c927157e99719fd3dd7adbc85661f0a8b1924ae28f585f8717140a",
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/zero-rc": "4a4edebac4ed58a4849301096c019cd85761939ca9732fd15ae5a4705f988bfb",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-go": "0ea7d48bc5aff1b7952d9572ae0beb169316df674287b9de537b51d2b4b1054e",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-rust": "c63f2735c1f6799264e3839a93e0c23c6b50c5ca07b8b40bce45c5dd01f69c22",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-zig-fast": "a67a28006cf5815b76ff658564118cbb13d22df729ad4df19a8f6ac73a129138",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-zig-safe": "d520d6a084a49d9962d240a2c6effc84ccd40321ff0c46ff6422b84110971771",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout/lib/footprints/soic-14.sexp": "3859c5b98d3428be2dbc11f18d2459fee14a897a623a973dc1e719ced1b8f7ee",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout/lib/footprints/sot23-5.sexp": "162d3155c2ee286ace4801208b0923d0f092f789be978d00ebeb9bab82736af8",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout/lib/footprints/testpoint-1mm.sexp": "6f701d2bc1275e38cdf91ae34aff5a24246317b9fab7ee2f3d1d42f370372583",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout/lib/pinouts/hex-inverter-schmitt.sexp": "0b3b5db356e97547498a286f2544c2db9e1b565ca96dcd4e963b09507ab3317f",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout/lib/pinouts/ldo-3v3-sot23-5.sexp": "c07299bb701adf1129cd5760a64026c0cba851be02f2be6b9912ae202274a299",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/expected/blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/expected/blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/expected/blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/expected/fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/expected/netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/expected/sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+  },
+  "guest_timeout_seconds": 120.0,
+  "warmups": 2,
+  "round_start": 0,
+  "rounds": 9,
+  "wall_samples": [
+    {
+      "arm": "zig-safe",
+      "value": 0.003185671,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "zig-fast",
+      "value": 0.002817042,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "rust",
+      "value": 0.003539378,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "go",
+      "value": 0.005977123,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "mylang-original-rc",
+      "value": 0.004080199,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "mylang-migrated-rc",
+      "value": 0.004173764,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "value": 0.024483962,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "value": 0.024728851,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "mylang-migrated-rc",
+      "value": 0.004305538,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "mylang-original-rc",
+      "value": 0.004167775,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "go",
+      "value": 0.006118412,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "rust",
+      "value": 0.003542539,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "zig-fast",
+      "value": 0.002856525,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "zig-safe",
+      "value": 0.003090423,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "zig-safe",
+      "value": 0.003051639,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 2
+    },
+    {
+      "arm": "zig-fast",
+      "value": 0.00288372,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 2
+    },
+    {
+      "arm": "rust",
+      "value": 0.003635418,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 2
+    },
+    {
+      "arm": "go",
+      "value": 0.005993882,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 2
+    },
+    {
+      "arm": "mylang-original-rc",
+      "value": 0.004080067,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 2
+    },
+    {
+      "arm": "mylang-migrated-rc",
+      "value": 0.004016583,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 2
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "value": 0.024523783,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 2
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "value": 0.024420429,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 3
+    },
+    {
+      "arm": "mylang-migrated-rc",
+      "value": 0.004060515,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 3
+    },
+    {
+      "arm": "mylang-original-rc",
+      "value": 0.004040441,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 3
+    },
+    {
+      "arm": "go",
+      "value": 0.006236048,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 3
+    },
+    {
+      "arm": "rust",
+      "value": 0.003632918,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 3
+    },
+    {
+      "arm": "zig-fast",
+      "value": 0.002814067,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 3
+    },
+    {
+      "arm": "zig-safe",
+      "value": 0.003098273,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 3
+    },
+    {
+      "arm": "zig-safe",
+      "value": 0.002954374,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 4
+    },
+    {
+      "arm": "zig-fast",
+      "value": 0.002877524,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 4
+    },
+    {
+      "arm": "rust",
+      "value": 0.003655341,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 4
+    },
+    {
+      "arm": "go",
+      "value": 0.005873235,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 4
+    },
+    {
+      "arm": "mylang-original-rc",
+      "value": 0.004115172,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 4
+    },
+    {
+      "arm": "mylang-migrated-rc",
+      "value": 0.003953845,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 4
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "value": 0.02455205,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 4
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "value": 0.024718527,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 5
+    },
+    {
+      "arm": "mylang-migrated-rc",
+      "value": 0.004040165,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 5
+    },
+    {
+      "arm": "mylang-original-rc",
+      "value": 0.004146984,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 5
+    },
+    {
+      "arm": "go",
+      "value": 0.006015835,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 5
+    },
+    {
+      "arm": "rust",
+      "value": 0.003653465,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 5
+    },
+    {
+      "arm": "zig-fast",
+      "value": 0.002947791,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 5
+    },
+    {
+      "arm": "zig-safe",
+      "value": 0.003013665,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 5
+    },
+    {
+      "arm": "zig-safe",
+      "value": 0.003141174,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 6
+    },
+    {
+      "arm": "zig-fast",
+      "value": 0.00282013,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 6
+    },
+    {
+      "arm": "rust",
+      "value": 0.003494795,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 6
+    },
+    {
+      "arm": "go",
+      "value": 0.006154447,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 6
+    },
+    {
+      "arm": "mylang-original-rc",
+      "value": 0.003982999,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 6
+    },
+    {
+      "arm": "mylang-migrated-rc",
+      "value": 0.004111761,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 6
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "value": 0.024630736,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 6
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "value": 0.024499072,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 7
+    },
+    {
+      "arm": "mylang-migrated-rc",
+      "value": 0.003983949,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 7
+    },
+    {
+      "arm": "mylang-original-rc",
+      "value": 0.003976625,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 7
+    },
+    {
+      "arm": "go",
+      "value": 0.005996072,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 7
+    },
+    {
+      "arm": "rust",
+      "value": 0.00395882,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 7
+    },
+    {
+      "arm": "zig-fast",
+      "value": 0.002772582,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 7
+    },
+    {
+      "arm": "zig-safe",
+      "value": 0.002998623,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 7
+    },
+    {
+      "arm": "zig-safe",
+      "value": 0.003022684,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 8
+    },
+    {
+      "arm": "zig-fast",
+      "value": 0.002752556,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 8
+    },
+    {
+      "arm": "rust",
+      "value": 0.003562268,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 8
+    },
+    {
+      "arm": "go",
+      "value": 0.006046709,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 8
+    },
+    {
+      "arm": "mylang-original-rc",
+      "value": 0.004047718,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 8
+    },
+    {
+      "arm": "mylang-migrated-rc",
+      "value": 0.004030404,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 8
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "value": 0.024296606,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 8
+    }
+  ],
+  "rss_samples": [
+    {
+      "arm": "zig-safe",
+      "value": 3328,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "zig-fast",
+      "value": 3332,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "rust",
+      "value": 4876,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "go",
+      "value": 7888,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "mylang-original-rc",
+      "value": 5180,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "mylang-migrated-rc",
+      "value": 5048,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "value": 6552,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "value": 6556,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "mylang-migrated-rc",
+      "value": 5048,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "mylang-original-rc",
+      "value": 5180,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "go",
+      "value": 7888,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "rust",
+      "value": 4832,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "zig-fast",
+      "value": 3332,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "zig-safe",
+      "value": 3328,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "zig-safe",
+      "value": 3328,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 2
+    },
+    {
+      "arm": "zig-fast",
+      "value": 3332,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 2
+    },
+    {
+      "arm": "rust",
+      "value": 4696,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 2
+    },
+    {
+      "arm": "go",
+      "value": 7888,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 2
+    },
+    {
+      "arm": "mylang-original-rc",
+      "value": 5180,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 2
+    },
+    {
+      "arm": "mylang-migrated-rc",
+      "value": 5048,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 2
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "value": 6556,
+      "output": {
+        "stdout_sha256": "49c66863773b7203d594f1441986947ffdcb1255eeab566b9122a34aa406d71f",
+        "artifacts": {},
+        "golden_tree": {
+          "blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+          "netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+          "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+          "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+          "blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+          "blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f"
+        }
+      },
+      "stderr": "",
+      "round": 2
+    }
+  ],
+  "arm_status": {
+    "zig-safe": {
+      "status": "ok"
+    },
+    "zig-fast": {
+      "status": "ok"
+    },
+    "rust": {
+      "status": "ok"
+    },
+    "go": {
+      "status": "ok"
+    },
+    "mylang-original-rc": {
+      "status": "ok"
+    },
+    "mylang-migrated-rc": {
+      "status": "ok"
+    },
+    "mylang-zero-rc": {
+      "status": "ok"
+    }
+  },
+  "summary": {
+    "zig-safe": {
+      "seconds": {
+        "median": 0.003051639,
+        "min": 0.002954374,
+        "max": 0.003185671,
+        "samples": [
+          0.003185671,
+          0.003090423,
+          0.003051639,
+          0.003098273,
+          0.002954374,
+          0.003013665,
+          0.003141174,
+          0.002998623,
+          0.003022684
+        ]
+      },
+      "child_peak_rss_kib": {
+        "median": 3328,
+        "min": 3328,
+        "max": 3328,
+        "samples": [
+          3328,
+          3328,
+          3328
+        ]
+      }
+    },
+    "zig-fast": {
+      "seconds": {
+        "median": 0.00282013,
+        "min": 0.002752556,
+        "max": 0.002947791,
+        "samples": [
+          0.002817042,
+          0.002856525,
+          0.00288372,
+          0.002814067,
+          0.002877524,
+          0.002947791,
+          0.00282013,
+          0.002772582,
+          0.002752556
+        ]
+      },
+      "child_peak_rss_kib": {
+        "median": 3332,
+        "min": 3332,
+        "max": 3332,
+        "samples": [
+          3332,
+          3332,
+          3332
+        ]
+      }
+    },
+    "rust": {
+      "seconds": {
+        "median": 0.003632918,
+        "min": 0.003494795,
+        "max": 0.00395882,
+        "samples": [
+          0.003539378,
+          0.003542539,
+          0.003635418,
+          0.003632918,
+          0.003655341,
+          0.003653465,
+          0.003494795,
+          0.00395882,
+          0.003562268
+        ]
+      },
+      "child_peak_rss_kib": {
+        "median": 4832,
+        "min": 4696,
+        "max": 4876,
+        "samples": [
+          4876,
+          4832,
+          4696
+        ]
+      }
+    },
+    "go": {
+      "seconds": {
+        "median": 0.006015835,
+        "min": 0.005873235,
+        "max": 0.006236048,
+        "samples": [
+          0.005977123,
+          0.006118412,
+          0.005993882,
+          0.006236048,
+          0.005873235,
+          0.006015835,
+          0.006154447,
+          0.005996072,
+          0.006046709
+        ]
+      },
+      "child_peak_rss_kib": {
+        "median": 7888,
+        "min": 7888,
+        "max": 7888,
+        "samples": [
+          7888,
+          7888,
+          7888
+        ]
+      }
+    },
+    "mylang-original-rc": {
+      "seconds": {
+        "median": 0.004080067,
+        "min": 0.003976625,
+        "max": 0.004167775,
+        "samples": [
+          0.004080199,
+          0.004167775,
+          0.004080067,
+          0.004040441,
+          0.004115172,
+          0.004146984,
+          0.003982999,
+          0.003976625,
+          0.004047718
+        ]
+      },
+      "child_peak_rss_kib": {
+        "median": 5180,
+        "min": 5180,
+        "max": 5180,
+        "samples": [
+          5180,
+          5180,
+          5180
+        ]
+      }
+    },
+    "mylang-migrated-rc": {
+      "seconds": {
+        "median": 0.004040165,
+        "min": 0.003953845,
+        "max": 0.004305538,
+        "samples": [
+          0.004173764,
+          0.004305538,
+          0.004016583,
+          0.004060515,
+          0.003953845,
+          0.004040165,
+          0.004111761,
+          0.003983949,
+          0.004030404
+        ]
+      },
+      "child_peak_rss_kib": {
+        "median": 5048,
+        "min": 5048,
+        "max": 5048,
+        "samples": [
+          5048,
+          5048,
+          5048
+        ]
+      }
+    },
+    "mylang-zero-rc": {
+      "seconds": {
+        "median": 0.024523783,
+        "min": 0.024296606,
+        "max": 0.024728851,
+        "samples": [
+          0.024483962,
+          0.024728851,
+          0.024523783,
+          0.024420429,
+          0.02455205,
+          0.024718527,
+          0.024630736,
+          0.024499072,
+          0.024296606
+        ]
+      },
+      "child_peak_rss_kib": {
+        "median": 6556,
+        "min": 6552,
+        "max": 6556,
+        "samples": [
+          6552,
+          6556,
+          6556
+        ]
+      }
+    }
+  },
+  "loadavg_end": [
+    1.30908203125,
+    3.18115234375,
+    4.140625
+  ],
+  "finished_utc": "2026-10-12T09:15:30.768137+00:00"
+}

@@ -107,11 +107,23 @@ copies and stack allocations.
 ## Experimental zero RC
 
 `--experimental-zero-rc` selects source moves, explicit copies, checked borrows
-and direct destruction. It applies to `build`, `run`, `check` and `dump-ir`;
-the guest `test` command does not accept it. `check` validates source ownership,
+and direct destruction. It applies to `build`, `run`, `run-project`, `check`,
+`check-project`, `check-module`, `check-session`, `dump-ir`, `test` and `doctest`.
+Persistent checks validate each request, including after cached checks. Documentation
+examples pass the selection into both checking and execution. Tests use the same checked source ownership rules, including
+directory workers and property trials. Local, shared and indexed-property test
+receipts distinguish ownership modes; an ordinary RC success cannot satisfy a
+zero-RC request. `check` validates source ownership,
 while `build` also checks backend and runtime support. Unsupported operations
 fail compilation without an RC fallback. See the
 [supported features and measurements](../../experiments/zero-rc-final-20261011/README.md).
+
+Optional providers such as `Clock?` can be borrowed through read-only parameters.
+Pass `None`, an existing optional parameter, or `Some(clock)` directly to a call;
+the last form borrows an immutable provider parameter or one of its fields.
+Matching an optional parameter borrows its payload. Optional provider locals,
+aggregate fields and returns are rejected. Keep these providers outside returned
+application state and pass them through the calls that need them.
 
 The runtime ABI is separate from ordinary RC builds: `kind` is at offset zero,
 there is no count member, and emitted LLVM starts with `mylang-zero-rc-v2`.

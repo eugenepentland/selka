@@ -25,7 +25,8 @@ func caller_arena() -> Link?:
 
 func aliased(depth: int) -> Link:
     mut child = optional(depth)
-    return Link(next=child, value=total(child))
+    const child_total = total(child)
+    return Link(next=child, value=child_total)
 
 
 public func test_recursive_nullable_return_keeps_every_fresh_box_alive() -> bool:
@@ -36,7 +37,7 @@ public func test_recursive_nullable_return_keeps_every_fresh_box_alive() -> bool
 
 public func test_managed_locals_and_unknown_callees_keep_generic_cleanup() -> bool:
     mut value = aliased(6)
-    mut before = value
+    mut before = value.copy()
     value.next = None
     return total(before.next) == 21 and before.value == 21 and total(value.next) == 0
 

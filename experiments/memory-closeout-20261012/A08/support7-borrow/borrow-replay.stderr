@@ -1,0 +1,4 @@
+build-slot: FIFO ticket 1009, position 13; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1009, position 6; earlier build tickets must run first; waiting (61s so far)
+build-slot: build slot 2, FIFO ticket 1009 after 101s
+{"version":"cache-report-v1","program":"replayed","units":0,"reused":0,"compiled":0,"verified":0,"processes":0,"stages":null,"storage":null,"program_shared":false}

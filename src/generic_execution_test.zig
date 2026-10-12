@@ -64,6 +64,26 @@ test "generic execution preserves nominal values through copy contracts" {
     try t.expectEqualStrings("id[B]", compilation.program.?.functions[2].name);
 }
 
+// spec-case: GENERIC-EXECUTION-1
+test "generic scalar copies consume only their own expression temporaries" {
+    var compilation = try language.Compilation.init(t.allocator, "scalar-copy.my",
+        \\record Entry[V: equality + storable]:
+        \\    value: V
+        \\func copied[V: equality + storable](entry: Entry[V]) -> Entry[V]:
+        \\    return Entry[V](value=entry.value.copy())
+        \\func last[T](values: T[]) -> T:
+        \\    return values[-1].copy()
+        \\func identity(value: int) -> int:
+        \\    return value
+        \\func main() -> int:
+        \\    const original = Entry[int](value=42)
+        \\    const result = copied(original)
+        \\    return result.value + last([3, 7]) + identity(5).copy()
+    );
+    defer compilation.deinit();
+    try t.expectEqual(@as(i64, 54), (try native.run(&compilation)).value);
+}
+
 fn declarations(count: usize) !void {
     var text_buffer: std.Io.Writer.Allocating = .init(t.allocator);
     defer text_buffer.deinit();

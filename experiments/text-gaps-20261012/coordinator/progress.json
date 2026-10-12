@@ -1,0 +1,78 @@
+{
+  "base": "78b4bb5934748d5942389b12dfe66cb0031cafdc",
+  "status": "implementation_and_measurement_in_progress",
+  "target": "Both sizes of unchanged string_split, json_transform, csv_aggregate below runtime ratio 1.0 vs Zig ReleaseFast, Rust, Go",
+  "full_applications": "deferred until user review",
+  "qualified_root_before_static_literals": {
+    "focused_tests": 17,
+    "ownership_tests": 183,
+    "logs": [
+      ".tmp/textgap-combined-tests-04.log",
+      ".tmp/textgap-ownership-tests-01.log"
+    ]
+  },
+  "production_changes": "Shared compiler95e408cc9; direct leaf cleanup1d14d5719; worker checkpoints integrating.",
+  "verification_gate": "pending final integration",
+  "results_are_interim": true,
+  "qualified_root_before_key_copy": {
+    "focused_tests": 19,
+    "ownership_tests_before_literal_change": 183,
+    "logs": [
+      "experiments/text-gaps-20261012/coordinator/validation/textgap-literal-tests-03.log",
+      "experiments/text-gaps-20261012/coordinator/validation/textgap-ownership-tests-01.log"
+    ]
+  },
+  "latest_trials": {
+    "json05": {
+      "protocol": "15 paired measured rounds; worker report pending coordinator integration",
+      "large": {
+        "candidate_us": 134.924,
+        "baseline_us": 245.728,
+        "rust_us": 115.846,
+        "zig_fast_us": 170.493
+      },
+      "small": {
+        "candidate_us": 7.794,
+        "baseline_us": 13.836,
+        "rust_us": 6.817,
+        "zig_fast_us": 8.145
+      }
+    },
+    "csv03": {
+      "protocol": "exploratory screen, not final qualification",
+      "large_ratio_vs_zig_fast": 1.03,
+      "small_ratio_vs_zig_fast": 1.134
+    },
+    "split02": {
+      "protocol": "exploratory screen, not final qualification",
+      "large_ratio_vs_rust": 1.043,
+      "small_ratio_vs_rust": 0.926
+    }
+  },
+  "integrated_focused_tests": 24,
+  "checked_ownership_tests": 183,
+  "guardian_checks": 88,
+  "full_verification_gate": "pending",
+  "best_screen_ratios_vs_fastest": {
+    "csv05": {
+      "small": 0.9677,
+      "large": 0.9032
+    },
+    "split04": {
+      "small": 0.8713,
+      "large": 1.0059
+    },
+    "json09": {
+      "small": 1.0798,
+      "large": 1.0668
+    },
+    "split05": {
+      "small": 0.8599,
+      "large": 0.961
+    }
+  },
+  "caveat": "Independent screening sessions; only within-session ratios, no final common-compiler qualification yet.",
+  "checkpoint_request": "Merge reviewed checkpoint into local main / development line before continuing optimization.",
+  "main_pre_merge": "4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9",
+  "independent_review": "gap_encode reviewed shared borrowing/copy-transfer/helper ABI and leaf cleanup; no concrete issue found."
+}

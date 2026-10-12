@@ -1,0 +1,276 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "overlay": false,
+  "library_source_overlay": false,
+  "compiler_source_overlay": false,
+  "check_only": false,
+  "harness_sha256": "8d0b8414f4c5220ac5e85b6474eb734bb889296ff83a07d039de51baf139d20e",
+  "cases": {
+    "provider_list_negative": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/negative/provider_list.my",
+        "original_sha256": "da644ed2ce39ba0fc4dcb39af36645dcd571e8a8c1f49aa4d3c2e479c21502df",
+        "source_sha256": "da644ed2ce39ba0fc4dcb39af36645dcd571e8a8c1f49aa4d3c2e479c21502df",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/provider_list_negative/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "main.my:1:1: error[E_LIST_CAPABILITY]: managed list elements cannot contain allocator or provider capabilities\n  # spec-case: NEW-CORE-ZERO-RC-RESOURCES-1\n  ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "da644ed2ce39ba0fc4dcb39af36645dcd571e8a8c1f49aa4d3c2e479c21502df"
+        },
+        "expected_refusal": [
+          "E_LIST_CAPABILITY"
+        ]
+      }
+    },
+    "provider_dictionary_negative": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/negative/provider_dictionary.my",
+        "original_sha256": "134b691dd4714d795d7b2e3517da7d568dc19a815b8465567794eee9e55f7503",
+        "source_sha256": "134b691dd4714d795d7b2e3517da7d568dc19a815b8465567794eee9e55f7503",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/provider_dictionary_negative/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "main.my:1:1: error[E_LIST_CAPABILITY]: managed list elements cannot contain allocator or provider capabilities\n  # spec-case: NEW-CORE-ZERO-RC-RESOURCES-1\n  ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "134b691dd4714d795d7b2e3517da7d568dc19a815b8465567794eee9e55f7503"
+        },
+        "expected_refusal": [
+          "E_LIST_CAPABILITY"
+        ]
+      }
+    },
+    "provider_recursive_negative": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/negative/provider_recursive.my",
+        "original_sha256": "ebecb8cc01d73f7b407c78c789b1b0a7b7741ff04ed28bf2e17b7eba1acd8e98",
+        "source_sha256": "ebecb8cc01d73f7b407c78c789b1b0a7b7741ff04ed28bf2e17b7eba1acd8e98",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/provider_recursive_negative/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/provider_recursive_negative/release/source/main.my:1:1: error[E_RECURSIVE_RECORD]: a recursive value type is shared through immutable boxes, so it cannot hold a capability\n  # spec-case: NEW-CORE-ZERO-RC-RESOURCES-1\n  ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "ebecb8cc01d73f7b407c78c789b1b0a7b7741ff04ed28bf2e17b7eba1acd8e98"
+        },
+        "expected_refusal": [
+          "E_RECURSIVE_RECORD"
+        ]
+      }
+    },
+    "disjoint_mut_fields_negative": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/negative/disjoint_mut_fields.my",
+        "original_sha256": "fcd7e0f51f02d4d0c8d49e5d353b9cc5da4e40ca66202af31a0ad3bb2be994e1",
+        "source_sha256": "fcd7e0f51f02d4d0c8d49e5d353b9cc5da4e40ca66202af31a0ad3bb2be994e1",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/disjoint_mut_fields_negative/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/disjoint_mut_fields_negative/release/source/main.my:12:26: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      fill(mut p.left, mut p.right)\n                           ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "fcd7e0f51f02d4d0c8d49e5d353b9cc5da4e40ca66202af31a0ad3bb2be994e1"
+        },
+        "expected_refusal": [
+          "E_SINGLE_OWNER_OVERLAP"
+        ]
+      }
+    },
+    "dictionary_get_view_negative": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/negative/dictionary_get_view.my",
+        "original_sha256": "6264faa5e77b110325cabfa5ee006393295e91309c8fa6ef0426c6f47a710ad7",
+        "source_sha256": "6264faa5e77b110325cabfa5ee006393295e91309c8fa6ef0426c6f47a710ad7",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/dictionary_get_view_negative/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/dictionary_get_view_negative/release/source/main.my:11:18: error[E_ZERO_RC_VIEW_ESCAPE]: a view cannot borrow from a selection with multiple possible owners; copy the selected value into a named owner first\n      const view = values.get(key, fallback).borrow(0, 3)\n                   ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "6264faa5e77b110325cabfa5ee006393295e91309c8fa6ef0426c6f47a710ad7"
+        },
+        "expected_refusal": [
+          "E_ZERO_RC_VIEW_ESCAPE"
+        ]
+      }
+    },
+    "capability_array_negative": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/negative/capability_array.my",
+        "original_sha256": "abb0dd17341301a450de9b05989568a3a908b721250e4520be194de36d636e2a",
+        "source_sha256": "abb0dd17341301a450de9b05989568a3a908b721250e4520be194de36d636e2a",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/capability_array_negative/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "main.my:47:9: error[E_ZERO_RC_UNSUPPORTED]: owning providers can be stored only in ordinary records or tuples\n      mut fss: FixedArray[Filesystem, 2] = FixedArray[Filesystem, 2]([filesystem.memory(), filesystem.memory()])\n          ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "abb0dd17341301a450de9b05989568a3a908b721250e4520be194de36d636e2a"
+        },
+        "expected_refusal": [
+          "E_ZERO_RC_UNSUPPORTED"
+        ]
+      }
+    },
+    "provider_root_move_negative": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/negative/provider_root_move.my",
+        "original_sha256": "5da411472d112359b1709d5439c1c863f1d0e3ec17869e6e90c70a1898570875",
+        "source_sha256": "5da411472d112359b1709d5439c1c863f1d0e3ec17869e6e90c70a1898570875",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/provider_root_move_negative/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "main.my:10:23: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          const moved = root\n                        ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "5da411472d112359b1709d5439c1c863f1d0e3ec17869e6e90c70a1898570875"
+        },
+        "expected_refusal": [
+          "E_SINGLE_OWNER_OVERLAP",
+          "E_ZERO_RC_RESOURCE_ESCAPE"
+        ]
+      }
+    },
+    "provider_copy_negative": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/negative/provider_copy.my",
+        "original_sha256": "2060481819b62323dd91b74d91d59e5d00a998a789da7b91af827e41de2a9f28",
+        "source_sha256": "2060481819b62323dd91b74d91d59e5d00a998a789da7b91af827e41de2a9f28",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/provider_copy_negative/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "main.my:9:20: error[E_ZERO_RC_UNSUPPORTED]: provider owners cannot be copied; borrow the enclosing record or move it\n      const copied = root.copy()\n                     ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "2060481819b62323dd91b74d91d59e5d00a998a789da7b91af827e41de2a9f28"
+        },
+        "expected_refusal": [
+          "E_ZERO_RC_UNSUPPORTED"
+        ]
+      }
+    },
+    "provider_parameter_result_negative": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/negative/provider_parameter_result.my",
+        "original_sha256": "8d0745bff15756026f95cefea686be9573e60f39f494a3b018514aa53e01b44b",
+        "source_sha256": "8d0745bff15756026f95cefea686be9573e60f39f494a3b018514aa53e01b44b",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/provider_parameter_result_negative/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "main.my:7:6: error[E_ZERO_RC_RESOURCE_ORIGIN]: a resource result requires exactly one provider or resource input\n  func opened(root: Store) -> Result[TextFile, str]:\n       ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "8d0745bff15756026f95cefea686be9573e60f39f494a3b018514aa53e01b44b"
+        },
+        "expected_refusal": [
+          "E_ZERO_RC_RESOURCE_ORIGIN"
+        ]
+      }
+    },
+    "provider_field_move_negative": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/negative/provider_field_move.my",
+        "original_sha256": "b549bc99091e50983a22dd4bc50a693e83711541360d1040dfde4739562f0478",
+        "source_sha256": "b549bc99091e50983a22dd4bc50a693e83711541360d1040dfde4739562f0478",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/provider_field_move_negative/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-18/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "main.my:9:19: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      const moved = root.fs\n                    ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "b549bc99091e50983a22dd4bc50a693e83711541360d1040dfde4739562f0478"
+        },
+        "expected_refusal": [
+          "E_SINGLE_OWNER_BORROW"
+        ]
+      }
+    }
+  },
+  "compiler_source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "ownership_selection": "experimental-zero-rc",
+  "failures": 0
+}

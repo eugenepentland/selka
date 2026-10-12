@@ -1,0 +1,20 @@
+{
+  "base_revision": "69f797479707dba0fbca18aad5c4fb5d3acbffb7",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/.tmp/memory-closeout/A08-memo/prototype/bin/mylang",
+  "compiler_sha256": "ac9ebb424496fa2951ce128987b4209b22861ac0914e27125fc0dbb2bebee549",
+  "kind": "Private Debug compiler for correctness, based on current integration plus 3-line semantic recipe fix; test-only overlays included. Not final C1.",
+  "files": {
+    "src/semantic_type_recipe.zig": "ca8d293ed66d549f4c1a11f198ac29d0ef6b1f519eaae54252df443f83970294",
+    "src/root_test.zig": "b12e6f62f7dc25e88a06a813826b89c3817043b7da62317919e7bc9a4b4bfeec",
+    "src/a08_memo_cache_test.zig": "68062c8a29e21b6777c62a145b4c5cba19f5c94717a2e29060ee60b0872cdcc7"
+  },
+  "installation": {
+    "bin/mylang": "ac9ebb424496fa2951ce128987b4209b22861ac0914e27125fc0dbb2bebee549",
+    "focus/mylang": "ac9ebb424496fa2951ce128987b4209b22861ac0914e27125fc0dbb2bebee549",
+    "tools/selka-components": "6eff221dc0fb75a163347f9e4e4b11b9bbc1a9ddddc9b5678c075a74dbeaa9da",
+    "libexec/mylang/components/cache-plan-ccc22b9c6efac02da2488dc1eec1e1b441a0c224dec383f509e0200ead4d6582": "ccc22b9c6efac02da2488dc1eec1e1b441a0c224dec383f509e0200ead4d6582",
+    "libexec/mylang/components/test-index.json": "69025cb228f81331b8ddb4b58c90b4f3db8e589485d8f2c10ba454b1079b5622",
+    "libexec/mylang/components/test-index-0e28cc1903bc4d763f3e1b3e4ad8266c481fa8ed85e4d37af4accfc9291d16ee": "0e28cc1903bc4d763f3e1b3e4ad8266c481fa8ed85e4d37af4accfc9291d16ee",
+    "libexec/mylang/components/cache-plan.json": "52488fae7bf2884569dd0fe31496ab140c69e6235f298f0abf49ead85622a505"
+  }
+}

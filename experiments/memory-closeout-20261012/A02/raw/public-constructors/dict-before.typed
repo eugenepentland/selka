@@ -1,0 +1,387 @@
+fn test_sorted_list_set_and_dict_collect_a_generator #6 params=0 ret=bool cabi=false host=false
+  local %0 <collection>: List<i64> mut
+  local %1 xs: List<i64> mut
+  local %2 <collection>: List<i64> mut
+  local %3 <collection>: i64 mut
+  local %4 <collection>: i64 mut
+  local %5 x: i64
+  local %6 <collection>: List<i64> mut
+  local %7 <collection>: List<i64> mut
+  local %8 <collection>: List<i64> mut
+  local %9 ordered: List<i64> mut
+  local %10 <collection>: List<i64> mut
+  local %11 <collection>: i64 mut
+  local %12 <collection>: i64 mut
+  local %13 x: i64
+  local %14 <collection>: List<i64> mut
+  local %15 <collection>: List<i64> mut
+  local %16 <collection>: List<i64> mut
+  local %17 <collection>: bool mut
+  local %18 <collection>: i64 mut
+  local %19 descending: List<i64> mut
+  local %20 <collection>: List<i64> mut
+  local %21 <collection>: i64 mut
+  local %22 <collection>: i64 mut
+  local %23 x: i64
+  local %24 <collection>: List<i64> mut
+  local %25 copied: List<i64> mut
+  local %26 <collection>: List<i64> mut
+  local %27 <collection>: i64 mut
+  local %28 <collection>: i64 mut
+  local %29 x: i64
+  local %30 <collection>: set<i64> mut
+  local %31 unique: set<i64> mut
+  local %32 <collection>: List<i64> mut
+  local %33 <collection>: i64 mut
+  local %34 <collection>: i64 mut
+  local %35 x: i64
+  local %36 <collection>: tuple<str,i64> mut
+  local %37 <collection>: dict<str,i64> mut
+  local %38 <collection>: str mut
+  local %39 <collection>: i64 mut
+  local %40 table: dict<str,i64> mut
+  local %41 <collection>: List<i64> mut
+  local %42 <collection>: List<i64> mut
+  local %43 <collection>: List<i64> mut
+  local %44 <collection>: set<i64> mut
+  block
+    initialize %1
+      block_value : List<i64>
+        block
+          initialize %0
+            acquire_buffer : List<i64>
+              integer : i64 3
+          discard
+            buffer_operation : unit append owner=%0
+              integer : i64 3
+          discard
+            buffer_operation : unit append owner=%0
+              integer : i64 1
+          discard
+            buffer_operation : unit append owner=%0
+              integer : i64 2
+        local : List<i64> %0
+    initialize %9
+      block_value : List<i64>
+        block
+          initialize %7
+            block_value : List<i64>
+              block
+                initialize %8
+                  block_value : List<i64>
+                    block
+                      initialize %6
+                        acquire_buffer : List<i64>
+                          integer : i64 0
+                      block
+                        initialize %2
+                          local : List<i64> %1
+                        initialize %3
+                          integer : i64 0
+                        initialize %4
+                          cast : i64
+                            buffer_operation : u64 length owner=%2
+                        loop id=0
+                          binary : bool lt
+                            local : i64 %3
+                            local : i64 %4
+                          block
+                            block
+                              discard
+                                buffer_operation : unit iteration_check owner=%2
+                                  local : i64 %4
+                            initialize %5
+                              buffer_operation : i64 read owner=%2
+                                local : i64 %3
+                            discard
+                              buffer_operation : unit append owner=%6
+                                binary : i64 mul
+                                  local : i64 %5
+                                  integer : i64 10
+                          step:
+                            block
+                              block
+                                discard
+                                  buffer_operation : unit iteration_check owner=%2
+                                    local : i64 %4
+                              assign %3
+                                binary : i64 add
+                                  local : i64 %3
+                                  integer : i64 1
+                    local : List<i64> %6
+              buffer_operation : List<i64> copy owner=%8
+          discard
+            buffer_operation : unit sort owner=%7
+        local : List<i64> %7
+    initialize %19
+      block_value : List<i64>
+        block
+          initialize %16
+            block_value : List<i64>
+              block
+                initialize %14
+                  acquire_buffer : List<i64>
+                    integer : i64 0
+                block
+                  initialize %10
+                    local : List<i64> %1
+                  initialize %11
+                    integer : i64 0
+                  initialize %12
+                    cast : i64
+                      buffer_operation : u64 length owner=%10
+                  loop id=1
+                    binary : bool lt
+                      local : i64 %11
+                      local : i64 %12
+                    block
+                      block
+                        discard
+                          buffer_operation : unit iteration_check owner=%10
+                            local : i64 %12
+                      initialize %13
+                        buffer_operation : i64 read owner=%10
+                          local : i64 %11
+                      discard
+                        buffer_operation : unit append owner=%14
+                          local : i64 %13
+                    step:
+                      block
+                        block
+                          discard
+                            buffer_operation : unit iteration_check owner=%10
+                              local : i64 %12
+                        assign %11
+                          binary : i64 add
+                            local : i64 %11
+                            integer : i64 1
+              local : List<i64> %14
+          initialize %17
+            boolean : bool true
+          initialize %18
+            cast : i64
+              buffer_operation : u64 length owner=%16
+          initialize %15
+            acquire_buffer : List<i64>
+              local : i64 %18
+          discard
+            buffer_operation : unit sort_keyed owner=%15
+              local : List<i64> %16
+              local : List<i64> %16
+              local : bool %17
+        local : List<i64> %15
+    initialize %25
+      block_value : List<i64>
+        block
+          initialize %24
+            acquire_buffer : List<i64>
+              integer : i64 0
+          block
+            initialize %20
+              local : List<i64> %1
+            initialize %21
+              integer : i64 0
+            initialize %22
+              cast : i64
+                buffer_operation : u64 length owner=%20
+            loop id=2
+              binary : bool lt
+                local : i64 %21
+                local : i64 %22
+              block
+                block
+                  discard
+                    buffer_operation : unit iteration_check owner=%20
+                      local : i64 %22
+                initialize %23
+                  buffer_operation : i64 read owner=%20
+                    local : i64 %21
+                branch
+                  binary : bool ne
+                    local : i64 %23
+                    integer : i64 1
+                  discard
+                    buffer_operation : unit append owner=%24
+                      local : i64 %23
+              step:
+                block
+                  block
+                    discard
+                      buffer_operation : unit iteration_check owner=%20
+                        local : i64 %22
+                  assign %21
+                    binary : i64 add
+                      local : i64 %21
+                      integer : i64 1
+        local : List<i64> %24
+    initialize %31
+      block_value : set<i64>
+        block
+          initialize %30
+            array : set<i64>
+          block
+            initialize %26
+              local : List<i64> %1
+            initialize %27
+              integer : i64 0
+            initialize %28
+              cast : i64
+                buffer_operation : u64 length owner=%26
+            loop id=3
+              binary : bool lt
+                local : i64 %27
+                local : i64 %28
+              block
+                block
+                  discard
+                    buffer_operation : unit iteration_check owner=%26
+                      local : i64 %28
+                initialize %29
+                  buffer_operation : i64 read owner=%26
+                    local : i64 %27
+                block
+                  discard
+                    buffer_operation : unit write owner=%30
+                      binary : i64 floor_rem
+                        local : i64 %29
+                        integer : i64 2
+                      unit : unit ...
+              step:
+                block
+                  block
+                    discard
+                      buffer_operation : unit iteration_check owner=%26
+                        local : i64 %28
+                  assign %27
+                    binary : i64 add
+                      local : i64 %27
+                      integer : i64 1
+        local : set<i64> %30
+    initialize %40
+      block_value : dict<str,i64>
+        block
+          initialize %37
+            array : dict<str,i64>
+          block
+            initialize %32
+              local : List<i64> %1
+            initialize %33
+              integer : i64 0
+            initialize %34
+              cast : i64
+                buffer_operation : u64 length owner=%32
+            loop id=4
+              binary : bool lt
+                local : i64 %33
+                local : i64 %34
+              block
+                block
+                  discard
+                    buffer_operation : unit iteration_check owner=%32
+                      local : i64 %34
+                initialize %35
+                  buffer_operation : i64 read owner=%32
+                    local : i64 %33
+                block
+                  initialize %36
+                    record : tuple<str,i64>
+                      field .0
+                        cast : str
+                          local : i64 %35
+                      field .1
+                        local : i64 %35
+                  initialize %38
+                    field : str .0
+                      local : tuple<str,i64> %36
+                  initialize %39
+                    field : i64 .1
+                      local : tuple<str,i64> %36
+                  discard
+                    buffer_operation : unit write owner=%37
+                      local : str %38
+                      local : i64 %39
+              step:
+                block
+                  block
+                    discard
+                      buffer_operation : unit iteration_check owner=%32
+                        local : i64 %34
+                  assign %33
+                    binary : i64 add
+                      local : i64 %33
+                      integer : i64 1
+        local : dict<str,i64> %37
+    ret
+      binary : bool logical_and
+        binary : bool logical_and
+          binary : bool logical_and
+            binary : bool logical_and
+              binary : bool eq
+                local : List<i64> %9
+                block_value : List<i64>
+                  block
+                    initialize %41
+                      acquire_buffer : List<i64>
+                        integer : i64 3
+                    discard
+                      buffer_operation : unit append owner=%41
+                        integer : i64 10
+                    discard
+                      buffer_operation : unit append owner=%41
+                        integer : i64 20
+                    discard
+                      buffer_operation : unit append owner=%41
+                        integer : i64 30
+                  local : List<i64> %41
+              binary : bool eq
+                local : List<i64> %19
+                block_value : List<i64>
+                  block
+                    initialize %42
+                      acquire_buffer : List<i64>
+                        integer : i64 3
+                    discard
+                      buffer_operation : unit append owner=%42
+                        integer : i64 3
+                    discard
+                      buffer_operation : unit append owner=%42
+                        integer : i64 2
+                    discard
+                      buffer_operation : unit append owner=%42
+                        integer : i64 1
+                  local : List<i64> %42
+            binary : bool eq
+              local : List<i64> %25
+              block_value : List<i64>
+                block
+                  initialize %43
+                    acquire_buffer : List<i64>
+                      integer : i64 2
+                  discard
+                    buffer_operation : unit append owner=%43
+                      integer : i64 3
+                  discard
+                    buffer_operation : unit append owner=%43
+                      integer : i64 2
+                local : List<i64> %43
+          binary : bool eq
+            local : set<i64> %31
+            block_value : set<i64>
+              block
+                initialize %44
+                  array : set<i64>
+                discard
+                  buffer_operation : unit write owner=%44
+                    integer : i64 0
+                    unit : unit ...
+                discard
+                  buffer_operation : unit write owner=%44
+                    integer : i64 1
+                    unit : unit ...
+              local : set<i64> %44
+        binary : bool eq
+          index : i64 from_end=false
+            local : dict<str,i64> %40
+            array : str
+              integer : u32 50
+          integer : i64 2

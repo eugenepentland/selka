@@ -1,0 +1,79 @@
+build-slot: FIFO ticket 446, position 22; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 446, position 15; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 446, position 8; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 446, position 4; earlier build tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 446, position 4; earlier build tickets must run first; waiting (240s so far)
+build-slot: FIFO ticket 446, position 4; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 446, position 3; earlier build tickets must run first; waiting (361s so far)
+build-slot: build slot 3, FIFO ticket 446 after 421s
+9860b781455ba0fff0277654eea23ec3a893cb3614551f277cbf67d7850f6cf7
+d7c7a2468458d4cddf08970071fd85e6b6c3ff126b450eb15d8f1628fe38d91f
+test-core
++- verification action core member 0 6 pass, 2 fail (8 total)
+guardian/test: test wall 139.99s; slowest over 50ms:
+guardian/test:   30.70s  zero_rc_test.test.zero RC conditional branch storage transfers owners instead of receiver loans
+guardian/test:   27.59s  zero_rc_test.test.zero RC optional narrowing preserves hidden payload availability and mutation
+guardian/test:   27.39s  zero_rc_test.test.zero RC setdefault copies borrowed hit and inserted payloads independently
+guardian/test:   26.59s  a06_nested_write_test.test.zero RC fixed array writeback captures a dynamic signed index once
+guardian/test:   25.86s  a06_nested_write_test.test.zero RC nested writeback keeps snapshots and directly cleans early returns
+guardian/test:   1.26s  a06_nested_write_test.test.zero RC array transfer analysis preserves unknown index and conditional live borrows
+guardian/test:   0.55s  a06_nested_write_test.test.zero RC list slot nested writeback preserves exact owner and index
+guardian/test: FAIL — 2 failed of 8
+guardian/test: RESULT {"passed":6,"failed":2,"skipped":0}
+error: 'a06_nested_write_test.test.zero RC array transfer analysis preserves unknown index and conditional live borrows' failed:
+       guardian/test: 8 test(s) selected by filter: "zero RC optional narrowing", "zero RC setdefault", "zero RC conditional branch" (+4 more)
+       guardian/test: SLOW  27.59s  zero_rc_test.test.zero RC optional narrowing preserves hidden payload availability and mutation
+       guardian/test: SLOW  27.39s  zero_rc_test.test.zero RC setdefault copies borrowed hit and inserted payloads independently
+       guardian/test: SLOW  30.70s  zero_rc_test.test.zero RC conditional branch storage transfers owners instead of receiver loans
+       guardian/test: SLOW  25.86s  a06_nested_write_test.test.zero RC nested writeback keeps snapshots and directly cleans early returns
+       guardian/test: SLOW  26.59s  a06_nested_write_test.test.zero RC fixed array writeback captures a dynamic signed index once
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/diagnostic.zig:186:9: 0x14f417b in fail (compiler.zig)
+               return error.SourceError;
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/sema.zig:1910:9: 0x1d13d4f in checkEntry (compiler.zig)
+               return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main");
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/sema.zig:1844:46: 0x159b159 in checkProgram (compiler.zig)
+           const main = if (options.entry_required) try checkEntry(&checker, module_names, failed) else @as(typed.FunctionId, @fromBackingInt(0));
+                                                    ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/sema.zig:1750:9: 0x13fc2af in checkCore (compiler.zig)
+               return err;
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/sema.zig:1708:5: 0x13fb32d in checkCached (compiler.zig)
+           return checkCore(allocator, src, program, sink, .{ .names = module_names, .cache = cache });
+           ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/compiler.zig:213:24: 0x13fa941 in checkWithCache (compiler.zig)
+               self.program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, cache);
+                              ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/compiler.zig:193:9: 0x13f9e36 in check (compiler.zig)
+               return self.checkWithCache(null);
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/test_support.zig:25:5: 0x1f76a30 in buildSource (root_test.zig)
+           try unit.check();
+           ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/test_support.zig:245:18: 0x1f765e2 in ownedText (root_test.zig)
+           var module = try buildSource(arena, source, &refusal);
+                        ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/a06_nested_write_test.zig:201:21: 0x1f76134 in test.zero RC array transfer analysis preserves unknown index and conditional live borrows (root_test.zig)
+           const unknown = try support.ownedText(arena.allocator(), slot_records ++
+                           ^
+error: 'a06_nested_write_test.test.zero RC list slot nested writeback preserves exact owner and index' failed:
+       nested writeback build: /home/epentland/ai/canopy/mylang-memory-20261012-A07/.zig-cache/tmp/eLbv1iNb5e2URxs3/nested.my:12:5: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression
+             rows[0].cells[1].value = 9
+             ^
+       
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x13c7079 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/a06_nested_write_test.zig:141:9: 0x13c81da in counted (root_test.zig)
+               try std.testing.expect(built.term == .exited and built.term.exited == 0);
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/a06_nested_write_test.zig:249:5: 0x13ca8d5 in test.zero RC list slot nested writeback preserves exact owner and index (root_test.zig)
+           try counted(std.testing.allocator, slot_records ++
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A07/zig-out/libexec/mylang/components ./.tmp/memory-closeout/A07/zig-cache/o/a271e94b1bf9bec5400d8ea8bf2afd3b/test "--guardian-filter=zero RC optional narrowing" "--guardian-filter=zero RC setdefault" "--guardian-filter=zero RC conditional branch" "--guardian-filter=zero RC list slot nested" "--guardian-filter=zero RC fixed array" "--guardian-filter=zero RC nested writeback" "--guardian-filter=zero RC array transfer" --cache-dir=./.tmp/memory-closeout/A07/zig-cache --seed=0x632119b0 --listen=-
+
+Build Summary: 10/12 steps succeeded (1 failed); 6/8 tests passed (2 failed)
+test-core transitive failure
++- verification action core member 0 6 pass, 2 fail (8 total)
+

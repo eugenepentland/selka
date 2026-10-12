@@ -1,0 +1,111 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+  "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+  "overlay": false,
+  "check_only": false,
+  "harness_sha256": "9241512d643050cf592d69810dddc20c8b39919a602634c9ca74360395aa8bc5",
+  "cases": {
+    "network_values": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/network_values.my",
+        "original_sha256": "bf1b89644a71a87947c0bba6273ad1d516fb5e3d2cc8379b0b8977259eb60d04",
+        "source_sha256": "bf1b89644a71a87947c0bba6273ad1d516fb5e3d2cc8379b0b8977259eb60d04",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support4-network-values-transfer/network_values/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support4-network-values-transfer/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support4-network-values-transfer/network_values/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support4-network-values-transfer/network_values/release/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "bf1b89644a71a87947c0bba6273ad1d516fb5e3d2cc8379b0b8977259eb60d04"
+        },
+        "provider": {
+          "endpoint": "127.0.0.1:43781",
+          "closed": 1,
+          "received": ""
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "d5422dedfe077933418481ee66f863aed4fabbbb8ebd441c48f5c0ec18da53df",
+        "llvm_sha256": "e2bd0db01090f78ee5307b006d7dabb98719d3a85f3a55d2730b0f08b4265103",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support4-network-values-transfer/network_values/release/counts.json",
+          "counter_sha256": "f096b2ae14310cfe1dcc2166d58d53c2857c7a2f454fe6d9f7fcf805112e6797",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 6,
+          "memory": {
+            "allocs": 10,
+            "alloc_bytes": 736,
+            "frees": 10,
+            "reallocs": 0,
+            "peak_live_bytes": 544,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      }
+    },
+    "capability_array_negative": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/negative/capability_array.my",
+        "original_sha256": "abb0dd17341301a450de9b05989568a3a908b721250e4520be194de36d636e2a",
+        "source_sha256": "abb0dd17341301a450de9b05989568a3a908b721250e4520be194de36d636e2a",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support4-network-values-transfer/capability_array_negative/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support4-network-values-transfer/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "main.my:47:9: error[E_ZERO_RC_UNSUPPORTED]: store resource owners in named local scopes in the zero-RC prototype\n      mut fss: FixedArray[Filesystem, 2] = FixedArray[Filesystem, 2]([filesystem.memory(), filesystem.memory()])\n          ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "abb0dd17341301a450de9b05989568a3a908b721250e4520be194de36d636e2a"
+        },
+        "expected_refusal": "E_ZERO_RC_UNSUPPORTED"
+      }
+    }
+  },
+  "compiler_source_revision": "66890fbc5135a771e6a423724d13c30018ab717f",
+  "ownership_selection": "experimental-zero-rc",
+  "failures": 0,
+  "scope": "Interim support4 counted public type constructor and affine carrier cleanup; expected capability-array refusal checked separately in same run"
+}

@@ -1,0 +1,16 @@
+--- a/docs/tooling/counters.md
++++ b/docs/tooling/counters.md
+@@ -6,9 +6,10 @@
+ comparisons; keep semantic counters separate from ordinary executable timings.
+ 
+ Normal supported commands use checked ownership. `--counters` instruments that
+-same ownership mode; it does not enable memory reference counting. During the
+-migration, the historical experimental selectors are same-mode aliases. Their
+-retirement is a separate change.
++same ownership mode; it does not enable memory reference counting. The retired
++`--experimental-zero-rc` and `--experimental-single-owner` options are rejected
++with status 2 and a diagnostic directing you to drop the flag. Guest arguments
++after `--` are not compiler options.
+ 
+ ```bash
+ mylang build program.my -o program-counted --release --counters

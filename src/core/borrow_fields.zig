@@ -46,7 +46,7 @@ pub fn run(a: std.mem.Allocator, m: *const ir.Module, f: *ir.Function, summaries
             }
         }
     };
-    const context: Context = .{ .a = a, .f = f, .shape = &shape, .changes = changes, .origin = origin, .positions = positions };
+    const context: Context = .{ .a = a, .module = m, .f = f, .shape = &shape, .changes = changes, .origin = origin, .positions = positions };
     for (f.blocks.items) |*block| {
         const original = try a.dupe(ir.Ref, block.insts.items);
         block.insts.clearRetainingCapacity();
@@ -80,6 +80,7 @@ fn replaceExtra(a: std.mem.Allocator, f: *ir.Function, inst: *ir.Inst, extra: []
 
 const Context = struct {
     a: std.mem.Allocator,
+    module: *const ir.Module,
     f: *ir.Function,
     shape: *const facts.Shape,
     changes: []const std.ArrayList(Change),
@@ -89,6 +90,12 @@ const Context = struct {
     fn forward(self: Context, raw: ir.Ref, user: ir.Ref, out: *std.ArrayList(ir.Ref)) !ir.Ref {
         const f = self.f;
         const value = f.resolve(raw);
+        const ty = f.inst(value).ty;
+        // Register values already capture their bytes. Re-reading a scalar
+        // through a later owner manufactures a loan and can retain a consumed
+        // loop input. Managed, address-passed and view results still borrow.
+        const borrows = self.module.managed(ty) or self.module.passedInMemory(ty) or ty == .str_view;
+        if (!borrows) return raw;
         const source = sourceOf(f, value) orelse return raw;
         var path: effects.Path = .{};
         var n = source.len;

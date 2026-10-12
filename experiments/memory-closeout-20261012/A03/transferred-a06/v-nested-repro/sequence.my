@@ -1,0 +1,16 @@
+record Item:
+    code: int
+    payload: int[]
+
+record Box:
+    items: Item[]
+
+func deep(b0: Box, v: int) -> int:
+    mut b = b0.copy()
+    b.items[0].payload[0] = v
+    b.items[1].payload.append(v + 1)
+    b.items[1].code = 77
+    return b.items[1].code
+
+func main() -> int:
+    return deep(Box(items=[Item(code=1, payload=[1]), Item(code=2, payload=[2])]), 55) - 77

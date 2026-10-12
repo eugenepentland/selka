@@ -1,0 +1,4 @@
+build-slot: FIFO ticket 455, position 1; draining active work (gate1.lock); waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 455 after 10s
+[ perf record: Woken up 68 times to write data ]
+[ perf record: Captured and wrote 16.980 MB /home/epentland/ai/canopy/mylang-text-gaps-20261012-bench/experiments/text-gaps-20261012/bench/profiles/json02/perf.data (2083 samples) ]

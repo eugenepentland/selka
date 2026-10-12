@@ -1,0 +1,89 @@
+{
+  "status": "native preparation only, production patch unapplied",
+  "binary_sha256": "87e6b7bb26919f5022ccef8618d4964bd8fefef2ef6401d238ee7b6d76553e63",
+  "runtime_sha256": "4dcb4dac7d1cc54fd2c13e36961ce4e75808037dc697a9db37a135a7ff82ddd6",
+  "inputs": {
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/retirement-preview/core_rt.c": "8b90aaa78f7cd3d8eb392dfe3fb2fd3319c2e5e0d4e08c781803737a6817017e",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/retirement-preview/core_dict.c": "4f3beca353e7d0908e9f408568ee994aea0abc4da75bf49edfaf9039699115ed",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A02/src/core/runtime/core_unicode_data.h": "668ed92a73281c3d22138b64719b4a30f2cd7472e31db9b6162f2e272292aeea",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A02/src/core/runtime/core_text.c": "d684a834ce0ad0a16eb96939deced5e723268acbd5ae2f77d56bc23c37b610f2",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/retirement-preview/core_sort.c": "c45d05dcbf2a9eed86fd4c40dda1dd3ca7c4822d4cb9b10e5218fbe9c414b818",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A02/src/core/runtime/core_number.c": "24134473bbeb81ca4896e37c86ff662f0e1f2524bd9a6b3db8599b9e61ac9143",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/retirement-preview/core_io.c": "ded0f00b113b78279afbae8d2f4c0fe77184621c5ddada4dc59f50899f360958",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/retirement-preview/core_durable.c": "22c616f2a6bec0db2eebd5fa8dc3d645ce760d91d73d73e5dd5b2f08bf0dec7d",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/retirement-preview/core_host.c": "77fa8d5fe29bbaca29b580256bd6cd786c40f92c3dfd11f839a261d6456d80fb",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/retirement-preview/core_bytes.c": "e9dea0f02d73aa7601d1a278ac40b9d467df99f67f68f3fa8f5221feeddcf363",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A02/src/core/runtime/core_values.c": "26dd1195c8974fb3493645947b812ce6af5904c7fb0e619c6621ccdbbe066123",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A02/src/core/runtime/core_owned_copy.c": "9f0fc3f83cd0a06f8171edb2f23867ef4a1f9213a5554625078df58dda86d450",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A02/src/core/runtime/core_test.c": "18535b83cd85b1f4ccd8bd55153c38a55299e561b8dd09429cba3c257d96e7fd",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A02/src/core/runtime/core_tasks.c": "e3d291ab113bd9f31c0b352761ab2523da20af08800c2010c44240bd5c622b85"
+  },
+  "scenarios": {
+    "0": {
+      "status": 0,
+      "stdout": "preserved\n",
+      "stderr": ""
+    },
+    "1": {
+      "status": 1,
+      "stdout": "",
+      "stderr": "fatal: out of memory\n"
+    },
+    "2": {
+      "status": 1,
+      "stdout": "",
+      "stderr": "fatal: out of memory\n"
+    },
+    "3": {
+      "status": 1,
+      "stdout": "",
+      "stderr": "fatal: out of memory\n"
+    },
+    "4": {
+      "status": 1,
+      "stdout": "",
+      "stderr": "fatal: out of memory\n"
+    },
+    "5": {
+      "status": 1,
+      "stdout": "",
+      "stderr": "fatal: out of memory\n"
+    },
+    "6": {
+      "status": 1,
+      "stdout": "",
+      "stderr": "fatal: out of memory\n"
+    },
+    "7": {
+      "status": 1,
+      "stdout": "",
+      "stderr": "fatal: out of memory\n"
+    },
+    "8": {
+      "status": 1,
+      "stdout": "",
+      "stderr": "fatal: out of memory\n"
+    },
+    "9": {
+      "status": 1,
+      "stdout": "",
+      "stderr": "error[R_MEMORY_BUDGET]: memory budget exhausted; raise it with --max-memory=SIZE\n"
+    },
+    "10": {
+      "status": 1,
+      "stdout": "",
+      "stderr": "fatal: out of memory\n"
+    },
+    "11": {
+      "status": 1,
+      "stdout": "",
+      "stderr": "fatal: out of memory\n"
+    },
+    "12": {
+      "status": 1,
+      "stdout": "",
+      "stderr": "fatal: out of memory\n"
+    }
+  },
+  "legacy_rc_symbols_absent": true
+}

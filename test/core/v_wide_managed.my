@@ -18,7 +18,7 @@ func mk(i: int) -> Big:
 
 
 func grow(b0: Big, v: int) -> Big:
-    mut b = b0
+    mut b = b0.copy()
     b.names.append(v)
     b.more.append(v * 2)
     b.a = b.a + 1
@@ -36,7 +36,7 @@ func weight(s: Slot) -> int:
 
 
 func spin(b0: Big, n: int) -> int:
-    mut b = b0
+    mut b = b0.copy()
     mut other = mk(100)
     for i in range(n):
         mut t = b
@@ -48,8 +48,8 @@ func spin(b0: Big, n: int) -> int:
 func main(out: Stream) -> int:
     mut slots: Slot[] = [Slot.empty, Slot.one(value=5), Slot.big(value=mk(7))]
     mut shared = grow(mk(1), 9)
-    slots.append(Slot.big(value=shared))
-    slots.append(Slot.big(value=shared))
+    slots.append(Slot.big(value=shared.copy()))
+    slots.append(Slot.big(value=shared.copy()))
     mut total = 0
     for i in range(len(slots)):
         total += weight(slots[i])

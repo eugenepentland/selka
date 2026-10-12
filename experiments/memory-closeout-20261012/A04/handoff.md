@@ -1,0 +1,347 @@
+# A04 handoff
+
+Base: `fbfcaa7a923186a8e773c3760f81c10aa345a432` (C0).
+Branch: `codex/memory-closeout-20261012-A04`.
+
+Coverage commit `d36558ac3e18ef1ba5547b67d9e14c7101998ab1` adds executable coverage and release inventory. Its required Guardian hook passed all 88 checks after correcting a duplicate primary spec tag to `spec-case`. It makes no
+production allocation-policy or runtime change. The 80 public functions and five
+public types in JSON, strings, path, base64, hex and byte_builder remain in scope;
+none is silently excluded. Every function has direct fixture call coverage in
+`inventory.json`.
+
+Owned files: `src/stdlib/{json,strings,path,base64,hex,byte_builder}.my`,
+`src/core/runtime/core_text.c`, associated fixtures and this A04 evidence.
+New durable regression: `tests/lang/a04_memory_library_contracts.my` contains six
+public tests and an executable main for zero-RC qualification before guest-test
+mode support lands. The existing `NEW-CORE-ZERO-RC-LIBRARY-1` spec contract applies.
+No shared-file edits were made. No helper whitelist additions were requested.
+
+The supplemental tests retain outputs across dynamic input replacement and local
+input destruction; exercise Unicode scalar boundaries, invalid UTF-8, codec
+padding/errors, nested JSON, split/join/path operations, repeated calls and builder
+snapshots. Separate fixtures prove borrowed view copies remain independent and
+require exact diagnostics for owner replacement, mutation and local-owner escape.
+
+## Executed evidence
+
+Frozen compiler:
+`/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang`.
+Compiler SHA-256:
+`324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a`.
+Source commit is C0, rebuilt on this host by A09 with the pinned toolchain and
+complete installed component layout.
+
+- `mylang fmt tests/lang/a04_memory_library_contracts.my --check`: passed.
+- `qualify.py --inventory`: passed, zero uncovered functions.
+- C0 release pilot: ownership supplement and positive views passed, plus all three
+  negative view cases. Both counted runs have zero emitted/runtime RC events and
+  zero managed bytes live at exit; LLVM and symbol audits pass.
+- Raw commands, compiler/source/binary/LLVM hashes and counters:
+  `c0-pilot/results.json` and `c0-pilot/raw/`.
+- C0 baseline qualification passed all 12 requested lanes and all three exact negative diagnostics. Every one of the eight fixtures runs in release; the six-test public ownership supplement also runs in unoptimized debug, verified release, optimized debug and release without facts. All counted runs have zero RC and zero managed exit-live bytes; LLVM/symbol audits pass. Raw evidence is in `c0/`, with compact totals in `c0-summary.json`. The coordinator approved this baseline scope because A04 makes no production change; the integrated candidate still requires the full 40-lane matrix.
+
+The harness owns shared admission for each lane and reuses an authorized bounded outer build lease. The final ten baseline lanes used one lease after coordinator approval; individual observed compiles had been 0.17–1.21 seconds. It preserves validated completed lanes when resuming an interrupted phase, archives exact source inputs, and refuses to overwrite completed reports. It
+imports historical helper functions without invoking their old report writers.
+Build elapsed times are operational observations, not controlled performance
+measurements. Managed counters are not RSS. No allocation reduction is claimed.
+
+## Integration and remaining work
+
+The coordinator should include the new guest test in normal auto-discovery and
+rerun this matrix on the frozen integrated compiler, then on changed default and
+retirement artifacts. C0 evidence cannot qualify a different compiler. The
+coordinator owns the full registered gate and final Guardian check.
+
+No production correctness failure was found in the complete C0 baseline library qualification. Active RC remains at
+C0; this handoff does not claim rollout or retirement. `core_text.c` has two
+legacy alternatives to remove only after stage approval: the uniqueness check in
+`core_text_append_bytes` and the retained alias in `myl_core_text_encode`.
+The selected zero-RC paths already copy static append sources and return an
+independent bytes owner from text encoding. A07 has this retirement inventory.
+
+## Additional guest migrations and repetition repair
+
+The coordinator subsequently reserved 19 existing text/codec guest files to A04.
+Commit `fe582983f` keeps all 133 public tests, exact originals and migration burden
+in `migrations/`. Interim A10 support-compiler execution passes all 74 runnable
+ordinary tests and 72 checked-ownership tests; two native-lowering refusals and
+five source-refused files remain explicit. See `migrations/README.md` for owners
+and reproducers. These sources need an integrated-compiler rerun.
+
+The repetition reproducer required additional coordinator reservations:
+`src/repetition.zig`, `src/sema_idioms.zig`, `src/core/build_values.zig` and
+`src/core/runtime/core_values.c`. Repetition now remains a typed binary operation;
+text/bytes use the existing borrowed-input, fresh-output runtime helper without a
+gathered list. List repetition copies each managed child before moving it into the
+output, as `PY-REPEAT-1` already requires. Named `*=` rebinds the independent result.
+Empty lists bypass the count loop, and the octet size guard includes its terminator.
+A07 approved the static ownership/cleanup review and owns the two explicit helper
+contracts. The coordinator extended `SPEC.md`; A04 did not edit shared contracts.
+
+The nested/wide list fixture passed counted execution in all five modes on A04's
+compiler SHA256 `077aa182f221694ed29e1757a1a6f249bdd8196018804f8e459747c8c193dff8`.
+Every lane reports zero RC, zero managed exit-live bytes, and clean LLVM/symbol
+audits (`repetition/lists-01/`). This is a prototype source-diff artifact, not C1.
+Full text/byte native qualification must consume A07's helper-contract additions;
+earlier unaudited-helper refusals are retained in `repetition/initial-02.json`.
+Nested-place `holder.values *= count` remains the existing `E_TYPE` boundary in
+both modes; mutable parameter and field arguments retain positive coverage.
+`repetition/ordinary-01.json` also passes the 17 existing Python expression guest
+tests and the new complete fixture; both oversized nonempty repetition probes
+trap `R_MEMORY_BUDGET` under the explicit 8 MiB ceiling. No runtime/RSS speedup or
+allocation reduction is inferred from these correctness probes.
+
+## Borrowed rendering and expanded fixture migration
+
+Commit `b63b5ae80454708f05d91409dac4d31a0fd0efee` replaces rendering's temporary
+owning box with a synchronous borrow of canonical stack storage. The coordinator
+reserved `build_render.zig`/`emit_render.zig`; A07 authored and audited the shared
+`emit_llvm.zig` hook and exact generated-helper contracts. The coordinator applied
+SPEC/root registration. Five focused tests and Guardian's 88 checks passed. The
+frozen prototype also passed all five native counted modes with zero RC/leaks and
+clean LLVM/symbol audits; its ordinary/replay/control evidence is still running.
+See `rendering/` for exact identities, source diff and raw results. The equivalent
+A01 driver dependency is `1120bde6a` on this branch and `38dc781a` in integration;
+do not merge both. No allocation/runtime saving is inferred from removing the box.
+
+The coordinator also assigned 14 more `test/core` fixtures. All 42 public tests,
+including intentional traps, and every existing value assertion are preserved.
+`additional-migrations/` records original bytes/hashes, 43 extra copy calls, 43
+added/removed lines, source checks and remaining reproducers. Twelve of fourteen
+source checks pass; A07 owns the conditional-result and optional-loop failures.
+Native qualification and registered exact diagnostic oracles remain required.
+The 19 earlier guest sources now admit 18 files under support4; only borrowed
+tuple destructuring remains source-blocked. `first_word` now explicitly copies a
+borrowed generic string return, with source burden recorded separately.
+
+## Completed support4 and renderer evidence
+
+`repetition/support4-01/` passes ten counted lanes plus three required negative
+cases on source `66890fbc5135a771e6a423724d13c30018ab717f`, compiler SHA256
+`4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375`.
+The compiler includes approved helper contracts and byte-kind preservation.
+Zero-RC counters, leak checks and structural LLVM/symbol audits pass throughout.
+The source-commit argument is now mandatory in the repetition harness, keeping
+external compiler identity distinct from the fixture checkout's revision.
+
+`rendering/prototype-02/` completes five counted zero-RC modes and ordinary release.
+The two replay checks fail their reuse requirement despite successful links, since
+the changed host native tool closure is unqualified. The immutable C0 ordinary
+control fails on the old native-object lifetime bug. These three failures remain
+in the report and block a cache/baseline qualification claim; the coordinator and
+A08 own the host approval and integrated rerun. No paired savings are claimed.
+The complete public-export matrix and migrated guest executions are still running
+against support4 and will be recorded separately. Their final-candidate rerun is
+required after integration, default promotion and retirement as affected.
+
+The full support4 public-export matrix is now complete: `support4-public/` records
+40/40 native lanes and 3/3 exact negative diagnostics, with all 80 functions and
+five public types retained. Counted execution has zero RC and zero managed exit
+bytes; LLVM and linked-symbol audits pass. The source-matched twelve C0 baseline
+lanes have unchanged allocation/reallocation/peak counters in
+`c0-support4-counter-comparison.json`. This is preserved behavior, not an
+allocation saving, RSS result or timing comparison. Support4 remains an interim
+artifact; the final integrated compiler must consume the full matrix again.
+
+The harness now batches each fixture's five modes under one build lease, validates
+completed sources before admission when resuming, and checks the three negative
+fixtures in one bounded lease. Completed native lanes were preserved across
+queued-only checkpoints when adopting the coordinator's shared build budget.
+No active compilation was interrupted during these support4 checkpoints.
+
+The support4 migrated-guest run is also complete: all 128 admitted ordinary tests
+pass; zero-RC passes 124, retains two native-lowering failures in
+`rc_plain_update_paths.my` and two unsupported `myl_core_format_float` repr tests
+in `python_text_surface.my` (A07 owns both). The separate five tests in source-refused
+`tuples.my` keep the full 133-test / 19-file denominator visible. Raw test receipts,
+forced execution commands and diagnostics are in `migrations/execution-support4.json`.
+The helper file is exercised by its importing formatter fixture.
+
+The resource audit adds `repetition/affine_resource.my`: both ordinary and
+support4 checked source compilation refuse a list containing a record that owns
+a generic resource with `E_LIST_ELEMENT`, before repetition could duplicate its
+owner. A07 is adding registered negative coverage; future repetition harness runs
+include this fourth negative separately from the completed three-negative report.
+
+The support5 renderer rerun (`rendering/support5-01/`) now passes six native lanes
+and both release/debug receipt/replay checks on source
+`a1f19edf255c8c0886731d8d7cce450d5f657720`. The five counted ownership modes have
+zero RC/leaks and clean structural audits. A08 separately verifies the transition
+from preserved C0 partial rendering stages; C0's old failed native link remains an
+explicit limitation. This does not qualify support5's historical installed RC
+components or claim C1/default/retirement completion.
+
+Numeric formatting ABI repair is committed as
+`92edc7a99e6ca2c03928586bc66f6f563a93b3b2` after Guardian88.
+The prebuilt Zig adapter now treats the first eight bytes as opaque and updates
+ASCII metadata through the selected C layout. `formatting/abi-04/` records the
+actual old/new objects under ordinary and checked ABIs: old checked fails the
+Unicode metadata oracle, both ordinary controls and the repaired checked object
+pass with no live managed blocks. Earlier harness attempts are retained and
+classified in that README. Five counted guest modes plus ordinary pass; two
+prototype cache replay requirements remain unqualified on the worker's old host
+closure. A08 owns integrated numeric-object invalidation/replay. Exact audited
+format_float/format_number/round_float contracts were authored by the coordinator
+and reviewed by A07. The harness now pins its old source to C0 so committing the
+repair does not silently turn the old control into the new implementation.
+
+Slice lifetime repair is committed as `36e1afc91`, Guardian88. Four focused IR
+tests pass, including preserved read-only fusion. New native regressions pass all
+five modes; original s1_reads passes five checked modes plus ordinary. Five
+s1_views checked lanes remain refused at an earlier sorted/list-copy path absent
+from this older worker compiler, while its ordinary control passes. All refusals
+remain in `slices/prototype-01/`; the full integrated rerun is required. The
+production pass follows borrowed parents and bidirectional phi aliases, retaining
+materialized snapshots across owner transfers or updates. Analysis remains
+O(nodes + edges) per candidate query. A07 reviewed the alias and consuming-operand
+contracts. No workaround changes either original S1 source.
+
+The additional 14 support5 native survey plus targeted corrected reruns now covers
+12/14 cases; two S1 slice failures remain assigned to the optimizer repair. The
+benchmark-provider failure was harness misuse of --link with an object instead of
+C source, preserved in the initial results and corrected in a separate phase.
+Two missed copies in the scalar comparison list are now explicit without changing
+assertions; the source burden is 44 line pairs / 45 added copy calls. See
+`additional-migrations/sources-support5.json` and both native result directories.
+Borrowed tuple decomposition migrations await the integrated tuple.copy frontend
+fix (A01 eccea1cc) and are not yet counted as qualified.
+
+Support6 source 5167c588 / compiler SHA256 bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4
+now completes two integrated follow-ups. Numeric formatting passes all six
+native lanes and both release/debug receipt-replay checks; the stored object
+SHA256 0fa3619e922e68e6418d487417de4b127281abe2618947cc023277dc7746c03c
+is recorded separately from the earlier prototype. A08 owns old-object repair.
+Slice qualification passes all 17 lanes, including both full original S1 fixtures
+with their existing output assertions. All 15 counted checked slice lanes are
+RC0/live0 and structurally clean. See formatting/support6-01 and slices/support6-01.
+These results remain intermediate; Support6 retains historical RC installed
+components and is not the final C1/default/retirement artifact. The 19-source
+migration survey still refuses the optional tuple unpack at found.copy(); A01's
+complete-unpack fix is excluded from Support6. Forced native tests for the
+admitted subset are underway and will retain all 19 sources/133 tests in evidence.
+
+The completed Support6 migration run records 18/19 admitted sources and all 128
+admitted tests executed in both modes. Ordinary 128/128 passes; checked 127/128
+passes with no unsupported tests. The remaining native refusal is
+`push(mut frame.rows[0])` in rc_plain_update_paths.my:28 (A07); nested writes and
+numeric repr now pass. Optional tuple.copy unpack remains source-refused at
+tuples.my:26 (A01 complete unpack work), retaining its five tests in the 133 total.
+The minimal pending tuple migration is snapshotted with exact hashes but is not
+qualified or integrated. Native command JSON and earlier Support5 survey remain
+in migrations evidence. No running A04 processes remain.
+
+List extrema follow-up: `extrema/` records the exact A09 list-only scalar-index
+patch, four new Core tests, eight passing existing unit blocks and 23 passing
+native lanes plus three expected source refusals. The unchanged fixture refuses
+Support6 before its explicit copy; the A04 prototype compiler SHA256 is
+8a6905b47120f6b279e53fe30cb05951da6d862380826a327a4cd9051e420beb on base
+4ab84724d45de3710f2e1b4ba20b7fab8f4082a3 plus the recorded diff. A07 approved the
+final borrow-root behavior. All ten normal-return checked lanes are RC0/live0
+and structurally clean; fatal empty-list runs separately retain the existing
+32-byte live empty-header observations (including the ordinary control), with
+all exact source/span traps preserved. The README explains fatal `_exit` without
+owner unwinding; these negative executions are not claimed as leak-free returns.
+The coordinator authored SPEC/root-test overlays. Different-root two-string
+extrema and Optional.unwrap_or remain separate support blockers for follow-up;
+no generic ownership merge or helper registry was changed. Final integration
+qualification remains required, and the pending tuple migration stays separate.
+
+Two-parent borrowed selections are now implemented and locally qualified in
+`selections/`. On base07f16c654 plus the exact recorded overlays, compiler
+SHA256 70525285968f79d1bd3e78705b189763ea015d4ac9073676eb0eaa1ed6667d5e
+passes Core5/5, frontend11/11, native6/6 and source-negative8/8. Five checked
+native modes are RC0/live0 with clean LLVM/symbol audits; ordinary release is a
+behavior/leak control. This is intermediate evidence, not a final candidate.
+The feature requires A08 atomic typed/semantic v9 commit779ea9a62; its shared
+files remain validation overlays outside the A04 feature commit. A07 authored
+and reviewed source/IR two-parent marker contracts, root authored shared Core
+hooks, registrations and SPEC prose. The logical validator is always-on before
+selection operands; no generic ownership merge changed. A08 will qualify native
+cache/replay on the integrated compiler. Generator extrema folds and set(iterable)
+remain separate owner tasks. Pending tuple source migration remains unstaged.
+
+Final selection phaseprototype-04 also includes the existing522e66671 verifier
+scratch-arena validation dependency. All compiler build stderr is now empty;
+earlier112-allocation compiler diagnostics are preserved as an omitted-overlay
+reproducer in selections/compiler-leaks.json, distinct from clean guest counters.
+
+The pending tuple migration now qualifies independently in tuples/prototype-02:
+checked and ordinary source checks pass, and all five original public test oracles
+pass in five checked native modes plus ordinary release (30 Boolean calls).
+Compiler70525285 is the exact prototype identified by selections' phase04 source
+manifest, with schema779ea9 and verifier522 dependencies. All compiler/guest stderr
+is empty; checkedRC0/live0/LLVM/symbol audits pass. Original C0/prior/pending/final
+sources and the unchanged public oracles are preserved with hashes and burden:
+10 removed/10 added lines and nine explicit copies from C0. A01's integrated
+complete-unpack behavior permits this source; Support7/final reruns remain due.
+
+A fresh isolated C3 core_text.c patch is prepared under retirement-core-text/
+against integration c749ad5a9d2dfef5d5c4d7b9de2a30f03029999f. Exact source and
+proposed hashes, private apply-check success, deleted-selector inventory and
+remaining qualification are recorded. Production core_text.c is unchanged;
+this is a reviewable draft, not legacy retirement. The patch preserves static
+copy-on-mutation and independent encode results and depends on A02/coordinator
+retaining count-free shared runtime helper contracts. Other files from the older
+multifile retirement draft remain held separately. C3 activation and actual
+native/structural/full verification remain required before any retirement claim.
+
+Additional C3 drafts now cover core_values.c's float-render temporary release
+and the newly added borrowed-selection lowerer plus previously owned repetition,
+slice and numeric-header comment paths. retirement-core-values/ pins c5ea530;
+retirement-owned-lowering/ pins bed11cf3. Both pass private apply-checks against
+exact committed sources. Runtime repetition helpers and overflow/kind guards are
+unchanged. The slice public updated() API retains the existing bounded owned-only
+implementation; the obsolete RC branch disappears. A07 has the exact compiler
+patch and A02 has the exact runtime patch for isolated combined previews. These
+are evidence-only drafts; active production remains unchanged until C2 qualifies
+and coordinator C3 activation supplies mandatory OWN1 ABI/cache invalidation.
+
+## Common Support7 matrix complete
+
+All A04 common-artifact suites pass on source
+`bed11cf3bf3102ffec44487e431a1573fdf02ad5`, compiler SHA256
+`540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef`, using the
+coordinator's full ReleaseFast installation with owned components.
+`common-support7/README.md` and `results.json` preserve every suite's denominator.
+The public library passes all 40 native lanes and three negative cases, retaining
+80 exports and five types. All 14 additional fixtures pass their 70 lanes. The
+original 19-source assignment has no refusals: 18 runnable files preserve all
+133 public tests, passing in each checked and ordinary mode (1,330 invocations),
+with zero unsupported tests. The helper remains covered through its importer.
+
+The overlapping suites contain 140 recorded counted normal-return checked runs;
+all have zero RC events, zero managed exit-live bytes and clean structural audits.
+The 12 fatal empty-list trap lanes retain their separate exit-live observations.
+Guest-test command assertions are not relabeled as RC/allocation counter results.
+This report makes no runtime/RSS claim and does not declare default or retirement
+complete. A07's supplemental lifecycle and A08's cache/storage evidence remain
+separate. No previously failing source was dropped.
+
+Eleven of twelve source-matched C0 counter pairs preserve allocations, cumulative
+bytes and managed peak exactly. JSON release adds three allocations/192 bytes,
+with unchanged 9,952-byte managed peak and zero exit-live bytes. Function counters
+and LLVM localize this to read_literal's conservative slice snapshot. Recursive
+list-copy event changes independently come from instrumentation commit 1f894ddd3.
+The separately qualified helper commit e5fa21135303705ca52fa594c69ebc4a6f823559
+restores those three optimized temporaries without changing the safety optimizer.
+Its evidence is not substituted for the original Support7 results. The next
+integrated candidate must consume that source and rerun affected evidence.
+
+Evidence and adapters are committed from the coordinator-authorized A04-json
+checkout, preserving the original worker's frozen inputs. The migration adapter
+now accepts all five modes while preserving its historical verified-only default.
+The counted adapter rejects compiler SafeAllocator diagnostics. The JSON replay
+adapter pins archived original/helper sources and takes an explicit compiler
+identity and fresh phase; the exact adapter used remains archived with its hash.
+
+C3 runtime/compiler patches remain isolated drafts. A10 now owns the narrow
+borrowed-equality changes in build_values/emit_values; the affected A04 C3 draft
+must be refreshed against that final implementation before retirement activation.
+
+## Full-gate follow-ups
+
+- `78dbb358d2306a043f22c1b9fafe81641ad8ea55`: exact scalar saturation helper admission; two Core tests and12 native lanes, including the unchanged original width-boundary function. Full recursive-values equality is separately owned by A10.
+- `187b0fe30`: repeated STR capacity/terminator repair restores moving Unicode cursor; two focused tests, all7 before/after source-identical lanes and10 repetition+4 negative lanes pass. Walks1,201,439,895→1,639,865; every paired managed metric unchanged. Exact artifact and raw evidence under `text-cursor/`.
+- Extrema lint wrappers move existing scenario bodies into private helpers, preserve all3 public tests/oracles and pass23 native+3 negatives plus lint/format; `extrema/wrapper-hygiene/`. Saturation fixture formatting changes only blank lines.
+
+The user subsequently changed the endpoint to a green complete verification gate; additional performance qualification is deferred. No A04 report promotes the intermediate Support7/prototype artifacts to a completed default or retirement milestone.

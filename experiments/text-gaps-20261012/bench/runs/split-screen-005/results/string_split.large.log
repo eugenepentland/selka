@@ -1,0 +1,14 @@
+build-slot: FIFO ticket 482, position 1; draining active work (gate1.lock); waiting (0s so far)
+build-slot: FIFO ticket 482, position 1; draining active work (gate1.lock); waiting (60s so far)
+build-slot: FIFO ticket 482, position 1; draining active work (gate1.lock); waiting (121s so far)
+build-slot: FIFO ticket 482, position 1; draining active work (gate1.lock); waiting (181s so far)
+build-slot: FIFO ticket 482, position 1; draining active work (gate1.lock); waiting (241s so far)
+build-slot: FIFO ticket 482, position 1; draining active work (gate1.lock); waiting (301s so far)
+build-slot: FIFO ticket 482, position 1; draining active work (gate1.lock); waiting (361s so far)
+build-slot: FIFO ticket 482, position 1; draining active work (gate1.lock); waiting (421s so far)
+build-slot: FIFO ticket 482, position 1; draining active work (gate1.lock); waiting (482s so far)
+build-slot: FIFO ticket 482, position 1; draining active work (gate1.lock); waiting (542s so far)
+build-slot: FIFO ticket 482, position 1; draining active work (gate1.lock); waiting (602s so far)
+build-slot: FIFO ticket 482, position 1; draining active work (gate1.lock); waiting (662s so far)
+build-slot: timing slot 1, FIFO ticket 482 after 702s
+text-gaps/split-screen-005/string_split/large {'checked-baseline': True, 'checked-candidate': True, 'rust': True}

@@ -1,0 +1,25 @@
+{
+  "status": "prior isolated draft27-test evidence; latest rebased patch includes production cache-isolation followup and has apply/fmt checks only; native rerun pending",
+  "source_revision": "50d86cfd5e48fff33205c95010246a323b0988e7",
+  "draft_builder_sha256": "fdff46b1e9ebc3d1c89098153e76801fb17f936a91856fbdefe524b471459c61",
+  "draft_sources": {
+    ".tmp/memory-closeout/A10/component-retirement/selfhost/component_archive.zig": "d8adb175b1399e0a93ad856456be5cdd8b29df57af27e223baf357f33feb3aed",
+    ".tmp/memory-closeout/A10/component-retirement/selfhost/component_files.zig": "5abb3f52b1bd2cec6c7911d153aa93f34a90eb7209946ea77ecf347480c88def",
+    ".tmp/memory-closeout/A10/component-retirement/selfhost/components.zig": "3a385a4099ac8d42ed5e9e86f658718586e53f5c6609accda77447a553d24ed9",
+    ".tmp/memory-closeout/A10/component-retirement/selfhost/test_component_native.py": "c7adcfaa930cd469b22759322b2bdc06f6d3d4092a12e22183e03db87d1794c9",
+    ".tmp/memory-closeout/A10/component-retirement/selfhost/test_components.py": "0b5896bbd23a2e20a167db0b7bec757e02b9ccd063c3356b036cc39ca12d538f"
+  },
+  "builder_compile": "PASS ReleaseSafe LLVM",
+  "tests": {
+    "passed": 27,
+    "failed": 0,
+    "skipped": 0,
+    "scope": "fake tool cache/archive/manifest refusal and native qualification routing"
+  },
+  "apply_check": "PASS",
+  "zig_fmt_check": "PASS",
+  "actual_pin": null,
+  "historical_pin_sha256": "a2e02f86f24b139c1b3b71c035ad0f376246f43b12081f3f5beac1bbc007da1c",
+  "required_integration": "Apply only at coordinator Stage4 with root default forwarding to real qualified checked-default-v1 compiler pin. Root forwarding and manifest are deliberately absent from this patch.",
+  "rebased_patch_requires_native_rerun": true
+}

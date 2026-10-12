@@ -1,6 +1,7 @@
-# Fixed arrays of capabilities (NEW-CORE-S5-CAP-COLLECTIONS-1): `[N]Stream`, `[N]Host` and
-# `[N]Filesystem` as locals, record fields, union payloads, `mut` parameters and results,
-# indexed, iterated, copied and rewritten. Stdout and stderr match the old core's.
+# Fixed arrays of Stream/Host handles (NEW-CORE-S5-CAP-COLLECTIONS-1) remain valid
+# locals, record fields, union payloads, mut parameters and results. Filesystems
+# use named owners; the original owning-array source is a negative A05 regression.
+# Stdout, stderr and the provider read order match the original fixture.
 import filesystem
 
 record Grid:
@@ -44,14 +45,14 @@ func read(fs: Filesystem, out: Stream) -> Unit:
 
 
 func files(out: Stream) -> int:
-    mut fss: FixedArray[Filesystem, 2] = FixedArray[Filesystem, 2]([filesystem.memory(), filesystem.memory()])
-    _ = fss[0].write_text("x.txt", "in a")
-    _ = fss[1].write_text("x.txt", "in b")
-    for fs in fss:
-        read(fs, out)
-    fss[1] = fss[0]
-    read(fss[1], out)
-    return len(fss)
+    const first = filesystem.memory()
+    const second = filesystem.memory()
+    _ = first.write_text("x.txt", "in a")
+    _ = second.write_text("x.txt", "in b")
+    read(first, out)
+    read(second, out)
+    read(first, out)
+    return 2
 
 
 func main(host: Host, out: Stream, err: Stream) -> int:

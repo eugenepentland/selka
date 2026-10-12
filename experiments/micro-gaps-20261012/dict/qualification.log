@@ -1,0 +1,15 @@
+build-slot: FIFO ticket 1875, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 1875 after 10s
+guardian/test: 4 test(s) selected
+All 4 tests passed.
+guardian/test: test wall 0.15s; slowest over 50ms:
+guardian/test:   0.15s  dict_test.test.gap_dict native inserted keys survive source replacement and early exits
+guardian/test: PASS — 4 passed
+guardian/test: RESULT {"passed":4,"failed":0,"skipped":0}
+779967
+779967
+100 100
+18
+1
+effect-1
+9

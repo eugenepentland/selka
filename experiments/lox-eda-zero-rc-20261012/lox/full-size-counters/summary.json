@@ -1,0 +1,1935 @@
+{
+  "instrumented_runs_only": true,
+  "compiler_source": "e2893d2707cbe057a09abf94e04c4b12d16b7b8b",
+  "compiler_sha256": "6e7938a14ad4abc46b76c149ef12551b170f6c7e6f462beec2f81db18d40a83d",
+  "cases_per_arm": 26,
+  "completed_per_arm": {
+    "mylang-original-rc": 26,
+    "mylang-migrated-rc": 26,
+    "mylang-zero-rc": 20
+  },
+  "common_completed_denominator": 20,
+  "common_completed_cells": [
+    "lox/tree/binary_trees",
+    "lox/tree/closures",
+    "lox/tree/equality",
+    "lox/tree/fib",
+    "lox/tree/instantiation",
+    "lox/tree/invocation",
+    "lox/tree/method_call",
+    "lox/tree/properties",
+    "lox/tree/string_equality",
+    "lox/tree/strings",
+    "lox/tree/trees",
+    "lox/tree/zoo",
+    "lox/tree/zoo_batch",
+    "lox/vm/binary_trees",
+    "lox/vm/closures",
+    "lox/vm/fib",
+    "lox/vm/instantiation",
+    "lox/vm/strings",
+    "lox/vm/trees",
+    "lox/vm/zoo"
+  ],
+  "common_completed_sums": {
+    "mylang-original-rc": {
+      "allocs": 114979544,
+      "reallocs": 725,
+      "cumulative_allocated_bytes": 10024638912,
+      "compiler_retains": 4210994959,
+      "compiler_releases": 4325162345,
+      "runtime_retains": 8441,
+      "runtime_releases": 806179,
+      "shared_retains": 0,
+      "shared_releases": 0,
+      "uniqueness_tests": 2548378577,
+      "direct_destructions": 114
+    },
+    "mylang-migrated-rc": {
+      "allocs": 114997063,
+      "reallocs": 740,
+      "cumulative_allocated_bytes": 10121124840,
+      "compiler_retains": 4288654456,
+      "compiler_releases": 4402828910,
+      "runtime_retains": 8441,
+      "runtime_releases": 806179,
+      "shared_retains": 0,
+      "shared_releases": 0,
+      "uniqueness_tests": 2548378577,
+      "direct_destructions": 114
+    },
+    "mylang-zero-rc": {
+      "allocs": 16578222271,
+      "reallocs": 751,
+      "cumulative_allocated_bytes": 7466718651880,
+      "compiler_retains": 0,
+      "compiler_releases": 0,
+      "runtime_retains": 0,
+      "runtime_releases": 0,
+      "shared_retains": 0,
+      "shared_releases": 0,
+      "uniqueness_tests": 0,
+      "direct_destructions": 16576177741
+    }
+  },
+  "cells": [
+    {
+      "cell": "lox/tree/binary_trees",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 4119616,
+            "reallocs": 43,
+            "alloc_bytes": 523572904,
+            "realloc_added_bytes": 2449760,
+            "peak_live_bytes": 5425176,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 475,
+            "runtime_releases": 17254,
+            "cumulative_allocated_bytes": 526022664,
+            "compiler_retains": 67588314,
+            "compiler_releases": 71690590,
+            "direct_destructions": 3,
+            "uniqueness_tests": 25160797,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 4120198,
+            "reallocs": 46,
+            "alloc_bytes": 525931640,
+            "realloc_added_bytes": 2517376,
+            "peak_live_bytes": 5439264,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 475,
+            "runtime_releases": 17254,
+            "cumulative_allocated_bytes": 528449016,
+            "compiler_retains": 69460629,
+            "compiler_releases": 73563101,
+            "direct_destructions": 3,
+            "uniqueness_tests": 25160797,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 34109019,
+            "reallocs": 46,
+            "alloc_bytes": 3575654544,
+            "realloc_added_bytes": 2001792,
+            "peak_live_bytes": 8147384,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 3577656336,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 33719102,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/tree/closures",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 5460745,
+            "reallocs": 41,
+            "alloc_bytes": 381360648,
+            "realloc_added_bytes": 2425184,
+            "peak_live_bytes": 3960440,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 399,
+            "runtime_releases": 21193,
+            "cumulative_allocated_bytes": 383785832,
+            "compiler_retains": 97206302,
+            "compiler_releases": 102645819,
+            "direct_destructions": 7,
+            "uniqueness_tests": 35025144,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 5461443,
+            "reallocs": 41,
+            "alloc_bytes": 384348680,
+            "realloc_added_bytes": 2425184,
+            "peak_live_bytes": 3974024,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 399,
+            "runtime_releases": 21193,
+            "cumulative_allocated_bytes": 386773864,
+            "compiler_retains": 105284680,
+            "compiler_releases": 110724449,
+            "direct_destructions": 7,
+            "uniqueness_tests": 35025144,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 49571755,
+            "reallocs": 42,
+            "alloc_bytes": 3374088336,
+            "realloc_added_bytes": 3113856,
+            "peak_live_bytes": 7569128,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 3377202192,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 49286335,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/tree/equality",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 600385,
+            "reallocs": 42,
+            "alloc_bytes": 19496744,
+            "realloc_added_bytes": 2430816,
+            "peak_live_bytes": 3616328,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 7,
+            "runtime_releases": 10663,
+            "cumulative_allocated_bytes": 21927560,
+            "compiler_retains": 210001907,
+            "compiler_releases": 210591273,
+            "direct_destructions": 1,
+            "uniqueness_tests": 36280311,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 600438,
+            "reallocs": 42,
+            "alloc_bytes": 20090072,
+            "realloc_added_bytes": 2430816,
+            "peak_live_bytes": 3649296,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 7,
+            "runtime_releases": 10663,
+            "cumulative_allocated_bytes": 22520888,
+            "compiler_retains": 210001940,
+            "compiler_releases": 210591342,
+            "direct_destructions": 1,
+            "uniqueness_tests": 36280311,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 38129948,
+            "reallocs": 43,
+            "alloc_bytes": 2696304056,
+            "realloc_added_bytes": 3807296,
+            "peak_live_bytes": 7398384,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 2700111352,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 38096286,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/tree/fib",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 2057291,
+            "reallocs": 35,
+            "alloc_bytes": 131887008,
+            "realloc_added_bytes": 2402528,
+            "peak_live_bytes": 3949440,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 23,
+            "runtime_releases": 3240,
+            "cumulative_allocated_bytes": 134289536,
+            "compiler_retains": 52967057,
+            "compiler_releases": 55021013,
+            "direct_destructions": 2,
+            "uniqueness_tests": 17483050,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 2057523,
+            "reallocs": 35,
+            "alloc_bytes": 132944152,
+            "realloc_added_bytes": 2402528,
+            "peak_live_bytes": 3960872,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 23,
+            "runtime_releases": 3240,
+            "cumulative_allocated_bytes": 135346680,
+            "compiler_retains": 57080080,
+            "compiler_releases": 59134130,
+            "direct_destructions": 2,
+            "uniqueness_tests": 17483050,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 23149516,
+            "reallocs": 35,
+            "alloc_bytes": 1487705504,
+            "realloc_added_bytes": 1944224,
+            "peak_live_bytes": 4257160,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 1489649728,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 23138576,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/tree/instantiation",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 6050461,
+            "reallocs": 41,
+            "alloc_bytes": 290099880,
+            "realloc_added_bytes": 2425184,
+            "peak_live_bytes": 3609416,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 969,
+            "runtime_releases": 18737,
+            "cumulative_allocated_bytes": 292525064,
+            "compiler_retains": 36802088,
+            "compiler_releases": 42834503,
+            "direct_destructions": 2,
+            "uniqueness_tests": 30623143,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 6051195,
+            "reallocs": 41,
+            "alloc_bytes": 294705512,
+            "realloc_added_bytes": 2425184,
+            "peak_live_bytes": 3626256,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 969,
+            "runtime_releases": 18737,
+            "cumulative_allocated_bytes": 297130696,
+            "compiler_retains": 42801847,
+            "compiler_releases": 48834630,
+            "direct_destructions": 2,
+            "uniqueness_tests": 30623143,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 33842274,
+            "reallocs": 42,
+            "alloc_bytes": 3251774856,
+            "realloc_added_bytes": 3343136,
+            "peak_live_bytes": 7200784,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 3255117992,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 33787115,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/tree/invocation",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 13650856,
+            "reallocs": 43,
+            "alloc_bytes": 725489936,
+            "realloc_added_bytes": 2440736,
+            "peak_live_bytes": 3366856,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 1092,
+            "runtime_releases": 9573,
+            "cumulative_allocated_bytes": 727930672,
+            "compiler_retains": 119404303,
+            "compiler_releases": 133046089,
+            "direct_destructions": 31,
+            "uniqueness_tests": 92082447,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 13654182,
+            "reallocs": 43,
+            "alloc_bytes": 739843368,
+            "realloc_added_bytes": 2436720,
+            "peak_live_bytes": 3380272,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 1092,
+            "runtime_releases": 9573,
+            "cumulative_allocated_bytes": 742280088,
+            "compiler_retains": 137403852,
+            "compiler_releases": 151046748,
+            "direct_destructions": 31,
+            "uniqueness_tests": 92082447,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 83429593,
+            "reallocs": 44,
+            "alloc_bytes": 14529384192,
+            "realloc_added_bytes": 2724928,
+            "peak_live_bytes": 5680256,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 14532109120,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 83399855,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/tree/method_call",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 8300730,
+            "reallocs": 43,
+            "alloc_bytes": 792693792,
+            "realloc_added_bytes": 2449760,
+            "peak_live_bytes": 3386488,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 1805,
+            "runtime_releases": 2535,
+            "cumulative_allocated_bytes": 795143552,
+            "compiler_retains": 148939410,
+            "compiler_releases": 157238648,
+            "direct_destructions": 6,
+            "uniqueness_tests": 61368395,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 8302107,
+            "reallocs": 45,
+            "alloc_bytes": 799750656,
+            "realloc_added_bytes": 2499488,
+            "peak_live_bytes": 3428864,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 1805,
+            "runtime_releases": 2535,
+            "cumulative_allocated_bytes": 802250144,
+            "compiler_retains": 157604363,
+            "compiler_releases": 165904153,
+            "direct_destructions": 6,
+            "uniqueness_tests": 61368395,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 81620205,
+            "reallocs": 46,
+            "alloc_bytes": 8113917896,
+            "realloc_added_bytes": 2729600,
+            "peak_live_bytes": 5161576,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 8116647496,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 81609810,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/tree/properties",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 9101057,
+            "reallocs": 47,
+            "alloc_bytes": 485608112,
+            "realloc_added_bytes": 2505824,
+            "peak_live_bytes": 3397592,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 2055,
+            "runtime_releases": 15417,
+            "cumulative_allocated_bytes": 488113936,
+            "compiler_retains": 127607225,
+            "compiler_releases": 136693750,
+            "direct_destructions": 32,
+            "uniqueness_tests": 67415063,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 9103642,
+            "reallocs": 47,
+            "alloc_bytes": 495569320,
+            "realloc_added_bytes": 2505824,
+            "peak_live_bytes": 3415752,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 2055,
+            "runtime_releases": 15417,
+            "cumulative_allocated_bytes": 498075144,
+            "compiler_retains": 139606579,
+            "compiler_releases": 148693844,
+            "direct_destructions": 32,
+            "uniqueness_tests": 67415063,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 76648343,
+            "reallocs": 48,
+            "alloc_bytes": 23370526152,
+            "realloc_added_bytes": 2611104,
+            "peak_live_bytes": 6018136,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 23373137256,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 76603057,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/tree/string_equality",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 43645,
+            "reallocs": 55,
+            "alloc_bytes": 240898792,
+            "realloc_added_bytes": 3131072,
+            "peak_live_bytes": 3499968,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 670,
+            "runtime_releases": 21026,
+            "cumulative_allocated_bytes": 244029864,
+            "compiler_retains": 256987889,
+            "compiler_releases": 257002660,
+            "direct_destructions": 2,
+            "uniqueness_tests": 32253170,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 43645,
+            "reallocs": 55,
+            "alloc_bytes": 240898792,
+            "realloc_added_bytes": 3131072,
+            "peak_live_bytes": 3499968,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 670,
+            "runtime_releases": 21026,
+            "cumulative_allocated_bytes": 244029864,
+            "compiler_retains": 256987896,
+            "compiler_releases": 257002667,
+            "direct_destructions": 2,
+            "uniqueness_tests": 32253170,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 83820971,
+            "reallocs": 55,
+            "alloc_bytes": 9787950824,
+            "realloc_added_bytes": 2607424,
+            "peak_live_bytes": 6014664,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 9790558248,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 83740652,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/tree/strings",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 1809802,
+            "reallocs": 38,
+            "alloc_bytes": 111643024,
+            "realloc_added_bytes": 2410080,
+            "peak_live_bytes": 3815792,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 39,
+            "runtime_releases": 6562,
+            "cumulative_allocated_bytes": 114053104,
+            "compiler_retains": 61080233,
+            "compiler_releases": 62883271,
+            "direct_destructions": 1,
+            "uniqueness_tests": 13962885,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 1809914,
+            "reallocs": 38,
+            "alloc_bytes": 112262376,
+            "realloc_added_bytes": 2410080,
+            "peak_live_bytes": 3836088,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 39,
+            "runtime_releases": 6562,
+            "cumulative_allocated_bytes": 114672456,
+            "compiler_retains": 61080241,
+            "compiler_releases": 62883325,
+            "direct_destructions": 1,
+            "uniqueness_tests": 13962885,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 22768556,
+            "reallocs": 39,
+            "alloc_bytes": 2728992432,
+            "realloc_added_bytes": 2640224,
+            "peak_live_bytes": 5549696,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 2731632656,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 22740977,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/tree/trees",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 2168537,
+            "reallocs": 51,
+            "alloc_bytes": 166991128,
+            "realloc_added_bytes": 16314640,
+            "peak_live_bytes": 48704800,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 483,
+            "runtime_releases": 99208,
+            "cumulative_allocated_bytes": 183305768,
+            "compiler_retains": 43162086,
+            "compiler_releases": 45231418,
+            "direct_destructions": 4,
+            "uniqueness_tests": 23516462,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 2168671,
+            "reallocs": 57,
+            "alloc_bytes": 170371824,
+            "realloc_added_bytes": 16721728,
+            "peak_live_bytes": 48990936,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 483,
+            "runtime_releases": 99208,
+            "cumulative_allocated_bytes": 187093552,
+            "compiler_retains": 43831150,
+            "compiler_releases": 45900528,
+            "direct_destructions": 4,
+            "uniqueness_tests": 23516462,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 22062450,
+            "reallocs": 57,
+            "alloc_bytes": 2200486864,
+            "realloc_added_bytes": 17635536,
+            "peak_live_bytes": 87377264,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 2218122400,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 21665560,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/tree/zoo",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 9500516,
+            "reallocs": 40,
+            "alloc_bytes": 496379064,
+            "realloc_added_bytes": 2422368,
+            "peak_live_bytes": 3358640,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 135,
+            "runtime_releases": 16204,
+            "cumulative_allocated_bytes": 498801432,
+            "compiler_retains": 142003203,
+            "compiler_releases": 151487329,
+            "direct_destructions": 8,
+            "uniqueness_tests": 74501621,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 9502418,
+            "reallocs": 40,
+            "alloc_bytes": 506122976,
+            "realloc_added_bytes": 2422368,
+            "peak_live_bytes": 3376152,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 135,
+            "runtime_releases": 16204,
+            "cumulative_allocated_bytes": 508545344,
+            "compiler_retains": 154002463,
+            "compiler_releases": 163487351,
+            "direct_destructions": 8,
+            "uniqueness_tests": 74501621,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 85039605,
+            "reallocs": 41,
+            "alloc_bytes": 8416861400,
+            "realloc_added_bytes": 2767136,
+            "peak_live_bytes": 6489312,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 8419628536,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 84988677,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/tree/zoo_batch",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 8400665,
+            "reallocs": 40,
+            "alloc_bytes": 435656552,
+            "realloc_added_bytes": 2426384,
+            "peak_live_bytes": 3375808,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 180,
+            "runtime_releases": 14690,
+            "cumulative_allocated_bytes": 438082936,
+            "compiler_retains": 126407223,
+            "compiler_releases": 134793004,
+            "direct_destructions": 8,
+            "uniqueness_tests": 64004964,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 8402247,
+            "reallocs": 40,
+            "alloc_bytes": 443854896,
+            "realloc_added_bytes": 2422368,
+            "peak_live_bytes": 3389880,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 180,
+            "runtime_releases": 14690,
+            "cumulative_allocated_bytes": 446277264,
+            "compiler_retains": 136005844,
+            "compiler_releases": 144392259,
+            "direct_destructions": 8,
+            "uniqueness_tests": 64004964,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 72452673,
+            "reallocs": 41,
+            "alloc_bytes": 7006576664,
+            "realloc_added_bytes": 2996416,
+            "peak_live_bytes": 6577376,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 7009573080,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 72392023,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/vm/binary_trees",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 13245144,
+            "reallocs": 35,
+            "alloc_bytes": 3391241064,
+            "realloc_added_bytes": 4267232,
+            "peak_live_bytes": 19881248,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 22,
+            "runtime_releases": 24959,
+            "cumulative_allocated_bytes": 3395508296,
+            "compiler_retains": 182761066,
+            "compiler_releases": 195981237,
+            "direct_destructions": 1,
+            "uniqueness_tests": 192020648,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 13245896,
+            "reallocs": 38,
+            "alloc_bytes": 3398005472,
+            "realloc_added_bytes": 4396992,
+            "peak_live_bytes": 19962296,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 22,
+            "runtime_releases": 24959,
+            "cumulative_allocated_bytes": 3402402464,
+            "compiler_retains": 180114654,
+            "compiler_releases": 193335127,
+            "direct_destructions": 1,
+            "uniqueness_tests": 192020648,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 1419945214,
+            "reallocs": 38,
+            "alloc_bytes": 589477779184,
+            "realloc_added_bytes": 3475920,
+            "peak_live_bytes": 19084600,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 589481255104,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 1419916049,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/vm/closures",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 8001120,
+            "reallocs": 33,
+            "alloc_bytes": 512613552,
+            "realloc_added_bytes": 2403472,
+            "peak_live_bytes": 3490656,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 60,
+            "runtime_releases": 14304,
+            "cumulative_allocated_bytes": 515017024,
+            "compiler_retains": 419414390,
+            "compiler_releases": 427401227,
+            "direct_destructions": 1,
+            "uniqueness_tests": 309374316,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 8002487,
+            "reallocs": 33,
+            "alloc_bytes": 520778208,
+            "realloc_added_bytes": 2399456,
+            "peak_live_bytes": 3512664,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 60,
+            "runtime_releases": 14304,
+            "cumulative_allocated_bytes": 523177664,
+            "compiler_retains": 419408062,
+            "compiler_releases": 427395447,
+            "direct_destructions": 1,
+            "uniqueness_tests": 309374316,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 2436819436,
+            "reallocs": 34,
+            "alloc_bytes": 1263189157680,
+            "realloc_added_bytes": 2973504,
+            "peak_live_bytes": 4091296,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 1263192131184,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 2436801319,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/vm/equality",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 910,
+            "reallocs": 10,
+            "alloc_bytes": 782872,
+            "realloc_added_bytes": 269360,
+            "peak_live_bytes": 424176,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 3,
+            "runtime_releases": 341,
+            "cumulative_allocated_bytes": 1052232,
+            "compiler_retains": 24006096,
+            "compiler_releases": 24006649,
+            "direct_destructions": 1,
+            "uniqueness_tests": 375001255,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 910,
+            "reallocs": 10,
+            "alloc_bytes": 782872,
+            "realloc_added_bytes": 269360,
+            "peak_live_bytes": 424176,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 3,
+            "runtime_releases": 341,
+            "cumulative_allocated_bytes": 1052232,
+            "compiler_retains": 24006082,
+            "compiler_releases": 24006635,
+            "direct_destructions": 1,
+            "uniqueness_tests": 375001255,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "timeout",
+            "arm": "mylang-zero-rc",
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero-counted",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/equality.vm.3000000.lox"
+            ],
+            "timeout_seconds": 120.0,
+            "censored": true,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": "",
+            "round": 0,
+            "phase": "warmup"
+          },
+          "metrics": null
+        }
+      }
+    },
+    {
+      "cell": "lox/vm/fib",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 460,
+            "reallocs": 10,
+            "alloc_bytes": 236136,
+            "realloc_added_bytes": 269360,
+            "peak_live_bytes": 416368,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 4,
+            "runtime_releases": 345,
+            "cumulative_allocated_bytes": 505496,
+            "compiler_retains": 369100252,
+            "compiler_releases": 369100351,
+            "direct_destructions": 1,
+            "uniqueness_tests": 322961574,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 460,
+            "reallocs": 10,
+            "alloc_bytes": 236136,
+            "realloc_added_bytes": 269360,
+            "peak_live_bytes": 416368,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 4,
+            "runtime_releases": 345,
+            "cumulative_allocated_bytes": 505496,
+            "compiler_retains": 369100238,
+            "compiler_releases": 369100337,
+            "direct_destructions": 1,
+            "uniqueness_tests": 322961574,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 2712877890,
+            "reallocs": 10,
+            "alloc_bytes": 664969290872,
+            "realloc_added_bytes": 269360,
+            "peak_live_bytes": 831536,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 664969560232,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 2712876487,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/vm/instantiation",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 15000819,
+            "reallocs": 33,
+            "alloc_bytes": 480567736,
+            "realloc_added_bytes": 2403472,
+            "peak_live_bytes": 3254520,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 3,
+            "runtime_releases": 20849,
+            "cumulative_allocated_bytes": 482971208,
+            "compiler_retains": 347011064,
+            "compiler_releases": 361991004,
+            "direct_destructions": 1,
+            "uniqueness_tests": 202490185,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 15002876,
+            "reallocs": 33,
+            "alloc_bytes": 495698056,
+            "realloc_added_bytes": 2403472,
+            "peak_live_bytes": 3265664,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 3,
+            "runtime_releases": 20849,
+            "cumulative_allocated_bytes": 498101528,
+            "compiler_retains": 347006248,
+            "compiler_releases": 361987560,
+            "direct_destructions": 1,
+            "uniqueness_tests": 202490185,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 1257010066,
+            "reallocs": 33,
+            "alloc_bytes": 782843138424,
+            "realloc_added_bytes": 2399456,
+            "peak_live_bytes": 3970608,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 782845537880,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 1256987069,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/vm/invocation",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 1673,
+            "reallocs": 12,
+            "alloc_bytes": 1431600,
+            "realloc_added_bytes": 274736,
+            "peak_live_bytes": 444464,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 3,
+            "runtime_releases": 493,
+            "cumulative_allocated_bytes": 1706336,
+            "compiler_retains": 1086011432,
+            "compiler_releases": 1086012562,
+            "direct_destructions": 1,
+            "uniqueness_tests": 382502851,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 1673,
+            "reallocs": 12,
+            "alloc_bytes": 1431600,
+            "realloc_added_bytes": 274736,
+            "peak_live_bytes": 444464,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 3,
+            "runtime_releases": 493,
+            "cumulative_allocated_bytes": 1706336,
+            "compiler_retains": 1086011418,
+            "compiler_releases": 1086012548,
+            "direct_destructions": 1,
+            "uniqueness_tests": 382502851,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "timeout",
+            "arm": "mylang-zero-rc",
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero-counted",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/invocation.vm.1500000.lox"
+            ],
+            "timeout_seconds": 120.0,
+            "censored": true,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": "",
+            "round": 0,
+            "phase": "warmup"
+          },
+          "metrics": null
+        }
+      }
+    },
+    {
+      "cell": "lox/vm/method_call",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 13334975,
+            "reallocs": 10,
+            "alloc_bytes": 4268211792,
+            "realloc_added_bytes": 269360,
+            "peak_live_bytes": 435248,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 12,
+            "runtime_releases": 385,
+            "cumulative_allocated_bytes": 4268481152,
+            "compiler_retains": 632679154,
+            "compiler_releases": 646013730,
+            "direct_destructions": 1,
+            "uniqueness_tests": 395669362,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 13334975,
+            "reallocs": 10,
+            "alloc_bytes": 4268211792,
+            "realloc_added_bytes": 269360,
+            "peak_live_bytes": 435248,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 12,
+            "runtime_releases": 385,
+            "cumulative_allocated_bytes": 4268481152,
+            "compiler_retains": 632679128,
+            "compiler_releases": 646013704,
+            "direct_destructions": 1,
+            "uniqueness_tests": 395669362,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "timeout",
+            "arm": "mylang-zero-rc",
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero-counted",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/method_call.vm.500000.lox"
+            ],
+            "timeout_seconds": 120.0,
+            "censored": true,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": "",
+            "round": 0,
+            "phase": "warmup"
+          },
+          "metrics": null
+        }
+      }
+    },
+    {
+      "cell": "lox/vm/properties",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 2662,
+            "reallocs": 13,
+            "alloc_bytes": 1949360,
+            "realloc_added_bytes": 281904,
+            "peak_live_bytes": 466120,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 3,
+            "runtime_releases": 527,
+            "cumulative_allocated_bytes": 2231264,
+            "compiler_retains": 784020162,
+            "compiler_releases": 784022245,
+            "direct_destructions": 1,
+            "uniqueness_tests": 315004978,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 2662,
+            "reallocs": 13,
+            "alloc_bytes": 1949360,
+            "realloc_added_bytes": 281904,
+            "peak_live_bytes": 466120,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 3,
+            "runtime_releases": 527,
+            "cumulative_allocated_bytes": 2231264,
+            "compiler_retains": 784020148,
+            "compiler_releases": 784022231,
+            "direct_destructions": 1,
+            "uniqueness_tests": 315004978,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "timeout",
+            "arm": "mylang-zero-rc",
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero-counted",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/properties.vm.1000000.lox"
+            ],
+            "timeout_seconds": 120.0,
+            "censored": true,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": "",
+            "round": 0,
+            "phase": "warmup"
+          },
+          "metrics": null
+        }
+      }
+    },
+    {
+      "cell": "lox/vm/string_equality",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 18492,
+            "reallocs": 10,
+            "alloc_bytes": 481866344,
+            "realloc_added_bytes": 269360,
+            "peak_live_bytes": 679032,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 103,
+            "runtime_releases": 461,
+            "cumulative_allocated_bytes": 482135704,
+            "compiler_retains": 143431,
+            "compiler_releases": 161544,
+            "direct_destructions": 1,
+            "uniqueness_tests": 322231271,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 18492,
+            "reallocs": 10,
+            "alloc_bytes": 481866344,
+            "realloc_added_bytes": 269360,
+            "peak_live_bytes": 679032,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 103,
+            "runtime_releases": 461,
+            "cumulative_allocated_bytes": 482135704,
+            "compiler_retains": 143417,
+            "compiler_releases": 161530,
+            "direct_destructions": 1,
+            "uniqueness_tests": 322231271,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "timeout",
+            "arm": "mylang-zero-rc",
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero-counted",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+            ],
+            "timeout_seconds": 120.0,
+            "censored": true,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": "",
+            "round": 0,
+            "phase": "warmup"
+          },
+          "metrics": null
+        }
+      }
+    },
+    {
+      "cell": "lox/vm/strings",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 6000743,
+            "reallocs": 11,
+            "alloc_bytes": 438473640,
+            "realloc_added_bytes": 271152,
+            "peak_live_bytes": 425840,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 10,
+            "runtime_releases": 387,
+            "cumulative_allocated_bytes": 438744792,
+            "compiler_retains": 51566968,
+            "compiler_releases": 57567313,
+            "direct_destructions": 1,
+            "uniqueness_tests": 170063556,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 6000743,
+            "reallocs": 11,
+            "alloc_bytes": 438473640,
+            "realloc_added_bytes": 271152,
+            "peak_live_bytes": 425840,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 10,
+            "runtime_releases": 387,
+            "cumulative_allocated_bytes": 438744792,
+            "compiler_retains": 51566942,
+            "compiler_releases": 57567287,
+            "direct_destructions": 1,
+            "uniqueness_tests": 170063556,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 1544445754,
+            "reallocs": 11,
+            "alloc_bytes": 1442442628416,
+            "realloc_added_bytes": 271248,
+            "peak_live_bytes": 844600,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 1442442899664,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 1544443209,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/vm/trees",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 1466053,
+            "reallocs": 33,
+            "alloc_bytes": 313073464,
+            "realloc_added_bytes": 30158992,
+            "peak_live_bytes": 174065176,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 7,
+            "runtime_releases": 488650,
+            "cumulative_allocated_bytes": 343232456,
+            "compiler_retains": 550978625,
+            "compiler_releases": 551956002,
+            "direct_destructions": 1,
+            "uniqueness_tests": 357789585,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 1466079,
+            "reallocs": 34,
+            "alloc_bytes": 313755648,
+            "realloc_added_bytes": 30344528,
+            "peak_live_bytes": 174237208,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 7,
+            "runtime_releases": 488650,
+            "cumulative_allocated_bytes": 344100176,
+            "compiler_retains": 550301408,
+            "compiler_releases": 551278795,
+            "direct_destructions": 1,
+            "uniqueness_tests": 357789585,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 3210469759,
+            "reallocs": 35,
+            "alloc_bytes": 1295555237088,
+            "realloc_added_bytes": 37685232,
+            "peak_live_bytes": 181613232,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 1295592922320,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 3209978264,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/vm/zoo",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 899,
+            "reallocs": 11,
+            "alloc_bytes": 376568,
+            "realloc_added_bytes": 271152,
+            "peak_live_bytes": 425312,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 3,
+            "runtime_releases": 383,
+            "cumulative_allocated_bytes": 647720,
+            "compiler_retains": 800005354,
+            "compiler_releases": 800005844,
+            "direct_destructions": 1,
+            "uniqueness_tests": 420001261,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 899,
+            "reallocs": 11,
+            "alloc_bytes": 376568,
+            "realloc_added_bytes": 271152,
+            "peak_live_bytes": 425312,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 3,
+            "runtime_releases": 383,
+            "cumulative_allocated_bytes": 647720,
+            "compiler_retains": 800005340,
+            "compiler_releases": 800005830,
+            "direct_destructions": 1,
+            "uniqueness_tests": 420001261,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 3290009244,
+            "reallocs": 11,
+            "alloc_bytes": 1337602928240,
+            "realloc_added_bytes": 270864,
+            "peak_live_bytes": 848336,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 1337603199104,
+            "compiler_retains": 0,
+            "compiler_releases": 0,
+            "direct_destructions": 3290007319,
+            "uniqueness_tests": 0,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        }
+      }
+    },
+    {
+      "cell": "lox/vm/zoo_batch",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 1014,
+            "reallocs": 11,
+            "alloc_bytes": 485880,
+            "realloc_added_bytes": 271152,
+            "peak_live_bytes": 426656,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 5,
+            "runtime_releases": 386,
+            "cumulative_allocated_bytes": 757032,
+            "compiler_retains": 632008036,
+            "compiler_releases": 632008640,
+            "direct_destructions": 1,
+            "uniqueness_tests": 356009898,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "metrics": {
+            "allocs": 1014,
+            "reallocs": 11,
+            "alloc_bytes": 485880,
+            "realloc_added_bytes": 271152,
+            "peak_live_bytes": 426656,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 5,
+            "runtime_releases": 386,
+            "cumulative_allocated_bytes": 757032,
+            "compiler_retains": 632008010,
+            "compiler_releases": 632008614,
+            "direct_destructions": 1,
+            "uniqueness_tests": 356009898,
+            "shared_retains": 0,
+            "shared_releases": 0
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "timeout",
+            "arm": "mylang-zero-rc",
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero-counted",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/zoo_batch.vm.400.lox"
+            ],
+            "timeout_seconds": 120.0,
+            "censored": true,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": "",
+            "round": 0,
+            "phase": "warmup"
+          },
+          "metrics": null
+        }
+      }
+    }
+  ],
+  "frozen_binaries": {
+    "mylang-original-rc": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-original-rc-counted",
+      "sha256": "ee5a4e7dc0fae4970d6b9afee4fbb0291d506c346b45921823ee67511272c387",
+      "bytes": 1631592,
+      "mode": "0555",
+      "flags": [
+        "--release",
+        "--counters"
+      ],
+      "source": "modern-control"
+    },
+    "mylang-migrated-rc": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-migrated-rc-counted",
+      "sha256": "20faf3eb4501b3c92134f8d7b0283d659fa152087e989d16479730bba2faada0",
+      "bytes": 1622416,
+      "mode": "0555",
+      "flags": [
+        "--release",
+        "--counters"
+      ],
+      "source": "migrated"
+    },
+    "mylang-zero-rc": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero-counted",
+      "sha256": "89e37cbd218613d8d85571f31ec0312a9f20e0dc73a18f5620f49a90770f47c9",
+      "bytes": 1473552,
+      "mode": "0555",
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--counters"
+      ],
+      "source": "migrated"
+    }
+  }
+}

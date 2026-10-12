@@ -1,0 +1,41 @@
+# RC-DICTIONARY-TEXT-LOOP-1: owning slice keys keep their ordinary journals.
+func frequencies(seq: str, width: int) -> dict[str, int]:
+    mut counts: dict[str, int] = {}
+    for i in range(len(seq) - width + 1):
+        mut key = seq[i:i + width]
+        counts[key] = counts.get(key, 0) + 1
+    return counts
+
+
+func published(seq: str) -> dict[str, int]:
+    mut counts: dict[str, int] = {}
+    mut before = counts
+    for i in range(len(seq)):
+        mut key = seq[i:i + 1]
+        counts[key] = counts.get(key, 0) + 1
+    if len(before) != 0:
+        counts["bad"] = 1
+    return counts
+
+
+func exposed(seq: str) -> dict[str, int]:
+    mut counts: dict[str, int] = {}
+    for i in range(len(seq)):
+        mut before = counts
+        mut key = seq[i:i + 1]
+        counts[key] = counts.get(key, 0) + 1
+        if before.get(key, 0) + 1 != counts[key]:
+            counts["bad"] = 1
+    return counts
+
+
+public func test_owned_text_keys_preserve_growth_and_empty_loop() -> bool:
+    mut empty = frequencies("", 1)
+    mut counts = frequencies("abcabcabc", 2)
+    return len(empty) == 0 and counts["ab"] == 3 and counts["bc"] == 3 and counts["ca"] == 2
+
+
+public func test_published_dictionary_keeps_copy_on_write() -> bool:
+    mut first = published("abcabc")
+    mut second = exposed("abcabc")
+    return first["a"] == 2 and second["b"] == 2 and first.get("bad", 0) == 0 and second.get("bad", 0) == 0

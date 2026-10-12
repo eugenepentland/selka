@@ -1,0 +1,5 @@
+func ignore():
+    pass
+func main() -> int:
+    ignore()
+    return 0

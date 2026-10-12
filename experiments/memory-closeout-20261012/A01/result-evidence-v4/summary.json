@@ -1,0 +1,26 @@
+{
+  "source_commit": "3c8c494758221d8d1f3dce6f65a05dce3ada5868",
+  "compiler_sha256": "a0840db3f813f2bb4dd37447fd3778435ba826ea3d24101c4351c1e73f1beb7f",
+  "harness_sha256": "2fea35d8bfc28d2b488a7f9d7be0f74c27b3aee92f35e96f62604a867eb58bd1",
+  "pipelines": [
+    "release",
+    "debug",
+    "verify",
+    "optimized_debug",
+    "no_facts",
+    "tsan"
+  ],
+  "workers": [
+    1,
+    2,
+    8
+  ],
+  "native_runs_passed": 54,
+  "normal_counted_runs_rc_and_leak_free": 30,
+  "tsan_runs_passed": 9,
+  "structural_audits_passed": 18,
+  "unhandled_list_refusal_passed": true,
+  "cycle_mutation_red": true,
+  "cycle_restored_green": true,
+  "integrated_C1_qualification": "pending"
+}

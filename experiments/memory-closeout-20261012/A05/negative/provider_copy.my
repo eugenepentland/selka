@@ -1,0 +1,11 @@
+# spec-case: CAPABILITY-FIELD-METHOD-1
+import filesystem
+
+record Store:
+    fs: Filesystem
+
+func main() -> int:
+    const root = Store(fs=filesystem.memory())
+    const copied = root.copy()
+    assert not root.fs.exists("note") and not copied.fs.exists("note")
+    return 0

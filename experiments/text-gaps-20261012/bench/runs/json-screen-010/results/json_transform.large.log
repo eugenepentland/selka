@@ -1,0 +1,6 @@
+build-slot: FIFO ticket 484, position 1; draining active work (gate1.lock); waiting (0s so far)
+build-slot: FIFO ticket 484, position 1; draining active work (gate1.lock); waiting (60s so far)
+build-slot: FIFO ticket 484, position 1; draining active work (gate1.lock); waiting (120s so far)
+build-slot: FIFO ticket 484, position 1; draining active work (gate1.lock); waiting (180s so far)
+build-slot: FIFO ticket 484, position 1; draining active work (gate1.lock); waiting (241s so far)
+build-slot: FIFO ticket 484, position 1; draining active work (gate1.lock); waiting (301s so far)

@@ -1,0 +1,12 @@
+build-slot: build slot 1, FIFO ticket 843 after 0s
+error: failed to open object /home/epentland/.cache/mylang/components/artifacts/119471adb90db5bf8d871431c2b3b594a600f8f40fb21d1f4a69f5c7253b5a86.build/cache/native-link-895503d41b9ced53c0a05d3baee808eb/4292805a27bc2ec4837a2b5df9b60cdd2bd59c198054ac95594ef020a66ef11b.o: FileNotFound
+components: command failed (exit 2): /home/epentland/.cache/mylang/components/seeds/234ed167a218092282ba74b74fd057259d381aa074b73559b55dd083ebbe6ff3/source/zig-out/focus/mylang
+affected-compiler
++- verification action component-preparation member 0 failure
+error: process exited with code 1
+failed command: cd .tmp/memory-closeout/A05/borrowed-overlay/. && ./.zig-cache/o/7d22101a50bdf832a8e67a404974382d/selka-components --root /home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-overlay/. --zig /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --install-dir /home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/libexec/mylang/components
+
+Build Summary: 8/10 steps succeeded (1 failed)
+affected-compiler transitive failure
++- verification action component-preparation member 0 failure
+

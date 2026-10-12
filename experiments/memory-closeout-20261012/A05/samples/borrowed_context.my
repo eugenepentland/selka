@@ -1,0 +1,74 @@
+# spec-case: CAPABILITY-FIELD-METHOD-1
+import environment
+import filesystem
+
+record Context:
+    fs: Filesystem
+    env: Environment
+    offset: int
+
+record WideContext:
+    fs: Filesystem
+    env: Environment
+    a: int
+    b: int
+    c: int
+    d: int
+    done: Unit
+    ratio: float
+
+func note(ctx: Context) -> Result[int, str]:
+    const repeated = Context(fs=ctx.fs, env=ctx.env, offset=ctx.offset)
+    with try repeated.fs.open("note", "r") as file:
+        const text = file.read()
+        return Ok(len(text) + len(repeated.env.names()) + repeated.offset)
+
+func helper(fs: Filesystem, env: Environment, early: bool) -> Result[int, str]:
+    mut ctx = Context(fs=fs, env=env, offset=7)
+    const wide = WideContext(fs=fs, env=env, a=1, b=2, c=3, d=4, done=(), ratio=1.5)
+    const result = try note(ctx)
+    with try ctx.fs.open("written", "w") as file:
+        _ = file.write("survives")
+        if early:
+            return Err("early")
+    assert len(wide.env.names()) == 1
+    assert wide.a + wide.b + wide.c + wide.d == 10
+    _ = wide.done
+    assert wide.ratio == 1.5
+    # Original parameters remain valid after constructing and using both wrappers.
+    const original = try fs.read_text("note")
+    assert original == "hello"
+    assert env.names() == ["KEEP"]
+    return Ok(result)
+
+func scalar_context(fs: Filesystem, env: Environment) -> int noalloc:
+    const ctx = Context(fs=fs, env=env, offset=19)
+    return ctx.offset
+
+func prepare(fs: Filesystem) -> Result[bool, str]:
+    with try fs.open("note", "w") as file:
+        _ = file.write("hello")
+    return Ok(True)
+
+func main() -> int:
+    const fs = filesystem.memory()
+    const env = environment.fixed({"KEEP": "yes"})
+    match prepare(fs):
+        case Ok(_):
+            pass
+        case Err(_):
+            return 2
+    assert scalar_context(fs, env) == 19
+    for i in range(8):
+        match helper(fs, env, i == 4):
+            case Ok(value):
+                assert value == 13
+            case Err(message):
+                assert i == 4 and message == "early"
+    match fs.read_text("written"):
+        case Ok(text):
+            assert text == "survives"
+        case Err(_):
+            return 1
+    assert env.names() == ["KEEP"]
+    return 0

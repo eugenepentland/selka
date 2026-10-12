@@ -76,7 +76,7 @@ public func test_bad_ids_and_digests_rejected() -> bool:
 
 
 func input_v2(adjacency: int[][], roots: int[][], changed: int[], candidates: bool[]) -> incremental.Input:
-    return incremental.Input(graph=incremental.Graph(digests=[for node in range(len(adjacency)) yield b"a" * 32], adjacency=adjacency, topology=b"t" * 32), roots=roots, candidates=candidates, changed=changed, prior=incremental.Indexes(topology=b"", reverse=[], groups=[]))
+    return incremental.Input(graph=incremental.Graph(digests=[for node in range(len(adjacency)) yield b"a" * 32], adjacency=adjacency.copy(), topology=b"t" * 32), roots=roots.copy(), candidates=candidates.copy(), changed=changed.copy(), prior=incremental.Indexes(topology=b"", reverse=[], groups=[]))
 
 
 # spec-case: SELFHOST-CACHE-PLAN-2
@@ -90,7 +90,7 @@ public func test_incremental_cycle_sharing_and_repeated_roots() -> bool fails st
 public func test_incremental_retained_indexes_reuse_without_closure_work() -> bool fails str:
     mut input = input_v2([[1], []], [[0], [1]], [], [False, False])
     mut initial = try incremental.build(input)
-    input.prior = initial.indexes
+    input.prior = incremental.Indexes(topology=initial.indexes.topology.copy(), reverse=initial.indexes.reverse.copy(), groups=initial.indexes.groups.copy())
     input.candidates = [True, True]
     mut warm = try incremental.build(input)
     return warm.reused == [True, True] and warm.work.closure_nodes == 0 and warm.work.closure_edges == 0 and warm.work.reused_tests == 2
@@ -119,7 +119,7 @@ public func test_incremental_single_root_chain_has_linear_closure_work() -> bool
 # spec-case: SELFHOST-CACHE-PLAN-2
 public func test_incremental_malformed_reverse_index_is_refused() -> bool fails str:
     mut input = input_v2([[1], []], [[0]], [], [True])
-    input.prior = incremental.Indexes(topology=input.graph.topology, reverse=[[], []], groups=[0, 1])
+    input.prior = incremental.Indexes(topology=input.graph.topology.copy(), reverse=[[], []], groups=[0, 1])
     match incremental.build(input):
         case Ok(value):
             return False
@@ -130,7 +130,7 @@ public func test_incremental_malformed_reverse_index_is_refused() -> bool fails 
 # spec-case: SELFHOST-CACHE-PLAN-2
 public func test_incremental_retained_groups_cannot_merge_unreachable_nodes() -> bool fails str:
     mut input = input_v2([[1, 3], [], [3], []], [[0], [2]], [1], [True, True])
-    input.prior = incremental.Indexes(topology=input.graph.topology, reverse=[[], [0], [], [0, 2]], groups=[0, 0, 0, 0])
+    input.prior = incremental.Indexes(topology=input.graph.topology.copy(), reverse=[[], [0], [], [0, 2]], groups=[0, 0, 0, 0])
     mut result = try incremental.build(input)
     return result.indexes.groups == [0, 1, 2, 3] and result.batches == [[1, 3], []] and result.reused == [False, True]
 
@@ -138,6 +138,18 @@ public func test_incremental_retained_groups_cannot_merge_unreachable_nodes() ->
 # spec-case: SELFHOST-CACHE-PLAN-2
 public func test_incremental_retained_groups_cannot_split_recursive_nodes() -> bool fails str:
     mut input = input_v2([[1], [0, 2], []], [[0], [2]], [1], [True, True])
-    input.prior = incremental.Indexes(topology=input.graph.topology, reverse=[[1], [0], [1]], groups=[0, 1, 2])
+    input.prior = incremental.Indexes(topology=input.graph.topology.copy(), reverse=[[1], [0], [1]], groups=[0, 1, 2])
     mut result = try incremental.build(input)
     return result.indexes.groups == [0, 0, 2] and result.batches == [[1, 2], []] and result.reused == [False, True]
+
+
+# spec-case: SELFHOST-CACHE-PLAN-2
+public func test_incremental_result_owns_retained_indexes() -> bool fails str:
+    mut input = input_v2([[1], []], [[0]], [], [True])
+    input.prior = incremental.Indexes(topology=input.graph.topology.copy(), reverse=[[], [0]], groups=[0, 1])
+    mut result = try incremental.build(input)
+    input.prior.groups.clear()
+    input.prior.reverse.clear()
+    input.prior.topology = b"changed"
+    input.graph.topology = b"changed"
+    return result.indexes.topology == b"t" * 32 and result.indexes.groups == [0, 1] and result.indexes.reverse == [[], [0]] and result.reused == [True]

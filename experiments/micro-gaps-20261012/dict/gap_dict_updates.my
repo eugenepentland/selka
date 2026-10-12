@@ -1,0 +1,43 @@
+func update_once(out: Stream, stop: bool) -> int:
+    mut keys = ["alpha-" + str(1), "beta-" + str(2)]
+    mut counts: dict[str, int] = {}
+    for i in range(200):
+        mut key = keys[i % 2].copy()
+        counts[key] = counts.get(key, 0) + 1
+        if stop and i == 17:
+            out.print(counts["alpha-1"] + counts["beta-2"])
+            return 0
+    keys[0] = "replacement-" + str(3)
+    keys.clear()
+    out.print(counts["alpha-1"], counts["beta-2"])
+    return 0
+
+func mutation_before_update(out: Stream) -> int:
+    mut keys = ["saved-" + str(1)]
+    mut counts: dict[str, int] = {}
+    mut key = keys[0].copy()
+    keys[0] = "changed-" + str(2)
+    counts[key] = counts.get(key, 0) + 1
+    keys.clear()
+    out.print(counts["saved-1"])
+    return 0
+
+func observe(text: str, out: Stream) -> int:
+    out.print(text)
+    return 9
+
+func effect_before_update(out: Stream) -> int:
+    mut keys = ["effect-" + str(1)]
+    mut counts: dict[str, int] = {}
+    mut key = keys[0].copy()
+    counts[key] = observe(key, out)
+    keys.clear()
+    out.print(counts["effect-1"])
+    return 0
+
+func main(out: Stream) -> int:
+    _ = update_once(out, False)
+    _ = update_once(out, True)
+    _ = mutation_before_update(out)
+    _ = effect_before_update(out)
+    return 0

@@ -1,0 +1,11 @@
+import pathlib,json,subprocess,os
+root=pathlib.Path('/home/epentland/ai/canopy/mylang-memory-20261012-A08');work=root/'.tmp/memory-closeout/A08/memo-reduce-01';work.mkdir(exist_ok=False);out=root/'experiments/memory-closeout-20261012/A08/memo-reduce-01';out.mkdir(exist_ok=False)
+compiler='/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang'
+original=pathlib.Path('/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/samples/memo.my').read_text();compute=original.split('func exercise()')[0]
+main='func main() -> int:\n    match memo.create[str[]](CAP, compute):\n        case Ok(_):\n            return OK\n        case Err(_):\n            return ERR\n'
+variants={'create-negative':compute+main.replace('CAP','-1').replace('OK','1').replace('ERR','0'),'create-zero':compute+main.replace('CAP','0').replace('OK','0').replace('ERR','1'),'exercise-only':original[:original.index('func main()')]+original[original.index('func main()'):].replace(original[original.index('    match memo.create'):original.index('    match exercise():')],''),'simple-callback':'import memo\nfunc compute(key: memo.Key) -> str[]:\n    return ["simple"]\n'+main.replace('CAP','-1').replace('OK','1').replace('ERR','0'),'direct-callable':'func compute(n: int) -> str[]:\n    return [str(n)]\nfunc apply(n: int, callback: func(int) -> str[] effects(managed_allocation)) -> int:\n    return len(callback(n))\nfunc main() -> int:\n    return apply(7, compute) - 1\n'}
+rows=[]
+for name,text in variants.items():
+ p=work/name;p.mkdir();source=p/'main.my';source.write_text(text);(out/(name+'.my')).write_text(text)
+ for state in ['cold','warm']:
+  argv=[compiler,'build',str(source),'--experimental-zero-rc','--cache-dir',str(p/'cache'),'--zig',os.environ['ZIG'],'--unoptimized','-o',str(p/state),'--emit-llvm',str(p/(state+'.ll')),'--report'];r=subprocess.run(argv,cwd=root,capture_output=True,text=True,timeout=120,env=dict(os.environ,MYLANG_COMPILER_SHARED_CACHE=''));rows.append(dict(name=name,state=state,argv=argv,status=r.returncode,stdout=r.stdout,stderr=r.stderr));(out/'results.json').write_text(json.dumps(rows,indent=2)+'\n');print(name,state,r.returncode,flush=True)

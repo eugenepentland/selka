@@ -98,7 +98,7 @@ public func test_a_rebuilt_buffer_in_a_loop_starts_from_the_list_every_time() ->
 public func test_a_renamed_buffer_is_still_a_value_of_its_own() -> bool:
     mut values = [1, 2]
     mut buffer = byte_buffer(values)
-    mut other = buffer
+    mut other = buffer.copy()
     _ = other.append_byte(3)
     return buffer == b"\x01\x02" and other == b"\x01\x02\x03"
 
@@ -106,7 +106,7 @@ public func test_a_renamed_buffer_is_still_a_value_of_its_own() -> bool:
 public func test_a_buffer_stored_in_a_record_is_a_value_of_its_own() -> bool:
     mut values = [1, 2]
     mut buffer = byte_buffer(values)
-    mut packet = Packet(tag="q", body=buffer)
+    mut packet = Packet(tag="q", body=buffer.copy())
     _ = buffer.append_byte(3)
     _ = packet.body.append_byte(4)
     return buffer == b"\x01\x02\x03" and packet.body == b"\x01\x02\x04"

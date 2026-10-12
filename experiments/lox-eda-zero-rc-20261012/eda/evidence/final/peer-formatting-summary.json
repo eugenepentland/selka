@@ -1,0 +1,6 @@
+{
+  "peer_module_count": 70,
+  "formatting_changed_peer_modules": 0,
+  "formatting_patch": "peer-formatting.patch",
+  "child_writeback_source_fix_excluded_from_formatting_baseline": true
+}

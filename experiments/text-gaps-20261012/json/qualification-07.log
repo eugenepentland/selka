@@ -1,0 +1,8 @@
+build-slot: FIFO ticket 2178, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 2178 after 10s
+@stdlib/json.my:467:23: error[E_BYTES_CONVERSION]: byte_buffer() requires an int[] argument
+              mut out = byte_buffer(b"")
+                        ^
+@stdlib/json.my:782:15: error[E_BYTES_CONVERSION]: byte_buffer() requires an int[] argument
+      mut out = byte_buffer(b"")
+                ^

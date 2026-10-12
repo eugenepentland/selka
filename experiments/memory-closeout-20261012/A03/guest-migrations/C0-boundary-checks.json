@@ -1,0 +1,182 @@
+{
+  "compiler_source_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "cases": [
+    {
+      "source": "func hold(child: int[], mut rows: int[][]) -> int:\n    rows = [[9]]\n    return child[0]\nfunc main() -> int:\n    mut rows = [[1]]\n    return hold(rows[0], mut rows)\n",
+      "source_sha256": "65ee48642cdf433fd0a9b8b6da0cfac11cb7f26a57c96ad12b92de2bc9e68dc9",
+      "result": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-boundaries-C0/case-0.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-boundaries-C0/cache"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": "case-0.my:6:26: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      return hold(rows[0], mut rows)\n                           ^\n",
+        "wall_ns_including_admission": 30996268,
+        "admission_receipt": "raw/admission/lease-1.json",
+        "wall_ns_excludes_admission_wait": true
+      },
+      "expected": "E_SINGLE_OWNER_OVERLAP",
+      "passed": true
+    },
+    {
+      "source": "func hold(mut rows: int[][], child: int[]) -> int:\n    rows = [[9]]\n    return child[0]\nfunc main() -> int:\n    mut rows = [[1]]\n    return hold(mut rows, rows[0])\n",
+      "source_sha256": "755706d87e76ada5407dbaef88dbd48285c59289d5e36c8aec329279df264951",
+      "result": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-boundaries-C0/case-1.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-boundaries-C0/cache"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": "case-1.my:6:27: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      return hold(mut rows, rows[0])\n                            ^\n",
+        "wall_ns_including_admission": 11324186,
+        "admission_receipt": "raw/admission/lease-1.json",
+        "wall_ns_excludes_admission_wait": true
+      },
+      "expected": "E_SINGLE_OWNER_OVERLAP",
+      "passed": true
+    },
+    {
+      "source": "func replace(mut rows: int[][]) -> int:\n    rows = [[9]]\n    return 2\nfunc observe(child: int[], value: int) -> int:\n    return child[0] + value\nfunc main() -> int:\n    mut rows = [[1]]\n    return observe(rows[0], replace(mut rows))\n",
+      "source_sha256": "75a2c48f387a33ce79567ab435c18b4a77d1942cdb04adb747e2a9ebb612a1cc",
+      "result": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-boundaries-C0/case-2.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-boundaries-C0/cache"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": "case-2.my:8:37: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      return observe(rows[0], replace(mut rows))\n                                      ^\n",
+        "wall_ns_including_admission": 9684171,
+        "admission_receipt": "raw/admission/lease-1.json",
+        "wall_ns_excludes_admission_wait": true
+      },
+      "expected": "E_SINGLE_OWNER_OVERLAP",
+      "passed": true
+    },
+    {
+      "source": "func replace(mut rows: int[][]) -> int:\n    rows = [[9]]\n    return 2\nfunc change(mut child: int[], value: int) -> int:\n    child.append(value)\n    return child[0]\nfunc main() -> int:\n    mut rows = [[1]]\n    return change(mut rows[0], replace(mut rows))\n",
+      "source_sha256": "b411ca9ff986e5f0bc348f76bfd3915e51b5ac88a58351e5eeb9df9e7e566a1e",
+      "result": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-boundaries-C0/case-3.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-boundaries-C0/cache"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": "case-3.my:9:40: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      return change(mut rows[0], replace(mut rows))\n                                         ^\n",
+        "wall_ns_including_admission": 8907620,
+        "admission_receipt": "raw/admission/lease-1.json",
+        "wall_ns_excludes_admission_wait": true
+      },
+      "expected": "E_SINGLE_OWNER_OVERLAP",
+      "passed": true
+    },
+    {
+      "source": "record State:\n    names: int[]\nfunc hold(names: int[], mut state: State) -> int:\n    state.names = [9]\n    return names[0]\nfunc main() -> int:\n    mut state = State(names=[1])\n    return hold(state.names, mut state)\n",
+      "source_sha256": "5ca1516c0e52dc1501e14f24fd8ab81f99b32937e280df0b9a1e4f51ae11888d",
+      "result": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-boundaries-C0/case-4.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-boundaries-C0/cache"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": "case-4.my:8:30: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      return hold(state.names, mut state)\n                               ^\n",
+        "wall_ns_including_admission": 6344968,
+        "admission_receipt": "raw/admission/lease-1.json",
+        "wall_ns_excludes_admission_wait": true
+      },
+      "expected": "E_SINGLE_OWNER_OVERLAP",
+      "passed": true
+    },
+    {
+      "source": "record State:\n    names: int[]\nfunc replace(mut state: State) -> int:\n    state = State(names=[9])\n    return 2\nfunc observe(names: int[], value: int) -> int:\n    return names[0] + value\nfunc main() -> int:\n    mut state = State(names=[1])\n    return observe(state.names, replace(mut state))\n",
+      "source_sha256": "d51a8cc3047ff2586ef8fae202b03f723db59b18b7a12c53e078379099af1eb0",
+      "result": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-boundaries-C0/case-5.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-boundaries-C0/cache"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": "case-5.my:10:41: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      return observe(state.names, replace(mut state))\n                                          ^\n",
+        "wall_ns_including_admission": 6987664,
+        "admission_receipt": "raw/admission/lease-1.json",
+        "wall_ns_excludes_admission_wait": true
+      },
+      "expected": "E_SINGLE_OWNER_OVERLAP",
+      "passed": true
+    },
+    {
+      "source": "func replace(mut mapping: dict[int, int[]]) -> int:\n    mapping[0] = [9]\n    return 2\nfunc observe(child: int[], value: int) -> int:\n    return child[0] + value\nfunc main() -> int:\n    mut mapping = {0: [1]}\n    return observe(mapping[0], replace(mut mapping))\n",
+      "source_sha256": "17caf448262dc00e860698768f6e4f3a4f1833e88512b41d28026e6dfe4e6020",
+      "result": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-boundaries-C0/case-6.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-boundaries-C0/cache"
+        ],
+        "exit": 1,
+        "stdout": "",
+        "stderr": "case-6.my:8:40: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      return observe(mapping[0], replace(mut mapping))\n                                         ^\n",
+        "wall_ns_including_admission": 6961984,
+        "admission_receipt": "raw/admission/lease-1.json",
+        "wall_ns_excludes_admission_wait": true
+      },
+      "expected": "E_SINGLE_OWNER_OVERLAP",
+      "passed": true
+    },
+    {
+      "source": "record State:\n    names: int[]\nfunc replace(mut rows: int[][]) -> int:\n    rows = [[9]]\n    return 2\nfunc change(mut child: int[], value: int) -> int:\n    child.append(value)\n    return child[0] * 100 + len(child)\nfunc replace_state(mut state: State) -> int:\n    state = State(names=[8])\n    return 3\nfunc observe(names: int[], value: int) -> int:\n    return names[0] * 100 + value\nfunc main(out: Stream) -> int:\n    mut rows = [[1]]\n    const selected_index = 0\n    mut selected = rows[selected_index].copy()\n    const replacement = replace(mut rows)\n    out.print(change(mut selected, replacement))\n    out.print(rows[0][0])\n    mut state = State(names=[4])\n    const saved = state.names.copy()\n    out.print(observe(saved, replace_state(mut state)))\n    out.print(state.names[0])\n    return 0\n",
+      "source_sha256": "06e2de244fd87f4aa755dde5481dc762a37fabdfb3dfa590ed57550c532683f4",
+      "result": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-boundaries-C0/case-7.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-boundaries-C0/cache"
+        ],
+        "exit": 0,
+        "stdout": "",
+        "stderr": "",
+        "wall_ns_including_admission": 11564236,
+        "admission_receipt": "raw/admission/lease-1.json",
+        "wall_ns_excludes_admission_wait": true
+      },
+      "expected": "admitted",
+      "passed": true
+    }
+  ]
+}

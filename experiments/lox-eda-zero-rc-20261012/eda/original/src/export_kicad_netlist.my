@@ -1,0 +1,129 @@
+
+import flat_netlist
+import sexpr_parser as parser_mod
+import sexpr_ast as ast_mod
+import kicad_pcb_format as kicad_format
+import byte_builder
+import support_strs as strs
+# Re-export historical flattening names from the neutral currency module.
+export flat_netlist.FlatTie
+export flat_netlist.collect_instances
+export flat_netlist.collect_nets
+export flat_netlist.collect_net_ties
+export flat_netlist.apply_net_ties
+export flat_netlist.apply_net_ties_mapped
+
+public const err_invalid_format: str = "InvalidFormat"
+
+
+# Write components followed by nets. Missing physical pads enter code-0 NC.
+# Only the CLI/HTTP design name is raw and escaped here; every other quoted
+# field is a tokenizer slice already carrying grammar escapes. Escaping it
+# again doubles backslashes and changes the source meaning.
+public func write_netlist(design_name: bytes, instances: flat_netlist.FlatInstance[], nets: flat_netlist.FlatNet[], fp_name_map: dict[str, bytes], fp_pad_map: dict[str, bytes[]]) -> bytes:
+    mut w = byte_builder.create()
+    byte_builder.append(mut w, b"(export (version \"E\")\n  (design\n    (source \"")
+    byte_builder.append(mut w, kicad_format.sexpr_escape(design_name))
+    byte_builder.append(mut w, b"\")\n    (tool \"netlisp\"))\n  (components\n")
+    for inst in instances:
+        byte_builder.append(mut w, b"    (comp (ref \"" + inst.ref_des + b"\")\n")
+        byte_builder.append(mut w, b"      (value \"" + inst.value + b"\")\n")
+        mut kicad_fp = fp_name_map.get(strs.text(inst.footprint), inst.footprint)
+        byte_builder.append(mut w, b"      (footprint \"footprints:" + kicad_fp + b"\")\n")
+        # KiCad matches PCB footprints via sheetpath_tstamps/component_tstamp.
+        byte_builder.append(mut w, b"      (sheetpath (names /) (tstamps /))\n")
+        if len(inst.uuid) > 0:
+            byte_builder.append(mut w, b"      (tstamp " + inst.uuid + b")\n")
+        # Properties round-trip through BOM into this same tokenizer form.
+        for prop in inst.properties:
+            byte_builder.append(mut w, b"      (property (name \"" + prop.key + b"\") (value \"" + prop.value + b"\"))\n")
+        if inst.dnp:
+            byte_builder.append(mut w, b"      (property (name \"dnp\") (value \"\"))\n")
+            byte_builder.append(mut w, b"      (property (name \"exclude_from_bom\") (value \"\"))\n")
+        byte_builder.append(mut w, b"    )\n")
+    byte_builder.append(mut w, b"  )\n")
+    # NUL separator prevents REF/PIN concatenation ambiguities.
+    mut connected_pins: set[str] = set()
+    for net in nets:
+        for pin in net.pins:
+            connected_pins.add(strs.text(pin.ref_des + b"\x00" + pin.pin))
+    byte_builder.append(mut w, b"  (nets\n    (net (code \"0\") (name \"\")\n")
+    for inst2 in instances:
+        mut footprint_key = strs.text(inst2.footprint)
+        if footprint_key not in fp_pad_map:
+            continue
+        for pad_name in fp_pad_map[footprint_key]:
+            mut key = strs.text(inst2.ref_des + b"\x00" + pad_name)
+            if key not in connected_pins:
+                byte_builder.append(mut w, b"      (node (ref \"" + inst2.ref_des + b"\") (pin \"" + pad_name + b"\"))\n")
+    byte_builder.append(mut w, b"    )\n")
+    mut i = 0
+    while i < len(nets):
+        mut net2 = nets[i]
+        if len(net2.pins) > 0:
+            byte_builder.append(mut w, b"    (net (code \"")
+            byte_builder.append_int(mut w, i + 1)
+            byte_builder.append(mut w, b"\") (name \"" + net2.name + b"\")\n")
+            for pin2 in net2.pins:
+                byte_builder.append(mut w, b"      (node (ref \"" + pin2.ref_des + b"\") (pin \"" + pin2.pin + b"\"))\n")
+            byte_builder.append(mut w, b"    )\n")
+        i += 1
+    byte_builder.append(mut w, b"  )\n)\n")
+    return byte_builder.finish(w)
+
+
+# Ordered footprint pad inventory includes bare integers: asAtom/asString
+# would silently drop project numeric pad tokens; token_text preserves them.
+public func extract_pad_names(source: bytes) -> Result[bytes[], str]:
+    mut nodes: ast_mod.Node[] = []
+    match parser_mod.parse(source):
+        case Ok(parsed):
+            nodes = parsed
+        case Err(error):
+            return Err(parser_mod.error_name(error))
+    if len(nodes) == 0:
+        return Err(err_invalid_format)
+    mut root = nodes[0]
+    if not ast_mod.is_form(root, b"footprint"):
+        return Err(err_invalid_format)
+    mut children = ast_mod.as_list(root)
+    if children is None:
+        return Err(err_invalid_format)
+    mut pads: bytes[] = []
+    for child in children[2:]:
+        if ast_mod.is_form(child, b"pad"):
+            mut cl = ast_mod.as_list(child)
+            if cl is None:
+                continue
+            if len(cl) < 2:
+                continue
+            mut name = ast_mod.token_text(cl[1])
+            if name is not None:
+                pads.append(name)
+    return Ok(pads)
+
+
+# Map internal project footprint id to its declared KiCad library name.
+public func extract_footprint_name(source: bytes) -> Result[bytes, str]:
+    mut nodes: ast_mod.Node[] = []
+    match parser_mod.parse(source):
+        case Ok(parsed):
+            nodes = parsed
+        case Err(error):
+            return Err(parser_mod.error_name(error))
+    if len(nodes) == 0:
+        return Err(err_invalid_format)
+    mut root = nodes[0]
+    if not ast_mod.is_form(root, b"footprint"):
+        return Err(err_invalid_format)
+    mut children = ast_mod.as_list(root)
+    if children is None:
+        return Err(err_invalid_format)
+    if len(children) < 2:
+        return Err(err_invalid_format)
+    mut name = ast_mod.as_atom(children[1])
+    if name is None:
+        name = ast_mod.as_string(children[1])
+    if name is None:
+        return Err(err_invalid_format)
+    return Ok(name)

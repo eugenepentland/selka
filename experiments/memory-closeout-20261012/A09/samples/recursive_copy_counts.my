@@ -1,0 +1,25 @@
+# Exact copy traffic: one 3-element scalar list and one 2-element list below
+# recursive boxes. Box payload copying is not a list-copy event.
+enum Tree:
+    leaf(items: int[])
+    node(child: Tree)
+
+func score(tree: Tree) -> int:
+    match tree:
+        case Tree.leaf(items=items):
+            return len(items) + items[0]
+        case Tree.node(child=child):
+            return 1 + score(child)
+
+func main(args: str[], out: Stream) -> int:
+    const seed = len(args) + 3
+    mut values = [seed, seed + 1, seed + 2]
+    const flat = values.copy()
+    values.clear()
+    mut tree = Tree.leaf(items=[seed, seed + 1])
+    for i in range(3):
+        tree = Tree.node(child=tree)
+    const saved = tree.copy()
+    tree = Tree.leaf(items=[])
+    out.print(score(saved), flat[0], len(flat))
+    return 0

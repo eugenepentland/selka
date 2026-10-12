@@ -1,0 +1,5 @@
+func results() -> tuple[Result[str, str], Result[str, str]]:
+    return Ok("a" + str(1)), Err("b" + str(2))
+func main() -> int:
+    const first, _ = results()
+    return 0

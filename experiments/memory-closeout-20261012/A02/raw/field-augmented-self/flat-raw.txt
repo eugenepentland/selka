@@ -1,0 +1,85 @@
+fn main() -> i64
+b0:
+  %1 = list_new list[str] 1:i64
+  %4 = call str myl_core_str_from_i64(1:i64)
+  %5 = str_append str str0, %4
+  %6 = list_push list[str] %1, %5
+  %7 = record_make record{list[str]} %6
+  %8 = record_get list[str] %7, field0
+  %9 = record_get list[str] %7, field0
+  %10 = record_get list[str] %7, field0
+  %11 = call i64 myl_core_owned_same_block(%10, %9)
+  %13 = cmp.ne bool %11, 0:i64
+  branch %13, b1, b2
+b1: ; preds b0
+  %15 = list_len u64 %10
+  jump b4
+b2: ; preds b0
+  %29 = list_len u64 %9
+  jump b7
+b3: ; preds b6 b9
+  %43 = phi list[str] %21, %37
+  %44 = record_set record{list[str]} %7, field0, %43
+  %45 = record_get list[str] %44, field0
+  %47 = list_new list[str] 2:i64
+  %49 = list_push list[str] %47, str1
+  %51 = list_push list[str] %49, str2
+  %52 = list_len u64 %45
+  %53 = list_len u64 %51
+  %54 = cmp.eq bool %52, %53
+  branch %54, b12, b11
+b4: ; preds b1 b5
+  %18 = phi u64 0:u64, %26
+  %21 = phi list[str] %10, %24
+  %19 = cmp.lt bool %18, %15
+  branch %19, b5, b6
+b5: ; preds b4
+  %22 = list_get.exact str %21, %18
+  %23 = call str myl_core_owned_octets_copy(%22)
+  %24 = list_push list[str] %21, %23
+  %26 = add u64 %18, 1:u64
+  jump b4
+b6: ; preds b4
+  jump b3
+b7: ; preds b2 b8
+  %32 = phi u64 0:u64, %40
+  %37 = phi list[str] %10, %38
+  %33 = cmp.lt bool %32, %29
+  branch %33, b8, b9
+b8: ; preds b7
+  %35 = list_get.exact str %9, %32
+  %36 = call str myl_core_owned_octets_copy(%35)
+  %38 = list_push list[str] %37, %36
+  %40 = add u64 %32, 1:u64
+  jump b7
+b9: ; preds b7
+  jump b3
+b10: ; preds b12 b15
+  %58 = phi u64 0:u64, %66
+  %59 = cmp.lt bool %58, %52
+  branch %59, b13, b14
+b11: ; preds b3 b16 b14
+  %72 = phi bool %54, 0:bool, 1:bool
+  branch %72, b18, b17
+b12: ; preds b3
+  jump b10
+b13: ; preds b10
+  %61 = list_get str %45, %58
+  %62 = list_get str %51, %58
+  %63 = call bool myl_core_str_eq(%61, %62)
+  branch %63, b15, b16
+b14: ; preds b10
+  jump b11
+b15: ; preds b13
+  %66 = add u64 %58, 1:u64
+  jump b10
+b16: ; preds b13
+  jump b11
+b17: ; preds b11
+  unreachable
+b18: ; preds b11
+  ret 0:i64
+fn myl_core_str_from_i64(i64) -> str extern
+fn myl_core_owned_same_block(list[str], list[str]) -> i64 extern
+fn myl_core_owned_octets_copy(str) -> str extern
+fn myl_core_str_eq(str, str) -> bool runtime

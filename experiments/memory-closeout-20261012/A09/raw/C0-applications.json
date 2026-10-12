@@ -1,0 +1,319 @@
+{
+  "source_commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "manifest_sha256": "f33672c6fdc45eb523049ca11928065a2df069cb9b13228e34d274f9bb31aa78",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "cases": [
+    {
+      "id": "a06_word_count",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/word_count/main.my",
+      "args": [
+        "20"
+      ],
+      "expected": "772360\n",
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "repetitions": 20,
+      "one_repetition_checksum": 38618,
+      "dataset_sha256": "39e475528883fa81beab7869d9433796af1ed207497b442a573586dff257b1b3",
+      "helper_identical_to": "experiments/memory-closeout-20261012/A06/programs/word_count/words.my",
+      "semantic_note": "Both compiler arms must use the same timing workload; not a before/after source migration comparison.",
+      "cpus": [
+        10
+      ],
+      "source_sha256": "4d633e9d3e0a96decb3654cca0a95ff19e2df2cb73d6fb8e84b3fb03a4e5599f",
+      "source_inputs_sha256": {
+        "main.my": "4d633e9d3e0a96decb3654cca0a95ff19e2df2cb73d6fb8e84b3fb03a4e5599f",
+        "words.my": "61569e71ae3a0723d2f123720f78d32a33df465cdd5be1e2f76d9b8c7203ef6e"
+      },
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/word_count/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/a06_word_count/program"
+      ],
+      "build_status": 0,
+      "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/a06_word_count/build.stderr",
+      "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/a06_word_count/program",
+      "binary_sha256": "13974c4ea293b0e43d0f6b5a2dc7c3c0289d5ad691642d0044affd6be88e3efb",
+      "instrumentation": "absent; flags and nm checked"
+    },
+    {
+      "id": "a06_nested_json",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/nested_json/main.my",
+      "args": [
+        "20"
+      ],
+      "expected": "491940\n",
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "repetitions": 20,
+      "one_repetition_checksum": 24597,
+      "dataset_sha256": "8de60ad9d0b1919ea2c056c33eec4a370107838b5f99336b7d9924529d6a503f",
+      "helper_identical_to": "experiments/memory-closeout-20261012/A06/programs/nested_json/transform.my",
+      "semantic_note": "Both compiler arms must use the same timing workload; not a before/after source migration comparison.",
+      "cpus": [
+        10
+      ],
+      "source_sha256": "529ff2ba488db292d409ad2af7aac3c49fbc49bb9bfa718504c5ee490270d65f",
+      "source_inputs_sha256": {
+        "main.my": "529ff2ba488db292d409ad2af7aac3c49fbc49bb9bfa718504c5ee490270d65f",
+        "transform.my": "731d621883eee8968c0a0fb49353de3908f16e711442d2199b73104d05c99f74"
+      },
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/nested_json/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/a06_nested_json/program"
+      ],
+      "build_status": 0,
+      "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/a06_nested_json/build.stderr",
+      "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/a06_nested_json/program",
+      "binary_sha256": "5c2737ad2521138f3e7a4a25b685912e87889716379268ebbc085889ac64ffc5",
+      "instrumentation": "absent; flags and nm checked"
+    },
+    {
+      "id": "a06_file_processing",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/file_processing/main.my",
+      "args": [
+        "50"
+      ],
+      "expected": "19660850\n",
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "repetitions": 50,
+      "one_repetition_checksum": 393217,
+      "dataset_sha256": "80809ee09c22396a791a21e00acad5084fc02daddf6ffcf9bcb26902d059a4a7",
+      "helper_identical_to": "experiments/memory-closeout-20261012/A06/programs/file_processing/process.my",
+      "semantic_note": "Both compiler arms must use the same timing workload; not a before/after source migration comparison.",
+      "cpus": [
+        10
+      ],
+      "source_sha256": "3d8cdf2a39a31f2fd2206690eff3a2f7cc738e6083efab574ba989fb549ebe33",
+      "source_inputs_sha256": {
+        "main.my": "3d8cdf2a39a31f2fd2206690eff3a2f7cc738e6083efab574ba989fb549ebe33",
+        "process.my": "5226147e7e0e228b006134ea3dc79caa821aadf5b555b3bf034cb35bd280d65b"
+      },
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/file_processing/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/a06_file_processing/program"
+      ],
+      "build_status": 0,
+      "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/a06_file_processing/build.stderr",
+      "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/a06_file_processing/program",
+      "binary_sha256": "c460a2ddff3ddf0d75b4495f49b3d83ef0b02ef22d6c7914e3039dbccde3e161",
+      "instrumentation": "absent; flags and nm checked"
+    },
+    {
+      "id": "a06_parallel_t1",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/parallel/main.my",
+      "args": [
+        "5"
+      ],
+      "expected": "115000\n",
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "repetitions": 5,
+      "one_repetition_checksum": 23000,
+      "dataset_sha256": "0e55b5f9a16cf7ff7743aeca77d64e2585b32868c4c6dcd4d07f47e548985418",
+      "helper_identical_to": "experiments/memory-closeout-20261012/A06/programs/parallel/primes.my",
+      "semantic_note": "Both compiler arms must use the same timing workload; not a before/after source migration comparison.",
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "source_sha256": "c8bec39775ef6af6d2822af7d7de52822d81db90ee161bd6060849dd3395ba45",
+      "source_inputs_sha256": {
+        "main.my": "c8bec39775ef6af6d2822af7d7de52822d81db90ee161bd6060849dd3395ba45",
+        "primes.my": "8ccc5b22614f0f7fd8ee9cc48ff08ce2d5e08ac85da2a0d5945f058c8e7da4de"
+      },
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/parallel/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/a06_parallel_t1/program"
+      ],
+      "build_status": 0,
+      "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/a06_parallel_t1/build.stderr",
+      "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/a06_parallel_t1/program",
+      "binary_sha256": "3be619806b8517c2de383b9aef455aa9d603a7fb02ca1fd4f6762e6ce474653b",
+      "instrumentation": "absent; flags and nm checked"
+    },
+    {
+      "id": "a06_parallel_t2",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/parallel/main.my",
+      "args": [
+        "5"
+      ],
+      "expected": "115000\n",
+      "env": {
+        "MYLANG_THREADS": "2"
+      },
+      "repetitions": 5,
+      "one_repetition_checksum": 23000,
+      "dataset_sha256": "0e55b5f9a16cf7ff7743aeca77d64e2585b32868c4c6dcd4d07f47e548985418",
+      "helper_identical_to": "experiments/memory-closeout-20261012/A06/programs/parallel/primes.my",
+      "semantic_note": "Both compiler arms must use the same timing workload; not a before/after source migration comparison.",
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "source_sha256": "c8bec39775ef6af6d2822af7d7de52822d81db90ee161bd6060849dd3395ba45",
+      "source_inputs_sha256": {
+        "main.my": "c8bec39775ef6af6d2822af7d7de52822d81db90ee161bd6060849dd3395ba45",
+        "primes.my": "8ccc5b22614f0f7fd8ee9cc48ff08ce2d5e08ac85da2a0d5945f058c8e7da4de"
+      },
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/parallel/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/a06_parallel_t1/program"
+      ],
+      "build_status": 0,
+      "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/a06_parallel_t1/build.stderr",
+      "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/a06_parallel_t1/program",
+      "binary_sha256": "3be619806b8517c2de383b9aef455aa9d603a7fb02ca1fd4f6762e6ce474653b",
+      "instrumentation": "absent; flags and nm checked"
+    },
+    {
+      "id": "a06_parallel_t8",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/parallel/main.my",
+      "args": [
+        "5"
+      ],
+      "expected": "115000\n",
+      "env": {
+        "MYLANG_THREADS": "8"
+      },
+      "repetitions": 5,
+      "one_repetition_checksum": 23000,
+      "dataset_sha256": "0e55b5f9a16cf7ff7743aeca77d64e2585b32868c4c6dcd4d07f47e548985418",
+      "helper_identical_to": "experiments/memory-closeout-20261012/A06/programs/parallel/primes.my",
+      "semantic_note": "Both compiler arms must use the same timing workload; not a before/after source migration comparison.",
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "source_sha256": "c8bec39775ef6af6d2822af7d7de52822d81db90ee161bd6060849dd3395ba45",
+      "source_inputs_sha256": {
+        "main.my": "c8bec39775ef6af6d2822af7d7de52822d81db90ee161bd6060849dd3395ba45",
+        "primes.my": "8ccc5b22614f0f7fd8ee9cc48ff08ce2d5e08ac85da2a0d5945f058c8e7da4de"
+      },
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/parallel/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/a06_parallel_t1/program"
+      ],
+      "build_status": 0,
+      "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/a06_parallel_t1/build.stderr",
+      "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-apps/a06_parallel_t1/program",
+      "binary_sha256": "3be619806b8517c2de383b9aef455aa9d603a7fb02ca1fd4f6762e6ce474653b",
+      "instrumentation": "absent; flags and nm checked"
+    }
+  ]
+}

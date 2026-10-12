@@ -1,0 +1,104 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/75e409ad69f15be3d392595458eae627/mylang",
+  "compiler_sha256": "b9e97d47272877d051e11287fbda6b2e3e5c9c147ce919911578ec69d1cecafb",
+  "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-validation/sources/borrowed-return.my",
+  "source_sha256": "c669701c205dfc6c3784c4226effe3a70ceb8316f5a0f7c57397c27ae2a0deb7",
+  "runs": [
+    {
+      "mode": "ordinary_release",
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/75e409ad69f15be3d392595458eae627/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-validation/sources/borrowed-return.my",
+          "--release",
+          "--counters",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-validation/candidate-borrowed-return-followup/ordinary_release/program.ll",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-validation/candidate-borrowed-return-followup/ordinary_release/cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-validation/candidate-borrowed-return-followup/ordinary_release/program"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "binary_sha256": "ebc078e8209bdc16884411226ff6a0c359989dd1cddf9ab7f4f0f710561c882a",
+      "llvm_sha256": "9959e11bebbab82a8235b67bd0c5194f43df77ed31e890b35217d0f24695f2bc",
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-validation/candidate-borrowed-return-followup/ordinary_release/program"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": ""
+      },
+      "totals": {
+        "calls": 1,
+        "allocs": 1,
+        "alloc_bytes": 64,
+        "frees": 1,
+        "free_bytes": 64,
+        "list_grows": 0,
+        "list_grow_bytes": 0,
+        "reallocs": 0,
+        "realloc_added_bytes": 0,
+        "realloc_moves": 0,
+        "realloc_moved_bytes": 0,
+        "list_copies": 0,
+        "list_copy_bytes": 0,
+        "dict_copies": 0,
+        "dict_copy_bytes": 0,
+        "buffer_copies": 0,
+        "buffer_copy_bytes": 0,
+        "text_copies": 0,
+        "text_copy_bytes": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "dict_grows": 0,
+        "dict_grow_bytes": 0,
+        "buffer_grows": 0,
+        "buffer_grow_bytes": 0,
+        "text_grows": 0,
+        "text_grow_bytes": 0,
+        "text_appends": 0,
+        "text_append_bytes": 0,
+        "buffer_pushes": 0,
+        "buffer_appends": 0,
+        "buffer_append_bytes": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0,
+        "share_bytes": 0,
+        "peak_live_bytes": 64,
+        "live_bytes_at_exit": 0
+      },
+      "rc_sites": [
+        {
+          "function": "main",
+          "origin": "main",
+          "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-validation/sources/borrowed-return.my",
+          "line": 4,
+          "column": 12,
+          "kind": "release",
+          "detail": "release",
+          "count": 1,
+          "bytes": 0,
+          "extra": 0
+        }
+      ]
+    }
+  ],
+  "zero_check": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/75e409ad69f15be3d392595458eae627/mylang",
+      "check",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-validation/sources/borrowed-return.my",
+      "--experimental-zero-rc"
+    ],
+    "status": 1,
+    "stdout": "",
+    "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/field-augmented-validation/sources/borrowed-return.my:4:12: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      return owner.items\n             ^\n"
+  }
+}

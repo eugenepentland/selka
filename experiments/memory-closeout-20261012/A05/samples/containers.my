@@ -1,0 +1,21 @@
+func main() -> int:
+    mut values: dict[str, str[]] = {}
+    for index in range(40):
+        values["key-" + str(index)] = ["value-" + str(index)]
+    const snapshot = values.copy()
+    const removed = values.pop("key-7")
+    values["key-8"] = ["replacement"]
+    const keys = list(values.keys())
+    const entries = list(values.items())
+    values = {}
+    if removed != ["value-7"] or snapshot["key-8"] != ["value-8"]:
+        return 1
+    if len(keys) != 39 or len(entries) != 39:
+        return 2
+    mut items: set[str] = set()
+    items.add("dynamic-" + str(1))
+    const saved = items.copy()
+    items.discard("dynamic-1")
+    if len(items) != 0 or "dynamic-1" not in saved:
+        return 3
+    return 0

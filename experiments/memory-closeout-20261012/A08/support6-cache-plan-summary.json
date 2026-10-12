@@ -1,0 +1,30 @@
+{
+  "status": "interim_support6_passed",
+  "component": "cache_plan",
+  "compiler_revision": "5167c588be79dd43d21d5013c36db15110bf239b",
+  "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "component_sha256": "44cf164990de93468addf576e18af792ebcbd593f95748aa8059b388e1766f7f",
+  "llvm_sha256": "2d538f7cb3e43aaeda72cc89d29a2035be99f638cfa43dd61cf1f9d28f6a1b3d",
+  "source_hashes": {
+    "codec.my": "fa0592f90fad2ac0efb7f1ca955e63a1a9059e03559e1c0c2bf97417c15102e5",
+    "incremental.my": "e797876683a7483ab32f40c1578f2a49c12948f1ece9c22fd9396d9b25122472",
+    "main.my": "03222396a6df8346c8dfe1396b384ba43adf63f370a536ad9bebf59e412cfda7",
+    "tests.my": "1cdf4d70dd5397ec9f97ed111e39f5c003ee35c5851c3469f7f69054ed96d829",
+    "graph.my": "ae55b3f4e713a1e86cee87e2e870e2fe65ca11e7604e0000759fcbaa0145a5a7",
+    "codec_v2.my": "409a84cfb78d309421e855f97f24d674913213a8ae748e8de4a848970ba6eb05"
+  },
+  "oracle_source_sha256": "3b88c6a85b1f4bb7a5e508abf6eca35532ae4de88b1f8164d7c13bcef089a99c",
+  "runs": 560,
+  "exit_status_counts": {
+    "2": 36,
+    "0": 523,
+    "1": 1
+  },
+  "all_observed_rc_free": true,
+  "returned_runs_leak_free": true,
+  "llvm_rc_clean": true,
+  "symbols_rc_clean": true,
+  "raw": "experiments/memory-closeout-20261012/A08/components-support6-cache_plan.json",
+  "raw_sha256": "d25511ab2d109aa4705029d0be9a4b876ff7a631bb90a3ac6da030601b68f977",
+  "limit": "Expected hard output-error trap is retained; cleanup claims apply only to normal/handled-error returns. Instrumented oracle durations are correctness telemetry, not exclusive runtime measurements. Installed libexec remains staged historical artifacts."
+}

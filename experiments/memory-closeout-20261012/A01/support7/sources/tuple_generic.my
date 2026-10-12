@@ -1,0 +1,17 @@
+func first[T: copy](pair: tuple[T, int]) -> T:
+    const value, _ = pair.copy()
+    return value
+
+func main(out: Stream) -> int:
+    const text_pair = ("generic-" + str(9), 9)
+    const rows_pair = (["row-" + str(2), "row-" + str(3)], 2)
+    const text = first(text_pair)
+    mut rows = first(rows_pair)
+    rows.append("extra-" + str(4))
+    const original_text, _ = text_pair
+    const original_rows, _ = rows_pair
+    assert text == original_text and len(original_rows) == 2
+    assert rows == ["row-2", "row-3", "extra-4"]
+    assert first((7, 0)) == 7
+    out.print("tuple-generic", text, len(rows), len(original_rows), first((8, 0)))
+    return 0

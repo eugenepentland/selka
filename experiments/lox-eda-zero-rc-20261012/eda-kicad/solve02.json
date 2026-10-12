@@ -1,0 +1,1109 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/zig-out/bin/mylang",
+  "records": [
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:134:23: error[E_SINGLE_OWNER_BORROW]: an indexed value is borrowed; use .copy() or pop() to obtain an owned value\n              mut cfg = model_cfg[key]\n                        ^\n",
+      "source_sha256": "ec9e9cc1ce201e750873051a31da21828e465944a70e1f70d4aea2bda582bc81",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 134,
+          "selection": "model_cfg[key]"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:135:26: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n              model_name = cfg.model\n                           ^\n",
+      "source_sha256": "598742506bf0f172691e9c232c36ce7500a2a5e4ed015660dff892bc48fe91a7",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 135,
+          "selection": "cfg.model"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:136:33: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n              model_offset = Some(cfg.offset)\n                                  ^\n",
+      "source_sha256": "15a960622f7c5ecd3c326449d236024b79bccd254e868424e90beb29633c24c5",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 136,
+          "selection": "cfg.offset"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:137:35: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n              model_rotation = Some(cfg.rotation)\n                                    ^\n",
+      "source_sha256": "e5098892e313926f173c5e6b32253553b3e4ab8a7f403242a3da11e50b286fbb",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 137,
+          "selection": "cfg.rotation"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:172:36: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n          mut path = strs.path_join([output_dir, strs.text(f.name)])\n                                     ^\n",
+      "source_sha256": "d91db70a9d41698a8106955dc47ae889228100e6b1d439243b55fc17655af088",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 172,
+          "selection": "output_dir"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:176:37: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n          mut path2 = strs.path_join([output_dir, strs.text(f2.name)])\n                                      ^\n",
+      "source_sha256": "a0c3de24ef2738597f35dbc29bfbeae848e80aadd598e623b2714f21520b6086",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 176,
+          "selection": "output_dir"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:198:13: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              fp_name_map[key] = inst.footprint\n              ^\n",
+      "source_sha256": "908db5e226d9e6350de07a4a73cb2143055cc0ba7e5d8728935f741c2729743a",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 198,
+          "selection": "inst.footprint"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:200:26: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n          mut kicad_name = inst.footprint\n                           ^\n",
+      "source_sha256": "f9722ff54e6212a90f4fc125fbab3bb5ada12e644b9a88c12559859942fa6f59",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 200,
+          "selection": "inst.footprint"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:228:13: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              fp_name_map[key] = inst.footprint\n              ^\n",
+      "source_sha256": "2bd70634949b3e3acdc37d0f2740a153ddf2020f81b2a489e889650e5d3311e5",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 228,
+          "selection": "inst.footprint"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:230:29: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n          mut declared_name = inst.footprint\n                              ^\n",
+      "source_sha256": "7b97acd170c43fc0866fa5a4a4d359116bbcb0f9f84d0a7d0c6e6ac378264292",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 230,
+          "selection": "inst.footprint"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:239:25: error[E_SINGLE_OWNER_BORROW]: an indexed value is borrowed; use .copy() or pop() to obtain an owned value\n              mut first = seen_kicad_names[nk]\n                          ^\n",
+      "source_sha256": "b437cbba52c3b6cd5f36171b8b1b7406338ee255ef7599606e65c45f0d041e43",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 239,
+          "selection": "seen_kicad_names[nk]"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:243:13: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              seen_kicad_names[nk.copy()] = inst.footprint\n              ^\n",
+      "source_sha256": "e830e972539c540268e4802bc293e806a649b0730f5fd8162f4cbf2a180ddfab",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 243,
+          "selection": "inst.footprint"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:249:23: error[E_SINGLE_OWNER_BORROW]: an indexed value is borrowed; use .copy() or pop() to obtain an owned value\n              mut cfg = model_cfg[key]\n                        ^\n",
+      "source_sha256": "aaf1e2ef1a32fa136db730244b468f1e24e746a7f682765103bf71bf67cb03ec",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 249,
+          "selection": "model_cfg[key]"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:250:26: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n              model_name = cfg.model\n                           ^\n",
+      "source_sha256": "1968a4fe0574bfa37467a869a3cd821be5abe8e83505146adf31299bfe137ab0",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 250,
+          "selection": "cfg.model"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:251:33: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n              model_offset = Some(cfg.offset)\n                                  ^\n",
+      "source_sha256": "2921d16264383f131a2320ae7d31a2b08b736d1657237b43fee01e07c0582ce1",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 251,
+          "selection": "cfg.offset"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:252:35: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n              model_rotation = Some(cfg.rotation)\n                                    ^\n",
+      "source_sha256": "9e41ec2de63302637efcd4cf5131d82cb5802701f2566e5947574196e9ca4534",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 252,
+          "selection": "cfg.rotation"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:275:49: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n              zip_files.append(zipfile.Entry(name=f.name, data=f.bytes))\n                                                  ^\n",
+      "source_sha256": "cf97be8a7ac6b4c64d2aaddcbd123e9dc354491b0e615ce4d674adf8735122d0",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 275,
+          "selection": "f.name"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:275:69: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n              zip_files.append(zipfile.Entry(name=f.name.copy(), data=f.bytes))\n                                                                      ^\n",
+      "source_sha256": "e29d36e427c3db0654f4497c59b720412e8bd160f2fcf0146c0ea9e45b7a0825",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 275,
+          "selection": "f.bytes"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:277:49: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n              zip_files.append(zipfile.Entry(name=f2.name, data=f2.bytes))\n                                                  ^\n",
+      "source_sha256": "4905db71485d714b74d29e80ea6d92b1850ee2c89cbe25a699b93d1db0159916",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 277,
+          "selection": "f2.name"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:277:70: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n              zip_files.append(zipfile.Entry(name=f2.name.copy(), data=f2.bytes))\n                                                                       ^\n",
+      "source_sha256": "05165b880f1ad0970e2e122fa2c8a26fb292233a6df62f6fe12932274c517177",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad.my",
+          "line": 277,
+          "selection": "f2.bytes"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad_sch.my:192:87: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n          return Some(compose.Bind(ref=qualify(inst.ref_des, src.bind.decouple.ic), pad=src.bind.decouple.pin))\n                                                                                        ^\n",
+      "source_sha256": "23797848ff596fa8570b52ae3d3a29fd25ed7fa31b8fec66c64ba3bfefd57778",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad_sch.my",
+          "line": 192,
+          "selection": "src.bind.decouple.pin"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad_sch.my:204:42: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n              return Some(compose.Bind(ref=pin.ref_des, pad=pad.copy()))\n                                           ^\n",
+      "source_sha256": "23797848ff596fa8570b52ae3d3a29fd25ed7fa31b8fec66c64ba3bfefd57778",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad_sch.my",
+          "line": 204,
+          "selection": "pin.ref_des"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad_sch.my:209:40: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      return compose.NetFacts(binds=Some(self.binds), net_pins=Some(self.net_pins), labels=Some(self.labels))\n                                         ^\n",
+      "source_sha256": "23797848ff596fa8570b52ae3d3a29fd25ed7fa31b8fec66c64ba3bfefd57778",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad_sch.my",
+          "line": 209,
+          "selection": "self.binds"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad_sch.my:209:74: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      return compose.NetFacts(binds=Some(self.binds.copy()), net_pins=Some(self.net_pins), labels=Some(self.labels))\n                                                                           ^\n",
+      "source_sha256": "23797848ff596fa8570b52ae3d3a29fd25ed7fa31b8fec66c64ba3bfefd57778",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad_sch.my",
+          "line": 209,
+          "selection": "self.net_pins"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad_sch.my:209:109: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      return compose.NetFacts(binds=Some(self.binds.copy()), net_pins=Some(self.net_pins.copy()), labels=Some(self.labels))\n                                                                                                              ^\n",
+      "source_sha256": "23797848ff596fa8570b52ae3d3a29fd25ed7fa31b8fec66c64ba3bfefd57778",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad_sch.my",
+          "line": 209,
+          "selection": "self.labels"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad_sch.my:217:38: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n          mut info = FpInfo(kicad_name=inst.footprint, pads=[])\n                                       ^\n",
+      "source_sha256": "23797848ff596fa8570b52ae3d3a29fd25ed7fa31b8fec66c64ba3bfefd57778",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad_sch.my",
+          "line": 217,
+          "selection": "inst.footprint"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad_sch.my:230:9: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          self.fp[key] = info\n          ^\n",
+      "source_sha256": "23797848ff596fa8570b52ae3d3a29fd25ed7fa31b8fec66c64ba3bfefd57778",
+      "snapshot_edits": [
+        {
+          "file": "export_kicad_sch.my",
+          "line": 230,
+          "selection": "info"
+        }
+      ]
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad_sch.my:230:9: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          self.fp[key] = info.copy()\n          ^\n",
+      "source_sha256": "23797848ff596fa8570b52ae3d3a29fd25ed7fa31b8fec66c64ba3bfefd57778",
+      "snapshot_edits": []
+    },
+    {
+      "module": "export_kicad_footprint.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "9f5e8cd46fbcbd516b27f1494738d677b88dc1a8b25e8adfe7125192fcb7a961"
+    },
+    {
+      "module": "export_kicad_footprint_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "376cd22513b55f315ea1a5e5ca2faa59103beb7fcd2545d6c8db275c3e1c7a04"
+    },
+    {
+      "module": "export_kicad_model.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "cb4165b53b9cd975c9821e4519f5af3f57415e8af446d9ee54f4868367e90748"
+    },
+    {
+      "module": "export_kicad_netlist.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "f84153cc9f5275156eb18c18ae7b8e79eecb0954f08a1267647649abacd8d0de"
+    },
+    {
+      "module": "export_kicad_netlist_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "a42cd8fe72c931bdfd2b9af623847de2d4bfdd08a9ce677993c7dbc836e63963"
+    },
+    {
+      "module": "export_kicad_sch.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad_sch.my:230:9: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          self.fp[key] = info.copy()\n          ^\n",
+      "source_sha256": "257b3d893d89721ebb33fbdf871be19f5f6f86dc8648364e25c762469c5bdff3",
+      "snapshot_edits": []
+    },
+    {
+      "module": "export_kicad_sch_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad_sch.my:230:9: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          self.fp[key] = info.copy()\n          ^\n",
+      "source_sha256": "14e6789e7e503127dec74270cacc5b55c35dcb2c2537eb3efba5519b4b49f358",
+      "snapshot_edits": []
+    },
+    {
+      "module": "export_kicad_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad_sch.my:230:9: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          self.fp[key] = info.copy()\n          ^\n",
+      "source_sha256": "34853d58e6b67fdd8bcf2162feafcea982cafa4173d99e586051bf458b588fef",
+      "snapshot_edits": []
+    },
+    {
+      "module": "kicad_pcb_format.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "fe5a6a47f7d34bb7f68abd9594056590fe3e668790a7db6c2ac370b2f6c0a72c"
+    },
+    {
+      "module": "kicad_pcb_format_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "cd0b94ecd06b33b094c6f2d3f26162dea41c53b99ceec078859e7064e7d89d54"
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:351:24: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              out.append(pn)\n                         ^\n",
+      "source_sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_shape.my",
+          "line": 351,
+          "selection": "pn"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:356:36: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              out.append(PadName(pad=pad, name=pad))\n                                     ^\n",
+      "source_sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_shape.my",
+          "line": 356,
+          "selection": "pad"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:356:53: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              out.append(PadName(pad=pad.copy(), name=pad))\n                                                      ^\n",
+      "source_sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_shape.my",
+          "line": 356,
+          "selection": "pad"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:361:36: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              out.append(PadName(pad=pad2, name=pad2))\n                                     ^\n",
+      "source_sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_shape.my",
+          "line": 361,
+          "selection": "pad2"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:361:54: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              out.append(PadName(pad=pad2.copy(), name=pad2))\n                                                       ^\n",
+      "source_sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_shape.my",
+          "line": 361,
+          "selection": "pad2"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:391:29: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n                  return Some(value)\n                              ^\n",
+      "source_sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_shape.my",
+          "line": 391,
+          "selection": "value"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:410:36: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n              out.append(PadName(pad=pad, name=ast.as_text(cl[2]).unwrap_or(pad)))\n                                     ^\n",
+      "source_sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_shape.my",
+          "line": 410,
+          "selection": "pad"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:410:53: error[E_SINGLE_OWNER_BORROW]: a borrowed selection cannot be stored or returned; make an explicit .copy()\n              out.append(PadName(pad=pad.copy(), name=ast.as_text(cl[2]).unwrap_or(pad)))\n                                                      ^\n",
+      "source_sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_shape.my",
+          "line": 410,
+          "selection": "ast.as_text(cl[2]).unwrap_or(pad)"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:575:16: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut left = pads[0]\n                 ^\n",
+      "source_sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_shape.my",
+          "line": 575,
+          "selection": "pads[0]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:576:17: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut right = pads[1]\n                  ^\n",
+      "source_sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_shape.my",
+          "line": 576,
+          "selection": "pads[1]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:578:16: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          left = pads[1]\n                 ^\n",
+      "source_sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_shape.my",
+          "line": 578,
+          "selection": "pads[1]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:579:17: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          right = pads[0]\n                  ^\n",
+      "source_sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_shape.my",
+          "line": 579,
+          "selection": "pads[0]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:580:25: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut pins = [Pin(pad=left.pad, name=left.name, side=Side.left, x=-381, y=0, len=m.lead), Pin(pad=right.pad, name=right.name, side=Side.right, x=381, y=0, len=m.lead)]\n                          ^\n",
+      "source_sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_shape.my",
+          "line": 580,
+          "selection": "left.pad"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:580:47: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut pins = [Pin(pad=left.pad.copy(), name=left.name, side=Side.left, x=-381, y=0, len=m.lead), Pin(pad=right.pad, name=right.name, side=Side.right, x=381, y=0, len=m.lead)]\n                                                ^\n",
+      "source_sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_shape.my",
+          "line": 580,
+          "selection": "left.name"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:580:115: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut pins = [Pin(pad=left.pad.copy(), name=left.name.copy(), side=Side.left, x=-381, y=0, len=m.lead), Pin(pad=right.pad, name=right.name, side=Side.right, x=381, y=0, len=m.lead)]\n                                                                                                                    ^\n",
+      "source_sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_shape.my",
+          "line": 580,
+          "selection": "right.pad"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:580:138: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut pins = [Pin(pad=left.pad.copy(), name=left.name.copy(), side=Side.left, x=-381, y=0, len=m.lead), Pin(pad=right.pad.copy(), name=right.name, side=Side.right, x=381, y=0, len=m.lead)]\n                                                                                                                                           ^\n",
+      "source_sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_shape.my",
+          "line": 580,
+          "selection": "right.name"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:586:25: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut pins = [Pin(pad=pad.pad, name=pad.name, side=Side.left, x=-254, y=0, len=m.lead)]\n                          ^\n",
+      "source_sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_shape.my",
+          "line": 586,
+          "selection": "pad.pad"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:586:46: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut pins = [Pin(pad=pad.pad.copy(), name=pad.name, side=Side.left, x=-254, y=0, len=m.lead)]\n                                               ^\n",
+      "source_sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_shape.my",
+          "line": 586,
+          "selection": "pad.name"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "render_svg_context.my:197:13: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              self.hub_order.append(inst.ref_des)\n              ^\n",
+      "source_sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed",
+      "snapshot_edits": []
+    },
+    {
+      "module": "kicad_sch_bank_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "render_svg_context.my:197:13: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              self.hub_order.append(inst.ref_des)\n              ^\n",
+      "source_sha256": "ae25c3d456166efa92a1e3d9d803621f48f95f8246f7c43f82c2571f0fe60f92",
+      "snapshot_edits": []
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:254:44: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      return Some(bank.Candidate(item=i, ref=it.id.ref, value=it.id.value, power=power, gnd=gnd, power_pin=power_pin, reach=reach))\n                                             ^\n",
+      "source_sha256": "b0cbe70514ce7d1162ffc28fae62c1ffead0df94c6f4c3b7c4099d3adcbe154e",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 254,
+          "selection": "it.id.ref"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:254:68: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      return Some(bank.Candidate(item=i, ref=it.id.ref.copy(), value=it.id.value, power=power, gnd=gnd, power_pin=power_pin, reach=reach))\n                                                                     ^\n",
+      "source_sha256": "de0ba848b7d6e7207fce3e38a8e69239669eb012b5766a2b2d302652dc1c93a9",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 254,
+          "selection": "it.id.value"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:258:17: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut binds = self.req.facts.binds\n                  ^\n",
+      "source_sha256": "c77f99c8832a9c83db6ff515a77d4e40d6aa9db4d7557af972dcda76bfb8caa5",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 258,
+          "selection": "self.req.facts.binds"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:269:18: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          mut it = items[i]\n                   ^\n",
+      "source_sha256": "818d20ce441fb1c3e4d11737cabdb760b16d3a4d9ecd7578243007d685a3ce99",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 269,
+          "selection": "items[i]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:290:13: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut u = self.req.shapes[it.shape].units[it.unit]\n              ^\n",
+      "source_sha256": "31f26da2db1ff7aa9ef07606e2baba045f7e7b0ec6e0fde528785228e5429911",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 290,
+          "selection": "self.req.shapes[it.shape].units[it.unit]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:293:19: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          mut pin = u.pins[i]\n                    ^\n",
+      "source_sha256": "8cce884e39427b5f01d07c82d4692f4e2416879e8a6831a6f998c4732f6f0929",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 293,
+          "selection": "u.pins[i]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:296:19: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n              net = it.nets[i]\n                    ^\n",
+      "source_sha256": "aa71d8cab9b43110f01da8978fcf4cb57f25777c9de08866a4e54b8c7dabb9b0",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 296,
+          "selection": "it.nets[i]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:324:21: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          mut owned = slot.plan.banks[i]\n                      ^\n",
+      "source_sha256": "8ec398d3c177f07dd4cd94cf02af024df906ac7074668c57aaab12a2137c57b9",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 324,
+          "selection": "slot.plan.banks[i]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:338:32: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      note(mut self, it.id.uuid, self.req.shapes[it.shape].lib_name)\n                                 ^\n",
+      "source_sha256": "81f04e9202c0185bb93006b8926958b6d4d37f9a85a4bb97c4e0d339b5a976d9",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 338,
+          "selection": "self.req.shapes[it.shape].lib_name"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:338:32: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      note(mut self, it.id.uuid, self.req.shapes[it.shape].lib_name.copy())\n                                 ^\n",
+      "source_sha256": "d27894023a3bc6c2e51f711c10aa347f3e116ef92902c07ad6429f7410e20664",
+      "snapshot_edits": []
+    },
+    {
+      "module": "kicad_sch_compose_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:338:32: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      note(mut self, it.id.uuid, self.req.shapes[it.shape].lib_name.copy())\n                                 ^\n",
+      "source_sha256": "9688b8edaddb7db9504aa0c2775baebf9ba88658b842489dba50971ff6bc7823",
+      "snapshot_edits": []
+    },
+    {
+      "module": "kicad_sch_emit.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "render_svg_context.my:197:13: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              self.hub_order.append(inst.ref_des)\n              ^\n",
+      "source_sha256": "2d2679b99e71e90f70dc45f5c28f34432def661f0b870bb0949bdb3ab1da93dd",
+      "snapshot_edits": []
+    },
+    {
+      "module": "kicad_sch_emit_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "render_svg_context.my:197:13: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              self.hub_order.append(inst.ref_des)\n              ^\n",
+      "source_sha256": "ae44aa0ea128d93e8dd7dcee855e00810e029cac19f7d5e48e29db8d9c538849",
+      "snapshot_edits": []
+    },
+    {
+      "module": "kicad_sch_gang.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "384300687185fec3a472c9a5ad8c965276a0acaaafbf69d37c8a378b01b7e800"
+    },
+    {
+      "module": "kicad_sch_gang_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "254892cc4590d40c51248c38653bc897fa0d7daa296ba23efca47c1e92d01b57"
+    },
+    {
+      "module": "kicad_sch_glyph_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "b0fdcffd6c068c50d31b025642301d5ac8205f92cabc41b5a792da2580749b02"
+    },
+    {
+      "module": "kicad_sch_plan.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "0aa52227fb4d20f882dc4d4eb0601205c56abc69507e3783c03cbc10a12efaba"
+    },
+    {
+      "module": "kicad_sch_plan_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "28881c19b5097325406126e07a523c1df74d52a80bda521bbd61f5b03b203058"
+    },
+    {
+      "module": "kicad_sch_project.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "render_svg_context.my:197:13: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              self.hub_order.append(inst.ref_des)\n              ^\n",
+      "source_sha256": "11f31dd94c588d648ad0754fe02ae08c20be5bf98c40f48d17e448cc4470d297",
+      "snapshot_edits": []
+    },
+    {
+      "module": "kicad_sch_project_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "render_svg_context.my:197:13: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              self.hub_order.append(inst.ref_des)\n              ^\n",
+      "source_sha256": "5ad3a855297730d87cc9299ea7a7e016d400570cf89e6c57875e31780660a684",
+      "snapshot_edits": []
+    },
+    {
+      "module": "kicad_sch_shape.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "36b4e88b9e1ead0c6ad6f5740c8ef1af126e005cc1c2142989e9aeb0ed58cb4a"
+    },
+    {
+      "module": "kicad_sch_shape_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "bb6f544f1270d5998aa455fc0c5cced0a6136dd1f32d8dcf30593b7f2f82498d"
+    },
+    {
+      "module": "kicad_sch_sheet.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "df965998a98143c724c439e08404031dadeb620a5ff347c902aa87b43c196a32"
+    },
+    {
+      "module": "kicad_sch_sheet_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "877b761d0119f5ae44430aeeba902f7492f9b09be7a87a6567e51a3792b4c5fe"
+    },
+    {
+      "module": "kicad_sch_stagger.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "86f56e9b413e266f63fdac9528b0c0689d8b40d6ccaaf82a4ee4e8678499e36b"
+    },
+    {
+      "module": "kicad_sch_stagger_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "81ab32a05846c32b4d3f0c02334d21dfdcb45056b0a08a3c688e7b49e33a7f67"
+    },
+    {
+      "module": "kicad_sch_stub.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "4de84c894e333f2b0d38aafe5ab111860e0ff3234ebc6deb227f3992b0a528cb"
+    },
+    {
+      "module": "kicad_sch_stub_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "8f8ac58c2075a67d0d8117aa2ce38c54292f4815fb684e97f43db931912628e8"
+    },
+    {
+      "module": "kicad_sch_testdata.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "593d98a923eb78796eab45020591cc7443e18d70df8efeefff99352960236cca"
+    },
+    {
+      "module": "kicad_sch_textbox.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "e284b53cab442a5f2a615831087e7c361485d7edc3786c9da74d9c29dc4df995"
+    },
+    {
+      "module": "kicad_sch_textbox_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "fe7921d51ac571d950dd4937e6358535d99ad43e1dfa6501e46b7ccbee8e9103"
+    },
+    {
+      "module": "kicad_sch_vendor.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_vendor.my:188:23: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          mut snapped = p\n                        ^\n",
+      "source_sha256": "927b400044784e38350522ad4e83877a3dd6e8bea37e28f92b3dac011d1ca4cf",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_vendor.my",
+          "line": 188,
+          "selection": "p"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_vendor.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "c80d53d013be7eeb9d9fa247f70f221b98f209fe9a72e8bc90d674f345c9d4ba"
+    },
+    {
+      "module": "kicad_sch_vendor_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "12d2240754b91b2d5546c160c7c9c004544f6438e6eba316b600a93373bf340a"
+    },
+    {
+      "module": "kicad_sch_verify.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "2e469b51f32a4d1fa48e72c7ddf2cd8ffa4a4b3da61600d4f0afd91a1433f4d6"
+    },
+    {
+      "module": "kicad_sch_verify_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "e07b5b4f5224deac8d0d2b77fd427325102e766773fea1f2579526d441a07c09"
+    },
+    {
+      "module": "kicad_sch_wire.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "56d56cef81c5877337233db10d5698e0d2ea798fcc3b1bba65bff8c07cdc720a"
+    },
+    {
+      "module": "kicad_sch_wire_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "1f71df3479687dca2c397a36fea5a21502aa73d3ffaf28450c6fcd7dfaf2a5d6"
+    },
+    {
+      "module": "kicad_sym_library.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "8ff1f5923b785a59fd4a7a3de01011bc49765f904696c5e75ffdec461f44e452"
+    },
+    {
+      "module": "kicad_sym_library_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "8833c42f5e357fea45c91c1846bc89627a7359b3e1c8d1c28cb5a9f2e39d6a5f"
+    },
+    {
+      "module": "kicad_sym_reader.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "82328ece020a1c75aab352e7dc4ed8c2c3e7e4f2f496c938f41bbeb9f89f2400"
+    },
+    {
+      "module": "kicad_sym_reader_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "82b19bf244cbd15b31ce570526c1a862ee569f41b4568a371ae6e14116e0e17b"
+    },
+    {
+      "module": "kicad_sym_testdata.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "2781e1545c6f48eb110742f7027f0b863b7c4479e77ede885f3f8ee62ebd3445"
+    }
+  ]
+}

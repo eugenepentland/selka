@@ -1,0 +1,158 @@
+{
+  "json_lookup": [
+    {
+      "case": "batch/array_1_hit",
+      "allocations_per_lookup": 3.0,
+      "reallocations_per_lookup": 0.0,
+      "cumulative_bytes_per_lookup": 320.0
+    },
+    {
+      "case": "batch/array_1_miss",
+      "allocations_per_lookup": 0.0,
+      "reallocations_per_lookup": 0.0,
+      "cumulative_bytes_per_lookup": 0.0
+    },
+    {
+      "case": "batch/array_16_hit",
+      "allocations_per_lookup": 3.0,
+      "reallocations_per_lookup": 0.0,
+      "cumulative_bytes_per_lookup": 320.0
+    },
+    {
+      "case": "batch/array_16_miss",
+      "allocations_per_lookup": 0.0,
+      "reallocations_per_lookup": 0.0,
+      "cumulative_bytes_per_lookup": 0.0
+    },
+    {
+      "case": "batch/array_128_hit",
+      "allocations_per_lookup": 3.0,
+      "reallocations_per_lookup": 0.0,
+      "cumulative_bytes_per_lookup": 320.0
+    },
+    {
+      "case": "batch/array_128_miss",
+      "allocations_per_lookup": 0.0,
+      "reallocations_per_lookup": 0.0,
+      "cumulative_bytes_per_lookup": 0.0
+    },
+    {
+      "case": "batch/object_1_hit",
+      "allocations_per_lookup": 3.0,
+      "reallocations_per_lookup": 0.0,
+      "cumulative_bytes_per_lookup": 320.0
+    },
+    {
+      "case": "batch/object_1_miss",
+      "allocations_per_lookup": 0.0,
+      "reallocations_per_lookup": 0.0,
+      "cumulative_bytes_per_lookup": 0.0
+    },
+    {
+      "case": "batch/object_16_hit",
+      "allocations_per_lookup": 3.0,
+      "reallocations_per_lookup": 0.0,
+      "cumulative_bytes_per_lookup": 320.0
+    },
+    {
+      "case": "batch/object_16_miss",
+      "allocations_per_lookup": 0.0,
+      "reallocations_per_lookup": 0.0,
+      "cumulative_bytes_per_lookup": 0.0
+    },
+    {
+      "case": "batch/object_128_hit",
+      "allocations_per_lookup": 3.0,
+      "reallocations_per_lookup": 0.0,
+      "cumulative_bytes_per_lookup": 320.0
+    },
+    {
+      "case": "batch/object_128_miss",
+      "allocations_per_lookup": 0.0,
+      "reallocations_per_lookup": 0.0,
+      "cumulative_bytes_per_lookup": 0.0
+    }
+  ],
+  "record_source_variants": {
+    "before": {
+      "calls": 3001,
+      "allocs": 27000,
+      "alloc_bytes": 3136000,
+      "frees": 27000,
+      "free_bytes": 3136000,
+      "list_grows": 0,
+      "list_grow_bytes": 0,
+      "reallocs": 0,
+      "realloc_added_bytes": 0,
+      "realloc_moves": 0,
+      "realloc_moved_bytes": 0,
+      "list_copies": 2000,
+      "list_copy_bytes": 32000,
+      "dict_copies": 0,
+      "dict_copy_bytes": 0,
+      "buffer_copies": 0,
+      "buffer_copy_bytes": 0,
+      "text_copies": 10000,
+      "text_copy_bytes": 651560,
+      "runtime_retains": 0,
+      "runtime_releases": 0,
+      "dict_grows": 0,
+      "dict_grow_bytes": 0,
+      "buffer_grows": 0,
+      "buffer_grow_bytes": 0,
+      "text_grows": 6000,
+      "text_grow_bytes": 384000,
+      "text_appends": 6000,
+      "text_append_bytes": 17340,
+      "buffer_pushes": 0,
+      "buffer_appends": 0,
+      "buffer_append_bytes": 0,
+      "shared_retains": 0,
+      "shared_releases": 0,
+      "share_marks": 0,
+      "share_bytes": 0,
+      "peak_live_bytes": 1536,
+      "live_bytes_at_exit": 0
+    },
+    "after": {
+      "calls": 3001,
+      "allocs": 21000,
+      "alloc_bytes": 2496000,
+      "frees": 21000,
+      "free_bytes": 2496000,
+      "list_grows": 0,
+      "list_grow_bytes": 0,
+      "reallocs": 0,
+      "realloc_added_bytes": 0,
+      "realloc_moves": 0,
+      "realloc_moved_bytes": 0,
+      "list_copies": 0,
+      "list_copy_bytes": 0,
+      "dict_copies": 0,
+      "dict_copy_bytes": 0,
+      "buffer_copies": 0,
+      "buffer_copy_bytes": 0,
+      "text_copies": 6000,
+      "text_copy_bytes": 384000,
+      "runtime_retains": 0,
+      "runtime_releases": 0,
+      "dict_grows": 0,
+      "dict_grow_bytes": 0,
+      "buffer_grows": 0,
+      "buffer_grow_bytes": 0,
+      "text_grows": 6000,
+      "text_grow_bytes": 384000,
+      "text_appends": 6000,
+      "text_append_bytes": 17340,
+      "buffer_pushes": 0,
+      "buffer_appends": 0,
+      "buffer_append_bytes": 0,
+      "shared_retains": 0,
+      "shared_releases": 0,
+      "share_marks": 0,
+      "share_bytes": 0,
+      "peak_live_bytes": 1536,
+      "live_bytes_at_exit": 0
+    }
+  }
+}

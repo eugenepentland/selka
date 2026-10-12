@@ -1,0 +1,28 @@
+func appended(n: int) -> str:
+    mut out = ""
+    for i in range(n):
+        out += "é€"[i % 2]
+    return out
+
+func scan(s: str) -> int:
+    mut n = len(s)
+    mut total = 0
+    mut start = 0
+    while s.find("é", start) >= 0:
+        start = s.index("é", start) + 1
+        total += start
+    mut end = n
+    while s.rfind("é", 0, end) >= 0:
+        end = s.rfind("é", 0, end)
+        total += end
+    mut i = n - 1
+    while i >= 0:
+        total += ord(s[i]) + len(s[i:i + 2])
+        i -= 1
+    total += ord(s[::-1][0]) + len(s[::-3])
+    return total
+
+func main(out: Stream) -> int:
+    out.print(scan("é" * 20000), scan(appended(20000)))
+    return 0
+

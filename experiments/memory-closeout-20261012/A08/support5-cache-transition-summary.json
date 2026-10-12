@@ -1,0 +1,67 @@
+{
+  "compiler_revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "status": "interim_support5_passed_not_final_C1",
+  "fresh_lowering": {
+    "generic": 2,
+    "map_new_abi": 3
+  },
+  "old_artifact_payloads_unchanged": true,
+  "changed_bookkeeping": [
+    "shared/compiler-artifacts-v2/retention-last",
+    "shared/compiler-artifacts-v2/syntax/43eb813d4d669806be57c4fd27012edb661a0afd2ba7d0c6e8a7337bfc0995b6.blob.lock",
+    "shared/compiler-artifacts-v2/syntax/82db28b9924e4a4ef3712e4541125ab3eae28a8be0738c8b72db0a41aeb91407.blob.lock",
+    "shared/compiler-artifacts-v2/syntax/767c414c6c00cc78490037c97565002c2854638d47e76116ed6b842832b256fd.blob.lock",
+    "shared/compiler-artifacts-v2/syntax/b45413b48c1bbf234f90cb67351ab93081a01f90730a564e35412ac54b6f036c.blob.lock",
+    "shared/compiler-artifacts-v2/syntax/f48c3f733999f77c2e996eca11089769711d2cb126689012a997c24db75794ba.blob.lock",
+    "shared/compiler-artifacts-v2/program/610015ec84778d1f540b572fe368d1ba03140ae1b8641052a82e5554e437ac6e.blob.lock",
+    "shared/compiler-artifacts-v2/program/f1a997a326e2abab4297442ad4923daf3717a3c0eef70589e77530193b2c602a.blob.lock",
+    "shared/compiler-artifacts-v2/program/751dac0c3e58b6dd91cca22c1078905d77234c04f8e3d3149901674d4eda4b08.blob.lock",
+    "shared/compiler-artifacts-v2/program/cca09e575ed16c8566446106feedceb232a13b5e32ce3eb60b91c786997c0233.blob.lock",
+    "shared/compiler-artifacts-v2/program/9edfed9680133ee1b95e6d8200477887912d907e6a360792ef2e91cb2a25c0cf.blob.lock",
+    "shared/compiler-artifacts-v2/typed/69ee5312a3d225c3b858c8fa5babf399b335e664f4e2c69915927df97cc90eae.blob.lock",
+    "shared/compiler-artifacts-v2/typed/c40846598f404ad1e9bad5ffef5b8bc8972eb06ce08fa04e9d7d6fc8f8e264a7.blob.lock",
+    "shared/compiler-artifacts-v2/typed/d9aed00985c11a76e840ae7ab044b8075ab1d34b9b5ea0a443fa384a62820377.blob.lock",
+    "shared/compiler-artifacts-v2/typed/f0ca8d22583a50c53fab1b65aad0aa012afe534c0f34aa7bc07d67f143b0cc13.blob.lock",
+    "shared/compiler-artifacts-v2/work/316904d2057a08bd7078613734795d9b1f5bc85ee9a1ae6adba355f85cf6c11f.lock",
+    "shared/compiler-artifacts-v2/work/87d1072d363da1bd416a573d8d23ce044cca247018abf7bb6fdbedf7bcd67962.lock",
+    "shared/compiler-artifacts-v2/work/0019765d07cb85bd58ca54264a2817a48a3563d905d5bc3bd90d207fde4dcf13.lock",
+    "shared/compiler-artifacts-v2/work/90642bd5381b708c739cce2d9dbcbecfa31615df97af4efa3aee1ab6068d41cd.lock",
+    "shared/compiler-artifacts-v2/work/903fcd03a82ad31ef68b5868b705966379bdd7adf22355ea20c2197e61c8140c.lock",
+    "map-abi/cache/stages-packed-v1/sequence",
+    "cache-project/cache/stages-packed-v1/sequence"
+  ],
+  "baseline_provenance": "support5-retained-cache/baseline-provenance.json",
+  "raw_results": "support5-retained-cache/results.json",
+  "limitations": [
+    "No new C0 native builds; pre-change successful C0 artifacts retained at original paths and snapshotted before candidate writes.",
+    "Elapsed/RSS are incidental correctness-run telemetry, not exclusive timing comparisons.",
+    "Candidate corpus and C2/C3 default/retirement checks remain pending."
+  ],
+  "retained_cases": 9,
+  "retained_passed": 9,
+  "total_cases": 40,
+  "total_passed": 40,
+  "matrices": {
+    "support5-fresh-cache": {
+      "cases": 21,
+      "all_passed": true,
+      "raw": "support5-fresh-cache/results.json"
+    },
+    "support5-retained-cache": {
+      "cases": 9,
+      "all_passed": true,
+      "raw": "support5-retained-cache/results.json"
+    },
+    "support5-result-cache": {
+      "cases": 7,
+      "all_passed": true,
+      "raw": "support5-result-cache/results.json"
+    },
+    "support5-render-cache": {
+      "cases": 3,
+      "all_passed": true,
+      "raw": "support5-render-cache/results.json"
+    }
+  }
+}

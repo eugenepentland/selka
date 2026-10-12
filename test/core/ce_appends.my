@@ -36,10 +36,10 @@ func main(args: str[], out: Stream) -> int:
     mut full = len(exact)
     _ = exact.append_range(piece, 7, 8)
     out.print(full, len(exact), checksum(exact))
-    # A snapshot shares the buffer's storage: the next append moves the buffer, the
-    # snapshot keeps its octets, and appending the snapshot to the buffer reads it whole.
+    # Explicit snapshots keep independent octets across later appends; appending
+    # a snapshot to its source buffer reads the complete earlier value.
     mut snapshot = bytes(buffer)
-    mut alias = buffer
+    mut alias = buffer.copy()
     _ = buffer.append_range(snapshot, 0, 5)
     _ = buffer.append_range(snapshot, len(snapshot) - 3, len(snapshot))
     _ = buffer.append_utf8("héllo")
@@ -50,8 +50,10 @@ func main(args: str[], out: Stream) -> int:
     _ = buffer.append_range(bytes(other), 0, 4)
     out.print(len(buffer), checksum(buffer), checksum(other))
     # A buffer appended to itself, with and without room.
-    _ = other.append_range(other, 0, len(other))
-    _ = other.append_range(other, 1, 3)
+    const first_snapshot = bytes(other)
+    _ = other.append_range(first_snapshot, 0, len(first_snapshot))
+    const second_snapshot = bytes(other)
+    _ = other.append_range(second_snapshot, 1, 3)
     out.print(len(other), checksum(other))
     if len(args) > 1 and args[0] == "grow":
         mut target = parse(args[1])

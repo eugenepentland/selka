@@ -1,0 +1,459 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+  "compiler_sha256": "077aa182f221694ed29e1757a1a6f249bdd8196018804f8e459747c8c193dff8",
+  "source_commit": "fe582983fe3e953ff1eecd07a949738557df3bcb",
+  "source_diff": "diff --git a/src/core/build_values.zig b/src/core/build_values.zig\nindex 1514f26e1..780838737 100644\n--- a/src/core/build_values.zig\n+++ b/src/core/build_values.zig\n@@ -25,10 +25,10 @@ pub fn concat(comptime Context: type, b: Context, left: ir.Ref, right: ir.Ref, s\n     const second = try b.emit(.{ .op = .list_len, .ty = .u64, .a = right, .span = span });\n     const length = try b.emit(.{ .op = .add, .ty = .u64, .a = first, .b = second, .check = .exact, .span = span });\n     const empty = try b.emit(.{ .op = .list_new, .ty = ty, .a = length, .span = span });\n-    return append(Context, b, try append(Context, b, empty, left, span), right, span);\n+    return append(Context, b, try append(Context, b, empty, left, span, false), right, span, false);\n }\n \n-fn append(comptime Context: type, b: Context, initial: ir.Ref, source: ir.Ref, span: u32) Error!ir.Ref {\n+fn append(comptime Context: type, b: Context, initial: ir.Ref, source: ir.Ref, span: u32, comptime independent: bool) Error!ir.Ref {\n     const ty = b.typeOfRef(initial);\n     const element = b.module().compound(ty).list;\n     const result = try b.synthetic(ty);\n@@ -47,10 +47,14 @@ fn append(comptime Context: type, b: Context, initial: ir.Ref, source: ir.Ref, s\n     try b.seal(body);\n     try b.seal(end);\n     b.current = body;\n-    const value = try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = index, .check = .exact, .span = span });\n-    const pushed = try b.emit(.{ .op = .list_push, .ty = ty, .a = try b.read(result, body), .b = value, .span = span });\n-    try b.write(result, b.current.?, pushed);\n-    try b.write(counter, b.current.?, try b.emit(.{ .op = .add, .ty = .u64, .a = index, .b = try b.constant(.u64, 1), .span = span }));\n+    var value = try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = index, .check = .exact, .span = span });\n+    // Repetition promises independent elements. Copy each borrowed child before\n+    // transferring it into the output; ordinary list stores still require moves.\n+    if (independent and b.module().zero_rc) value = try b.copyOwned(value, span);\n+    const at = b.current.?;\n+    const pushed = try b.emit(.{ .op = .list_push, .ty = ty, .a = try b.read(result, at), .b = value, .span = span });\n+    try b.write(result, at, pushed);\n+    try b.write(counter, at, try b.emit(.{ .op = .add, .ty = .u64, .a = index, .b = try b.constant(.u64, 1), .span = span }));\n     try b.jump(header);\n     try b.seal(header);\n     b.enter(end);\n@@ -114,7 +118,8 @@ pub fn repeat(comptime Context: type, b: Context, left: ir.Ref, right: ir.Ref, s\n     const header = try b.newBlock();\n     const body = try b.newBlock();\n     const end = try b.newBlock();\n-    try b.jump(header);\n+    const nonempty = try b.emit(.{ .op = .cmp, .ty = .bool, .a = length, .b = try b.constant(.u64, 0), .data = @backingInt(ir.Predicate.ne), .span = span });\n+    try b.branch(nonempty, header, end, span);\n     b.current = header;\n     const index = try b.read(counter, header);\n     const more = try b.emit(.{ .op = .cmp, .ty = .bool, .a = index, .b = wide, .data = @backingInt(ir.Predicate.lt), .span = span });\n@@ -122,7 +127,7 @@ pub fn repeat(comptime Context: type, b: Context, left: ir.Ref, right: ir.Ref, s\n     try b.seal(body);\n     try b.seal(end);\n     b.current = body;\n-    const next = try append(Context, b, try b.read(result, body), collection, span);\n+    const next = try append(Context, b, try b.read(result, body), collection, span, true);\n     try b.write(result, b.current.?, next);\n     try b.write(counter, b.current.?, try b.emit(.{ .op = .add, .ty = wide_ty, .a = index, .b = try b.constant(wide_ty, 1), .check = .exact, .span = span }));\n     try b.jump(header);\ndiff --git a/src/core/runtime/core_values.c b/src/core/runtime/core_values.c\nindex 23cc79131..f64d8ff0e 100644\n--- a/src/core/runtime/core_values.c\n+++ b/src/core/runtime/core_values.c\n@@ -7,7 +7,8 @@ int64_t myl_core_octets_compare(const myl_block *a, const myl_block *b) {\n }\n \n myl_block *myl_core_octets_repeat_unsigned(const myl_block *source, uint64_t count) {\n-    if (source->len && count > (uint64_t)INT64_MAX / (uint64_t)source->len) out_of_memory();\n+    /* The trailing terminator is part of the signed allocation capacity. */\n+    if (source->len && count > (uint64_t)(INT64_MAX - 1) / (uint64_t)source->len) out_of_memory();\n     size_t n = (size_t)((uint64_t)source->len * count);\n     myl_block *result = block_new(MYL_KIND_STR, (int64_t)n + 1, 1);\n     result->len = (int64_t)n;\ndiff --git a/src/repetition.zig b/src/repetition.zig\nindex 7e9406c93..59d18e9aa 100644\n--- a/src/repetition.zig\n+++ b/src/repetition.zig\n@@ -1,17 +1,14 @@\n //! PY-REPEAT-1: `sequence * count` and `count * sequence` for `str`, `bytes`\n //! and `list[T]`, as Python repeats them.\n //!\n-//! A repeated `str` or `bytes` gathers `count` references to the one operand and\n-//! joins them with the empty separator, so the result is built with one\n-//! exactly-sized allocation instead of a chain of growing prefixes. A repeated\n-//! list extends a fresh list by the operand `count` times, so its elements are\n-//! shared shallowly, as Python's are. A count of zero or less answers an empty\n-//! value. Both operands are evaluated once, left to right.\n+//! A repeated `str` or `bytes` remains a binary operation: Core borrows its\n+//! operands and produces one exactly-sized allocation. A repeated list creates\n+//! independent elements under value semantics. A count of zero or less answers\n+//! an empty value. Both operands are evaluated once, left to right.\n const std = @import(\"std\");\n const typed = @import(\"typed.zig\");\n const source = @import(\"source.zig\");\n const diagnostic = @import(\"diagnostic.zig\");\n-const collections = @import(\"collection_lower.zig\");\n \n /// The sequence kinds `*` repeats: text, immutable octets and lists.\n pub fn repeatable(records: []const typed.Record, ty: typed.Type) bool {\n@@ -31,37 +28,13 @@ pub fn repeatable(records: []const typed.Record, ty: typed.Type) bool {\n /// of the two the source wrote first.\n pub const Operands = struct { sequence: typed.NodeId, count: typed.NodeId, count_first: bool };\n \n-/// Build the checked value of one repetition through the checker's builder.\n+/// Preserve repetition as a binary operation so Core can borrow its operands.\n pub fn build(comptime Checker: type, checker: *Checker, span: source.Span, operands: Operands) diagnostic.Error!typed.Node {\n-    const b: collections.Builder(Checker) = .{ .checker = checker, .span = span };\n-    const allocator = checker.allocator;\n     const sequence_type = checker.nodes.items[@backingInt(operands.sequence)].ty;\n-    const kind = checker.catalog.records[sequence_type.recordIndex()].collection.kind;\n-    const sequence = try b.local(sequence_type);\n-    const count = try b.local(.i64);\n-    const count_value = if (checker.nodes.items[@backingInt(operands.count)].ty == .i64) operands.count else try b.node(.i64, .{ .cast = operands.count });\n-    const bind_sequence = try b.stmt(.{ .initialize = .{ .slot = sequence, .value = operands.sequence } });\n-    const bind_count = try b.stmt(.{ .initialize = .{ .slot = count, .value = count_value } });\n-    // A list gathers the operand's elements; text and octets gather the operand.\n-    const gathered_type = if (kind == .list) sequence_type else try collections.listType(&checker.catalog, sequence_type, span);\n-    const gathered = try b.local(gathered_type);\n-    const index = try b.local(.i64);\n-    const gather: @import(\"buffer_operations.zig\").Kind = if (kind == .list) .extend else .append;\n-    const body = try b.stmt(.{ .block = try allocator.dupe(typed.StatementId, &.{\n-        try b.stmt(.{ .discard = try b.operation(gathered, gather, &.{try b.read(sequence)}) }),\n-        try b.stmt(.{ .assign = .{ .slot = index, .value = try b.binary(.add, try b.read(index), try b.integer(1), .i64) } }),\n-    }) });\n-    const loop_id = checker.loops.next;\n-    checker.loops.next += 1;\n-    const statements = try allocator.dupe(typed.StatementId, &.{\n-        if (operands.count_first) bind_count else bind_sequence,\n-        if (operands.count_first) bind_sequence else bind_count,\n-        try b.stmt(.{ .initialize = .{ .slot = gathered, .value = try b.node(gathered_type, .{ .acquire_buffer = .{ .capacity = try b.integer(0) } }) } }),\n-        try b.stmt(.{ .initialize = .{ .slot = index, .value = try b.integer(0) } }),\n-        try b.stmt(.{ .loop = .{ .id = loop_id, .condition = try b.binary(.lt, try b.read(index), try b.read(count), .bool), .body = body } }),\n-    });\n-    if (kind == .list) return b.block(statements, try b.read(gathered));\n-    const empty = try b.node(sequence_type, .{ .array = &.{} });\n-    const joined = try b.access(empty, .join, &.{try b.read(gathered)}, false);\n-    return b.block(statements, try b.node(joined.ty, joined.data));\n+    return .{ .span = span, .ty = sequence_type, .data = .{ .binary = .{\n+        .op = .mul,\n+        .op_span = span,\n+        .left = if (operands.count_first) operands.count else operands.sequence,\n+        .right = if (operands.count_first) operands.sequence else operands.count,\n+    } } };\n }\ndiff --git a/src/sema_idioms.zig b/src/sema_idioms.zig\nindex 2dfb057f5..689658e0d 100644\n--- a/src/sema_idioms.zig\n+++ b/src/sema_idioms.zig\n@@ -178,8 +178,7 @@ fn chainBlock(comptime Checker: type, self: *Checker, span: source.Span, links:\n }\n \n /// PY-REPEAT-1: `name *= count` on a `str`, `bytes` or list binding. Text and\n-/// octets rebind the name to the repeated value; a list is repeated in place,\n-/// as Python's `list.__imul__` is, so every alias observes it.\n+/// octets and lists rebind the name to the independent repeated value.\n fn repeatAssignment(comptime Checker: type, self: *Checker, slot: typed.LocalId, a: @FieldType(@FieldType(ast.Statement, \"data\"), \"assignment\")) Error!@FieldType(typed.Statement, \"data\") {\n     try self.requireReadable(slot, a.name);\n     const count = try self.expression(a.value);\n@@ -189,16 +188,7 @@ fn repeatAssignment(comptime Checker: type, self: *Checker, slot: typed.LocalId,\n     self.locals.items[@backingInt(slot)].usage.writes += 1;\n     const b: collections.Builder(Checker) = .{ .checker = self, .span = a.op_span };\n     const product = try b.node(target_type, (try repetition.build(Checker, self, a.op_span, .{ .sequence = try b.read(slot), .count = count, .count_first = false })).data);\n-    if (self.catalog.records[target_type.recordIndex()].collection.kind != .list) {\n-        return .{ .assign = .{ .slot = slot, .value = product } };\n-    }\n-    const repeated = try b.local(target_type);\n-    const arguments = try self.allocator.dupe(typed.NodeId, &.{try b.read(repeated)});\n-    return .{ .block = try self.allocator.dupe(typed.StatementId, &.{\n-        try b.stmt(.{ .initialize = .{ .slot = repeated, .value = product } }),\n-        try b.stmt(.{ .discard = try b.operation(slot, .clear, &.{}) }),\n-        try b.stmt(.{ .discard = try b.operation(slot, .extend, arguments) }),\n-    }) };\n+    return .{ .assign = .{ .slot = slot, .value = product } };\n }\n \n /// PY-FSTRING-SPEC-1: one `{value:spec}` field. The literal specification is\n",
+  "harness_sha256": "7d691ca07e39233ac9ff13feb59df7275b8bc7f747d8295ae2e927387471bff6",
+  "cases": {
+    "lists": {
+      "release": {
+        "compiler_sha256": "077aa182f221694ed29e1757a1a6f249bdd8196018804f8e459747c8c193dff8",
+        "source_sha256": "8dd0bf47fd760443b876c4fb51a8cbc1c299a8e7d058a75a9048ecefcc1b7e97",
+        "binary_sha256": "ca7277241beafabe241050f1b2289af7dd9a992df4a552eea653175f995dae9b",
+        "llvm_sha256": "562b2b31458a27822274f703e674300dcd8216e7aa7e42122908492b7b1631e9",
+        "build_ns": 5200375306,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/repetition/lists-01/lists/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1219482,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/repetition/lists-01/lists/release/counts-1.json",
+              "counter_sha256": "a25b4c07b4cdb75c360d12028ec38d857930b63484b6139f8728c56f206ae1d1",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 19,
+              "memory": {
+                "allocs": 52,
+                "alloc_bytes": 3424,
+                "frees": 52,
+                "reallocs": 0,
+                "peak_live_bytes": 1856,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 2,
+              "allocs": 52,
+              "alloc_bytes": 3424,
+              "frees": 52,
+              "free_bytes": 3424,
+              "list_grows": 2,
+              "list_grow_bytes": 56,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 7,
+              "list_copy_bytes": 88,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 16,
+              "text_copy_bytes": 28,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 4,
+              "text_grow_bytes": 4,
+              "text_appends": 4,
+              "text_append_bytes": 4,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 1856,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      },
+      "debug": {
+        "compiler_sha256": "077aa182f221694ed29e1757a1a6f249bdd8196018804f8e459747c8c193dff8",
+        "source_sha256": "8dd0bf47fd760443b876c4fb51a8cbc1c299a8e7d058a75a9048ecefcc1b7e97",
+        "binary_sha256": "ec9cef6486b9cc740d08b3153ae63266016ed2ff93eb3bfca7fc7ca1a0ac76c4",
+        "llvm_sha256": "a5ede79c876d98653f03da60170c8b23900b7e1dbcd8e3f2d109c3306dbc76aa",
+        "build_ns": 383641578,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/repetition/lists-01/lists/debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1364182,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/repetition/lists-01/lists/debug/counts-1.json",
+              "counter_sha256": "e4b8c32dc730b962c4ad9efe57b5d879549aafe5c0141c5ca2cbed289214b35b",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 21,
+              "memory": {
+                "allocs": 54,
+                "alloc_bytes": 3552,
+                "frees": 54,
+                "reallocs": 0,
+                "peak_live_bytes": 1856,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 2,
+              "allocs": 54,
+              "alloc_bytes": 3552,
+              "frees": 54,
+              "free_bytes": 3552,
+              "list_grows": 2,
+              "list_grow_bytes": 56,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 7,
+              "list_copy_bytes": 88,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 16,
+              "text_copy_bytes": 28,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 4,
+              "text_grow_bytes": 4,
+              "text_appends": 4,
+              "text_append_bytes": 4,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 1856,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      },
+      "verify": {
+        "compiler_sha256": "077aa182f221694ed29e1757a1a6f249bdd8196018804f8e459747c8c193dff8",
+        "source_sha256": "8dd0bf47fd760443b876c4fb51a8cbc1c299a8e7d058a75a9048ecefcc1b7e97",
+        "binary_sha256": "4449e28c70c742b1986a3024fd183a3c21608826805cf33a55f8e73fc469965d",
+        "llvm_sha256": "deba9d969940a850b9b1b9d60155a1f38ed3e727038aa01cffd02ce6f1a3d5f5",
+        "build_ns": 518299394,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/repetition/lists-01/lists/verify/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1878802,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/repetition/lists-01/lists/verify/counts-1.json",
+              "counter_sha256": "6f884f67d57f188079284692cc33fc1925d592751d9acdff73542016b38a4ddb",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 19,
+              "memory": {
+                "allocs": 52,
+                "alloc_bytes": 3424,
+                "frees": 52,
+                "reallocs": 0,
+                "peak_live_bytes": 1856,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 2,
+              "allocs": 52,
+              "alloc_bytes": 3424,
+              "frees": 52,
+              "free_bytes": 3424,
+              "list_grows": 2,
+              "list_grow_bytes": 56,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 7,
+              "list_copy_bytes": 88,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 16,
+              "text_copy_bytes": 28,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 4,
+              "text_grow_bytes": 4,
+              "text_appends": 4,
+              "text_append_bytes": 4,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 1856,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      },
+      "optimized_debug": {
+        "compiler_sha256": "077aa182f221694ed29e1757a1a6f249bdd8196018804f8e459747c8c193dff8",
+        "source_sha256": "8dd0bf47fd760443b876c4fb51a8cbc1c299a8e7d058a75a9048ecefcc1b7e97",
+        "binary_sha256": "571062d868d09280551e76d20829ac03bab66ea450be6209dc88bc5b106d63b9",
+        "llvm_sha256": "e177ff6539d202b35da45c915fa21b1b6a5902d4b327e3ba4bdc9fa2e1ae5c4f",
+        "build_ns": 447810525,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/repetition/lists-01/lists/optimized_debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1817609,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/repetition/lists-01/lists/optimized_debug/counts-1.json",
+              "counter_sha256": "b47a6b3fd1fe02de874da37a028bcc9d348ac707f5cf3aebe46a0d1bd1a82f32",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 19,
+              "memory": {
+                "allocs": 52,
+                "alloc_bytes": 3424,
+                "frees": 52,
+                "reallocs": 0,
+                "peak_live_bytes": 1856,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 2,
+              "allocs": 52,
+              "alloc_bytes": 3424,
+              "frees": 52,
+              "free_bytes": 3424,
+              "list_grows": 2,
+              "list_grow_bytes": 56,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 7,
+              "list_copy_bytes": 88,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 16,
+              "text_copy_bytes": 28,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 4,
+              "text_grow_bytes": 4,
+              "text_appends": 4,
+              "text_append_bytes": 4,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 1856,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      },
+      "no_facts": {
+        "compiler_sha256": "077aa182f221694ed29e1757a1a6f249bdd8196018804f8e459747c8c193dff8",
+        "source_sha256": "8dd0bf47fd760443b876c4fb51a8cbc1c299a8e7d058a75a9048ecefcc1b7e97",
+        "binary_sha256": "cabea417a4d236c1245085f9a45a14e31492d30d4f04a497a7e0425b4f194486",
+        "llvm_sha256": "a1e8f062fa0cfc5b5c3831e4585e052ed564798fce410440589ee650a5f45c1e",
+        "build_ns": 430392109,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/repetition/lists-01/lists/no_facts/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2604340,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/repetition/lists-01/lists/no_facts/counts-1.json",
+              "counter_sha256": "4847ad394b328b4357c8aff1fb92e714c1a97179450fefc9514dd984ab6a6c71",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 21,
+              "memory": {
+                "allocs": 54,
+                "alloc_bytes": 3552,
+                "frees": 54,
+                "reallocs": 0,
+                "peak_live_bytes": 1856,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 2,
+              "allocs": 54,
+              "alloc_bytes": 3552,
+              "frees": 54,
+              "free_bytes": 3552,
+              "list_grows": 2,
+              "list_grow_bytes": 56,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 7,
+              "list_copy_bytes": 88,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 16,
+              "text_copy_bytes": 28,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 4,
+              "text_grow_bytes": 4,
+              "text_appends": 4,
+              "text_append_bytes": 4,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 1856,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      }
+    }
+  },
+  "negative_cases": {},
+  "scope": "lists only; text/byte helper contracts pending",
+  "limitations": "Managed counters are not RSS. Build times include no admitted queue wait but are not controlled performance samples.",
+  "summary": {
+    "failed": 0,
+    "lanes": 5,
+    "negative_cases": 0
+  }
+}

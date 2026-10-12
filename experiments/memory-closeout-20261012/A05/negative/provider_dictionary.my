@@ -1,0 +1,10 @@
+# spec-case: NEW-CORE-ZERO-RC-RESOURCES-1
+import filesystem
+
+record Store:
+    fs: Filesystem
+
+func main() -> int:
+    const stores = {"one": Store(fs=filesystem.memory())}
+    assert not stores["one"].fs.exists("note")
+    return 0

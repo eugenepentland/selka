@@ -1,0 +1,10 @@
+# fib: naive double recursion; measures call/frame protocol at depth.
+func fib(n: int) -> int:
+    if n < 2:
+        return n
+    return fib(n - 1) + fib(n - 2)
+
+
+func main(out: Stream) -> int:
+    out.print(fib(36))
+    return 0

@@ -1,0 +1,52 @@
+build-slot: FIFO ticket 1187, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 1187 after 10s
+1/1 a08_memo_cache_test.test.A08 persisted memo caller hydration preserves fresh checking...A08 callable parent=memo.create[str[]] site=compute spans=.{ .start = 381, .end = 399 }/.{ .start = 403, .end = 410 }
+FAIL (InternalError)
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/module_names.zig:32:59: 0x1551943 in reference (a08_memo_cache_test.zig)
+        const qualified = (try self.qualify(text)) orelse return error.InternalError;
+                                                          ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/semantic_type_recipe.zig:82:67: 0x1b70f65 in callable__anon_108248 (a08_memo_cache_test.zig)
+            const key = if (checker.catalog.module_names) |names| try names.reference(call.name, .function, null, null, checker.sink) else checker.src.text(call.name);
+                                                                  ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/semantic_type_recipe.zig:61:29: 0x1b6fcc2 in resolve__anon_108229 (a08_memo_cache_test.zig)
+        .callable => |site| try callable(Checker, checker, sites, relocate(site, before, after) orelse return null),
+                            ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/sema_specialize.zig:582:40: 0x1b6f0e4 in resolveType (a08_memo_cache_test.zig)
+                error.InternalError => return error.InternalError,
+                                       ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/semantic_cache.zig:495:37: 0x1b0c288 in copyEntry (a08_memo_cache_test.zig)
+                const fresh_type = (try resolve_type(resolver.context, recipe, old_region, new_region, records[0..position])) orelse return self.reason(.interned_record);
+                                    ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/semantic_cache.zig:441:13: 0x1aa703c in lookup (a08_memo_cache_test.zig)
+            return self.copyEntry(allocator, index, &self.cache.entries[entry_index], nodes, statements);
+            ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/sema.zig:1501:20: 0x1aa4cdf in reuseBody (a08_memo_cache_test.zig)
+        function = try queries.lookup(allocator, i, &checker.nodes, &checker.statements);
+                   ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/sema.zig:1567:20: 0x1a50ede in checkInstance (a08_memo_cache_test.zig)
+    const reused = try reuseBody(checker, step.session, step.spec_session, step.cache, step.allocator, i);
+                   ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/sema.zig:1604:31: 0x1612549 in checkBodies (a08_memo_cache_test.zig)
+            const function = (try checkInstance(step)) orelse {
+                              ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/sema.zig:1537:5: 0x16121ef in retryOr (a08_memo_cache_test.zig)
+    return err;
+    ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/sema.zig:1854:46: 0x138274d in checkProgram (a08_memo_cache_test.zig)
+    }, contracts_failed, failed) catch |err| return retryOr(&plan, err);
+                                             ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/sema.zig:1750:9: 0x1354ecf in checkCore (a08_memo_cache_test.zig)
+        return err;
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/sema.zig:1708:5: 0x13548ed in checkCached (a08_memo_cache_test.zig)
+    return checkCore(allocator, src, program, sink, .{ .names = module_names, .cache = cache });
+    ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/project_compile.zig:92:63: 0x1352864 in checkWithCache (a08_memo_cache_test.zig)
+            const request = semantic.context.summaries orelse return err;
+                                                              ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/src/a08_memo_cache_test.zig:83:9: 0x1351acb in test.A08 persisted memo caller hydration preserves fresh checking (a08_memo_cache_test.zig)
+        try compilation.checkWithCache(&cache);
+        ^
+0 passed; 0 skipped; 1 failed.
+error: the following test command failed with exit code 1:
+.zig-cache/o/5a78fa915724b6d9d0c87b2e0fe1105c/test --seed=0xddd1b094

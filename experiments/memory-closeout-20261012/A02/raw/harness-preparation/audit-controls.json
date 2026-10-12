@@ -1,0 +1,465 @@
+{
+  "scope": "syntax, historical artifact controls, fresh-output and missing-counter guards; no candidate native qualification",
+  "harnesses": {
+    "qualification_support.py": "bd0342e977edacb8501d735552b7936beaa0bfc76a722c4677d547e2342a05ce",
+    "qualify_migrations.py": "9cd9406f959c0a9906fdba4a69debb0d4c49afdf691399188bf0d2191f1653b1",
+    "qualify_additional.py": "b2b6f5eb0a0bb6ccbc8f962c527e71121c413b64bbe44e3ca35b1cc73e8797a3",
+    "list_methods.py": "a508111a0a16d18df62192ace10655056d96e5b6d0582b1c344e48e35c4073fb"
+  },
+  "controls": [
+    {
+      "case": "tests/value_semantics/calls.my",
+      "mode": "ordinary",
+      "counts_sha256": "db76bad8de0ce415c0809becbb53670208d44427ca464b1a7c91eaee1b0449d9",
+      "rc_events": 6,
+      "release_unique_sites": 3,
+      "owned_clean": false,
+      "binary_sha256": "75f5cd9f8c547ccf062b2301fbb15f4dc683a9e869b8b1d1378e80891197ed77",
+      "llvm_sha256": "434a6366d35659d950e72179fc8e378c91f51156ae8a3298afc0ff57eac28f55",
+      "symbols_clean": false,
+      "llvm_clean": false,
+      "forbidden_symbols": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_share",
+        "myl_core_free_block"
+      ],
+      "forbidden_llvm": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_free_block",
+        "atomic i32 count load",
+        "legacy count-tagged i32 store"
+      ]
+    },
+    {
+      "case": "tests/value_semantics/calls.my",
+      "mode": "zero",
+      "counts_sha256": "85391b55e3893a67a3295edbdd9bf42be8b44e877f48faecdc52b6467e58f349",
+      "rc_events": 0,
+      "release_unique_sites": 9,
+      "owned_clean": true,
+      "binary_sha256": "05e833b38f2cd1bcb730b4cfd3162c05ede335c8d036e08bf1205e3b221d77db",
+      "llvm_sha256": "a0bf8d3963fc8ec572e6276477278a0ae7b164583e09b3f892264e192532e394",
+      "symbols_clean": true,
+      "llvm_clean": true,
+      "forbidden_symbols": [],
+      "forbidden_llvm": []
+    },
+    {
+      "case": "tests/value_semantics/collections.my",
+      "mode": "ordinary",
+      "counts_sha256": "d6856fa0da2b81430ecb3988ba3a2c8054fb8ee065dbca130fc841f72ea15154",
+      "rc_events": 37,
+      "release_unique_sites": 12,
+      "owned_clean": false,
+      "binary_sha256": "04fd3f3c87073b80782008e1e81071b63fe981a6848240ce105293960070d1a1",
+      "llvm_sha256": "ee95f78d8cb128eb684abcb0d9bc6c2d736b0db2992acd3fcf90abdb50832f6c",
+      "symbols_clean": false,
+      "llvm_clean": false,
+      "forbidden_symbols": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_share",
+        "myl_core_free_block"
+      ],
+      "forbidden_llvm": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_free_block",
+        "atomic i32 count load",
+        "legacy count-tagged i32 store"
+      ]
+    },
+    {
+      "case": "tests/value_semantics/copy_roots.my",
+      "mode": "ordinary",
+      "counts_sha256": "1156c41995f0c54ffcf1de734133f7cd76267eadf28ad0f5b9cb5c3cafc37cf0",
+      "rc_events": 2,
+      "release_unique_sites": 4,
+      "owned_clean": false,
+      "binary_sha256": "645f0919c1911371be6e3d52ff8e902480816fe19f0696c261a6dd24f1a06c5f",
+      "llvm_sha256": "2fc24edbed2b4e4f888b47a52ad85f5b0d8b026bfa5108fa9227a114c6aed2a3",
+      "symbols_clean": false,
+      "llvm_clean": false,
+      "forbidden_symbols": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_share",
+        "myl_core_free_block"
+      ],
+      "forbidden_llvm": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_free_block",
+        "atomic i32 count load",
+        "legacy count-tagged i32 store"
+      ]
+    },
+    {
+      "case": "tests/value_semantics/copy_roots.my",
+      "mode": "zero",
+      "counts_sha256": "ca1ec7d6ed40b8bc8a0eb7e8cfaefa17f552c9c9dbed30e3e7f18ed9a70f8d31",
+      "rc_events": 0,
+      "release_unique_sites": 4,
+      "owned_clean": true,
+      "binary_sha256": "d7d8c565c020d7e9e4d9ad29500efb7b0604387d41f24236d028626b88021b8f",
+      "llvm_sha256": "c762a28d7ac79eb0fd7e9414dc8c310026c11fefde4228fdb14da96062d2295a",
+      "symbols_clean": true,
+      "llvm_clean": true,
+      "forbidden_symbols": [],
+      "forbidden_llvm": []
+    },
+    {
+      "case": "tests/value_semantics/copy_scratch.my",
+      "mode": "ordinary",
+      "counts_sha256": "0f28a5d1df38813d6d8e15f3bf76dd1e00b224a4efea55fd4434ba384231ab26",
+      "rc_events": 21,
+      "release_unique_sites": 0,
+      "owned_clean": false,
+      "binary_sha256": "4b644a1bca3bc3cd2deb92be040f6f759c54c124a1124b56b36c9ccf7344d4e8",
+      "llvm_sha256": "c6e4bd221a9e233b6dc6fbfcd926ec62ce84b0bfa5183147bec1c483f420773e",
+      "symbols_clean": false,
+      "llvm_clean": false,
+      "forbidden_symbols": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_share",
+        "myl_core_free_block"
+      ],
+      "forbidden_llvm": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_free_block",
+        "atomic i32 count load",
+        "legacy count-tagged i32 store"
+      ]
+    },
+    {
+      "case": "tests/value_semantics/copy_scratch.my",
+      "mode": "zero",
+      "counts_sha256": "8e074279c337f72953fcad9bc366e70743bc742f8857576beca4d947a67fc626",
+      "rc_events": 0,
+      "release_unique_sites": 8,
+      "owned_clean": true,
+      "binary_sha256": "58ba09e717c8a05370779614f6c55a4a7549264ba5e0480415143a3dce0af5d8",
+      "llvm_sha256": "3043464896b27ebde54d9662d17ce9a05bafe71bcac91899044593bdca7aa4f8",
+      "symbols_clean": true,
+      "llvm_clean": true,
+      "forbidden_symbols": [],
+      "forbidden_llvm": []
+    },
+    {
+      "case": "tests/value_semantics/field_return.my",
+      "mode": "ordinary",
+      "counts_sha256": "02dbb8bf8eee15849b32fead310c12cd019a698ead55a3fc6fbefc6481309774",
+      "rc_events": 104,
+      "release_unique_sites": 0,
+      "owned_clean": false,
+      "binary_sha256": "16c4f2a9aefdd03eb2a71287ee4483163f478598d26c57c493375ca39dc7a313",
+      "llvm_sha256": "ed6b272932b3d61c298f33753a5f30d01f4d338542838fad75d525fe536ebbab",
+      "symbols_clean": false,
+      "llvm_clean": false,
+      "forbidden_symbols": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_share",
+        "myl_core_free_block"
+      ],
+      "forbidden_llvm": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_free_block",
+        "atomic i32 count load",
+        "legacy count-tagged i32 store"
+      ]
+    },
+    {
+      "case": "tests/value_semantics/field_return.my",
+      "mode": "zero",
+      "counts_sha256": "96f7901104a6f2b12e5d6950a148990a20a2970543fb5b17df116d3956a4cd9c",
+      "rc_events": 0,
+      "release_unique_sites": 52,
+      "owned_clean": true,
+      "binary_sha256": "ec7ef38c6cb7f8da0ff5a379e16e13d484884b99980dcfa493fc62bc76e59211",
+      "llvm_sha256": "83166080563d55d66f12d43942d04c63740864d836356bac3e01b31f310b0df7",
+      "symbols_clean": true,
+      "llvm_clean": true,
+      "forbidden_symbols": [],
+      "forbidden_llvm": []
+    },
+    {
+      "case": "tests/value_semantics/index_return.my",
+      "mode": "ordinary",
+      "counts_sha256": "dd0f2434477f4309dcdd0085d5cc61afec6f917a2e902ff29330e2035f58a447",
+      "rc_events": 240,
+      "release_unique_sites": 5,
+      "owned_clean": false,
+      "binary_sha256": "d7f2be290e9cd694789d6e9c2d14fef003ae7cea905ac3629a07f75af057a86b",
+      "llvm_sha256": "69f385eb3fff0ace2ac86de58e0e5ee9fc1c98b7ca580584f3221a92554831dd",
+      "symbols_clean": false,
+      "llvm_clean": false,
+      "forbidden_symbols": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_share",
+        "myl_core_free_block"
+      ],
+      "forbidden_llvm": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_free_block",
+        "atomic i32 count load",
+        "legacy count-tagged i32 store"
+      ]
+    },
+    {
+      "case": "tests/value_semantics/index_return.my",
+      "mode": "zero",
+      "counts_sha256": "4b9c2afe9e108788a724f089792f2d6483db09525cec23f95943ee150a5c217a",
+      "rc_events": 0,
+      "release_unique_sites": 109,
+      "owned_clean": true,
+      "binary_sha256": "9d45d699bfd0b6c7dd8eead2cb42478f72df9d6c56e3c8016dcd81f6aaccc8e8",
+      "llvm_sha256": "112d686eb8d1677239af50ed1d4995c663fab3fcc3a97f1f24c731e2deedd443",
+      "symbols_clean": true,
+      "llvm_clean": true,
+      "forbidden_symbols": [],
+      "forbidden_llvm": []
+    },
+    {
+      "case": "tests/value_semantics/interactions.my",
+      "mode": "ordinary",
+      "counts_sha256": "008965816c5e8f115eabb651d0a6aa92594534af603f67b54fb01df9be898b89",
+      "rc_events": 21,
+      "release_unique_sites": 4,
+      "owned_clean": false,
+      "binary_sha256": "662c97c6227dcede119c79c3836295e5803428a688b210fcfc03d2755a2d58c4",
+      "llvm_sha256": "468917e908a9af2c9e3f525f588491a8fec92c1c052e6e375c7fd0267b8687ba",
+      "symbols_clean": false,
+      "llvm_clean": false,
+      "forbidden_symbols": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_share",
+        "myl_core_free_block"
+      ],
+      "forbidden_llvm": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_free_block",
+        "atomic i32 count load",
+        "legacy count-tagged i32 store"
+      ]
+    },
+    {
+      "case": "tests/value_semantics/interactions.my",
+      "mode": "zero",
+      "counts_sha256": "5bb83a357a134a79cbd3e9ba154c50cdb46f54422ace0e294fe6b84f6c092b19",
+      "rc_events": 0,
+      "release_unique_sites": 11,
+      "owned_clean": true,
+      "binary_sha256": "fca06a338502802bd42df1d1b7cec5f2dd904e91d45b12bc2add150200d9091d",
+      "llvm_sha256": "c8190329169f93ac5f442ebcc30a00ab4ff55772d75464ac537c7167d615bf0a",
+      "symbols_clean": true,
+      "llvm_clean": true,
+      "forbidden_symbols": [],
+      "forbidden_llvm": []
+    },
+    {
+      "case": "tests/value_semantics/nested_array_callbacks.my",
+      "mode": "ordinary",
+      "counts_sha256": "dfb7a53561db3df6822b3eb96e5606d22446a068fdaf336af00450ca5196c4ac",
+      "rc_events": 2582,
+      "release_unique_sites": 29,
+      "owned_clean": false,
+      "binary_sha256": "3fd97cf3f931c61d73840d58293e4ef5169db5ad7dc2b07f17098375ccf469e8",
+      "llvm_sha256": "344c842439a1098160a85c32a02fa4ae0d3df11c4f56d570e3ff6faefd851284",
+      "symbols_clean": false,
+      "llvm_clean": false,
+      "forbidden_symbols": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_share",
+        "myl_core_free_block"
+      ],
+      "forbidden_llvm": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_free_block",
+        "atomic i32 count load",
+        "legacy count-tagged i32 store"
+      ]
+    },
+    {
+      "case": "tests/value_semantics/nested_arrays.my",
+      "mode": "ordinary",
+      "counts_sha256": "6c9ca03e4cbca12d3ff323aedc83e52843a3d24b93730dbae85ccc29e6a83e57",
+      "rc_events": 305,
+      "release_unique_sites": 19,
+      "owned_clean": false,
+      "binary_sha256": "8b689c43e61389c512108e3dfbe85a70fa212a0869fd203cec431254b4d38465",
+      "llvm_sha256": "32cf446751bb73d77db2230c6324c89dbfae26b13ea984344faf96731f11467f",
+      "symbols_clean": false,
+      "llvm_clean": false,
+      "forbidden_symbols": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_share",
+        "myl_core_free_block"
+      ],
+      "forbidden_llvm": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_free_block",
+        "atomic i32 count load",
+        "legacy count-tagged i32 store"
+      ]
+    },
+    {
+      "case": "tests/value_semantics/nested_collections.my",
+      "mode": "ordinary",
+      "counts_sha256": "4516f2e5b84e8c7dcae2b63d1eb35f3dc1ba463a6fb2062471389671336b6fd4",
+      "rc_events": 209,
+      "release_unique_sites": 34,
+      "owned_clean": false,
+      "binary_sha256": "109f22655a23b5616b893a8942a7f583719a55d8980eb350633346c1dd4ba5da",
+      "llvm_sha256": "71e325bd7a3ceb351a1c0374b355b725a2f42b13caf550f57bcd382c34d5b7ce",
+      "symbols_clean": false,
+      "llvm_clean": false,
+      "forbidden_symbols": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_share",
+        "myl_core_free_block"
+      ],
+      "forbidden_llvm": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_free_block",
+        "atomic i32 count load",
+        "legacy count-tagged i32 store"
+      ]
+    },
+    {
+      "case": "tests/value_semantics/packed_calls.my",
+      "mode": "ordinary",
+      "counts_sha256": "e7ec06978d06e366c1fd98ec04273220a16fedb7c4a8be2f2025a4ff52eae309",
+      "rc_events": 1,
+      "release_unique_sites": 1,
+      "owned_clean": false,
+      "binary_sha256": "7bde23117ee0da7e8020cd3bd3f45b78d5edd03a9ab32c3353551fad2c4d2c4e",
+      "llvm_sha256": "d67cb52eab9860674450cb1c70729b7f4d660632bfb46940686517a06e8c1c91",
+      "symbols_clean": false,
+      "llvm_clean": false,
+      "forbidden_symbols": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_share",
+        "myl_core_free_block"
+      ],
+      "forbidden_llvm": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_free_block",
+        "atomic i32 count load",
+        "legacy count-tagged i32 store"
+      ]
+    },
+    {
+      "case": "tests/value_semantics/packed_calls.my",
+      "mode": "zero",
+      "counts_sha256": "24d684f6ab357d3e473edfbf3df0c5ed85619df38a46ece8d4ecfa76b588d150",
+      "rc_events": 0,
+      "release_unique_sites": 2,
+      "owned_clean": true,
+      "binary_sha256": "44f7f0c5397d4a62997200ae8b39bf2ecdec35a93067dfa5780e95f415a407b5",
+      "llvm_sha256": "7dc120429dcb24aa03426eade877c4986e085bce4cdb152a9ee7276e15a610cc",
+      "symbols_clean": true,
+      "llvm_clean": true,
+      "forbidden_symbols": [],
+      "forbidden_llvm": []
+    },
+    {
+      "case": "tests/value_semantics/pending_receiver_arguments.my",
+      "mode": "ordinary",
+      "counts_sha256": "d17f093285a488ce0c6affa1f595158ed99d9c67eee72cf96e0d182d794f1000",
+      "rc_events": 80,
+      "release_unique_sites": 6,
+      "owned_clean": false,
+      "binary_sha256": "2365d9fcc02dd3e09be79885b5faccac6d6e83496cb6535276facf868c7f28ab",
+      "llvm_sha256": "501a5a7813e4102bedebbbe8cc7c89f798ed499ad9282c0c44de54219ca4da04",
+      "symbols_clean": false,
+      "llvm_clean": false,
+      "forbidden_symbols": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_share",
+        "myl_core_free_block"
+      ],
+      "forbidden_llvm": [
+        "myl_core_retain",
+        "myl_core_release",
+        "myl_core_free_block",
+        "atomic i32 count load",
+        "legacy count-tagged i32 store"
+      ]
+    },
+    {
+      "case": "tests/value_semantics/pending_receiver_arguments.my",
+      "mode": "zero",
+      "counts_sha256": "5554cecf3233fa4cc6b7eda2e4a6a0d1e54eb740b603a7c8620437299ccd7a0d",
+      "rc_events": 0,
+      "release_unique_sites": 13,
+      "owned_clean": true,
+      "binary_sha256": "ed0a8018d9d9f05fdfb6bac8e86a8af96034cd68b58b31b14f9569972ff2f886",
+      "llvm_sha256": "3e40202e6501605438ec535d930a47c262163aed099b6294607658f094835d65",
+      "symbols_clean": true,
+      "llvm_clean": true,
+      "forbidden_symbols": [],
+      "forbidden_llvm": []
+    }
+  ],
+  "wrappers": {
+    "test/core/b_buffer_values.my": {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/harness-validation/b_buffer_values.my",
+      "source_sha256": "646f6ab0fb6377a23232ee8759559c1f0271700c7715499bd21d5170034c9dc8",
+      "wrapper_sha256": "cc24b83ccfe053141c93567319c80231567c5b58b3b0100cb6788308a7dd1577",
+      "archived_wrapper": "raw/harness-preparation/wrappers/b_buffer_values.my"
+    },
+    "test/core/c_runner_byte_buffer.my": {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/harness-validation/c_runner_byte_buffer.my",
+      "source_sha256": "a39f6e78c12f2caddaa31f744e31692caf53a5da34969dd49c1d7812776d4e87",
+      "wrapper_sha256": "aec2927b6cb2f94e123ada97b9c20983b8b0330c133acdc8e381203acc4c5b8b",
+      "archived_wrapper": "raw/harness-preparation/wrappers/c_runner_byte_buffer.my"
+    },
+    "test/core/m_list_methods.my": {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/harness-validation/m_list_methods.my",
+      "source_sha256": "9a14085c332a4b265873fd48e09ffe436c6376e87a896ac36e3d9905d91ba529",
+      "wrapper_sha256": "2ff3813b8191b46190ce8763c203f502058c4231f5593f977da86e0d031f937a",
+      "archived_wrapper": "raw/harness-preparation/wrappers/m_list_methods.my"
+    },
+    "test/core/v_dynamic_repeat.my": {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/harness-validation/v_dynamic_repeat.my",
+      "source_sha256": "bc649543ed366581763f8172be19e5cb795747700eb8d2031c0d8bf253373336",
+      "wrapper_sha256": "13c8e5cc2771381c23cf3a5b648f19e6dca37637593c8d3b78ccbca1478978ec",
+      "archived_wrapper": "raw/harness-preparation/wrappers/v_dynamic_repeat.my"
+    },
+    "test/core/v_nested_lengths.my": {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/harness-validation/v_nested_lengths.my",
+      "source_sha256": "5b3511bcd8e3cdbcbf5660f7a30c0c636d75a5cb496b5ada95e28683c9b03130",
+      "wrapper_sha256": "3b7da68ddfc9606c24932deddebec4aea308e62e6702784e7421d3c0207b2082",
+      "archived_wrapper": "raw/harness-preparation/wrappers/v_nested_lengths.my"
+    },
+    "test/core/v_nested_places.my": {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/harness-validation/v_nested_places.my",
+      "source_sha256": "7774a80719af5f5cc35a34b69dd7d4809d22934619a6d4e9cf3d361ca97bcaeb",
+      "wrapper_sha256": "7441b95932e77cc419f585e6e4148706a5f2e852f5f4393666560b0338ee16fd",
+      "archived_wrapper": "raw/harness-preparation/wrappers/v_nested_places.my"
+    }
+  },
+  "default_flags": [],
+  "missing_counts_refused": true,
+  "existing_output_refused": true,
+  "c2_c3_qualification": false
+}

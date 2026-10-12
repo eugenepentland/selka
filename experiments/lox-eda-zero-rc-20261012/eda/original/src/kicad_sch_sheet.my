@@ -1,0 +1,102 @@
+
+import kicad_sch_shape as shape_mod
+
+const margin: int = 1270
+
+
+const gap: int = 508
+
+
+const min_page: int = 29700
+
+
+const max_page: int = 280000
+
+
+public record Cell:
+    w: int
+    h: int
+    ox: int
+    oy: int
+
+
+public record Spot:
+    x: int
+    y: int
+
+
+public record Block:
+    spots: Spot[]
+    w: int
+    h: int
+
+
+public record Layout:
+    spots: Spot[]
+    page_w: int
+    page_h: int
+
+
+public func pack_cells(cells: Cell[]) -> Block:
+    return shelf(cells, 12, 0)
+
+
+public func pack_sheet(cells: Cell[]) -> Layout:
+    mut block = shelf(cells, 14, margin)
+    return Layout(spots=block.spots, page_w=clamp_page(block.w + 2 * margin), page_h=clamp_page(block.h + 2 * margin))
+
+
+# Left-to-right, wrap, top-to-bottom. Preserve the caller's member order.
+func shelf(cells: Cell[], aspect: int, pad: int) -> Block:
+    mut area = 0
+    mut widest = 0
+    for c in cells:
+        area += c.w * c.h
+        widest = max(widest, c.w)
+    mut limit = row_limit(area, widest, aspect)
+    mut spots: Spot[] = []
+    mut x = 0
+    mut y = 0
+    mut row_h = 0
+    mut w = 0
+    for c2 in cells:
+        if x > 0 and x + c2.w > limit:
+            y += row_h + gap
+            x = 0
+            row_h = 0
+        spots.append(Spot(x=pad + x + c2.ox, y=pad + y + c2.oy))
+        x += c2.w + gap
+        w = max(w, x - gap)
+        row_h = max(row_h, c2.h)
+    mut h = 0
+    if len(cells) > 0:
+        h = y + row_h
+    return Block(spots=spots, w=w, h=h)
+
+
+func row_limit(area: int, widest: int, aspect: int) -> int:
+    mut target = isqrt((area * aspect) // 10)
+    return snap_up(max(widest, min(target, max_page)))
+
+
+# Private in Zig; public for the split test. Newton integer square root.
+public func isqrt(v: int) -> int:
+    if v <= 0:
+        return 0
+    mut x = v
+    mut y = (x + 1) // 2
+    while y < x:
+        x = y
+        y = (x + v // x) // 2
+    return x
+
+
+public func snap_up(v: int) -> int:
+    mut r = v % shape_mod.grid
+    if r == 0:
+        return v
+    return v + shape_mod.grid - r
+
+
+public func clamp_page(v: int) -> int:
+    return snap_up(max(min_page, min(v, max_page)))

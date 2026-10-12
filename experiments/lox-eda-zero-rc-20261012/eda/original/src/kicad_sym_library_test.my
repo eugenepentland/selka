@@ -1,0 +1,56 @@
+
+import kicad_sym_library as m
+import kicad_sym_testdata as data
+import infra_fs as fsx
+import support_expect as ex
+
+func temp_project(fs: Filesystem, file_name: str) -> Result[str, str]:
+    try fsx.make_path(fs, "project/lib/sources")
+    try fs.write_file("project/lib/sources/" + file_name, data.vendor_flat())
+    return Ok("project")
+
+
+# test "kicad-sym: the vendor index matches names case-insensitively across _ and -"
+public func test_kicad_sym_the_vendor_index_matches_names_case_insensitively_across_and(fs: Filesystem, out: Stream) -> bool:
+    match temp_project(fs, "Acme_3.kicad_sym"):
+        case Err(_):
+            return False
+        case Ok(dir_):
+            mut lib = m.load(fs, out, dir_)
+            if not ex.eq_int(out, "files", lib.files, 1):
+                return False
+            for name in [b"acme-3", b"ACME-3", b"acme_3"]:
+                if not ex.ok(out, "name matches", m.library_find(lib, name).is_some()):
+                    return False
+            mut sym = m.library_find(lib, b"ACME_3")
+            if sym is None:
+                return False
+            if not ex.eq_bytes(out, "symbol name", sym.name, b"ACME-3"):
+                return False
+            if not ex.ok(out, "empty misses", m.library_find(lib, b"").is_none()):
+                return False
+            return ex.ok(out, "unknown misses", m.library_find(lib, b"no-such-part").is_none())
+
+
+# test "kicad-sym: the vendor index tolerates a missing directory and a junk library"
+public func test_kicad_sym_the_vendor_index_tolerates_a_missing_directory_and_a_junk_library(fs: Filesystem, out: Stream) -> bool:
+    mut missing = m.load(fs, out, "/nonexistent-project")
+    if not ex.eq_int(out, "missing files", missing.files, 0):
+        return False
+    if not ex.ok(out, "missing index", m.library_find(missing, b"acme-3").is_none()):
+        return False
+    match temp_project(fs, "good.kicad_sym"):
+        case Err(_):
+            return False
+        case Ok(dir_):
+            match fs.write_file("project/lib/sources/junk.kicad_sym", b"((((not a library"):
+                case Err(_):
+                    return False
+                case Ok(_):
+                    pass
+            mut lib = m.load(fs, out, dir_)
+            if not ex.eq_int(out, "only good file", lib.files, 1):
+                return False
+            if not ex.ok(out, "good indexed", m.library_find(lib, b"acme-3").is_some()):
+                return False
+            return ex.ok(out, "junk skipped", m.library_find(lib, b"junk").is_none())

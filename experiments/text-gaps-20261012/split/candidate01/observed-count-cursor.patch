@@ -1,0 +1,117 @@
+diff --git a/src/core/fuse_text_split.zig b/src/core/fuse_text_split.zig
+index f3c548bf1..64241e2e9 100644
+--- a/src/core/fuse_text_split.zig
++++ b/src/core/fuse_text_split.zig
+@@ -12,6 +12,7 @@ const Candidate = struct {
+     counter: ir.Ref,
+     next: ir.Ref,
+     start_slot: u1,
++    observed_count: bool = false,
+ };
+ 
+ /// Fuse private split iterations whose words are only dictionary lookup or insertion keys.
+@@ -86,11 +87,16 @@ fn candidateFor(f: *const ir.Function, module: *const ir.Module, seed: Candidate
+     if (branch.op != .branch or f.resolve(branch.a) != condition) return null;
+     const targets = ir.unpackTargets(branch.data);
+     if (targets.then != out.loop.body or targets.otherwise != out.loop.exit) return null;
+-    out.element = privateElement(f, out.split, out.length, out.counter) orelse return null;
++    out.element = privateElement(f, out.split, out.length, out.counter, !whitespace(f, module, out.split)) orelse return null;
+     const block = graph.block_of[out.element.index()] orelse return null;
+     if (!dominates(graph, block, out.loop.latch)) return null;
+     if (!onlyUses(f, out.counter, &.{ condition, out.element, out.next })) return null;
+-    if (!onlyUses(f, out.length, &.{bound}) or !onlyUses(f, bound, &.{condition})) return null;
++    const length_private = onlyUses(f, out.length, &.{bound}) and onlyUses(f, bound, &.{condition});
++    if (whitespace(f, module, out.split) and !length_private) return null;
++    out.observed_count = !length_private;
++    for (f.insts.items, 0..) |inst, index| {
++        if (inst.op == .list_len and f.resolve(inst.a) == out.split and index != out.length.index()) out.observed_count = true;
++    }
+     if (whitespace(f, module, out.split) and !keyUses(f, module, out.element, 0)) return null;
+     return out;
+ }
+@@ -110,7 +116,7 @@ fn whitespace(f: *const ir.Function, module: *const ir.Module, ref: ir.Ref) bool
+     return std.mem.eql(u8, module.functions.items[f.inst(ref).a.index()].name, "myl_core_str_split_whitespace");
+ }
+ 
+-fn privateElement(f: *const ir.Function, split: ir.Ref, length: ir.Ref, counter: ir.Ref) ?ir.Ref {
++fn privateElement(f: *const ir.Function, split: ir.Ref, length: ir.Ref, counter: ir.Ref, observed_count: bool) ?ir.Ref {
+     var element: ir.Ref = .none;
+     for (f.insts.items, 0..) |inst, index| {
+         if (inst.op == .copy) continue;
+@@ -118,7 +124,7 @@ fn privateElement(f: *const ir.Function, split: ir.Ref, length: ir.Ref, counter:
+         for (0..operands.len()) |at| {
+             if (f.resolve(operands.get(at)) != split) continue;
+             const ref: ir.Ref = @fromBackingInt(@intCast(index));
+-            if (ref == length and at == 0) continue;
++            if (at == 0 and (ref == length or (observed_count and inst.op == .list_len))) continue;
+             if (inst.op != .list_get or at != 0 or inst.ty != .str) return null;
+             if (f.resolve(inst.b) != counter or element != .none) return null;
+             element = ref;
+@@ -279,24 +285,52 @@ fn splitRuntime(arena: std.mem.Allocator, module: *ir.Module, symbol: []const u8
+     return ref;
+ }
+ 
++fn countRuntime(arena: std.mem.Allocator, module: *ir.Module) std.mem.Allocator.Error!ir.Ref {
++    const symbol = "myl_core_str_split_count";
++    for (module.functions.items, 0..) |function, index| {
++        const signature = function.signature;
++        if (signature.linkage != .runtime_c or signature.ret != .u64 or
++            (signature.owned | signature.views | signature.consumes) != 0) continue;
++        if (std.mem.eql(u8, function.name, symbol) and std.mem.eql(ir.Type, signature.params, &.{ .str, .str })) return @fromBackingInt(@intCast(index));
++    }
++    const ref: ir.Ref = @fromBackingInt(@intCast(module.functions.items.len));
++    try module.functions.append(arena, .{ .name = symbol, .signature = .{ .params = &.{ .str, .str }, .ret = .u64, .linkage = .runtime_c } });
++    return ref;
++}
++
+ fn explicitRewrite(arena: std.mem.Allocator, f: *ir.Function, module: *ir.Module, candidate: Candidate) std.mem.Allocator.Error!void {
+     const list_type = f.inst(candidate.split).ty;
+     const split_args = f.operands(f.inst(candidate.split).data);
+     const source = split_args[0];
+     const separator = split_args[1];
+-    const start_fn = try splitRuntime(arena, module, "myl_core_split_start");
+     const end_fn = try splitRuntime(arena, module, "myl_core_split_end");
+     const next_fn = try splitRuntime(arena, module, "myl_core_split_next");
+     const readable = views.onlyReads(f, module, candidate.element);
+     const zero = try append(arena, f, .{ .op = .iconst, .ty = .i64 });
+-    f.insts.items[candidate.split.index()] = .{ .op = .call, .ty = .i64, .a = start_fn, .data = try extra(arena, f, &.{ source, separator, zero }) };
+-    const phi = f.inst(candidate.counter);
+-    const phi_args = ir.ExtraSlice.unpack(phi.data);
+-    f.extra.items[phi_args.start + candidate.start_slot] = candidate.split;
+-    f.insts.items[candidate.length.index()] = .{ .op = .iconst, .ty = .u64 };
++    if (candidate.observed_count) {
++        const count_fn = try countRuntime(arena, module);
++        // Count at the original eager split site: preserve traps and every observed
++        // length while lazy iteration uses byte offsets and creates no list owner.
++        for (f.insts.items) |*inst| {
++            if (inst.op == .list_len and f.resolve(inst.a) == candidate.split) {
++                inst.* = .{ .op = .copy, .ty = .u64, .a = candidate.split, .span = inst.span };
++            }
++        }
++        f.insts.items[candidate.split.index()] = .{ .op = .call, .ty = .u64, .a = count_fn, .data = try extra(arena, f, &.{ source, separator }) };
++    } else {
++        // Unobserved lengths need no preliminary scan; keep the original lazy path.
++        const start_fn = try splitRuntime(arena, module, "myl_core_split_start");
++        f.insts.items[candidate.split.index()] = .{ .op = .call, .ty = .i64, .a = start_fn, .data = try extra(arena, f, &.{ source, separator, zero }) };
++        const phi_args = ir.ExtraSlice.unpack(f.inst(candidate.counter).data);
++        f.extra.items[phi_args.start + candidate.start_slot] = candidate.split;
++        f.insts.items[candidate.length.index()] = .{ .op = .iconst, .ty = .u64 };
++    }
+     for (f.blocks.items[candidate.loop.header.index()].insts.items) |ref| {
+         const inst = &f.insts.items[ref.index()];
+-        if (inst.op == .cmp and f.resolve(inst.a) == candidate.counter) inst.data = @backingInt(ir.Predicate.ge);
++        if (inst.op == .cmp and f.resolve(inst.a) == candidate.counter) {
++            inst.data = @backingInt(ir.Predicate.ge);
++            inst.b = zero;
++        }
+     }
+     const end = try append(arena, f, .{ .op = .call, .ty = .i64, .a = end_fn, .data = try extra(arena, f, &.{ source, separator, candidate.counter }) });
+     const offset = try append(arena, f, .{ .op = .convert, .ty = .u64, .a = candidate.counter, .check = .exact });
+@@ -315,6 +349,6 @@ fn explicitRewrite(arena: std.mem.Allocator, f: *ir.Function, module: *ir.Module
+     f.insts.items[candidate.next.index()] = .{ .op = .call, .ty = .i64, .a = next_fn, .data = try extra(arena, f, &.{ source, separator, end }) };
+     const empty = try append(arena, f, .{ .op = .undef, .ty = list_type });
+     for (f.insts.items) |*inst| {
+-        if (inst.op == .copy and f.resolve(inst.a) == candidate.split) inst.a = empty;
++        if (inst.op == .copy and inst.ty == list_type and f.resolve(inst.a) == candidate.split) inst.a = empty;
+     }
+ }

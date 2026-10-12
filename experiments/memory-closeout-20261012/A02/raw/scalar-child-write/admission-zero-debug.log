@@ -1,0 +1,5 @@
+oracle zero debug True
+reduced zero debug True
+control zero debug True
+build-slot: FIFO ticket 856, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 856 after 15s

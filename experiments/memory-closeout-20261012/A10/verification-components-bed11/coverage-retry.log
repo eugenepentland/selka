@@ -1,0 +1,6 @@
+test_coverage_verdict_changes_when_a_negative_fixture_lookup_becomes_present (verify_cache_test.VerificationCoordinator.test_coverage_verdict_changes_when_a_negative_fixture_lookup_becomes_present) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.004s
+
+OK

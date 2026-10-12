@@ -1,0 +1,292 @@
+{
+  "status": "awaiting frozen integrated candidate; no final implementation/default/retirement milestone claimed",
+  "baseline_debug": {
+    "source_commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+    "installation": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0",
+    "compiler_optimize": "Debug",
+    "build_command": "scripts/build-slot.sh build \"$ZIG\" build -p \"$PWD/.tmp/memory-closeout/A09/C0\" -j4 --maxrss 8589934592",
+    "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "zig_version": "0.17.0-dev.1683+5ceec001b",
+    "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+    "guardian_commit": "ae1ae2899cc60b575e9e1b9212d73eddf9e2df72",
+    "files": {
+      "bin/mylang": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+      "libexec/mylang/components/cache-plan-14501451340ebbb82684c4108f35b9a71cc2d407333ed50f6f90bc321954261e": "14501451340ebbb82684c4108f35b9a71cc2d407333ed50f6f90bc321954261e",
+      "libexec/mylang/components/cache-plan.json": "44e7c8ed5cb9698221a185056651e3dbe38ea3e5167f59859b49e10a09df1fce",
+      "libexec/mylang/components/test-index-b3ad0140096fa33d2775a7f74bf4385b0750ee09ce885d5c0c23453a7d6c285e": "b3ad0140096fa33d2775a7f74bf4385b0750ee09ce885d5c0c23453a7d6c285e",
+      "libexec/mylang/components/test-index.json": "81006c7e1c24629159943474e4d0d0a7a5125d18c40f124b7274403fbad6f295",
+      "tools/selka-components": "69c222bf0361ea763cab6222d9e9279b77bc380bc27ef6ee3ad56a1480a930c1"
+    },
+    "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+    "component_manifests": {
+      "test-index.json": {
+        "artifact": "test-index-b3ad0140096fa33d2775a7f74bf4385b0750ee09ce885d5c0c23453a7d6c285e",
+        "component": "test-index",
+        "format": 1,
+        "key": "c5252fad3ec1c7d4164d91bc716032258c003b0f9b8ded07092d902350bde3cc",
+        "protocol": 1,
+        "schema": 1,
+        "sha256": "b3ad0140096fa33d2775a7f74bf4385b0750ee09ce885d5c0c23453a7d6c285e"
+      },
+      "cache-plan.json": {
+        "artifact": "cache-plan-14501451340ebbb82684c4108f35b9a71cc2d407333ed50f6f90bc321954261e",
+        "component": "cache-plan",
+        "format": 1,
+        "key": "f0b5459555ce2f1dd4edeac738aeff7b9affe77733f8104b0f768828a58866ee",
+        "protocol": 2,
+        "schema": 2,
+        "sha256": "14501451340ebbb82684c4108f35b9a71cc2d407333ed50f6f90bc321954261e"
+      }
+    }
+  },
+  "baseline_releasefast": {
+    "source_commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+    "worktree_commit": "35bab5be43172cffb6a57eec063f4dd202132ed9",
+    "source_equality": "git diff C0 -- src build.zig build.zig.zon build_identity.zig docs was empty; only A09 experiment evidence differs",
+    "installation": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-releasefast",
+    "compiler_optimize": "ReleaseFast",
+    "build_command": "scripts/build-slot.sh build \"$ZIG\" build -Doptimize=ReleaseFast -p \"$PWD/.tmp/memory-closeout/A09/C0-releasefast\" -j4 --maxrss 8589934592",
+    "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+    "files": {
+      "bin/mylang": "78ac31605c7505c7cb330d41bdf2d3a232043e032f487e599f454b3bc6f2bd37",
+      "libexec/mylang/components/cache-plan-14501451340ebbb82684c4108f35b9a71cc2d407333ed50f6f90bc321954261e": "14501451340ebbb82684c4108f35b9a71cc2d407333ed50f6f90bc321954261e",
+      "libexec/mylang/components/cache-plan.json": "44e7c8ed5cb9698221a185056651e3dbe38ea3e5167f59859b49e10a09df1fce",
+      "libexec/mylang/components/test-index-b3ad0140096fa33d2775a7f74bf4385b0750ee09ce885d5c0c23453a7d6c285e": "b3ad0140096fa33d2775a7f74bf4385b0750ee09ce885d5c0c23453a7d6c285e",
+      "libexec/mylang/components/test-index.json": "81006c7e1c24629159943474e4d0d0a7a5125d18c40f124b7274403fbad6f295",
+      "tools/selka-components": "69c222bf0361ea763cab6222d9e9279b77bc380bc27ef6ee3ad56a1480a930c1"
+    },
+    "compiler_sha256": "78ac31605c7505c7cb330d41bdf2d3a232043e032f487e599f454b3bc6f2bd37",
+    "frozen_utc": "2026-10-12T00:57:47.111296+00:00"
+  },
+  "runtime_guest_cases_built": 9,
+  "application_timing_entries_built": 6,
+  "qualified_final_runtime_pairs": 0,
+  "native_policy": {
+    "replacement": {
+      "arms": {
+        "baseline": {
+          "repetitions": 10000000,
+          "wall_median_ns": 171044973,
+          "wall_range_ns": [
+            168732109,
+            212877357
+          ],
+          "rss_median_kib": 2060,
+          "rss_range_kib": [
+            2056,
+            2060
+          ]
+        },
+        "start_one": {
+          "repetitions": 10000000,
+          "wall_median_ns": 174929761,
+          "wall_range_ns": [
+            172200545,
+            179002646
+          ],
+          "rss_median_kib": 2060,
+          "rss_range_kib": [
+            2056,
+            2060
+          ]
+        }
+      },
+      "alternative_baseline_wall_ratio": 1.0227120852011242,
+      "paired_ratios": [
+        0.8408721741129095,
+        1.0144185106661625,
+        1.0059388335272548,
+        1.0157060233713462,
+        1.0250870627119346,
+        0.9769935547770563,
+        1.0221954981947572,
+        1.0238808947632738,
+        1.0138269604678445
+      ],
+      "over_5_percent_review_trigger": false,
+      "decision": "retain current policy; these native experiments do not establish a throughput or RSS saving",
+      "review": "No material runtime saving; policy rejection relies on allocation tradeoff evidence in A02.",
+      "raw": "raw/capacity-replacement-long.json"
+    },
+    "buffer": {
+      "arms": {
+        "baseline": {
+          "repetitions": 200,
+          "wall_median_ns": 249877855,
+          "wall_range_ns": [
+            230407185,
+            605417233
+          ],
+          "rss_median_kib": 3572,
+          "rss_range_kib": [
+            3568,
+            3572
+          ]
+        },
+        "start_one": {
+          "repetitions": 200,
+          "wall_median_ns": 281022086,
+          "wall_range_ns": [
+            228678824,
+            427952411
+          ],
+          "rss_median_kib": 3568,
+          "rss_range_kib": [
+            3564,
+            3572
+          ]
+        }
+      },
+      "alternative_baseline_wall_ratio": 1.1246378195458737,
+      "paired_ratios": [
+        0.9759962417208051,
+        0.9732963436473574,
+        1.0020240254226447,
+        1.1834591810014883,
+        1.379521226480834,
+        0.7068718689743673,
+        1.149241933777438,
+        0.5728504211998124,
+        0.9412496217469841
+      ],
+      "over_5_percent_review_trigger": true,
+      "decision": "retain current policy; these native experiments do not establish a throughput or RSS saving",
+      "review": "The list growth policy does not modify the byte-buffer path. Broad overlapping buffer ranges form an unchanged-path noise control; a repeatable compiler regression is not established.",
+      "raw": "raw/capacity-buffer-long.json"
+    },
+    "reserved": {
+      "arms": {
+        "baseline": {
+          "repetitions": 200,
+          "wall_median_ns": 211482564,
+          "wall_range_ns": [
+            206008286,
+            229253045
+          ],
+          "rss_median_kib": 3516,
+          "rss_range_kib": [
+            3512,
+            3520
+          ]
+        },
+        "start_one": {
+          "repetitions": 200,
+          "wall_median_ns": 215928804,
+          "wall_range_ns": [
+            211272271,
+            222665151
+          ],
+          "rss_median_kib": 3516,
+          "rss_range_kib": [
+            3516,
+            3548
+          ]
+        }
+      },
+      "alternative_baseline_wall_ratio": 1.021024144572032,
+      "paired_ratios": [
+        1.0803753204373536,
+        1.0110818039034148,
+        1.018668095239448,
+        1.013133204090339,
+        1.0426314908873529,
+        1.0133626233540751,
+        0.9215680036005629,
+        1.0072584208136006,
+        1.0267848826774677
+      ],
+      "over_5_percent_review_trigger": false,
+      "decision": "retain current policy; these native experiments do not establish a throughput or RSS saving",
+      "review": "No material runtime saving; policy rejection relies on allocation tradeoff evidence in A02.",
+      "raw": "raw/capacity-reserved-long.json"
+    }
+  },
+  "fresh_C0_census": {
+    "source": "../A03/C0-release/REPORT.md",
+    "configurations": [
+      "release"
+    ],
+    "expanded_cases": 81,
+    "executions": 131,
+    "passed": 131,
+    "original_migrated_denominator": 30,
+    "original_migrated_allocating": 23,
+    "original_migrated_allocation_free": 7,
+    "original_migrated_rc": 0,
+    "original_migrated_refused": 0,
+    "original_unmigrated_source_admitted": 21,
+    "original_unmigrated_source_refused": 9,
+    "final_candidate_measured": false
+  },
+  "runtime_preparation": {
+    "calibrated_manifests": [
+      "calibrated-manifest.json",
+      "calibrated-applications-manifest.json"
+    ],
+    "baseline_binaries_built": 15,
+    "final_input_pilot": {
+      "status": "all21 checks passed",
+      "raw": "raw/workload-pilot-final-inputs.json",
+      "started_utc": "2026-10-12T01:38:38.742775+00:00",
+      "finished_utc": "2026-10-12T01:39:05.456624+00:00",
+      "minimum_sample_ms": 158.054702,
+      "scope": "input sizing only; not final paired performance"
+    },
+    "prototype_scope": "A01 map71940901d plus A07 helper only; not integrated candidate",
+    "affinity_by_workers": {
+      "1": [
+        10
+      ],
+      "2": [
+        8,
+        10
+      ],
+      "8": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ]
+    },
+    "cross_worker_cheap_scaling_claim": false,
+    "comparison_runner": "compare.py; one case per exclusive lease with ordinary barriers"
+  },
+  "correctness_fix": {
+    "commit": "714ae7645b0315a38eb152e27b8a8b0bb44b79b6",
+    "owner_file": "src/core/version.zig",
+    "tests_passed": 2,
+    "guardian_passed": 88,
+    "details": "raw/version/results.json",
+    "final_integrated_qualification": false
+  },
+  "guest_pilot_rss": {
+    "status": "invalid",
+    "manifest": "raw/rss-qualification/invalid-pilots.json",
+    "repair_qualification": "raw/rss-qualification/results.json",
+    "final_method": "Separate GNU-time guest-child RSS executions; outer launcher RSS and their elapsed times excluded."
+  },
+  "size_aligned_counted_baseline": {
+    "status": "qualified_manual_native_replay",
+    "unique_builds": 8,
+    "build_failures": 8,
+    "case_denominator": 15,
+    "guest_executions": 15,
+    "raw": "raw/size-aligned-C0/results.json",
+    "candidate_status": "awaiting frozen compiler",
+    "passed_executions": 15,
+    "method": "counted-release-native-replay-v1",
+    "manual_raw": "raw/size-aligned-C0-native-replay/results.json",
+    "ordinary_compiler_status": "8native build failures preserved",
+    "candidate_requirement": "same adapter and final normal/manual controls"
+  },
+  "schedule": "C1-schedule.json"
+}

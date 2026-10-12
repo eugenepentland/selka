@@ -1,0 +1,91 @@
+# Fresh recursive constructors keep every child owned through a complete handoff.
+record Node:
+    value: int
+    left: Node?
+    right: Node?
+
+
+func tree(depth: int) -> Node:
+    if depth == 0:
+        return Node(value=1, left=None, right=None)
+    return Node(value=depth, left=Some(tree(depth - 1)), right=Some(tree(depth - 1)))
+
+
+func reordered(depth: int) -> Node:
+    if depth == 0:
+        return Node(right=None, value=1, left=None)
+    return Node(right=Some(reordered(depth - 1)), value=depth, left=Some(reordered(depth - 1)))
+
+
+func weight(node: Node) -> int:
+    mut result = node.value
+    match node.left:
+        case Some(child):
+            result += weight(child)
+        case None:
+            pass
+    match node.right:
+        case Some(child):
+            result += weight(child)
+        case None:
+            pass
+    return result
+
+
+enum Chain:
+    empty
+    link(value: int, rest: Chain)
+
+
+func chain(depth: int) -> Chain:
+    if depth == 0:
+        return Chain.empty
+    return Chain.link(value=depth, rest=chain(depth - 1))
+
+
+func chain_sum(value: Chain) -> int:
+    match value:
+        case Chain.empty:
+            return 0
+        case Chain.link(value=number, rest=rest):
+            return number + chain_sum(rest)
+
+
+func in_arena() -> Node:
+    mut value = tree(5)
+    assert weight(value) == 89
+    return value
+
+
+func aliased(depth: int) -> Node:
+    mut child: Node? = Some(tree(depth))
+    return Node(value=0, left=child, right=child)
+
+
+public func test_recursive_fresh_record_children_have_independent_owners() -> bool:
+    mut value = tree(5)
+    value.left = None
+    return weight(value) == 47 and weight(tree(5)) == 89
+
+
+public func test_named_constructor_order_preserves_the_result() -> bool:
+    return weight(reordered(5)) == 89
+
+
+public func test_recursive_variant_payloads_retain_every_child() -> bool:
+    return chain_sum(chain(20)) == 210 and chain_sum(chain(0)) == 0
+
+
+public func test_aliased_immutable_boxes_keep_the_generic_transfer_path() -> bool:
+    mut value = aliased(4)
+    mut before = value
+    value.left = None
+    return weight(before) == 84 and weight(value) == 42
+
+
+func main() -> int:
+    assert test_recursive_fresh_record_children_have_independent_owners()
+    assert test_named_constructor_order_preserves_the_result()
+    assert test_recursive_variant_payloads_retain_every_child()
+    assert test_aliased_immutable_boxes_keep_the_generic_transfer_path()
+    return 0

@@ -1,0 +1,46 @@
+fn main(cap) -> i64
+b0:
+  %2 = dict_new dict[i64, i64] 1:u64
+  %5 = dict_find i64 %2, 1:i64
+  %7 = cmp.ge bool %5, 0:i64
+  branch %7, b1, b2
+b1: ; preds b0
+  %9 = dict_set_value dict[i64, i64] %2, %5, 7:i64
+  jump b3
+b2: ; preds b0
+  %11 = dict_insert dict[i64, i64] %2, %5, 1:i64, 7:i64
+  jump b3
+b3: ; preds b1 b2
+  %13 = phi dict[i64, i64] %9, %11
+  %14 = call dict[i64, i64] update(%13)
+  %17 = dict_find i64 %14, 1:i64
+  %19 = cmp.ge bool %17, 0:i64
+  branch %19, b4, b5
+b4: ; preds b3
+  %22 = dict_entry_value i64 %14, %17
+  print param0, %22
+  ret 0:i64
+b5: ; preds b3
+  unreachable
+fn update(dict[i64, i64]) -> dict[i64, i64]
+b0:
+  %2 = dict_find i64 param0, 1:i64
+  %4 = cmp.ge bool %2, 0:i64
+  branch %4, b1, b2
+b1: ; preds b0
+  %7 = dict_entry_value i64 param0, %2
+  %9 = add.exact i64 %7, 1:i64
+  %11 = dict_find i64 param0, 1:i64
+  %13 = cmp.ge bool %11, 0:i64
+  branch %13, b3, b4
+b2: ; preds b0
+  unreachable
+b3: ; preds b1
+  %15 = dict_set_value dict[i64, i64] param0, %11, %9
+  jump b5
+b4: ; preds b1
+  %17 = dict_insert dict[i64, i64] param0, %11, 1:i64, %9
+  jump b5
+b5: ; preds b3 b4
+  %19 = phi dict[i64, i64] %15, %17
+  ret %19

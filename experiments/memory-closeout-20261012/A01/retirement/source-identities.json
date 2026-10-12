@@ -1,0 +1,35 @@
+{
+  "status": "prepared_only_unapplied_unqualified",
+  "worker_head": "011851386f1dfc5ae5c138b4efceb0ff8a063c86",
+  "authorization_required": "Coordinator C2 qualification and authorization before applying production changes",
+  "files": {
+    "src/core/a01_owned_scheduler_fixture.c": {
+      "original_sha256": "a4a8e185ebe71ed40a92578c79d18892c2e386742ec19788a686bdad1e5ba603",
+      "prepared_sha256": "a76aad84629f4de3dad7bd745d4698ef788202f1cd7f2368044de9d4c258b7a8"
+    },
+    "src/core/runtime/core_tasks.c": {
+      "original_sha256": "2145018fce759abacf3ca24cd076f575e6f9b20d2a916e9ec2e76997ac56fded",
+      "prepared_sha256": "36e84a3ba58cddbddd90bc71cca684b843e109659021810e30373243b38185aa"
+    },
+    "src/core/task_ir_program.zig": {
+      "original_sha256": "bce21c8dbd3ce6a2353eb4e860055cb6dc355e6d8aadb939594ff36b0536421a",
+      "prepared_sha256": "06e657245bfd5e1cc3c529b3b95a571e48f62aaa186d7ea480e0cb61c58a8cd3"
+    },
+    "src/core/task_ir_test.zig": {
+      "original_sha256": "2a8a966da45947760130b316c6250b20f8180d41d353b7cc1162a7917ec0d8b5",
+      "prepared_sha256": "2be7a0b544a0cd436152d1c4def6ab42b9ff26c2accaf959d33bdfd7db8c7757"
+    },
+    "src/core/task_scheduler_fixture.c": {
+      "original_sha256": "4032a0298ec7d1d8b39deb0276b3ee023682725727f64eea11aceac0d460c05e",
+      "prepared_sha256": "796c947ed16aa20519c7fa479786cdeef4ed11b8bf1823fdb7dff1e6efa4670e"
+    },
+    "src/core/task_scheduler_test.zig": {
+      "original_sha256": "8e02aaec7633e7eb5716ef7f1b35839a3fdf54280b5321066c75bf0cb04eb33c",
+      "prepared_sha256": "a7e68524d915fde70df9fe4092190b60cc7400568bebf1f06bbd116e9ec68514"
+    },
+    "src/stdlib/parallel.my": {
+      "original_sha256": "8bb12cc4af967ec2ae8dc1ae276f2ef3497b78d063fc05c0facaa48830e82191",
+      "prepared_sha256": "5473faa7051ead4119341bac51e40d92578c7e5057e0c54f07f0677aed871a9c"
+    }
+  }
+}

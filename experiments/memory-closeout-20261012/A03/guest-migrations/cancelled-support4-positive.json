@@ -1,0 +1,6 @@
+{
+  "reason": "Coordinator paused broad Support4 sweeps; this redundant positive CLI batch is superseded by authorized registered test rerun with driver dependency.",
+  "compiler_started": false,
+  "queued_admission_pid": 2852684,
+  "parent_paused_during_cancel": true
+}

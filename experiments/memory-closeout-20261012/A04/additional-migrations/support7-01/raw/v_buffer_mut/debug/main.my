@@ -1,0 +1,59 @@
+import byte_builder
+
+record Sink:
+    buffer: byte_buffer
+    count: int
+
+
+func put(mut sink: Sink, data: bytes, start: int, end: int) -> bool:
+    mut ok = sink.buffer.append_range(data, start, end)
+    if ok:
+        sink.count += 1
+    return ok
+
+
+func put_byte(mut sink: Sink, value: int) -> bool:
+    return sink.buffer.append_byte(value)
+
+
+func put_text(mut sink: Sink, text: str):
+    _ = sink.buffer.append_utf8(text)
+
+
+func maybe(mut sink: Sink, value: int):
+    if value % 2 == 0:
+        _ = sink.buffer.append_byte(value % 256)
+
+
+func spelled(data: byte_buffer) -> str:
+    return str(len(data)) + ":" + bytes(data).hex()
+
+
+func main(out: Stream) -> int:
+    mut empty: int[] = []
+    mut sink = Sink(buffer=byte_buffer(empty), count=0)
+    out.print(put(mut sink, b"0123456789", 1, 4), put(mut sink, b"0123456789", 0 - 1, 3), put(mut sink, b"0123456789", 4, 3), put(mut sink, b"0123456789", 4, 11), put(mut sink, b"xy", 2, 2))
+    out.print(put_byte(mut sink, 65), put_byte(mut sink, 256), put_byte(mut sink, 0 - 1), put_byte(mut sink, 0))
+    put_text(mut sink, "λx")
+    out.print(spelled(sink.buffer), sink.count)
+    # A copy taken before the appends keeps its own octets.
+    mut before = sink.copy()
+    _ = put(mut sink, b"abc", 0, 3)
+    maybe(mut sink, 66)
+    maybe(mut sink, 67)
+    out.print(spelled(before.buffer), spelled(sink.buffer))
+    # The buffer's own snapshot appended to itself.
+    mut snapshot = bytes(sink.buffer)
+    _ = put(mut sink, snapshot, 0, 2)
+    out.print(spelled(sink.buffer))
+    mut builder = byte_builder.create()
+    for i in range(200000):
+        byte_builder.append(mut builder, b"ab")
+        _ = byte_builder.append_byte(mut builder, i % 256)
+        byte_builder.append_text(mut builder, "é")
+    mut data = byte_builder.finish(builder)
+    mut total = 0
+    for octet in data:
+        total += octet
+    out.print(len(data), total)
+    return 0

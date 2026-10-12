@@ -1,0 +1,35 @@
+
+# Guest tests translated from the `test "..."` blocks of zig/src/net_name.zig.
+import net_name
+
+# `f(x) == Some(v)` is E_OPTION_INFERENCE (see gaps/g16), so compare through a typed parameter.
+func is_some(o: bytes?, want: bytes) -> bool:
+    return o == Some(want)
+
+
+# test "leaf removes a hierarchy prefix"
+public func test_leaf_removes_a_hierarchy_prefix() -> bool:
+    assert net_name.leaf(b"buck_3v3/C17") == b"C17", "prefixed leaf"
+    assert net_name.leaf(b"U2") == b"U2", "bare name"
+    # A trailing slash has an EMPTY leaf, not the parent segment.
+    assert net_name.leaf(b"buck_3v3/") == b"", "trailing slash"
+    assert net_name.leaf(b"") == b"", "empty"
+    return True
+
+
+# test "stripUpper drops separators and raises case"
+public func test_stripupper_drops_separators_and_raises_case() -> bool:
+    assert net_name.strip_upper(b"FLASH_CLK", 32) == b"FLASHCLK", "underscore"
+    assert net_name.strip_upper(b"xtal-in", 32) == b"XTALIN", "dash and case"
+    # Truncation is by design: every caller matches a short prefix or suffix.
+    assert net_name.strip_upper(b"a_b_c_d_e", 4) == b"ABCD", "truncation"
+    return True
+
+
+# test "parent removes a hierarchy leaf"
+public func test_parent_removes_a_hierarchy_leaf() -> bool:
+    assert is_some(net_name.parent(b"buck_3v3/VOUT"), b"buck_3v3"), "parent"
+    assert net_name.parent(b"VOUT") is None, "no parent"
+    # The parent of a trailing-slash name is everything before that slash.
+    assert is_some(net_name.parent(b"buck_3v3/"), b"buck_3v3"), "trailing slash"
+    return True

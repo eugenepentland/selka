@@ -1,0 +1,54 @@
+{
+  "base": "78213cabec272c321a24850fc7e5099a319b51b6",
+  "source_sha256": {
+    "src/core/own.zig": "e04f3b509f42219c1614dcd60070e32cd483a0a1913b3f832c0279799cae6a38",
+    "src/core/a02_indirect_owned_test.zig": "dda6fb89578c0383218977f9b94228f00aa31bc1bdc30366d125286f74bd5e50",
+    "src/core/a02_indirect_owned_fixture.my": "0ca7e0856c3d7699cbbf2f9257bf93a8c83576d4400a712c6532971b00185673",
+    "src/core/root_test.zig": "76c9ed4e66508a941b6f99b03f4ba7e2b11fe5cf4ffed7718ed410c9aa0244fe"
+  },
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "components": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/install/libexec/mylang/components",
+  "component_boundary": "Support6 independent owned pin supplies components; final default/retirement package qualification is separate",
+  "steps": [
+    {
+      "name": "build",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build",
+        "core-test-binary",
+        "-Dtest-filter=zero RC A02 indirect calls",
+        "-j4",
+        "--maxrss",
+        "8589934592",
+        "--prefix",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/indirect-owned-results/install",
+        "-Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+        "-Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 5.305623810971156,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "test",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/indirect-owned-results/install/focus/core-tests",
+        "--guardian-filter=zero RC A02 indirect calls"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 1.2348802769556642,
+      "stdout": "",
+      "stderr": "guardian/test: 2 test(s) selected by filter: \"zero RC A02 indirect calls\"\nAll 2 tests passed.\nguardian/test: test wall 1.22s; slowest over 50ms:\nguardian/test:   1.21s  a02_indirect_owned_test.test.zero RC A02 indirect calls transfer owned result and mutable writeback\nguardian/test: PASS \u2014 2 passed\nguardian/test: RESULT {\"passed\":2,\"failed\":0,\"skipped\":0}\n"
+    }
+  ],
+  "complete": true,
+  "compiler": {
+    "path": ".zig-cache/o/cd072e73238eac4dd68a1397de366cea/mylang",
+    "sha256": "37742e49746da007fd9caea88680369945d1b3e2852c71940029370142f1be30",
+    "options": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/c4a78c3df1c786d4bcd49dcd0f284248/options.zig"
+  },
+  "test_binary_sha256": "fc879de14bd698888ae9a2f89b7a86dd43ca5d3b03654e68e6756db72ac5da81",
+  "pass": true
+}

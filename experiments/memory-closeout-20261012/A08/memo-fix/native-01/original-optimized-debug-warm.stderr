@@ -1,0 +1,9 @@
+build-slot: FIFO ticket 1230, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1230 after 5s
+usage: mylang build <file.my> (-o <output> | --run [run options] [-- ARGS...]) [--release | --unoptimized | --optimize-debug] [--link FILE.c]... [--emit-llvm PATH]
+Default: optimized debug; --optimize-debug and --mode Debug select the same mode.
+--unoptimized disables Core and LLVM optimization; --release optimizes the whole program.
+       [--cache-dir DIR] [--no-cache] [--zig PATH] [--report] [--cache-report] [--verify-cache] [--stats] [--diagnostics=text|json]
+       [--experimental-single-owner]    prototype: lists move; calls borrow; .copy() duplicates
+                                        .snapshot() opts a list family into copy-on-write
+       [--experimental-zero-rc]         prototype: strings/bytes also move; no sharing or RC

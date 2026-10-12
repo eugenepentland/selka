@@ -1,0 +1,18 @@
+build-slot: build slot 2, FIFO ticket 267 after 0s
+9b0a804ccfe77da08b3a8cf3c357e4e8d0a42ff56bbb5c89576ec8f800c2a3cc
+dd72aaabbba0926c9adb7612756a57cd67426d794b451d2bde9fc1b319a49ac6
+test-core
++- verification action core member 0 w
+guardian/test: 8 test(s) selected by filter: "sort"
+guardian/test: test wall 4.10s; slowest over 50ms:
+guardian/test:   1.69s  s2_views_test.test.S2 escaped long byte slices sort by values with normal reverse and keyed order
+guardian/test:   1.13s  value_e2e_test.test.xs.sort() and sorted(xs) of integers, floats and text give the old core's order: stable, NaN last, signed zeros tied, no leak
+guardian/test:   0.65s  r_runtime_test.test.R small integer sort boundaries preserve unsigned order snapshots and decorated ties
+guardian/test:   0.20s  a08_zero_rc_test.test.zero RC A08 stable keyed sorting borrows callbacks and owns nested output
+guardian/test:   0.17s  zero_rc_test.test.zero RC keyed sort copies nested values and text keys independently
+guardian/test:   0.16s  a08_zero_rc_test.test.zero RC A08 sorted and list copies own managed children
+guardian/test:   0.07s  s2_ir_test.test.S2 IR list_sort emits valid LLVM and verifies its result type
+guardian/test: PASS — 8 passed
+guardian/test: RESULT {"passed":8,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A08/zig-out/libexec/mylang/components ./.zig-cache/o/1d9bd65cb7dc1357b53e80f29394466f/test --guardian-filter=sort --cache-dir=./.zig-cache --seed=0x62138f70 --listen=-
+

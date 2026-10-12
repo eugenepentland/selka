@@ -1,0 +1,111 @@
+{
+  "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9",
+  "cases": [
+    {
+      "source": "tests/lang/rc_plain_aggregates.my",
+      "source_sha256": "b8bd8435c2df588d719cc6fccd7326308b939371cf5a7fa88a24de2f42d31293",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_plain_field_loans.my",
+      "source_sha256": "9abc2fcb536b351afe3d2a95bd7140d49d792fbbab31fca70cb219890ba995b1",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_plain_field_loans.my:38:25: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      return rows[replace(mut rows)].label.number\n                          ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_plain_list_writes.my",
+      "source_sha256": "50eb5f84eba67040713b9d2a92596012151450a337c62dc6931367829d452957",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_plain_list_writes.my:18:5: error[E_SINGLE_OWNER_MOVED]: 'row' was moved or is unavailable on this path; use .copy() when both values are needed\n      row.append(3)\n      ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_plain_record_writes.my",
+      "source_sha256": "6f8bb8fa9385c2d3faf7292247f57631986fc59863a80a184cecb93d438ecb4c",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_plain_record_writes.my:71:42: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      mut first = with_snapshot(mut state, state)\n                                           ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_range_key_anchors.my",
+      "source_sha256": "bd5c8151e112cd5f15b880701e53d11d93e998519e5ba2512ac94b317465f661",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_range_key_anchors.my:29:12: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      counts[probe] = 0\n             ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_read_list_versions.my",
+      "source_sha256": "f1c1e447b9ec07d8fb571101f3c77bef1445d6c8b7ee1b1b2a5a0ff3d09f2671",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_readonly_calls.my",
+      "source_sha256": "905b83a94bccb7147e1fcbae3a4bd8ab5b8571554a6f7a135578a804c15b2ed4",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": [
+        {
+          "line": 31,
+          "before": "    return items[0]",
+          "after": "    return items[0].copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/rc_readonly_managed_calls.my",
+      "source_sha256": "62a9ba54f7e976e8cc26ebd028f0e4f376e70723520dcd9b2baddf61bef16469",
+      "status": 0,
+      "stdout": "",
+      "stderr": "rc_readonly_managed_calls.my:16:40: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func choose(index: int, first: Item[], second: Item[]) -> Item:\n                                         ^\n",
+      "copy_changes": [
+        {
+          "line": 18,
+          "before": "        return first[0]",
+          "after": "        return first[0].copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 19,
+          "before": "    return first[index]",
+          "after": "    return first[index].copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 34,
+          "before": "    return items[index]",
+          "after": "    return items[index].copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/rc_record_field_reads.my",
+      "source_sha256": "5bac8ee128ad308a2bc3aa14cf6e553042369f21756073a9e293964d5f96f62b",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_record_field_reads.my:46:36: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      mut value = cursor.code[change(mut cursor)]\n                                     ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_scalar_loops.my",
+      "source_sha256": "af846cd5d5593380794b895d27b6675304b166d082e9a003a9cc74fe6f3db534",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    }
+  ]
+}

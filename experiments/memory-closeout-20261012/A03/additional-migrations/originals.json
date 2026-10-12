@@ -1,0 +1,98 @@
+[
+  {
+    "owner": "A03",
+    "source": "test/core/counters.my",
+    "sha256": "a2ce0c71dce95433aed04294c153ff8da1f29abc999d1d37b1f1c83655e5cb4f",
+    "code": "E_SINGLE_OWNER_BORROW",
+    "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/counters.my:14:13: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+    "source_excerpt": "      mut q = p\n              ^",
+    "followup": "explicit independent copy/local source migration",
+    "legacy_native_oracle_review": true,
+    "original_source": "# NEW-CORE-COUNTERS-1: a counting build (`--counters`) of this program records one\n# list copy (`ys` is appended to while `xs` is still live), ten record copies into\n# list elements in `bump`, the pushes and the allocations, and prints the same output\n# as an ordinary build. Any argument makes it trap after printing.\nrecord P:\n    a: int\n    b: int\n    c: int[]\n    d: int\n    e: int\n\n\nfunc bumped(p: P) -> P:\n    mut q = p\n    q.a += 1\n    return q\n\n\n# The element goes out by value and a new record comes back: both are copied. (Read and\n# written back in place, `p = ps[i]; p.a += 1; ps[i] = p` stores only `a`, NEW-CORE-CE2-EFFECTS-4.)\nfunc bump(mut ps: P[], i: int) -> Unit:\n    ps[i] = bumped(ps[i])\n\n\nfunc main(args: str[], out: Stream) -> int:\n    mut xs: int[] = []\n    for i in range(100):\n        xs.append(i)\n    mut ys = xs\n    ys.append(5)\n    mut ps: P[] = []\n    for i in range(10):\n        ps.append(P(a=i, b=i, c=[i], d=0, e=0))\n    for i in range(10):\n        bump(mut ps, i)\n    out.print(len(xs), len(ys), ps[3].a)\n    return xs[len(args) * 200]\n",
+    "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432"
+  },
+  {
+    "owner": "A03",
+    "source": "test/core/f1_tbaa.my",
+    "sha256": "065c187358ae8a9d7b5c4d101873baea20d04ef5cf5955738ab9e93e40ccf325",
+    "code": "E_SINGLE_OWNER_OVERLAP",
+    "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/f1_tbaa.my:42:17: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it",
+    "source_excerpt": "                  xs[i] = Num.f(value=float(v) * 0.5)\n                  ^",
+    "followup": "evaluation-order or lifetime review; extract local result before mutation, preserve observed order, escalate false refusal to A07",
+    "legacy_native_oracle_review": false,
+    "original_source": "# Element data tagged by scalar type (NEW-CORE-F1-TBAA-1, -2): adversarial shapes\n# where a wrong alias fact would change an answer. Every answer here is the base\n# compiler's (main cafe7fea7, one generic data tag).\nrecord P:\n    x: float\n    n: int\n\n\nenum Num:\n    i(value: int)\n    f(value: float)\n    none\n\n\nrecord Holder:\n    tag: Num\n    weight: float\n\n\n# A list of records: an element copied whole, then a field of it and of the list read,\n# with field stores and whole-element stores interleaved.\nfunc records(rounds: int) -> int:\n    mut ps = [P(x=1.5, n=2), P(x=2.5, n=3), P(x=-1.0, n=7)]\n    mut total = 0\n    for k in range(rounds):\n        mut q = ps[k % 3]\n        ps[k % 3].x = q.x + 1.0\n        ps[k % 3].n = q.n + k\n        ps[(k + 1) % 3] = q\n        total = total + ps[0].n + int(ps[1].x * 10.0) + q.n\n    return total + int(ps[2].x * 100.0)\n\n\n# A list of unions whose cases put an int and a float in the same payload word.\nfunc unions(rounds: int) -> int:\n    mut xs = [Num.i(value=3), Num.f(value=0.5), Num.none, Num.i(value=-4)]\n    mut total = 0\n    for k in range(rounds):\n        mut i = k % 4\n        match xs[i]:\n            case Num.i(value=v):\n                xs[i] = Num.f(value=float(v) * 0.5)\n                total = total + v\n            case Num.f(value=v):\n                xs[i] = Num.i(value=int(v * 8.0))\n                total = total + int(v * 4.0)\n            case Num.none:\n                xs[i] = Num.i(value=k)\n    return total\n\n\n# Records holding a union, stored whole and read by field and by payload.\nfunc holders(rounds: int) -> int:\n    mut hs = [Holder(tag=Num.f(value=1.25), weight=2.0), Holder(tag=Num.i(value=5), weight=0.5)]\n    mut total = 0\n    for k in range(rounds):\n        mut h = hs[k % 2]\n        match h.tag:\n            case Num.i(value=v):\n                hs[k % 2] = Holder(tag=Num.f(value=float(v) + h.weight), weight=h.weight + 1.0)\n                total = total + v\n            case Num.f(value=v):\n                hs[k % 2] = Holder(tag=Num.i(value=int(v * 2.0)), weight=h.weight * 0.5)\n                total = total + int(v)\n            case Num.none:\n                total = total - 1\n        hs[k % 2].weight = hs[k % 2].weight + 0.25\n    return total + int(hs[0].weight * 100.0) + int(hs[1].weight * 100.0)\n\n\n# A list of floats and a list of lists in one loop: each float store sits between reads\n# of row pointers, row lengths and other rows' elements.\nfunc mixed(n: int) -> int:\n    mut grid = [for i in range(n) yield [for j in range(n) yield float(i * n + j)]]\n    mut flat = [for _ in range(n) yield 0.5]\n    for i in range(n):\n        for j in range(n):\n            flat[j] = flat[j] + grid[i][j]\n            grid[(i + 1) % n][j] = grid[i][j] * 0.5 + flat[j]\n            if j == 1:\n                grid[i] = [for k in range(n) yield flat[k]]\n    mut total = 0.0\n    for row in grid:\n        for v in row:\n            total = total + v\n    for v in flat:\n        total = total + v\n    return int(total)\n\n\n# A block freed and its memory reused for a list of another element type in one\n# function (same size class, so the inline allocator hands the block back).\nfunc churn(rounds: int) -> int:\n    mut total = 0\n    for r in range(rounds):\n        mut fs = [float(r) + 0.25, 1.5, 2.5, 3.5]\n        mut a = int(fs[0] * 4.0 + fs[3])\n        fs = []\n        mut ns = [r, r + 1, r + 2, r + 3]\n        mut b = ns[0] + ns[3]\n        ns = []\n        mut bs = [r % 2 == 0, True, False, r % 3 == 0]\n        mut c = 0\n        if bs[0]:\n            c = c + 1\n        if bs[3]:\n            c = c + 2\n        total = total + a + b + c + len(fs) + len(ns)\n    return total\n\n\n# Nested lists that alias by value: writing one copy's row leaves the other's alone.\nfunc nested(n: int) -> int:\n    mut a = [for i in range(n) yield [for j in range(n) yield float(i + j)]]\n    mut b = a\n    b[0][0] = 1000.0\n    mut c = a\n    for i in range(n):\n        for j in range(n):\n            c[i][j] = c[i][j] + a[j][i]\n    return int(a[0][0] * 10.0 + b[0][0] * 100.0 + c[0][0] + c[n - 1][0] * 7.0)\n\n\nfunc main(args: str[], out: Stream) -> int:\n    mut rounds = 100 + len(args)\n    out.print(records(rounds), unions(rounds), holders(rounds))\n    out.print(mixed(6 + len(args)), churn(rounds), nested(5 + len(args)))\n    return 0\n",
+    "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432"
+  },
+  {
+    "owner": "A03",
+    "source": "test/core/i_live_place.my",
+    "sha256": "c18ac8fe2ac528e63baa38532cc0a65ca3820d664db8ba75471f5f33ac252c8d",
+    "code": "E_SINGLE_OWNER_MOVED",
+    "first_diagnostic": "i_live_place.my:13:5: error[E_SINGLE_OWNER_MOVED]: 'items' was moved or is unavailable on this path; use .copy() when both values are needed",
+    "source_excerpt": "      for value in items:\n      ^",
+    "followup": "explicit independent copy/local source migration",
+    "legacy_native_oracle_review": false,
+    "original_source": "func change(mut items: int[]) -> Unit:\n    items[1] = 9\n\n\nrecord Box:\n    items: int[]\n\n\npublic func test_shared_element_write() -> bool:\n    mut items = [1, 2]\n    mut saved = items\n    mut total = 0\n    for value in items:\n        total += value\n        items[1] = 9\n    return total == 10 and saved == [1, 2]\n\n\npublic func test_append_continue_growth() -> bool:\n    mut items = [1]\n    mut saved = items\n    mut total = 0\n    for value in items:\n        total += value\n        if value < 4:\n            items.append(value + 1)\n            continue\n    return total == 10 and saved == [1]\n\n\npublic func test_mut_callee_write() -> bool:\n    mut items = [1, 2]\n    mut saved = items\n    mut total = 0\n    for value in items:\n        total += value\n        change(mut items)\n    return total == 10 and saved == [1, 2]\n\n\npublic func test_record_field_write() -> bool:\n    mut box = Box(items=[1, 2])\n    mut saved = box\n    mut total = 0\n    for value in box.items:\n        total += value\n        box.items[1] = 9\n    return total == 10 and saved.items == [1, 2]\n\n\npublic func test_root_rebind_snapshot() -> bool:\n    mut items = [1, 2]\n    mut total = 0\n    for value in items:\n        items[1] = 9\n        items = [7, 8]\n        total += value\n    return total == 3 and items == [7, 8]\n\n\nfunc main() -> int:\n    assert test_shared_element_write()\n    assert test_append_continue_growth()\n    assert test_mut_callee_write()\n    assert test_record_field_write()\n    assert test_root_rebind_snapshot()\n    return 0\n",
+    "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432"
+  },
+  {
+    "owner": "A03",
+    "source": "test/core/rc_alias_paths.my",
+    "sha256": "6ddfcfac6bfa2f4ab1a2af000e4ac25e0e641626b57319025e47b0de7bddb656",
+    "code": "E_SINGLE_OWNER_BORROW",
+    "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_alias_paths.my:11:14: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+    "source_excerpt": "      mut ys = xs\n               ^",
+    "followup": "explicit independent copy/local source migration",
+    "legacy_native_oracle_review": true,
+    "original_source": "# rc_fuzz.py seed 62 case 26: an alias read across a loop that appends to the original,\n# where only one of several paths into the loop carries a shared block (NEW-CORE-RC-9).\nfunc make_ints(n: int) -> int[]:\n    mut out: int[] = []\n    for i in range(n):\n        out.append(i)\n    return out\n\n\nfunc grow_int(xs: int[], n: int) -> int[]:\n    mut ys = xs\n    if n > 1:\n        return xs\n    ys.append(n)\n    return ys\n\n\nfunc grow_str(xs: str[], n: int) -> str[]:\n    mut ys = xs\n    if n > 1:\n        return xs\n    ys.append(\"a\")\n    return ys\n\n\nfunc grow_row(xs: int[][], n: int) -> int[][]:\n    mut ys = xs\n    if n > 1:\n        return xs\n    ys.append(make_ints(2))\n    return ys\n\n\nfunc body(seed: int, out: Stream) -> int:\n    mut acc = 0\n    mut il1: int[] = []\n    il1.append(6)\n    mut sl2: str[] = []\n    sl2.append(\"xyz\")\n    mut rl3: int[][] = []\n    rl3.append(make_ints(seed))\n    acc = acc + len(il1)\n    for i2 in range(3):\n        for i1 in range(2):\n            sl2.append(\"xyz\")\n            il1.append(i2)\n            mut ig4 = grow_int(il1, 1)\n            if len(rl3) > 0:\n                mut inner5 = rl3[0]\n                inner5.append(5)\n                acc = acc + len(inner5) + len(rl3[0])\n            acc = acc + len(rl3)\n        mut ra6 = rl3\n        mut ia7 = il1\n        mut sa8 = sl2\n        for i1 in range(2):\n            acc = acc + len(sa8)\n            mut rg9 = grow_row(ra6, seed)\n            acc = acc + len(ia7)\n            sl2.append(\"bc\")\n        if len(ia7) > 3:\n            acc = acc + len(sa8)\n            mut sg10 = grow_str(sa8, seed)\n            acc = acc + len(ia7)\n            return acc + len(ia7)\n    acc = acc + len(il1)\n    if len(sl2) > 0:\n        out.print(sl2[len(sl2) - 1])\n    acc = acc + len(sl2)\n    acc = acc + len(rl3)\n    return acc\n\n\nfunc main(args: str[], out: Stream) -> int:\n    out.print(body(len(args), out))\n    return 0\n",
+    "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432"
+  },
+  {
+    "owner": "A03",
+    "source": "test/core/v_inline_loops.my",
+    "sha256": "aa72b2bef873044660980f926cc15af9342c82682c4d04c0685d724724377b91",
+    "code": "E_SINGLE_OWNER_MOVED",
+    "first_diagnostic": "v_inline_loops.my:24:21: error[E_SINGLE_OWNER_MOVED]: 'parent' was moved or is unavailable on this path; use .copy() when both values are needed",
+    "source_excerpt": "      mut root = find(mut parent, 2)\n                      ^",
+    "followup": "explicit independent copy/local source migration",
+    "legacy_native_oracle_review": false,
+    "original_source": "func find(mut parent: int[], start: int) -> int:\n    mut x = start\n    while parent[x] != x:\n        parent[x] = parent[parent[x]]\n        x = parent[x]\n    return x\n\n\nfunc pick(mut values: int[], count: int) -> int:\n    mut n = count\n    if n < 1:\n        values[0] = 4\n        return 7\n    while n > 1:\n        values[0] += n\n        n -= 1\n    return values[0]\n\n\n# spec-case: NEW-CORE-INLINE-S4-1\npublic func test_mut_loop_returns_and_shared_snapshots() -> bool:\n    mut parent = [0, 0, 1]\n    mut saved = parent\n    mut root = find(mut parent, 2)\n    mut values = [0]\n    mut empty_arm = pick(mut values, 0)\n    mut loop_arm = pick(mut values, 3)\n    return root == 0 and parent[2] == 0 and saved[2] == 1 and empty_arm == 7 and loop_arm == 9 and values[0] == 9\n\n\nfunc main() -> int:\n    return 0\n",
+    "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432"
+  },
+  {
+    "owner": "A03",
+    "source": "test/core/v_narrow.my",
+    "sha256": "f0a41855714a7a2c6719f160719a5e0cd0dcfbe6f87d71cfec2a79018d3d2c23",
+    "code": "E_SINGLE_OWNER_MOVED",
+    "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_narrow.my:4:5: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed",
+    "source_excerpt": "      candidate.append(item)\n      ^",
+    "followup": "explicit independent copy/local source migration",
+    "legacy_native_oracle_review": false,
+    "original_source": "func append_one(mut candidate: int[]?, item: int) -> int:\n    if candidate is None:\n        return 0\n    candidate.append(item)\n    return len(candidate)\n\n\nfunc bump_first(mut candidate: int[]?) -> int:\n    if candidate is None:\n        return -1\n    candidate[0] = candidate[0] + 100\n    return candidate[0]\n\n\nfunc main(out: Stream) -> int:\n    mut items: int[] = [40]\n    mut candidate: int[]? = Some(items.copy())\n    mut count = append_one(mut candidate, 2)\n    mut other: int[]? = Some([5, 6])\n    out.print(count, bump_first(mut other), bump_first(mut candidate), append_one(mut other, 7))\n    if candidate is None:\n        return 1\n    candidate[0] = candidate[0] + candidate[1]\n    out.print(candidate[0], items[0], len(candidate))\n    mut nothing: int[]? = None\n    out.print(append_one(mut nothing, 5), bump_first(mut nothing))\n    return 0\n",
+    "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432"
+  },
+  {
+    "owner": "A03",
+    "source": "test/core/v_trace.my",
+    "sha256": "695f20bdb1ef22efa47c527d973500e0f524966c3a166f5fed9a1760dc40a81f",
+    "code": "E_SINGLE_OWNER_OVERLAP",
+    "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_trace.my:31:20: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it",
+    "source_excerpt": "              return t\n                     ^",
+    "followup": "evaluation-order or lifetime review; extract local result before mutation, preserve observed order, escalate false refusal to A07",
+    "legacy_native_oracle_review": false,
+    "original_source": "\nenum Failure:\n    text(value: str)\n    code(value: int)\n\n\nfunc parse(x: int) -> Result[int, str]:\n    if x < 0:\n        return Err(\"negative\")\n    return Ok(x)\n\n\nfunc forward(x: int) -> Result[int, str]:\n    mut r = parse(x)\n    return r\n\n\nfunc pass_on(x: int) -> Result[int, str]:\n    mut v = try forward(x)\n    return Ok(v + 1)\n\n\nfunc lift(x: int) -> Result[int, Failure]:\n    mut v = try pass_on(x)\n    return Ok(v * 2)\n\n\nfunc describe(f: Failure) -> str:\n    match f:\n        case Failure.text(value=t):\n            return t\n        case Failure.code(value=_):\n            return \"code\"\n\n\nfunc run(x: int) -> Result[int, str]:\n    match lift(x):\n        case Ok(v):\n            return Ok(v)\n        case Err(f):\n            return Err(describe(f))\n\n\nfunc main(args: str[], out: Stream) -> Result[int, str]:\n    mut a = try pass_on(len(args) + 2)\n    match run(3):\n        case Ok(v):\n            out.print(\"run\", a, v)\n        case Err(e):\n            out.print(\"run failed\", e)\n    match run(0 - 3):\n        case Ok(v):\n            out.print(\"run\", v)\n        case Err(e):\n            out.print(\"run failed\", e)\n    mut b = try pass_on(0 - len(args))\n    return Ok(a + b)\n",
+    "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432"
+  },
+  {
+    "owner": "A03",
+    "source": "test/core/v_trap_set.my",
+    "sha256": "7976c63e3a3544987d39f8f63b9bf70f28e70b1117aa3f46bd0228659cd15411",
+    "code": "E_SINGLE_OWNER_BORROW",
+    "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_trap_set.my:7:17: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+    "source_excerpt": "      mut cells = cells0\n                  ^",
+    "followup": "explicit independent copy/local source migration",
+    "legacy_native_oracle_review": false,
+    "original_source": "record Cell:\n    code: int\n    flag: bool\n\n\nfunc write(cells0: Cell[], i: int, v: int) -> int:\n    mut cells = cells0\n    cells[i] = Cell(code=v, flag=True)\n    return cells[i].code\n\n\nfunc main(out: Stream) -> int:\n    mut cells = [Cell(code=1, flag=False), Cell(code=2, flag=False)]\n    out.print(write(cells, 1, 9))\n    out.print(write(cells, 2, 9))\n    return 0\n",
+    "original_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432"
+  }
+]

@@ -1,7 +1,7 @@
 func main(out: Stream) -> int:
     mut d: dict[int, int] = {2: 7, 1: 9}
     out.print(len(d), d[2], d.get(3, 99), 2 in d)
-    mut copy = d
+    mut copy = d.copy()
     d[2] = 11
     d[3] = d.get(3, 0) + 8
     out.print(copy[2], d[2], len(d))

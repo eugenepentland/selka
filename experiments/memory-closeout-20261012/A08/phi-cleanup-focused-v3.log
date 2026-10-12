@@ -1,0 +1,20 @@
+build-slot: FIFO ticket 361, position 9; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 361, position 8; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 361, position 6; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 361, position 4; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 361, position 3; earlier build tickets must run first; waiting (241s so far)
+build-slot: build slot 2, FIFO ticket 361 after 276s
+9b0a804ccfe77da08b3a8cf3c357e4e8d0a42ff56bbb5c89576ec8f800c2a3cc
+error: failed to open object /home/epentland/.cache/mylang/components/artifacts/b3af9768a6531f70b9676879a4cb189234f8e47db950807897500493c2c1a793.build/cache/native-link-ae91dbf149620784611f42a075920e18/eafd4a8ef95e6b41c27b913a8ff689991bdc7a882bf5cbfe9234a5b8d668bf23.o: FileNotFound
+components: command failed (exit 2): /home/epentland/.cache/mylang/components/seeds/99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc/source/zig-out/focus/mylang
+test-core
++- verification action core member 0
+   +- verification action component-preparation member 0 failure
+error: process exited with code 1
+failed command: cd . && ./.zig-cache/o/2ecd722ce01240aa65d48334d1933c23/selka-components --root /home/epentland/ai/canopy/mylang-memory-20261012-A08/. --zig /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --install-dir /home/epentland/ai/canopy/mylang-memory-20261012-A08/zig-out/libexec/mylang/components
+
+Build Summary: 9/12 steps succeeded (1 failed)
+test-core transitive failure
++- verification action core member 0 transitive failure
+   +- verification action component-preparation member 0 failure
+

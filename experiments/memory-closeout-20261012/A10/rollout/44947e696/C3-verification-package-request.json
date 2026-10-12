@@ -1,0 +1,15 @@
+{
+  "status": "UNAPPLIED shared-file request; root owns verification coordinator and must requalify its complete input contract",
+  "source_revision": "44947e6967d8eb0deeaa86b25ca2bb44bc58803d",
+  "patch_sha256": "8b4ecd25a4cdfe5516e07f14dec9476bdfe49d0ca8e1df8a8afa6b681cdb961e",
+  "files": {
+    "scripts/verify_cache.py": {
+      "base_sha256": "ebf15695fe158b685e533620a5a37ad714e13e9e62709def071f6e1711de7818",
+      "draft_sha256": "91c8a610c0e16ca87803208afe69682e5ca2f9d00689da03b7ee6af8386caf81"
+    },
+    "scripts/verify_cache_test.py": {
+      "base_sha256": "8853392973d69a06a8c61f5de8d7f3a7aa58dd95eea809eb512f3dd2c6570142",
+      "draft_sha256": "e6cb256ab058a996afc42757fe6ea6ec12544d93e95de3c6eddaab67be038faf"
+    }
+  }
+}

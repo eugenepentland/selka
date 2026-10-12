@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "harness_sha256": "36c3c591b27ee8490324abdd9d71e97e62b7c1563a08a9c9637f13cca9d729b8",
+  "engine_sha256": "8383389bf1c59130c58e0be8899597a4bccb0c7ad3ffe0e930b92adb34289cbd",
+  "fixture_sha256": "bace27f035ed485fc988e7516c70e6747096ac55d70542eaf934cdad1b138275",
+  "compiler_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "cases": 11,
+  "scope": "Actual generic source tuple split: native release, LLVM RC audit, replay, relocation, earlier declarations, valid/invalid edits.",
+  "boundaries": "Semantic-cache-v8 malformed payload and specialization serialization are separate registered tests. Mode rollout and installed package remain separate gates. No timing claim."
+}

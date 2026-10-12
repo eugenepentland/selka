@@ -1,0 +1,60 @@
+{
+  "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+  "cases": {
+    "set-add": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/source-followup/set-add.my",
+        "--experimental-zero-rc"
+      ],
+      "status": -6,
+      "stdout": "",
+      "stderr": "thread 2781366 panic: index out of bounds: index 4294967295, len 22\n/home/epentland/ai/canopy/mylang-memory-20261012/src/core/ir.zig:544:32: 0x1a49a17 in inst (cli.zig)\n        return self.insts.items[ref.index()];\n                               ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:1076:34: 0x1a93269 in typeOfRef (cli.zig)\n        return self.function.inst(self.function.resolve(ref)).ty;\n                                 ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:775:53: 0x1b6e40b in providerStore (cli.zig)\n        if (!self.module().zero_rc or self.typeOfRef(value) != .capability) return;\n                                                    ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:767:31: 0x1b6d8bd in storeStatement (cli.zig)\n        try self.providerStore(store, place, value, assign, span);\n                              ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:807:68: 0x1aa0d1e in statement (cli.zig)\n            .initialize, .assign => |store| try self.storeStatement(store, span, s.data == .assign),\n                                                                   ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:798:54: 0x1a9f053 in statement (cli.zig)\n                for (items) |item| try self.statement(item);\n                                                     ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:1405:35: 0x1ac1b45 in expressionPlace (cli.zig)\n                try self.statement(block.body);\n                                  ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:1390:36: 0x1b6bee5 in expression (cli.zig)\n        return self.expressionPlace(id, null);\n                                   ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:816:56: 0x1a9fbef in statement (cli.zig)\n            .discard => |value| _ = try self.expression(value),\n                                                       ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:798:54: 0x1a9f053 in statement (cli.zig)\n                for (items) |item| try self.statement(item);\n                                                     ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:2547:20: 0x1a8b21f in buildFunction (cli.zig)\n    try b.statement(checked.scope.body);\n                   ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:144:37: 0x1a4dbf0 in buildRootsCached (cli.zig)\n            } else try buildFunction(&mb, function, mb.module.functions.items[index]);\n                                    ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:88:28: 0x1a4ac3f in buildRootsInput (cli.zig)\n    return buildRootsCached(allocator, roots, input, refusal, null) catch |err| switch (err) {\n                           ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:74:27: 0x2b88090 in buildExecutable (cli.zig)\n    return buildRootsInput(allocator, &.{input.program.main}, input, refusal);\n                          ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/core/main.zig:131:39: 0x32414ef in dumpIr (cli.zig)\n    var module = build.buildExecutable(allocator, .{ .program = checked.program, .source = checked.src, .single_owner = single_owner, .zero_rc = zero_rc }, &refusal) catch |err| switch (err) {\n                                      ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/core/main.zig:89:22: 0x3247167 in developer (cli.zig)\n        return dumpIr(init, args[2], with_facts, single_owner, zero_rc);\n                     ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/core/cli.zig:115:148: 0x323ee72 in dispatch (cli.zig)\n        for ([_][]const u8{ \"dump-ir\", \"dump-typed\", \"coverage\" }) |name| if (std.mem.eql(u8, command, name)) break :status try core_main.developer(init, args);\n                                                                                                                                                   ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/main.zig:263:33: 0x1475088 in dispatch (main.zig)\n    if (try mylang_core.dispatch(process, args)) |status| return status;\n                                ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/main.zig:159:28: 0x1477e98 in dispatchCommandLine (main.zig)\n    const status = dispatch(init) catch |err| status: {\n                           ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/wiring/process_start.zig:41:9: 0x14342fa in run__anon_32059 (main.zig)\n    body(.{ .minimal = minimal, .arena = &arena, .gpa = gpa, .io = threaded.io(), .environ_map = &environ_map, .preopens = preopens });\n        ^\n/home/epentland/ai/canopy/mylang-memory-20261012/src/main.zig:148:22: 0x1433f11 in main (main.zig)\n    process_start.run(minimal, dispatchCommandLine);\n                     ^\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x143380f in callMain (std.zig)\n    if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{\n                                                                                       ^\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x14331e1 in _start (std.zig)\n    asm volatile (switch (native_arch) {\n    ^\n"
+    },
+    "set-discard": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/source-followup/set-discard.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "stdout": "fn main() -> i64\nb0:\n  %1 = dict_new dict[i64, void] 0:u64\n  undef\n  %4 = dict_find i64 %1, 1:i64\n  %6 = cmp.ge bool %4, 0:i64\n  branch %6, b1, b2\nb1: ; preds b0\n  jump b3\nb2: ; preds b0\n  %9 = dict_insert dict[i64, void] %1, %4, 1:i64, undef\n  jump b3\nb3: ; preds b1 b2\n  %11 = phi dict[i64, void] %1, %9\n  undef\n  %14 = dict_find i64 %11, 2:i64\n  %16 = cmp.ge bool %14, 0:i64\n  branch %16, b4, b5\nb4: ; preds b3\n  jump b6\nb5: ; preds b3\n  %19 = dict_insert dict[i64, void] %11, %14, 2:i64, undef\n  jump b6\nb6: ; preds b4 b5\n  %21 = phi dict[i64, void] %11, %19\n  %23 = dict_find i64 %21, 1:i64\n  %25 = cmp.ge bool %23, 0:i64\n  branch %25, b7, b8\nb7: ; preds b6\n  jump b9\nb8: ; preds b6\n  jump b9\nb9: ; preds b7 b8\n  %30 = cmp.ge bool %23, 0:i64\n  branch %30, b10, b11\nb10: ; preds b9\n  %32 = dict_remove dict[i64, void] %21, %23\n  jump b11\nb11: ; preds b9 b10\n  %34 = phi dict[i64, void] %21, %32\n  %36 = dict_len u64 %34\n  %37 = convert.exact i64 %36\n  ret %37\n",
+      "stderr": ""
+    },
+    "buffer-append": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/source-followup/buffer-append.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "stdout": "fn main() -> i64\nb0:\n  %1 = list_new list[i64] 0:i64\n  %2 = call bool myl_core_bytes_valid_list(%1)\n  branch %2, b1, b2\nb1: ; preds b0\n  %5 = call byte_buffer myl_core_buffer_from_list(%1)\n  %8 = cmp.ge bool 7:i64, 0:i64\n  %10 = cmp.le bool 7:i64, 255:i64\n  %11 = bit_and bool %8, %10\n  %12 = call byte_buffer myl_core_buffer_push_checked(%5, 7:i64)\n  %13 = list_len u64 %12\n  %14 = convert.exact i64 %13\n  ret %14\nb2: ; preds b0\n  unreachable\nfn myl_core_bytes_valid_list(list[i64]) -> bool extern\nfn myl_core_buffer_from_list(list[i64]) -> byte_buffer extern\nfn myl_core_buffer_push_checked(byte_buffer, i64) -> byte_buffer extern\n",
+      "stderr": ""
+    },
+    "test/core/f2_index.my": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/source-followup/f2_index.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "tests/value_semantics/stores.my": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/source-followup/stores.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "stores.my:62:31: error[E_TYPE]: a tuple has no methods; take it apart with `head, rest = value`\n      const first, count = pair.copy()\n                                ^\n"
+    }
+  }
+}

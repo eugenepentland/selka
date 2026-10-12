@@ -1,0 +1,39 @@
+{
+  "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar",
+  "sha256": "0557a645579881d54d3f4c493c8b07be38d42b0a21622ab712b84589ee212c27",
+  "bytes": 1517547520,
+  "git_archive_commit": "5167c588be79dd43d21d5013c36db15110bf239b",
+  "entries": 65127,
+  "files": 59750,
+  "source_bytes": 1468193452,
+  "symlinks": [
+    {
+      "name": "experiments/edit-fuzz-20260930/finding-invalid-native-manifest/lox-gc-seed1-full/original",
+      "target": "../lox-gc-minimal/original"
+    },
+    {
+      "name": "experiments/edit-fuzz-20260930/finding-invalid-native-manifest/lox-gc-seed2-full/original",
+      "target": "../lox-gc-minimal/original"
+    },
+    {
+      "name": "experiments/edit-fuzz-20260930/finding-invalid-native-manifest/lox-gc-seed3-full/original",
+      "target": "../lox-gc-minimal/original"
+    },
+    {
+      "name": "experiments/sexpr-audit/sexpr",
+      "target": "../sexpr-port/sexpr"
+    }
+  ],
+  "command": [
+    "git",
+    "archive",
+    "--format=tar",
+    "5167c588be79dd43d21d5013c36db15110bf239b"
+  ],
+  "admission": {
+    "kind": "build",
+    "ticket": 721,
+    "queue_wait_seconds": 486
+  },
+  "state": "exact source archive frozen; no ReleaseFast compiler provisioned yet"
+}

@@ -1,0 +1,158 @@
+fn main(list[str], cap) -> i64
+b0:
+  %3 = list_new list[i64] 2:i64
+  %5 = list_push list[i64] %3, 0:i64
+  %7 = list_push list[i64] %5, 0:i64
+  %9 = record_make record{list[i64], i64} %7, 0:i64
+  %10 = list_len u64 param0
+  %11 = convert.proven i64 %10
+  %13 = add.proven i64 %11, 2:i64
+  jump b6
+b1: ; preds b5
+  %23 = list_len u64 %18
+  %24 = convert.exact i64 %23
+  %25 = add.exact i64 %24, 0:i64
+  jump b2
+b2: ; preds b5 b1
+  %27 = phi i64 0:i64, %25
+  %29 = list_get.exact i64 %18, %27
+  %34 = iconst bool 0
+  branch 0:bool, b3, b4
+b3: ; preds b2
+  %36 = list_len u64 %18
+  %37 = convert.exact i64 %36
+  %38 = add.exact i64 %37, 1:i64
+  jump b4
+b4: ; preds b2 b3
+  %40 = phi i64 1:i64, %38
+  %42 = list_get.exact i64 %18, %40
+  release %70
+  print param1, %29, %42
+  ret 0:i64
+b5: ; preds b16
+  print param1, %110
+  %18 = record_get list[i64] %70, field0
+  %21 = iconst bool 0
+  branch 0:bool, b1, b2
+b6: ; preds b0
+  %47 = record_get list[i64] %9, field0
+  %50 = iconst bool 0
+  branch 0:bool, b7, b8
+b7: ; preds b6
+  %52 = list_len u64 %47
+  %53 = convert.exact i64 %52
+  %54 = add.exact i64 %53, 0:i64
+  jump b8
+b8: ; preds b6 b7
+  %56 = phi i64 0:i64, %54
+  %61 = list_set.exact list[i64] %47, %56, 1:i64
+  %62 = record_set record{list[i64], i64} %9, field0, %61
+  jump b9
+b9: ; preds b8 b11
+  %65 = phi i64 0:i64, %92
+  %70 = phi record{list[i64], i64} %62, %89
+  %67 = cmp.lt bool %65, %13
+  branch %67, b10, b12
+b10: ; preds b9
+  %71 = record_get list[i64] %70, field0
+  %73 = list_len u64 %71
+  %74 = convert.proven i64 %73
+  %75 = floor_rem.exact i64 %65, %74
+  %77 = cmp.lt bool %75, 0:i64
+  branch %77, b13, b14
+b11: ; preds b14
+  jump b9
+b12: ; preds b9
+  %99 = record_get list[i64] %70, field0
+  %102 = iconst bool 0
+  branch 0:bool, b15, b16
+b13: ; preds b10
+  %79 = list_len u64 %71
+  %80 = convert.proven i64 %79
+  %81 = add.proven i64 %80, %75
+  jump b14
+b14: ; preds b10 b13
+  %83 = phi i64 %75, %81
+  %88 = list_set.exact list[i64] %71, %83, 1:i64
+  %89 = record_set record{list[i64], i64} %70, field0, %88
+  %92 = add.proven i64 %65, 1:i64
+  jump b11
+b15: ; preds b12
+  %104 = list_len u64 %99
+  %105 = convert.exact i64 %104
+  %106 = add.exact i64 %105, 0:i64
+  jump b16
+b16: ; preds b12 b15
+  %108 = phi i64 0:i64, %106
+  %110 = list_get.exact i64 %99, %108
+  jump b5
+fn visit(record{list[i64], i64}, i64) -> record{i64, record{list[i64], i64}}
+b0:
+  %3 = record_get list[i64] param0, field0
+  %6 = iconst bool 0
+  branch 0:bool, b1, b2
+b1: ; preds b0
+  %8 = list_len u64 %3
+  %9 = convert.exact i64 %8
+  %10 = add.exact i64 %9, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %12 = phi i64 0:i64, %10
+  %17 = list_set.exact list[i64] %3, %12, 1:i64
+  %18 = record_set record{list[i64], i64} param0, field0, %17
+  jump b3
+b3: ; preds b2 b5
+  %21 = phi i64 0:i64, %48
+  %26 = phi record{list[i64], i64} %18, %45
+  %23 = cmp.lt bool %21, param1
+  branch %23, b4, b6
+b4: ; preds b3
+  %27 = record_get list[i64] %26, field0
+  %29 = list_len u64 %27
+  %30 = convert.proven i64 %29
+  %31 = floor_rem.exact i64 %21, %30
+  %33 = cmp.lt bool %31, 0:i64
+  branch %33, b7, b8
+b5: ; preds b8
+  jump b3
+b6: ; preds b3
+  %55 = record_get list[i64] %26, field0
+  %58 = iconst bool 0
+  branch 0:bool, b9, b10
+b7: ; preds b4
+  %35 = list_len u64 %27
+  %36 = convert.proven i64 %35
+  %37 = add.proven i64 %36, %31
+  jump b8
+b8: ; preds b4 b7
+  %39 = phi i64 %31, %37
+  %44 = list_set.exact list[i64] %27, %39, 1:i64
+  %45 = record_set record{list[i64], i64} %26, field0, %44
+  %48 = add.proven i64 %21, 1:i64
+  jump b5
+b9: ; preds b6
+  %60 = list_len u64 %55
+  %61 = convert.exact i64 %60
+  %62 = add.exact i64 %61, 0:i64
+  jump b10
+b10: ; preds b6 b9
+  %64 = phi i64 0:i64, %62
+  %66 = list_get.exact i64 %55, %64
+  %68 = record_make record{i64, record{list[i64], i64}} %66, %26
+  ret %68
+facts main: %10=[0,140737488355328] %11=[0,140737488355328] %13=[2,140737488355330] %15=[-9223372036854775808,9223372036854775807] %21=[0,0] %27=[0,0] %29=[-9223372036854775808,9223372036854775807] %34=[0,0] %40=[1,1] %42=[-9223372036854775808,9223372036854775807] %50=[0,0] %56=[0,0] %57=[-9223372036854775808,9223372036854775807] %65=[0,140737488355330] %66=[-9223372036854775808,9223372036854775807] %67=[0,1] %69=[-9223372036854775808,9223372036854775807] %73=[0,140737488355328] %74=[0,140737488355328] %75=[-9223372036854775808,9223372036854775807] %77=[0,1] %79=[0,140737488355328] %80=[0,140737488355328] %81=[-9223372036854775808,140737488355327] %83=[-9223372036854775808,9223372036854775807] %84=[-9223372036854775808,9223372036854775807] %90=[-9223372036854775808,9223372036854775807] %92=[1,140737488355330] %95=[-9223372036854775808,9223372036854775807] %96=[-9223372036854775808,9223372036854775807] %97=[-9223372036854775808,9223372036854775807] %98=[-9223372036854775808,9223372036854775807] %102=[0,0] %108=[0,0] %110=[-9223372036854775808,9223372036854775807]
+list main %3: settled=true length=%-1 len=[0,0]
+list main %5: settled=true length=%-1 elements=[0,0] len=[1,1]
+list main %7: settled=true length=%-1 elements=[0,0] len=[2,2]
+list main %29: settled=true length=%-1
+list main %42: settled=true length=%-1
+list main %61: settled=true length=%-1
+list main %70: settled=true length=%-1
+list main %88: settled=true length=%-1
+list main %110: settled=true length=%-1
+facts visit: %6=[0,0] %12=[0,0] %13=[-9223372036854775808,9223372036854775807] %21=[0,9223372036854775807] %22=[-9223372036854775808,9223372036854775807] %23=[0,1] %25=[-9223372036854775808,9223372036854775807] %29=[0,140737488355328] %30=[0,140737488355328] %31=[-9223372036854775808,9223372036854775807] %33=[0,1] %35=[0,140737488355328] %36=[0,140737488355328] %37=[-9223372036854775808,140737488355327] %39=[-9223372036854775808,9223372036854775807] %40=[-9223372036854775808,9223372036854775807] %46=[-9223372036854775808,9223372036854775807] %48=[1,9223372036854775807] %51=[-9223372036854775808,9223372036854775807] %52=[-9223372036854775808,9223372036854775807] %53=[-9223372036854775808,9223372036854775807] %54=[-9223372036854775808,9223372036854775807] %58=[0,0] %64=[0,0] %66=[-9223372036854775808,9223372036854775807]
+list visit %17: settled=true length=%-1
+list visit %26: settled=true length=%-1
+list visit %44: settled=true length=%-1
+list visit %66: settled=true length=%-1
+field type17.1: [0, 0]

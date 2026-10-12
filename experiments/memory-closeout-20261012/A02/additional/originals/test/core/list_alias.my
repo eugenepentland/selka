@@ -1,0 +1,26 @@
+func grow(xs: int[]) -> int:
+    mut copy = xs
+    copy.append(1)
+    copy.append(2)
+    return len(copy) * 10 + len(xs)
+
+
+func local_alias(n: int) -> int:
+    mut a = [1, 2, 3]
+    mut b = a
+    for j in range(n):
+        b.append(j)
+    return len(a) * 100 + len(b)
+
+
+func fill(n: int) -> int:
+    mut xs = [0]
+    for j in range(n):
+        xs.append(j)
+    return len(xs)
+
+
+func main(out: Stream) -> int:
+    mut ys = [1, 2, 3]
+    out.print(grow(ys), len(ys), ys[2], local_alias(20), fill(50))
+    return 0

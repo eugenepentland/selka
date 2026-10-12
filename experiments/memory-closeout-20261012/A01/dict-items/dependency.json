@@ -1,0 +1,6 @@
+{
+  "path": "src/dictionary_views.zig",
+  "commit": "4fc3f95173609c4f7763f2a64f3b5295ca5076b9",
+  "sha256": "a346eea892fe6d6831ba0fa07acdd4bc4d79d68e07efa87172316783964d3d16",
+  "role": "coordinator-authorized exact validation prerequisite; already integrated, excluded from feature commit"
+}

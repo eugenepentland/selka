@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+"""Execute migrated guest assertions; preserve source-refused files as blockers."""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[3]
+sys.path.insert(0, str(ROOT / "experiments/memory-closeout-20261012/A04"))
+import ownership_commands as ownership
+sys.path.insert(0, str(ROOT / "scripts"))
+from build_admission import admission
+
+parser = argparse.ArgumentParser(description=__doc__)
+ownership.add_option(parser)
+parser.add_argument("--compiler", type=Path, required=True)
+parser.add_argument("--survey", type=Path, required=True)
+parser.add_argument("--phase", required=True)
+parser.add_argument("--resume", action="store_true")
+MODES = {"release": ["--release"], "debug": ["--unoptimized"],
+         "verify": ["--release", "--verify-facts"], "optimized_debug": [],
+         "no_facts": ["--release", "--no-facts"]}
+parser.add_argument("--modes", nargs="+", choices=tuple(MODES), default=["verify"])
+args = parser.parse_args()
+report = HERE / (args.phase + ".json")
+digest = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
+survey = json.loads(args.survey.read_text())
+assert survey["compiler_sha256"] == digest(args.compiler), "survey/compiler identity differs"
+assert survey.get("default_ownership", False) == args.default_ownership, "survey ownership mode differs"
+result = {"compiler": str(args.compiler), "compiler_sha256": digest(args.compiler), "survey": str(args.survey),
+          "default_ownership": args.default_ownership, "ownership_support_sha256": ownership.digest(), "guest_modes": args.modes,
+          "rows": [], "admission": "at most ten guest commands or two source files per shared build lease"}
+if report.exists():
+    assert args.resume, "choose a new phase or --resume"
+    previous = json.loads(report.read_text())
+    assert 'summary' not in previous, 'completed evidence is immutable; choose a new phase'
+    assert all(previous[key] == result[key] for key in ('compiler', 'compiler_sha256', 'survey')), "resume identity changed"
+    assert previous.get("default_ownership", False) == args.default_ownership, "ownership mode changed"
+    assert previous.get("guest_modes", ["verify"]) == args.modes, "guest modes differ"
+    result = previous
+recorded_sources = {row['source']: row for row in result['rows']}
+ready = []
+total_ready = []
+for row in survey["rows"]:
+    source = ROOT / row["source"]
+    assert digest(source) == row["source_sha256"], "source changed since admission survey"
+    names = re.findall(r"^public func (test_\w+)\(", source.read_text(), re.M)
+    if not row['status'] and names:
+        total_ready.append((row, names))
+    if row['source'] in recorded_sources:
+        assert recorded_sources[row['source']]['source_sha256'] == digest(source), "recorded source changed"
+        continue
+    if row["status"]:
+        result["rows"].append({"source": row["source"], "source_sha256": digest(source), "status": "source blocked", "diagnostic": row["stderr"], "public_tests": names})
+    elif not names:
+        result["rows"].append({"source": row["source"], "source_sha256": digest(source), "status": "helper tested through importer", "importer": "tests/lang/migrated/python_format.my", "public_tests": []})
+    else:
+        ready.append((row, names))
+env = dict(os.environ, MYL_CORE_LEAKCHECK="1")
+ownership_modes = [("default", [])] if args.default_ownership else [("ordinary", []), ("zero_rc", ownership.flags(args))]
+execution_modes = [(owner if args.modes == ["verify"] else owner + "/" + mode, [*flags, *MODES[mode]])
+                   for owner, flags in ownership_modes for mode in args.modes]
+batch = min(2, max(1, 10 // len(execution_modes)))
+for first in range(0, len(ready), batch):
+    with admission("build"):
+        for row, names in ready[first:first + batch]:
+            recorded = {"source": row["source"], "source_sha256": row["source_sha256"], "public_tests": names, "modes": {}}
+            for mode, flags in execution_modes:
+                command = [str(args.compiler), "test", str(ROOT / row["source"]), "--force", "--json", "--jobs", "1", *flags]
+                ran = subprocess.run(command, cwd=ROOT, env=env, capture_output=True, text=True, timeout=600)
+                try:
+                    counts = json.loads(ran.stdout) if ran.stdout.startswith('{') else {}
+                except json.JSONDecodeError:
+                    counts = {}
+                executed_names = {test['name'].rsplit('::', 1)[-1] for test in counts.get('tests', [])}
+                qualified = ran.returncode == 0 and not ran.stderr and counts.get('passed') == len(names) and counts.get('failed') == 0 and counts.get('unsupported') == 0 and executed_names == set(names)
+                recorded["modes"][mode] = {"command": command, "status": ran.returncode, "stdout": ran.stdout, "stderr": ran.stderr,
+                                            "qualified": qualified, 'passed': counts.get('passed'), 'failed': counts.get('failed'), 'unsupported': counts.get('unsupported')}
+                print(row["source"], mode, ran.returncode, 'qualified' if qualified else 'FAILED QUALIFICATION', flush=True)
+            result["rows"].append(recorded)
+            assert result["compiler_sha256"] == digest(args.compiler), "compiler changed"
+            report.write_text(json.dumps(result, indent=2) + "\n")
+result["summary"] = {"assigned_files": len(survey["rows"]), "source_blocked": sum(row.get("status") == "source blocked" for row in result["rows"]),
+                     "executed_files": len(total_ready), "executed_tests_per_mode": sum(len(names) for _, names in total_ready),
+                     "failed_commands": sum(run["status"] != 0 for row in result["rows"] for run in row.get("modes", {}).values())}
+result['summary']['failed_qualifications'] = sum(not run.get('qualified', False) for row in result['rows'] for run in row.get('modes', {}).values())
+result['summary']['execution_totals'] = {}
+for mode, _ in execution_modes:
+    totals = dict(passed=0, failed=0, unsupported=0)
+    for row in result['rows']:
+        if mode not in row.get('modes', {}):
+            continue
+        data = row['modes'][mode]
+        for key in totals:
+            totals[key] += data.get(key) or 0
+    result['summary']['execution_totals'][mode] = totals
+report.write_text(json.dumps(result, indent=2) + "\n")
+print(result["summary"], flush=True)
+raise SystemExit(int(any(total['failed'] or total['unsupported'] for total in result['summary']['execution_totals'].values()) or bool(result['summary']['source_blocked']) or bool(result['summary']['failed_qualifications'])))

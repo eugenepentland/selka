@@ -1,0 +1,13 @@
+{
+  "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9",
+  "cases": [
+    {
+      "source": "tests/lang/rc_site_eliminations.my",
+      "source_sha256": "524d664c983ff941e68b42d9b36b2567bbadc67cb8dab44b8be93f3c70e76486",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    }
+  ]
+}

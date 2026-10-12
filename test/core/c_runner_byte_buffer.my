@@ -5,7 +5,7 @@ public record Packet:
 
 public func test_buffer_copy_appends_alone(buffer: byte_buffer) -> bool:
     mut before = len(buffer)
-    mut copy = buffer
+    mut copy = buffer.copy()
     _ = copy.append_byte(7)
     return len(buffer) == before and len(copy) == before + 1 and copy[before] == 7
 
@@ -28,5 +28,5 @@ public func test_short_buffer(buffer: byte_buffer) -> bool:
 
 public func test_buffer_error_result(buffer: byte_buffer) -> Result[bool, byte_buffer]:
     if len(buffer) > 2:
-        return Err(buffer)
+        return Err(buffer.copy())
     return Ok(True)

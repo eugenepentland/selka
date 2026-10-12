@@ -1,0 +1,11 @@
+{
+  "status": "three completed paired runtime cases; next unadmitted window canceled for critical cache diagnosis",
+  "completed_case_count": 3,
+  "launch_count": 66,
+  "unadmitted_log_sha256": "039c6702b761d6e1c4c4c0fb0a4f77c8ec0c29e83aee9120bb2ea999b3ef0330",
+  "interrupted_guest_runs": 0,
+  "active_or_queued_A09_timing": false,
+  "measurement_harness_sha256": "4bec9df0eba605cd7f5258016e4c3b311a5bbab9604074481311b9c86fe9634d",
+  "measurement_harness_commit": "455b090d162f711bdf37f6f6c5e1899337678605",
+  "timing_metadata_note": "These initial3cases retain original top-level window timestamps. Later runs add per-case window start/end and harness hashes outside measured intervals; original raw samples are unchanged."
+}

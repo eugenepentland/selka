@@ -1,6 +1,6 @@
 # A capability held in a record field takes method syntax exactly as a bare local
 # does (SPEC.md CAPABILITY-FIELD-METHOD-1): `ctx.fs.read_text(path)` builds the
-# same checked call as `fs = ctx.fs` followed by `fs.read_text(path)`.
+# same checked capability call as reading the field through a borrowed helper.
 import environment
 import filesystem
 import network
@@ -28,7 +28,7 @@ func app() -> App:
 func text(result: Result[str, str]) -> str:
     match result:
         case Ok(value):
-            return value
+            return value.copy()
         case Err(message):
             return "error: " + message
 
@@ -44,7 +44,7 @@ func done(result: Result[Unit, str]) -> bool:
 func data(result: Result[bytes, str]) -> bytes:
     match result:
         case Ok(value):
-            return value
+            return value.copy()
         case Err(_):
             return b""
 
@@ -52,7 +52,7 @@ func data(result: Result[bytes, str]) -> bytes:
 func names(result: Result[str[], str]) -> str[]:
     match result:
         case Ok(value):
-            return value
+            return value.copy()
         case Err(_):
             return ["error"]
 
@@ -90,38 +90,44 @@ public func test_open_scopes_and_narrowing_work_on_a_field_path() -> bool:
     with state.ports.fs.open("log.txt", "r") as g:
         lines = g.readlines()
     _ = state.ports.fs.mkdir("data")
-    mut scoped = state.ports.fs.dir("data")
-    mut inside = done(scoped.write_text("x.txt", "1"))
-    mut frozen = state.ports.fs.read_only()
-    mut refused = done(frozen.write_text("y.txt", "2"))
-    mut chained = done(state.ports.fs.dir("data").write_text("z.txt", "3"))
-    return first and second and lines == ["a\n", "b\n"] and inside and not refused and chained and text(state.ports.fs.read_text("data/z.txt")) == "3" and not state.ports.fs.exists("y.txt")
+    with state.ports.fs.dir("data") as scoped:
+        mut inside = done(scoped.write_text("x.txt", "1"))
+        with state.ports.fs.read_only() as frozen:
+            mut refused = done(frozen.write_text("y.txt", "2"))
+            mut chained = False
+            with state.ports.fs.dir("data") as writer:
+                chained = done(writer.write_text("z.txt", "3"))
+            return first and second and lines == ["a\n", "b\n"] and inside and not refused and chained and text(state.ports.fs.read_text("data/z.txt")) == "3" and not state.ports.fs.exists("y.txt")
+
+
+func same_filesystem_observation(ports: Ports, alias: Filesystem) -> bool:
+    return read_note(ports, "shared.txt") == "one" and text(alias.read_text("shared.txt")) == "one"
 
 
 # spec-case: CAPABILITY-FIELD-METHOD-1
 public func test_a_field_and_a_local_alias_of_it_reach_the_same_filesystem() -> bool:
     mut state = app()
     _ = done(state.ports.fs.write_text("shared.txt", "one"))
-    mut alias = state.ports.fs
-    return read_note(state.ports, "shared.txt") == "one" and text(alias.read_text("shared.txt")) == "one"
+    return same_filesystem_observation(state.ports, state.ports.fs)
 
 
 # spec-case: CAPABILITY-FIELD-METHOD-1
 public func test_environment_methods_work_on_a_field_path() -> bool:
     mut state = app()
-    mut narrowed = state.ports.env.only("HOME")
-    mut home = state.ports.env.get("HOME")
-    return home is not None and state.ports.env.get("PATH") is None and state.ports.env.names() == ["HOME", "LANG"] and narrowed.names() == ["HOME"]
+    with state.ports.env.only("HOME") as narrowed:
+        mut home = state.ports.env.get("HOME")
+        return home is not None and state.ports.env.get("PATH") is None and state.ports.env.names() == ["HOME", "LANG"] and narrowed.names() == ["HOME"]
 
 
 # spec-case: CAPABILITY-FIELD-METHOD-1
 public func test_network_host_works_on_a_field_path() -> bool:
     mut state = app()
-    match network.connect(state.ports.net.host("127.0.0.1:8000")):
-        case network.Connected.ok(_):
-            return False
-        case network.Connected.err(code):
-            return code == network.denied_here()
+    with state.ports.net.host("127.0.0.1:8000") as scoped:
+        match network.connect(scoped):
+            case network.Connected.ok(_):
+                return False
+            case network.Connected.err(code):
+                return code == network.denied_here()
 
 
 # spec-case: CAPABILITY-FIELD-METHOD-1

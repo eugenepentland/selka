@@ -44,7 +44,7 @@ func two_dicts(seq: str) -> str:
     mut b: dict[str, int] = {}
     for i in range(len(seq) - 1):
         mut key = seq[i:i + 2]
-        a[key] = a.get(key, 0) + 1
+        a[key.copy()] = a.get(key, 0) + 1
         if key not in b:
             b[key] = len(b)
     return summary(a) + "|" + summary(b)
@@ -124,7 +124,7 @@ func deletions(seq: str, size: int) -> str:
 
 
 func add_one(mut d: dict[str, int], key: str) -> Unit:
-    d[key] = d.get(key, 0) + 1
+    d[key.copy()] = d.get(key, 0) + 1
 
 
 # A slice probed, then the dictionary changed by a call, then the slice inserted.
@@ -171,7 +171,7 @@ func control(seq: str, stop: int) -> str:
 # semantics: CPython's oracle reads `e = d` as `e = dict(d)`).
 func shared(seq: str) -> str:
     mut d: dict[str, int] = {"zz": 0}
-    mut e = d
+    mut e = d.copy()
     for i in range(len(seq) - 2):
         mut key = seq[i:i + 3]
         e[key] = e.get(key, 0) + 1

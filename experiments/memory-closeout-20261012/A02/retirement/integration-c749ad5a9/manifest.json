@@ -1,0 +1,63 @@
+{
+  "status": "prepared, not applied to production; activation requires coordinator C2 approval",
+  "base_commit": "c749ad5a9d2dfef5d5c4d7b9de2a30f03029999f",
+  "source_root": "/home/epentland/ai/canopy/mylang-memory-20261012",
+  "worker_commit": "eb38385d8be205e8604f7b8433778f4a30dc949d",
+  "files": [
+    {
+      "path": "src/core/runtime/core_rt.c",
+      "before_sha256": "83449a8fdd78d5f4c23147b709b848929ae1e6ae4c3e0dcdfe6f806a70adc361",
+      "after_sha256": "70aa3232adfa6b673fbc6a75d09cf810c1789351e80b5f779485d9616e9e6684"
+    },
+    {
+      "path": "src/core/runtime/core_bytes.c",
+      "before_sha256": "3e776dd1d693c638d661086b1c375988e59a124bb132cc132c02bb531af05d96",
+      "after_sha256": "e9dea0f02d73aa7601d1a278ac40b9d467df99f67f68f3fa8f5221feeddcf363"
+    }
+  ],
+  "apply_check": {
+    "status": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "scratch_apply": {
+    "status": 0,
+    "stdout": "patching file src/core/runtime/core_rt.c\npatching file src/core/runtime/core_bytes.c\n",
+    "stderr": ""
+  },
+  "patch_sha256": "0e41a276536b3599d6ad01f5029487a524d93eee68636de825eea4540b972a65",
+  "byte_identical_to_nested_extension_refresh": true,
+  "capacity_test_migration": {
+    "base_commit": "c749ad5a9d2dfef5d5c4d7b9de2a30f03029999f",
+    "before_sha256": "36e9ebb56323570e0be496173f1a75a1b3db5532f5dc8b9312750ad79fe67d94",
+    "after_sha256": "13386eeed90c734ae4397fe23cb87d8cc40ff0f2fc714704bee407758bc9e30c",
+    "scenario_count": 13,
+    "status": "prepared only; run after sole owned runtime activation"
+  },
+  "guest_test_migration": {
+    "base_commit": "eb38385d8be205e8604f7b8433778f4a30dc949d",
+    "files": [
+      {
+        "path": "src/core/a02_list_methods_test.zig",
+        "before_sha256": "f716b3d42a2497054da15767dafc341be5cc86b2fa51b5ac3aa99a8e4b311ebe",
+        "after_sha256": "e4e00d20b90050c2fb89b57517514cfefa64d1a65438d557e9796dae0b7b6a0f"
+      },
+      {
+        "path": "src/core/a02_mut_call_test.zig",
+        "before_sha256": "48ccad36e9d99ebf51446fd261e456cb91994232f0672f44b337ea49c7890c00",
+        "after_sha256": "f6c76097142b24150eba5bf6ae5c2e78f83328042c01077593b5a0a9839a4312"
+      },
+      {
+        "path": "src/core/a02_scalar_child_test.zig",
+        "before_sha256": "f172d84f9f3fa2e8d52fe160a9f666de7a51700f9ed9bc98c701aafd6a4ea92e",
+        "after_sha256": "d3d657bc9ccf0db5b46743eb8bf8d01d1634d574cd692db065ad57c70835aad3"
+      },
+      {
+        "path": "src/core/a02_public_constructors_test.zig",
+        "before_sha256": "2663f432ceace68793874bae2c00d1cd1d6bfb2956f649d8375d30da83a868e4",
+        "after_sha256": "76337b8f430c0a72a076ee2be00d0990748d50212a7993c7f50a230cb78b2909"
+      }
+    ],
+    "status": "prepared only; remove retired experimental CLI selector after ownership default promotion, preserve all five modes and assertions"
+  }
+}

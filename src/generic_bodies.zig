@@ -936,22 +936,25 @@ const Checker = struct {
     /// produced values.
     fn comprehensionValue(self: *Checker, each: ast.Comprehension, span: source.Span) Error!Symbolic {
         const element = switch (each.source) {
-            .iterable => |iterable| try self.comprehensionElement(try self.expression(iterable), span),
+            .iterable => |iterable| try self.comprehensionElement(try self.borrowList(iterable), span),
             .range => |bounds| try self.rangeElement(bounds, each.name, span),
         };
         const text = self.src.text(each.name);
         if (try self.shadows(each.name)) return self.sink.fail(eShadowing, each.name, "comprehension binding shadows an active declaration");
         const hidden = self.active.get(text);
+        const first = self.locals.items.len;
         try self.bind(each.name, element, false);
         defer self.unbindScoped(text, hidden);
         const facts = try self.option_facts.snapshot(self.field_arena.allocator());
         defer self.option_facts.restore(facts);
+        if (each.filter != null and try self.requiresHandling(element))
+            return self.sink.fail(eResultOperation, span, "a filtered comprehension could skip pending Results; use an explicit handling loop");
         if (each.filter) |condition| {
             try self.compatible(try self.expression(condition), .{ .concrete = .bool }, span);
             try self.assumeOption(condition, true);
         }
         const produced = try self.expression(each.output);
-        try self.supports(produced, .copy, span);
+        try self.requireHandled(first, span);
         try self.supports(produced, .storable, span);
         self.seedEffect(.managed_allocation);
         if (each.set) {
@@ -985,9 +988,9 @@ const Checker = struct {
         if (self.gather_frames.items.len == 0) return error.InternalError;
         const key = if (step.key) |syntax| try self.expression(syntax) else null;
         const value = try self.expression(step.value);
-        try self.supports(value, .copy, span);
-        try self.supports(value, .storable, span);
         const frame = &self.gather_frames.items[self.gather_frames.items.len - 1];
+        if (frame.shape != .list) try self.supports(value, .copy, span);
+        try self.supports(value, .storable, span);
         frame.key = key;
         frame.value = value;
     }
@@ -1047,9 +1050,7 @@ const Checker = struct {
             const value = if (element) |ty_value| try self.expressionExpected(input, ty_value) else try self.expression(input);
             if (element) |ty_value| try self.compatible(value, ty_value, node.span) else element = value;
         }
-        try self.supports(element.?, .copy, node.span);
         try self.supports(element.?, .storable, node.span);
-        if (try self.requiresHandling(element.?)) return self.sink.fail(eResultOperation, node.span, "list elements cannot contain pending results");
         if (expected == null) expected = try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{element.?});
         self.seedEffect(.managed_allocation);
         return expected.?;
@@ -1091,6 +1092,7 @@ const Checker = struct {
         const element = try self.collectionElement(owner, operation.span);
         const key = if (family == .dictionary) try self.shapes().collectionKey(owner, operation.span) else element;
         const kind = buffer_operations.forFamily(operation.kind, family);
+        try self.checkPendingOperation(owner, kind, operation.span);
         if (operation.inputs.len != kind.arity()) return self.sink.fail("E_ARITY", operation.span, "collection argument count differs from its signature");
         if (buffer_operations.search(kind) != null or buffer_operations.trim(kind) != null)
             return self.textOperation(owner, .{ .kind = kind, .inputs = operation.inputs, .span = operation.span });
@@ -1102,10 +1104,10 @@ const Checker = struct {
             .borrow_view => try self.shapes().nominal(self.catalog.templates.store.?.index.names.get(if (family == .string) text_view_name else byte_view_name).?, &.{}),
             .is_digit, .is_alpha, .is_space => .{ .concrete = .bool },
             .count => .{ .concrete = .i64 },
-            .length => .{ .concrete = .i64 },
+            .length, .capacity => .{ .concrete = .i64 },
             .parse_int, .parse_int_range => try self.optionType(.{ .concrete = .i64 }),
             .parse_float, .parse_float_range => try self.optionType(self.floatType()),
-            .read, .get => element,
+            .read, .get, .pop, .pop_at => element,
             .contains => .{ .concrete = .bool },
             .append, .write => .{ .concrete = .unit },
             .keys, .values, .split => try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{if (kind == .keys) key else if (kind == .split) owner else element}),
@@ -1127,7 +1129,7 @@ const Checker = struct {
         if (family != .dictionary and (kind == .keys or kind == .values or kind == .get)) return self.sink.fail(eListType, operation.span, "mapping operation requires a dictionary");
         const range_bound = kind == .view or kind == .borrow_view or kind == .slice or kind == .parse_int_range or kind == .parse_float_range;
         for (operation.inputs, 0..) |input, index| {
-            const indexed = index == 0 and (kind == .read or kind == .write);
+            const indexed = index == 0 and (kind == .read or kind == .write or kind == .pop_at);
             const integer = family != .dictionary and (range_bound or indexed);
             const expected = if (family == .dictionary) (if (index == 0) key else element) else if (kind == .join) try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{owner}) else element;
             if (integer) try self.supports(try self.expression(input), .integer, operation.span) else try self.compatible(try self.expressionExpected(input, expected), expected, operation.span);
@@ -1159,7 +1161,7 @@ const Checker = struct {
         };
     }
     fn listOperation(self: *Checker, node: ast.Node, operation: @FieldType(@FieldType(ast.Node, "data"), "list_operation")) Error!Symbolic {
-        const owner = try self.expression(operation.base);
+        const owner = try self.borrowList(operation.base);
         if (operation.kind == .write and operation.arguments.len == 2 and symbolic.array(owner, self.catalog.records) != null)
             return self.arrayWrite(owner, operation, node.span);
         return self.collectionOperation(owner, .{ .kind = operation.kind, .inputs = operation.arguments, .span = node.span, .owner_node = operation.base });
@@ -1295,7 +1297,8 @@ const Checker = struct {
     }
     fn listSlice(self: *Checker, node: ast.Node) Error!Symbolic {
         const slice = node.data.slice;
-        const owner = try self.expression(slice.base);
+        const owner = try self.borrowList(slice.base);
+        try self.checkPendingOperation(owner, .slice, node.span);
         _ = try self.collectionElement(owner, node.span);
         if (slice.start) |input| try self.supports(try self.expression(input), .integer, node.span);
         if (slice.end) |input| try self.supports(try self.expression(input), .integer, node.span);
@@ -1334,6 +1337,7 @@ const Checker = struct {
         if (input_call.owner) |owner| if (self.active.get(self.src.text(owner))) |slot| {
             const receiver = if (self.option_facts.has(slot)) try self.optionElement(self.locals.items[slot].ty, owner) else self.locals.items[slot].ty;
             if (self.shapes().managed(receiver) or std.mem.eql(u8, self.src.text(input_call.name), "copy")) {
+                try self.runtimeOwner(owner, false);
                 if (keywordSort(self, input_call)) {
                     const sorted = try self.keyedSort(receiver, .{ .arguments = input_call.arguments, .names = input_call.argument_names, .span = span });
                     return sorted;
@@ -1388,6 +1392,7 @@ const Checker = struct {
     /// written. Each specialization checks the key against its concrete
     /// element type; without a key the element needs a native order.
     fn keyedSort(self: *Checker, receiver: Symbolic, sort: SortOperands) Error!Symbolic {
+        try self.checkPendingOperation(receiver, .sort, sort.span);
         if (self.shapes().collectionKind(receiver) != .list) return self.sink.fail(eListType, sort.span, "sort requires a list receiver");
         var keyed = false;
         for (sort.arguments, 0..) |argument, index| {
@@ -2132,7 +2137,7 @@ const Checker = struct {
                 break :result shape.fields[index].ty.?;
             },
             .length => |input| result: {
-                const base = try self.expression(input);
+                const base = try self.borrowList(input);
                 if (dictionary_views.symbolicKind(self.catalog, base)) |kind| if (kind != .item) break :result .{ .concrete = .i64 };
                 if (self.shapes().managed(base)) break :result .{ .concrete = .i64 };
                 _ = try self.arrayShape(base, node.span);
@@ -2140,7 +2145,7 @@ const Checker = struct {
                 break :result .{ .concrete = .i64 };
             },
             .index => |access| result: {
-                const base = try self.expression(access.base);
+                const base = try self.borrowList(access.base);
                 if (self.shapes().managed(base)) {
                     if (self.shapes().collectionKind(base) == .dictionary) {
                         try self.compatible(try self.expression(access.index), try self.shapes().collectionKey(base, node.span), node.span);
@@ -2263,9 +2268,34 @@ const Checker = struct {
         self.seedEffect(kind.effect());
         return result;
     }
+    /// Inspection never settles a named pending list's aggregate obligation.
+    fn borrowList(self: *Checker, id: ast.NodeId) Error!Symbolic {
+        const node = self.program.nodes.items[@backingInt(id)];
+        if (node.data == .name) if (self.active.get(self.src.text(node.data.name))) |slot| {
+            const binding = self.locals.items[slot];
+            if (self.shapes().collectionKind(binding.ty) == .list and try self.requiresHandling(binding.ty)) {
+                try self.runtimeOwner(node.data.name, false);
+                return binding.ty;
+            }
+        };
+        const value = try self.expression(id);
+        if (self.shapes().collectionKind(value) == .list and try self.requiresHandling(value))
+            return self.sink.fail(eResultOperation, node.span, "bind the pending Result list before inspecting it; acknowledge the remaining elements explicitly");
+        return value;
+    }
+    fn checkPendingOperation(self: *Checker, owner: Symbolic, kind: BufferKind, span: source.Span) Error!void {
+        if (self.shapes().collectionKind(owner) == .list and try self.requiresHandling(owner)) try self.pendingListOperation(kind, span);
+    }
+    fn pendingListOperation(self: *Checker, kind: BufferKind, span: source.Span) Error!void {
+        switch (kind) {
+            .append, .pop, .pop_at, .copy, .read, .length, .capacity, .iteration_check => {},
+            else => return self.sink.fail(eResultOperation, span, "this operation would implicitly discard or copy pending Results; handle elements or explicitly discard the whole list"),
+        }
+    }
     fn runtimeOwner(self: *Checker, span: source.Span, mutates: bool) Error!void {
         const binding = try self.local(span);
-        if (!self.shapes().managed(binding.ty) and !binding.available) return self.sink.failTransfer(diagnostic.owned_consumed, span, binding.name, binding.transfer_span);
+        const tracked = !self.shapes().managed(binding.ty) or try self.requiresHandling(binding.ty);
+        if (tracked and !binding.available) return self.sink.failTransfer(diagnostic.owned_consumed, span, binding.name, binding.transfer_span);
         if (mutates and !binding.mutable) return self.sink.fail(diagnostic.immutable, span, "mutation requires a binding it may modify");
     }
     fn operationResult(self: *Checker, span: ?source.Span, success: typed.Type, code: []const u8) Error!Symbolic {
@@ -2281,11 +2311,14 @@ const Checker = struct {
     }
     fn bufferValue(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "buffer_operation")) Error!Symbolic {
         const owner = try self.local(operation.owner);
+        try self.runtimeOwner(operation.owner, operation.kind.mutates());
+        if (self.shapes().collectionKind(owner.ty) == .list and try self.requiresHandling(owner.ty))
+            try self.pendingListOperation(operation.kind, operation.owner);
         if (operation.kind == .copy) return self.collectionOperation(owner.ty, .{ .kind = .copy, .inputs = operation.arguments, .span = operation.owner });
         if (!self.shapes().managed(owner.ty)) return self.sink.fail(eListType, operation.owner, "operation requires a managed collection value binding");
         const shape = (try self.shapes().container(owner.ty, operation.owner)) orelse return self.sink.fail(eListType, operation.owner, "operation requires a managed collection value binding");
         const element = shape.element;
-        if (operation.kind == .read) try self.supports(element, .copy, operation.owner);
+        if (operation.kind == .read) try self.supports(element, .storable, operation.owner);
         for (operation.arguments, 0..) |input, index| {
             const writes_element = index == 1 and operation.kind == .write;
             const value = if (operation.kind == .append or writes_element) try self.expressionExpected(input, element) else try self.expression(input);
@@ -2296,6 +2329,7 @@ const Checker = struct {
         if (operation.kind == .append) self.seedEffect(.managed_allocation);
         const dictionary = (self.shapes().collectionKind(owner.ty) orelse .list) == .dictionary;
         self.seedCollectionWrite(operation.kind, dictionary, self.parameterIndexAt(operation.owner));
+        if (operation.kind == .pop or operation.kind == .pop_at) return element;
         if (operation.kind.mutates()) return .{ .concrete = .unit };
         const success: Symbolic = if (operation.kind == .read) element else .{ .concrete = .u64 };
         return self.symbolicOperationResult(null, success, eListType);
@@ -2899,7 +2933,7 @@ const Checker = struct {
                 try self.invalidateOptions(each.body);
                 const loop_facts = try self.option_facts.snapshot(self.field_arena.allocator());
                 defer self.option_facts.restore(loop_facts);
-                const source_type = try self.expression(each.iterable);
+                const source_type = try self.borrowList(each.iterable);
                 const view = dictionary_views.symbolicKind(self.catalog, source_type);
                 const projected = view != null and view.? != .item;
                 const owner = if (projected) try dictionary_views.symbolicOwner(self.shapes(), source_type, statement_value.span) else source_type;
@@ -2923,12 +2957,15 @@ const Checker = struct {
                     if (each.index_name) |name| try self.bind(name, .{ .concrete = .i64 }, true);
                 }
                 defer self.endScope(first);
-                const before = try self.pendingState(self.locals.items.len);
+                const before = try self.pendingState(first);
                 defer self.allocator.free(before);
                 const previous = self.loop_pending;
                 self.loop_pending = before;
                 defer self.loop_pending = previous;
-                if (!try self.statement(each.body)) try self.samePending(before, statement_value.span, diagnostic.result_loop);
+                if (!try self.statement(each.body)) {
+                    try self.requireHandled(first, statement_value.span);
+                    try self.samePending(before, statement_value.span, diagnostic.result_loop);
+                }
                 self.restorePending(before);
             },
             .for_range => |range| {

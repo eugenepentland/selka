@@ -1,0 +1,70 @@
+{
+  "schema": "micro-gap-sort-evidence-v1",
+  "files": [
+    {
+      "path": "experiments/micro-gaps-20261012/sort/evidence/baseline-sort_int-4096-counts.json",
+      "sha256": "fb507e33e9741ee57b8d09b2b6a81388357fa4d006a160a8f26c252c80bba632",
+      "bytes": 26567
+    },
+    {
+      "path": "experiments/micro-gaps-20261012/sort/evidence/baseline-sort_int-64-counts.json",
+      "sha256": "aa182765edf2406c85de82332914a4461497e28d37135403d25c89218f8a165e",
+      "bytes": 26527
+    },
+    {
+      "path": "experiments/micro-gaps-20261012/sort/evidence/baseline-sort_records-4096-counts.json",
+      "sha256": "142892959d0a0613b15e43befa198aa3c7c35ba2feada453f27c7599a11a07ec",
+      "bytes": 28271
+    },
+    {
+      "path": "experiments/micro-gaps-20261012/sort/evidence/baseline-sort_records-64-counts.json",
+      "sha256": "f09ec56474cc962008bc5b5d3158789745a05a774cb77cdb55453d3e4d0d7ed0",
+      "bytes": 28207
+    },
+    {
+      "path": "experiments/micro-gaps-20261012/sort/evidence/counter-comparison.json",
+      "sha256": "d97b4c602540cd71903873a130287701bef942c9762b4369e99a5591fec7536b",
+      "bytes": 7777
+    },
+    {
+      "path": "experiments/micro-gaps-20261012/sort/evidence/focused-tests.log",
+      "sha256": "4eb0c8cd2a8c809854c02e19350dce08e1902340beed54def9c2a381da053307",
+      "bytes": 607
+    },
+    {
+      "path": "experiments/micro-gaps-20261012/sort/evidence/guardian.log",
+      "sha256": "a23f827a2406b79c8ed5e6c077a9a34cdea66064387b437577b5437245908927",
+      "bytes": 675
+    },
+    {
+      "path": "experiments/micro-gaps-20261012/sort/evidence/install-identity.json",
+      "sha256": "7da9d07a3daccb1ace1ebc547aeda78b9f64fa4836aba04c96a99e4bb6453aca",
+      "bytes": 3386
+    },
+    {
+      "path": "experiments/micro-gaps-20261012/sort/evidence/qualification.json",
+      "sha256": "ca92ffe78c48ec30ac270f175895398444d927e1c953f5d6ac8daa36c4396b34",
+      "bytes": 18918
+    },
+    {
+      "path": "experiments/micro-gaps-20261012/sort/evidence/sort_int-4096-counts.json",
+      "sha256": "6ef07a7e2c043ba74dddfc1e3d76e052b2fc6b9a86ad1c8f24d0515f7f753cb4",
+      "bytes": 26647
+    },
+    {
+      "path": "experiments/micro-gaps-20261012/sort/evidence/sort_int-64-counts.json",
+      "sha256": "72fb1d1e7c64ff6450779cf788f5cdefacf7e5fad2d7e1317941891a60fd04ce",
+      "bytes": 26607
+    },
+    {
+      "path": "experiments/micro-gaps-20261012/sort/evidence/sort_records-4096-counts.json",
+      "sha256": "e42f99dbaec736021408f66f4e05b4fc67b73d3bbb2bda4a3470902a7eb5b6b0",
+      "bytes": 28359
+    },
+    {
+      "path": "experiments/micro-gaps-20261012/sort/evidence/sort_records-64-counts.json",
+      "sha256": "a4c8881dd2df9356e2e0b284b3c24c0bb09c8bdebc79cafc5ed2b55698fd5e42",
+      "bytes": 28295
+    }
+  ]
+}

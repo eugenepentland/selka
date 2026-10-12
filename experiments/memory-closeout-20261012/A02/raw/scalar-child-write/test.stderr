@@ -1,0 +1,6 @@
+guardian/test: 1 test(s) selected by filter: "zero RC A02 scalar child writes"
+All 1 tests passed.
+guardian/test: test wall 2.29s; slowest over 50ms:
+guardian/test:   2.29s  a02_scalar_child_test.test.zero RC A02 scalar child writes preserve nested owned fields
+guardian/test: PASS — 1 passed
+guardian/test: RESULT {"passed":1,"failed":0,"skipped":0}

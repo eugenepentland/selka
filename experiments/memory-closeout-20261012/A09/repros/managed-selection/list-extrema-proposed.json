@@ -1,0 +1,16 @@
+{
+  "applied": false,
+  "qualified": false,
+  "source_revision": "5167c588",
+  "preimage_sha256": "f9e361b1d34efbe1119e56c96cc54b9bd75677cc074135cce2522c178a26bd8c",
+  "proposal": "Carry scalar selected index rather than a managed borrowed element through loop joins; preserve initial empty-list index0 trap and return one selected borrowed read",
+  "scope": "list min/max only; two-argument and Option joins remain separate blockers",
+  "required_validation": [
+    "source/native five-mode min/max text and scalar controls",
+    "empty/single/many lists and exact empty diagnostic",
+    "selected independent result survives owner mutation/destruction",
+    "negative move/view escape across owner mutation",
+    "no implicit copies/allocations inside borrowed selection"
+  ],
+  "patch_sha256": "eb6928f80c8069909a428f1025dda0a49a9571ce5e4aa8c80545ecddf47506b8"
+}

@@ -1,0 +1,59 @@
+{
+  "purpose": "ordinary-mode source/type baseline only; not zero-RC qualification",
+  "compiler_revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "cases": {
+    "provider_list": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/negative/provider_list.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/provider-boundary-syntax/cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "provider_list.my:1:1: error[E_LIST_CAPABILITY]: managed list elements cannot contain allocator or provider capabilities\n  # spec-case: NEW-CORE-ZERO-RC-RESOURCES-1\n  ^\n",
+      "source_sha256": "da644ed2ce39ba0fc4dcb39af36645dcd571e8a8c1f49aa4d3c2e479c21502df"
+    },
+    "provider_dictionary": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/negative/provider_dictionary.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/provider-boundary-syntax/cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "provider_dictionary.my:1:1: error[E_LIST_CAPABILITY]: managed list elements cannot contain allocator or provider capabilities\n  # spec-case: NEW-CORE-ZERO-RC-RESOURCES-1\n  ^\n",
+      "source_sha256": "134b691dd4714d795d7b2e3517da7d568dc19a815b8465567794eee9e55f7503"
+    },
+    "provider_variant": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/negative/provider_variant.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/provider-boundary-syntax/cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "417cfc1d13d63d14db97e85424c7ec6c121131176835b03eff9867cc25a81a19"
+    },
+    "provider_recursive": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/negative/provider_recursive.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/provider-boundary-syntax/cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/negative/provider_recursive.my:1:1: error[E_RECURSIVE_RECORD]: a recursive value type is shared through immutable boxes, so it cannot hold a capability\n  # spec-case: NEW-CORE-ZERO-RC-RESOURCES-1\n  ^\n",
+      "source_sha256": "ebecb8cc01d73f7b407c78c789b1b0a7b7741ff04ed28bf2e17b7eba1acd8e98"
+    }
+  }
+}

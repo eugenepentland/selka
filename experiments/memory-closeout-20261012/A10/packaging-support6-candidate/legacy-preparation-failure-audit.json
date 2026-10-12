@@ -1,0 +1,20 @@
+{
+  "scope": "read-only failure audit; no seed/shared-cache edits or reproducer executions",
+  "failed_log": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/provider-transfer-focused.log",
+  "failed_log_sha256": "02db14cc0229f4d9bd2b7bb09d44ecc27a8a1e6390601e2c80c93c470a495bb4",
+  "failed_log_text": "build-slot: FIFO ticket 785, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)\nbuild-slot: build slot 2, FIFO ticket 785 after 5s\nerror: failed to open object /home/epentland/.cache/mylang/components/artifacts/59f51976ca43711535f6e37fed89e68a6d8c789bde77f1351df42a9f706f0d63.build/cache/native-link-0dd02491ea98632f36fac76404df08bf/4292805a27bc2ec4837a2b5df9b60cdd2bd59c198054ac95594ef020a66ef11b.o: FileNotFound\ncomponents: command failed (exit 2): /home/epentland/.cache/mylang/components/seeds/234ed167a218092282ba74b74fd057259d381aa074b73559b55dd083ebbe6ff3/source/zig-out/focus/mylang\ntest-core\n+- verification action core member 0\n   +- verification action component-preparation member 0 failure\nerror: process exited with code 1\nfailed command: cd . && ./.zig-cache/o/d25f4101f9b52253a2f68040558360c7/selka-components --root /home/epentland/ai/canopy/mylang-memory-20261012/. --zig /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --install-dir /home/epentland/ai/canopy/mylang-memory-20261012/zig-out/libexec/mylang/components\n\nBuild Summary: 9/12 steps succeeded (1 failed)\ntest-core transitive failure\n+- verification action core member 0 transitive failure\n   +- verification action component-preparation member 0 failure\n\n",
+  "legacy_seed_commit": "0689d3407c17df34915aeb2a92e309af3a04921c",
+  "legacy_seed_compiler_sha256": "322535f89720f90957c5e475085a0f863ccfe797d850562210b792877166f393",
+  "legacy_seed_receipt_sha256": "67299f916a8db1adf3f43d10d4c41a308aa9b740fc2f7e86309383f2a50ae1ba",
+  "legacy_driver_sha256": "b8a78ffadf785cc40c48078ae96f2e05703f8263233b1e684ca7d9b99e9f118c",
+  "legacy_host_policy_sha256": "d7afd49d7542aa6b18fdc8141589dfeb81a4f4dee63764297b270757f391a661",
+  "legacy_expected_ld_cache_sha256": "fe063c1bee92cacf27776b62c04e35a2c71e7ed111ec3eaa542ba339410fcde3",
+  "actual_ld_cache_sha256": "d519185506fec90f5efbdc206f606f4c259891e83c4e98e48b9fa4694b64fbe6",
+  "cause": "Host closure mismatch disables native reuse. Immutable driver unitObjects unconditionally deletes pending uncached objects at function exit before link consumes them. Failure names native-link staging object. Same concrete defect fixed by 38dc781a897182ffbf1fff0906ec319a007a9154 in current source, absent from historical seed.",
+  "current_fix_commit": "38dc781a897182ffbf1fff0906ec319a007a9154",
+  "supported_resolution": "Select the actually qualified independent Support6 owned compiler using explicit C1 options, keeping immutable seed/default-selection history unchanged. Do not reset or silently repin historical seed.",
+  "separate_concurrency_observation": "component() uses deterministic key.build with remove/create and no process lock; concurrent same-key cold provisioning could race. No concurrent process evidence establishes that as this incident cause. Serialize same-cache cold provisioning until a separately reviewed fix exists.",
+  "qualification_evidence_commit": "f26a570e385743dd4046864575ce28ace7cf525b",
+  "counted_companion_commit": "aee50b1e191f837f3306ab1b89ed9f3e87e94009",
+  "compiler_variants": "Final Debug/RF host compiler builds can share independent RF component seed. Component identity includes actual component source, seed, target/toolchain and builder binary hashes, not host compiler optimization. Capture/verify manifests for each final installation; do not assume equal outputs from differing identities."
+}

@@ -1,0 +1,8 @@
+test_missing_legacy_optin_and_malformed_ownership_markers_refuse (verify_cache_test.CheckedComponentPackage.test_missing_legacy_optin_and_malformed_ownership_markers_refuse) ... ok
+test_owned_manifests_bind_both_component_artifacts (verify_cache_test.CheckedComponentPackage.test_owned_manifests_bind_both_component_artifacts) ... ok
+test_owned_marker_does_not_authorize_foreign_protocol_or_bad_binary (verify_cache_test.CheckedComponentPackage.test_owned_marker_does_not_authorize_foreign_protocol_or_bad_binary) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.014s
+
+OK

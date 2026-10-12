@@ -1,0 +1,12 @@
+{"name": "original-release-cold", "status": 0, "passed": true, "elapsed_ns": 14078726007, "max_rss_kib": "167060"}
+{"name": "original-release-warm", "status": 0, "passed": true, "elapsed_ns": 5253846780, "max_rss_kib": "33024"}
+{"name": "original-debug-cold", "status": 0, "passed": true, "elapsed_ns": 5358456311, "max_rss_kib": "57568"}
+{"name": "original-debug-warm", "status": 0, "passed": true, "elapsed_ns": 5254731778, "max_rss_kib": "31388"}
+{"name": "original-verified-cold", "status": 0, "passed": true, "elapsed_ns": 5358391416, "max_rss_kib": "66332"}
+{"name": "original-verified-warm", "status": 0, "passed": true, "elapsed_ns": 5254008930, "max_rss_kib": "33148"}
+{"name": "original-optimized-debug-cold", "status": 0, "passed": true, "elapsed_ns": 5351802714, "max_rss_kib": "63812"}
+{"name": "original-optimized-debug-warm", "status": 0, "passed": true, "elapsed_ns": 5252184497, "max_rss_kib": "33472"}
+{"name": "original-no-facts-cold", "status": 0, "passed": true, "elapsed_ns": 15268617112, "max_rss_kib": "64808"}
+{"name": "original-no-facts-warm", "status": 0, "passed": true, "elapsed_ns": 10266451151, "max_rss_kib": "31912"}
+{"name": "minimal-debug-cold", "status": 0, "passed": true, "elapsed_ns": 5256999029, "max_rss_kib": "55612"}
+{"name": "minimal-debug-warm", "status": 0, "passed": true, "elapsed_ns": 25496805123, "max_rss_kib": "30176"}

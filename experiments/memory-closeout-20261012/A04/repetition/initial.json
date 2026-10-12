@@ -1,0 +1,54 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+  "compiler_sha256": "c5e446afe1afca9a5bf424543329f78407684e2ac2a55ab15bd853dc0ed09a7b",
+  "results": [
+    {
+      "mode": "ordinary",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "check",
+        "tests/lang/a04_repetition_ownership.my"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "a04_repetition_ownership.my:36:168: error[E_TYPE]: expected u64, found FixedArray[u8, 0]\n      return left == \"\u00e9\u00e9\u00e9\" and right == \"\u00e9\u00e9\u00e9\" and log == [1, 2, 3, 4] and repeat_text(\"a\", -2) == \"\" and repeat_bytes(b\"a\", 0) == b\"\" and \"\" * huge == \"\" and huge * b\"\" == b\"\"\n                                                                                                                                                                         ^\n"
+    },
+    {
+      "mode": "ordinary",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "run",
+        "tests/lang/a04_repetition_ownership.my",
+        "--release"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "tests/lang/a04_repetition_ownership.my:36:168: error[E_TYPE]: expected u64, found FixedArray[u8, 0]\n      return left == \"\u00e9\u00e9\u00e9\" and right == \"\u00e9\u00e9\u00e9\" and log == [1, 2, 3, 4] and repeat_text(\"a\", -2) == \"\" and repeat_bytes(b\"a\", 0) == b\"\" and \"\" * huge == \"\" and huge * b\"\" == b\"\"\n                                                                                                                                                                         ^\n"
+    },
+    {
+      "mode": "zero-rc",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "check",
+        "tests/lang/a04_repetition_ownership.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "a04_repetition_ownership.my:36:168: error[E_TYPE]: expected u64, found FixedArray[u8, 0]\n      return left == \"\u00e9\u00e9\u00e9\" and right == \"\u00e9\u00e9\u00e9\" and log == [1, 2, 3, 4] and repeat_text(\"a\", -2) == \"\" and repeat_bytes(b\"a\", 0) == b\"\" and \"\" * huge == \"\" and huge * b\"\" == b\"\"\n                                                                                                                                                                         ^\n"
+    },
+    {
+      "mode": "zero-rc",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "run",
+        "tests/lang/a04_repetition_ownership.my",
+        "--experimental-zero-rc",
+        "--release"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "tests/lang/a04_repetition_ownership.my:36:168: error[E_TYPE]: expected u64, found FixedArray[u8, 0]\n      return left == \"\u00e9\u00e9\u00e9\" and right == \"\u00e9\u00e9\u00e9\" and log == [1, 2, 3, 4] and repeat_text(\"a\", -2) == \"\" and repeat_bytes(b\"a\", 0) == b\"\" and \"\" * huge == \"\" and huge * b\"\" == b\"\"\n                                                                                                                                                                         ^\n"
+    }
+  ]
+}

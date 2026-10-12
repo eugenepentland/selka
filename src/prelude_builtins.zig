@@ -161,6 +161,7 @@ fn sequenceElement(comptime Checker: type, checker: *Checker, ty: typed.Type, sp
 
 const unsupported = "E_PRELUDE_TYPE";
 const eArity = "E_ARITY";
+const eResultOperation = "E_RESULT_OPERATION";
 
 /// Build one prelude builtin call, or null when a later recognizer owns this call.
 fn buildCall(comptime Checker: type, checker: *Checker, span: source.Span, name: []const u8, arguments: []const typed.NodeId) Error!?typed.Node {
@@ -461,6 +462,11 @@ fn extreme(comptime Checker: type, checker: *Checker, span: source.Span, argumen
     const ty = nodeType(Checker, checker, left);
     if (ty != nodeType(Checker, checker, right)) return checker.sink.fail(unsupported, span, "min and max require two values of the same type");
     const family = familyOf(Checker, checker, ty) orelse return checker.sink.fail(unsupported, span, "min and max require int, float or str values");
+    if (family == .text) return .{ .span = span, .ty = ty, .data = .{ .borrow_selection = .{
+        .kind = if (greatest) .max_text else .min_text,
+        .first = left,
+        .second = right,
+    } } };
     const b = builder(Checker, checker, span);
     const result = try b.local(ty);
     // PRELUDE-EXTREME-2: each argument evaluates once, left to right; the
@@ -491,17 +497,17 @@ fn extremeOfList(comptime Checker: type, checker: *Checker, span: source.Span, i
     const owner = try b.local(list);
     const index = try b.local(.i64);
     const limit = try b.local(.i64);
-    const result = try b.local(element);
+    const result = try b.local(.i64);
     const i = try b.read(index);
     const guard = try b.stmt(.{ .discard = try b.operation(owner, .iteration_check, &.{try b.read(limit)}) });
     const candidate = try b.operation(owner, .read, &.{i});
     const replace = comptime if (greatest) less else swapLess;
-    const condition = try replace(Checker, checker, span, family, try b.read(result), candidate);
+    const condition = try replace(Checker, checker, span, family, try b.operation(owner, .read, &.{try b.read(result)}), candidate);
     const body = try b.stmt(.{ .block = try keep(Checker, checker, &.{
         guard,
         try b.stmt(.{ .branch = .{
             .condition = condition,
-            .then_body = try b.stmt(.{ .assign = .{ .slot = result, .value = try b.operation(owner, .read, &.{i}) } }),
+            .then_body = try b.stmt(.{ .assign = .{ .slot = result, .value = i } }),
             .else_body = null,
         } }),
     }) });
@@ -511,14 +517,16 @@ fn extremeOfList(comptime Checker: type, checker: *Checker, span: source.Span, i
     }) });
     const loop = checker.loops.next;
     checker.loops.next += 1;
-    // An empty list has no smallest element, and the first read reports it as a located trap.
+    // Keep only a scalar selection across the loop; the selected element borrows
+    // from owner once at the end. The first read preserves the empty-list trap.
     return b.block(&.{
         try b.stmt(.{ .initialize = .{ .slot = owner, .value = input } }),
         try b.stmt(.{ .initialize = .{ .slot = index, .value = try b.integer(1) } }),
         try b.stmt(.{ .initialize = .{ .slot = limit, .value = try b.length(owner) } }),
-        try b.stmt(.{ .initialize = .{ .slot = result, .value = try b.operation(owner, .read, &.{try b.integer(0)}) } }),
+        try b.stmt(.{ .discard = try b.operation(owner, .read, &.{try b.integer(0)}) }),
+        try b.stmt(.{ .initialize = .{ .slot = result, .value = try b.integer(0) } }),
         try b.stmt(.{ .loop = .{ .id = loop, .condition = try b.binary(.lt, i, try b.read(limit), .bool), .body = body, .step = step } }),
-    }, try b.read(result));
+    }, try b.operation(owner, .read, &.{try b.read(result)}));
 }
 
 /// `sorted(xs)`, `sorted(xs, key=callback)` and `sorted(xs, reverse=flag)`: a
@@ -529,13 +537,15 @@ fn sortedCall(comptime Checker: type, checker: *Checker, call: SortedCall) Error
     const span = call.sort.span;
     const b = builder(Checker, checker, span);
     const element = try listElement(Checker, checker, nodeType(Checker, checker, call.input), span);
+    if (typed.requiresHandling(nodeType(Checker, checker, call.input), checker.catalog.records))
+        return checker.sink.fail(eResultOperation, span, "sorted cannot implicitly copy pending Results; handle the elements first");
     if (call.sort.key == null and (element == .bool or !orderedField(Checker, checker, element)))
         return checker.sink.fail(unsupported, span, "sorted requires a list of int, float, str or bytes values, or a key=callback that maps each element to one");
     const list = try collections.listType(&checker.catalog, element, span);
     const result = try b.local(list);
     var statements: std.ArrayList(typed.StatementId) = .empty;
     if (call.sort.key == null and call.sort.reverse == null) {
-        try statements.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = result, .value = try retain(Checker, checker, span, try b.slice(call.input, null, null)) } }));
+        try statements.append(checker.allocator, try b.stmt(.{ .initialize = .{ .slot = result, .value = try retain(Checker, checker, span, try b.access(call.input, .copy, &.{}, false)) } }));
         try statements.append(checker.allocator, try b.stmt(.{ .discard = try b.operation(result, .sort, &.{}) }));
     } else {
         // A keyed copy is gathered already sorted from the original list into
@@ -786,7 +796,9 @@ fn copyListCall(comptime Checker: type, checker: *Checker, span: source.Span, in
     const sequence = ty.isAggregate() and checker.catalog.records[ty.recordIndex()].isCollection();
     if (!sequence or checker.catalog.records[ty.recordIndex()].collection.kind != .list)
         return checker.sink.fail(unsupported, span, "list requires a list, range, reversed source or dictionary view");
-    return b.slice(input, null, null);
+    if (typed.requiresHandling(ty, checker.catalog.records))
+        return checker.sink.fail(eResultOperation, span, "list cannot implicitly copy pending Results; use an explicit .copy() and handle both lists");
+    return b.access(input, .copy, &.{}, false);
 }
 
 /// Compare two texts the way `sort.compare_strs` does, by Unicode code point order.

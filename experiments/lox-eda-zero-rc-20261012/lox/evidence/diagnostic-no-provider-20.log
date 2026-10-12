@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1396, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1396 after 20s
+interpreter.my:407:50: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+                      mut env = try enter_function(mut it, function, function.closure, count, callee_slot + 1, line)
+                                                   ^

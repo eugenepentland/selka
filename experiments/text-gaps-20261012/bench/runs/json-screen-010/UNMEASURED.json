@@ -1,0 +1,10 @@
+{
+  "schema": "text-gap-unmeasured-v1",
+  "status": "canceled-before-admission",
+  "reason": "Root instruction: prioritize local main merge; resume after merge.",
+  "ticket": 484,
+  "lease_started": false,
+  "samples": 0,
+  "candidate_receipt_sha256": "2507dc0d3711dd2438970505bb66b954ee909f2d093ed7f00d2e3ec3fe910f72",
+  "resume": "Create a new unique run after merge; preserve this unmeasured queue evidence."
+}

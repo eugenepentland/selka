@@ -21,9 +21,8 @@ test "the CLI test binary names neither its build tree nor the executables it ru
     try testing.expectEqual(@as(usize, 0), try paths.occurrencesOutsideDebug(testing.io, std.Io.Dir.cwd(), self, std.fs.path.dirname(paths.componentBuilderPath()).?));
     try testing.expect(try paths.occurrencesOutsideDebug(testing.io, std.Io.Dir.cwd(), self, paths.component_builder_variable) > 0);
 }
-// Mirror src/semantic_store.zig's directory format: this CLI test cannot
-// import files outside its Zig module root.
-const semantic_cache_version = "semantic-cache-v7";
+// Bind corruption fixtures to the compiler's exported durable-store format.
+const semantic_cache_version = @import("test_options").semantic_cache_version;
 
 // spec: VALUE-SEMANTICS-11
 test "a scalar-only mut record parameter writes the caller" {

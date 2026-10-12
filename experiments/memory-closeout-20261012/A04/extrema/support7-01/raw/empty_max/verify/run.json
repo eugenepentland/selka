@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/verify/program"
+  ],
+  "status": 1,
+  "elapsed_ns": 1157228,
+  "stdout": "",
+  "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/verify/main.my:3:16: error[R_LIST_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/verify/main.my:3:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n"
+}

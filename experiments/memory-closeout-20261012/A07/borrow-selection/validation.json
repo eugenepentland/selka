@@ -1,0 +1,48 @@
+{
+  "base": "385ed7b1f5e02c937643495f8d5a09bd171ce488",
+  "feature": "readonly managed dictionary get(default)",
+  "status": "focused passed; integration qualification pending",
+  "tests": {
+    "command": "scripts/build-slot.sh build $ZIG build test-core -Dtest-filter=\"zero RC borrowed defaults\" -j$MYLANG_DEV_JOBS --maxrss $MYLANG_DEV_MAXRSS",
+    "passed": 6,
+    "failed": 0,
+    "native_modes": [
+      "unoptimized debug",
+      "verified release"
+    ],
+    "includes": [
+      "nested selections and eager fallback evaluation",
+      "64-level shared-root selection",
+      "both root invalidation refusal",
+      "fresh fallback success/error cleanup",
+      "malformed producer and consuming use refusal",
+      "noalloc failure does not certify malformed marker",
+      "readonly receiver mutation refusal"
+    ]
+  },
+  "guardian": {
+    "command": "guardian-check all . --gate",
+    "passed": 88
+  },
+  "source_sha256": {
+    "SPEC.md": "953fed124e75b2b5436c3d7e09de3efbfdc1c6d2530c4248bcad436149d796e9",
+    "src/core/borrow_selection.zig": "9e3a7612c0ef6ba55651c3bf73b315df8d37ea464b29bedf2679b9dc381380f0",
+    "src/core/build.zig": "18296fdde0973baf6cbdcaeed2553a2e6eb43a077e091052edbe2a23c03b5a2f",
+    "src/core/build_dict.zig": "3fbdeef049eb39b49d9e40e6459e90b7a3715f4eb9842f85ddd8d60b754f3d11",
+    "src/core/own.zig": "f54c14cc4dc52d30a66a67abc54ea2ae94413922b05606a425dd19157cf310a7",
+    "src/core/single_owner.zig": "858ad07f55d9b92e895b71a449e950c1c22970919f43a66fc925278dea392bf7",
+    "src/core/emit_llvm.zig": "3899bf2491a601a055293cad9ab8b105edc22f2e37b2b7814c256d48b3f5acbd",
+    "src/core/verify_ir.zig": "e4666bc7ea9f2dd5fbde1fcbf6200d1f1446ba7f3d5fefb629e353d6bbfbb241",
+    "src/core/passes.zig": "07f8d99de49fd66fd3e7cdc6cb166ea8874e50c61118b90fda7fa051ef8e7e7f",
+    "src/core/allocation_contract.zig": "2adeea18674be0c6de7e883939fd581018e6638d99412cd08bbc9d68f611824f",
+    "src/core/optimization_cache.zig": "824c87075f09cb59d4fb5879d07627830a519ab46bfb9de3d380d7b7b9a31286",
+    "src/core/pipeline.zig": "98a7d1dc573d6271a9540551b8b2a6de0c2d899bf67c2167d6dd787de34ca253",
+    "src/core/zero_rc_test.zig": "6f0e4587b0d069bb15f9b62209c5bcc83a3d03294388c30d25e3c9f997e9c197"
+  },
+  "limits": [
+    "Final C1/C2/C3 not measured here.",
+    "Central decoded-cache guard implemented; A08 full replay/corruption qualification pending.",
+    "Two duplicate local source overlays (providerStore none guard and restrict_resource scope) excluded from feature commit; integrated equivalents already exist.",
+    "Direct receiver mutation test first expected ownership diagnostic; actual earlier frontend E_ASSIGNMENT_TARGET preserved and separately asserted."
+  ]
+}

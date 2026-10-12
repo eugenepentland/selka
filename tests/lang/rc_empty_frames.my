@@ -21,7 +21,7 @@ func loop(mut points: Point[], count: int) -> int:
 
 public func test_caller_snapshot_and_negative_index_survive_unlinked_callee() -> bool:
     mut points = [Point(x=3, y=5), Point(x=7, y=11)]
-    mut before = points
+    mut before = points.copy()
     mut result = advance(mut points, -1, 13)
     return result == 20 and points[1].x == 20 and before[1].x == 7 and points[0].y == 5
 
@@ -38,7 +38,7 @@ func callback(mut points: Point[]):
 
 public func test_completed_callback_keeps_caller_and_snapshot_independent() -> bool:
     mut points = [Point(x=3, y=5)]
-    mut before = points
+    mut before = points.copy()
     callback(mut points)
     return points[0].x == 23 and len(points) == 2 and before[0].x == 3 and len(before) == 1
 

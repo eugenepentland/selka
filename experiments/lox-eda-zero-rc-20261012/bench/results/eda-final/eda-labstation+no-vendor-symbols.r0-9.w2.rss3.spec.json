@@ -1,0 +1,87 @@
+{
+  "cell": "eda/labstation+no-vendor-symbols",
+  "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+  "arms": {
+    "zig-safe": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-zig-safe",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/labstation+no-vendor-symbols/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/labstation+no-vendor-symbols",
+      "--no-vendor-symbols"
+    ],
+    "zig-fast": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-zig-fast",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/labstation+no-vendor-symbols/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/labstation+no-vendor-symbols",
+      "--no-vendor-symbols"
+    ],
+    "rust": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-rust",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/labstation+no-vendor-symbols/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/labstation+no-vendor-symbols",
+      "--no-vendor-symbols"
+    ],
+    "go": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-go",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/labstation+no-vendor-symbols/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/labstation+no-vendor-symbols",
+      "--no-vendor-symbols"
+    ],
+    "mylang-original-rc": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/original-rc",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/labstation+no-vendor-symbols/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/labstation+no-vendor-symbols",
+      "--no-vendor-symbols"
+    ],
+    "mylang-migrated-rc": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/migrated-rc",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/labstation+no-vendor-symbols/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/labstation+no-vendor-symbols",
+      "--no-vendor-symbols"
+    ],
+    "mylang-zero-rc": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/zero-rc",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/labstation+no-vendor-symbols/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/labstation+no-vendor-symbols",
+      "--no-vendor-symbols"
+    ]
+  },
+  "oracle": "zig-safe",
+  "files": [
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/labstation+no-vendor-symbols/model.sexp",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/manifest.json"
+  ],
+  "out_dir": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/labstation+no-vendor-symbols",
+  "golden_dir": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/labstation+no-vendor-symbols/expected",
+  "identity_dirs": [
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/labstation+no-vendor-symbols/expected"
+  ]
+}

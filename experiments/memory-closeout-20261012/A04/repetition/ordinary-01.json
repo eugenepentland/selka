@@ -1,0 +1,63 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+  "compiler_sha256": "077aa182f221694ed29e1757a1a6f249bdd8196018804f8e459747c8c193dff8",
+  "results": [
+    {
+      "name": "existing_expressions",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "test",
+        "tests/lang/python_expressions.my",
+        "--release",
+        "--verify-facts",
+        "--force",
+        "--json",
+        "--jobs",
+        "1"
+      ],
+      "status": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"python_expressions::test_a_chain_evaluates_each_operand_once_and_stops_at_a_false_link\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"df75332782b5db6f24a68d12e8d6bbeb48b281d6875284790bc0ae868aa339e5\",\"component\":\"ec2ddf2d839b4c90f97407b33f07e6cfe5ed905a8b4b168c0e78ae258346d1b7\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"tests/lang/python_expressions.my#b2e9449e849f57c4608bd526f2358be05a4e940f145bafb3ffafa0472b9c1993\",\"producer\":{\"facts\":{\"fresh\":38,\"reused\":0,\"fallback\":29,\"decoded\":0},\"lowering\":{\"fresh\":29,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":38,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":152,\"index_edges\":160,\"affected_nodes\":38,\"closure_nodes\":92,\"closure_edges\":32,\"reused_tests\":0,\"planned_tests\":17},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":54020,\"save_bytes_prepared\":121630,\"sequence_locks\":93}},\"nanoseconds\":{\"lowering\":32701808,\"facts\":21836796,\"graph\":786160,\"planner\":176434825,\"keys\":157406,\"publication\":18067797,\"total\":250867101},\"transport\":{\"request_bytes\":1976,\"reply_bytes\":812,\"startups\":1}}}},{\"name\":\"python_expressions::test_a_chain_types_each_literal_by_its_neighbour\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"c02951671a66be4f87bb82547bea12fc855e767654669c50850effc4a6accb17\",\"component\":\"ec2ddf2d839b4c90f97407b33f07e6cfe5ed905a8b4b168c0e78ae258346d1b7\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_comparison_chain_reads_as_python_and\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"cb36a6c66ff33ff4855e4d8fb54113f87b9739f63accfa5ebf9e7af71e797931\",\"component\":\"ec2ddf2d839b4c90f97407b33f07e6cfe5ed905a8b4b168c0e78ae258346d1b7\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_constant_chain_folds_and_short_circuits\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"43401ba6489f9b662e4b4f44d759357e657bcb371e0431738e69d3288d309796\",\"component\":\"ec2ddf2d839b4c90f97407b33f07e6cfe5ed905a8b4b168c0e78ae258346d1b7\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_generic_body_checks_each_link_of_a_chain\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"16c33dbe633ce17b88e46751a1a61f7e40883c2609024f55eeeffa38173b50de\",\"component\":\"ec2ddf2d839b4c90f97407b33f07e6cfe5ed905a8b4b168c0e78ae258346d1b7\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_generic_body_orders_its_str_operands\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"a5a322be604d715a2682d20184d23da4c368b6e5f3a0c59782ae6a7e8dd15c84\",\"component\":\"ec2ddf2d839b4c90f97407b33f07e6cfe5ed905a8b4b168c0e78ae258346d1b7\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_generic_body_repeats_text\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"d74648743030456303dfca866dc8f0bb55e9054d50da9ef74642e6fa864771cc\",\"component\":\"ec2ddf2d839b4c90f97407b33f07e6cfe5ed905a8b4b168c0e78ae258346d1b7\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_list_repeats_by_an_integer_into_independent_values\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"90e04115624867e0d3a4aa0564714c25474c8b51282c9c0d2c07f5f058b9c929\",\"component\":\"ec2ddf2d839b4c90f97407b33f07e6cfe5ed905a8b4b168c0e78ae258346d1b7\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_parenthesized_comparison_is_a_bool_operand\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"2f56683abc573c80710d4c21475d614c7aea5eb2d72807c96d3fad9ac3c80a5a\",\"component\":\"ec2ddf2d839b4c90f97407b33f07e6cfe5ed905a8b4b168c0e78ae258346d1b7\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_repetition_evaluates_its_operands_once_in_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"0d4ce6e054a11d052e118d7694fcb82b2dbf741234aae5041150a24d46260b4d\",\"component\":\"ec2ddf2d839b4c90f97407b33f07e6cfe5ed905a8b4b168c0e78ae258346d1b7\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_stepped_range_feeds_a_comprehension_and_list\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"77ecb932961ab9fc9fbb7c5c6fb0ceb3207a2b77f888259254bc5b464cda3c83\",\"component\":\"ec2ddf2d839b4c90f97407b33f07e6cfe5ed905a8b4b168c0e78ae258346d1b7\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_an_int_times_a_float_is_still_arithmetic\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"6bfcae816181273bed011a7de4b6efec722bf0e64082f25b32f8fdf0e4465744\",\"component\":\"ec2ddf2d839b4c90f97407b33f07e6cfe5ed905a8b4b168c0e78ae258346d1b7\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_bytes_order_by_octet_with_a_prefix_first\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"21a36da6617758fdb3f9c3001a6301c0870b7f7ff68b803182e6b923be9c47b6\",\"component\":\"ec2ddf2d839b4c90f97407b33f07e6cfe5ed905a8b4b168c0e78ae258346d1b7\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_range_counts_by_its_step_in_either_direction\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"2fe0aa650dfe48ebff19389d7c4a741ffffd9a708e881789be4fd6a8593945ad\",\"component\":\"ec2ddf2d839b4c90f97407b33f07e6cfe5ed905a8b4b168c0e78ae258346d1b7\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_str_and_bytes_repeat_by_an_integer_on_either_side\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ced4110f591954f83737e9d9fe46e1522ce78e0fa7ef4058b16702bb190eb9c3\",\"component\":\"ec2ddf2d839b4c90f97407b33f07e6cfe5ed905a8b4b168c0e78ae258346d1b7\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_str_orders_by_code_point_with_a_prefix_first\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"9ad858586b64cde1189418d9349795da1425b6b11ad6a2ecbab4cbc170c5196e\",\"component\":\"ec2ddf2d839b4c90f97407b33f07e6cfe5ed905a8b4b168c0e78ae258346d1b7\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_the_last_step_never_overflows_the_counter_type\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"065ccd012b9bfa4f9543e74035866b43bcca407cb8d3013c6a7739d06a42f638\",\"component\":\"ec2ddf2d839b4c90f97407b33f07e6cfe5ed905a8b4b168c0e78ae258346d1b7\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":17,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/python_expressions.my\"]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "new_contract",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "run",
+        "tests/lang/a04_repetition_ownership.my",
+        "--release"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "overflow_signed",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/repetition/overflow_signed.my",
+        "--release",
+        "--max-memory",
+        "8M"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "error[R_MEMORY_BUDGET]: memory budget exhausted; raise it with --max-memory=SIZE\n"
+    },
+    {
+      "name": "overflow_unsigned",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/repetition/overflow_unsigned.my",
+        "--release",
+        "--max-memory",
+        "8M"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "error[R_MEMORY_BUDGET]: memory budget exhausted; raise it with --max-memory=SIZE\n"
+    }
+  ]
+}

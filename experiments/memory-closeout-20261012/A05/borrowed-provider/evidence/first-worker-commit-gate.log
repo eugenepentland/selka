@@ -1,0 +1,36 @@
+build-slot: FIFO ticket 273, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 273 after 5s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10026 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 6/88 failed (spec, import-resolution, orphan-files, test-reachability, test-no-conditional, bool-ops-per-condition)
+guardian: failures grouped by check (6):
+  spec (8 findings)
+    - tag in a never-compiled file: CAPABILITY-FIELD-METHOD-1 in src/core/borrowed_provider_cache_test.zig
+      fix: these tags cover nothing — their file's tests never compile. Reference it from a test root (see the test-reachability check), or the bullets above stay unverified.
+    - tag in a never-compiled file: CAPABILITY-FIELD-METHOD-1 in src/core/borrowed_provider_test.zig
+    - tag in a never-compiled file: CAPABILITY-FIELD-METHOD-1 in src/core/borrowed_provider_test.zig
+    - +5 more — use --verbose for full detail
+  import-resolution (1 finding)
+    - src/core/borrowed_provider_cache_test.zig:59: unresolved import "marker_validation.zig" — no file at src/core/marker_validation.zig
+      fix: create src/core/marker_validation.zig, fix the path, or — if "marker_validation.zig" is a build.zig module name — rename the module so it does not end in .zig
+  orphan-files (3 findings)
+    - src/core/borrowed_provider.zig: src/core/borrowed_provider.zig
+      fix: import the file from a reachable module, or add it to [orphan_files] roots in guardian.toml.
+    - src/core/borrowed_provider_cache_test.zig: src/core/borrowed_provider_cache_test.zig
+    - src/core/borrowed_provider_test.zig: src/core/borrowed_provider_test.zig
+  test-reachability (2 findings)
+    - src/core/borrowed_provider_cache_test.zig: 1 test block(s) never compile — no test root references this file
+      fix: reference the file from a test root's module graph (e.g. `_ = @import("path/to/file.zig");` in the root's test block).
+    - src/core/borrowed_provider_test.zig: 7 test block(s) never compile — no test root references this file
+  test-no-conditional (2 findings)
+    - src/core/borrowed_provider_cache_test.zig:37: if at top level of test body
+      fix: one top-level loop is fine; merge multiple loops into one table-driven loop, split a branch into two independent tests, or hoist the computation into a helper. A multi-loop finding names the loop to hoist — the assertion-free one when there is one, otherwise the extra loop itself.
+    - src/core/borrowed_provider_test.zig:156: more than one top-level loop — a test may keep one; the loop at line 147 asserts nothing, so hoist that one into a named helper
+  bool-ops-per-condition (2 findings)
+    - src/core/borrowed_provider.zig:17: condition has 4 boolean ops (cap 3)
+      fix: split into nested/sequential ifs, or extract into a named bool.
+    - src/core/borrowed_provider.zig:104: condition has 4 boolean ops (cap 3)
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

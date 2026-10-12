@@ -71,7 +71,16 @@ const Dumper = struct {
                 try self.node(value, depth + 1);
             },
             .initialize, .assign => |store| {
-                try self.out.print(self.allocator, " %{d}{s}\n", .{ @backingInt(store.slot), if (store.element) " element" else "" });
+                try self.out.print(self.allocator, " %{d}{s}", .{ @backingInt(store.slot), if (store.element) " element" else "" });
+                if (store.unpack) |slots| {
+                    try self.out.appendSlice(self.allocator, " unpack=[");
+                    for (slots, 0..) |slot, index| {
+                        if (index != 0) try self.out.appendSlice(self.allocator, ", ");
+                        if (slot) |field| try self.out.print(self.allocator, "%{d}", .{@backingInt(field)}) else try self.out.appendSlice(self.allocator, "_");
+                    }
+                    try self.out.appendSlice(self.allocator, "]");
+                }
+                try self.out.appendSlice(self.allocator, "\n");
                 try self.node(store.value, depth + 1);
             },
             .branch => |branch| {
@@ -139,6 +148,11 @@ const Dumper = struct {
                 try self.out.print(self.allocator, " {s}\n", .{self.program.functions[@backingInt(call.function)].name});
                 for (call.arguments) |argument| try self.node(argument, depth + 1);
                 if (call.evaluation) |evaluation| try self.statement(evaluation.body, depth + 1);
+            },
+            .borrow_selection => |selection| {
+                try self.out.print(self.allocator, " {s}\n", .{@tagName(selection.kind)});
+                try self.node(selection.first, depth + 1);
+                try self.node(selection.second, depth + 1);
             },
             .block_value => |block| {
                 try self.out.appendSlice(self.allocator, "\n");

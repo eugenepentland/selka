@@ -1,0 +1,10 @@
+{
+  "command": [
+    ".zig-cache/o/246c5d773299b5a4dd2c645e0df22ad5/mylang",
+    "dump-ir",
+    ".tmp/memory-closeout/A02/scalar-child-validation/sources/reduced.my",
+    "--experimental-zero-rc",
+    "--facts"
+  ],
+  "status": 0
+}

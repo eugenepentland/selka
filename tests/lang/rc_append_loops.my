@@ -74,7 +74,7 @@ public func test_snapshot_and_managed_children_keep_full_transfer() -> bool:
     mut items: int[] = []
     mut children: int[][] = []
     for index in range(17):
-        mut snapshot = items
+        mut snapshot = items.copy()
         items.append(index)
         children.append(snapshot)
     return children[0] == [] and children[16] == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] and len(items) == 17

@@ -1,0 +1,11 @@
+{
+  "source_base": "07f16c65415819c36c46eb0657530abce734e395",
+  "qualified_source_is_worktree_overlay": true,
+  "source_manifest": "../source-manifest-prototype-02.json",
+  "source_manifest_sha256": "4eaae3fdb146876c8c258ab1027cf43ea687b7178ac3c9384252c458b85498a2",
+  "compiler_sha256": "6eb87752337bac179e43bdf30fc4163dfc983ff6db8a43048751bc4c8b130f6e",
+  "guest_source": "tests/lang/a04_borrow_selections.my",
+  "guest_source_sha256": "2ee970b40ca3e130d48da34189ed0d103677b24bb6d5751ddf174852a23f15d2",
+  "schema_dependency_commit": "779ea9a62d0bdbe6f62f7fa1cb2fc243cb9ba33f",
+  "post_build_changes": "Coordinator SPEC prose only; no production implementation or fixture changes after source freeze."
+}

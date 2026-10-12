@@ -1,0 +1,4 @@
+func main(out: Stream) -> int:
+    const data = b"a" * 32
+    out.print(len(data))
+    return 0

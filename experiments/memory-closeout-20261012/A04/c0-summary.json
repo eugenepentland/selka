@@ -1,0 +1,174 @@
+{
+  "strings": {
+    "release": {
+      "status": "passed",
+      "rc_free": true,
+      "managed_leak_free": true,
+      "memory": {
+        "allocs": 103,
+        "alloc_bytes": 6816,
+        "frees": 103,
+        "reallocs": 0,
+        "peak_live_bytes": 352,
+        "live_bytes_at_exit": 0
+      }
+    }
+  },
+  "path": {
+    "release": {
+      "status": "passed",
+      "rc_free": true,
+      "managed_leak_free": true,
+      "memory": {
+        "allocs": 130,
+        "alloc_bytes": 8160,
+        "frees": 130,
+        "reallocs": 0,
+        "peak_live_bytes": 704,
+        "live_bytes_at_exit": 0
+      }
+    }
+  },
+  "codecs": {
+    "release": {
+      "status": "passed",
+      "rc_free": true,
+      "managed_leak_free": true,
+      "memory": {
+        "allocs": 185,
+        "alloc_bytes": 31632,
+        "frees": 185,
+        "reallocs": 0,
+        "peak_live_bytes": 1896,
+        "live_bytes_at_exit": 0
+      }
+    }
+  },
+  "byte_builder": {
+    "release": {
+      "status": "passed",
+      "rc_free": true,
+      "managed_leak_free": true,
+      "memory": {
+        "allocs": 93,
+        "alloc_bytes": 225000,
+        "frees": 93,
+        "reallocs": 7,
+        "peak_live_bytes": 331256,
+        "live_bytes_at_exit": 0
+      }
+    }
+  },
+  "json": {
+    "release": {
+      "status": "passed",
+      "rc_free": true,
+      "managed_leak_free": true,
+      "memory": {
+        "allocs": 538,
+        "alloc_bytes": 38720,
+        "frees": 538,
+        "reallocs": 0,
+        "peak_live_bytes": 9952,
+        "live_bytes_at_exit": 0
+      }
+    }
+  },
+  "ownership_contracts": {
+    "release": {
+      "status": "passed",
+      "rc_free": true,
+      "managed_leak_free": true,
+      "memory": {
+        "allocs": 1339,
+        "alloc_bytes": 171760,
+        "frees": 1339,
+        "reallocs": 0,
+        "peak_live_bytes": 8424,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "debug": {
+      "status": "passed",
+      "rc_free": true,
+      "managed_leak_free": true,
+      "memory": {
+        "allocs": 1347,
+        "alloc_bytes": 172336,
+        "frees": 1347,
+        "reallocs": 0,
+        "peak_live_bytes": 8424,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "verify": {
+      "status": "passed",
+      "rc_free": true,
+      "managed_leak_free": true,
+      "memory": {
+        "allocs": 1339,
+        "alloc_bytes": 171760,
+        "frees": 1339,
+        "reallocs": 0,
+        "peak_live_bytes": 8424,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "optimized_debug": {
+      "status": "passed",
+      "rc_free": true,
+      "managed_leak_free": true,
+      "memory": {
+        "allocs": 1339,
+        "alloc_bytes": 171760,
+        "frees": 1339,
+        "reallocs": 0,
+        "peak_live_bytes": 8424,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "no_facts": {
+      "status": "passed",
+      "rc_free": true,
+      "managed_leak_free": true,
+      "memory": {
+        "allocs": 1341,
+        "alloc_bytes": 171952,
+        "frees": 1341,
+        "reallocs": 0,
+        "peak_live_bytes": 8424,
+        "live_bytes_at_exit": 0
+      }
+    }
+  },
+  "json_lookup": {
+    "release": {
+      "status": "passed",
+      "rc_free": true,
+      "managed_leak_free": true,
+      "memory": {
+        "allocs": 153,
+        "alloc_bytes": 12064,
+        "frees": 153,
+        "reallocs": 0,
+        "peak_live_bytes": 2080,
+        "live_bytes_at_exit": 0
+      }
+    }
+  },
+  "view_contracts": {
+    "release": {
+      "status": "passed",
+      "rc_free": true,
+      "managed_leak_free": true,
+      "memory": {
+        "allocs": 10,
+        "alloc_bytes": 640,
+        "frees": 10,
+        "reallocs": 0,
+        "peak_live_bytes": 192,
+        "live_bytes_at_exit": 0
+      }
+    }
+  }
+}

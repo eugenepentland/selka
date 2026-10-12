@@ -1,0 +1,1 @@
+{"arguments": ["--request", "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/work/tmps7q2n3bp/request.bin"], "request_sha256": "08e3655e1717040de4c88d7bfe4384ad50e63474dd50466534b14e12f79ea053", "status": 2, "stderr": "test-index: request edge count exceeds limit\n"}

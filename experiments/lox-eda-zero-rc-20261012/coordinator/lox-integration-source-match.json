@@ -1,0 +1,151 @@
+{
+  "status": "passed",
+  "integrated_commit": "70083062b",
+  "files": [
+    {
+      "file": "NOTES.md",
+      "sha256": "f2d18bfa0845c2f022d39ceb52de5cf86c21d891124196b39c41d509a00b3247"
+    },
+    {
+      "file": "ast.my",
+      "sha256": "1fb65ed5a17d23d337b822e263e974886f06386365e869b07fc418d96afe3e46"
+    },
+    {
+      "file": "bench.json",
+      "sha256": "915ce6f25effd651a3fe3ce38997719a7cd2a26a307dbbb365a6d33a82c52a87"
+    },
+    {
+      "file": "chunk.my",
+      "sha256": "d78b6babd52503e76abcd88fe858d11e44ad43cdb45f7a436aa0adabdbf5b731"
+    },
+    {
+      "file": "compiler.my",
+      "sha256": "92f20efd56d2976bc8abf6e349dfb2dd00d7cd6db5a788a87cf054fd99e2ed90"
+    },
+    {
+      "file": "compiler_test.my",
+      "sha256": "57ef31985f79ddd7f36420430847c94bf3fda79b1bc1bc7fff56859ea3310e60"
+    },
+    {
+      "file": "driver.my",
+      "sha256": "7fc1224dd3e5b42a488a92f4f7282c198ec03fb0eccaa6516b63ca6d75be6c9c"
+    },
+    {
+      "file": "driver_cases.json",
+      "sha256": "da7be595d0c9ef93fe12fd6e7b732eb8bc6b955a796e43d7e375b52be45cc37a"
+    },
+    {
+      "file": "driver_tests.my",
+      "sha256": "7de9d76e841420434c3ee6195cd31cb3acfebd23d45c290b6ef49077bd87e99a"
+    },
+    {
+      "file": "heap.my",
+      "sha256": "58ca74ce34b70b7d02d36f986cfc363462b72fc8b31c17d6963c13733b21abfc"
+    },
+    {
+      "file": "heap_test.my",
+      "sha256": "163e84ed66b8b77248337b0a04789993a63f87ccb4beda704dc14fbe2c346cc5"
+    },
+    {
+      "file": "interpreter.my",
+      "sha256": "1e1265144984c4241d78441b3f959dde2afc07904446d050b4c09b09bf6498c9"
+    },
+    {
+      "file": "lox_strings.my",
+      "sha256": "02a517589bf27891e2a062f525fe711a5d1c5af42eae73b8943ec8d69539c091"
+    },
+    {
+      "file": "lox_strings_test.my",
+      "sha256": "ef5d217fe56c99212cd02b137f8bd75e458a6ddf89df07d7f4c10df0d85b51ae"
+    },
+    {
+      "file": "main.my",
+      "sha256": "641f72b214650751a3799292bb9f9900c0ee191a4ee9b51cd6c5d47da731dc3f"
+    },
+    {
+      "file": "natives.my",
+      "sha256": "275a01cc19f99e51ed04ca2c45fb997e9df1a61ac83bfbcb71e3344ccb5a8bc8"
+    },
+    {
+      "file": "object.my",
+      "sha256": "d7676af7b94ffecfa563e2aa1cbdda39f9dc15934e0268aa168cb8630a111f93"
+    },
+    {
+      "file": "output.my",
+      "sha256": "3a2e104f0f7e7fd5b5b281d38cd39ee7cf32d0cb06816a90bcff57198d462b84"
+    },
+    {
+      "file": "parser.my",
+      "sha256": "9d240b7def5f585ad3571f1d6f78f079a32c5b1133569bee8de08c002ea70ddd"
+    },
+    {
+      "file": "parser_test.my",
+      "sha256": "7b87e451fc84c6f745246b5b716c2f49d4c994b75ac0149f28e3efdcf6115567"
+    },
+    {
+      "file": "repros/overlap_proof_blowup.my.txt",
+      "sha256": "5c510f5d5e2d441cb5397a7d6097e3689a040751373d2c9594db6754812b4dfb"
+    },
+    {
+      "file": "repros/print_long_float.my.txt",
+      "sha256": "0767918284593321e9589f14e3b90d9dc41239321d355be89aed055eef5cb132"
+    },
+    {
+      "file": "repros/print_union_class_payload.my.txt",
+      "sha256": "c03c987b6bf03db950bb8e98c238a76c0e7ea9c4c98c29c3e5748cd2c3a4ce8d"
+    },
+    {
+      "file": "repros/qbe_pm_slots.my.txt",
+      "sha256": "3560079c67785824971ae6f10c3f04e49e87e5e5dbd20afdd7f1c0a1b258dbe9"
+    },
+    {
+      "file": "repros/read_fifo.my.txt",
+      "sha256": "2a3b1658eb6e4c9a0f40cfed13c0db92989e9c78de69150197df247a18e5becd"
+    },
+    {
+      "file": "repros/runtime_flags.my.txt",
+      "sha256": "2d314b6501ea5be517e904e0791461f5900745a77e386c8403f6d15fefdd67eb"
+    },
+    {
+      "file": "repros/stream_field_method.my.txt",
+      "sha256": "b551e742a030b770cc3861bebacbbc76beab0fc38aef78a54be7a3af4ee9eb97"
+    },
+    {
+      "file": "resolver.my",
+      "sha256": "f06d3b559ee224b9c32fc3e48de932b7b151c15b93d97bde0bf92bc0f47cf8de"
+    },
+    {
+      "file": "resolver_test.my",
+      "sha256": "764c6cf4042cab6ffbad624a724268f20d353adc08f38094ebbb0feed1503974"
+    },
+    {
+      "file": "scanner.my",
+      "sha256": "62e0ead93c58c83b4dee2473991df12778e432e2404122d9c59bc1be2bdf30df"
+    },
+    {
+      "file": "scanner_test.my",
+      "sha256": "c725372b79a947e38f4ca71e3db8c2cf4a06207536eda84d7089613145639a43"
+    },
+    {
+      "file": "table.my",
+      "sha256": "09997c3fbc7461e5698c16de1b186ba755f98b94951b54dadfad0dc7268dfa98"
+    },
+    {
+      "file": "table_test.my",
+      "sha256": "5cb9baaebaf11aa301faacbeabd777af4a460eb0f0c6e9a67ff8f0e276b0cccc"
+    },
+    {
+      "file": "value.my",
+      "sha256": "be66ac3375e327f4bdf1759177519fd95a45bcd1f60070af0bf70047e8bb8c41"
+    },
+    {
+      "file": "value_test.my",
+      "sha256": "e08b23815ec0b80060b56168648514c35d2103ab09444b0bd16532ac63caa560"
+    },
+    {
+      "file": "vm.my",
+      "sha256": "4ef180c944181b764fac0a770adafeb528114bac2cfeee941679600880562e5f"
+    }
+  ],
+  "compiler_sha256": "6e7938a14ad4abc46b76c149ef12551b170f6c7e6f462beec2f81db18d40a83d"
+}

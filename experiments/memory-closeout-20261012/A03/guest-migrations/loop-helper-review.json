@@ -1,0 +1,12 @@
+{
+  "file": "tests/lang/loop_rebinding.my",
+  "before_commit": "b4a083209cbb3dbb68dc1874172b37be63fe0126",
+  "before_sha256": "8bfb95e99ac7267178fe4e21d13a8416bc3908ad4e446f01cad864ba80cde6b4",
+  "after_sha256": "57f54d5e5cd46d4cc20400d1a2f762e7d3adc4409c6992b9a49efcad9f02f9df",
+  "added_lines": 4,
+  "removed_lines": 4,
+  "copy_calls_before": 6,
+  "copy_calls_after": 10,
+  "all_public_test_bodies_byte_identical": true,
+  "contract": "first_of copies borrowed fallback and iteration values into local owners; moving value into seen is its last read before replacement; the fallback return copies only that branch."
+}

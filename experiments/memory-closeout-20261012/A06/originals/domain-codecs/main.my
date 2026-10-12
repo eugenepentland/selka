@@ -1,0 +1,8 @@
+import data
+
+func main() -> int:
+    match data.Positive.from_wire(data.Wire(n=7)):
+        case data.Decoded.ok(value):
+            return data.Positive.to_wire(value).n
+        case data.Decoded.err(code):
+            return code

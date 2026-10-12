@@ -1,0 +1,10 @@
+resource File: filesystem
+
+record Owned:
+    file: File
+
+func choose(value: Owned?, fallback: Owned) -> Owned effects(filesystem):
+    return value.unwrap_or(fallback)
+
+func main() -> int:
+    return 0

@@ -1,0 +1,7 @@
+func change(mut value: str?) -> str:
+    value = None
+    return "fallback"
+
+func main() -> int:
+    mut value: str? = Some("a" + str(1))
+    return len(value.unwrap_or(change(mut value)).copy())

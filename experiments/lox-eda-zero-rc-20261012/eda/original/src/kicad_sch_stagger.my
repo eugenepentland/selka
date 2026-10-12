@@ -1,0 +1,125 @@
+
+import kicad_sch_shape as shape
+import kicad_sch_emit as emit
+import support_sort as sorts
+import support_strs as strs
+
+public const line_h: int = 127
+
+
+public func spread(s: shape.Shape, nets: dict[str, bytes]?) -> shape.Shape:
+    if nets is None:
+        return s
+    mut map = nets
+    mut units: shape.ShapeUnit[] = []
+    mut any_ = False
+    for u in s.units:
+        mut copy = u
+        copy.stubs = plan_unit(u, map)
+        if len(copy.stubs) > 0:
+            any_ = True
+        units.append(copy)
+    if not any_:
+        return s
+    mut result = s
+    result.units = units
+    return result
+
+
+func plan_unit(u: shape.ShapeUnit, map: dict[str, bytes]) -> int[]:
+    mut result = [for i in range(len(u.pins)) yield 0]
+    mut moved = False
+    for side in [shape.Side.left, shape.Side.right, shape.Side.top, shape.Side.bottom]:
+        if spread_edge(u, side, map, mut result):
+            moved = True
+    if moved:
+        return result
+    return []
+
+
+record Run:
+    first: int
+    len: int
+
+
+func spread_edge(u: shape.ShapeUnit, side: shape.Side, map: dict[str, bytes], mut result: int[]) -> bool:
+    mut on = on_edge(u, side, map)
+    if len(on) < 2:
+        return False
+    mut runs = runs_of(u, map, on)
+    mut delta = widest(u, map, on) + 127
+    mut moved = False
+    mut column = 0
+    for j in range(len(runs)):
+        mut r = runs[j]
+        if j > 0:
+            column = next_column(u, side, on, runs[j - 1], r, column)
+        if column == 0:
+            continue
+        moved = True
+        for i in on[r.first:r.first + r.len]:
+            result[i] = delta
+    return moved
+
+
+func next_column(u: shape.ShapeUnit, side: shape.Side, on: int[], prev: Run, here: Run, column: int) -> int:
+    mut gap = axis_of(u, side, on[here.first]) - axis_of(u, side, on[prev.first])
+    if gap <= line_h:
+        return 1 - column
+    return 0
+
+
+record Order:
+    u: shape.ShapeUnit
+    side: shape.Side
+
+
+func on_edge(u: shape.ShapeUnit, side: shape.Side, map: dict[str, bytes]) -> int[]:
+    mut result: int[] = []
+    for i in range(len(u.pins)):
+        mut p = u.pins[i]
+        if p.side != side or len(net_of(map, p)) == 0:
+            continue
+        result.append(i)
+    mut ctx = Order(u=u, side=side)
+    sorts.sort_by_ctx(mut result, ctx, order_less)
+    return result
+
+
+func order_less(self: Order, a: int, b: int) -> bool:
+    mut ax = axis_of(self.u, self.side, a)
+    mut bx = axis_of(self.u, self.side, b)
+    if ax != bx:
+        return ax < bx
+    return a < b
+
+
+func axis_of(u: shape.ShapeUnit, side: shape.Side, i: int) -> int:
+    if side == shape.Side.left or side == shape.Side.right:
+        return -u.pins[i].y
+    return u.pins[i].x
+
+
+func runs_of(u: shape.ShapeUnit, map: dict[str, bytes], on: int[]) -> Run[]:
+    mut result: Run[] = []
+    mut start = 0
+    for k in range(len(on)):
+        mut i = on[k]
+        if k > 0 and net_of(map, u.pins[i]) == net_of(map, u.pins[on[k - 1]]):
+            continue
+        if k > 0:
+            result.append(Run(first=start, len=k - start))
+        start = k
+    result.append(Run(first=start, len=len(on) - start))
+    return result
+
+
+func widest(u: shape.ShapeUnit, map: dict[str, bytes], on: int[]) -> int:
+    mut result = 0
+    for i in on:
+        result = max(result, emit.label_span(net_of(map, u.pins[i])))
+    return result
+
+
+func net_of(map: dict[str, bytes], p: shape.Pin) -> bytes:
+    return map.get(strs.text(p.pad), b"")

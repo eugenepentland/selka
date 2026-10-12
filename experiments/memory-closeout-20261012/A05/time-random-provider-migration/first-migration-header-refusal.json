@@ -1,0 +1,194 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "overlay": false,
+  "library_source_overlay": false,
+  "compiler_source_overlay": false,
+  "check_only": false,
+  "harness_sha256": "8d0b8414f4c5220ac5e85b6474eb734bb889296ff83a07d039de51baf139d20e",
+  "cases": {
+    "time_random_provider": {
+      "release": {
+        "original_source": "src/stdlib/fixtures/time_random_provider.my",
+        "original_sha256": "5c94756aaf790d4bd724929f82185b13c48f00246f360a2c83e4645ebc8b16df",
+        "source_sha256": "5c94756aaf790d4bd724929f82185b13c48f00246f360a2c83e4645ebc8b16df",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/time_random_provider/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/time_random_provider/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/time_random_provider/release/program.ll",
+          "--link",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "main.my:1:1: error[E_MODULE_HEADER]: module names come from file paths; remove the redundant module header\n  module main\n  ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "linked_provider": {
+          "path": "experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c",
+          "sha256": "b99c5f496e52b607b9072dfd9b4bca0400b9883ffd331b66d34c7930495dcd93"
+        },
+        "source_files": {
+          "main.my": "5c94756aaf790d4bd724929f82185b13c48f00246f360a2c83e4645ebc8b16df"
+        }
+      },
+      "debug": {
+        "original_source": "src/stdlib/fixtures/time_random_provider.my",
+        "original_sha256": "5c94756aaf790d4bd724929f82185b13c48f00246f360a2c83e4645ebc8b16df",
+        "source_sha256": "5c94756aaf790d4bd724929f82185b13c48f00246f360a2c83e4645ebc8b16df",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/time_random_provider/debug/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--unoptimized",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/time_random_provider/debug/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/time_random_provider/debug/program.ll",
+          "--link",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "main.my:1:1: error[E_MODULE_HEADER]: module names come from file paths; remove the redundant module header\n  module main\n  ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "linked_provider": {
+          "path": "experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c",
+          "sha256": "b99c5f496e52b607b9072dfd9b4bca0400b9883ffd331b66d34c7930495dcd93"
+        },
+        "source_files": {
+          "main.my": "5c94756aaf790d4bd724929f82185b13c48f00246f360a2c83e4645ebc8b16df"
+        }
+      },
+      "verified": {
+        "original_source": "src/stdlib/fixtures/time_random_provider.my",
+        "original_sha256": "5c94756aaf790d4bd724929f82185b13c48f00246f360a2c83e4645ebc8b16df",
+        "source_sha256": "5c94756aaf790d4bd724929f82185b13c48f00246f360a2c83e4645ebc8b16df",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/time_random_provider/verified/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--verify-facts",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/time_random_provider/verified/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/time_random_provider/verified/program.ll",
+          "--link",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "main.my:1:1: error[E_MODULE_HEADER]: module names come from file paths; remove the redundant module header\n  module main\n  ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "linked_provider": {
+          "path": "experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c",
+          "sha256": "b99c5f496e52b607b9072dfd9b4bca0400b9883ffd331b66d34c7930495dcd93"
+        },
+        "source_files": {
+          "main.my": "5c94756aaf790d4bd724929f82185b13c48f00246f360a2c83e4645ebc8b16df"
+        }
+      },
+      "optimized-debug": {
+        "original_source": "src/stdlib/fixtures/time_random_provider.my",
+        "original_sha256": "5c94756aaf790d4bd724929f82185b13c48f00246f360a2c83e4645ebc8b16df",
+        "source_sha256": "5c94756aaf790d4bd724929f82185b13c48f00246f360a2c83e4645ebc8b16df",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/time_random_provider/optimized-debug/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--optimize-debug",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/time_random_provider/optimized-debug/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/time_random_provider/optimized-debug/program.ll",
+          "--link",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "main.my:1:1: error[E_MODULE_HEADER]: module names come from file paths; remove the redundant module header\n  module main\n  ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "linked_provider": {
+          "path": "experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c",
+          "sha256": "b99c5f496e52b607b9072dfd9b4bca0400b9883ffd331b66d34c7930495dcd93"
+        },
+        "source_files": {
+          "main.my": "5c94756aaf790d4bd724929f82185b13c48f00246f360a2c83e4645ebc8b16df"
+        }
+      },
+      "no-facts": {
+        "original_source": "src/stdlib/fixtures/time_random_provider.my",
+        "original_sha256": "5c94756aaf790d4bd724929f82185b13c48f00246f360a2c83e4645ebc8b16df",
+        "source_sha256": "5c94756aaf790d4bd724929f82185b13c48f00246f360a2c83e4645ebc8b16df",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/time_random_provider/no-facts/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--no-facts",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/time_random_provider/no-facts/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated/time_random_provider/no-facts/program.ll",
+          "--link",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "main.my:1:1: error[E_MODULE_HEADER]: module names come from file paths; remove the redundant module header\n  module main\n  ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "linked_provider": {
+          "path": "experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c",
+          "sha256": "b99c5f496e52b607b9072dfd9b4bca0400b9883ffd331b66d34c7930495dcd93"
+        },
+        "source_files": {
+          "main.my": "5c94756aaf790d4bd724929f82185b13c48f00246f360a2c83e4645ebc8b16df"
+        }
+      }
+    }
+  },
+  "compiler_source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "ownership_selection": "experimental-zero-rc",
+  "failures": 5
+}

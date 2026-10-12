@@ -24,9 +24,9 @@ func main(out: Stream) -> int:
         total = total % 1000003
     out.print(len(keys), total)
     mut s = "é"
-    mut u = s
+    mut u = s.copy()
     u += "a"
-    mut v = a
+    mut v = a.copy()
     v += "é"
     out.print(len(s), len(u), u[1], len(v), v[11], len(a))
     return 0

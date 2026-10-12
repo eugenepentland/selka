@@ -4,6 +4,6 @@ record Holder[T]:
 
 public func program() -> i64:
     mut holder = Holder[i64[]](value=[])
-    mut values = holder.value
+    mut values = holder.value.copy()
     values.append(42)
     return values[0]

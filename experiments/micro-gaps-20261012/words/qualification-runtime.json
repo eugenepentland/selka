@@ -1,0 +1,958 @@
+{
+  "binary": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+  "sha256": "dd1ff73048e7c014c9102c58412e6d4e66cc3a18d29f0508e0d2ec9bcbbc5897",
+  "results": [
+    {
+      "case": "bytes_scan",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "bytes_scan",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "39 390\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 39,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "bytes_scan",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "bytes_scan",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "1382 395\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 1382,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "bytes_scan",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "bytes_scan",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "57495 701\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 57495,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "bytes_scan",
+      "size": 64,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "bytes_scan",
+        "64",
+        "3",
+        "42"
+      ],
+      "stdout": "24480 350\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 24480,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "bytes_scan",
+      "size": 4096,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "bytes_scan",
+        "4096",
+        "3",
+        "42"
+      ],
+      "stdout": "1566720 848\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 1566720,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_equal",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_equal",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "0 626\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 0,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_equal",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_equal",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "4 585\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 4,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_equal",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_equal",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "16 840\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 16,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_equal",
+      "size": 64,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_equal",
+        "64",
+        "3",
+        "42"
+      ],
+      "stdout": "2 557\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 2,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_equal",
+      "size": 4096,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_equal",
+        "4096",
+        "3",
+        "42"
+      ],
+      "stdout": "2 1091\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 2,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_search",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_search",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "9 1121\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 9,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_search",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_search",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "28 1730\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 28,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_search",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_search",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "376 2946\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 376,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_search",
+      "size": 64,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_search",
+        "64",
+        "3",
+        "42"
+      ],
+      "stdout": "70 1689\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 70,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_search",
+      "size": 4096,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_search",
+        "4096",
+        "3",
+        "42"
+      ],
+      "stdout": "4102 2948\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 4102,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_split",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_split",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "1204 1834\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 1204,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_split",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_split",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "11277 3030\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 11277,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_split",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_split",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "228811 33022\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 228811,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_split",
+      "size": 64,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_split",
+        "64",
+        "3",
+        "42"
+      ],
+      "stdout": "82182 13386\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 82182,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_split",
+      "size": 4096,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_split",
+        "4096",
+        "3",
+        "42"
+      ],
+      "stdout": "5279658 515406\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 5279658,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_join",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_join",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "1308 569\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 1308,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_join",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_join",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "12838 1191\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 12838,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_join",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_join",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "285330 3800\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 285330,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_join",
+      "size": 64,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_join",
+        "64",
+        "3",
+        "42"
+      ],
+      "stdout": "104022 1924\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 104022,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_join",
+      "size": 4096,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "string_join",
+        "4096",
+        "3",
+        "42"
+      ],
+      "stdout": "6700602 85121\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 6700602,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_parse",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "int_parse",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "999999869 655\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 999999869,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_parse",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "int_parse",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "400 1153\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 400,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_parse",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "int_parse",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "2006253 1583\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 2006253,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_parse",
+      "size": 64,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "int_parse",
+        "64",
+        "3",
+        "42"
+      ],
+      "stdout": "5933 1249\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 5933,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_parse",
+      "size": 4096,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "int_parse",
+        "4096",
+        "3",
+        "42"
+      ],
+      "stdout": "5933 27489\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 5933,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_format",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "int_format",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "159 897\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 159,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_format",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "int_format",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "1092 1449\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 1092,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_format",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "int_format",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "6683 3006\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 6683,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_format",
+      "size": 64,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "int_format",
+        "64",
+        "3",
+        "42"
+      ],
+      "stdout": "694 893\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 694,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_format",
+      "size": 4096,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "int_format",
+        "4096",
+        "3",
+        "42"
+      ],
+      "stdout": "694 1102\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 694,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "word_count",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "word_count",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "2379 3447\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 2379,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "word_count",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "word_count",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "15733 6406\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 15733,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "word_count",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "word_count",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "1076884 31278\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 1076884,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "word_count",
+      "size": 16,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "word_count",
+        "16",
+        "3",
+        "42"
+      ],
+      "stdout": "91044 6652\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 91044,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "word_count",
+      "size": 256,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "word_count",
+        "256",
+        "3",
+        "42"
+      ],
+      "stdout": "20382504 27217\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 20382504,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "csv_aggregate",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "csv_aggregate",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "1510 4851\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 1510,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "csv_aggregate",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "csv_aggregate",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "21679 16682\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 21679,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "csv_aggregate",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "csv_aggregate",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "6658645 296954\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 6658645,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "csv_aggregate",
+      "size": 16,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "csv_aggregate",
+        "16",
+        "3",
+        "42"
+      ],
+      "stdout": "48300 33461\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 48300,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "csv_aggregate",
+      "size": 256,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "csv_aggregate",
+        "256",
+        "3",
+        "42"
+      ],
+      "stdout": "3496086 477938\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 3496086,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "json_transform",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "json_transform",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "7450 13180\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 7450,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "json_transform",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "json_transform",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "53402 48131\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 53402,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "json_transform",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "json_transform",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "1390987 927471\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 1390987,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "json_transform",
+      "size": 16,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "json_transform",
+        "16",
+        "3",
+        "42"
+      ],
+      "stdout": "114612 86166\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 114612,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "json_transform",
+      "size": 256,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "json_transform",
+        "256",
+        "3",
+        "42"
+      ],
+      "stdout": "2021052 1374091\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 2021052,
+      "ok": true,
+      "counters": null
+    }
+  ],
+  "all_ok": true,
+  "note": "Protocol validation only; no timing comparison."
+}

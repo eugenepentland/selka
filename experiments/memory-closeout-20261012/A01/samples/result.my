@@ -1,0 +1,29 @@
+import parallel
+
+func attempt(value: int) -> Result[str, str]:
+    if value % 3 == 0:
+        return Err("bad-" + str(value))
+    return Ok("good-" + str(value))
+
+func handled(value: int) -> str:
+    match attempt(value):
+        case Ok(text):
+            return text
+        case Err(text):
+            return text
+
+func inspect(value: str) -> int:
+    return len(value)
+
+func main(out: Stream) -> int:
+    mut source: int[] = []
+    for i in range(257):
+        source.append(i)
+    const outcomes = parallel.map(source, handled)
+    const sizes = parallel.map(outcomes, inspect)
+    mut total = 0
+    for size in sizes:
+        total += size
+    _ = parallel.map(source, handled)
+    out.print(total)
+    return 0

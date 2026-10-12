@@ -1,0 +1,734 @@
+{
+  "schema": "micro-foreign-reference-build-v1",
+  "base_revision": "e303d704d37d9cbd90c643ce4f06a4ecb9895718",
+  "source_root": "/home/epentland/ai/canopy/mylang-micro-refs-20261012",
+  "fresh_build": true,
+  "tools": {
+    "rust": {
+      "path": "/home/epentland/.cargo/bin/rustc",
+      "actual_path": "/home/epentland/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc",
+      "invocation_sha256": "dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71",
+      "sha256": "859254978c0a0402c32f949f6de0d99aee73be8d15f45aac00ae1448aac51e74",
+      "version": "rustc 1.98.1 (48a229cea 2026-09-01)"
+    },
+    "cargo": {
+      "path": "/home/epentland/.cargo/bin/cargo",
+      "actual_path": "/home/epentland/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/cargo",
+      "invocation_sha256": "dda7234360b7f578ca8b0ddcb80145646fa61a67c1720a5abc7051b35c9fcb71",
+      "sha256": "da77c8b33849312255ccde3179198ada4c8deb370488d050286146b1d1b27e14",
+      "version": "cargo 1.98.1 (797e8a9bc 2026-08-05)"
+    },
+    "go": {
+      "path": "/home/epentland/.local/bin/go",
+      "actual_path": "/home/epentland/.local/opt/go1.27.0/bin/go",
+      "invocation_sha256": "1db869c560a193573a71be466a34e0d4abb7792d78165c6102cdda069276a3a8",
+      "sha256": "1db869c560a193573a71be466a34e0d4abb7792d78165c6102cdda069276a3a8",
+      "version": "go version go1.27.0 linux/amd64"
+    },
+    "zig": {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "actual_path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "invocation_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+      "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+      "version": "0.17.0-dev.1683+5ceec001b"
+    }
+  },
+  "sources": {
+    "experiments/micro-ownership-20261012/references/sources/legacy/main.rs": {
+      "canonical": "benchmarks/runtime/ports/main.rs",
+      "canonical_sha256": "ff09886df28a1b7944722c8c34b124dcef32123ed2c75e512d014d39d9b66c3b",
+      "sha256": "ff09886df28a1b7944722c8c34b124dcef32123ed2c75e512d014d39d9b66c3b"
+    },
+    "experiments/micro-ownership-20261012/references/sources/legacy/main.go": {
+      "canonical": "benchmarks/runtime/ports/main.go",
+      "canonical_sha256": "b917ebdf82a71a70240951febc9f709cb206067bc857bce0d7c73a5710d86eb5",
+      "sha256": "b917ebdf82a71a70240951febc9f709cb206067bc857bce0d7c73a5710d86eb5"
+    },
+    "experiments/micro-ownership-20261012/references/sources/legacy/main.zig": {
+      "canonical": "benchmarks/runtime/ports/main.zig",
+      "canonical_sha256": "d62ea4e798cde935c9aed166e5452c672be9f0f7c33b85602917a72b5e096a4e",
+      "sha256": "d62ea4e798cde935c9aed166e5452c672be9f0f7c33b85602917a72b5e096a4e"
+    },
+    "experiments/micro-ownership-20261012/references/sources/compute/main.rs": {
+      "canonical": "benchmarks/runtime/expanded/compute/main.rs",
+      "canonical_sha256": "ce9e8859065748e930a7d4adb69d7ba791dee188fa49ddd19e026272deea92c2",
+      "sha256": "ce9e8859065748e930a7d4adb69d7ba791dee188fa49ddd19e026272deea92c2"
+    },
+    "experiments/micro-ownership-20261012/references/sources/compute/main.go": {
+      "canonical": "benchmarks/runtime/expanded/compute/main.go",
+      "canonical_sha256": "ab8d7cbef36f7a4ac4526745342db01dac9ac4c716ce1354a6fa627054f317f2",
+      "sha256": "ab8d7cbef36f7a4ac4526745342db01dac9ac4c716ce1354a6fa627054f317f2"
+    },
+    "experiments/micro-ownership-20261012/references/sources/compute/main.zig": {
+      "canonical": "benchmarks/runtime/expanded/compute/main.zig",
+      "canonical_sha256": "376d889076a6ebab6c832782960cbc63011e393305a2e768bc8a072b2ef66b3f",
+      "sha256": "376d889076a6ebab6c832782960cbc63011e393305a2e768bc8a072b2ef66b3f"
+    },
+    "experiments/micro-ownership-20261012/references/sources/collections/main.rs": {
+      "canonical": "benchmarks/runtime/expanded/collections/main.rs",
+      "canonical_sha256": "f439c5f20b2419e47a8b9883cb0d305fa68d102ffa64ec6083d55c09af0dc575",
+      "sha256": "f439c5f20b2419e47a8b9883cb0d305fa68d102ffa64ec6083d55c09af0dc575"
+    },
+    "experiments/micro-ownership-20261012/references/sources/collections/main.go": {
+      "canonical": "benchmarks/runtime/expanded/collections/main.go",
+      "canonical_sha256": "c3650b691172d5c579dd988ea0615be438c7e68bab7e0d3ec5551387b3595a78",
+      "sha256": "c3650b691172d5c579dd988ea0615be438c7e68bab7e0d3ec5551387b3595a78"
+    },
+    "experiments/micro-ownership-20261012/references/sources/collections/main.zig": {
+      "canonical": "benchmarks/runtime/expanded/collections/main.zig",
+      "canonical_sha256": "0113e9958e2742371ea4c33ce716a49d46784a1c4ad4c190db3ca9938e354277",
+      "sha256": "0113e9958e2742371ea4c33ce716a49d46784a1c4ad4c190db3ca9938e354277"
+    },
+    "experiments/micro-ownership-20261012/references/sources/text/main.rs": {
+      "canonical": "benchmarks/runtime/expanded/text/main.rs",
+      "canonical_sha256": "cdd8d7bba9d2d7590d6786ca1912bdba65ed6c36c6789f8f16252d14a1d7673c",
+      "sha256": "cdd8d7bba9d2d7590d6786ca1912bdba65ed6c36c6789f8f16252d14a1d7673c"
+    },
+    "experiments/micro-ownership-20261012/references/sources/text/main.go": {
+      "canonical": "benchmarks/runtime/expanded/text/main.go",
+      "canonical_sha256": "034f1b96198f48b20200032ca3f5dc76641d0985b98b712253b430c6c17e7e8d",
+      "sha256": "034f1b96198f48b20200032ca3f5dc76641d0985b98b712253b430c6c17e7e8d"
+    },
+    "experiments/micro-ownership-20261012/references/sources/text/main.zig": {
+      "canonical": "benchmarks/runtime/expanded/text/main.zig",
+      "canonical_sha256": "94dd771cf7c78deef2a1f81aabfa63cad5515ab5ceb811d2a249659457547ddd",
+      "sha256": "94dd771cf7c78deef2a1f81aabfa63cad5515ab5ceb811d2a249659457547ddd"
+    },
+    "experiments/micro-ownership-20261012/references/sources/text/Cargo.toml": {
+      "canonical": "benchmarks/runtime/expanded/text/Cargo.toml",
+      "canonical_sha256": "901ae84abfd66afcc4d102aca89a7d422c8339909fe67b794772289dbd115fec",
+      "sha256": "901ae84abfd66afcc4d102aca89a7d422c8339909fe67b794772289dbd115fec"
+    },
+    "experiments/micro-ownership-20261012/references/sources/text/Cargo.lock": {
+      "canonical": "benchmarks/runtime/expanded/text/Cargo.lock",
+      "canonical_sha256": "890ae737be8813c44d0f980b4c02db3dc3dfa7c78da86fa04929c4c017125202",
+      "sha256": "890ae737be8813c44d0f980b4c02db3dc3dfa7c78da86fa04929c4c017125202"
+    }
+  },
+  "commands": {
+    "legacy/rust": [
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/.cargo/bin/rustc",
+      "-O",
+      "--edition",
+      "2021",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.rs",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-rust"
+    ],
+    "legacy/go": [
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/.local/bin/go",
+      "build",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-go",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.go"
+    ],
+    "legacy/zig-safe": [
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "build-exe",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.zig",
+      "-lc",
+      "-O",
+      "ReleaseSafe",
+      "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-zig-safe"
+    ],
+    "legacy/zig-fast": [
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "build-exe",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.zig",
+      "-lc",
+      "-O",
+      "ReleaseFast",
+      "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-zig-fast"
+    ],
+    "compute/rust": [
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/.cargo/bin/rustc",
+      "-O",
+      "--edition",
+      "2021",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/compute/main.rs",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/compute-rust"
+    ],
+    "compute/go": [
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/.local/bin/go",
+      "build",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/compute-go",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/compute/main.go"
+    ],
+    "compute/zig-safe": [
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "build-exe",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/compute/main.zig",
+      "-lc",
+      "-O",
+      "ReleaseSafe",
+      "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/compute-zig-safe"
+    ],
+    "compute/zig-fast": [
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "build-exe",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/compute/main.zig",
+      "-lc",
+      "-O",
+      "ReleaseFast",
+      "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/compute-zig-fast"
+    ],
+    "collections/rust": [
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/.cargo/bin/rustc",
+      "-O",
+      "--edition",
+      "2021",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/collections/main.rs",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/collections-rust"
+    ],
+    "collections/go": [
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/.local/bin/go",
+      "build",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/collections-go",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/collections/main.go"
+    ],
+    "collections/zig-safe": [
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "build-exe",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/collections/main.zig",
+      "-lc",
+      "-O",
+      "ReleaseSafe",
+      "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/collections-zig-safe"
+    ],
+    "collections/zig-fast": [
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "build-exe",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/collections/main.zig",
+      "-lc",
+      "-O",
+      "ReleaseFast",
+      "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/collections-zig-fast"
+    ],
+    "text/rust": [
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/.cargo/bin/cargo",
+      "build",
+      "--release",
+      "--locked",
+      "--manifest-path",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/Cargo.toml",
+      "--target-dir",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/cargo-target"
+    ],
+    "text/go": [
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/.local/bin/go",
+      "build",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-go",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/main.go"
+    ],
+    "text/zig-safe": [
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "build-exe",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/main.zig",
+      "-lc",
+      "-O",
+      "ReleaseSafe",
+      "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-zig-safe"
+    ],
+    "text/zig-fast": [
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/scripts/build-slot.sh",
+      "build",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "build-exe",
+      "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/main.zig",
+      "-lc",
+      "-O",
+      "ReleaseFast",
+      "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-zig-fast"
+    ]
+  },
+  "environment": {
+    "GOMAXPROCS": "1",
+    "GOGC": "100",
+    "GOMEMLIMIT": "off",
+    "GOAMD64": "v1",
+    "GOFLAGS": "",
+    "GOEXPERIMENT": "",
+    "GOTOOLCHAIN": "local",
+    "MYLANG_SLOT_DIR": "/home/epentland/.cache/mylang/slots",
+    "MYLANG_DEV_JOBS": "4",
+    "MYLANG_DEV_MAXRSS": "8589934592",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/tmp",
+    "GOCACHE": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/gocache",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/zigcache",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/zig-global-cache",
+    "RUSTC": "/home/epentland/.cargo/bin/rustc"
+  },
+  "builds": {
+    "legacy/rust": {
+      "exit_status": 0,
+      "log": "experiments/micro-ownership-20261012/references/logs/legacy-rust.log",
+      "log_sha256": "7385a8bd328b2fea58c0e8261571d1eabe2c255122a212416164ea324cdf41be",
+      "path": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-rust",
+      "sha256": "1ac2fc645e15d184a0f1937e543e0d09342683cd6a8b5f21739153dd5b1f6bfb"
+    },
+    "legacy/go": {
+      "exit_status": 0,
+      "log": "experiments/micro-ownership-20261012/references/logs/legacy-go.log",
+      "log_sha256": "9f63d0da21ca059a65e0d5e25656dfb7afe4ed3e2bacb7a4b7badb025b380450",
+      "path": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-go",
+      "sha256": "b00d920977e61eb78c5f7962dbe37b411746b91e66c3168bd16d15882c1d2efe"
+    },
+    "legacy/zig-safe": {
+      "exit_status": 0,
+      "log": "experiments/micro-ownership-20261012/references/logs/legacy-zig-safe.log",
+      "log_sha256": "ecfda4e0f04aa9305e819cb79f820d90b6be28938184b1afa7c448ec4fcda2d7",
+      "path": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-zig-safe",
+      "sha256": "57be8ac698c590898d9829af8ed9a84af05d66c1d72610bac216f4103536fef5"
+    },
+    "legacy/zig-fast": {
+      "exit_status": 0,
+      "log": "experiments/micro-ownership-20261012/references/logs/legacy-zig-fast.log",
+      "log_sha256": "f0bffaf940f49b2c24364f772c4ffdffb1c88e9d9b4ade48e6f446cb41f989b2",
+      "path": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-zig-fast",
+      "sha256": "2ad8e202f142e934fcc846595498bf5aa9c1f4c1e3598a1ee521c384e26f210f"
+    },
+    "compute/rust": {
+      "exit_status": 0,
+      "log": "experiments/micro-ownership-20261012/references/logs/compute-rust.log",
+      "log_sha256": "6d9bfc377f2494e8148c430fc5fdee48a5afc59348c191456fb721b2522d5edb",
+      "path": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/compute-rust",
+      "sha256": "7620df55fd7dc39b369e8247f765df28bffecc83e8e509fc05f02b768dc3819b"
+    },
+    "compute/go": {
+      "exit_status": 0,
+      "log": "experiments/micro-ownership-20261012/references/logs/compute-go.log",
+      "log_sha256": "d9b74008e61dd69127206b2cce2b0a0f71983a1b5e937ae98bc3c65730afeec6",
+      "path": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/compute-go",
+      "sha256": "f2b73d44693ecc07a051c24b5dc26f750432f165d9ddfddadbd6dcf8d644a5a0"
+    },
+    "compute/zig-safe": {
+      "exit_status": 0,
+      "log": "experiments/micro-ownership-20261012/references/logs/compute-zig-safe.log",
+      "log_sha256": "6f4d3ba24bad75258b48d284bf13d0627ff67c69a0315ebd5da0e033b80d6366",
+      "path": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/compute-zig-safe",
+      "sha256": "fea29c49b06d6efa7ba75eda887eab1853693066c9caec76c936f16ec8b9a7fb"
+    },
+    "compute/zig-fast": {
+      "exit_status": 0,
+      "log": "experiments/micro-ownership-20261012/references/logs/compute-zig-fast.log",
+      "log_sha256": "8ece094333b5033579561d9e8ff2b14faca9640f038216f2ed94cacd6ba91a6b",
+      "path": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/compute-zig-fast",
+      "sha256": "727de280a7d35aaba681fa57cccaa6477298701d055e75ad802c36ecd1265af9"
+    },
+    "collections/rust": {
+      "exit_status": 0,
+      "log": "experiments/micro-ownership-20261012/references/logs/collections-rust.log",
+      "log_sha256": "3d5abdcdc7a551663a9ed06751fb5302bd7d8c8a52d237ecb64019f46ba142b2",
+      "path": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/collections-rust",
+      "sha256": "6699572d3a0ad346e65310c7b2b4a4592a0e275fb39d65aac5f11a9f1152a8a9"
+    },
+    "collections/go": {
+      "exit_status": 0,
+      "log": "experiments/micro-ownership-20261012/references/logs/collections-go.log",
+      "log_sha256": "0896d23cdcc65098c60d114bfa664946aff58fa5b50ed254cb54a99c1a337412",
+      "path": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/collections-go",
+      "sha256": "93d4f8dfc3e43f22c77369f8f61c78046ab4c454f434d280d4efbcc977ca78b0"
+    },
+    "collections/zig-safe": {
+      "exit_status": 0,
+      "log": "experiments/micro-ownership-20261012/references/logs/collections-zig-safe.log",
+      "log_sha256": "2f296633f5acb7cef4b43b028e1e1856cea8b2a6c010cc75f919d1abb6a7aac0",
+      "path": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/collections-zig-safe",
+      "sha256": "f09ce2bb5547a2ac8a01dfc223c5d1f6176f88ab2ec62f80e4b3f654b550372f"
+    },
+    "collections/zig-fast": {
+      "exit_status": 0,
+      "log": "experiments/micro-ownership-20261012/references/logs/collections-zig-fast.log",
+      "log_sha256": "c71119b59b2259ddc62f1e2c89a1a06bf3e572932473bf734245701d2b3c2fa5",
+      "path": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/collections-zig-fast",
+      "sha256": "b9f9da126c05abc53ca5c3a18b1c3d36b13014cba6ab25a7aeeb611dc1cb4046"
+    },
+    "text/rust": {
+      "exit_status": 0,
+      "log": "experiments/micro-ownership-20261012/references/logs/text-rust.log",
+      "log_sha256": "8781755b570d53da4844a879ed8bfeaae8d7156169ca33dd1d5c2eb704cf931f",
+      "path": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-rust",
+      "sha256": "230ff4317181142193c29c7ee5f260fa6866d527fb59caf512aefe33c1a0b7d4"
+    },
+    "text/go": {
+      "exit_status": 0,
+      "log": "experiments/micro-ownership-20261012/references/logs/text-go.log",
+      "log_sha256": "706dfc1395952a9e47486a31d92bfaa987cf011445c29327de6353933064ea44",
+      "path": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-go",
+      "sha256": "82021b9547264b3420dbe83e4354feb8cdf1037c148dcdaed0b85d63ccac7cad"
+    },
+    "text/zig-safe": {
+      "exit_status": 0,
+      "log": "experiments/micro-ownership-20261012/references/logs/text-zig-safe.log",
+      "log_sha256": "ea5cd9f4912133b9cb571416981fd84fdc8b31b7b9f6bd98ffb69f78b916a159",
+      "path": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-zig-safe",
+      "sha256": "6997b7027dc85edd47ddd6a1a842e26b96c93cc3b5a98f82e270eb932f5ea003"
+    },
+    "text/zig-fast": {
+      "exit_status": 0,
+      "log": "experiments/micro-ownership-20261012/references/logs/text-zig-fast.log",
+      "log_sha256": "087ee52f4dec11be7c87202b6dac3567ff0fcdb242af5b41bbfd9d7f781dcb41",
+      "path": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-zig-fast",
+      "sha256": "7e4e9f2b3586cd7797a19c0ae9361f9cfa13ce8a4618bab867080d33d281f776"
+    }
+  },
+  "entries": [
+    {
+      "group": "legacy",
+      "arm": "rust",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-rust",
+      "sha256": "1ac2fc645e15d184a0f1937e543e0d09342683cd6a8b5f21739153dd5b1f6bfb",
+      "status": "built",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.rs",
+      "flags": [
+        "/home/epentland/.cargo/bin/rustc",
+        "-O",
+        "--edition",
+        "2021",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.rs",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-rust"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/legacy-rust.log"
+    },
+    {
+      "group": "legacy",
+      "arm": "go",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-go",
+      "sha256": "b00d920977e61eb78c5f7962dbe37b411746b91e66c3168bd16d15882c1d2efe",
+      "status": "built",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.go",
+      "flags": [
+        "/home/epentland/.local/bin/go",
+        "build",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-go",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.go"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/legacy-go.log"
+    },
+    {
+      "group": "legacy",
+      "arm": "zig-safe",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-zig-safe",
+      "sha256": "57be8ac698c590898d9829af8ed9a84af05d66c1d72610bac216f4103536fef5",
+      "status": "built",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.zig",
+      "flags": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build-exe",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.zig",
+        "-lc",
+        "-O",
+        "ReleaseSafe",
+        "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-zig-safe"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/legacy-zig-safe.log"
+    },
+    {
+      "group": "legacy",
+      "arm": "zig-fast",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-zig-fast",
+      "sha256": "2ad8e202f142e934fcc846595498bf5aa9c1f4c1e3598a1ee521c384e26f210f",
+      "status": "built",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.zig",
+      "flags": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build-exe",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.zig",
+        "-lc",
+        "-O",
+        "ReleaseFast",
+        "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-zig-fast"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/legacy-zig-fast.log"
+    },
+    {
+      "group": "compute",
+      "arm": "rust",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/compute-rust",
+      "sha256": "7620df55fd7dc39b369e8247f765df28bffecc83e8e509fc05f02b768dc3819b",
+      "status": "built",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/compute/main.rs",
+      "flags": [
+        "/home/epentland/.cargo/bin/rustc",
+        "-O",
+        "--edition",
+        "2021",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/compute/main.rs",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/compute-rust"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/compute-rust.log"
+    },
+    {
+      "group": "compute",
+      "arm": "go",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/compute-go",
+      "sha256": "f2b73d44693ecc07a051c24b5dc26f750432f165d9ddfddadbd6dcf8d644a5a0",
+      "status": "built",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/compute/main.go",
+      "flags": [
+        "/home/epentland/.local/bin/go",
+        "build",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/compute-go",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/compute/main.go"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/compute-go.log"
+    },
+    {
+      "group": "compute",
+      "arm": "zig-safe",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/compute-zig-safe",
+      "sha256": "fea29c49b06d6efa7ba75eda887eab1853693066c9caec76c936f16ec8b9a7fb",
+      "status": "built",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/compute/main.zig",
+      "flags": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build-exe",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/compute/main.zig",
+        "-lc",
+        "-O",
+        "ReleaseSafe",
+        "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/compute-zig-safe"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/compute-zig-safe.log"
+    },
+    {
+      "group": "compute",
+      "arm": "zig-fast",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/compute-zig-fast",
+      "sha256": "727de280a7d35aaba681fa57cccaa6477298701d055e75ad802c36ecd1265af9",
+      "status": "built",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/compute/main.zig",
+      "flags": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build-exe",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/compute/main.zig",
+        "-lc",
+        "-O",
+        "ReleaseFast",
+        "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/compute-zig-fast"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/compute-zig-fast.log"
+    },
+    {
+      "group": "collections",
+      "arm": "rust",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/collections-rust",
+      "sha256": "6699572d3a0ad346e65310c7b2b4a4592a0e275fb39d65aac5f11a9f1152a8a9",
+      "status": "built",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/collections/main.rs",
+      "flags": [
+        "/home/epentland/.cargo/bin/rustc",
+        "-O",
+        "--edition",
+        "2021",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/collections/main.rs",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/collections-rust"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/collections-rust.log"
+    },
+    {
+      "group": "collections",
+      "arm": "go",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/collections-go",
+      "sha256": "93d4f8dfc3e43f22c77369f8f61c78046ab4c454f434d280d4efbcc977ca78b0",
+      "status": "built",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/collections/main.go",
+      "flags": [
+        "/home/epentland/.local/bin/go",
+        "build",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/collections-go",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/collections/main.go"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/collections-go.log"
+    },
+    {
+      "group": "collections",
+      "arm": "zig-safe",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/collections-zig-safe",
+      "sha256": "f09ce2bb5547a2ac8a01dfc223c5d1f6176f88ab2ec62f80e4b3f654b550372f",
+      "status": "built",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/collections/main.zig",
+      "flags": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build-exe",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/collections/main.zig",
+        "-lc",
+        "-O",
+        "ReleaseSafe",
+        "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/collections-zig-safe"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/collections-zig-safe.log"
+    },
+    {
+      "group": "collections",
+      "arm": "zig-fast",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/collections-zig-fast",
+      "sha256": "b9f9da126c05abc53ca5c3a18b1c3d36b13014cba6ab25a7aeeb611dc1cb4046",
+      "status": "built",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/collections/main.zig",
+      "flags": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build-exe",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/collections/main.zig",
+        "-lc",
+        "-O",
+        "ReleaseFast",
+        "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/collections-zig-fast"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/collections-zig-fast.log"
+    },
+    {
+      "group": "text",
+      "arm": "rust",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-rust",
+      "sha256": "230ff4317181142193c29c7ee5f260fa6866d527fb59caf512aefe33c1a0b7d4",
+      "status": "built",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/main.rs",
+      "flags": [
+        "/home/epentland/.cargo/bin/cargo",
+        "build",
+        "--release",
+        "--locked",
+        "--manifest-path",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/Cargo.toml",
+        "--target-dir",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/cargo-target"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/text-rust.log"
+    },
+    {
+      "group": "text",
+      "arm": "go",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-go",
+      "sha256": "82021b9547264b3420dbe83e4354feb8cdf1037c148dcdaed0b85d63ccac7cad",
+      "status": "built",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/main.go",
+      "flags": [
+        "/home/epentland/.local/bin/go",
+        "build",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-go",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/main.go"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/text-go.log"
+    },
+    {
+      "group": "text",
+      "arm": "zig-safe",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-zig-safe",
+      "sha256": "6997b7027dc85edd47ddd6a1a842e26b96c93cc3b5a98f82e270eb932f5ea003",
+      "status": "built",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/main.zig",
+      "flags": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build-exe",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/main.zig",
+        "-lc",
+        "-O",
+        "ReleaseSafe",
+        "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-zig-safe"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/text-zig-safe.log"
+    },
+    {
+      "group": "text",
+      "arm": "zig-fast",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-zig-fast",
+      "sha256": "7e4e9f2b3586cd7797a19c0ae9361f9cfa13ce8a4618bab867080d33d281f776",
+      "status": "built",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/main.zig",
+      "flags": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build-exe",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/main.zig",
+        "-lc",
+        "-O",
+        "ReleaseFast",
+        "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-zig-fast"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/text-zig-fast.log"
+    }
+  ],
+  "migration_edits": [],
+  "oracle_source_hashes": {
+    "benchmarks/runtime/oracle.py": "14bff3ae5eec751b5182b81c2485448ceba02f01a7dc98b064bb6bc3af8889d5",
+    "benchmarks/runtime/expanded/registry.py": "04661575c2246c0848fa97196864f5d2a640994ef5b6f68919d87da402e4495b",
+    "benchmarks/runtime/expanded/compute/oracle.py": "fd1109575fbb29b4e54818fe04acf0c1c5b6a8466f54c9d3c6d18d703c7a297e",
+    "benchmarks/runtime/expanded/collections/oracle.py": "357785b3c650484955daef3f6ccc885e393f46f7566c825d8ddf670077affbb9",
+    "benchmarks/runtime/expanded/text/oracle.py": "9f955c24e2db9fd2af698f44d4bc0ec2f0b095ef93e99ee1befbd362907c6bde"
+  },
+  "qualification_admission_command": [
+    "/home/epentland/ai/canopy/mylang-micro-refs-20261012/scripts/build-slot.sh",
+    "build",
+    "python3",
+    "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/qualify.py"
+  ],
+  "qualification_note": "Initial per-probe admission process stopped after all16 builds; no qualification published from that attempt. Complete qualification executed fresh under one batch build admission.",
+  "evidence_hashes": {
+    "experiments/micro-ownership-20261012/references/prepare.py": "4a7eb6bc37e5c8375495d08176f7be943d3ac01a0dad1063a1a210ec144b8639",
+    "experiments/micro-ownership-20261012/references/qualify.py": "a9802aec783169d70185b2a22808b6e7b71bc0fc9701eff09ccc1eda05717104",
+    "experiments/micro-ownership-20261012/references/verify.py": "7b0ac9ef909ea229c9c1e0392ccfeb01646a0087590be4f17f3c22d583e5ab81",
+    "experiments/micro-ownership-20261012/references/qualification.json": "7e2096cd41209a77cb119a62411e23eef8cfb701d411c90b53c0ff23bd260d33",
+    "experiments/micro-ownership-20261012/references/qualification-admission.log": "4f24ea518063dd8b21578ae0f2b1fb1da2f912a13be3d7f3077793fb0ee96633",
+    "experiments/micro-ownership-20261012/references/history-inventory.json": "aa971f4e47acb69207623f5ad68dedd7c4ec2a1d623b728573057bcf5165e73c",
+    "experiments/micro-ownership-20261012/references/history-confirmations.json": "1ab1222cb5516612e4030e4ecb8d37cefdc551961b67dc5f527c40d237e1a769"
+  },
+  "qualification_status": "passed-all-800"
+}

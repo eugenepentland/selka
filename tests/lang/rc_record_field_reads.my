@@ -10,7 +10,7 @@ func read(index: int) -> int:
 
 
 func read_from(items: int[], index: int) -> int:
-    mut cursor = Cursor(code=items, index=index)
+    mut cursor = Cursor(code=items.copy(), index=index)
     mut value = cursor.code[cursor.index]
     return value + cursor.index
 
@@ -43,7 +43,8 @@ func change(mut cursor: Cursor) -> int:
 
 func captured_callback() -> int:
     mut cursor = Cursor(code=[7], index=0)
-    mut value = cursor.code[change(mut cursor)]
+    const receiver_snapshot = cursor.code.copy()
+    mut value = receiver_snapshot[change(mut cursor)]
     return value + cursor.code[0]
 
 
@@ -95,7 +96,7 @@ public func test_older_heap_home_inside_inner_region() -> bool:
 
 public func test_named_snapshot_survives_replacement_after_read() -> bool:
     mut cursor = Cursor(code=[7, 11], index=1)
-    mut snapshot = cursor
+    mut snapshot = cursor.copy()
     mut value = cursor.code[cursor.index]
     cursor = Cursor(code=[13], index=0)
     return value + snapshot.code[1] + cursor.code[0] == 35

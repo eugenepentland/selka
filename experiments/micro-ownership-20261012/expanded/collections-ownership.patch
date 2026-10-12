@@ -1,0 +1,33 @@
+--- original/collections.my
++++ migrated/collections.my
+@@ -120,10 +120,10 @@
+     elif kind == 6:
+         mut text_mapping: dict[str, int] = {}
+         for j in range(size):
+-            text_mapping[keys[j]] = values[j]
++            text_mapping[keys[j].copy()] = values[j]
+         for j in range(size * 2):
+             mut key = (seed + j * 17 + batch) % (size * 2)
+-            text_mapping[keys[key]] = (text_mapping.get(keys[key], 17) + j + batch + 1) % 1000003
++            text_mapping[keys[key].copy()] = (text_mapping.get(keys[key], 17) + j + batch + 1) % 1000003
+         for j in range(size * 2):
+             if keys[j] in text_mapping:
+                 total += j + text_mapping[keys[j]]
+@@ -152,7 +152,7 @@
+                 total += value
+         return total
+     elif kind == 10:
+-        mut snapshot = nested
++        mut snapshot = nested.copy()
+         mut index = (seed + batch * 17) % size
+         nested[index][1] = (nested[index][1] + batch + 1) % 1000003
+         return snapshot[index][1] + nested[index][1]
+@@ -205,7 +205,7 @@
+         if args[0] == "dict_lookup":
+             lookup[j] = values[j]
+         if args[0] == "dict_lookup_str":
+-            lookup_str[keys[j]] = values[j]
++            lookup_str[keys[j].copy()] = values[j]
+     mut nested: int[][] = []
+     if args[0] == "mutate_nested":
+         nested = [for j in range(size) yield [for k in range(4) yield (seed + j * 13 + k) % 1009]]

@@ -1,0 +1,66 @@
+{
+  "base": "723d2281ae98df97cf1503ad21ad2c9b4336df0b",
+  "source_sha256": {
+    "src/core/own.zig": "e04f3b509f42219c1614dcd60070e32cd483a0a1913b3f832c0279799cae6a38",
+    "src/core/build.zig": "7ddad513c6f6edea9f5e8dd8bfecc910698af6957ad5fe90a2a48cd2e2819b3c",
+    "src/core/emit_homes.zig": "8e6cfd91f38affbefd50aa422944977d3f07393051e9b799da8a0b998f1fff5e",
+    "src/core/ce_records_test.zig": "2ba1665b437d6374fff9d76b8a1b179776b348b9439ca52fb4274303ed6c352a",
+    "src/core/test_support.zig": "80b49b2d8d0faf2db687c9c811071b6c53b39f02619d4b95ae74230d676cef5b"
+  },
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "components": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/install/libexec/mylang/components",
+  "component_boundary": "Support6 independent owned pin supplies components; final default/retirement package qualification is separate",
+  "steps": [
+    {
+      "name": "build",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build",
+        "core-test-binary",
+        "-Dtest-filter=ce_records_test",
+        "-j4",
+        "--maxrss",
+        "8589934592",
+        "--prefix",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/ce-record-copies/install",
+        "-Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+        "-Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 3.3772079120390117,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "test-0",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/ce-record-copies/install/focus/core-tests",
+        "--guardian-filter=a record whose old value has no later reader"
+      ],
+      "status": 1,
+      "elapsed_admitted_seconds": 2.0756365119013935,
+      "stdout": "",
+      "stderr": "guardian/test: 9 test(s) selected by filter: \"a record whose old value has no later reader\" \u2014 1 match by name, 8 unnamed test block(s) run regardless\nexpected 0, found 2\n3 ce_records_test.test.a record whose old value has no later reader is updated in place; a snapshot still read keeps a copy...FAIL (TestExpectedEqual)\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x2774109 in expectEqualInner__anon_279262 (std.zig)\n                return error.TestExpectedEqual;\n                ^\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x2775eb9 in expectEqual (root_test.zig)\n    return expectEqualInner(T, expected, actual);\n    ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/src/core/ce_records_test.zig:216:5: 0x2775f44 in test.a record whose old value has no later reader is updated in place; a snapshot still read keeps a copy (root_test.zig)\n    try std.testing.expectEqual(@as(usize, 0), copies(functionText(llvm, \"@\\\"my.write_backs\\\"\")));\n    ^\nexpected 0, found 2\n4 ce_records_test.test.a mut record crosses a call in-out: one writable pointer, no sret, no copy in or out...FAIL (TestExpectedEqual)\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x2774109 in expectEqualInner__anon_279262 (std.zig)\n                return error.TestExpectedEqual;\n                ^\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x2774842 in expectEqual (root_test.zig)\n    return expectEqualInner(T, expected, actual);\n    ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/src/core/ce_records_test.zig:236:5: 0x27748cd in test.a mut record crosses a call in-out: one writable pointer, no sret, no copy in or out (root_test.zig)\n    try std.testing.expectEqual(@as(usize, 0), copies(pushes));\n    ^\n7 passed; 0 skipped; 2 failed.\nguardian/test: test wall 2.03s; slowest over 50ms:\nguardian/test:   1.06s  ce_records_test.test.shared homes, views, in-place updates and in-out calls keep value semantics, debug, release and verify, leak-free\nguardian/test:   0.59s  ce_records_test.test.a record whose old value has no later reader is updated in place; a snapshot still read keeps a copy\nguardian/test:   0.11s  ce_records_test.test.the CE-A shapes print what value semantics says, debug and release\nguardian/test:   0.10s  ce_records_test.test.a ret next to a value living in %ret builds its value in a temporary: a field swap reads both halves first\nguardian/test:   0.08s  ce_records_test.test.a call's result record read whole gets its in-out final values copied in after the call\nguardian/test: FAIL \u2014 2 failed of 9\nguardian/test: RESULT {\"passed\":7,\"failed\":2,\"skipped\":0}\n"
+    },
+    {
+      "name": "test-1",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/ce-record-copies/install/focus/core-tests",
+        "--guardian-filter=a mut record crosses a call in-out"
+      ],
+      "status": 1,
+      "elapsed_admitted_seconds": 1.6484165340662003,
+      "stdout": "",
+      "stderr": "guardian/test: 9 test(s) selected by filter: \"a mut record crosses a call in-out\" \u2014 1 match by name, 8 unnamed test block(s) run regardless\nexpected 0, found 2\n3 ce_records_test.test.a record whose old value has no later reader is updated in place; a snapshot still read keeps a copy...FAIL (TestExpectedEqual)\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x2774109 in expectEqualInner__anon_279262 (std.zig)\n                return error.TestExpectedEqual;\n                ^\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x2775eb9 in expectEqual (root_test.zig)\n    return expectEqualInner(T, expected, actual);\n    ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/src/core/ce_records_test.zig:216:5: 0x2775f44 in test.a record whose old value has no later reader is updated in place; a snapshot still read keeps a copy (root_test.zig)\n    try std.testing.expectEqual(@as(usize, 0), copies(functionText(llvm, \"@\\\"my.write_backs\\\"\")));\n    ^\nexpected 0, found 2\n4 ce_records_test.test.a mut record crosses a call in-out: one writable pointer, no sret, no copy in or out...FAIL (TestExpectedEqual)\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x2774109 in expectEqualInner__anon_279262 (std.zig)\n                return error.TestExpectedEqual;\n                ^\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x2774842 in expectEqual (root_test.zig)\n    return expectEqualInner(T, expected, actual);\n    ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/src/core/ce_records_test.zig:236:5: 0x27748cd in test.a mut record crosses a call in-out: one writable pointer, no sret, no copy in or out (root_test.zig)\n    try std.testing.expectEqual(@as(usize, 0), copies(pushes));\n    ^\n7 passed; 0 skipped; 2 failed.\nguardian/test: test wall 1.62s; slowest over 50ms:\nguardian/test:   0.68s  ce_records_test.test.shared homes, views, in-place updates and in-out calls keep value semantics, debug, release and verify, leak-free\nguardian/test:   0.60s  ce_records_test.test.a record whose old value has no later reader is updated in place; a snapshot still read keeps a copy\nguardian/test:   0.11s  ce_records_test.test.the CE-A shapes print what value semantics says, debug and release\nguardian/test:   0.09s  ce_records_test.test.a call's result record read whole gets its in-out final values copied in after the call\nguardian/test:   0.09s  ce_records_test.test.a ret next to a value living in %ret builds its value in a temporary: a field swap reads both halves first\nguardian/test: FAIL \u2014 2 failed of 9\nguardian/test: RESULT {\"passed\":7,\"failed\":2,\"skipped\":0}\n"
+    }
+  ],
+  "complete": true,
+  "compiler": {
+    "path": ".zig-cache/o/cd072e73238eac4dd68a1397de366cea/mylang",
+    "sha256": "37742e49746da007fd9caea88680369945d1b3e2852c71940029370142f1be30",
+    "options": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/c4a78c3df1c786d4bcd49dcd0f284248/options.zig"
+  },
+  "test_binary_sha256": "3392cda2bac21fcc4b4a574fc280d395a3b7a370ad0c80bb88655b6d5304b8fa",
+  "pass": false
+}

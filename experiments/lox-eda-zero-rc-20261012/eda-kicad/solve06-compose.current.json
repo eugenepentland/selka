@@ -1,0 +1,1 @@
+{"modules": [{"module": "kicad_sch_compose.my", "status": 1, "stdout": "", "stderr": "kicad_sch_compose.my:791:16: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut head = sites[run[0]]\n                 ^\n", "source_sha256": "b1960d0e63c1509700a5f6d027a1893d48de267ccc4f58aa3377e55af6d8751b"}]}

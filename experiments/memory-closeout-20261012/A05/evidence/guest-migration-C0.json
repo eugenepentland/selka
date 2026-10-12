@@ -1,0 +1,110 @@
+{
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "results": [
+    {
+      "path": "tests/lang/application_cache.my",
+      "original_sha256": "0c8277f041134839c9780969f9098c529916a8235c500db8ae8e548d3c216d35",
+      "migrated_sha256": "d27bdb4039f9a4a753c4796bfd4a6ad525fd2598954dfa044c108555f10ba397",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "check",
+        "tests/lang/application_cache.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "application_cache.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main\n  import cache_record\n  ^\n"
+    },
+    {
+      "path": "tests/lang/capability_fields.my",
+      "original_sha256": "fcc03d5095e7fa4068abb5557d295d174cf2e6186d4bf041888819848a1f9807",
+      "migrated_sha256": "fcc03d5095e7fa4068abb5557d295d174cf2e6186d4bf041888819848a1f9807",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "check",
+        "tests/lang/capability_fields.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "capability_fields.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main\n  # A capability held in a record field takes method syntax exactly as a bare local\n  ^\n"
+    },
+    {
+      "path": "tests/lang/memo_cache.my",
+      "original_sha256": "973d611157cd6d360a5d4e32cd8696278a61403606236a04681f37c68629f2c7",
+      "migrated_sha256": "a6d7d945b0f5d7a2a62c1363900fd381dad9caedb059c6de8c3806902234439f",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "check",
+        "tests/lang/memo_cache.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "@stdlib/memo.my:18:20: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n              return detail\n                     ^\n"
+    },
+    {
+      "path": "tests/lang/rc_capability_values.my",
+      "original_sha256": "d151504ed8ae3e636bfa10be9a64e5a22a26cd6db59b15623bf82fa445d340ad",
+      "migrated_sha256": "d151504ed8ae3e636bfa10be9a64e5a22a26cd6db59b15623bf82fa445d340ad",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "check",
+        "tests/lang/rc_capability_values.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "test_capabilities.my:90:20: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n              return value\n                     ^\n"
+    },
+    {
+      "path": "tests/lang/rc_contract_results.my",
+      "original_sha256": "5f6451472ba46a531cc2cffa8116dda0dd961d3df63b235d5996e9887651d03e",
+      "migrated_sha256": "5f6451472ba46a531cc2cffa8116dda0dd961d3df63b235d5996e9887651d03e",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "check",
+        "tests/lang/rc_contract_results.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_contract_results.my:38:5: error[E_ZERO_RC_UNSUPPORTED]: store resource owners in named local scopes in the zero-RC prototype\n      return fs.open(\"data\", \"w\")\n      ^\n"
+    },
+    {
+      "path": "tests/lang/test_capabilities.my",
+      "original_sha256": "104b56f7a7040f66bdcf46a5265bc17ba8f633484f3310d2046b7e979367f9ea",
+      "migrated_sha256": "66799f51cb34ddd13f04f5a769f4d645f0b7f7b4dc6a080cdfe6da540fb5ba0a",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "check",
+        "tests/lang/test_capabilities.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "test_capabilities.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main\n  # Deterministic stand-in capabilities (SPEC.md TEST-CAPS-1, TEST-CAPS-3,\n  ^\n"
+    },
+    {
+      "path": "tests/value_semantics/stdlib.my",
+      "original_sha256": "68ee1ffa14d3470dcebbb538e86bc708647d447e49435d9a42241165e169eb80",
+      "migrated_sha256": "bb8a1c40b247cc767b7652b89c27885a964f28ab55d19224ed4e607e29fbbe61",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "check",
+        "tests/value_semantics/stdlib.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "stdlib.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main\n  import byte_builder\n  ^\n"
+    }
+  ]
+}

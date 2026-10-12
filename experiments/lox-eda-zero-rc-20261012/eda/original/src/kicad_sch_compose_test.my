@@ -1,0 +1,21 @@
+
+import kicad_sch_compose as m
+
+# test "kicad-sch: isRailNet accepts the canonical grounds and nothing else"
+public func test_kicad_sch_israilnet_accepts_the_canonical_grounds_and_nothing_else() -> bool:
+    for name in [b"GND", b"AGND", b"DGND", b"VSSA", b"adc1/GND"]:
+        assert m.is_rail_net(name)
+    for name in [b"VDD3V3", b"GND_SENSE", b""]:
+        assert not m.is_rail_net(name)
+    return True
+
+
+# test "kicad-sch: a band heading never repeats the sheet title"
+public func test_kicad_sch_a_band_heading_never_repeats_the_sheet_title() -> bool:
+    mut title = b"STM32N657L0H3Q Core System"
+    assert m.band_heading(title, title) is None
+    assert m.band_heading(title, title + b" / charger") == Some(b"charger")
+    assert m.band_heading(title, b"sub-block buck") == Some(b"sub-block buck")
+    assert m.band_heading(b"", title) == Some(title)
+    assert m.band_heading(title, b"STM32N657L0H3Q Core Systems") == Some(b"STM32N657L0H3Q Core Systems")
+    return True

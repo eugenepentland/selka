@@ -5,12 +5,15 @@
 //! (NEW-CORE-S5-RETIRED-1). `src/main.zig` asks `dispatch` first; null hands the
 //! command to the front-end commands it still owns.
 const std = @import("std");
+const allocation_contract = @import("allocation_contract.zig");
 const core_main = @import("main.zig");
 const cli_args = @import("cli_args.zig");
 const cli_run = @import("cli_run.zig");
 const pipeline = @import("pipeline.zig");
 const cost_command = @import("cost_command.zig");
 const juice_command = @import("juice/command.zig");
+/// Source ownership validation shared with the full front-end check command.
+pub const validateOwnership = @import("single_owner.zig").validateMode;
 
 /// What stops a command before it has a status: memory, an unwritable stream, or a
 /// test the runner cannot encode.
@@ -96,7 +99,9 @@ pub fn dispatch(init: std.process.Init, args: []const []const u8) Error!?u8 {
     }
     const rest = args[2..];
     if (std.mem.eql(u8, command, "check")) {
-        for (rest) |arg| if (std.mem.eql(u8, arg, "--experimental-single-owner") or std.mem.eql(u8, arg, "--experimental-zero-rc")) {
+        // Developer profiling keeps its dedicated output; ordinary checks retain
+        // the full front-end parser, library support and diagnostic options.
+        for (rest) |arg| if (std.mem.eql(u8, arg, "--typed") or std.mem.eql(u8, arg, "--stats")) {
             const result = try @import("check_command.zig").run(init, rest);
             return result;
         };
@@ -221,8 +226,14 @@ fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
 }
 
 /// Append Core allocation warnings for lint; validation-only commands do not call this.
-pub fn checkAllocationContracts(a: std.mem.Allocator, program: @import("mylang").typed.Program, source: @import("mylang").source.Source, sink: *@import("mylang").diagnostic.Sink) std.mem.Allocator.Error!void {
-    for (try @import("allocation_contract.zig").collectProgram(a, program, source)) |failure| {
-        try sink.items.append(sink.allocator, try @import("allocation_contract.zig").diagnostic(a, failure));
+pub fn checkAllocationContracts(
+    a: std.mem.Allocator,
+    program: @import("mylang").typed.Program,
+    source: @import("mylang").source.Source,
+    sink: *@import("mylang").diagnostic.Sink,
+    ownership: allocation_contract.Ownership,
+) std.mem.Allocator.Error!void {
+    for (try allocation_contract.collectProgramWithOwnership(a, program, source, ownership)) |failure| {
+        try sink.items.append(sink.allocator, try allocation_contract.diagnostic(a, failure));
     }
 }

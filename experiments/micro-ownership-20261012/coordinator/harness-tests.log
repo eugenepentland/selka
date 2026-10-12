@@ -1,0 +1,10 @@
+test_direct_destruction_is_not_rc (test_measure.MeasurementContract.test_direct_destruction_is_not_rc) ... ok
+test_exit_and_stderr_cannot_qualify (test_measure.MeasurementContract.test_exit_and_stderr_cannot_qualify) ... ok
+test_failed_arm_preserved_and_no_receipt_overwrite (test_measure.MeasurementContract.test_failed_arm_preserved_and_no_receipt_overwrite) ... ok
+test_kernel_checksum_and_positive_clock (test_measure.MeasurementContract.test_kernel_checksum_and_positive_clock) ... ok
+test_timeout_is_not_a_timing_sample (test_measure.MeasurementContract.test_timeout_is_not_a_timing_sample) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.227s
+
+OK

@@ -1,0 +1,7 @@
+public func test_moved() -> bool:
+    const before = "move-" + str(7)
+    const after = before
+    return before == after
+
+func main() -> int:
+    return 0

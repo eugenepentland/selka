@@ -1,0 +1,75 @@
+build-slot: FIFO ticket 2163, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 2163 after 5s
+guardian/test: 19 test(s) selected
+E_COLLECTION_METHOD: operation is not supported by this collection
+18 textgap_literal_test.test.textgap_literal immutable raw literals have static byte IR without runtime encoding...FAIL (SourceError)
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema.zig:1610:21: 0x21d788b in checkBodies (compiler.zig)
+        if (failed) return error.SourceError;
+                    ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema.zig:1537:5: 0x21d71ef in retryOr (compiler.zig)
+    return err;
+    ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema.zig:1854:46: 0x1f9a06d in checkProgram (compiler.zig)
+    }, contracts_failed, failed) catch |err| return retryOr(&plan, err);
+                                             ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema.zig:1750:9: 0x1e255cf in checkCore (compiler.zig)
+        return err;
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema.zig:1708:5: 0x1e24fad in checkCached (compiler.zig)
+    return checkCore(allocator, src, program, sink, .{ .names = module_names, .cache = cache });
+    ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/compiler.zig:215:24: 0x1e24891 in checkWithCache (compiler.zig)
+        self.program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, cache);
+                       ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/compiler.zig:195:9: 0x1e24026 in check (compiler.zig)
+        return self.checkWithCache(null);
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/textgap_literal_test.zig:12:9: 0x13f4398 in make (root_test.zig)
+        return err;
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/textgap_literal_test.zig:53:20: 0x2918eb4 in test.textgap_literal immutable raw literals have static byte IR without runtime encoding (root_test.zig)
+    const module = try make(arena.allocator(), source);
+                   ^
+E_COLLECTION_METHOD: operation is not supported by this collection
+19 textgap_literal_test.test.textgap_literal native raw values copies replacements and mutable buffers stay independent...FAIL (SourceError)
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema.zig:1610:21: 0x21d788b in checkBodies (compiler.zig)
+        if (failed) return error.SourceError;
+                    ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema.zig:1537:5: 0x21d71ef in retryOr (compiler.zig)
+    return err;
+    ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema.zig:1854:46: 0x1f9a06d in checkProgram (compiler.zig)
+    }, contracts_failed, failed) catch |err| return retryOr(&plan, err);
+                                             ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema.zig:1750:9: 0x1e255cf in checkCore (compiler.zig)
+        return err;
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema.zig:1708:5: 0x1e24fad in checkCached (compiler.zig)
+    return checkCore(allocator, src, program, sink, .{ .names = module_names, .cache = cache });
+    ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/compiler.zig:215:24: 0x1e24891 in checkWithCache (compiler.zig)
+        self.program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, cache);
+                       ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/compiler.zig:195:9: 0x1e24026 in check (compiler.zig)
+        return self.checkWithCache(null);
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/textgap_literal_test.zig:12:9: 0x13f4398 in make (root_test.zig)
+        return err;
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/textgap_literal_test.zig:77:22: 0x13f4f0a in test.textgap_literal native raw values copies replacements and mutable buffers stay independent (root_test.zig)
+        var module = try make(a, source);
+                     ^
+17 passed; 0 skipped; 2 failed.
+guardian/test: test wall 4.54s; slowest over 50ms:
+guardian/test:   1.25s  textgap_split_test.test.textgap_split five native modes preserve lengths Unicode escapes and early traps
+guardian/test:   0.46s  textgap_literal_test.test.textgap_literal immutable raw literals have static byte IR without runtime encoding
+guardian/test:   0.45s  textgap_decode_test.test.textgap_decode mutated bytes and escaping snapshot retain original bytes
+guardian/test:   0.40s  textgap_snapshot_test.test.textgap_snapshot dead owned donors transfer but live sources and children retain independent storage
+guardian/test:   0.38s  textgap_decode_test.test.textgap_decode native Unicode invalid boundaries and replaced input keep independent results
+guardian/test:   0.32s  textgap_buffer_span_test.test.textgap_buffer_span append borrows encoded octets with valid invalid growth and independent output
+guardian/test:   0.31s  textgap_csv_test.test.textgap_csv static append keeps Unicode literals snapshots self appends and empty values independent
+guardian/test:   0.31s  textgap_csv_test.test.textgap_csv character collectors preserve delimiter resets UTF8 and early exits across growth
+guardian/test:   0.30s  textgap_buffer_span_test.test.textgap_buffer_span rejects forged helper contracts and parent replacement
+guardian/test:   0.11s  textgap_snapshot_test.test.textgap_snapshot cold warm replay matches uncached donor and retained child ownership
+guardian/test: FAIL — 2 failed of 19
+guardian/test: RESULT {"passed":17,"failed":2,"skipped":0}

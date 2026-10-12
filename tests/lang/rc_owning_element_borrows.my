@@ -15,8 +15,8 @@ record Pin:
 
 
 func pin(part: int, net: bytes, nc: bool, net_id: int) -> Pin:
-    mut span = Span(source=net, start=0, end=len(net))
-    return Pin(part=part, net=span, nc=nc, display=span, net_id=net_id)
+    mut span = Span(source=net.copy(), start=0, end=len(net))
+    return Pin(part=part, net=span.copy(), nc=nc, display=span, net_id=net_id)
 
 
 func sample() -> Pin[]:
@@ -38,7 +38,7 @@ func same(a: Span, b: Span) -> bool:
 func find(pins: Pin[], part: int) -> Pin:
     mut i = 0
     while i < len(pins):
-        mut found = pins[i]
+        mut found = pins[i].copy()
         if found.part == part:
             return found
         i += 1
@@ -48,13 +48,13 @@ func find(pins: Pin[], part: int) -> Pin:
 # An owned-result body allocates, calls and returns while the borrow is live.
 func matching(pins: Pin[], wanted: bytes) -> Span[]:
     mut out: Span[] = []
-    mut target = Span(source=wanted, start=0, end=len(wanted))
+    mut target = Span(source=wanted.copy(), start=0, end=len(wanted))
     mut i = 0
     while i < len(pins):
-        mut current = pins[i]
+        mut current = pins[i].copy()
         if not current.nc and same(current.net, target):
-            out.append(current.display)
-            out.append(Span(source=current.net.source, start=1, end=current.net.end))
+            out.append(current.display.copy())
+            out.append(Span(source=current.net.source.copy(), start=1, end=current.net.end))
         i += 1
     return out
 
@@ -63,14 +63,14 @@ func matching(pins: Pin[], wanted: bytes) -> Span[]:
 # captures deep, so these element reads keep their copies.
 func groups(pins: Pin[]) -> int[]:
     mut out: int[] = []
-    mut view = pins
+    mut view = pins.copy()
     mut i = 0
     while i < len(view):
-        mut current = view[i]
+        mut current = view[i].copy()
         mut count = 0
         mut j = 0
         while j < len(view):
-            mut other = view[j]
+            mut other = view[j].copy()
             if not other.nc and same(other.net, current.net):
                 count += 1
             j += 1
@@ -81,16 +81,16 @@ func groups(pins: Pin[]) -> int[]:
 
 func last_with(pins: Pin[], net_id: int) -> Pin:
     mut kept: bytes[] = []
-    mut result = pins[0]
+    mut result = pins[0].copy()
     mut i = 0
     while i < len(pins):
-        mut current = pins[i]
-        kept.append(current.net.source)
+        mut current = pins[i].copy()
+        kept.append(current.net.source.copy())
         if current.net_id == net_id:
-            result = pins[i]
+            result = pins[i].copy()
         i += 1
     if len(kept) == 0:
-        return pins[0]
+        return pins[0].copy()
     return result
 
 
@@ -125,14 +125,14 @@ public func test_a_reassigned_element_local_returns_its_latest_element() -> bool
 
 # Near misses: a `mut` list, a local list and an iteration source copy.
 func rename(mut pins: Pin[]) -> int:
-    mut before = pins[0]
+    mut before = pins[0].copy()
     pins[0].net = Span(source=b"RENAMED", start=0, end=7)
     pins[0].part = 50
     return before.part * 100 + before.net.end
 
 
 func swap_first(view: Pin[], mut target: Pin[]) -> int:
-    mut first = view[0]
+    mut first = view[0].copy()
     target[0] = pin(99, b"ZZ", False, 9)
     target.append(pin(5, b"YYYY", False, 5))
     return first.part * 10 + first.net.end
@@ -140,7 +140,7 @@ func swap_first(view: Pin[], mut target: Pin[]) -> int:
 
 func local_list(count: int) -> int:
     mut pins = sample()
-    mut current = pins[1]
+    mut current = pins[1].copy()
     pins[1] = pin(70, b"NEW", False, 70)
     pins.append(pin(count, b"MORE", False, 0))
     return current.part * 1000 + current.net.end * 100 + pins[1].part
@@ -161,7 +161,7 @@ public func test_mut_list_element_read_keeps_its_snapshot() -> bool:
 
 public func test_read_only_and_mut_views_of_one_list_stay_distinct() -> bool:
     mut pins = sample()
-    mut result = swap_first(pins, mut pins)
+    mut result = swap_first(pins.copy(), mut pins)
     return result == 3 and pins[0].part == 99 and len(pins) == 5
 
 
@@ -173,12 +173,12 @@ public func test_local_list_and_iteration_elements_keep_their_copies() -> bool:
 # of a read-only element, is bound in place; a local copy as the first
 # argument keeps its own.
 func matching_parts(pins: Pin[], net: Span) -> int[]:
-    mut base = net
+    mut base = net.copy()
     base.end = net.end - 1
     mut out: int[] = []
     mut i = 0
     while i < len(pins):
-        mut current = pins[i]
+        mut current = pins[i].copy()
         if same(current.net, base):
             out.append(current.part)
         if same(base, current.display):

@@ -21,9 +21,11 @@ func touch_both(mut first: int[], mut second: int[], source: int[]) -> int:
 # spec-case: VALUE-SEMANTICS-5
 public func test_a_mut_argument_before_or_after_its_snapshot() -> bool:
     mut first = [1, 2]
-    mut seen_first = touch(mut first, first)
+    const first_snapshot = first.copy()
+    mut seen_first = touch(mut first, first_snapshot)
     mut second = [1, 2]
-    mut seen_second = reversed(second, mut second)
+    const second_snapshot = second.copy()
+    mut seen_second = reversed(second_snapshot, mut second)
     return seen_first == 2 and seen_second == 2 and first == [1, 2, 2] and second == [1, 2, 2]
 
 
@@ -33,12 +35,14 @@ public func test_a_mut_argument_before_or_after_its_snapshot() -> bool:
 public func test_two_mut_operands_and_a_snapshot_of_one_of_them() -> bool:
     mut items = [1, 2]
     mut others = [7]
-    mut seen = touch_both(mut items, mut others, items)
+    const items_snapshot = items.copy()
+    mut seen = touch_both(mut items, mut others, items_snapshot)
     return seen == 2 and items == [1, 2, 2] and others == [7, 2]
 
 
 # spec-case: VALUE-SEMANTICS-5
 public func test_a_mut_record_field_is_redirected_after_a_later_snapshot() -> bool:
     mut holder = Carrier(items=[1, 2])
-    mut seen = touch(mut holder.items, holder.items)
+    const items_snapshot = holder.items.copy()
+    mut seen = touch(mut holder.items, items_snapshot)
     return seen == 2 and holder.items == [1, 2, 2]

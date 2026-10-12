@@ -30,7 +30,7 @@ func observe(mut m: Machine) -> Unit:
 
 # Pushes a frame: the caller reads it back.
 func enter(mut m: Machine, code: int[]) -> Unit:
-    m.frames.append(Frame(code=code, ip=0, base=m.acc))
+    m.frames.append(Frame(code=code.copy(), ip=0, base=m.acc))
     m.count = m.count + 1
 
 
@@ -42,10 +42,10 @@ func leave(mut m: Machine) -> Unit:
 # 0 halt, 1 add one, 2 add the next word, 3 observe, 4 call a nested code, 5 return
 # from it, 6 jump to the next word, 7 trap when the accumulator passes the next word.
 func run(mut m: Machine, nested: int[]) -> int:
-    mut frame = m.frames[m.count - 1]
+    mut frame = m.frames[m.count - 1].copy()
     while True:
         mut op = read(mut frame)
-        m.frames[m.count - 1] = frame
+        m.frames[m.count - 1] = frame.copy()
         if op == 1:
             m.acc = m.acc + 1
         elif op == 0:
@@ -56,12 +56,12 @@ func run(mut m: Machine, nested: int[]) -> int:
         elif op == 3:
             observe(mut m)
         elif op == 4:
-            m.frames[m.count - 1] = frame
+            m.frames[m.count - 1] = frame.copy()
             enter(mut m, nested)
-            frame = m.frames[m.count - 1]
+            frame = m.frames[m.count - 1].copy()
         elif op == 5:
             leave(mut m)
-            frame = m.frames[m.count - 1]
+            frame = m.frames[m.count - 1].copy()
         elif op == 6:
             frame.ip = frame.code[frame.ip]
         elif op == 7:
@@ -69,12 +69,12 @@ func run(mut m: Machine, nested: int[]) -> int:
             frame.ip = frame.ip + 1
             if m.acc > limit:
                 m.log.append(m.frames[m.count + 5].ip)
-        m.frames[m.count - 1] = frame
+        m.frames[m.count - 1] = frame.copy()
     return m.acc * 1000 + frame.ip
 
 
 func machine(code: int[]) -> Machine:
-    return Machine(frames=[Frame(code=code, ip=0, base=0)], count=1, log=[], acc=0)
+    return Machine(frames=[Frame(code=code.copy(), ip=0, base=0)], count=1, log=[], acc=0)
 
 
 func main(args: str[], out: Stream) -> int:

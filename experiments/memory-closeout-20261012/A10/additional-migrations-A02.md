@@ -1,0 +1,67 @@
+# A02 proposed additional fixture migrations
+
+proposed nonoverlapping reservations for coordinator dispatch; A10 edits none of these sources
+
+- `test/core/b_buffer_values.my`
+  - b_buffer_values.my:10:26: error[E_SINGLE_OWNER_MOVED]: 'buffer' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/c_runner_byte_buffer.my`
+  - c_runner_byte_buffer.my:8:16: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+  - Followup: explicit independent copy/local source migration.
+- `test/core/ce_appends.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_appends.my:43:9: error[E_SINGLE_OWNER_MOVED]: 'buffer' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/f2_index.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/f2_index.my:125:14: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+  - Followup: explicit independent copy/local source migration.
+- `test/core/list_alias.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/list_alias.my:2:16: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+  - Followup: explicit independent copy/local source migration.
+- `test/core/m_list_methods.my`
+  - m_list_methods.my:19:8: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/rc_lists.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_lists.my:2:14: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+  - Followup: explicit independent copy/local source migration. Native RC/COW counter assertions require separate oracle review.
+- `test/core/rc_mut.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_mut.my:38:9: error[E_SINGLE_OWNER_MOVED]: 'a' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration. Native RC/COW counter assertions require separate oracle review.
+- `test/core/rc_promote_order.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_promote_order.my:25:5: error[E_SINGLE_OWNER_MOVED]: 'xs' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration. Native RC/COW counter assertions require separate oracle review.
+- `test/core/rc_shared_loops.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_shared_loops.my:4:5: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit
+  - Followup: loop owner transfer; explicit copy/reinitialization preserving each iteration. Native RC/COW counter assertions require separate oracle review.
+- `test/core/u1_growth.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/u1_growth.my:40:13: error[E_SINGLE_OWNER_MOVED]: 'b' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/u1_hoist.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/u1_hoist.my:19:13: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+  - Followup: explicit independent copy/local source migration.
+- `test/core/v_dynamic_repeat.my`
+  - v_dynamic_repeat.my:13:5: error[E_SINGLE_OWNER_MOVED]: 'rows' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/v_lists.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_lists.my:18:14: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+  - Followup: explicit independent copy/local source migration.
+- `test/core/v_loops.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_loops.my:37:17: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+  - Followup: explicit independent copy/local source migration.
+- `test/core/v_methods.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_methods.my:38:20: error[E_SINGLE_OWNER_MOVED]: 'zs' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/v_mut_rebind.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_mut_rebind.my:3:13: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+  - Followup: explicit independent copy/local source migration.
+- `test/core/v_nested_lengths.my`
+  - v_nested_lengths.my:4:17: error[E_SINGLE_OWNER_MOVED]: 'grid' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/v_nested_places.my`
+  - v_nested_places.my:10:5: error[E_SINGLE_OWNER_MOVED]: 'a' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/v_sort.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_sort.my:57:5: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/v_units.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_units.my:13:16: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.

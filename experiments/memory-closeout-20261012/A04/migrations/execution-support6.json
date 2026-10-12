@@ -1,0 +1,1011 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+  "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "survey": "experiments/memory-closeout-20261012/A04/migrations/check-support6.json",
+  "default_ownership": false,
+  "ownership_support_sha256": "09a65264e96844f62e0b8bb59bb8e12674a9c20ab5f9c1b30ab552351a784ace",
+  "rows": [
+    {
+      "source": "tests/lang/migrated/python_format_case_3.my",
+      "source_sha256": "435edbca6a12988d2dd096bf2be9a568cf977c1cd15f9ac0ae08c2d5af0ab284",
+      "status": "helper tested through importer",
+      "importer": "tests/lang/migrated/python_format.my",
+      "public_tests": []
+    },
+    {
+      "source": "tests/lang/tuples.my",
+      "source_sha256": "9b19c3b5b7e42b2d98475a0fa703ecc104055991e971d8da764dfe77d6458710",
+      "status": "source blocked",
+      "diagnostic": "tuples.my:26:11: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      const number, letter = found.copy()\n            ^\n",
+      "public_tests": [
+        "test_a_returned_tuple_destructures_and_the_swap_idiom_works",
+        "test_a_tuple_nests_in_a_list_and_in_a_record_field",
+        "test_an_option_and_a_result_payload_can_be_a_tuple",
+        "test_tuple_equality_and_rendering_follow_the_aggregate_rule",
+        "test_a_generic_function_over_a_tuple_keeps_its_element_type"
+      ]
+    },
+    {
+      "source": "tests/lang/builtin_context.my",
+      "source_sha256": "888b1bcf8837ac260506622f597a7ef35900ac47b6b68af96f021956c9685e89",
+      "public_tests": [
+        "test_generic_list_result_and_contextual_constructors_keep_symbolic_type_parameters",
+        "test_builtin_list_and_result_resolve_without_imports_or_explicit_declarations",
+        "test_empty_lists_and_ok_err_inherit_binding_return_and_argument_contexts",
+        "test_record_fields_and_nested_list_elements_propagate_empty_list_context",
+        "test_ok_unit_values_preserve_fallible_result_handling"
+      ],
+      "modes": {
+        "ordinary": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/builtin_context.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"builtin_context::test_builtin_list_and_result_resolve_without_imports_or_explicit_declarations\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3b36d3b7669584906eb399e649969e89496867ebd64b973f5c3988627e30181f\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/builtin_context.my#29b7ddb9c1019f03688e7cc198c73ebade66cfeafa5e4bc9124241feaafe2298\",\"producer\":{\"facts\":{\"fresh\":11,\"reused\":0,\"fallback\":11,\"decoded\":0},\"lowering\":{\"fresh\":11,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":11,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":44,\"index_edges\":30,\"affected_nodes\":11,\"closure_nodes\":22,\"closure_edges\":6,\"reused_tests\":0,\"planned_tests\":5},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":6,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":11548,\"save_bytes_prepared\":14791,\"sequence_locks\":39}},\"nanoseconds\":{\"lowering\":4246028,\"facts\":1452192,\"graph\":650611,\"planner\":110012092,\"keys\":87438,\"publication\":3371361,\"total\":121115424},\"transport\":{\"request_bytes\":648,\"reply_bytes\":304,\"startups\":1}}}},{\"name\":\"builtin_context::test_empty_lists_and_ok_err_inherit_binding_return_and_argument_contexts\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"d6f530b1ae9e76a49500f7adaeae9c303b2b66b43f8ab7f4953dedf1dc65e2aa\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"builtin_context::test_generic_list_result_and_contextual_constructors_keep_symbolic_type_parameters\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"d1c2d0a00153d437a4e118816617665733cf9c5992cc2222aebfa383fcfad283\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"builtin_context::test_ok_unit_values_preserve_fallible_result_handling\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3ec0d7783b1ec835736687c4877d53c88ef881baa3f319029fdbffc5ddcccbfa\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"builtin_context::test_record_fields_and_nested_list_elements_propagate_empty_list_context\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"45eba483014f1fb139f1f0fe562bff86b306996a041a7829d5e821748eddf553\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":5,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/builtin_context.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 5,
+          "failed": 0,
+          "unsupported": 0
+        },
+        "zero_rc": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/builtin_context.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"builtin_context::test_builtin_list_and_result_resolve_without_imports_or_explicit_declarations\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"610cbd822bb431833718d836bb229aabfcfb7295b051ae933d1787f4d25ef596\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/builtin_context.my#29b7ddb9c1019f03688e7cc198c73ebade66cfeafa5e4bc9124241feaafe2298\",\"producer\":{\"facts\":{\"fresh\":11,\"reused\":0,\"fallback\":11,\"decoded\":0},\"lowering\":{\"fresh\":11,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":11,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":2},\"planner\":{\"index_nodes\":44,\"index_edges\":30,\"affected_nodes\":11,\"closure_nodes\":22,\"closure_edges\":6,\"reused_tests\":0,\"planned_tests\":5},\"storage\":{\"packed_bytes_read\":8139,\"decoded_bytes\":18935,\"blocks_decoded\":1,\"payload_bytes_returned\":164,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":11348,\"save_bytes_prepared\":14697,\"sequence_locks\":38}},\"nanoseconds\":{\"lowering\":2744358,\"facts\":971224,\"graph\":111124,\"planner\":126924591,\"keys\":51165,\"publication\":4039483,\"total\":135001145},\"transport\":{\"request_bytes\":648,\"reply_bytes\":304,\"startups\":1}}}},{\"name\":\"builtin_context::test_empty_lists_and_ok_err_inherit_binding_return_and_argument_contexts\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"bb2ee5e399912d3c2658787530e9516924c1985a07be0c1f91732594bfca936c\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"builtin_context::test_generic_list_result_and_contextual_constructors_keep_symbolic_type_parameters\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"9da26eaa489a9caaa4e9f4a875a7a86cb9f140f3fe15eb4254f86ff94372e03b\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"builtin_context::test_ok_unit_values_preserve_fallible_result_handling\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"58fb91fab767279a879975c6242fa710caa69ceaac8c33f1e5e6ac4d4e4bb165\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"builtin_context::test_record_fields_and_nested_list_elements_propagate_empty_list_context\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"a700d6db80152d07e0bc861461ef44b3a1833f9aad714c4fca38f47d5800ac7b\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":5,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/builtin_context.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 5,
+          "failed": 0,
+          "unsupported": 0
+        }
+      }
+    },
+    {
+      "source": "tests/lang/byte_buffer.my",
+      "source_sha256": "157ca5f3a90a6ac03d77407f0ee96609606ee0462ca1dfcbd68061c3a932868c",
+      "public_tests": [
+        "test_append_methods_write_in_place_and_refuse_without_writing",
+        "test_a_buffer_storeback_preserves_an_earlier_snapshot",
+        "test_growth_preserves_identity_content_and_earlier_snapshots",
+        "test_byte_kinds_share_reads_and_compare_by_content",
+        "test_buffers_are_traced_through_record_fields_lists_and_generics",
+        "test_byte_buffer_builds_from_an_integer_list",
+        "test_append_float_matches_the_printed_spelling",
+        "test_growth_past_the_segment_threshold_keeps_every_octet"
+      ],
+      "modes": {
+        "ordinary": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/byte_buffer.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"byte_buffer::test_a_buffer_storeback_preserves_an_earlier_snapshot\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"e8a59df577a3e4b2b5932851ddbc85ac158b30fab55ce8c60579730abedce831\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/byte_buffer.my#3c55fde7a3ea82f3c6e0677bd79c69b0d77fe21148619926789ce33e4f29bb87\",\"producer\":{\"facts\":{\"fresh\":43,\"reused\":0,\"fallback\":11,\"decoded\":0},\"lowering\":{\"fresh\":11,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":43,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":172,\"index_edges\":450,\"affected_nodes\":43,\"closure_nodes\":200,\"closure_edges\":94,\"reused_tests\":0,\"planned_tests\":8},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":4,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":30189,\"save_bytes_prepared\":72121,\"sequence_locks\":39}},\"nanoseconds\":{\"lowering\":9400591,\"facts\":4060512,\"graph\":298571,\"planner\":113612663,\"keys\":118761,\"publication\":8127475,\"total\":135832449},\"transport\":{\"request_bytes\":2300,\"reply_bytes\":1264,\"startups\":1}}}},{\"name\":\"byte_buffer::test_append_float_matches_the_printed_spelling\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"6863d4009f8039c63ae5011ad6ab8c0005001c5f110ef581d9105a992938d0e2\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer::test_append_methods_write_in_place_and_refuse_without_writing\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"e34406140dd548a5f9007c8d56fcc9a40f0537eecf2a449b32582003c3e35b9f\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer::test_buffers_are_traced_through_record_fields_lists_and_generics\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"d53ea515e0722793554a3509483f9eff68c72a99d0a8178a6ce1e2a634735d42\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer::test_byte_buffer_builds_from_an_integer_list\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"cf657c2761ad5d96523494351d5a6b1ca6bec29b8ee93239819b03d3a97ba973\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer::test_byte_kinds_share_reads_and_compare_by_content\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"8930d0c49f2a4ab485b20a48d85eca19d5069e0e2463b0c72bbc9f1030084d1b\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer::test_growth_past_the_segment_threshold_keeps_every_octet\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"d674d762d87bdeb99b26774d2722610e4dad06b040c553cd37e83b0d5207ddbf\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer::test_growth_preserves_identity_content_and_earlier_snapshots\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"6bc69394a6ccb4e7c134fceb20387ce9f9fa5af2960a3bd8ead0acff6ea2d51c\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":8,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/byte_buffer.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 8,
+          "failed": 0,
+          "unsupported": 0
+        },
+        "zero_rc": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/byte_buffer.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"byte_buffer::test_a_buffer_storeback_preserves_an_earlier_snapshot\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"876678184ac81b1dff83be7969746f1fe875911b565bc8ff737d64ca03ebafb0\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/byte_buffer.my#3c55fde7a3ea82f3c6e0677bd79c69b0d77fe21148619926789ce33e4f29bb87\",\"producer\":{\"facts\":{\"fresh\":43,\"reused\":0,\"fallback\":11,\"decoded\":0},\"lowering\":{\"fresh\":11,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":43,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":2},\"planner\":{\"index_nodes\":172,\"index_edges\":450,\"affected_nodes\":43,\"closure_nodes\":200,\"closure_edges\":94,\"reused_tests\":0,\"planned_tests\":8},\"storage\":{\"packed_bytes_read\":9321,\"decoded_bytes\":21732,\"blocks_decoded\":1,\"payload_bytes_returned\":884,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":5,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":29870,\"save_bytes_prepared\":71482,\"sequence_locks\":38}},\"nanoseconds\":{\"lowering\":8205334,\"facts\":4037221,\"graph\":280047,\"planner\":113937979,\"keys\":118692,\"publication\":9369333,\"total\":136177581},\"transport\":{\"request_bytes\":2300,\"reply_bytes\":1264,\"startups\":1}}}},{\"name\":\"byte_buffer::test_append_float_matches_the_printed_spelling\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3dbbdff67a8ca8490fd5b818ede359ca43d7fcd21f38d895b1e3964e2e37b7e2\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer::test_append_methods_write_in_place_and_refuse_without_writing\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"dd9014db1d8130c323014f54772a58eec8a391b2b619d6c3070f03432ae6816e\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer::test_buffers_are_traced_through_record_fields_lists_and_generics\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"81c8d3e2d8c5296dd4601c51627346eee18ca06c5fa89c576ca958905d01b3e7\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer::test_byte_buffer_builds_from_an_integer_list\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"e0d6cd2751276f8c08ecc15ca3fc713f51afd51461a6fcfd1b820e18669f755d\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer::test_byte_kinds_share_reads_and_compare_by_content\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"c2c53f166dae7d8e31214b23b4c88272d31a21d94f91bd17cec42170a058666f\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer::test_growth_past_the_segment_threshold_keeps_every_octet\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"dfb94cfd6cd2ac0beb21c30feeb26f301e668503377afe47d39e1d4f8197a297\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer::test_growth_preserves_identity_content_and_earlier_snapshots\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"6390310c51c8d76dcf9af27e2febee2c45c617bc450f00e155423c8b0d55c486\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":8,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/byte_buffer.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 8,
+          "failed": 0,
+          "unsupported": 0
+        }
+      }
+    },
+    {
+      "source": "tests/lang/byte_buffer_from_list.my",
+      "source_sha256": "bf84253197a370b46f59ec39b99bb0fbe89dbe795ed476d8f8a959f11e06ea37",
+      "public_tests": [
+        "test_writing_a_buffer_built_from_a_list_leaves_the_list_alone",
+        "test_writing_the_list_after_the_conversion_leaves_the_buffer_alone",
+        "test_two_buffers_built_from_one_list_are_independent",
+        "test_a_buffer_built_from_a_record_field_leaves_the_field_alone",
+        "test_a_returned_buffer_owns_its_octets",
+        "test_a_buffer_grown_in_a_callee_is_independent_of_its_list",
+        "test_a_snapshot_taken_before_a_write_keeps_its_octets",
+        "test_a_rebuilt_buffer_in_a_loop_starts_from_the_list_every_time",
+        "test_a_renamed_buffer_is_still_a_value_of_its_own",
+        "test_a_buffer_stored_in_a_record_is_a_value_of_its_own"
+      ],
+      "modes": {
+        "ordinary": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/byte_buffer_from_list.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"byte_buffer_from_list::test_a_buffer_built_from_a_record_field_leaves_the_field_alone\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"aa18d922bb215df6fdf71467636fb4a75a2e7a36a8ead60f6e61b4eb4c1ba26e\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/byte_buffer_from_list.my#02a39044ac75aaad248f313303159a2e1eb60c14fd8b2b8ce859fb9f72027609\",\"producer\":{\"facts\":{\"fresh\":22,\"reused\":0,\"fallback\":13,\"decoded\":0},\"lowering\":{\"fresh\":13,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":22,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":88,\"index_edges\":300,\"affected_nodes\":22,\"closure_nodes\":140,\"closure_edges\":60,\"reused_tests\":0,\"planned_tests\":10},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":6,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":20600,\"save_bytes_prepared\":40483,\"sequence_locks\":45}},\"nanoseconds\":{\"lowering\":7094100,\"facts\":2464551,\"graph\":229271,\"planner\":107181658,\"keys\":117652,\"publication\":5015510,\"total\":122350625},\"transport\":{\"request_bytes\":1364,\"reply_bytes\":864,\"startups\":1}}}},{\"name\":\"byte_buffer_from_list::test_a_buffer_grown_in_a_callee_is_independent_of_its_list\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"6b61f9628ef1f215d8aeefd0b9052fe712c374630da190cf516d48d9c0878ad6\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer_from_list::test_a_buffer_stored_in_a_record_is_a_value_of_its_own\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"e524608584a412f75c09cd8efe777646c6742b5a54f2fb137e7ac2d992b05fad\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer_from_list::test_a_rebuilt_buffer_in_a_loop_starts_from_the_list_every_time\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"eb17ee895897cb6a8ed7a15eea8c6293f6f0ab6a63679cef260d204d55a3d321\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer_from_list::test_a_renamed_buffer_is_still_a_value_of_its_own\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"5ae2f8e5165804561be9bdd7671c6652c2c0e10bc2f76798a2e69dac12d0c938\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer_from_list::test_a_returned_buffer_owns_its_octets\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"9220dbb0e805e1a2d6d1585b210ae9bf88a6a301a90542cee0d68647e69db1d0\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer_from_list::test_a_snapshot_taken_before_a_write_keeps_its_octets\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"9e28ca2e0552a8fdddfb2495e91a007cea26fa1a2e92f8ea4924cdc56cac8ce3\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer_from_list::test_two_buffers_built_from_one_list_are_independent\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"1e608b29077fed48fed81ae19b3311c1a2edd5737f8c97d76b7cd3f063c7b6ee\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer_from_list::test_writing_a_buffer_built_from_a_list_leaves_the_list_alone\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ca5b8e60d9ffadd4009d8a920ad5e4458e323ffcd56ffacef7426daad544472e\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer_from_list::test_writing_the_list_after_the_conversion_leaves_the_buffer_alone\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"b10cefa02d2acffff08e2376cff22cef8983b774f9170e47ef9a29be815d819b\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":10,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/byte_buffer_from_list.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 10,
+          "failed": 0,
+          "unsupported": 0
+        },
+        "zero_rc": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/byte_buffer_from_list.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"byte_buffer_from_list::test_a_buffer_built_from_a_record_field_leaves_the_field_alone\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"485ff20851b3c3256becbe86759b0fc8d6656288bc01ed24cf0d223ab776340f\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/byte_buffer_from_list.my#02a39044ac75aaad248f313303159a2e1eb60c14fd8b2b8ce859fb9f72027609\",\"producer\":{\"facts\":{\"fresh\":22,\"reused\":0,\"fallback\":13,\"decoded\":0},\"lowering\":{\"fresh\":13,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":22,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":2},\"planner\":{\"index_nodes\":88,\"index_edges\":300,\"affected_nodes\":22,\"closure_nodes\":140,\"closure_edges\":60,\"reused_tests\":0,\"planned_tests\":10},\"storage\":{\"packed_bytes_read\":16663,\"decoded_bytes\":45299,\"blocks_decoded\":1,\"payload_bytes_returned\":512,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":20153,\"save_bytes_prepared\":40111,\"sequence_locks\":44}},\"nanoseconds\":{\"lowering\":5403543,\"facts\":2555867,\"graph\":215907,\"planner\":108558442,\"keys\":111236,\"publication\":7128390,\"total\":124225071},\"transport\":{\"request_bytes\":1364,\"reply_bytes\":864,\"startups\":1}}}},{\"name\":\"byte_buffer_from_list::test_a_buffer_grown_in_a_callee_is_independent_of_its_list\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ebc4cc9131e5c01097138bb1c3aa79f40fb12e4f7f6ca56d6992aadc9c24fa43\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer_from_list::test_a_buffer_stored_in_a_record_is_a_value_of_its_own\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"e337e0635051a81f9300a71b9f45cc53808d4a39dd1d0a15df6009aded56f4f0\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer_from_list::test_a_rebuilt_buffer_in_a_loop_starts_from_the_list_every_time\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"c8351a43f380de13c942aeb2c03b3a3c2ec671460ff37a87bf8d4e340ee5ad87\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer_from_list::test_a_renamed_buffer_is_still_a_value_of_its_own\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"9e2aa2f5784f60197258c5b6a871c461f4a84fd25b564f31a6d2608e6495257c\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer_from_list::test_a_returned_buffer_owns_its_octets\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"69bcca977c62b2c04173442f0565546bf042887a95ec4cb4b6a050e6e11db09b\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer_from_list::test_a_snapshot_taken_before_a_write_keeps_its_octets\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"205b860301cb63cec6e6fd9d0f467e369a4579c5ed339927f9340fb3a4cfbef4\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer_from_list::test_two_buffers_built_from_one_list_are_independent\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"f0a69977bba87eed06181acd154fd0bfab03b5fbc85fb6258332366c1eed5716\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer_from_list::test_writing_a_buffer_built_from_a_list_leaves_the_list_alone\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3fe1e0b287e4643e65f02e92e8f4542e68db3058b56ccd1329cc2a8967de67cb\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_buffer_from_list::test_writing_the_list_after_the_conversion_leaves_the_buffer_alone\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"30bf4bb79be506a9a560fde05a84b22ff5f10dbe4b638798eac4095e73274f8c\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":10,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/byte_buffer_from_list.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 10,
+          "failed": 0,
+          "unsupported": 0
+        }
+      }
+    },
+    {
+      "source": "tests/lang/byte_views.my",
+      "source_sha256": "7a7b83933cac7998f9c2a4941087bed24d1a8f0a7f8d74736799e126ab2213f3",
+      "public_tests": [
+        "test_a_view_reads_its_range_with_every_byte_string_operation",
+        "test_view_endpoints_clamp_like_a_slice",
+        "test_views_retain_their_source_across_collection",
+        "test_views_nest_and_slices_copy_their_range",
+        "test_scalar_count_counts_scalars_and_rejects_malformed_utf8",
+        "test_byte_strings_parse_numbers_without_decoding"
+      ],
+      "modes": {
+        "ordinary": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/byte_views.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"byte_views::test_a_view_reads_its_range_with_every_byte_string_operation\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"6c14c6d2088e38ff75aa89d4103054084653e5f6ee5bc70ef45ef42bf33946bb\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/byte_views.my#d93670f6130b8e4cb175e281c469fad312198d23ad170ed9d4f765565c7b0bda\",\"producer\":{\"facts\":{\"fresh\":25,\"reused\":0,\"fallback\":9,\"decoded\":0},\"lowering\":{\"fresh\":9,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":25,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":100,\"index_edges\":200,\"affected_nodes\":25,\"closure_nodes\":86,\"closure_edges\":40,\"reused_tests\":0,\"planned_tests\":6},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":6,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":23126,\"save_bytes_prepared\":57650,\"sequence_locks\":33}},\"nanoseconds\":{\"lowering\":8194226,\"facts\":3124962,\"graph\":165788,\"planner\":109307844,\"keys\":65686,\"publication\":7671635,\"total\":128711943},\"transport\":{\"request_bytes\":1356,\"reply_bytes\":684,\"startups\":1}}}},{\"name\":\"byte_views::test_byte_strings_parse_numbers_without_decoding\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"a683c8576c253fcbe50059f468b8ae53d9c003e63bd5e7bc165183910bf0457b\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_views::test_scalar_count_counts_scalars_and_rejects_malformed_utf8\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"47f66d36dd78e76958b785854cd4a50a27a2da689fa99945908272facdca5ce7\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_views::test_view_endpoints_clamp_like_a_slice\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"5de3f89e672d201ded836a614bc8a8544ec1f824feaf56aa0390049d5e18cb9e\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_views::test_views_nest_and_slices_copy_their_range\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"11486aab141a838e7bdef3aeeeb81330d44ff38ea3e35f9c9f871595e5d73bfc\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_views::test_views_retain_their_source_across_collection\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"dd118d338aedd7535bf05b4bdec7c88631c14752025fbe90626f20b8dc42fa33\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":6,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/byte_views.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 6,
+          "failed": 0,
+          "unsupported": 0
+        },
+        "zero_rc": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/byte_views.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"byte_views::test_a_view_reads_its_range_with_every_byte_string_operation\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"873a50e6446eec5e34d990ba345edb3928a702948da4b59fbb648bf762c36979\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/byte_views.my#d93670f6130b8e4cb175e281c469fad312198d23ad170ed9d4f765565c7b0bda\",\"producer\":{\"facts\":{\"fresh\":26,\"reused\":0,\"fallback\":9,\"decoded\":0},\"lowering\":{\"fresh\":9,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":26,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":104,\"index_edges\":215,\"affected_nodes\":26,\"closure_nodes\":92,\"closure_edges\":43,\"reused_tests\":0,\"planned_tests\":6},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":23329,\"save_bytes_prepared\":58374,\"sequence_locks\":33}},\"nanoseconds\":{\"lowering\":6262327,\"facts\":3212146,\"graph\":180704,\"planner\":108765415,\"keys\":73377,\"publication\":6725110,\"total\":125387949},\"transport\":{\"request_bytes\":1408,\"reply_bytes\":716,\"startups\":1}}}},{\"name\":\"byte_views::test_byte_strings_parse_numbers_without_decoding\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"bcce5d36b94bde052293f2e9b70b8495814c5c26515a78324e38dcb9f2632906\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_views::test_scalar_count_counts_scalars_and_rejects_malformed_utf8\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ecbacd747ae0a33670721804c696744a693f4cfd320eeb5adb1e7a4ccedb2d1c\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_views::test_view_endpoints_clamp_like_a_slice\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"32704e0ad3b67424ce98205617cf9615f618aad349b65a6f925ec112d0ecb143\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_views::test_views_nest_and_slices_copy_their_range\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"9af65c2c6b716a9eb2675d296d3f627fc2124c9d766024cafdb48158c03492a7\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"byte_views::test_views_retain_their_source_across_collection\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"4b8146cff05bc551b0fbb05bd81f1f607a17e8e8f9176b0c3450a5e7aa6e1460\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":6,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/byte_views.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 6,
+          "failed": 0,
+          "unsupported": 0
+        }
+      }
+    },
+    {
+      "source": "tests/lang/migrated/python_format.my",
+      "source_sha256": "b91253b242151f3f9dda587c3f19a3f52739290eaf3a5bc7f33924186f4e3883",
+      "public_tests": [
+        "test_an_f_before_anything_but_a_quote_stays_an_or",
+        "test_doubled_braces_are_literal_and_an_empty_form",
+        "test_format_strings_interpolate_expressions_and_r"
+      ],
+      "modes": {
+        "ordinary": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/migrated/python_format.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"python_format::test_an_f_before_anything_but_a_quote_stays_an_or\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ff358eb19d9b1ed47a39637322774fc9b70f394bc05e960c16e4bad5d4c47ee9\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/migrated/python_format.my#10b076bbb4af68411b7a945fd953e96976f9d07f018a579ac63fe34c371bea26\",\"producer\":{\"facts\":{\"fresh\":12,\"reused\":0,\"fallback\":7,\"decoded\":0},\"lowering\":{\"fresh\":7,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":12,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":48,\"index_edges\":65,\"affected_nodes\":12,\"closure_nodes\":28,\"closure_edges\":13,\"reused_tests\":0,\"planned_tests\":3},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":6,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":8768,\"save_bytes_prepared\":13963,\"sequence_locks\":27}},\"nanoseconds\":{\"lowering\":4806345,\"facts\":806151,\"graph\":118630,\"planner\":108473051,\"keys\":36936,\"publication\":2451968,\"total\":116812933},\"transport\":{\"request_bytes\":692,\"reply_bytes\":344,\"startups\":1}}}},{\"name\":\"python_format::test_doubled_braces_are_literal_and_an_empty_form\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"1e5eaa84d2d7b6853bb54ac25d8cef852ae4c59c62b6b43282333e3964227eb3\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_format::test_format_strings_interpolate_expressions_and_r\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3b63e39720e28a915017bdea794703c5632d6f99cde1977ccc81a4658d66789e\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":3,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/migrated/python_format.my\",\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/migrated/python_format_case_1.my\",\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/migrated/python_format_case_2.my\",\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/migrated/python_format_case_3.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 3,
+          "failed": 0,
+          "unsupported": 0
+        },
+        "zero_rc": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/migrated/python_format.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"python_format::test_an_f_before_anything_but_a_quote_stays_an_or\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"77e01bfebba69276ffc79a408fb173bad3bd84ce115fff880a7748f06c903a56\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/migrated/python_format.my#10b076bbb4af68411b7a945fd953e96976f9d07f018a579ac63fe34c371bea26\",\"producer\":{\"facts\":{\"fresh\":13,\"reused\":0,\"fallback\":7,\"decoded\":0},\"lowering\":{\"fresh\":7,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":13,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":52,\"index_edges\":70,\"affected_nodes\":13,\"closure_nodes\":30,\"closure_edges\":14,\"reused_tests\":0,\"planned_tests\":3},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":8861,\"save_bytes_prepared\":14395,\"sequence_locks\":27}},\"nanoseconds\":{\"lowering\":2340932,\"facts\":835667,\"graph\":103418,\"planner\":110018718,\"keys\":34219,\"publication\":2428134,\"total\":115878503},\"transport\":{\"request_bytes\":736,\"reply_bytes\":360,\"startups\":1}}}},{\"name\":\"python_format::test_doubled_braces_are_literal_and_an_empty_form\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"4fb32cf9a68b4fde8bb8bc682b40db54a31c71714d6a4a34b987c96011a2269d\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_format::test_format_strings_interpolate_expressions_and_r\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"6cb1de18273d75568e3c66bfb1859a4da00b563bbea2cad4ee1db1dd40f5df5b\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":3,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/migrated/python_format.my\",\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/migrated/python_format_case_1.my\",\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/migrated/python_format_case_2.my\",\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/migrated/python_format_case_3.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 3,
+          "failed": 0,
+          "unsupported": 0
+        }
+      }
+    },
+    {
+      "source": "tests/lang/python_bytes.my",
+      "source_sha256": "11a20571bb89ba593cb8f9c0deded355db2bc8180ac944aeb754c94b3f194761",
+      "public_tests": [
+        "test_byte_literals_index_slice_concatenate_compare_and_iterate",
+        "test_membership_accepts_a_byte_scalar_or_a_contiguous_subsequence",
+        "test_byte_strings_alias_through_helpers_and_survive_collection_stress",
+        "test_split_join_prefix_suffix_search_and_container_storage",
+        "test_generic_bodies_preserve_managed_byte_string_identities",
+        "test_find_any_reports_the_first_octet_of_a_set_at_or_after_start",
+        "test_find_any_searches_a_two_octet_set_with_one_pass_per_octet",
+        "test_find_any_walks_an_input_missing_one_octet_in_linear_time",
+        "test_find_any_finds_either_octet_across_its_search_windows",
+        "test_find_any_clamps_start_and_reads_values_as_a_byte_set",
+        "test_find_keeps_its_first_index_answer_for_short_and_long_needles",
+        "test_integer_list_text_and_hexadecimal_conversions_round_trip",
+        "test_a_decoded_slice_keeps_clamping_and_invalid_utf8"
+      ],
+      "modes": {
+        "ordinary": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/python_bytes.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"python_bytes::test_a_decoded_slice_keeps_clamping_and_invalid_utf8\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"33edb54f26cf862d3c78394fb383dee03c915e1afdc655d60fbca7a06b5a1538\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/python_bytes.my#ddc0f28a1d69f054885776f52ed00b598ba89c5350608df9fc2f445e83eba38b\",\"producer\":{\"facts\":{\"fresh\":43,\"reused\":0,\"fallback\":20,\"decoded\":0},\"lowering\":{\"fresh\":20,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":43,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":172,\"index_edges\":345,\"affected_nodes\":43,\"closure_nodes\":152,\"closure_edges\":71,\"reused_tests\":0,\"planned_tests\":13},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":6,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":40498,\"save_bytes_prepared\":84691,\"sequence_locks\":66}},\"nanoseconds\":{\"lowering\":12012166,\"facts\":4800534,\"graph\":283843,\"planner\":107114365,\"keys\":136704,\"publication\":10057361,\"total\":134709730},\"transport\":{\"request_bytes\":2276,\"reply_bytes\":1104,\"startups\":1}}}},{\"name\":\"python_bytes::test_byte_literals_index_slice_concatenate_compare_and_iterate\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"2500702b192307bc5f03afcb869a1345fed9d664b4d0328f1cec9f31a639f727\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_byte_strings_alias_through_helpers_and_survive_collection_stress\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ed437126ea7fad45764159c3c56e41c3a5537c2d3614cc791789c5b787e6627b\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_find_any_clamps_start_and_reads_values_as_a_byte_set\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"c0bfe5b5b0ec41099ef6d8ad6c50ceb33cb23bb566a303292189d667b22c9d12\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_find_any_finds_either_octet_across_its_search_windows\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"28bbee21ca5939291c03eaf65d870d0db3c0e30b12e88c29e60f4f70aa89f829\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_find_any_reports_the_first_octet_of_a_set_at_or_after_start\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"4d3a315a18434c104cf52b1580e6929a28e42d14005be37dbc01539e7bea27af\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_find_any_searches_a_two_octet_set_with_one_pass_per_octet\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"d61abd69329b79fd4770d044a0c811a0b11bf488c306609e6ecabbb8a8379cab\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_find_any_walks_an_input_missing_one_octet_in_linear_time\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"5aad7f5381d3b8d27fc59d4e7d83e4df3f35388ad63a0bb1ea686c3f86e62c33\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_find_keeps_its_first_index_answer_for_short_and_long_needles\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"c55b21aeed0ae05113eba93b479804881e57ba76f1775609f148650bcd6afd89\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_generic_bodies_preserve_managed_byte_string_identities\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"bfa0509f774272058d39905e47889144dedf3ed32ce59e6e953a903731c0cef2\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_integer_list_text_and_hexadecimal_conversions_round_trip\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"47d502c5264133a8950618896a7851281e10800ee591b542164dcb195a87a9ee\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_membership_accepts_a_byte_scalar_or_a_contiguous_subsequence\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"e8a470dc9728acd196e34226c38487ccdcc97fee494accb19cfa224222682c64\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_split_join_prefix_suffix_search_and_container_storage\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"b99012fab49374253a4dd0eed5993d5dd2a855ba6199c73d3671d4b683ca7c8e\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":13,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/python_bytes.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 13,
+          "failed": 0,
+          "unsupported": 0
+        },
+        "zero_rc": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/python_bytes.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"python_bytes::test_a_decoded_slice_keeps_clamping_and_invalid_utf8\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"f7a4f0d64553d817edb2e6fed954cbe8a576571a9f56ba787fd6eea8954aebd7\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/python_bytes.my#ddc0f28a1d69f054885776f52ed00b598ba89c5350608df9fc2f445e83eba38b\",\"producer\":{\"facts\":{\"fresh\":45,\"reused\":0,\"fallback\":20,\"decoded\":0},\"lowering\":{\"fresh\":20,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":45,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":180,\"index_edges\":370,\"affected_nodes\":45,\"closure_nodes\":164,\"closure_edges\":77,\"reused_tests\":0,\"planned_tests\":13},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":41005,\"save_bytes_prepared\":85993,\"sequence_locks\":66}},\"nanoseconds\":{\"lowering\":10461199,\"facts\":5115704,\"graph\":306219,\"planner\":110961189,\"keys\":132240,\"publication\":9822473,\"total\":137123098},\"transport\":{\"request_bytes\":2376,\"reply_bytes\":1164,\"startups\":1}}}},{\"name\":\"python_bytes::test_byte_literals_index_slice_concatenate_compare_and_iterate\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"daec743ff2edae6d3d1fba516c603a2c98980c8c8c787036d8f2423440a81278\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_byte_strings_alias_through_helpers_and_survive_collection_stress\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"da3335efa3353ceeb8cd7557cd5c50fe3a67f61c551c37408dbc209975c2c491\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_find_any_clamps_start_and_reads_values_as_a_byte_set\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"b7f2548d5b5d340403074bd59ca78f8c6d6c478ba84db6daee2384cee3f2c713\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_find_any_finds_either_octet_across_its_search_windows\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"66fef879a1db48d9f754fdced43d512b79645db3ae207d490a24d6aa22a93194\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_find_any_reports_the_first_octet_of_a_set_at_or_after_start\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"39277061a45d84e9cee7d059c824b2cc34f489b1540d147b7ae8e45a29c71584\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_find_any_searches_a_two_octet_set_with_one_pass_per_octet\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"e768e21c8b893f1c6354b3448efedfeeda10ec3f6f1aa04520d82438fc819564\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_find_any_walks_an_input_missing_one_octet_in_linear_time\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3c7c1e99c9f4f5c025f198b329fe7b22aaa93ceda091df3f5a7f8d05607e8800\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_find_keeps_its_first_index_answer_for_short_and_long_needles\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"256afad576680a71c723a98fda6c02f765632dd673ba42439f5cec93252aba66\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_generic_bodies_preserve_managed_byte_string_identities\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"926dc903b5c0bf4612464609c592fa8fe18780b54a973f639a0e1f3293094873\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_integer_list_text_and_hexadecimal_conversions_round_trip\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"2d53d1e53fe1d25cf9a40d7161f8cf17e13b2bfe4998920865d8db7253ff3290\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_membership_accepts_a_byte_scalar_or_a_contiguous_subsequence\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"5fb157789f9e3208c2c31a807543d99844c51597aceb4a7cc6c98c210e103ba8\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_bytes::test_split_join_prefix_suffix_search_and_container_storage\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"0610a9071a3a7d918b4f95f61acefbdd5ab0fb554aaf448683d21dd1f14c7757\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":13,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/python_bytes.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 13,
+          "failed": 0,
+          "unsupported": 0
+        }
+      }
+    },
+    {
+      "source": "tests/lang/python_expressions.my",
+      "source_sha256": "2d78e1c6d6530d5a0155fffec9a5d3c87108a35b21572e74e5ecb66734c50bcc",
+      "public_tests": [
+        "test_str_orders_by_code_point_with_a_prefix_first",
+        "test_a_generic_body_orders_its_str_operands",
+        "test_bytes_order_by_octet_with_a_prefix_first",
+        "test_a_comparison_chain_reads_as_python_and",
+        "test_a_chain_evaluates_each_operand_once_and_stops_at_a_false_link",
+        "test_a_chain_types_each_literal_by_its_neighbour",
+        "test_a_parenthesized_comparison_is_a_bool_operand",
+        "test_a_constant_chain_folds_and_short_circuits",
+        "test_a_generic_body_checks_each_link_of_a_chain",
+        "test_range_counts_by_its_step_in_either_direction",
+        "test_a_stepped_range_feeds_a_comprehension_and_list",
+        "test_the_last_step_never_overflows_the_counter_type",
+        "test_str_and_bytes_repeat_by_an_integer_on_either_side",
+        "test_an_int_times_a_float_is_still_arithmetic",
+        "test_a_list_repeats_by_an_integer_into_independent_values",
+        "test_a_repetition_evaluates_its_operands_once_in_order",
+        "test_a_generic_body_repeats_text"
+      ],
+      "modes": {
+        "ordinary": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/python_expressions.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"python_expressions::test_a_chain_evaluates_each_operand_once_and_stops_at_a_false_link\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"e36fbc3b48fa2d0a670256077020595d452dceeb6b0000325b5dc557b25b0561\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/python_expressions.my#b2e9449e849f57c4608bd526f2358be05a4e940f145bafb3ffafa0472b9c1993\",\"producer\":{\"facts\":{\"fresh\":38,\"reused\":0,\"fallback\":29,\"decoded\":0},\"lowering\":{\"fresh\":29,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":38,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":152,\"index_edges\":160,\"affected_nodes\":38,\"closure_nodes\":92,\"closure_edges\":32,\"reused_tests\":0,\"planned_tests\":17},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":5,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":54025,\"save_bytes_prepared\":121630,\"sequence_locks\":93}},\"nanoseconds\":{\"lowering\":18738439,\"facts\":9116558,\"graph\":342289,\"planner\":116427326,\"keys\":144158,\"publication\":13241484,\"total\":158449305},\"transport\":{\"request_bytes\":1976,\"reply_bytes\":812,\"startups\":1}}}},{\"name\":\"python_expressions::test_a_chain_types_each_literal_by_its_neighbour\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"8846f92fa5694387287f34d0aa9957f4bc98e37b4b3b7218e5f4e9843170ce97\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_comparison_chain_reads_as_python_and\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"a3454c957cf233dff965793724d1be229ee599277009e5766e686f5b92393666\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_constant_chain_folds_and_short_circuits\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"d3f4bcc238c3be594bff998f8f730f756d921d2b11c99fafdb5553c18f2a5548\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_generic_body_checks_each_link_of_a_chain\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"1f8eaa06454e0b90494d0a5ff68dc622a31c7b7cd7e4f782ce040a948cce5b94\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_generic_body_orders_its_str_operands\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"32e9246cc53adb92a45cfa0e8e0118028656c0b4c5f5f33789d34a7e2e3f5f55\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_generic_body_repeats_text\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"e89f82c1f294edb2b2381c61f0f0424d0349ecdcb91780f4a7ac3068d67297f4\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_list_repeats_by_an_integer_into_independent_values\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"fdf7defc7f9be29f9fc9fadfe9080b395939b4fbf13fceadfc0902a998507512\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_parenthesized_comparison_is_a_bool_operand\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"7fb4b38ba92e18ad64e784265eaa02522d9e3f9a49b05c03c5afb43f5eba2ab6\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_repetition_evaluates_its_operands_once_in_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"893b151a17472bda4fb9a0d244f31bae944c1c8a7dcefd003bccb3b39d6a7a05\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_stepped_range_feeds_a_comprehension_and_list\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"4e6c24b8857d77cb2e4ac4226ff6ae5f64b367d83cd24384ebea1988b0b92a7c\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_an_int_times_a_float_is_still_arithmetic\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"8f7282ef1ec3161f3f077d8fbd91cb4bad8b77bebd92d4a72d1e7c656c3d1af4\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_bytes_order_by_octet_with_a_prefix_first\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"1d74e6bb42b1f8e124128eb8e880703db118b2452a6309c84319765291dd21c2\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_range_counts_by_its_step_in_either_direction\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"f052b58f87a93bb592492c84adc4a24ab6d6e3d3a3dd6aa927f72ea8b8c338a3\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_str_and_bytes_repeat_by_an_integer_on_either_side\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"80ee493bf9f6f9c49ba2f6b3839ccc3d4764dced940e15ab68d4db420e0ea435\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_str_orders_by_code_point_with_a_prefix_first\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"bcfd06e0a965eaf0b403593b451300cbe36e0abc3575a8a95692c9b6267c125d\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_the_last_step_never_overflows_the_counter_type\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"8c6b003870a5e6e8bfe54aec6918c80fe601a117a04f6d9ad259bdcb8a884291\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":17,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/python_expressions.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 17,
+          "failed": 0,
+          "unsupported": 0
+        },
+        "zero_rc": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/python_expressions.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"python_expressions::test_a_chain_evaluates_each_operand_once_and_stops_at_a_false_link\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"d7af2519dfbb49a4e36672deb9e8a957cd315142a9696c70f7fe3b40482e1aba\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/python_expressions.my#b2e9449e849f57c4608bd526f2358be05a4e940f145bafb3ffafa0472b9c1993\",\"producer\":{\"facts\":{\"fresh\":39,\"reused\":0,\"fallback\":29,\"decoded\":0},\"lowering\":{\"fresh\":29,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":39,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":156,\"index_edges\":185,\"affected_nodes\":39,\"closure_nodes\":100,\"closure_edges\":37,\"reused_tests\":0,\"planned_tests\":17},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":6,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":54392,\"save_bytes_prepared\":122638,\"sequence_locks\":93}},\"nanoseconds\":{\"lowering\":17776762,\"facts\":10008235,\"graph\":372215,\"planner\":119783903,\"keys\":150684,\"publication\":15274293,\"total\":163859499},\"transport\":{\"request_bytes\":2036,\"reply_bytes\":856,\"startups\":1}}}},{\"name\":\"python_expressions::test_a_chain_types_each_literal_by_its_neighbour\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"eaa82cd9dfd7e2cdfa9978c0dc1b3735b1b56efd5e76f6039e8f6f6a1ecd87d4\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_comparison_chain_reads_as_python_and\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"9cb1033ba1cc215f29e2e8df008ada70c51bd49ba27dfb1f80acb2fd3a9ac74f\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_constant_chain_folds_and_short_circuits\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"9f10b158727317514e611d8ff4c438feee950a29024b65c90993465a17e4365a\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_generic_body_checks_each_link_of_a_chain\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"5e702bbb265b5d62fae508e899c1ed5dd8d66aea9bb854fec25bebb3fbceb230\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_generic_body_orders_its_str_operands\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"1966580319f7434592a3265682e656f199479291a7051887c3f550828e47730f\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_generic_body_repeats_text\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"5087083ce849a149c0ce46e6f6262f25a5fea9fcaa0db6c7b097415bf8bd26e6\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_list_repeats_by_an_integer_into_independent_values\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ef3ea1657a39e76860983ff65383f025ee6f67828738e8f4c9f1951cfebc42ff\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_parenthesized_comparison_is_a_bool_operand\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"9c90d2eac30aea05962db54351399e48aaa79d97410627eaa69a98d7fd9ef2f9\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_repetition_evaluates_its_operands_once_in_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"485943bc7ab3287b3128c8db4954d4302b94dad0c903103f3beb7e72091ad1cb\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_a_stepped_range_feeds_a_comprehension_and_list\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"5f1535e45d7a00974cb7c0ab1525d1c3f1b083d41998cccf0ec78bae834c317a\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_an_int_times_a_float_is_still_arithmetic\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ab538206b1ea1e51b1c87887b5e9812aecb8b620acdca30c7c6c55c6abdb2e05\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_bytes_order_by_octet_with_a_prefix_first\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3c80a3d1df09f05749b6de2fc248a57b6e9e7c0e89ef3d84bae1dbd1339a39ee\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_range_counts_by_its_step_in_either_direction\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"dcd89071f406e473811e1d406aad1c9b7b2bc192e970ca44bc4e9195b5ebbcee\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_str_and_bytes_repeat_by_an_integer_on_either_side\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"61d4f736ef6c7b967a9a50d8cd24e30fa2a4ba68b51b7161aa14c972ff834c88\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_str_orders_by_code_point_with_a_prefix_first\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"f7918c494f2c48296bec4c08242947d3ef306b82597318c5858718c413d4702e\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_expressions::test_the_last_step_never_overflows_the_counter_type\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"015508cd00849357f4619af0ec20a514c88148c54623ff5ae22e8d718b67b31f\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":17,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/python_expressions.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 17,
+          "failed": 0,
+          "unsupported": 0
+        }
+      }
+    },
+    {
+      "source": "tests/lang/python_text_surface.my",
+      "source_sha256": "4d32d2d368586321b08ef8e459fdc2e059ce25fd12f3da0b2cc9ac13d93af7c7",
+      "public_tests": [
+        "test_sorted_bytes_unsigned_prefix_order_and_value_copy",
+        "test_sort_bytes_in_place_and_reverse",
+        "test_bytes_key_and_tuple_keys_preserve_equal_key_order",
+        "test_bytes_sort_and_keys_in_generic_body",
+        "test_charset_is_a_set_empty_set_and_aliases",
+        "test_unicode_default_whitespace_and_bytes_ascii_whitespace",
+        "test_byte_charset_invalid_utf8_nul_and_empty",
+        "test_ranges_count_scalars_and_return_global_positions",
+        "test_empty_needles_at_end_and_beyond_end_are_distinct",
+        "test_empty_needles_reversed_and_extreme_ranges",
+        "test_ranged_affixes_and_overlapping_reverse_search",
+        "test_byte_ranges_views_and_constant_receivers",
+        "test_generic_methods_and_expression_receivers",
+        "test_repr_quote_selection_escapes_and_printable_unicode",
+        "test_repr_bytes_all_octet_classes_and_quotes",
+        "test_repr_integer_widths_boolean_and_generic",
+        "test_repr_float_shortest_exponents_signed_zero_and_nonfinite",
+        "test_repr_large_unicode_result_is_indexed_and_survives_views",
+        "test_unsigned64_bounds_saturate_positive_instead_of_becoming_negative",
+        "test_generic_nominal_bytes_inputs_sort_and_repr",
+        "test_contextual_octet_declarations_keep_legacy_text_compatibility"
+      ],
+      "modes": {
+        "ordinary": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/python_text_surface.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"python_text_surface::test_byte_charset_invalid_utf8_nul_and_empty\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"cc2679e4567605d76ca7b54c0fd789c6221fce1967995e97693be30e29b35189\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/python_text_surface.my#4345baf17d866fab81998dda0fc2873c0d6d21308a631dfd138f476f74a3f208\",\"producer\":{\"facts\":{\"fresh\":52,\"reused\":0,\"fallback\":30,\"decoded\":0},\"lowering\":{\"fresh\":30,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":52,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":208,\"index_edges\":365,\"affected_nodes\":52,\"closure_nodes\":180,\"closure_edges\":74,\"reused_tests\":0,\"planned_tests\":21},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":4,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":47707,\"save_bytes_prepared\":89318,\"sequence_locks\":96}},\"nanoseconds\":{\"lowering\":17086455,\"facts\":5939486,\"graph\":461559,\"planner\":86556137,\"keys\":363046,\"publication\":14489297,\"total\":125420960},\"transport\":{\"request_bytes\":2748,\"reply_bytes\":1280,\"startups\":1}}}},{\"name\":\"python_text_surface::test_byte_ranges_views_and_constant_receivers\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"85a7523f64d01b26d4c1e5115b02d2136ec1dc7e900efb47de7f3c19485942c5\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_bytes_key_and_tuple_keys_preserve_equal_key_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"42d4e251fa931eb83ba5607d9c6c056105e29825307a2bb4ff5f5b37ab0f0c83\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_bytes_sort_and_keys_in_generic_body\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"42e9e5d5bb75d699c8734ce1cd5b40222b8261821cd5c70810e004d2a97e3610\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_charset_is_a_set_empty_set_and_aliases\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"e4a8fe3d984bd1ed49c5a2162ac8cd1581a835d79a0164b31fc90025e7b79097\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_contextual_octet_declarations_keep_legacy_text_compatibility\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"4e3f18adadef4898f4dcdffdee87ed5c14b79387891cde8e4db3678fa9abfa1c\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_empty_needles_at_end_and_beyond_end_are_distinct\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"219d27284f021a7aabe4c42105c028b57e8ce1829f1fb3f6504e4b7bd2c1f454\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_empty_needles_reversed_and_extreme_ranges\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"c0c120ad492e865b2f3a57b1d1812c57b1ef268ac30b09b4d89721b43afd0df2\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_generic_methods_and_expression_receivers\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"5975d28f397d8ee2cd0b5e0bd2d207a8b000d849bcefb5fd8e041207c4fdd129\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_generic_nominal_bytes_inputs_sort_and_repr\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"7daf2b8d155d4cb96637979a98520c92f0e3d82a2331a702c315e7941a985aa2\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_ranged_affixes_and_overlapping_reverse_search\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"8b1e2a8d0e4a6f3bbb052a611f95f062b9883c58deb38687fe4273e43f4f0455\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_ranges_count_scalars_and_return_global_positions\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"15b2ab304bab51682d83b18ace8391a02e3871fe3b67e76f7bad26b580844647\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_repr_bytes_all_octet_classes_and_quotes\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"09ffed58461a72f573ec4b9233d894d83fd2b330187f293229af1f9891b0cce5\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_repr_float_shortest_exponents_signed_zero_and_nonfinite\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"7ac44526551570e2b951d5784b94e0c254739b44ad47d3238967fe5ef3d95e0a\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_repr_integer_widths_boolean_and_generic\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"491632d0ce0eabc50770c9d6e31e94a3ff4af729d0ed4de97151ffd467c9b656\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_repr_large_unicode_result_is_indexed_and_survives_views\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"700cc41e74b985de5429580d25cf57e47af1a3bfb73b5a2f2fc010e128f4d905\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_repr_quote_selection_escapes_and_printable_unicode\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3688054f5ef8e36f146bc3d74e4650a4479447ab43376a9df7eb71279f83f994\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_sort_bytes_in_place_and_reverse\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"18f34987e05a0ead216a3357cffc915da7b13ceb4b316db08b6513ee4f5802e3\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_sorted_bytes_unsigned_prefix_order_and_value_copy\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"224071f965ec49ec2cece121a37c24e7aacf059ccfd4d81f5015a7b9886d400b\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_unicode_default_whitespace_and_bytes_ascii_whitespace\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"c1db4b6c61b0553608e1a113106af3fb21d6bb1a1067ba64a98486cd4a1fe0fd\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_unsigned64_bounds_saturate_positive_instead_of_becoming_negative\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"8dc129280e88950d3fbfabccffa80fa513b29726b48d1f138060f60e85812b7a\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":21,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/python_text_surface.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 21,
+          "failed": 0,
+          "unsupported": 0
+        },
+        "zero_rc": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/python_text_surface.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"python_text_surface::test_byte_charset_invalid_utf8_nul_and_empty\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"65bc25f7ec770af03c3525d102fd4d321cfd8121d7c82d239ddb5af9fc75f3ef\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/python_text_surface.my#4345baf17d866fab81998dda0fc2873c0d6d21308a631dfd138f476f74a3f208\",\"producer\":{\"facts\":{\"fresh\":57,\"reused\":0,\"fallback\":30,\"decoded\":0},\"lowering\":{\"fresh\":30,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":57,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":228,\"index_edges\":415,\"affected_nodes\":57,\"closure_nodes\":198,\"closure_edges\":84,\"reused_tests\":0,\"planned_tests\":21},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":5,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":48565,\"save_bytes_prepared\":92319,\"sequence_locks\":96}},\"nanoseconds\":{\"lowering\":12590105,\"facts\":5651579,\"graph\":449585,\"planner\":114220739,\"keys\":192017,\"publication\":11812461,\"total\":145399343},\"transport\":{\"request_bytes\":2988,\"reply_bytes\":1396,\"startups\":1}}}},{\"name\":\"python_text_surface::test_byte_ranges_views_and_constant_receivers\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"90607066543e8e5312da5ff0f236e7134f78e6f4caf12c1c1f28baf1d579e82e\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_bytes_key_and_tuple_keys_preserve_equal_key_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"a87d4ed2be41a023602469d3223a4c8e1017fadd5e19f4e6be85f5a9da0e2075\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_bytes_sort_and_keys_in_generic_body\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"4e18c7a813b9508a8841cfa698b1549a04e955dfc4efe3e47b2aa7090d5406ec\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_charset_is_a_set_empty_set_and_aliases\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ceb36ab02c2d42717403d730099c4762f4b202ebe2f926555b9c1976ec8f46bf\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_contextual_octet_declarations_keep_legacy_text_compatibility\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"6e97a1c781b38d52b8c832b5b8af60bb01e7ec953c8a05138e64618edf4e38f1\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_empty_needles_at_end_and_beyond_end_are_distinct\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"77b78d90030d8c6124140917cbfe88ab00ff8054632195b6b0675b1a42e5be39\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_empty_needles_reversed_and_extreme_ranges\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3508df58b3bb8912fd9f36154b6dff36a07c5d0e1da1676b9e404b02a5197345\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_generic_methods_and_expression_receivers\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"b16fd5deb85117207feb8401f1a5257417b0f59215c723c8f526db5b27e002f4\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_generic_nominal_bytes_inputs_sort_and_repr\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"49ea83c090f514405e9af5a0266155f21af495f384de8f89be03747399f973e3\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_ranged_affixes_and_overlapping_reverse_search\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"f118cc6b845e8f21da17c3015c444e59f668efaa46bcf0bf87efb88a04232294\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_ranges_count_scalars_and_return_global_positions\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"65f1954994f24029ef61026e67fdafb4f615bd13f1413647abba415834849c57\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_repr_bytes_all_octet_classes_and_quotes\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"dec86f735325dbb371b44ac04cf93949176b70a8800de9a54ed9304c02d2f14a\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_repr_float_shortest_exponents_signed_zero_and_nonfinite\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"fedd8232a17a8d81fc5054ae16d8e5cb01ad00519ef797b4290bfcd911ec7daf\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_repr_integer_widths_boolean_and_generic\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"0042e69bf85435121e5f7d9b678b8e228ad6abccb924d0b06b4dacd671e400f1\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_repr_large_unicode_result_is_indexed_and_survives_views\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3b44504afe65e8fa8bd0a779c96cb0f40e578329a5a1de996c002d3b231cef5a\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_repr_quote_selection_escapes_and_printable_unicode\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"e36fc683e343c806fd20c26d03cc04cdb5a565300a09ddfd0e50a45bfb39a35c\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_sort_bytes_in_place_and_reverse\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"37e8f3cfefdca3e6e0c6c3fb584cdfabf27623b581b930c591fd29e640bc14ab\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_sorted_bytes_unsigned_prefix_order_and_value_copy\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"e64a979f1b96442a50a47c1df99edeaf42bc98a206cce772ed01798a8137a66d\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_unicode_default_whitespace_and_bytes_ascii_whitespace\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ded911d04560e2d934830f6b22881cda09b3987c3e4734fc40b6369c9e9cbc4e\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"python_text_surface::test_unsigned64_bounds_saturate_positive_instead_of_becoming_negative\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"dda58bb14624e56bcb9fd8ea4da10fe0682d651e90ee3bf0b4c06073fc2a1f98\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":21,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/python_text_surface.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 21,
+          "failed": 0,
+          "unsupported": 0
+        }
+      }
+    },
+    {
+      "source": "tests/lang/rc_byte_loop_versions.my",
+      "source_sha256": "a8876940969936b6823e114eda8d194254a8a55e289b2de0f22562ba0f8937e2",
+      "public_tests": [
+        "test_full_short_empty_and_negative_byte_scans",
+        "test_byte_snapshot_and_rebound_source_keep_canonical_backing",
+        "test_held_byte_iteration_and_mutable_buffer_keep_fallbacks",
+        "test_empty_backing_and_multiple_byte_owners"
+      ],
+      "modes": {
+        "ordinary": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_byte_loop_versions.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"rc_byte_loop_versions::test_byte_snapshot_and_rebound_source_keep_canonical_backing\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"a5e2e63300694fa77866752fb45bddb96ef78f9bafdaa8a4dc039ed33505f27f\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_byte_loop_versions.my#9e61f9c62acfafb2128c179028d7820f4fddb473dc3899667bc093299eefac8e\",\"producer\":{\"facts\":{\"fresh\":12,\"reused\":0,\"fallback\":5,\"decoded\":0},\"lowering\":{\"fresh\":5,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":12,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":48,\"index_edges\":90,\"affected_nodes\":12,\"closure_nodes\":44,\"closure_edges\":18,\"reused_tests\":0,\"planned_tests\":4},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":6,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":11289,\"save_bytes_prepared\":26106,\"sequence_locks\":21}},\"nanoseconds\":{\"lowering\":5617563,\"facts\":1600421,\"graph\":105802,\"planner\":108967643,\"keys\":47694,\"publication\":3597285,\"total\":120069647},\"transport\":{\"request_bytes\":724,\"reply_bytes\":400,\"startups\":1}}}},{\"name\":\"rc_byte_loop_versions::test_empty_backing_and_multiple_byte_owners\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"5fd0a1cbae8b3051a05c7220598a7703c360b16ffdb6a0b929575d03021091f4\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"rc_byte_loop_versions::test_full_short_empty_and_negative_byte_scans\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"aabb8a7cfa2aa131948b4fa65974b618b7afebde1c1d466814f66815cce09e3b\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"rc_byte_loop_versions::test_held_byte_iteration_and_mutable_buffer_keep_fallbacks\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"98b8ebe57eb4b5ba0ffa39a31ef40caf60ee8e364cb6c0444278f4bcb60f3fe4\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":4,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_byte_loop_versions.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 4,
+          "failed": 0,
+          "unsupported": 0
+        },
+        "zero_rc": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_byte_loop_versions.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"rc_byte_loop_versions::test_byte_snapshot_and_rebound_source_keep_canonical_backing\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"c95843c55d17759fc189d9f1e1d02f75d707091ca8d56834cc4e04ae5a02ef3b\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_byte_loop_versions.my#9e61f9c62acfafb2128c179028d7820f4fddb473dc3899667bc093299eefac8e\",\"producer\":{\"facts\":{\"fresh\":13,\"reused\":0,\"fallback\":5,\"decoded\":0},\"lowering\":{\"fresh\":5,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":13,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":52,\"index_edges\":95,\"affected_nodes\":13,\"closure_nodes\":46,\"closure_edges\":19,\"reused_tests\":0,\"planned_tests\":4},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":11434,\"save_bytes_prepared\":26538,\"sequence_locks\":21}},\"nanoseconds\":{\"lowering\":3262103,\"facts\":1640108,\"graph\":111708,\"planner\":107647962,\"keys\":48355,\"publication\":3284997,\"total\":116131032},\"transport\":{\"request_bytes\":768,\"reply_bytes\":416,\"startups\":1}}}},{\"name\":\"rc_byte_loop_versions::test_empty_backing_and_multiple_byte_owners\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"0057ba21841350546de27427771f5abdb0ebf7c4d30ad96df68fb488c50e7e02\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"rc_byte_loop_versions::test_full_short_empty_and_negative_byte_scans\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"1bce7a830968200e998f917e4142660fa7cabb0cc0616efdcd0a111fba64727b\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"rc_byte_loop_versions::test_held_byte_iteration_and_mutable_buffer_keep_fallbacks\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ee15c77bc5e58ee9d62bf7548b1c06a0ac0884a5c3b2d7182bccccbf0af62f9f\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":4,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_byte_loop_versions.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 4,
+          "failed": 0,
+          "unsupported": 0
+        }
+      }
+    },
+    {
+      "source": "tests/lang/rc_byte_receivers.my",
+      "source_sha256": "8b3ede3dbba4b4a195d6cd5e4039ff4bb0b300f6590db78797328248e47477a3",
+      "public_tests": [
+        "test_appends_through_a_mut_record_field_write_in_place",
+        "test_appending_a_snapshot_of_the_same_buffer_reads_the_old_octets",
+        "test_computed_and_rebound_inputs_keep_their_scopes",
+        "test_length_limits_read_the_field_in_place"
+      ],
+      "modes": {
+        "ordinary": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_byte_receivers.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"rc_byte_receivers::test_appending_a_snapshot_of_the_same_buffer_reads_the_old_octets\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"4624a3d8e9ee685b5324a86c962092263e13ea742299de4e4a863ee2cf2edbb0\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_byte_receivers.my#d6498f1151d8d02f32bd40092b235f4cb4b05f1dab0569b5e82b8ceac6736c89\",\"producer\":{\"facts\":{\"fresh\":22,\"reused\":0,\"fallback\":11,\"decoded\":0},\"lowering\":{\"fresh\":11,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":22,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":88,\"index_edges\":190,\"affected_nodes\":22,\"closure_nodes\":94,\"closure_edges\":49,\"reused_tests\":0,\"planned_tests\":4},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":6,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":13663,\"save_bytes_prepared\":24994,\"sequence_locks\":39}},\"nanoseconds\":{\"lowering\":6391225,\"facts\":1390470,\"graph\":148749,\"planner\":108913073,\"keys\":63410,\"publication\":3616448,\"total\":120663775},\"transport\":{\"request_bytes\":1204,\"reply_bytes\":660,\"startups\":1}}}},{\"name\":\"rc_byte_receivers::test_appends_through_a_mut_record_field_write_in_place\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"45117ab12c44c7560b3b57e1dd20ba3651c1eb65a12e9efdc48c7395bab26d1e\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"rc_byte_receivers::test_computed_and_rebound_inputs_keep_their_scopes\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"2005b3112439d1b72a35fabcc4eb28eed4f3f2ef7b32831cee7621f6407bf3db\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"rc_byte_receivers::test_length_limits_read_the_field_in_place\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"6523fc1c765773099979fa6e0ce2849bd52b42dc61abdf1ec2a1578d8c23cc3c\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":4,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_byte_receivers.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 4,
+          "failed": 0,
+          "unsupported": 0
+        },
+        "zero_rc": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_byte_receivers.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"rc_byte_receivers::test_appending_a_snapshot_of_the_same_buffer_reads_the_old_octets\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"1ea562a3ec6637646021c549d35b3d0c28e7988d972d5bd7ed356c2bfe0f83d5\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_byte_receivers.my#d6498f1151d8d02f32bd40092b235f4cb4b05f1dab0569b5e82b8ceac6736c89\",\"producer\":{\"facts\":{\"fresh\":23,\"reused\":0,\"fallback\":11,\"decoded\":0},\"lowering\":{\"fresh\":11,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":23,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":92,\"index_edges\":195,\"affected_nodes\":23,\"closure_nodes\":96,\"closure_edges\":50,\"reused_tests\":0,\"planned_tests\":4},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":13845,\"save_bytes_prepared\":25720,\"sequence_locks\":39}},\"nanoseconds\":{\"lowering\":4088818,\"facts\":1389043,\"graph\":178396,\"planner\":113996916,\"keys\":65283,\"publication\":3673656,\"total\":123538734},\"transport\":{\"request_bytes\":1248,\"reply_bytes\":676,\"startups\":1}}}},{\"name\":\"rc_byte_receivers::test_appends_through_a_mut_record_field_write_in_place\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"2f3696ae0df2737aded3532a5e30f8913759e53db53326d451665548e54f586f\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"rc_byte_receivers::test_computed_and_rebound_inputs_keep_their_scopes\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"7deae0ffc1370cec4f799b61a50b07c19ed2b262bc71a2318645c78345d2597f\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"rc_byte_receivers::test_length_limits_read_the_field_in_place\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"7af4158efa09530c735fdb0ba8eeecc43c365673285b14c930c1d890ffa92cb4\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":4,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_byte_receivers.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 4,
+          "failed": 0,
+          "unsupported": 0
+        }
+      }
+    },
+    {
+      "source": "tests/lang/rc_dictionary_text_loops.my",
+      "source_sha256": "b6945b52b5307661cbeaec51e4e6b197e9ca3029e817fed1348fc06f70582cee",
+      "public_tests": [
+        "test_owned_text_keys_preserve_growth_and_empty_loop",
+        "test_published_dictionary_keeps_copy_on_write"
+      ],
+      "modes": {
+        "ordinary": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_dictionary_text_loops.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"rc_dictionary_text_loops::test_owned_text_keys_preserve_growth_and_empty_loop\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"76b89f3266e644f81d0e97fea664789bcd6c40d467e0c9874c928a54d01cdea9\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_dictionary_text_loops.my#f4a9b4ae654098cb8531945eddbb5dfe4fd3de0fbba7ed69966fb8dad2b6f7d9\",\"producer\":{\"facts\":{\"fresh\":6,\"reused\":0,\"fallback\":5,\"decoded\":0},\"lowering\":{\"fresh\":5,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":6,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":24,\"index_edges\":30,\"affected_nodes\":6,\"closure_nodes\":14,\"closure_edges\":6,\"reused_tests\":0,\"planned_tests\":2},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":6,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":8911,\"save_bytes_prepared\":18153,\"sequence_locks\":21}},\"nanoseconds\":{\"lowering\":6407811,\"facts\":1242419,\"graph\":69766,\"planner\":111419797,\"keys\":27393,\"publication\":2668085,\"total\":121956618},\"transport\":{\"request_bytes\":412,\"reply_bytes\":236,\"startups\":1}}}},{\"name\":\"rc_dictionary_text_loops::test_published_dictionary_keeps_copy_on_write\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"5f372352b5d92c46f305bbc97fe4f7d8e17ce35648f8c0130ba11b9b361fa5bc\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":2,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_dictionary_text_loops.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 2,
+          "failed": 0,
+          "unsupported": 0
+        },
+        "zero_rc": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_dictionary_text_loops.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"rc_dictionary_text_loops::test_owned_text_keys_preserve_growth_and_empty_loop\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"30224ac848b58ba4c77c69955ec2b2c7ab03f8a5dae11a1dfb1c28f1510f0aa8\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_dictionary_text_loops.my#f4a9b4ae654098cb8531945eddbb5dfe4fd3de0fbba7ed69966fb8dad2b6f7d9\",\"producer\":{\"facts\":{\"fresh\":8,\"reused\":0,\"fallback\":5,\"decoded\":0},\"lowering\":{\"fresh\":5,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":8,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":32,\"index_edges\":55,\"affected_nodes\":8,\"closure_nodes\":20,\"closure_edges\":11,\"reused_tests\":0,\"planned_tests\":2},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":9185,\"save_bytes_prepared\":19330,\"sequence_locks\":21}},\"nanoseconds\":{\"lowering\":4940119,\"facts\":2264782,\"graph\":129589,\"planner\":7940228,\"keys\":38001,\"publication\":4230483,\"total\":19673528},\"transport\":{\"request_bytes\":512,\"reply_bytes\":284,\"startups\":1}}}},{\"name\":\"rc_dictionary_text_loops::test_published_dictionary_keeps_copy_on_write\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"d2da5a732fbc0b05509ab0baa3b612d90389a757f03658e8970b0af7c70bc5bf\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":2,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_dictionary_text_loops.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 2,
+          "failed": 0,
+          "unsupported": 0
+        }
+      }
+    },
+    {
+      "source": "tests/lang/rc_loop_guard_context.my",
+      "source_sha256": "f69e1c3db7d85648590f328ef8c9d3757e8c0e623a493c89743a7b7d89a0e8a7",
+      "public_tests": [
+        "test_adjacent_dictionary_and_byte_loops_keep_their_own_guard_context"
+      ],
+      "modes": {
+        "ordinary": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_loop_guard_context.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"rc_loop_guard_context::test_adjacent_dictionary_and_byte_loops_keep_their_own_guard_context\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"178c04f3a46f1a2ee4e6482dd4534081023fd8a68ed80b3af3e90227f56982a5\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_loop_guard_context.my#4104c91d49c074f8c76cd336db2deece6bf5c9d295d2b0e2c496ed6d01cb1a2c\",\"producer\":{\"facts\":{\"fresh\":5,\"reused\":0,\"fallback\":2,\"decoded\":0},\"lowering\":{\"fresh\":2,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":5,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":20,\"index_edges\":20,\"affected_nodes\":5,\"closure_nodes\":10,\"closure_edges\":4,\"reused_tests\":0,\"planned_tests\":1},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":6,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":5018,\"save_bytes_prepared\":9414,\"sequence_locks\":12}},\"nanoseconds\":{\"lowering\":2653560,\"facts\":637932,\"graph\":63160,\"planner\":112705457,\"keys\":18405,\"publication\":2057845,\"total\":118216431},\"transport\":{\"request_bytes\":352,\"reply_bytes\":208,\"startups\":1}}}}],\"passed\":1,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_loop_guard_context.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 1,
+          "failed": 0,
+          "unsupported": 0
+        },
+        "zero_rc": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_loop_guard_context.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"rc_loop_guard_context::test_adjacent_dictionary_and_byte_loops_keep_their_own_guard_context\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"007b2a840fa0b3cb37f880f55aee38ba29f9b3808eb718d84fe14c5bfe08333d\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_loop_guard_context.my#4104c91d49c074f8c76cd336db2deece6bf5c9d295d2b0e2c496ed6d01cb1a2c\",\"producer\":{\"facts\":{\"fresh\":6,\"reused\":0,\"fallback\":2,\"decoded\":0},\"lowering\":{\"fresh\":2,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":6,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":24,\"index_edges\":25,\"affected_nodes\":6,\"closure_nodes\":12,\"closure_edges\":5,\"reused_tests\":0,\"planned_tests\":1},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":5129,\"save_bytes_prepared\":9846,\"sequence_locks\":12}},\"nanoseconds\":{\"lowering\":1310855,\"facts\":564970,\"graph\":61429,\"planner\":99869189,\"keys\":15043,\"publication\":1803979,\"total\":103699144},\"transport\":{\"request_bytes\":396,\"reply_bytes\":224,\"startups\":1}}}}],\"passed\":1,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_loop_guard_context.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 1,
+          "failed": 0,
+          "unsupported": 0
+        }
+      }
+    },
+    {
+      "source": "tests/lang/rc_plain_update_paths.my",
+      "source_sha256": "69add28b6b2ee7febf4ba34d991e92bcf6c60e279026061060299f12a0dba81c",
+      "public_tests": [
+        "test_a_nested_write_callee_keeps_the_captured_receiver",
+        "test_a_mut_field_argument_callee_keeps_the_captured_receiver",
+        "test_a_mut_element_argument_callee_keeps_the_captured_receiver"
+      ],
+      "modes": {
+        "ordinary": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_plain_update_paths.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"rc_plain_update_paths::test_a_mut_element_argument_callee_keeps_the_captured_receiver\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"6d74a7dd42a20e2bc815e5364a4fb8b2c5c536e6ba671feac2dc77398552992c\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_plain_update_paths.my#06b615b1b049dd3e9389c71d46c529250e3d4882e3b1759562b882971c6b9906\",\"producer\":{\"facts\":{\"fresh\":11,\"reused\":0,\"fallback\":11,\"decoded\":0},\"lowering\":{\"fresh\":11,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":11,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":44,\"index_edges\":40,\"affected_nodes\":11,\"closure_nodes\":22,\"closure_edges\":8,\"reused_tests\":0,\"planned_tests\":3},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":6,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":13967,\"save_bytes_prepared\":25600,\"sequence_locks\":39}},\"nanoseconds\":{\"lowering\":192235839,\"facts\":2194370,\"graph\":88204,\"planner\":92244275,\"keys\":57729,\"publication\":16126013,\"total\":303087757},\"transport\":{\"request_bytes\":632,\"reply_bytes\":304,\"startups\":1}}}},{\"name\":\"rc_plain_update_paths::test_a_mut_field_argument_callee_keeps_the_captured_receiver\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"d4d2b3780d334da94113b768d9c018f24c6976e9670b05e329e01a237945fab2\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"rc_plain_update_paths::test_a_nested_write_callee_keeps_the_captured_receiver\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"c6a2cfd7519e869d28e6eb92659160f06821ec187bf8c1f6c19ba04222d2bf25\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":3,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_plain_update_paths.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 3,
+          "failed": 0,
+          "unsupported": 0
+        },
+        "zero_rc": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_plain_update_paths.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--experimental-zero-rc"
+          ],
+          "status": 1,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"rc_plain_update_paths::test_a_mut_element_argument_callee_keeps_the_captured_receiver\",\"status\":\"failed\",\"reason\":\"build error (SourceError): rc_plain_update_paths.my:28:5: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"db567f53cccaf93bcb8952f9034895f82329913cc2249f3d60746c85414fd7eb\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_plain_update_paths.my#06b615b1b049dd3e9389c71d46c529250e3d4882e3b1759562b882971c6b9906\",\"producer\":{\"facts\":{\"fresh\":12,\"reused\":0,\"fallback\":11,\"decoded\":0},\"lowering\":{\"fresh\":11,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":12,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":48,\"index_edges\":55,\"affected_nodes\":12,\"closure_nodes\":28,\"closure_edges\":11,\"reused_tests\":0,\"planned_tests\":3},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":14169,\"save_bytes_prepared\":26273,\"sequence_locks\":39}},\"nanoseconds\":{\"lowering\":4603161,\"facts\":1917593,\"graph\":97023,\"planner\":108273481,\"keys\":45897,\"publication\":3707108,\"total\":118779337},\"transport\":{\"request_bytes\":684,\"reply_bytes\":336,\"startups\":1}}}},{\"name\":\"rc_plain_update_paths::test_a_mut_field_argument_callee_keeps_the_captured_receiver\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"613fbacca93e21ce1b4efe6b17feaa1b02fce75c55cdda808ee0bce891419d4d\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"rc_plain_update_paths::test_a_nested_write_callee_keeps_the_captured_receiver\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"0e8a9f9bfbedc844b3a2b94a3772b05f65a0fd15aab5aa545c8a9da4c48e8cef\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":2,\"failed\":1,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_plain_update_paths.my\"]}\n",
+          "stderr": "",
+          "qualified": false,
+          "passed": 2,
+          "failed": 1,
+          "unsupported": 0
+        }
+      }
+    },
+    {
+      "source": "tests/lang/rc_readonly_bytes.my",
+      "source_sha256": "9f465b81a535ff6b3314c41c7f191d48ec02edc8ba77af285b05a5a16db175cb",
+      "public_tests": [
+        "test_readonly_octets_preserve_positive_and_negative_boundaries",
+        "test_readonly_octets_keep_view_backing_anchored"
+      ],
+      "modes": {
+        "ordinary": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_readonly_bytes.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"rc_readonly_bytes::test_readonly_octets_keep_view_backing_anchored\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"56b437352a566d1da1d3ffe945d22a00240ff8944971da622072d01e3b804930\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_readonly_bytes.my#e59f58a19fde4faa759de740644afffb465a4c7c0ac74cb94ceb7b34b4bff652\",\"producer\":{\"facts\":{\"fresh\":8,\"reused\":0,\"fallback\":4,\"decoded\":0},\"lowering\":{\"fresh\":4,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":8,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":32,\"index_edges\":45,\"affected_nodes\":8,\"closure_nodes\":26,\"closure_edges\":11,\"reused_tests\":0,\"planned_tests\":2},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":6,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":5716,\"save_bytes_prepared\":8776,\"sequence_locks\":18}},\"nanoseconds\":{\"lowering\":53581633,\"facts\":1846704,\"graph\":173116,\"planner\":104389450,\"keys\":24264,\"publication\":1638423,\"total\":161820800},\"transport\":{\"request_bytes\":504,\"reply_bytes\":288,\"startups\":1}}}},{\"name\":\"rc_readonly_bytes::test_readonly_octets_preserve_positive_and_negative_boundaries\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"002c7004756a5323319b5a67c5acab6540b31067907099d47a8fa66d036ce928\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":2,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_readonly_bytes.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 2,
+          "failed": 0,
+          "unsupported": 0
+        },
+        "zero_rc": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_readonly_bytes.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"rc_readonly_bytes::test_readonly_octets_keep_view_backing_anchored\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"16a2589c39a8f13fc5661132025c84a2b4e4e9cffa9e638e83f65176d86a887e\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_readonly_bytes.my#e59f58a19fde4faa759de740644afffb465a4c7c0ac74cb94ceb7b34b4bff652\",\"producer\":{\"facts\":{\"fresh\":9,\"reused\":0,\"fallback\":4,\"decoded\":0},\"lowering\":{\"fresh\":4,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":9,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":36,\"index_edges\":50,\"affected_nodes\":9,\"closure_nodes\":30,\"closure_edges\":13,\"reused_tests\":0,\"planned_tests\":2},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":5794,\"save_bytes_prepared\":9208,\"sequence_locks\":18}},\"nanoseconds\":{\"lowering\":2875795,\"facts\":1205087,\"graph\":213236,\"planner\":120230104,\"keys\":31725,\"publication\":1915799,\"total\":126591020},\"transport\":{\"request_bytes\":548,\"reply_bytes\":308,\"startups\":1}}}},{\"name\":\"rc_readonly_bytes::test_readonly_octets_preserve_positive_and_negative_boundaries\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"eae9ab3e507300e15a1d005da051fd5a81b64397d1523c5305398210cbb2ea6d\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":2,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/rc_readonly_bytes.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 2,
+          "failed": 0,
+          "unsupported": 0
+        }
+      }
+    },
+    {
+      "source": "tests/lang/text_index.my",
+      "source_sha256": "00453baf779c1a7ea9ef7915a49a88b4ddc838a6954523367b97ab0dd078cbf8",
+      "public_tests": [
+        "test_every_scalar_of_a_long_text_is_found_in_every_order",
+        "test_iteration_visits_each_scalar_once_in_order",
+        "test_lookups_agree_on_both_sides_of_the_index_threshold",
+        "test_one_non_ascii_scalar_in_ascii_text",
+        "test_a_text_of_four_octet_scalars",
+        "test_slices_of_a_long_text_read_the_scalars_they_name",
+        "test_slice_endpoints_clamp_and_count_from_the_end",
+        "test_the_rest_of_a_text_after_each_cut",
+        "test_views_of_a_long_text_have_positions_of_their_own",
+        "test_search_reports_scalar_positions_in_a_long_text",
+        "test_texts_built_by_methods_are_indexed_correctly",
+        "test_short_empty_and_ascii_texts_are_unchanged",
+        "test_aliases_and_copies_read_independently"
+      ],
+      "modes": {
+        "ordinary": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/text_index.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"text_index::test_a_text_of_four_octet_scalars\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"f8393bd00c3ab912d3ab525615b124965b9bafa8fb610a3e6a1b5d8307f46be5\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/text_index.my#7897c4264ab88b68f150a1d9820d64c0ff62c1d3373a5b41a474d80e5703378b\",\"producer\":{\"facts\":{\"fresh\":38,\"reused\":0,\"fallback\":21,\"decoded\":0},\"lowering\":{\"fresh\":21,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":38,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":152,\"index_edges\":550,\"affected_nodes\":38,\"closure_nodes\":250,\"closure_edges\":156,\"reused_tests\":0,\"planned_tests\":13},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":6,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":53190,\"save_bytes_prepared\":126757,\"sequence_locks\":69}},\"nanoseconds\":{\"lowering\":98045632,\"facts\":8596646,\"graph\":399450,\"planner\":102262805,\"keys\":186998,\"publication\":15233139,\"total\":225060396},\"transport\":{\"request_bytes\":2240,\"reply_bytes\":1424,\"startups\":1}}}},{\"name\":\"text_index::test_aliases_and_copies_read_independently\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"d67a004fcc45c2cec331b6e9d2953eb6dcd0ad0b12721f318c4fb92b569ac680\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_every_scalar_of_a_long_text_is_found_in_every_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"b23b5ba506426e34b0593dfd7806e5d9d9402072dc0e34d8c7e173498a6b81f7\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_iteration_visits_each_scalar_once_in_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"d63338db80c645ee63f1d847bdc0b5f3c0f174f292b71c60dc514e600ce17502\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_lookups_agree_on_both_sides_of_the_index_threshold\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"299cd11dde3940fdeb40b7d24baa64606910a101ad94be30c4a80939640344da\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_one_non_ascii_scalar_in_ascii_text\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"fecf0920caf8e7e1e0823645211d3bd18222a7a7977c7a7a9e3ec1fbd0116b5c\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_search_reports_scalar_positions_in_a_long_text\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"b0d00f30e96ff0810a4429cb6d0c37f745589caf6a77d04f5b1092cfb7cac7bd\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_short_empty_and_ascii_texts_are_unchanged\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ac01c3d56b59cd03b726bd206a0642d994462a7ce7b5d85a82cf072e330eea33\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_slice_endpoints_clamp_and_count_from_the_end\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"731eadb16790ac7db11557cb2ecf41bbbe37ec880f0b23811e2a39dbb030940b\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_slices_of_a_long_text_read_the_scalars_they_name\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ffcdc4970f5e478dcddfaf03aaacd14f95616dfd29734f559e59e263e14e282f\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_texts_built_by_methods_are_indexed_correctly\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"575bd0a5d0c38bc05210a29d19e600b598305be5b2a654df56f2eb569d100f99\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_the_rest_of_a_text_after_each_cut\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"4ced0ccd56538cec2087a0d8580563cb4ec44207f0546e19ba864de223813a60\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_views_of_a_long_text_have_positions_of_their_own\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"6ac7236c9af4e03f29d1fd537abb2f73319ba8b6021ac35bf8f9c4837c2b8c7f\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":13,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/text_index.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 13,
+          "failed": 0,
+          "unsupported": 0
+        },
+        "zero_rc": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/text_index.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"text_index::test_a_text_of_four_octet_scalars\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"9705c654b74f9fda0860f107f200458325a3d9317bca56b7e7138f4b201e3c6c\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/text_index.my#7897c4264ab88b68f150a1d9820d64c0ff62c1d3373a5b41a474d80e5703378b\",\"producer\":{\"facts\":{\"fresh\":39,\"reused\":0,\"fallback\":21,\"decoded\":0},\"lowering\":{\"fresh\":21,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":39,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":156,\"index_edges\":560,\"affected_nodes\":39,\"closure_nodes\":276,\"closure_edges\":170,\"reused_tests\":0,\"planned_tests\":13},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":53380,\"save_bytes_prepared\":127296,\"sequence_locks\":69}},\"nanoseconds\":{\"lowering\":17771072,\"facts\":8832983,\"graph\":386969,\"planner\":54476644,\"keys\":321047,\"publication\":18374928,\"total\":100506347},\"transport\":{\"request_bytes\":2288,\"reply_bytes\":1492,\"startups\":1}}}},{\"name\":\"text_index::test_aliases_and_copies_read_independently\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"5200abc294be9c73819dbf0e6a50089fa330cbe430468368948a918bb3331402\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_every_scalar_of_a_long_text_is_found_in_every_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"705fe26ef11bdad82599f0771e161c849de39088401eecfd7c74e282e9c5cd21\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_iteration_visits_each_scalar_once_in_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"267306a0076dd6ffdc420667606267865c8e1771dfd6bf0a9a86bf1cfd8eb538\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_lookups_agree_on_both_sides_of_the_index_threshold\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"82fb72dcc7c755d5e2beec2033e9f0a472bf076900d81b93a3b74bccb42abae6\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_one_non_ascii_scalar_in_ascii_text\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"1f2da34b0f200b48f9973bf9ea34e3d7752e7c0af429a12fe3d63517ac88e146\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_search_reports_scalar_positions_in_a_long_text\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"2910df0d57700ea3f8014e69fc1bb268f6310553b874ef3c69796c445f694726\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_short_empty_and_ascii_texts_are_unchanged\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"64b960c2f3dd883b95ba55fa9f08c9eb429bad6b2e4c2c18b5528c2df148fe9a\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_slice_endpoints_clamp_and_count_from_the_end\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"918e6034edd94c5f96b194dcddf120bb3d4c4844258711f736d603a4a58c23a5\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_slices_of_a_long_text_read_the_scalars_they_name\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"de2382ae238f4a2efda80f3111c2889438f2d3c3149cfe64fe01a010e0f244e9\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_texts_built_by_methods_are_indexed_correctly\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"b6851a02644eb63c787a96da55988d31675670f8977beffcd2198986254bcd33\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_the_rest_of_a_text_after_each_cut\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"df2a7e7445a03f35d8e1ea6842c31967e274a7fdb4529392c8857d1f1a7aa6be\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_index::test_views_of_a_long_text_have_positions_of_their_own\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"0e779f89a53e7552c203a9c8b76100d5bc2ab9b2b796bd16c05f539d6142e8ea\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":13,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/text_index.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 13,
+          "failed": 0,
+          "unsupported": 0
+        }
+      }
+    },
+    {
+      "source": "tests/lang/text_scanning.my",
+      "source_sha256": "02e3c18cfddafafe42e228b9ea9dd5c397f2e47280d5155b736420e7ace40807",
+      "public_tests": [
+        "test_count_is_non_overlapping_at_every_position",
+        "test_count_and_find_multibyte_needles_and_haystacks",
+        "test_count_and_find_over_long_inputs",
+        "test_replace_copies_runs_between_non_overlapping_matches",
+        "test_replace_over_long_inputs",
+        "test_split_keeps_empty_pieces_and_measures_each_piece",
+        "test_split_over_long_inputs",
+        "test_byte_string_separator_split_uses_the_same_cuts"
+      ],
+      "modes": {
+        "ordinary": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/text_scanning.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"text_scanning::test_byte_string_separator_split_uses_the_same_cuts\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"04941c0b6c4c74634647a67c6671291b985bc674db73f138d2eeac6797583262\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/text_scanning.my#2658cf276cae343aa4d3755e92d04369ffaafac837b8325fbbcf7fbeebfa8e54\",\"producer\":{\"facts\":{\"fresh\":22,\"reused\":0,\"fallback\":9,\"decoded\":0},\"lowering\":{\"fresh\":9,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":22,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":88,\"index_edges\":160,\"affected_nodes\":22,\"closure_nodes\":84,\"closure_edges\":34,\"reused_tests\":0,\"planned_tests\":8},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":6,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":28204,\"save_bytes_prepared\":74945,\"sequence_locks\":33}},\"nanoseconds\":{\"lowering\":43256984,\"facts\":5115227,\"graph\":197831,\"planner\":132904993,\"keys\":95816,\"publication\":10660987,\"total\":192493233},\"transport\":{\"request_bytes\":1228,\"reply_bytes\":632,\"startups\":1}}}},{\"name\":\"text_scanning::test_count_and_find_multibyte_needles_and_haystacks\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"b4353df8cda12a7cc9a4242db7bb512e839d0bd058fe48f5daadeaa3d741d211\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_scanning::test_count_and_find_over_long_inputs\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ffd53767e5594ac1067041665f66c3ba931985e93604322682f8977b6d67d0a5\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_scanning::test_count_is_non_overlapping_at_every_position\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"b4857c70075c761033c013f94c11b97cb98e1f8b7ed209d7db44b4762f96957d\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_scanning::test_replace_copies_runs_between_non_overlapping_matches\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"0fee7e529d40e6f44e010cf75f126d96388291e0f52da0940206570938245873\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_scanning::test_replace_over_long_inputs\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"a1cbf35f929a6ea73d4031778a3182ab9c03cc355052ac33d13b2c8292ad04ff\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_scanning::test_split_keeps_empty_pieces_and_measures_each_piece\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"d7e3f0975031c4530e0a3cd405b67241f0d2e4c6455bfe6510035c520118051f\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_scanning::test_split_over_long_inputs\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"91ee3a06a6f3a5d524caa67588412e152b3e67a1bffbd361466deb8e0b0297d4\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":8,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/text_scanning.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 8,
+          "failed": 0,
+          "unsupported": 0
+        },
+        "zero_rc": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/text_scanning.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"text_scanning::test_byte_string_separator_split_uses_the_same_cuts\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"42f094174b93e54743d65a747221bd787020adbab488b109efa895dbed6c1a26\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/text_scanning.my#2658cf276cae343aa4d3755e92d04369ffaafac837b8325fbbcf7fbeebfa8e54\",\"producer\":{\"facts\":{\"fresh\":23,\"reused\":0,\"fallback\":9,\"decoded\":0},\"lowering\":{\"fresh\":9,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":23,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":92,\"index_edges\":165,\"affected_nodes\":23,\"closure_nodes\":90,\"closure_edges\":37,\"reused_tests\":0,\"planned_tests\":8},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":28297,\"save_bytes_prepared\":75377,\"sequence_locks\":33}},\"nanoseconds\":{\"lowering\":9712848,\"facts\":4738117,\"graph\":191450,\"planner\":130399044,\"keys\":94626,\"publication\":9145506,\"total\":154515211},\"transport\":{\"request_bytes\":1272,\"reply_bytes\":656,\"startups\":1}}}},{\"name\":\"text_scanning::test_count_and_find_multibyte_needles_and_haystacks\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"b71a92a39d0465fbe3f3417ce095762047626677fc7dfadfeb3b96b7797f1941\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_scanning::test_count_and_find_over_long_inputs\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"4f04b00a2ae3683a5ebbd5319ac45f7eb4ac6606c0647708d72611a5d3397362\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_scanning::test_count_is_non_overlapping_at_every_position\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"f83105b8164494d48e0925f50f8e53943eaf0250496c5ac8dd6dbb9db28b4354\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_scanning::test_replace_copies_runs_between_non_overlapping_matches\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"e260893fc8c7a3d9fde2d0eaf18bee0368b7c561e2c06878f601594d37d4d5e9\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_scanning::test_replace_over_long_inputs\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3b175c827419b3be0a19d1a152bdb2c885ae61214595727e3bcff1939d8359ea\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_scanning::test_split_keeps_empty_pieces_and_measures_each_piece\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"22449061466c4d115ffe82508b67f8e708da260542de4cddbb9c9ed706aa8ed4\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_scanning::test_split_over_long_inputs\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"45f98fdb793a4adc3253fe42bb77a04432b7332445f4c6743ba7d9d1c2fc54c0\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":8,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/text_scanning.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 8,
+          "failed": 0,
+          "unsupported": 0
+        }
+      }
+    },
+    {
+      "source": "tests/lang/text_views.my",
+      "source_sha256": "c480fec08b4134604838034f58f7ad40d67db4a6ddee4f67b9bb0f4eec3e4e54",
+      "public_tests": [
+        "test_pieces_outlive_every_other_reference_to_their_receiver",
+        "test_views_of_views_read_the_right_octets",
+        "test_non_ascii_pieces_index_by_scalar",
+        "test_pieces_are_dictionary_keys_equal_to_owned_text",
+        "test_a_short_piece_does_not_keep_a_large_receiver_alive",
+        "test_pieces_at_the_policy_edges",
+        "test_every_consumer_reads_a_piece",
+        "test_streaming_tails_preserve_scalars_and_consumers"
+      ],
+      "modes": {
+        "ordinary": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/text_views.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"text_views::test_a_short_piece_does_not_keep_a_large_receiver_alive\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"0f215d70ac8925ec72539b9931f07a3baf4831a9e8eaed46e2d3066fc5ba20ef\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/text_views.my#9e67f6d0245c5cb7ac3ce50d8435fb07e759f83374fc4baca5d4930181d4c3ce\",\"producer\":{\"facts\":{\"fresh\":34,\"reused\":0,\"fallback\":12,\"decoded\":0},\"lowering\":{\"fresh\":12,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":34,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":136,\"index_edges\":310,\"affected_nodes\":34,\"closure_nodes\":146,\"closure_edges\":68,\"reused_tests\":0,\"planned_tests\":8},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":4,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":36976,\"save_bytes_prepared\":92609,\"sequence_locks\":42}},\"nanoseconds\":{\"lowering\":28253630,\"facts\":5911426,\"graph\":266807,\"planner\":111946497,\"keys\":99059,\"publication\":9368132,\"total\":156058560},\"transport\":{\"request_bytes\":1828,\"reply_bytes\":972,\"startups\":1}}}},{\"name\":\"text_views::test_every_consumer_reads_a_piece\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"c530f73ddda7a85986dd87a55d3768d8e863b2a37cef1102cd4f000d6d50da1e\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_views::test_non_ascii_pieces_index_by_scalar\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"77b0b2fdd23548fcb60ffe793b92ca3f033377b7b20088a2a77bf7d981326e56\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_views::test_pieces_are_dictionary_keys_equal_to_owned_text\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"c269ecc4de78d4bcf90c1a2a21d20922d2f7aa9e2485cab87b0b91182f0f0767\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_views::test_pieces_at_the_policy_edges\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"a9e81d32265c623d5a200ab1fb221274f44074482d7a6dc69b18cb47ef29f376\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_views::test_pieces_outlive_every_other_reference_to_their_receiver\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"b9b2aaf32ee8f609a7a0b13e50221410acddf95db4af3e824692c11e57efc5b3\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_views::test_streaming_tails_preserve_scalars_and_consumers\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"521aefdebc8eb0979bd2931599493e5188a8b58ece4b15514c78a0160828cc8c\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_views::test_views_of_views_read_the_right_octets\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"f3aa90545e34b55347356bff3c8604aa843124499a0605998d210559b150fa25\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":8,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/text_views.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 8,
+          "failed": 0,
+          "unsupported": 0
+        },
+        "zero_rc": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/text_views.my",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"text_views::test_a_short_piece_does_not_keep_a_large_receiver_alive\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ede7a62b53c6980d7f234f944484f5b6648f631235f6583dd325e2380acce3df\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/text_views.my#9e67f6d0245c5cb7ac3ce50d8435fb07e759f83374fc4baca5d4930181d4c3ce\",\"producer\":{\"facts\":{\"fresh\":36,\"reused\":0,\"fallback\":12,\"decoded\":0},\"lowering\":{\"fresh\":12,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":36,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":144,\"index_edges\":335,\"affected_nodes\":36,\"closure_nodes\":164,\"closure_edges\":79,\"reused_tests\":0,\"planned_tests\":8},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":5,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":37425,\"save_bytes_prepared\":93981,\"sequence_locks\":42}},\"nanoseconds\":{\"lowering\":12439604,\"facts\":6033748,\"graph\":277608,\"planner\":122991668,\"keys\":124624,\"publication\":11494323,\"total\":153616171},\"transport\":{\"request_bytes\":1928,\"reply_bytes\":1044,\"startups\":1}}}},{\"name\":\"text_views::test_every_consumer_reads_a_piece\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"c4ce641f9e5455c11d8a80c6fd11019e901541845f072b38e530c396bc8a01f8\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_views::test_non_ascii_pieces_index_by_scalar\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"4ecc9ad0a34bd72ec8465d6b458e6fa93ca8aa161c2c4a4da15dffb6b0105031\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_views::test_pieces_are_dictionary_keys_equal_to_owned_text\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ebddcd95b1b4ceb3be090228366b0f553655966531bedbaa3bc9280ab8d071a3\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_views::test_pieces_at_the_policy_edges\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"24bb9976f6342b53028d67677624899b3adb4e3516293328b037e2f6162b53f3\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_views::test_pieces_outlive_every_other_reference_to_their_receiver\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"84bf235cb08fe9be25f5caae5b6ef93105e2b04c5cf1b728b4f2779469580a81\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_views::test_streaming_tails_preserve_scalars_and_consumers\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"7aadd2f7be145e471a5188ac943b609217cfd6c37a83ec42fb91883f03ee2d37\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"text_views::test_views_of_views_read_the_right_octets\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"cec4a32a6d91b3c6c332f05ff6222553dcac981250190b768a7361bf2b17b9c5\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":8,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/text_views.my\"]}\n",
+          "stderr": "",
+          "qualified": true,
+          "passed": 8,
+          "failed": 0,
+          "unsupported": 0
+        }
+      }
+    }
+  ],
+  "admission": "at most two source files per shared build lease; each has ordinary and zero-RC guest-test execution",
+  "summary": {
+    "assigned_files": 19,
+    "source_blocked": 1,
+    "executed_files": 17,
+    "executed_tests_per_mode": 128,
+    "failed_commands": 1,
+    "failed_qualifications": 1,
+    "execution_totals": {
+      "ordinary": {
+        "passed": 128,
+        "failed": 0,
+        "unsupported": 0
+      },
+      "zero_rc": {
+        "passed": 127,
+        "failed": 1,
+        "unsupported": 0
+      }
+    }
+  }
+}

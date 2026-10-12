@@ -1,0 +1,8 @@
+{
+  "A02_patch": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/retirement/nested-extension-refresh/runtime-retirement.patch",
+  "A02_patch_sha256": "0e41a276536b3599d6ad01f5029487a524d93eee68636de825eea4540b972a65",
+  "status": 0,
+  "stdout": "patching file src/core/runtime/core_rt.c\npatching file src/core/runtime/core_bytes.c\n",
+  "stderr": "",
+  "source_root": "/home/epentland/ai/canopy/mylang-memory-20261012"
+}

@@ -1,0 +1,11 @@
+--- a/src/core/build.zig
++++ b/src/core/build.zig
+@@ -2706,7 +2706,7 @@
+ 
+ fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Function) Error!ir.Function {
+     const parallel = @import("build_parallel.zig");
+-    if (mb.module.zero_rc and parallel.matches(mb.input.source, checked)) return parallel.build(mb, declared);
++    if (parallel.matches(mb.input.source, checked)) return parallel.build(mb, declared);
+     var b: FnBuilder = .{ .mb = mb, .function = declared, .checked = checked };
+     b.declared_ret = try mb.mapType(checked.signature.return_type, declared.span);
+     defer b.places.deinit(mb.allocator);

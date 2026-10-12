@@ -1,0 +1,93 @@
+{
+  "scope": "Linux/glibc LD_PRELOAD counter probe; process setup included; reporting snapshot; no timing or RSS claims",
+  "source": "native_allocator_probe.c",
+  "input": [
+    "json_transform",
+    "256",
+    "1",
+    "42"
+  ],
+  "all_checksums": 673682,
+  "repeats": {
+    "08": [
+      {
+        "version": "native-allocator-v1",
+        "malloc_calls": 684,
+        "calloc_calls": 683,
+        "realloc_calls": 14,
+        "free_calls": 2742,
+        "nonnull_frees": 1378,
+        "malloc_bytes": 43651,
+        "calloc_bytes": 27576,
+        "realloc_bytes": 80320
+      },
+      {
+        "version": "native-allocator-v1",
+        "malloc_calls": 684,
+        "calloc_calls": 683,
+        "realloc_calls": 14,
+        "free_calls": 2742,
+        "nonnull_frees": 1378,
+        "malloc_bytes": 43651,
+        "calloc_bytes": 27576,
+        "realloc_bytes": 80320
+      },
+      {
+        "version": "native-allocator-v1",
+        "malloc_calls": 684,
+        "calloc_calls": 683,
+        "realloc_calls": 14,
+        "free_calls": 2742,
+        "nonnull_frees": 1378,
+        "malloc_bytes": 43651,
+        "calloc_bytes": 27576,
+        "realloc_bytes": 80320
+      }
+    ],
+    "09": [
+      {
+        "version": "native-allocator-v1",
+        "malloc_calls": 2,
+        "calloc_calls": 683,
+        "realloc_calls": 14,
+        "free_calls": 2059,
+        "nonnull_frees": 695,
+        "malloc_bytes": 3,
+        "calloc_bytes": 71224,
+        "realloc_bytes": 80320
+      },
+      {
+        "version": "native-allocator-v1",
+        "malloc_calls": 2,
+        "calloc_calls": 683,
+        "realloc_calls": 14,
+        "free_calls": 2059,
+        "nonnull_frees": 695,
+        "malloc_bytes": 3,
+        "calloc_bytes": 71224,
+        "realloc_bytes": 80320
+      },
+      {
+        "version": "native-allocator-v1",
+        "malloc_calls": 2,
+        "calloc_calls": 683,
+        "realloc_calls": 14,
+        "free_calls": 2059,
+        "nonnull_frees": 695,
+        "malloc_bytes": 3,
+        "calloc_bytes": 71224,
+        "realloc_bytes": 80320
+      }
+    ]
+  },
+  "delta_09_minus_08": {
+    "malloc_calls": -682,
+    "calloc_calls": 0,
+    "realloc_calls": 0,
+    "free_calls": -683,
+    "nonnull_frees": -683,
+    "malloc_bytes": -43648,
+    "calloc_bytes": 43648,
+    "realloc_bytes": 0
+  }
+}

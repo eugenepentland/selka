@@ -45,7 +45,8 @@ func next_op(mut frame: Frame) -> int:
 
 # A view of `frame.code` is live across a call that writes only `frame.ip`.
 func read_const(mut frame: Frame) -> int:
-    return frame.code.consts[next_op(mut frame)]
+    const constants = frame.code.consts.copy()
+    return constants[next_op(mut frame)]
 
 
 # Writes `frame.code.n`: the same field as the view the caller keeps.
@@ -55,14 +56,14 @@ func touch_code(mut frame: Frame):
 
 # The old `code` must survive a callee that writes inside it.
 func same_field(mut frame: Frame) -> int:
-    mut old = frame.code
+    mut old = frame.code.copy()
     touch_code(mut frame)
     return old.n * 1000 + frame.code.n
 
 
 # A view held across an in-place update of a disjoint field, then of the same field.
 func held_view(mut frame: Frame) -> int:
-    mut code = frame.code
+    mut code = frame.code.copy()
     frame.ip = frame.ip + 5
     mut first = code.n + frame.ip
     frame.code = Code(consts=[7], lines=[], name="new", n=50, m=0)
@@ -71,7 +72,7 @@ func held_view(mut frame: Frame) -> int:
 
 # A loop with `break` and `continue` keeps a view of `code` while it updates `ip`.
 func loop_view(mut frame: Frame, limit: int) -> int:
-    mut code = frame.code
+    mut code = frame.code.copy()
     mut total = 0
     while True:
         if frame.ip >= limit:
@@ -87,7 +88,7 @@ func loop_view(mut frame: Frame, limit: int) -> int:
 func recurse(mut frame: Frame, depth: int) -> int:
     if depth == 0:
         return frame.ip
-    mut code = frame.code
+    mut code = frame.code.copy()
     frame.ip = frame.ip + 1
     mut inner = recurse(mut frame, depth - 1)
     return inner + code.m
@@ -95,7 +96,7 @@ func recurse(mut frame: Frame, depth: int) -> int:
 
 # Counted fields: a list field is replaced while a view of another counted field is live.
 func swap_ops(mut frame: Frame) -> int:
-    mut code = frame.code
+    mut code = frame.code.copy()
     frame.ops = [9, 8, 7]
     return len(code.consts) * 10 + len(frame.ops)
 
@@ -104,7 +105,7 @@ func swap_ops(mut frame: Frame) -> int:
 func slot_ip(slot: Slot, bump: int) -> int:
     match slot:
         case Slot.frame(value=frame):
-            mut inner = frame
+            mut inner = frame.copy()
             inner.ip = inner.ip + bump
             return inner.ip * 100 + frame.ip
         case Slot.count(value=n):
@@ -114,7 +115,7 @@ func slot_ip(slot: Slot, bump: int) -> int:
 
 
 func make_code(tag: str, n: int) -> Code:
-    return Code(consts=[10, 20, 30, 40], lines=[1, 2], name=tag, n=n, m=n * 2)
+    return Code(consts=[10, 20, 30, 40], lines=[1, 2], name=tag.copy(), n=n, m=n * 2)
 
 
 func make_frame(tag: str, n: int) -> Frame:
@@ -140,7 +141,7 @@ func new_machine(code: int[]) -> Machine:
     mut frames: Frame[] = []
     mut i = 0
     while i < 4:
-        frames.append(Frame(closure=i, code=make_code("m", i), ops=code, ip=0, base=i))
+        frames.append(Frame(closure=i, code=make_code("m", i), ops=code.copy(), ip=0, base=i))
         i += 1
     return Machine(frames=frames, count=1, stack=[], top=0, log=[])
 
@@ -179,7 +180,7 @@ func checked_push(mut m: Machine, x: int) -> bool:
 func call(mut m: Machine, target: int) -> bool:
     if m.count == len(m.frames):
         return report_failure(mut m, "deep")
-    m.frames[m.count] = Frame(closure=target, code=make_code("c", target), ops=m.frames[0].ops, ip=target, base=m.top)
+    m.frames[m.count] = Frame(closure=target, code=make_code("c", target), ops=m.frames[0].ops.copy(), ip=target, base=m.top)
     m.count = m.count + 1
     return True
 
@@ -193,11 +194,11 @@ func with_frames(m: Machine, f: func(Machine) -> int) -> int:
 # 10 an out-of-range read (a trap), 11 rename the frame's code (a counted field), 12 log,
 # 13 a frame count past the list (the store at the end of the step traps).
 func run(mut m: Machine, steps: int) -> int:
-    mut frame = m.frames[m.count - 1]
+    mut frame = m.frames[m.count - 1].copy()
     mut n = 0
     while True:
         mut op = next_op(mut frame)
-        m.frames[m.count - 1] = frame
+        m.frames[m.count - 1] = frame.copy()
         mut ok = True
         n += 1
         if n > steps:
@@ -216,21 +217,21 @@ func run(mut m: Machine, steps: int) -> int:
             m.log.append("t" + str(trace(m)))
         elif op == 4:
             const target = next_op(mut frame)
-            m.frames[m.count - 1] = frame
+            m.frames[m.count - 1] = frame.copy()
             ok = call(mut m, target)
             if ok:
-                frame = m.frames[m.count - 1]
+                frame = m.frames[m.count - 1].copy()
         elif op == 5:
             m.count = m.count - 1
             if m.count == 0:
                 return 100 + trace(m)
-            frame = m.frames[m.count - 1]
+            frame = m.frames[m.count - 1].copy()
         elif op == 6:
             ok = checked_push(mut m, next_op(mut frame))
         elif op == 7:
-            m.frames.append(frame)
+            m.frames.append(frame.copy())
         elif op == 8:
-            m.frames = [frame, frame]
+            m.frames = [frame.copy(), frame.copy()]
             m.count = 1
         elif op == 9:
             m.log.append("i" + str(with_frames(m, trace)))
@@ -243,7 +244,7 @@ func run(mut m: Machine, steps: int) -> int:
             m.log.append(frame.code.name + str(len(frame.code.consts)))
         elif op == 13:
             m.count = m.count + 10
-        m.frames[m.count - 1] = frame
+        m.frames[m.count - 1] = frame.copy()
         if not ok:
             return -2
 
@@ -262,14 +263,15 @@ func show(m: Machine, result: int) -> str:
 # Union elements: a payload read, updated and stored back, a case replaced, and a
 # construction stored past the index's negative-index branch.
 func retag(mut slots: Slot[], i: int, f: Frame) -> int:
-    match slots[i]:
+    const selected = slots[i].copy()
+    match selected:
         case Slot.frame(value=inner):
-            mut moved = inner
+            mut moved = inner.copy()
             moved.ip = moved.ip + 1
             slots[i] = Slot.frame(value=moved)
         case _:
             slots[i] = Slot.count(value=i)
-    slots[-1] = Slot.frame(value=f)
+    slots[-1] = Slot.frame(value=f.copy())
     return len(slots)
 
 
@@ -302,7 +304,7 @@ func stores_section(out: Stream, trap: str):
         const result = run(mut m, 40)
         out.print(show(m, result))
     mut slots = [Slot.frame(value=make_frame("u", 1)), Slot.empty, Slot.count(value=2)]
-    mut before = slots
+    mut before = slots.copy()
     mut n = retag(mut slots, 0, make_frame("v", 2))
     n = n + retag(mut slots, 1, make_frame("w", 3))
     out.print(n, slot_text(slots[0]), slot_text(slots[1]), slot_text(slots[2]), slot_text(before[0]), slot_text(before[2]))
@@ -332,24 +334,24 @@ func take_pop(mut m: Machine) -> int:
 
 # `it.m` is read, `it.returned` updated, then `it.m` written back: the read takes the field.
 func return_value(mut it: Interp):
-    mut wb = it.m
+    mut wb = it.m.copy()
     it.returned = take_pop(mut wb)
     it.m = wb
 
 
 # A managed field is replaced between the read and the write-back.
 func rename_and_pop(mut it: Interp, name: str):
-    mut wb = it.m
-    it.name = name
+    mut wb = it.m.copy()
+    it.name = name.copy()
     it.returned = take_pop(mut wb)
     it.m = wb
 
 
 # The whole record is copied between the read and the write-back: the copy keeps the old field.
 func snapshot_between(mut it: Interp) -> int:
-    mut wb = it.m
+    mut wb = it.m.copy()
     it.depth = it.depth + 1
-    mut keep = it
+    mut keep = it.copy()
     it.returned = take_pop(mut wb)
     it.m = wb
     return keep.m.top * 100 + keep.depth * 10 + it.m.top
@@ -361,7 +363,7 @@ func depth_of(it: Interp) -> int:
 
 # A call reads the record between the read and the write-back.
 func read_between(mut it: Interp) -> int:
-    mut wb = it.m
+    mut wb = it.m.copy()
     it.depth = it.depth + 1
     mut seen = depth_of(it)
     it.returned = take_pop(mut wb)
@@ -384,6 +386,6 @@ func main(args: str[], out: Stream) -> int:
     takes_section(out)
     mut trap = ""
     if len(args) > 0:
-        trap = args[0]
+        trap = args[0].copy()
     stores_section(out, trap)
     return 0

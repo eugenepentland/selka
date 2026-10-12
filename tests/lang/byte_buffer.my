@@ -15,8 +15,8 @@ func widest(values: int[]) -> byte_buffer:
 
 
 func buffer_pair[T: copy + storable](buffer: byte_buffer) -> byte_buffer[]:
-    mut both: byte_buffer[] = [buffer, buffer]
-    both.append(buffer)
+    mut both: byte_buffer[] = [buffer.copy(), buffer.copy()]
+    both.append(buffer.copy())
     if len(buffer) < 0:
         return both
     return both
@@ -68,13 +68,13 @@ public func test_a_buffer_storeback_preserves_an_earlier_snapshot() -> bool:
     mut empty: int[] = []
     mut buffer = byte_buffer(empty)
     _ = buffer.append_range(b"seed", 0, 4)
-    mut alias = buffer
+    mut alias = buffer.copy()
     if len(alias) != 4 or alias != b"seed":
         return False
     mut snapshot = bytes(buffer)
     if not alias.append_byte(33):
         return False
-    buffer = alias
+    buffer = alias.copy()
     if buffer != b"seed!" or alias != b"seed!":
         return False
     if snapshot != b"seed" or len(snapshot) != 4:
@@ -150,7 +150,7 @@ public func test_buffers_are_traced_through_record_fields_lists_and_generics() -
     mut packet = Packet(tag="head", body=buffer_of(b"body"))
     if packet.body != b"body":
         return False
-    mut body = packet.body
+    mut body = packet.body.copy()
     if not body.append_byte(33):
         return False
     packet.body = body
@@ -164,7 +164,7 @@ public func test_buffers_are_traced_through_record_fields_lists_and_generics() -
     if both[0] != b"7" or both[2] != b"7":
         return False
     mut index = 0
-    mut first = both[0]
+    mut first = both[0].copy()
     while index < 200:
         _ = first.append_byte(index % 256)
         index += 1

@@ -29,6 +29,9 @@ const build_values = @import("build_values.zig");
 const single_owner_copy = @import("single_owner_copy.zig");
 const build_capture = @import("build_capture.zig");
 const lowering_cache = @import("lowering_cache.zig");
+const aggregate_provider = @import("aggregate_provider.zig");
+const borrowed_provider = @import("borrowed_provider.zig");
+const borrow_selection = @import("borrow_selection.zig");
 
 /// Refusal reasons several constructs share.
 const refuse_payload = "match payload";
@@ -95,6 +98,7 @@ fn buildRootsInput(allocator: std.mem.Allocator, roots: []const typed.FunctionId
 pub fn buildRootsCached(allocator: std.mem.Allocator, roots: []const typed.FunctionId, input: Input, refusal: *Refusal, cache: ?*lowering_cache.Cache) CachedError!ir.Module {
     const program = input.program;
     var mb: ModuleBuilder = .{ .allocator = allocator, .input = input, .refusal = refusal, .discovery = .{ .enabled = cache != null } };
+    defer if (mb.provider_types) |facts| allocator.free(facts);
     mb.module.single_owner = input.single_owner or input.zero_rc;
     mb.module.zero_rc = input.zero_rc;
     defer mb.discovery.ids.deinit(allocator);
@@ -173,6 +177,12 @@ pub fn coverage(allocator: std.mem.Allocator, program: typed.Program) Error![]Ou
 
 /// Coverage checks with optional resolved embedded-asset content.
 pub fn coverageSource(allocator: std.mem.Allocator, program: typed.Program, source: ?Source) Error![]Outcome {
+    return coverageInput(allocator, .{ .program = program, .source = source });
+}
+
+/// Coverage checks under the caller's selected source ownership and runtime ABI.
+pub fn coverageInput(allocator: std.mem.Allocator, input: Input) Error![]Outcome {
+    const program = input.program;
     const outcomes = try allocator.alloc(Outcome, program.functions.len);
     for (program.functions, outcomes) |function, *outcome| {
         outcome.* = .{ .name = function.name, .refusal = null };
@@ -181,7 +191,10 @@ pub fn coverageSource(allocator: std.mem.Allocator, program: typed.Program, sour
             continue;
         }
         var refusal: Refusal = .{};
-        var mb: ModuleBuilder = .{ .allocator = allocator, .input = .{ .program = program, .source = source }, .refusal = &refusal };
+        var mb: ModuleBuilder = .{ .allocator = allocator, .input = input, .refusal = &refusal };
+        defer if (mb.provider_types) |facts| allocator.free(facts);
+        mb.module.single_owner = input.single_owner or input.zero_rc;
+        mb.module.zero_rc = input.zero_rc;
         const index = mb.functionIndex(function.id) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             error.Unsupported => {
@@ -204,9 +217,12 @@ pub fn coverageSource(allocator: std.mem.Allocator, program: typed.Program, sour
 /// The `ir.Signature.owned` bits of a function whose parameters (`unit` ones included)
 /// are `all` and whose `mut` parameters sit at `mutated`: a `mut` parameter is passed
 /// by value and returned, so the call hands it over (bits count passed parameters only).
-fn ownedParameters(all: []const ir.Type, mutated: []const u16) u64 {
+fn ownedParameters(all: []const ir.Type, function: typed.Function, program: typed.Program, zero_rc: bool) u64 {
     var bits: u64 = 0;
-    for (mutated) |position| {
+    for (all, function.scope.locals[0..all.len], 0..) |_, local_info, position| {
+        const mutated = std.mem.indexOfScalar(u16, function.signature.declared_mutates, @intCast(position)) != null;
+        const affine = zero_rc and @import("single_owner_resource.zig").affine(program, local_info.ty);
+        if (!mutated and !affine) continue;
         var passed: u6 = 0;
         for (all[0..position]) |param| passed += @intFromBool(param != .void);
         if (position < all.len and all[position] != .void) bits |= @as(u64, 1) << passed;
@@ -223,6 +239,12 @@ const ModuleBuilder = struct {
     /// Checked record and union type → IR type. An entry is made before the type's fields
     /// are mapped, so a recursive type (through a boxed field) finds itself.
     types: std.AutoHashMapUnmanaged(typed.Type, ir.Type) = .empty,
+    provider_types: ?[]bool = null,
+
+    fn hasProvider(self: *ModuleBuilder, ty: typed.Type) Error!bool {
+        if (self.provider_types == null) self.provider_types = try aggregate_provider.classify(self.allocator, self.input.program);
+        return aggregate_provider.contains(self.provider_types.?, ty);
+    }
 
     fn lowering(self: *ModuleBuilder) lowering_cache.Context {
         return .{ .arena = self.allocator, .input = .{ .program = self.input.program, .source = self.input.source, .drop_debug = self.input.drop_debug }, .module = &self.module, .discovery = &self.discovery, .types = &self.types };
@@ -255,7 +277,8 @@ const ModuleBuilder = struct {
         if (linkage == .extern_c and function.signature.declared_mutates.len != 0) return self.refuse("mut parameter of an extern function", span);
         const ret = try self.returnType(function, declared, all, span);
         const index: u32 = @intCast(self.module.functions.items.len);
-        try self.module.functions.append(self.allocator, .{ .name = function.name, .signature = .{ .params = params, .ret = ret, .linkage = linkage, .owned = ownedParameters(all, function.signature.declared_mutates) }, .span = span });
+        const owned = ownedParameters(all, function, self.input.program, self.module.zero_rc);
+        try self.module.functions.append(self.allocator, .{ .name = function.name, .signature = .{ .params = params, .ret = ret, .linkage = linkage, .owned = owned }, .span = span });
         try self.discovery.ids.put(self.allocator, @backingInt(id), index);
         try self.discovery.pending.append(self.allocator, id);
         return index;
@@ -439,6 +462,9 @@ const Ssa = struct {
     resources: std.ArrayList(build_cap.Scope) = .empty,
     /// Parents already detached for a hidden receiver's imminent write-back.
     prepared: std.AutoHashMapUnmanaged(u32, PreparedPath) = .empty,
+    /// Exact nested reconstruction reads share their parent's normalized index.
+    array_indices: std.AutoHashMapUnmanaged(typed.NodeId, ir.Ref) = .empty,
+    dictionary_defaults: std.AutoHashMapUnmanaged(ir.Ref, build_dict.DefaultSelection) = .empty,
 };
 
 /// Where `break` and `continue` of one checked loop go.
@@ -657,6 +683,7 @@ const FnBuilder = struct {
     }
 
     fn prepareParent(self: *FnBuilder, base: ir.Ref, span: u32) Error!ir.Ref {
+        if (self.module().zero_rc) return base;
         const ty = self.typeOfRef(base);
         const kind = self.mb.module.kind(ty);
         if (kind == .list or kind == .dict) return self.emit(.{ .op = if (kind == .dict) .dict_copy else .list_copy, .ty = ty, .a = base, .data = flags.place_copy, .span = span });
@@ -752,18 +779,97 @@ const FnBuilder = struct {
 
     /// Lower one binding store and preserve its alias and assignment facts.
     fn storeStatement(self: *FnBuilder, store: typed.Store, span: u32, assign: bool) Error!void {
+        if (store.unpack != null) return self.unpackStore(store, span, assign);
         if (store.element) {
             const kind = self.mb.module.kind(self.ssa.types.items[self.local(store.slot)]);
             if (kind != .array and kind != .record) return self.mb.refuse("element store", span);
         }
         try self.guardViewRebind(self.local(store.slot), span);
+        if (assign and self.module().zero_rc) try self.prepareOptionalWriteback(store, span);
         var place: ?Place = null;
-        const value = try self.expressionPlace(store.value, &place);
+        const borrowed_context = self.module().zero_rc and !assign and borrowed_provider.initializer(self.mb.input.program, self.checked, store.value);
+        const value = if (borrowed_context) try self.borrowedProvider(store.value, span) else try self.expressionPlace(store.value, &place);
         const block = self.current orelse return;
+        try self.providerStore(store, place, value, assign, span);
         try self.write(self.local(store.slot), block, value);
         try self.assigned(self.local(store.slot));
         if (assign) try build_capture.invalidate(@TypeOf(self), self, .{ .root = self.local(store.slot), .steps = &.{} }, span);
         try self.noteAlias(store.slot, place);
+    }
+
+    /// The RHS and defensive refresh have completed; transfer only this payload.
+    fn prepareOptionalWriteback(self: *FnBuilder, store: typed.Store, span: u32) Error!void {
+        const found = @import("optional_writeback.zig").shape(self.mb.input.program, self.checked, store) orelse return;
+        const receiver = self.local(found.receiver);
+        const place = self.places.get(receiver) orelse return self.mb.refuse("optional writeback without a payload place", span);
+        if (place.root != self.local(store.slot) or place.steps.len != 1 or place.steps[0] != .payload or place.steps[0].payload != found.tag)
+            return self.mb.refuse("optional writeback must reconstruct its original payload", span);
+        if (place.root_version != self.version(place.root)) return self.mb.refuse("optional writeback has a stale payload", span);
+        const root = try self.read(place.root, self.current.?);
+        const payload = try self.propagatedPayload(root, found.tag, span);
+        try self.write(receiver, self.current.?, payload);
+    }
+
+    /// Validate the complete logical shape before evaluating or splitting a tuple.
+    fn unpackStore(self: *FnBuilder, store: typed.Store, span: u32, assign: bool) Error!void {
+        _ = @import("tuple_unpack.zig").fields(self.allocator(), self.mb.input.program, self.checked, store, !assign) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.Invalid => return self.mb.refuse("invalid complete tuple staging", span),
+        };
+        var place: ?Place = null;
+        const value = try self.expressionPlace(store.value, &place);
+        const block = self.current orelse return;
+        if (self.module().zero_rc) {
+            // The moved source's lexical provider pin must no longer name it.
+            // Other whole owners are unavailable under the same source contract.
+            if (place) |source| if (source.steps.len == 0) {
+                const empty = try self.detached(.{ .op = .undef, .ty = self.typeOfRef(value) });
+                try self.write(source.root, block, empty);
+            };
+            return self.unpackPayload(value, store.unpack.?, span);
+        }
+        // Ordinary RC tuple parameters can remain borrowed after destructuring.
+        for (store.unpack.?, 0..) |optional, index| {
+            const slot = optional orelse continue;
+            const field = try self.fieldGet(value, index, span);
+            try self.write(self.local(slot), self.current.?, field);
+        }
+    }
+
+    fn providerStore(self: *FnBuilder, store: typed.Store, place: ?Place, value: ir.Ref, assign: bool, span: u32) Error!void {
+        if (!self.module().zero_rc or self.function.resolve(value) == .none) return;
+        if (!try self.mb.hasProvider(self.checked.scope.locals[self.local(store.slot)].ty)) return;
+        const slot = self.local(store.slot);
+        const info = self.checked.scope.locals[slot];
+        if (std.mem.startsWith(u8, info.name, "<")) return;
+        if (assign) try aggregate_provider.keepalive(@TypeOf(self), self, try self.read(slot, self.current.?), span);
+        // Source moves invalidate the old binding. Its lexical pin must read
+        // null on this path, not borrow an already-transferred SSA owner.
+        if (place) |source| if (source.steps.len == 0 and source.root != slot) {
+            const empty = try self.detached(.{ .op = .undef, .ty = self.typeOfRef(value) });
+            try self.write(source.root, self.current.?, empty);
+        };
+        if (!assign) try self.ssa.resources.append(self.allocator(), .{ .owner = .none, .depth = self.loops.items.len, .pin = slot });
+    }
+
+    /// A whole provider owner transferred into a value must leave no lexical pin
+    /// on its old binding. Field projections remain the enclosing owner's borrows.
+    fn clearProviderSource(self: *FnBuilder, source: ?Place, ty: typed.Type) Error!void {
+        if (!self.module().zero_rc or !try self.mb.hasProvider(ty)) return;
+        const place = source orelse return;
+        if (place.steps.len != 0) return;
+        const old = try self.read(place.root, self.current.?);
+        const empty = try self.detached(.{ .op = .undef, .ty = self.typeOfRef(old) });
+        try self.write(place.root, self.current.?, empty);
+    }
+
+    /// Record construction consumes each checked owned field in source order.
+    fn recordFieldValue(self: *FnBuilder, node: typed.NodeId) Error!ir.Ref {
+        if (!self.module().zero_rc or !try self.mb.hasProvider(self.nodeOf(node).ty)) return self.expression(node);
+        var place: ?Place = null;
+        const value = try self.expressionPlace(node, &place);
+        if (self.current != null) try self.clearProviderSource(place, self.nodeOf(node).ty);
+        return value;
     }
 
     /// Lower a checked statement and preserve lexical cleanup on every exit.
@@ -773,7 +879,16 @@ const FnBuilder = struct {
         const span: u32 = @intCast(s.span.start);
         switch (s.data) {
             .block => |items| {
+                const first_resource = self.ssa.resources.items.len;
+                defer self.ssa.resources.shrinkRetainingCapacity(first_resource);
                 for (items) |item| try self.statement(item);
+                if (self.current != null) {
+                    var index = self.ssa.resources.items.len;
+                    while (index > first_resource) {
+                        index -= 1;
+                        try build_cap.closeScope(@TypeOf(self), self, self.ssa.resources.items[index], span);
+                    }
+                }
             },
             .initialize, .assign => |store| try self.storeStatement(store, span, s.data == .assign),
             .range_loop => |range| {
@@ -810,7 +925,7 @@ const FnBuilder = struct {
                     const owner = try self.expression(source);
                     const variable = self.local(scope.slot);
                     try self.write(variable, self.current.?, owner);
-                    const provider = if (self.module().zero_rc) try self.expression(@import("build_cap.zig").scopeProvider(self.nodeOf(source)).?) else .none;
+                    const provider = if (self.module().zero_rc) try self.expression(build_cap.scopeProvider(self.mb.input.program, source).?) else .none;
                     const cleanup: build_cap.Scope = .{ .owner = owner, .depth = self.loops.items.len, .provider = provider };
                     try self.ssa.resources.append(self.allocator(), cleanup);
                     try self.statement(scope.body);
@@ -972,7 +1087,7 @@ const FnBuilder = struct {
     }
 
     fn matchStatement(self: *FnBuilder, value_node: typed.NodeId, arms: []const typed.MatchArm, span: u32) Error!void {
-        const owned = self.module().zero_rc and @import("single_owner.zig").matchOwnsTemporary(self.mb.input.program.nodes, value_node);
+        const owned = self.module().zero_rc and (@import("single_owner.zig").matchOwnsTemporary(self.mb.input.program.nodes, value_node) or @import("single_owner_resource.zig").affine(self.mb.input.program, self.nodeOf(value_node).ty));
         var value_place: ?Place = null;
         const value = try self.expressionPlace(value_node, &value_place);
         if (self.current == null) return;
@@ -1039,7 +1154,34 @@ const FnBuilder = struct {
 
     /// Recursively materialize an independent owner using the selected contract.
     pub fn copyOwned(self: *FnBuilder, value: ir.Ref, span: u32) Error!ir.Ref {
+        if (self.ssa.dictionary_defaults.get(self.function.resolve(value))) |selection|
+            return build_dict.copyDefault(@TypeOf(self), self, selection, span);
         return single_owner_copy.copy(@TypeOf(self), self, value, span);
+    }
+
+    /// Pin both evaluated get inputs without allocating or transferring either.
+    pub fn borrowSelection(self: *FnBuilder, selected: ir.Ref, dictionary: ir.Ref, fallback: ir.Ref, span: u32) Error!ir.Ref {
+        const ty = self.typeOfRef(selected);
+        const callee = borrow_selection.declare(self.allocator(), self.module(), self.typeOfRef(dictionary), ty) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.UnsupportedInstruction => return self.mb.refuse("invalid borrowed dictionary selection", span),
+        };
+        return self.emit(.{ .op = .call, .ty = ty, .a = @fromBackingInt(callee), .data = try self.extraSlice(&.{ selected, dictionary, fallback }), .span = span });
+    }
+
+    /// Borrow one selected value while both eagerly evaluated inputs stay live.
+    pub fn borrowChoice(self: *FnBuilder, kind: borrow_selection.Kind, selected: ir.Ref, first: ir.Ref, second: ir.Ref, span: u32) Error!ir.Ref {
+        const ty = self.typeOfRef(selected);
+        const callee = borrow_selection.declareChoice(self.allocator(), self.module(), kind, self.typeOfRef(first), ty) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.UnsupportedInstruction => return self.mb.refuse("invalid borrowed value selection", span),
+        };
+        return self.emit(.{ .op = .call, .ty = ty, .a = @fromBackingInt(callee), .data = try self.extraSlice(&.{ selected, first, second }), .span = span });
+    }
+
+    /// Preserve one evaluated lookup for an immediately requested independent copy.
+    pub fn rememberDefault(self: *FnBuilder, value: ir.Ref, selection: build_dict.DefaultSelection) Error!void {
+        try self.ssa.dictionary_defaults.put(self.allocator(), self.function.resolve(value), selection);
     }
 
     /// The type of the value `ref` stands for.
@@ -1113,14 +1255,17 @@ const FnBuilder = struct {
         if (self.version(place.root) != place.root_version) return self.mb.refuse("write to a receiver's place while its arguments are evaluated", span);
         const root = try self.read(place.root, self.current.?);
         const root_kind = self.mb.module.kind(self.typeOfRef(root));
-        if (root_kind != .list and root_kind != .dict) return alias;
+        if (root_kind != .list and root_kind != .dict and !self.module().zero_rc) return alias;
         const parents = try self.allocator().alloc(ir.Ref, place.steps.len);
         const children = try self.allocator().alloc(ir.Ref, place.steps.len);
         var value = root;
         for (place.steps, 0..) |step, index| {
             value = try self.prepareParent(value, span);
             parents[index] = value;
-            value = try self.stepGet(value, step, span);
+            value = if (self.module().zero_rc and step == .payload)
+                try self.propagatedPayload(value, step.payload, span)
+            else
+                try self.stepGet(value, step, span);
             children[index] = value;
             const kind = self.mb.module.kind(self.typeOfRef(parents[index]));
             if ((kind == .list or kind == .dict) and self.mb.module.managed(self.typeOfRef(value))) self.function.insts.items[value.index()].data = flags.place_read;
@@ -1218,6 +1363,28 @@ const FnBuilder = struct {
         return self.emit(.{ .op = .list_set, .ty = self.typeOfRef(list), .a = list, .b = index, .data = data, .check = .exact, .span = span });
     }
 
+    /// A checked field destination reconstructs its hidden read into the exact
+    /// same slot. Preserve that transfer before store narrowing or ownership.
+    fn transferSlotRead(self: *FnBuilder, value: typed.NodeId, list: ir.Ref, index: ir.Ref) Error!void {
+        if (!self.module().zero_rc) return;
+        const base = switch (self.nodeOf(value).data) {
+            .update => |update| update.base,
+            .replace => |replace| replace.base,
+            else => return,
+        };
+        const slot = switch (self.nodeOf(base).data) {
+            .local => |binding| self.local(binding),
+            else => return,
+        };
+        if (!std.mem.startsWith(u8, self.checked.scope.locals[slot].name, "<")) return;
+        const ref = self.function.resolve(try self.read(slot, self.current.?));
+        const instruction = self.function.inst(ref);
+        if (instruction.op != .list_get or !self.module().managed(instruction.ty)) return;
+        if (instruction.data != 0 and instruction.data != flags.place_read) return;
+        if (self.function.resolve(instruction.a) != self.function.resolve(list) or self.function.resolve(instruction.b) != self.function.resolve(index)) return;
+        self.function.insts.items[ref.index()].data = flags.place_read;
+    }
+
     fn storeInto(self: *FnBuilder, base: ir.Ref, steps: []const Step, value: ir.Ref, span: u32) Error!ir.Ref {
         if (steps.len == 0) return value;
         if (steps.len == 1) return self.stepSet(base, steps[0], value, span);
@@ -1225,7 +1392,7 @@ const FnBuilder = struct {
         const indexed = kind == .list or kind == .dict;
         // Ownership chooses identity, count-tested detach, or copy before the
         // child read. The child can then take the slot's existing owner.
-        const parent = if (indexed) try self.emit(.{ .op = if (kind == .dict) .dict_copy else .list_copy, .ty = self.typeOfRef(base), .a = base, .data = flags.place_copy, .span = span }) else base;
+        const parent = try self.prepareParent(base, span);
         const child = try self.stepGet(parent, steps[0], span);
         if (indexed and self.mb.module.managed(self.typeOfRef(child))) self.function.insts.items[child.index()].data = flags.place_read;
         const inner = try self.storeInto(child, steps[1..], value, span);
@@ -1372,6 +1539,7 @@ const FnBuilder = struct {
             .boolean => |value| return self.constant(.bool, @intFromBool(value)),
             .unit => return .none,
             .local => |slot| return self.localExpression(slot, n.ty, out, span),
+            .borrow_selection => |choice| return @import("build_borrow_selection.zig").lower(@TypeOf(self), self, choice, n.ty, try self.typeOf(id), span),
             .block_value => |block| {
                 try self.statement(block.body);
                 return self.expressionPlace(block.value, out);
@@ -1397,7 +1565,7 @@ const FnBuilder = struct {
                 if (self.mb.module.kind(buffer_type) == .dict and self.typeOfRef(capacity) != .u64) capacity = try self.emit(.{ .op = .convert, .ty = .u64, .a = capacity, .check = .exact, .span = span });
                 return self.emit(.{ .op = if (self.mb.module.kind(buffer_type) == .dict) .dict_new else .list_new, .ty = buffer_type, .a = capacity, .span = span });
             },
-            .index => |index| return self.indexExpression(index, n.ty, try self.typeOf(id), span, out),
+            .index => return self.indexExpression(id, try self.typeOf(id), span, out),
             .arena_escape => |value| return self.expression(value),
             .length => |operand| return self.stringLength(operand, span),
             .variant => |case| return self.variantMake(id, case.tag, case.value, span),
@@ -1484,15 +1652,17 @@ const FnBuilder = struct {
     }
 
     /// Read a dictionary or array element and remember its place for mut write-back.
-    fn arrayGet(self: *FnBuilder, index: @FieldType(@FieldType(typed.Node, "data"), "index"), span: u32, out: ?*?Place) Error!ir.Ref {
+    fn arrayGet(self: *FnBuilder, id: typed.NodeId, span: u32, out: ?*?Place) Error!ir.Ref {
+        const index = self.nodeOf(id).data.index;
         var base_place: ?Place = null;
         const base = try self.expressionPlace(index.base, if (out != null) &base_place else null);
-        const raw = try self.expression(index.index);
+        const captured = self.ssa.array_indices.get(id);
+        const raw = if (captured == null) try self.expression(index.index) else ir.Ref.none;
         if (self.current == null) return .none;
         const ty = self.typeOfRef(base);
         const dictionary = self.mb.module.kind(ty) == .dict;
         if (!dictionary and self.mb.module.kind(ty) != .array) return self.mb.refuse("index of a non-array", span);
-        const at = if (dictionary) try build_dict.find(@TypeOf(self), self, base, raw, span) else try self.arrayIndex(base, raw, index.from_end, span);
+        const at = captured orelse if (dictionary) try build_dict.find(@TypeOf(self), self, base, raw, span) else try self.arrayIndex(base, raw, index.from_end, span);
         if (dictionary) try build_dict.requirePresent(@TypeOf(self), self, at, span);
         if (out) |place| if (base_place) |found| {
             place.* = try self.extendPlace(found, .{ .element = at });
@@ -1505,11 +1675,39 @@ const FnBuilder = struct {
     fn arrayReplace(self: *FnBuilder, replacement: @FieldType(@FieldType(typed.Node, "data"), "replace"), span: u32) Error!ir.Ref {
         const base = try self.expression(replacement.base);
         const raw = try self.expression(replacement.index);
+        if (self.current == null) return .none;
+        const shared = if (self.module().zero_rc and self.mb.module.kind(self.typeOfRef(base)) == .array) self.reconstructedIndex(replacement) else null;
+        if (shared) |index| {
+            const normalized = try self.arrayIndex(base, raw, replacement.from_end, span);
+            const previous = self.ssa.array_indices.get(index);
+            try self.ssa.array_indices.put(self.allocator(), index, normalized);
+            defer {
+                if (previous) |old| self.ssa.array_indices.getPtr(index).?.* = old else _ = self.ssa.array_indices.remove(index);
+            }
+            const value = try self.expression(replacement.value);
+            if (self.current == null) return .none;
+            return self.arraySet(base, normalized, value, span);
+        }
         const value = try self.expression(replacement.value);
         if (self.current == null) return .none;
         if (self.mb.module.kind(self.typeOfRef(base)) == .dict) return build_dict.put(@TypeOf(self), self, base, raw, value, span);
         if (self.mb.module.kind(self.typeOfRef(base)) != .array) return self.mb.refuse("replace of a non-array", span);
         return self.arraySet(base, try self.arrayIndex(base, raw, replacement.from_end, span), value, span);
+    }
+
+    /// Only the exact typed projection being rebuilt can reuse this normalization.
+    fn reconstructedIndex(self: *FnBuilder, replacement: @FieldType(@FieldType(typed.Node, "data"), "replace")) ?typed.NodeId {
+        const base = switch (self.nodeOf(replacement.value).data) {
+            .update => |update| update.base,
+            .replace => |replace| replace.base,
+            else => return null,
+        };
+        const projection = switch (self.nodeOf(base).data) {
+            .index => |index| index,
+            else => return null,
+        };
+        if (projection.base != replacement.base or projection.index != replacement.index or projection.from_end != replacement.from_end) return null;
+        return base;
     }
 
     /// Replace one normalized array element, preserving aggregate ownership semantics.
@@ -1533,12 +1731,37 @@ const FnBuilder = struct {
             else => return self.mb.refuse("variant type", span),
         };
         if (tag >= cases.len) return self.mb.refuse("variant tag", span);
+        if (self.module().zero_rc and borrowed_provider.optionalArgument(self.mb.input.program, self.checked, id)) {
+            const callee = borrowed_provider.declare(self.allocator(), self.module(), ty) catch |err| switch (err) {
+                error.OutOfMemory => return error.OutOfMemory,
+                error.UnsupportedInstruction => return self.mb.refuse("invalid borrowed optional provider", span),
+            };
+            return self.emit(.{ .op = .call, .ty = ty, .a = @fromBackingInt(callee), .data = try self.extraSlice(&.{payload}), .span = span });
+        }
         if (payload != .none) payload = try self.boxFor(cases[tag], payload, span);
         const made = try self.emit(.{ .op = .union_make, .ty = ty, .a = payload, .data = tag, .span = span });
         if (typed.resultShape(self.nodeOf(id).ty, self.mb.input.program.records)) |shape| {
             if (shape.error_tag == tag) _ = try self.emit(.{ .op = .err_trace, .ty = .void, .data = @backingInt(ir.TraceMode.origin), .span = span });
         }
         return made;
+    }
+
+    /// A local parameter-rooted provider context borrows each field without clearing ownership pins.
+    fn borrowedProvider(self: *FnBuilder, id: typed.NodeId, span: u32) Error!ir.Ref {
+        const ty = try self.typeOf(id);
+        const stored = self.module().compound(ty).record;
+        const values = try self.allocator().alloc(ir.Ref, stored.len);
+        @memset(values, .none);
+        for (self.nodeOf(id).data.record) |field| {
+            const value = try self.expression(field.value);
+            if (self.current == null) return .none;
+            values[field.index] = try self.boxFor(stored[field.index], value, span);
+        }
+        const callee = borrowed_provider.declare(self.allocator(), self.module(), ty) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.UnsupportedInstruction => return self.mb.refuse("invalid borrowed provider context", span),
+        };
+        return self.emit(.{ .op = .call, .ty = ty, .a = @fromBackingInt(callee), .data = try self.extraSlice(values), .span = span });
     }
 
     /// `Name(fields)`: the fields are evaluated in the order written and placed in declaration order.
@@ -1558,7 +1781,7 @@ const FnBuilder = struct {
         @memset(values, .none);
         for (fields) |init| {
             if (init.index >= stored.len) return self.mb.refuse(refuse_field_index, span);
-            const value = try self.expression(init.value);
+            const value = try self.recordFieldValue(init.value);
             if (self.current == null) return .none;
             values[init.index] = try self.boxFor(stored[init.index], value, span);
         }
@@ -1569,13 +1792,16 @@ const FnBuilder = struct {
 
     /// `update`: the base with each listed field replaced.
     fn recordUpdate(self: *FnBuilder, base_node: typed.NodeId, fields: []const typed.FieldInit, span: u32) Error!ir.Ref {
-        var base = try self.expression(base_node);
+        var place: ?Place = null;
+        const provider = self.module().zero_rc and try self.mb.hasProvider(self.nodeOf(base_node).ty);
+        var base = try self.expressionPlace(base_node, if (provider) &place else null);
         if (self.current == null) return .none;
         for (fields) |init| {
-            const value = try self.expression(init.value);
+            const value = try self.recordFieldValue(init.value);
             if (self.current == null) return .none;
             base = try self.fieldSet(base, init.index, value, span);
         }
+        try self.clearProviderSource(place, self.nodeOf(base_node).ty);
         return base;
     }
 
@@ -2111,6 +2337,8 @@ const FnBuilder = struct {
         // a value before later arguments; an ancestor write can orphan that selected value.
         // A later whole-root mutation supersedes publication even if its body preserves the leaf.
         const places = try self.allocator().alloc(Place, mutated.len);
+        const prepared = try self.allocator().alloc(?PreparedPath, mutated.len);
+        @memset(prepared, null);
         const values = try self.allocator().alloc(ir.Ref, argument_nodes.len);
         for (0..argument_nodes.len) |written_position| {
             const position = if (contract.order.len == 0) written_position else contract.order[written_position];
@@ -2130,9 +2358,14 @@ const FnBuilder = struct {
         if (target.op == .call and self.mb.module.functions.items[target.a.index()].signature.linkage == .extern_c and values.len != 0 and self.typeOfRef(values[0]) == .cap) {
             _ = try self.effectCall("myl_core_host_check", &.{.cap}, .void, &.{values[0]}, span);
         }
-        for (mutated, places) |position, *place| {
+        // A managed leaf transfers its owner through a saved path. Scalar writebacks
+        // rebuild from the current root so an earlier sibling write is preserved.
+        for (mutated, places, prepared) |position, *place, *path| {
             if (place.steps.len > 0 and self.version(place.root) != place.root_version) {
                 values[position] = try build_capture.refresh(@TypeOf(self), self, place, values[position], span);
+            } else if (self.module().zero_rc and place.steps.len > 0 and self.module().managed(try self.typeOf(argument_nodes[position]))) {
+                path.* = try self.prepareMutPlace(place.*, span);
+                values[position] = path.*.?.children[place.steps.len - 1];
             } else values[position] = try self.readPlace(place.*, span);
         }
         try self.guardMutPlaces(places, span);
@@ -2149,12 +2382,48 @@ const FnBuilder = struct {
         const result = try self.emit(inst);
         if (mutated.len == 0) return if (inst.ty == .void) .none else result;
         const declared = try self.mb.mapType(contract.declared, span);
-        return self.writeBack(result, declared != .void, places, span);
+        return self.writeBack(result, declared != .void, places, prepared, span);
+    }
+
+    /// Transfer a checked interior mut argument through one captured parent path.
+    /// Source checking keeps the root exclusively loaned until the call returns.
+    fn prepareMutPlace(self: *FnBuilder, place: Place, span: u32) Error!PreparedPath {
+        const parents = try self.allocator().alloc(ir.Ref, place.steps.len);
+        const children = try self.allocator().alloc(ir.Ref, place.steps.len);
+        var value = try self.read(place.root, self.current.?);
+        for (place.steps, 0..) |step, index| {
+            parents[index] = value;
+            value = if (step == .payload)
+                try self.propagatedPayload(value, step.payload, span)
+            else
+                try self.stepGet(value, step, span);
+            children[index] = value;
+            const kind = self.module().kind(self.typeOfRef(parents[index]));
+            if ((kind == .list or kind == .dict) and self.module().managed(self.typeOfRef(value))) self.function.insts.items[value.index()].data = flags.place_read;
+        }
+        return .{ .parents = parents, .children = children };
+    }
+
+    /// Reattach each returned child to the exact slot whose owner was transferred.
+    fn storeMutPlace(self: *FnBuilder, place: Place, path: PreparedPath, value: ir.Ref, span: u32) Error!void {
+        var rebuilt = value;
+        var index = place.steps.len;
+        while (index != 0) {
+            index -= 1;
+            const parent = path.parents[index];
+            rebuilt = if (self.module().kind(self.typeOfRef(parent)) == .dict)
+                try self.listSet(parent, self.function.inst(path.children[index]).b, rebuilt, span)
+            else
+                try self.stepSet(parent, place.steps[index], rebuilt, span);
+        }
+        try self.write(place.root, self.current.?, rebuilt);
+        try self.assigned(place.root);
+        try build_capture.invalidate(@TypeOf(self), self, place, span);
     }
 
     /// A call to a function with `mut` parameters returned `result`: its own value (unless
     /// `unit`) and each `mut` parameter's final value. Store those into the caller's places.
-    fn writeBack(self: *FnBuilder, result: ir.Ref, has_value: bool, places: []const Place, span: u32) Error!ir.Ref {
+    fn writeBack(self: *FnBuilder, result: ir.Ref, has_value: bool, places: []const Place, prepared: []const ?PreparedPath, span: u32) Error!ir.Ref {
         const record_type = self.typeOfRef(result);
         const parts: []const ir.Type = if (self.mb.module.kind(record_type) == .record) self.mb.module.compound(record_type).record else &.{};
         // One part alone is not wrapped in a record.
@@ -2162,9 +2431,11 @@ const FnBuilder = struct {
         var value: ir.Ref = result;
         if (wrapped) value = if (has_value) try self.emit(.{ .op = .record_get, .ty = parts[0], .a = result, .data = 0, .span = span }) else .none;
         const first: usize = if (has_value) 1 else 0;
-        for (places, 0..) |place, k| {
+        for (places, prepared, 0..) |place, path, k| {
             const part = if (wrapped) try self.emit(.{ .op = .record_get, .ty = parts[first + k], .a = result, .data = first + k, .span = span }) else result;
-            if (place.publish == .none) {
+            if (path) |captured| {
+                try self.storeMutPlace(place, captured, part, span);
+            } else if (place.publish == .none) {
                 _ = try self.storePlace(place, part, span);
             } else {
                 const write_block = try self.newBlock();
@@ -2218,19 +2489,25 @@ const FnBuilder = struct {
         return build_text.operation(@TypeOf(self), self, operation, ty, span);
     }
 
-    fn indexExpression(self: *FnBuilder, index: @FieldType(@FieldType(typed.Node, "data"), "index"), source_type: typed.Type, result: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
+    fn indexExpression(self: *FnBuilder, id: typed.NodeId, result: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
+        const node = self.nodeOf(id);
+        const index = node.data.index;
         const base_type = try self.typeOf(index.base);
         if (base_type == .str_view) {
             const text = self.mb.input.program.records[self.nodeOf(index.base).ty.recordIndex()].collection.kind == .string;
             return build_view.indexed(@TypeOf(self), self, try self.expression(index.base), try self.expression(index.index), text, result, span);
         }
         if (base_type == .str or base_type == .bytes or base_type == .byte_buffer) return build_text.indexed(@TypeOf(self), self, index.base, index.index, span, result);
-        const value = try self.arrayGet(index, span, out);
-        return if (source_type == .unit) .none else value;
+        const value = try self.arrayGet(id, span, out);
+        return if (node.ty == .unit) .none else value;
     }
 
     fn bufferOperation(self: *FnBuilder, operation: BufferOperation, ty: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
         const receiver_type = self.ssa.types.items[self.local(operation.owner)];
+        if (self.module().zero_rc and operation.kind == .copy) {
+            const source = try self.receiverOf(operation.owner);
+            if (self.ssa.dictionary_defaults.contains(self.function.resolve(source))) return self.copyOwned(source, span);
+        }
         if (try build_view.dispatch(@TypeOf(self), self, operation, ty, receiver_type, span)) |value| return value;
         const result = try self.bufferOperationRaw(operation, ty, span, out);
         // A length is `u64` in the IR; a `len()` of a view or buffer typed `int` converts it,
@@ -2293,6 +2570,7 @@ const FnBuilder = struct {
                 if (self.current == null) return .none;
                 if (value == .none or self.typeOfRef(value) == .void) value = try self.constant(.bool, 0);
                 const list = try self.writableReceiverOf(owner, span);
+                try self.transferSlotRead(argument_nodes[1], list, index);
                 try self.writeOwner(owner, try self.listSet(list, index, value, span), span);
                 return .none;
             },
@@ -2513,6 +2791,7 @@ fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Funct
         const param = try b.detached(.{ .op = .param, .ty = ty, .data = passed });
         passed += 1;
         try b.write(@intCast(i), entry, param);
+        if (mb.module.zero_rc and try mb.hasProvider(local.ty)) try b.ssa.resources.append(mb.allocator, .{ .owner = .none, .depth = 0, .pin = @intCast(i) });
     }
     try b.statement(checked.scope.body);
     if (b.current != null) {

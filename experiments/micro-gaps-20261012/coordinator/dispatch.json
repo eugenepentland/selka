@@ -1,0 +1,37 @@
+{
+  "base": "399013af36d41b78610e5ede22a9102ec5b17ffe",
+  "integration_branch": "codex/micro-gaps-20261012",
+  "workers": [
+    {
+      "id": "dict",
+      "worktree": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict",
+      "branch": "codex/micro-gaps-20261012-dict"
+    },
+    {
+      "id": "words",
+      "worktree": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words",
+      "branch": "codex/micro-gaps-20261012-words"
+    },
+    {
+      "id": "sort",
+      "worktree": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-sort",
+      "branch": "codex/micro-gaps-20261012-sort"
+    },
+    {
+      "id": "encode",
+      "worktree": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-encode",
+      "branch": "codex/micro-gaps-20261012-encode"
+    }
+  ],
+  "scope": [
+    "dictionary string-key updates",
+    "word counting/tokenization",
+    "owned record sorting",
+    "intermediate text encoding"
+  ],
+  "frozen_baseline_compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+  "frozen_baseline_compiler_sha256": "8e58720cd72de8632aa48df373d18fc8238d46ec27010f8b182820a0eaaf10fa",
+  "shared_environment": "/home/epentland/.config/mylang/dev-env.sh",
+  "agent_model": "gpt-6.1-sol",
+  "agent_reasoning_effort": "low"
+}

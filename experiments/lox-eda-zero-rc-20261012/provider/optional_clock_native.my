@@ -1,0 +1,25 @@
+import time
+
+func stamp(clock: Clock?) -> int:
+    match clock:
+        case Some(provider):
+            match time.now(provider):
+                case Ok(instant):
+                    if instant.unix_nanoseconds > 0:
+                        return 1
+                    return -2
+                case Err(_):
+                    return -1
+        case None:
+            return 0
+
+func main(clock: Clock, out: Stream) -> int:
+    out.print(stamp(Some(clock)))
+    out.print(stamp(None))
+    out.print(stamp(Some(clock)))
+    match time.now(clock):
+        case Ok(instant):
+            out.print(instant.unix_nanoseconds > 0)
+        case Err(_):
+            return 1
+    return 0

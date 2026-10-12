@@ -91,3 +91,120 @@ test "extern whitespace cursor calls retain their C boundary implementation in e
     defer arena.deinit();
     try nativeBoundaries(arena.allocator(), .extern_c);
 }
+
+// spec-case: NEW-CORE-S2-SPLIT-3
+test "private whitespace split defers checked key copies and refuses escaping copies" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const language = @import("mylang");
+    const build = @import("build.zig");
+    const fusion = @import("fuse_text_split.zig");
+    const source =
+        \\func words(s: str) -> dict[str, int]:
+        \\    mut counts: dict[str, int] = {}
+        \\    for word in s.split():
+        \\        counts[word.copy().copy()] = counts.get(word, 0) + 1
+        \\    return counts
+        \\func escaped(s: str) -> str[]:
+        \\    mut result: str[] = []
+        \\    for word in s.split():
+        \\        result.append(word.copy())
+        \\    return result
+        \\func changed(s: str) -> dict[str, int]:
+        \\    mut source = s.copy()
+        \\    mut counts: dict[str, int] = {}
+        \\    for word in source.split():
+        \\        source += "x"
+        \\        counts[word.copy()] = 1
+        \\    return counts
+        \\func separator_changed(s: str) -> int:
+        \\    mut separator = ","
+        \\    mut total = 0
+        \\    for part in s.split(separator):
+        \\        total += len(part)
+        \\        separator += "x"
+        \\    return total
+        \\func main(out: Stream) -> int:
+        \\    mut counts = words("a b a")
+        \\    out.print(counts["a"], escaped("x y"), len(changed("a b")), separator_changed("a,b"))
+        \\    return 0
+    ;
+    var unit = try language.Compilation.init(a, "words.my", source);
+    try unit.check();
+    var refusal: build.Refusal = .{};
+    var module = try build.buildExecutable(a, .{ .program = unit.program.?, .single_owner = true, .zero_rc = true }, &refusal);
+    try fusion.run(a, &module);
+    var authorized_copy = false;
+    var words_views: usize = 0;
+    var words_copies: usize = 0;
+    var escaped_splits: usize = 0;
+    var changed_splits: usize = 0;
+    var separator_splits: usize = 0;
+    for (module.functions.items) |function| {
+        if (std.mem.eql(u8, function.name, "myl_core_owned_octets_copy")) {
+            try std.testing.expectEqual(.runtime_c, function.signature.linkage);
+            try std.testing.expectEqual(@as(u64, 0), function.signature.owned);
+            try std.testing.expectEqual(@as(u64, 0), function.signature.consumes);
+            authorized_copy = true;
+        }
+        for (function.insts.items) |inst| {
+            if (std.mem.eql(u8, function.name, "words")) {
+                if (inst.op == .str_view_of) words_views += 1;
+                if (inst.op == .call and std.mem.eql(u8, module.functions.items[inst.a.index()].name, "myl_core_owned_octets_copy")) words_copies += 1;
+            }
+            if (std.mem.eql(u8, function.name, "separator_changed") and inst.op == .call and std.mem.eql(u8, module.functions.items[inst.a.index()].name, "myl_core_str_split")) separator_splits += 1;
+            if (std.mem.eql(u8, function.name, "changed") and inst.op == .call and std.mem.eql(u8, module.functions.items[inst.a.index()].name, "myl_core_str_split_whitespace")) changed_splits += 1;
+            if (std.mem.eql(u8, function.name, "escaped") and inst.op == .call and std.mem.eql(u8, module.functions.items[inst.a.index()].name, "myl_core_str_split_whitespace")) escaped_splits += 1;
+        }
+    }
+    try std.testing.expectEqual(@as(usize, 1), words_views);
+    try std.testing.expect(authorized_copy);
+    try std.testing.expectEqual(@as(usize, 0), words_copies);
+    try std.testing.expectEqual(@as(usize, 1), escaped_splits);
+    try std.testing.expectEqual(@as(usize, 1), changed_splits);
+    try std.testing.expectEqual(@as(usize, 1), separator_splits);
+    try support.verified(a, &module, &.{});
+}
+
+// spec-case: NEW-CORE-S2-SPLIT-3
+test "private whitespace split copy recognition requires runtime authority and borrowing signature" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const language = @import("mylang");
+    const build = @import("build.zig");
+    const source =
+        \\func words(s: str) -> dict[str, int]:
+        \\    mut counts: dict[str, int] = {}
+        \\    for word in s.split():
+        \\        counts[word.copy()] = 1
+        \\    return counts
+        \\func main(out: Stream) -> int:
+        \\    mut counts = words("a b")
+        \\    out.print(len(counts))
+        \\    return 0
+    ;
+    var unit = try language.Compilation.init(a, "words.my", source);
+    try unit.check();
+    for ([_]ir.Signature{
+        .{ .params = &.{.str}, .ret = .str, .linkage = .extern_c },
+        .{ .params = &.{.str}, .ret = .str, .linkage = .runtime_c, .owned = 1 },
+        .{ .params = &.{.str}, .ret = .str, .linkage = .runtime_c, .consumes = 1 },
+        .{ .params = &.{.str}, .ret = .str, .linkage = .runtime_c, .views = 1 },
+    }) |signature| {
+        var refusal: build.Refusal = .{};
+        var module = try build.buildExecutable(a, .{ .program = unit.program.?, .single_owner = true, .zero_rc = true }, &refusal);
+        for (module.functions.items) |*function| {
+            if (std.mem.eql(u8, function.name, "myl_core_owned_octets_copy")) function.signature = signature;
+        }
+        try @import("fuse_text_split.zig").run(a, &module);
+        var splits: usize = 0;
+        for (module.functions.items) |function| {
+            for (function.insts.items) |inst| {
+                if (inst.op == .call and std.mem.eql(u8, module.functions.items[inst.a.index()].name, "myl_core_str_split_whitespace")) splits += 1;
+            }
+        }
+        try std.testing.expectEqual(@as(usize, 1), splits);
+    }
+}

@@ -1,0 +1,18 @@
+public func test_a_direct_and_an_indirect_call_of_one_function_agree() -> bool:
+    mut a = [3, 4]
+    mut b = [3, 4]
+    _ = poke(mut a)
+    _ = apply(poke, mut b)
+    return a == b and a == [8, 4]
+
+public func test_a_sharing_callee_reached_through_a_function_value_keeps_its_answers() -> bool:
+    mut xs = [1, 2]
+    mut old = apply(snap, mut xs)
+    return old == 1 and xs == [9, 2]
+
+public func test_an_unpinned_callee_reached_through_a_function_value_writes_the_callers_list() -> bool:
+    mut xs = [1, 2]
+    mut before = xs.copy()
+    mut n = apply(poke, mut xs)
+    mut m = apply(poke, mut xs)
+    return n == 2 and m == 2 and xs == [11, 2] and before == [1, 2]

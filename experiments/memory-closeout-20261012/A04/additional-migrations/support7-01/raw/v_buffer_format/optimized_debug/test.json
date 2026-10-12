@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/v_buffer_format.my",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support7-01/cache",
+    "--experimental-zero-rc",
+    "--force",
+    "--json",
+    "--jobs",
+    "1"
+  ],
+  "status": 0,
+  "elapsed_ns": 334943746,
+  "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"v_buffer_format::test_numeric_buffer_spelling_and_snapshots\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"a40e1b0fbfb5146c931ece807ed662095bfdf63f9227faf88fbac9bf08b1c40b\",\"component\":\"361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/v_buffer_format.my#f5a9e1aa4988857299b7e369053b58fdb6442a4be3cd51f7c2bb9474f337d5e9\",\"producer\":{\"facts\":{\"fresh\":7,\"reused\":1,\"fallback\":0,\"decoded\":1},\"lowering\":{\"fresh\":0,\"reused\":1,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":8,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":1},\"planner\":{\"index_nodes\":32,\"index_edges\":25,\"affected_nodes\":8,\"closure_nodes\":12,\"closure_edges\":5,\"reused_tests\":0,\"planned_tests\":1},\"storage\":{\"packed_bytes_read\":2202,\"decoded_bytes\":5843,\"blocks_decoded\":1,\"payload_bytes_returned\":2233,\"block_cache_hits\":3,\"publication\":{\"filename_lookups\":5,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":747,\"save_bytes_prepared\":233,\"sequence_locks\":4}},\"nanoseconds\":{\"lowering\":173834,\"facts\":22810,\"graph\":18485,\"planner\":2351356,\"keys\":3606,\"publication\":401708,\"total\":2999041},\"transport\":{\"request_bytes\":476,\"reply_bytes\":240,\"startups\":1}}}}],\"passed\":1,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/v_buffer_format.my\"]}\n",
+  "stderr": ""
+}

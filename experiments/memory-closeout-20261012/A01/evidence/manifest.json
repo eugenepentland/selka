@@ -1,0 +1,9 @@
+{
+  "C0-allocations.json": "03c09c63957ce90eef79d2bad835281118c4df978c65f53d84bed10e9481c232",
+  "build.log": "5c9476cbf61b8780bb113f7d7d330044cc84fb4dd0344426428361ada6c4675b",
+  "commit.log": "386d59c23746df295f75c34534d2435d0a8ef18c39a530291415b1491423b84b",
+  "core-tests.log": "e2d2134d09a0f80e432e9cb2ebeeb23d93a543aee15eb17c3ac940da70b18bad",
+  "prototype-allocations.json": "cd4acfd46ac3604367dc6f49bbaf6e85313131b207a3ca5564b32f3c552553f0",
+  "prototype-repeat-managed.json": "1353df56986b2cfdaf5b83389d32a44c07c1e139cd2cad706952615bd253f4d0",
+  "raw-counts.tar.gz": "baeb72b61aa4112b62ecd164f2bf1204cf4dc7b4dc88ea3e6740753b89248fcb"
+}

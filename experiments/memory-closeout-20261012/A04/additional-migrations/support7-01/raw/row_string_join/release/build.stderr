@@ -1,0 +1,6 @@
+/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_join.my:36:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  func inputs(kind: str, size: int, seed: int) -> Inputs:
+              ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_join.my:48:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:
+              ^

@@ -25,19 +25,24 @@ func replace_code(mut frame: Frame) -> int:
 
 
 func selected(mut frame: Frame) -> int:
-    return frame.code[replace_code(mut frame)]
+    const code = frame.code.copy()
+    return code[replace_code(mut frame)]
 
 
 func main(out: Stream) -> int:
     mut a = [1, 2, 3]
-    out.print(a[poke(mut a)], a[0])
+    const before_a = a.copy()
+    out.print(before_a[poke(mut a)], a[0])
     mut b = [1, 2, 3]
-    out.print(b[grow(mut b)], len(b))
+    const before_b = b.copy()
+    out.print(before_b[grow(mut b)], len(b))
     mut c = [1, 2, 3]
-    out.print(c[swap(mut c)], c[0])
+    const before_c = c.copy()
+    out.print(before_c[swap(mut c)], c[0])
     mut d = [1, 2, 3]
-    mut snapshot = d
-    out.print(d[poke(mut d)], d[0], snapshot[0])
+    mut snapshot = d.copy()
+    const before_d = d.copy()
+    out.print(before_d[poke(mut d)], d[0], snapshot[0])
     mut frame = Frame(code=[7, 11], ip=0)
     out.print(selected(mut frame), len(frame.code), frame.code[0])
     return 0

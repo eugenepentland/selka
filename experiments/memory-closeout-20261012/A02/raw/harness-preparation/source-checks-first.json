@@ -1,0 +1,81 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+  "scope": "supplemental wrapper source admission only on Support4",
+  "cases": [
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/harness-validation/b_buffer_values.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "cc24b83ccfe053141c93567319c80231567c5b58b3b0100cb6788308a7dd1577"
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/harness-validation/c_runner_byte_buffer.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "c_runner_byte_buffer.my:36:43: error[E_BYTES_CONVERSION]: byte_buffer() requires an int[] argument\n      if not test_buffer_copy_appends_alone(byte_buffer(b\"\")):\n                                            ^\n",
+      "source_sha256": "db61a576688a39be3eb3e21bb8259122ec828b24d6da204dd179f5a994f907c2"
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/harness-validation/m_list_methods.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "2ff3813b8191b46190ce8763c203f502058c4231f5593f977da86e0d031f937a"
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/harness-validation/v_dynamic_repeat.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "13c8e5cc2771381c23cf3a5b648f19e6dca37637593c8d3b78ccbca1478978ec"
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/harness-validation/v_nested_lengths.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "3b7da68ddfc9606c24932deddebec4aea308e62e6702784e7421d3c0207b2082"
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/harness-validation/v_nested_places.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "7441b95932e77cc419f585e6e4148706a5f2e852f5f4393666560b0338ee16fd"
+    }
+  ],
+  "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+  "compiler_source": "66890fbc5135a771e6a423724d13c30018ab717f",
+  "native_qualification": false
+}

@@ -1,0 +1,52 @@
+import environment
+import filesystem
+import random
+import time
+
+func file_early(fs: Filesystem) -> int:
+    with fs.open("data.txt", "r") as file:
+        if file.read() == "contents":
+            return 7
+        return 0
+
+func main() -> int:
+    const env = environment.fixed({"B": "two", "A": "one"})
+    if env.names() != ["A", "B"] or env.get("missing") is not None:
+        return 1
+    with env.only("A") as limited:
+        if limited.names() != ["A"]:
+            return 2
+    const fs = filesystem.memory()
+    match fs.write_text("data.txt", "contents"):
+        case Ok(_):
+            pass
+        case Err(_):
+            return 3
+    for index in range(20):
+        if file_early(fs) != 7:
+            return 4
+    with fs.read_only() as readonly:
+        match readonly.write_text("data.txt", "replacement"):
+            case Ok(_):
+                return 5
+            case Err(_):
+                pass
+    const clock = time.simulated_clock(time.from_unix_nanoseconds(123))
+    match time.advance(clock, time.nanoseconds(7)):
+        case Ok(_):
+            pass
+        case Err(_):
+            return 6
+    match time.now(clock):
+        case Ok(instant):
+            if instant.unix_nanoseconds != 130:
+                return 7
+        case Err(_):
+            return 8
+    match random.from_entropy(random.seeded_entropy(42)):
+        case Ok(generator):
+            if len(generator.state) != 1:
+                return 9
+        case Err(_):
+            return 10
+    return 0

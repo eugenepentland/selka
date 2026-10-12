@@ -1,0 +1,56 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 2K of event 'cpu_core/cycles/u'
+# Event count (approx.): 6322690445
+#
+# Children      Self  Command       Shared Object     Symbol                            
+# ........  ........  ............  ................  ..................................
+#
+    12.95%    12.95%  text-runtime  text-runtime      [.] myl_core_drop_owned
+    12.02%    12.02%  text-runtime  text-runtime      [.] block_alloc
+     9.50%     9.50%  text-runtime  text-runtime      [.] myl_core_values_copy_box
+     8.71%     8.71%  text-runtime  text-runtime      [.] my.json::read_value
+     7.64%     7.64%  text-runtime  text-runtime      [.] my.json::read_string
+     3.26%     3.26%  text-runtime  text-runtime      [.] myl_core_span_utf8_count
+     3.22%     0.00%  text-runtime  libc.so.6         [.] 0x00007b3e88cb2328
+            |
+            ---0x7b3e88cb2328
+
+     3.14%     3.14%  text-runtime  text-runtime      [.] myl_core_dict_insert
+     2.52%     2.52%  text-runtime  text-runtime      [.] my.text::kernel
+     2.51%     2.51%  text-runtime  libc.so.6         [.] cfree
+            |
+            ---cfree
+
+     2.41%     2.41%  text-runtime  text-runtime      [.] myl_core_str_hash
+     1.93%     1.93%  text-runtime  text-runtime      [.] my.json::write_quoted
+     1.79%     1.79%  text-runtime  text-runtime      [.] myl_core_buffer_push_checked
+     1.74%     0.00%  text-runtime  libc.so.6         [.] 0x00007b3e88cb3dbe
+            |
+            ---0x7b3e88cb3dbe
+
+     1.68%     0.00%  text-runtime  libc.so.6         [.] 0x00007b3e88cb3e9f
+            |
+            ---0x7b3e88cb3e9f
+
+     1.61%     1.61%  text-runtime  text-runtime      [.] myl_core_text_encode
+     1.47%     1.47%  text-runtime  text-runtime      [.] myl_core_span_decode_text
+     1.40%     1.40%  text-runtime  text-runtime      [.] memcpy@plt
+     1.30%     1.30%  text-runtime  text-runtime      [.] myl_core_parse_int_range
+     1.26%     1.26%  text-runtime  libc.so.6         [.] 0x0000000000197a85
+            |
+            ---0x7b3e88d97a85
+
+     1.26%     0.00%  text-runtime  libc.so.6         [.] 0x00007b3e88d97a85
+            |
+            ---0x7b3e88d97a85
+
+     1.19%     1.19%  text-runtime  text-runtime      [.] my.json::write_value
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

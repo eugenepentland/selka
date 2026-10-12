@@ -1,0 +1,5 @@
+oracle zero release True
+reduced zero release True
+control zero release True
+build-slot: FIFO ticket 854, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 854 after 5s

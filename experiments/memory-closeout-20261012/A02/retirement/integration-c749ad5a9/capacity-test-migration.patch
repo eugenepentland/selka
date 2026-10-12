@@ -1,0 +1,14 @@
+--- a/src/core/a02_capacity_test.zig
++++ b/src/core/a02_capacity_test.zig
+@@ -19,9 +19,9 @@
+     try environment.put("ZIG_LOCAL_CACHE_DIR", try std.fs.path.join(a, &.{ root, "zig-local" }));
+     const source = try std.fs.path.join(a, &.{ root, "fixture.c" });
+     const binary = try std.fs.path.join(a, &.{ root, "fixture" });
+-    for ([_][]const u8{ "-DMYL_ZERO_RC=1", "-UMYL_ZERO_RC" }) |mode| {
++    {
+         const built = try std.process.run(a, io, .{
+-            .argv = &.{ environment.get("ZIG") orelse "zig", "cc", "-O2", "-std=c11", "-pthread", mode, source, "-o", binary },
++            .argv = &.{ environment.get("ZIG") orelse "zig", "cc", "-O2", "-std=c11", "-pthread", source, "-o", binary },
+             .environ_map = &environment,
+         });
+         try std.testing.expectEqualStrings("", built.stderr);

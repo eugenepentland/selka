@@ -1,0 +1,97 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "default": false,
+  "total_blocks": 33,
+  "expected_units": 2,
+  "selected_blocks": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/tooling/guest-tests.md",
+      "line": 257,
+      "source": "# doc: check\n\n@invariant(self.low <= self.high, \"a span never runs backwards\")\npublic record Span:\n    low: int\n    high: int\n\nfunc total(xs: int[]) -> int:\n    mut sum = 0\n    for x in xs:\n        sum = sum + x\n    return sum\n\npublic func test_reversing_twice_is_the_identity(xs: int[]) -> bool:\n    mut ys = xs.copy()\n    ys.reverse()\n    ys.reverse()\n    return ys == xs\n\n@requires(len(xs) > 0, \"an average needs a value\")\npublic func test_average_is_within_range(xs: i32[]) -> bool:\n    mut mean = total([for x in xs yield int(x)]) // len(xs)\n    return int(min(xs)) <= mean and mean <= int(max(xs))\n\npublic func test_a_span_is_ordered(span: Span) -> bool:\n    return span.low <= span.high\n\npublic func test_budget_stays_below_100(costs: int[]) -> bool:\n    return total(costs) < 100\n\nfunc main() -> int:\n    return 0\n",
+      "sha256": "eae1666b773a382165297159723715289ac3917146a42466303a1aaa6cc044d2"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/tooling/guest-tests.md",
+      "line": 802,
+      "source": "# doc: project scanner-private\n# doc: file scanner.my\n# doc: check\nfunc is_digit(c: str) -> bool:\n    return c in \"0123456789\"\n",
+      "sha256": "d528802131e02f3c7cbf49cfb18083c2a702dc71c529fc0ca184eb6ef368b172"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/tooling/guest-tests.md",
+      "line": 812,
+      "source": "# doc: project scanner-private\n# doc: file scanner_test.my\n# doc: entry scanner_test.my\nimport scanner\n\n\npublic func test_is_digit() -> bool:\n    return scanner.is_digit(\"7\") and not scanner.is_digit(\"x\")\n",
+      "sha256": "3bff98898e89b6c6cd20260edaeb5eee25ed4bb30da93ed7dc3289f62f430b8f"
+    }
+  ],
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "doctest",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/docs-reference-support5-project",
+    "--jobs",
+    "1",
+    "--report",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/docs-reference-support5-project/report.json",
+    "--experimental-zero-rc"
+  ],
+  "status": 0,
+  "stdout": "  README.md: 0 run, 2 checked, 0 skipped, 0 mis-tagged, 0 failed\nDoc examples: 1 files scanned, 3 blocks found, 0 run, 2 checked, 0 skipped, 0 mis-tagged, 0 failed\n",
+  "stderr": "",
+  "doctest_report": {
+    "version": "doc-examples-v1",
+    "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+    "totals": {
+      "run": 0,
+      "checked": 2,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0
+    },
+    "files": {
+      "README.md": {
+        "blocks": 3,
+        "run": 0,
+        "checked": 2,
+        "skipped": 0,
+        "mistagged": 0,
+        "failed": 0,
+        "skips": []
+      }
+    },
+    "units": [
+      {
+        "label": "README.md:1",
+        "kind": "block",
+        "document": "README.md",
+        "status": "checked",
+        "detail": "",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-66ffed362af1188e/unit000/main.my",
+          "--diagnostics=json",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-66ffed362af1188e/unit000/objects"
+        ]
+      },
+      {
+        "label": "README.md#scanner-private",
+        "kind": "project",
+        "document": "README.md",
+        "status": "checked",
+        "detail": "generated entry point",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "check-project",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-66ffed362af1188e/unit001/scanner_test.my",
+          "--diagnostics=json",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-66ffed362af1188e/unit001/objects"
+        ]
+      }
+    ],
+    "mistagged": []
+  },
+  "success": true
+}

@@ -4,7 +4,7 @@ func write(mut items: int[][], row: int, column: int, value: int) -> unit:
 
 public func test_nested_scalar_writes_keep_the_original_snapshot() -> bool:
     mut rows = [[1, 2], [3, 4]]
-    mut before = rows
+    mut before = rows.copy()
     for index in range(20):
         write(mut rows, -1, -1, index)
         rows[0][-1] = rows[-1][-1] + 2
@@ -12,7 +12,7 @@ public func test_nested_scalar_writes_keep_the_original_snapshot() -> bool:
 
 
 func save(rows: int[][], mut snapshots: int[][][]) -> int:
-    snapshots.append(rows)
+    snapshots.append(rows.copy())
     return 7
 
 
@@ -25,15 +25,15 @@ public func test_callback_publication_keeps_full_pending_receiver_pins() -> bool
 
 public func test_managed_publication_still_establishes_independent_values() -> bool:
     mut rows = [[1], [2]]
-    mut before = rows
-    rows[0] = rows[1]
+    mut before = rows.copy()
+    rows[0] = rows[1].copy()
     rows[0].append(3)
     return rows == [[2, 3], [2]] and before == [[1], [2]]
 
 
 public func test_conditional_indices_and_zero_iterations_preserve_owners() -> bool:
     mut rows = [[1, 2]]
-    mut before = rows
+    mut before = rows.copy()
     for index in range(0):
         rows[0][index] = 7
     for index in range(10):
@@ -54,10 +54,10 @@ func main() -> int:
 
 public func test_three_level_shared_projection_keeps_named_row_and_outer_snapshot() -> bool:
     mut row = [1, 2]
-    mut rows = [row, row]
-    mut cube = [rows, rows]
-    mut before = cube
-    mut saved = cube[0][1]
+    mut rows = [row.copy(), row.copy()]
+    mut cube = [rows.copy(), rows]
+    mut before = cube.copy()
+    mut saved = cube[0][1].copy()
     cube[0][1][-1] = 7
     cube[1][0][if (len(saved) == 2) then (0) else (1)] = 9
     return cube == [[[1, 2], [1, 7]], [[9, 2], [1, 2]]] and before == [[[1, 2], [1, 2]], [[1, 2], [1, 2]]] and saved == [1, 2] and row == [1, 2]
@@ -73,14 +73,14 @@ func write_point(mut points: Point[], index: int, value: int) -> unit:
 
 
 func save_points(mut points: Point[], mut snapshots: Point[][]) -> int:
-    snapshots.append(points)
+    snapshots.append(points.copy())
     points[0].y = 9
     return -1
 
 
 public func test_plain_record_writes_keep_snapshot_and_negative_index() -> bool:
     mut points = [Point(x=3, y=7)]
-    mut before = points
+    mut before = points.copy()
     for index in range(4):
         write_point(mut points, -1, index)
         points[0].y = points[0].x + 10

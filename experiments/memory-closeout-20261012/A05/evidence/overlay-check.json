@@ -1,0 +1,95 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "overlay": true,
+  "check_only": true,
+  "harness_sha256": "762e145d19e37fa96ee906d032e475a98b41c1249b88b1af07badc6e9217dc82",
+  "cases": {
+    "cache_record": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/cache_record.my",
+        "original_sha256": "9bd5e272720a3ae780c7a387b3bbf51810bcfe3efc238dea5b4ff09d00fcc996",
+        "source_sha256": "847f0f579773ae635c6d85a75e3f27f7badefca68c21eec698182ea5b4cec668",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/overlay-check-v2/cache_record/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/overlay-check-v2/cache"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "d2b95d581eec0dead092caaf804f6b8a5c1888f40a846b276e19f8362f231bd8",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "847f0f579773ae635c6d85a75e3f27f7badefca68c21eec698182ea5b4cec668"
+        }
+      }
+    },
+    "memo": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/memo.my",
+        "original_sha256": "28074a03530fda44404c885eaf79a2484723ea9193a76c0a76ed5445ec4da64e",
+        "source_sha256": "8d98a56885132f08695197ce1ef1b309bf8d3862724a79f5cd7d8f1e6b9357bd",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/overlay-check-v2/memo/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/overlay-check-v2/cache"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "d2b95d581eec0dead092caaf804f6b8a5c1888f40a846b276e19f8362f231bd8",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "8d98a56885132f08695197ce1ef1b309bf8d3862724a79f5cd7d8f1e6b9357bd"
+        }
+      }
+    },
+    "storage": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/storage.my",
+        "original_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+        "source_sha256": "0c6c631c86493f669b77388ce5608c379dbbb9f327f8967af8c41666376bf58e",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/overlay-check-v2/storage/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/overlay-check-v2/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "a05_durable.my:163:5: error[E_ZERO_RC_UNSUPPORTED]: open a dependent scope directly from a named provider in this prototype\n      with try lock_directory(fs, \"\") as lease:\n      ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "d2b95d581eec0dead092caaf804f6b8a5c1888f40a846b276e19f8362f231bd8",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "0c6c631c86493f669b77388ce5608c379dbbb9f327f8967af8c41666376bf58e"
+        }
+      }
+    }
+  },
+  "failures": 1
+}

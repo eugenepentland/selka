@@ -1,0 +1,58 @@
+
+# Port of zig/src/escape.zig: shared HTML/XML/SVG output escaping. Zig's
+# `writeXml(w: anytype, s)` writes into any writer; here the writer is a
+# `byte_builder.Builder`.
+import byte_builder
+
+# Append the entity for one byte, or the byte itself. `apostrophe` is the only
+# thing the two public spellings disagree about.
+func write_entities(mut w: byte_builder.Builder, s: bytes, apostrophe: bytes):
+    for c in s:
+        if c == ord("&"):
+            byte_builder.append(mut w, b"&amp;")
+        elif c == ord("<"):
+            byte_builder.append(mut w, b"&lt;")
+        elif c == ord(">"):
+            byte_builder.append(mut w, b"&gt;")
+        elif c == ord("\""):
+            byte_builder.append(mut w, b"&quot;")
+        elif c == ord("'"):
+            byte_builder.append(mut w, apostrophe)
+        else:
+            _ = byte_builder.append_byte(mut w, c)
+
+
+# Escape `s` for an XML/HTML text node AND for quoted attribute values:
+# `& < > " '` become entities (the apostrophe as `&#39;`).
+public func write_xml(mut w: byte_builder.Builder, s: bytes):
+    write_entities(mut w, s, b"&#39;")
+
+
+# `write_xml` with the apostrophe spelled `&#x27;` instead of `&#39;`.
+public func write_xml_hex_apos(mut w: byte_builder.Builder, s: bytes):
+    write_entities(mut w, s, b"&#x27;")
+
+
+# Inverse of `write_xml`: expand exactly the entity set it produces. An
+# unrecognised `&...;` run is copied through verbatim.
+public func decode_xml_alloc(s: bytes) -> bytes:
+    mut names = [b"&amp;", b"&lt;", b"&gt;", b"&quot;", b"&#39;"]
+    mut chars = [ord("&"), ord("<"), ord(">"), ord("\""), ord("'")]
+    mut out = byte_builder.create()
+    mut i = 0
+    mut n = len(s)
+    while i < n:
+        if s[i] == ord("&"):
+            mut matched = False
+            for k in range(len(names)):
+                mut name = names[k]
+                if s.view(i, min(i + len(name), n)) == name:
+                    _ = byte_builder.append_byte(mut out, chars[k])
+                    i += len(name)
+                    matched = True
+                    break
+            if matched:
+                continue
+        _ = byte_builder.append_byte(mut out, s[i])
+        i += 1
+    return byte_builder.finish(out)

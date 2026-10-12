@@ -1,0 +1,20 @@
+{
+  "local_base_commit": "90ce40266e589598a6e98ac9a2c88ec26e0cb233",
+  "local_dependency_duplicate_of": "38dc781a8",
+  "exclude_local_dependency_from_integration": true,
+  "test_source_sha256": "b92949395274dd7d92886cf53bfc17adfab83ce25e6ff04c79159859e3861501",
+  "test_runner_sha256": "c8e074f2a3bacb5ffb1aaad12a704960310ef1e33518dc5664edb84ebe70bbb0",
+  "command": "scripts/build-slot.sh build \"$ZIG\" build test-core -Dtest-filter=\"zero RC migration\" -j\"$MYLANG_DEV_JOBS\" --maxrss \"$MYLANG_DEV_MAXRSS\"",
+  "command_exit": 0,
+  "registered_tests_passed": 7,
+  "negative_sources": 11,
+  "positive_sources": 2,
+  "positive_native_executions": 4,
+  "positive_modes": [
+    "debug",
+    "verified release"
+  ],
+  "native_leakcheck": true,
+  "emitted_llvm_rc_audit": true,
+  "not_final_integrated_gate": true
+}

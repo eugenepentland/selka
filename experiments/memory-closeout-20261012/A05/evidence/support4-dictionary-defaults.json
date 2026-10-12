@@ -1,0 +1,44 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+  "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+  "overlay": false,
+  "check_only": false,
+  "harness_sha256": "9241512d643050cf592d69810dddc20c8b39919a602634c9ca74360395aa8bc5",
+  "cases": {
+    "dictionary_defaults": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/dictionary_defaults.my",
+        "original_sha256": "fb753b3b4c9d7edcf2f5231684549d7647c0fcd618238810d11c10a5a62d717f",
+        "source_sha256": "fb753b3b4c9d7edcf2f5231684549d7647c0fcd618238810d11c10a5a62d717f",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support4-dictionary-defaults/dictionary_defaults/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support4-dictionary-defaults/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support4-dictionary-defaults/dictionary_defaults/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support4-dictionary-defaults/dictionary_defaults/release/program.ll"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support4-dictionary-defaults/dictionary_defaults/release/source/main.my:10:17: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression\n      const hit = values.get(\"present\", fallback(mut calls, 1)).copy()\n                  ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "main.my": "fb753b3b4c9d7edcf2f5231684549d7647c0fcd618238810d11c10a5a62d717f"
+        }
+      }
+    }
+  },
+  "compiler_source_revision": "66890fbc5135a771e6a423724d13c30018ab717f",
+  "ownership_selection": "experimental-zero-rc",
+  "failures": 1
+}

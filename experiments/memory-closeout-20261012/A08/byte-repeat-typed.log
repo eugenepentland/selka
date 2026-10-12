@@ -1,0 +1,49 @@
+build-slot: FIFO ticket 123, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 123 after 10s
+fn main #0 params=1 ret=i64 cabi=false host=false
+  local %0 out: stream_cap
+  local %1 <collection>: bytes mut
+  local %2 <collection>: i64 mut
+  local %3 <collection>: List<bytes> mut
+  local %4 <collection>: i64 mut
+  local %5 <collection>: bytes mut
+  local %6 data: bytes
+  block
+    initialize %6
+      block_value : bytes
+        block
+          initialize %1
+            array : bytes
+              integer : u8 97
+          initialize %2
+            integer : i64 32
+          initialize %3
+            acquire_buffer : List<bytes>
+              integer : i64 0
+          initialize %4
+            integer : i64 0
+          loop id=0
+            binary : bool lt
+              local : i64 %4
+              local : i64 %2
+            block
+              discard
+                buffer_operation : unit append owner=%3
+                  local : bytes %1
+              assign %4
+                binary : i64 add
+                  local : i64 %4
+                  integer : i64 1
+        block_value : bytes
+          block
+            initialize %5
+              array : bytes
+          buffer_operation : bytes join owner=%5
+            local : List<bytes> %3
+    discard
+      print : unit sink=stdout debug=false
+        local : stream_cap %0
+        length : i64
+          local : bytes %6
+    ret
+      integer : i64 0

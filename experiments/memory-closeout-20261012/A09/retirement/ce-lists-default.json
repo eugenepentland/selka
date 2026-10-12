@@ -1,0 +1,8 @@
+{
+  "applied": false,
+  "phase": "Only after coordinator authorizes C2 default promotion",
+  "source_sha256": "9130ea189b1196d7face21f150694f366011f855dc5f3db8510cf437e456b4fa",
+  "patch_sha256": "6bcadb0032a8899ea4c5b3cbf059f0f44b2dd37eeb64625cc5cad7b525963102",
+  "intent": "Run all five checked guest modes and exact traps through ordinary commands; preserve source/IR/LLVM checked assertions",
+  "qualification": "Actual default compiler invocation remains pending C2"
+}

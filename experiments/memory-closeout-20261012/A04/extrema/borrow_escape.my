@@ -1,0 +1,6 @@
+func select(words: str[]) -> str:
+    return min(words)
+
+func main() -> int:
+    const words = ["a" + str(1), "z" + str(2)]
+    return len(select(words))

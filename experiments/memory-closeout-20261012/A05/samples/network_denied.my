@@ -1,0 +1,11 @@
+import network
+
+func main() -> int:
+    const denied = network.denied()
+    match network.connect(denied):
+        case network.Connected.ok(_):
+            return 1
+        case network.Connected.err(code):
+            if code != network.denied_here() or len(network.describe(code)) == 0:
+                return 2
+    return 0

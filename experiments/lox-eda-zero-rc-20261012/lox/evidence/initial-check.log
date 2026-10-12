@@ -1,0 +1,4 @@
+build-slot: build slot 1, FIFO ticket 1307 after 0s
+main.my:1:1: error[E_MODULE_HEADER]: module names come from file paths; remove the redundant module header
+  module main
+  ^

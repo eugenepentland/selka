@@ -1,0 +1,1 @@
+{"arguments": ["--request", "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/work/tmp1_2d8doe/request.bin"], "request_sha256": "d51a764fc68691b9f01144e3d8651af9ff3c20ee05632174f4d9e32194c8d4a7", "status": 2, "stderr": "test-index: request table count exceeds limit\n"}

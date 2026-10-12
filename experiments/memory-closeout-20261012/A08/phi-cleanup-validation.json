@@ -1,0 +1,29 @@
+{
+  "base_revision": "7005ad4a3",
+  "driver_dependency": "38dc781a897182ffbf1fff0906ec319a007a9154",
+  "source_sha256": {
+    "src/core/phi_cleanup.zig": "7a7f9db847cb724a0e6bfbcf7d579009f0a590f8f910f3633e4e0d3427d6650a",
+    "src/core/phi_cleanup_test.zig": "98ad2518e3048f4a457436aaac534a4268bdad75f58b5f1c94836cc8d99ac562",
+    "src/core/root_test.zig": "dbfac651e677e0a43bd2f2da7dcec414ae1ec6c9db6f57de243187e69cfeca6b"
+  },
+  "test_binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.zig-cache/o/93e5e68466e933f302f11df43c320e17/test",
+  "test_binary_sha256": "4e6fa2cfb2ec403f399f43d2a89719cd23f583acc0328185f55115ec8d42bceb",
+  "evidence": "phi-cleanup-direct-v3.log",
+  "selected": 4,
+  "passed": 4,
+  "failed": 0,
+  "algorithm_work": {
+    "sizes": [
+      16,
+      4096,
+      16384
+    ],
+    "copies_resolved": "N",
+    "phis_visited": "N",
+    "phi_edges_visited": "4*N (2*N graph edges, two traversals)"
+  },
+  "integration": "A07 owns invocation at start of own.functionWithScratch; helper alone does not fix production lowering.",
+  "registered_prerequisite_failure": "phi-cleanup-focused-v3.log: immutable seed native-link object lifetime bug after host loader cache changed; direct Hand IR tests do not use installed components.",
+  "after_test_mechanical_change": "Guardian requested merging two top-level assertion loops. Converted to one table of identical value/op assertions; production helper and native execution test unchanged. Final registered integration rerun still required.",
+  "final_test_source_sha256": "94dd855d6a66b5059f5003dc4da8282c3fe3096238de83a342e8ce1f28534418"
+}

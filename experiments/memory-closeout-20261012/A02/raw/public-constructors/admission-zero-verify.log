@@ -1,0 +1,5 @@
+fixture zero verify True
+sets zero verify True
+generator_arguments zero verify True
+build-slot: FIFO ticket 934, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 934 after 5s

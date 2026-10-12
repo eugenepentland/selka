@@ -1,0 +1,1067 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "fixture_commit": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "fixture_root": "/home/epentland/ai/canopy/mylang-memory-20261012-support7",
+  "ownership": "opt-in",
+  "cases": {
+    "tests/lang/value_equality.my": {
+      "source_sha256": "9b3ae34e56a37dc4f8996933beb3bd482d37a9ca316876dd2f84f7da63d22a26",
+      "modes": {
+        "release": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-support7/tests/lang/value_equality.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--seed",
+            "7",
+            "--property-runs",
+            "12",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/Support7-guest-tests/cache/release"
+          ],
+          "exit": 0,
+          "stderr": "",
+          "counts": {
+            "passed": 4,
+            "failed": 0,
+            "unsupported": 3,
+            "skipped": 0,
+            "cached": 0
+          },
+          "bad_tests": [
+            {
+              "name": "value_equality::test_equality_through_a_field_supplies_the_option_type",
+              "status": "unsupported",
+              "reason": "unaudited zero-RC runtime helper myl_core_equal_16",
+              "at": "1:1",
+              "cache": {
+                "action": "refuse",
+                "reason": "unsupported",
+                "key": null,
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "per-test-ir-fallback",
+                "work": null
+              }
+            },
+            {
+              "name": "value_equality::test_pool_handles_keep_identity_separate_from_record_equality",
+              "status": "unsupported",
+              "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+              "at": "1:1",
+              "cache": {
+                "action": "refuse",
+                "reason": "unsupported",
+                "key": null,
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "per-test-ir-fallback",
+                "work": null
+              }
+            },
+            {
+              "name": "value_equality::test_recursive_record_equality_is_structural",
+              "status": "unsupported",
+              "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+              "at": "1:1",
+              "cache": {
+                "action": "refuse",
+                "reason": "unsupported",
+                "key": null,
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "per-test-ir-fallback",
+                "work": null
+              }
+            }
+          ]
+        },
+        "debug": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-support7/tests/lang/value_equality.my",
+            "--experimental-zero-rc",
+            "--unoptimized",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--seed",
+            "7",
+            "--property-runs",
+            "12",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/Support7-guest-tests/cache/debug"
+          ],
+          "exit": 0,
+          "stderr": "",
+          "counts": {
+            "passed": 4,
+            "failed": 0,
+            "unsupported": 3,
+            "skipped": 0,
+            "cached": 0
+          },
+          "bad_tests": [
+            {
+              "name": "value_equality::test_equality_through_a_field_supplies_the_option_type",
+              "status": "unsupported",
+              "reason": "unaudited zero-RC runtime helper myl_core_equal_16",
+              "at": "1:1",
+              "cache": {
+                "action": "refuse",
+                "reason": "unsupported",
+                "key": null,
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "per-test-ir-fallback",
+                "work": null
+              }
+            },
+            {
+              "name": "value_equality::test_pool_handles_keep_identity_separate_from_record_equality",
+              "status": "unsupported",
+              "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+              "at": "1:1",
+              "cache": {
+                "action": "refuse",
+                "reason": "unsupported",
+                "key": null,
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "per-test-ir-fallback",
+                "work": null
+              }
+            },
+            {
+              "name": "value_equality::test_recursive_record_equality_is_structural",
+              "status": "unsupported",
+              "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+              "at": "1:1",
+              "cache": {
+                "action": "refuse",
+                "reason": "unsupported",
+                "key": null,
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "per-test-ir-fallback",
+                "work": null
+              }
+            }
+          ]
+        },
+        "verify": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-support7/tests/lang/value_equality.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--seed",
+            "7",
+            "--property-runs",
+            "12",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/Support7-guest-tests/cache/verify"
+          ],
+          "exit": 0,
+          "stderr": "",
+          "counts": {
+            "passed": 4,
+            "failed": 0,
+            "unsupported": 3,
+            "skipped": 0,
+            "cached": 0
+          },
+          "bad_tests": [
+            {
+              "name": "value_equality::test_equality_through_a_field_supplies_the_option_type",
+              "status": "unsupported",
+              "reason": "unaudited zero-RC runtime helper myl_core_equal_16",
+              "at": "1:1",
+              "cache": {
+                "action": "refuse",
+                "reason": "unsupported",
+                "key": null,
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "per-test-ir-fallback",
+                "work": null
+              }
+            },
+            {
+              "name": "value_equality::test_pool_handles_keep_identity_separate_from_record_equality",
+              "status": "unsupported",
+              "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+              "at": "1:1",
+              "cache": {
+                "action": "refuse",
+                "reason": "unsupported",
+                "key": null,
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "per-test-ir-fallback",
+                "work": null
+              }
+            },
+            {
+              "name": "value_equality::test_recursive_record_equality_is_structural",
+              "status": "unsupported",
+              "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+              "at": "1:1",
+              "cache": {
+                "action": "refuse",
+                "reason": "unsupported",
+                "key": null,
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "per-test-ir-fallback",
+                "work": null
+              }
+            }
+          ]
+        },
+        "optimized_debug": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-support7/tests/lang/value_equality.my",
+            "--experimental-zero-rc",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--seed",
+            "7",
+            "--property-runs",
+            "12",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/Support7-guest-tests/cache/optimized_debug"
+          ],
+          "exit": 0,
+          "stderr": "",
+          "counts": {
+            "passed": 4,
+            "failed": 0,
+            "unsupported": 3,
+            "skipped": 0,
+            "cached": 0
+          },
+          "bad_tests": [
+            {
+              "name": "value_equality::test_equality_through_a_field_supplies_the_option_type",
+              "status": "unsupported",
+              "reason": "unaudited zero-RC runtime helper myl_core_equal_16",
+              "at": "1:1",
+              "cache": {
+                "action": "refuse",
+                "reason": "unsupported",
+                "key": null,
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "per-test-ir-fallback",
+                "work": null
+              }
+            },
+            {
+              "name": "value_equality::test_pool_handles_keep_identity_separate_from_record_equality",
+              "status": "unsupported",
+              "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+              "at": "1:1",
+              "cache": {
+                "action": "refuse",
+                "reason": "unsupported",
+                "key": null,
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "per-test-ir-fallback",
+                "work": null
+              }
+            },
+            {
+              "name": "value_equality::test_recursive_record_equality_is_structural",
+              "status": "unsupported",
+              "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+              "at": "1:1",
+              "cache": {
+                "action": "refuse",
+                "reason": "unsupported",
+                "key": null,
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "per-test-ir-fallback",
+                "work": null
+              }
+            }
+          ]
+        },
+        "no_facts": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-support7/tests/lang/value_equality.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--no-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--seed",
+            "7",
+            "--property-runs",
+            "12",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/Support7-guest-tests/cache/no_facts"
+          ],
+          "exit": 0,
+          "stderr": "",
+          "counts": {
+            "passed": 4,
+            "failed": 0,
+            "unsupported": 3,
+            "skipped": 0,
+            "cached": 0
+          },
+          "bad_tests": [
+            {
+              "name": "value_equality::test_equality_through_a_field_supplies_the_option_type",
+              "status": "unsupported",
+              "reason": "unaudited zero-RC runtime helper myl_core_equal_16",
+              "at": "1:1",
+              "cache": {
+                "action": "refuse",
+                "reason": "unsupported",
+                "key": null,
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "per-test-ir-fallback",
+                "work": null
+              }
+            },
+            {
+              "name": "value_equality::test_pool_handles_keep_identity_separate_from_record_equality",
+              "status": "unsupported",
+              "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+              "at": "1:1",
+              "cache": {
+                "action": "refuse",
+                "reason": "unsupported",
+                "key": null,
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "per-test-ir-fallback",
+                "work": null
+              }
+            },
+            {
+              "name": "value_equality::test_recursive_record_equality_is_structural",
+              "status": "unsupported",
+              "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+              "at": "1:1",
+              "cache": {
+                "action": "refuse",
+                "reason": "unsupported",
+                "key": null,
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "per-test-ir-fallback",
+                "work": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tests/lang/frontend_mut.my": {
+      "source_sha256": "63f4c3fe8c95224fd28e5949e413efc43aa01550a2300bfc16be945fb23594e6",
+      "modes": {
+        "release": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-support7/tests/lang/frontend_mut.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--seed",
+            "7",
+            "--property-runs",
+            "12",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/Support7-guest-tests/cache/release"
+          ],
+          "exit": 1,
+          "stderr": "",
+          "counts": {
+            "passed": 8,
+            "failed": 2,
+            "unsupported": 0,
+            "skipped": 0,
+            "cached": 0
+          },
+          "bad_tests": [
+            {
+              "name": "frontend_mut::test_dynamic_mut_disjoint_targets",
+              "status": "failed",
+              "reason": "expected true, got false",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "06e9ba8cc4cf7ca45397f30405eef2e978d335b07600f4574ce1ee524fe54100",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            },
+            {
+              "name": "frontend_mut::test_named_mut_interior_places_preserve_storage_and_written_order",
+              "status": "failed",
+              "reason": "build error (SourceError): frontend_mut.my:116:17: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "9057a2572b2d7107f1acc3c194a73f83febcd1a45779b761cbc689ea36a16052",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            }
+          ]
+        },
+        "debug": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-support7/tests/lang/frontend_mut.my",
+            "--experimental-zero-rc",
+            "--unoptimized",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--seed",
+            "7",
+            "--property-runs",
+            "12",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/Support7-guest-tests/cache/debug"
+          ],
+          "exit": 1,
+          "stderr": "",
+          "counts": {
+            "passed": 8,
+            "failed": 2,
+            "unsupported": 0,
+            "skipped": 0,
+            "cached": 0
+          },
+          "bad_tests": [
+            {
+              "name": "frontend_mut::test_dynamic_mut_disjoint_targets",
+              "status": "failed",
+              "reason": "expected true, got false",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "9d17ae8f0e05cf4a986506ab8044170f7659c0f65e7345ce788489e57c7e6575",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            },
+            {
+              "name": "frontend_mut::test_named_mut_interior_places_preserve_storage_and_written_order",
+              "status": "failed",
+              "reason": "build error (SourceError): frontend_mut.my:116:17: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "f3d03eba7404f27c5d7bc20adffe3014a4f1704a0b58fb8fe5924226a0d3731b",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            }
+          ]
+        },
+        "verify": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-support7/tests/lang/frontend_mut.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--seed",
+            "7",
+            "--property-runs",
+            "12",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/Support7-guest-tests/cache/verify"
+          ],
+          "exit": 1,
+          "stderr": "",
+          "counts": {
+            "passed": 8,
+            "failed": 2,
+            "unsupported": 0,
+            "skipped": 0,
+            "cached": 0
+          },
+          "bad_tests": [
+            {
+              "name": "frontend_mut::test_dynamic_mut_disjoint_targets",
+              "status": "failed",
+              "reason": "expected true, got false",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "1ee114f5080e73a4c3aeb056b08c57dcba72b1385d26879081caa4bcb29f7476",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            },
+            {
+              "name": "frontend_mut::test_named_mut_interior_places_preserve_storage_and_written_order",
+              "status": "failed",
+              "reason": "build error (SourceError): frontend_mut.my:116:17: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "8e54d187de9daed268b29552b7a08e0a18253ff04743d4de650c93a94038b611",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            }
+          ]
+        },
+        "optimized_debug": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-support7/tests/lang/frontend_mut.my",
+            "--experimental-zero-rc",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--seed",
+            "7",
+            "--property-runs",
+            "12",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/Support7-guest-tests/cache/optimized_debug"
+          ],
+          "exit": 1,
+          "stderr": "",
+          "counts": {
+            "passed": 8,
+            "failed": 2,
+            "unsupported": 0,
+            "skipped": 0,
+            "cached": 0
+          },
+          "bad_tests": [
+            {
+              "name": "frontend_mut::test_dynamic_mut_disjoint_targets",
+              "status": "failed",
+              "reason": "expected true, got false",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "b408a1fd293776ce04f1e323c6d288a579fbd77ad819723ecd65cb6bd9864f51",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            },
+            {
+              "name": "frontend_mut::test_named_mut_interior_places_preserve_storage_and_written_order",
+              "status": "failed",
+              "reason": "build error (SourceError): frontend_mut.my:116:17: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "230b50b41ea8772a5754a741a98a874ce5cc4658d5bbe7c7a9c819926bd3ffec",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            }
+          ]
+        },
+        "no_facts": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-support7/tests/lang/frontend_mut.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--no-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--seed",
+            "7",
+            "--property-runs",
+            "12",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/Support7-guest-tests/cache/no_facts"
+          ],
+          "exit": 1,
+          "stderr": "",
+          "counts": {
+            "passed": 8,
+            "failed": 2,
+            "unsupported": 0,
+            "skipped": 0,
+            "cached": 0
+          },
+          "bad_tests": [
+            {
+              "name": "frontend_mut::test_dynamic_mut_disjoint_targets",
+              "status": "failed",
+              "reason": "expected true, got false",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "e27908c4852cbde0fda762722c9993d05e768f8a0d3d83efcd974b5a6c814f36",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            },
+            {
+              "name": "frontend_mut::test_named_mut_interior_places_preserve_storage_and_written_order",
+              "status": "failed",
+              "reason": "build error (SourceError): frontend_mut.my:116:17: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "7c06913e0e09c63cb92e14f53f25a65ba4a98bc54feb72263456767540485895",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    "tests/lang/rc_pin_elide.my": {
+      "source_sha256": "d9d3c958d7eb444a6ad702d70a7479a9b9550848bf47a4676285d5743cf0b09b",
+      "modes": {
+        "release": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-support7/tests/lang/rc_pin_elide.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--seed",
+            "7",
+            "--property-runs",
+            "12",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/Support7-guest-tests/cache/release"
+          ],
+          "exit": 1,
+          "stderr": "",
+          "counts": {
+            "passed": 23,
+            "failed": 3,
+            "unsupported": 0,
+            "skipped": 0,
+            "cached": 0
+          },
+          "bad_tests": [
+            {
+              "name": "rc_pin_elide::test_a_direct_and_an_indirect_call_of_one_function_agree",
+              "status": "failed",
+              "reason": "build error (SourceError): rc_pin_elide.my:141:12: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "1d091c2549ffe34b3003ed27489623d274efc335c8aca9b3ef86a7b9e8ce3798",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            },
+            {
+              "name": "rc_pin_elide::test_a_sharing_callee_reached_through_a_function_value_keeps_its_answers",
+              "status": "failed",
+              "reason": "build error (SourceError): rc_pin_elide.my:141:12: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "6a5364a5c45ae535053131ce8f06421a28594edb7f95124e552ee72c10f43469",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            },
+            {
+              "name": "rc_pin_elide::test_an_unpinned_callee_reached_through_a_function_value_writes_the_callers_list",
+              "status": "failed",
+              "reason": "build error (SourceError): rc_pin_elide.my:141:12: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "a534478da8c27ac1621ded9e0850c5dd5efbc784ce7d35ad0d1e40ebf744d2bc",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            }
+          ]
+        },
+        "debug": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-support7/tests/lang/rc_pin_elide.my",
+            "--experimental-zero-rc",
+            "--unoptimized",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--seed",
+            "7",
+            "--property-runs",
+            "12",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/Support7-guest-tests/cache/debug"
+          ],
+          "exit": 1,
+          "stderr": "",
+          "counts": {
+            "passed": 23,
+            "failed": 3,
+            "unsupported": 0,
+            "skipped": 0,
+            "cached": 0
+          },
+          "bad_tests": [
+            {
+              "name": "rc_pin_elide::test_a_direct_and_an_indirect_call_of_one_function_agree",
+              "status": "failed",
+              "reason": "build error (SourceError): rc_pin_elide.my:141:12: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "dc30d4ff8fc370bd1cef58141a3701954084462ad64690ce8982fe70efc32a35",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            },
+            {
+              "name": "rc_pin_elide::test_a_sharing_callee_reached_through_a_function_value_keeps_its_answers",
+              "status": "failed",
+              "reason": "build error (SourceError): rc_pin_elide.my:141:12: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "037a5d03985185546cc105fa6885d5157a429010d2927bf5e907f1fe4943cb6b",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            },
+            {
+              "name": "rc_pin_elide::test_an_unpinned_callee_reached_through_a_function_value_writes_the_callers_list",
+              "status": "failed",
+              "reason": "build error (SourceError): rc_pin_elide.my:141:12: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "7ffdbd592f47469d156775bb30abb6e9633f4460aa718fa1a40d50c057247c5a",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            }
+          ]
+        },
+        "verify": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-support7/tests/lang/rc_pin_elide.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--verify-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--seed",
+            "7",
+            "--property-runs",
+            "12",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/Support7-guest-tests/cache/verify"
+          ],
+          "exit": 1,
+          "stderr": "",
+          "counts": {
+            "passed": 23,
+            "failed": 3,
+            "unsupported": 0,
+            "skipped": 0,
+            "cached": 0
+          },
+          "bad_tests": [
+            {
+              "name": "rc_pin_elide::test_a_direct_and_an_indirect_call_of_one_function_agree",
+              "status": "failed",
+              "reason": "build error (SourceError): rc_pin_elide.my:141:12: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "4bfc81ec0a167e447c64960e03c8c8f176c893321b50d3fc68607140969bfddb",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            },
+            {
+              "name": "rc_pin_elide::test_a_sharing_callee_reached_through_a_function_value_keeps_its_answers",
+              "status": "failed",
+              "reason": "build error (SourceError): rc_pin_elide.my:141:12: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "2fe177ffebc9fdda277d45fa6dcbf92b94c330dcd271bf526db901e313c5a4bf",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            },
+            {
+              "name": "rc_pin_elide::test_an_unpinned_callee_reached_through_a_function_value_writes_the_callers_list",
+              "status": "failed",
+              "reason": "build error (SourceError): rc_pin_elide.my:141:12: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "477f135833eb8914c16133462de0909b91fcd8ac4ae8dc4f6cf8c39470840082",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            }
+          ]
+        },
+        "optimized_debug": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-support7/tests/lang/rc_pin_elide.my",
+            "--experimental-zero-rc",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--seed",
+            "7",
+            "--property-runs",
+            "12",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/Support7-guest-tests/cache/optimized_debug"
+          ],
+          "exit": 1,
+          "stderr": "",
+          "counts": {
+            "passed": 23,
+            "failed": 3,
+            "unsupported": 0,
+            "skipped": 0,
+            "cached": 0
+          },
+          "bad_tests": [
+            {
+              "name": "rc_pin_elide::test_a_direct_and_an_indirect_call_of_one_function_agree",
+              "status": "failed",
+              "reason": "build error (SourceError): rc_pin_elide.my:141:12: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "a6ac1da48d81ccc9794efc7022cf3969fbf0b1c37ef371a5c37ba356e14358af",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            },
+            {
+              "name": "rc_pin_elide::test_a_sharing_callee_reached_through_a_function_value_keeps_its_answers",
+              "status": "failed",
+              "reason": "build error (SourceError): rc_pin_elide.my:141:12: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "7a36898a03da1e13dbe90262e77e99c374c3193e4f6149663d067b8cf953d9be",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            },
+            {
+              "name": "rc_pin_elide::test_an_unpinned_callee_reached_through_a_function_value_writes_the_callers_list",
+              "status": "failed",
+              "reason": "build error (SourceError): rc_pin_elide.my:141:12: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "0ddce75de1727adcf2970cb54862362de3825daa13f33b92abc1d6ac74b51ec1",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            }
+          ]
+        },
+        "no_facts": {
+          "command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-support7/tests/lang/rc_pin_elide.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--no-facts",
+            "--force",
+            "--json",
+            "--jobs",
+            "1",
+            "--seed",
+            "7",
+            "--property-runs",
+            "12",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/Support7-guest-tests/cache/no_facts"
+          ],
+          "exit": 1,
+          "stderr": "",
+          "counts": {
+            "passed": 23,
+            "failed": 3,
+            "unsupported": 0,
+            "skipped": 0,
+            "cached": 0
+          },
+          "bad_tests": [
+            {
+              "name": "rc_pin_elide::test_a_direct_and_an_indirect_call_of_one_function_agree",
+              "status": "failed",
+              "reason": "build error (SourceError): rc_pin_elide.my:141:12: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "5406aa7603b9db3a805151d7ebb03363647815b88264da6b72e5518f7c3764ac",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            },
+            {
+              "name": "rc_pin_elide::test_a_sharing_callee_reached_through_a_function_value_keeps_its_answers",
+              "status": "failed",
+              "reason": "build error (SourceError): rc_pin_elide.my:141:12: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "ee674f3cabaf121e2858965ee8121b38afded4cb70b8def144d674252b8fa336",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            },
+            {
+              "name": "rc_pin_elide::test_an_unpinned_callee_reached_through_a_function_value_writes_the_callers_list",
+              "status": "failed",
+              "reason": "build error (SourceError): rc_pin_elide.my:141:12: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+              "at": "",
+              "cache": {
+                "action": "execute",
+                "reason": "force",
+                "key": "f3ad51050701e39294f7d4ff3bd52718e71e721db8fefce890e03175a44b1e89",
+                "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+                "key_method": "canonical-facts",
+                "work": null
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

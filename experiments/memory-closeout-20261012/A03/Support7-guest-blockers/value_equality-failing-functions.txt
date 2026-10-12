@@ -1,0 +1,49 @@
+public func test_equality_through_a_field_supplies_the_option_type() -> bool:
+    mut first = Node(value=1, next=None)
+    mut second = Node(value=2, next=Some(first.copy()))
+    if second.next == None:
+        return False
+    if first.next != None:
+        return False
+    if second.next != Some(first):
+        return False
+    return True
+
+
+# spec: EQUALITY-CONTEXT-2
+
+public func test_pool_handles_keep_identity_separate_from_record_equality() -> bool:
+    mut seed: Node[] = []
+    mut store = pool.create(seed)
+    mut first = pool.insert(mut store, Node(value=1, next=None))
+    mut second = pool.insert(mut store, Node(value=1, next=None))
+    if first == second:
+        return False
+    match pool.get(store, first):
+        case Some(one):
+            match pool.get(store, second):
+                case Some(two):
+                    return one == two
+                case None:
+                    return False
+        case None:
+            return False
+
+
+# spec-case: EQUALITY-CONTEXT-1
+
+public func test_recursive_record_equality_is_structural() -> bool:
+    mut first = Node(value=1, next=None)
+    mut second = Node(value=1, next=None)
+    if first != second:
+        return False
+    if first != first:
+        return False
+    second.next = Some(first.copy())
+    mut expected: Node? = Some(first)
+    if second.next != expected:
+        return False
+    return True
+
+
+# spec-case: VALUE-EQUALITY-1

@@ -1,0 +1,29 @@
+enum Text:
+    text(value: str)
+
+
+record Cursor:
+    data: bytes
+    position: int
+
+
+func read(mut cursor: Cursor) -> Result[str, str]:
+    cursor.position += 1
+    return Ok("value-" + str(cursor.position))
+
+
+func constant(mut cursor: Cursor) -> Result[Text, str]:
+    const value = try read(mut cursor)
+    return Ok(Text.text(value=value))
+
+
+func mutable(mut cursor: Cursor) -> Result[Text, str]:
+    mut value = try read(mut cursor)
+    return Ok(Text.text(value=value))
+
+
+func main() -> int:
+    mut cursor = Cursor(data=b"abc", position=0)
+    _ = constant(mut cursor)
+    _ = mutable(mut cursor)
+    return 0

@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1084, position 17; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1084, position 8; earlier build tickets must run first; waiting (61s so far)
+build-slot: FIFO ticket 1084, position 3; earlier build tickets must run first; waiting (121s so far)
+build-slot: build slot 1, FIFO ticket 1084 after 136s
+guardian/test: 1 test(s) selected by filter: "context-only"

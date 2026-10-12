@@ -1,0 +1,73 @@
+{
+  "worker_base": "2d471045543d74ea49014062c226b583d2963f5a",
+  "design_status": "frontend implemented and focused-tested; combined native implementation unqualified",
+  "source_hashes": {
+    "sources/borrowed_unpack.my": "e8107525146eb7899d7a15cc1750db53cf95d213f34d1fd72f34fcdae74f499e",
+    "sources/combined.my": "8c071485bedb745b7c6afe719098a9c5762d3c36da3b550f953ab368a1928364",
+    "sources/copied_obligation.my": "42e9a3fe1f10e238c9495051cecbee6bdf7aea032749adea06562deb4c6afd04",
+    "sources/duplicate_result_destination.my": "5f44a58167065c159abfc3e8cc7c4d26c6a74e1194b6325ba1fb0d087dad7596",
+    "sources/effect-origin.my": "813366346c4b50581800ee9bbcf44c441afe018e6cf9aabe54997dd827a84a77",
+    "sources/ordinary_borrow.my": "42e390ac056c113222782c56a9aee5677b1711001cf106ccccd88691bc5a1f86",
+    "sources/overwrite_field.my": "6766981ce520cbc84b0aedb140d0fd9bf08b6c17eab73df09a64e5f4a76160e5",
+    "sources/partial_field.my": "2193d3cdc96ba3bcec66d6488c1b07b16b9a67327bf1f2a4eeced5bb9dbd1243",
+    "sources/positive.my": "ffdac127b6f9363b6141b29b1ed8f0665aa7ff84f0c1c12fc463832a682a63ad",
+    "sources/provider_extra.my": "9766eda82ba15283d3085750f7ba35f0f74642e3839e539a9378da894002d05b",
+    "sources/provider_tuple.my": "6978f3188bd54b882e6fbe796c2a2ba0ff26e2b6a5ccf9d7407c54010a675256",
+    "sources/result_fields.my": "9a93e2468b0b5b8a3a9ace6f096f6ea4abe6b1f7c2f0c99767a28c3f04f663b0",
+    "sources/unhandled_field.my": "5f383a06a310dabc5ccb543605f3db155c27b74abf5768d3357450323c0435b7",
+    "sources/use_whole_after.my": "c9f951670ff0ff3c6ef20bdb58d33dae0f8047aea7573c12056450693900c967"
+  },
+  "provider_original": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/samples/provider_tuple.my",
+  "combined_expected_output": "tuple-unpack 3\ntuple-results 28\n",
+  "ordinary_borrow_expected_output": "ordinary-borrow 2\n",
+  "unresolved": [
+    "A07 Core checked transfer and ordinary projections integration",
+    "full native/provider/Result and negative qualification",
+    "A08 live-candidate cold/warm/source-relocation/generic qualification"
+  ],
+  "production_and_test_hashes": {
+    "src/sema_places.zig": "4378bdac653b37c8a29f8d8c3388428dedabc3f419e111dc353586d088078f6e",
+    "src/origins.zig": "fcf4fd2dcaae7a1acd6adc0c42e113353864cc4a7933099503c951fb430a53b6",
+    "src/effects.zig": "18837e93becaf4a8a6baa5dd2a9539e270653ac97f16fa7c19569543441763b6",
+    "src/value_semantics.zig": "3800aaa40c4a2877e8daa33646d420f676ae3c95fee8eb172433868f51e92e31",
+    "src/duplicates.zig": "4cfdeb93fef84c8eca8c036bc6018b336c48a2946b7ff5931ea27648cda5cb7a",
+    "src/a01_tuple_origins_test.zig": "36f312e8e57b3cc8a267579a938e6d9b017162ebd02516ac4cc2d3872ac5e670",
+    "src/core/a01_tuple_unpack_test.zig": "93be823caace919f9796292203af9ad07b00bb2bb24098601071c8f6ab09b974",
+    "src/typed.zig": "5faa8d6e53431577c5d5481c4f95f71db4d6618cec462746bc206117198f4bfd",
+    "src/dictionary_views.zig": "a346eea892fe6d6831ba0fa07acdd4bc4d79d68e07efa87172316783964d3d16",
+    "src/root_test.zig": "5b9b601467a93b01a36a069d04a39d92e947a17b4a720971aaa10f89bdd73684",
+    "src/core/root_test.zig": "2341d49599f609605e871ef7ee81cf3fdc4bf4fd11b3854f49a1abec29bd70bd"
+  },
+  "dependencies": {
+    "typed_store_and_semantic_v8": "3bbff3a61db91c4f8105749cefc1652159a2d162",
+    "integration_dependency": "8f5206e4e",
+    "core_transfer": "A07 pending"
+  },
+  "frontend_test_binary": {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.zig-cache/o/1b2d4c436978250db1ac00c13a5bc808/test",
+    "sha256": "8456469ff6714fc0d69e576f31dfd9d65da59308152cb8dedce2f2c740d6cc6f"
+  },
+  "checks": [
+    {
+      "kind": "producer-structural",
+      "passed": 1,
+      "failed": 0,
+      "log": "raw/frontend-1.log.gz"
+    },
+    {
+      "kind": "frontend-consumers",
+      "passed": 10,
+      "named": 3,
+      "always_run_blocks": 7,
+      "failed": 0,
+      "log": "raw/origin-test-3.log.gz"
+    },
+    {
+      "kind": "guardian",
+      "passed": 88,
+      "failed": 0,
+      "log": "raw/guardian-3.log.gz"
+    }
+  ],
+  "queue_waits_excluded": true
+}

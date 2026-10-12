@@ -59,7 +59,7 @@ func in_arena() -> Node:
 
 func aliased(depth: int) -> Node:
     mut child: Node? = Some(tree(depth))
-    return Node(value=0, left=child, right=child)
+    return Node(value=0, left=child.copy(), right=child)
 
 
 public func test_recursive_fresh_record_children_have_independent_owners() -> bool:
@@ -78,7 +78,7 @@ public func test_recursive_variant_payloads_retain_every_child() -> bool:
 
 public func test_aliased_immutable_boxes_keep_the_generic_transfer_path() -> bool:
     mut value = aliased(4)
-    mut before = value
+    mut before = value.copy()
     value.left = None
     return weight(before) == 84 and weight(value) == 42
 

@@ -1,0 +1,34 @@
+build-slot: FIFO ticket 583, position 20; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 583, position 12; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 583, position 4; earlier build tickets must run first; waiting (120s so far)
+build-slot: build slot 1, FIFO ticket 583 after 155s
+guardian/test: 6 test(s) selected by filter: "aggregate provider", "zero RC provider", "provider lifetime"
+3 provider_store_test.test.zero RC aggregate provider roots cannot copy or invalidate active field scopes...FAIL (SourceError)
+/home/epentland/ai/canopy/mylang-memory-20261012/src/parser.zig:988:36: 0x2788332 in parse (compiler.zig)
+        if (self.cursor.recovered) return error.SourceError;
+                                   ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/compiler.zig:149:23: 0x285f03b in parseCached (compiler.zig)
+        self.syntax = try p.parse();
+                      ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/compiler.zig:133:9: 0x285e516 in parse (compiler.zig)
+        return self.parseCached(null);
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/compiler.zig:212:9: 0x285d80e in checkWithCache (compiler.zig)
+        try self.parse();
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/compiler.zig:195:9: 0x285d3d6 in check (compiler.zig)
+        return self.checkWithCache(null);
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/provider_store_test.zig:65:5: 0x285c84f in refuses (root_test.zig)
+    try unit.check();
+    ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/provider_store_test.zig:74:5: 0x285cd85 in test.zero RC aggregate provider roots cannot copy or invalidate active field scopes (root_test.zig)
+    try refuses(std.testing.allocator,
+    ^
+guardian/test: SLOW  32.48s  a08_provider_cache_test.test.zero RC A08 aggregate provider pins survive cache replay and earlier type discovery edits
+5 passed; 0 skipped; 1 failed.
+guardian/test: test wall 32.82s; slowest over 50ms:
+guardian/test:   32.48s  a08_provider_cache_test.test.zero RC A08 aggregate provider pins survive cache replay and earlier type discovery edits
+guardian/test:   0.33s  provider_store_test.test.zero RC aggregate provider roots cannot copy or invalidate active field scopes
+guardian/test: FAIL — 1 failed of 6
+guardian/test: RESULT {"passed":5,"failed":1,"skipped":0}

@@ -1,0 +1,335 @@
+{
+  "prototype_source_abbreviation": "4ab84724d",
+  "prototype_source_full_sha": "4ab84724d45de3710f2e1b4ba20b7fab8f4082a3",
+  "compiler_sha256": "8a6905b47120f6b279e53fe30cb05951da6d862380826a327a4cd9051e420beb",
+  "recorded_production_diff_sha256": "01f5004792076afae67ca20469f2dc6101ef63e1f46494178271ed3de0ea0d9c",
+  "baseline_source_full_sha": "5167c588be79dd43d21d5013c36db15110bf239b",
+  "baseline_compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "baseline_status": 1,
+  "trap_site_checks": {
+    "empty_min/release": {
+      "source_line": 3,
+      "source_column": 16,
+      "diagnostic": "R_LIST_BOUNDS",
+      "index": 0,
+      "length": 0,
+      "managed_leak_free": false,
+      "observed_rc_free": true,
+      "managed_memory": {
+        "allocs": 1,
+        "alloc_bytes": 32,
+        "frees": 0,
+        "reallocs": 0,
+        "peak_live_bytes": 32,
+        "live_bytes_at_exit": 32
+      }
+    },
+    "empty_min/debug": {
+      "source_line": 3,
+      "source_column": 16,
+      "diagnostic": "R_LIST_BOUNDS",
+      "index": 0,
+      "length": 0,
+      "managed_leak_free": false,
+      "observed_rc_free": true,
+      "managed_memory": {
+        "allocs": 1,
+        "alloc_bytes": 32,
+        "frees": 0,
+        "reallocs": 0,
+        "peak_live_bytes": 32,
+        "live_bytes_at_exit": 32
+      }
+    },
+    "empty_min/verify": {
+      "source_line": 3,
+      "source_column": 16,
+      "diagnostic": "R_LIST_BOUNDS",
+      "index": 0,
+      "length": 0,
+      "managed_leak_free": false,
+      "observed_rc_free": true,
+      "managed_memory": {
+        "allocs": 1,
+        "alloc_bytes": 32,
+        "frees": 0,
+        "reallocs": 0,
+        "peak_live_bytes": 32,
+        "live_bytes_at_exit": 32
+      }
+    },
+    "empty_min/optimized_debug": {
+      "source_line": 3,
+      "source_column": 16,
+      "diagnostic": "R_LIST_BOUNDS",
+      "index": 0,
+      "length": 0,
+      "managed_leak_free": false,
+      "observed_rc_free": true,
+      "managed_memory": {
+        "allocs": 1,
+        "alloc_bytes": 32,
+        "frees": 0,
+        "reallocs": 0,
+        "peak_live_bytes": 32,
+        "live_bytes_at_exit": 32
+      }
+    },
+    "empty_min/no_facts": {
+      "source_line": 3,
+      "source_column": 16,
+      "diagnostic": "R_LIST_BOUNDS",
+      "index": 0,
+      "length": 0,
+      "managed_leak_free": false,
+      "observed_rc_free": true,
+      "managed_memory": {
+        "allocs": 1,
+        "alloc_bytes": 32,
+        "frees": 0,
+        "reallocs": 0,
+        "peak_live_bytes": 32,
+        "live_bytes_at_exit": 32
+      }
+    },
+    "empty_min/ordinary": {
+      "source_line": 3,
+      "source_column": 16,
+      "diagnostic": "R_LIST_BOUNDS",
+      "index": 0,
+      "length": 0,
+      "managed_leak_free": false,
+      "observed_rc_free": true,
+      "managed_memory": {
+        "allocs": 1,
+        "alloc_bytes": 32,
+        "frees": 0,
+        "reallocs": 0,
+        "peak_live_bytes": 32,
+        "live_bytes_at_exit": 32
+      }
+    },
+    "empty_max/release": {
+      "source_line": 3,
+      "source_column": 16,
+      "diagnostic": "R_LIST_BOUNDS",
+      "index": 0,
+      "length": 0,
+      "managed_leak_free": true,
+      "observed_rc_free": true,
+      "managed_memory": {
+        "allocs": 0,
+        "alloc_bytes": 0,
+        "frees": 0,
+        "reallocs": 0,
+        "peak_live_bytes": 0,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "empty_max/debug": {
+      "source_line": 3,
+      "source_column": 16,
+      "diagnostic": "R_LIST_BOUNDS",
+      "index": 0,
+      "length": 0,
+      "managed_leak_free": false,
+      "observed_rc_free": true,
+      "managed_memory": {
+        "allocs": 1,
+        "alloc_bytes": 32,
+        "frees": 0,
+        "reallocs": 0,
+        "peak_live_bytes": 32,
+        "live_bytes_at_exit": 32
+      }
+    },
+    "empty_max/verify": {
+      "source_line": 3,
+      "source_column": 16,
+      "diagnostic": "R_LIST_BOUNDS",
+      "index": 0,
+      "length": 0,
+      "managed_leak_free": true,
+      "observed_rc_free": true,
+      "managed_memory": {
+        "allocs": 0,
+        "alloc_bytes": 0,
+        "frees": 0,
+        "reallocs": 0,
+        "peak_live_bytes": 0,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "empty_max/optimized_debug": {
+      "source_line": 3,
+      "source_column": 16,
+      "diagnostic": "R_LIST_BOUNDS",
+      "index": 0,
+      "length": 0,
+      "managed_leak_free": true,
+      "observed_rc_free": true,
+      "managed_memory": {
+        "allocs": 0,
+        "alloc_bytes": 0,
+        "frees": 0,
+        "reallocs": 0,
+        "peak_live_bytes": 0,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "empty_max/no_facts": {
+      "source_line": 3,
+      "source_column": 16,
+      "diagnostic": "R_LIST_BOUNDS",
+      "index": 0,
+      "length": 0,
+      "managed_leak_free": false,
+      "observed_rc_free": true,
+      "managed_memory": {
+        "allocs": 1,
+        "alloc_bytes": 32,
+        "frees": 0,
+        "reallocs": 0,
+        "peak_live_bytes": 32,
+        "live_bytes_at_exit": 32
+      }
+    },
+    "empty_max/ordinary": {
+      "source_line": 3,
+      "source_column": 16,
+      "diagnostic": "R_LIST_BOUNDS",
+      "index": 0,
+      "length": 0,
+      "managed_leak_free": true,
+      "observed_rc_free": true,
+      "managed_memory": {
+        "allocs": 0,
+        "alloc_bytes": 0,
+        "frees": 0,
+        "reallocs": 0,
+        "peak_live_bytes": 0,
+        "live_bytes_at_exit": 0
+      }
+    }
+  },
+  "normal_memories": {
+    "complete/release": {
+      "1": {
+        "allocs": 38,
+        "alloc_bytes": 2432,
+        "frees": 38,
+        "reallocs": 0,
+        "peak_live_bytes": 544,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "complete/debug": {
+      "1": {
+        "allocs": 47,
+        "alloc_bytes": 3008,
+        "frees": 47,
+        "reallocs": 0,
+        "peak_live_bytes": 544,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "complete/verify": {
+      "1": {
+        "allocs": 38,
+        "alloc_bytes": 2432,
+        "frees": 38,
+        "reallocs": 0,
+        "peak_live_bytes": 544,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "complete/optimized_debug": {
+      "1": {
+        "allocs": 38,
+        "alloc_bytes": 2432,
+        "frees": 38,
+        "reallocs": 0,
+        "peak_live_bytes": 544,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "complete/no_facts": {
+      "1": {
+        "allocs": 47,
+        "alloc_bytes": 3008,
+        "frees": 47,
+        "reallocs": 0,
+        "peak_live_bytes": 544,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "complete/ordinary": {
+      "1": {
+        "allocs": 34,
+        "alloc_bytes": 2176,
+        "frees": 34,
+        "reallocs": 0,
+        "peak_live_bytes": 544,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "view_copy/release": {
+      "1": {
+        "allocs": 9,
+        "alloc_bytes": 544,
+        "frees": 9,
+        "reallocs": 0,
+        "peak_live_bytes": 320,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "view_copy/debug": {
+      "1": {
+        "allocs": 9,
+        "alloc_bytes": 544,
+        "frees": 9,
+        "reallocs": 0,
+        "peak_live_bytes": 320,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "view_copy/verify": {
+      "1": {
+        "allocs": 9,
+        "alloc_bytes": 544,
+        "frees": 9,
+        "reallocs": 0,
+        "peak_live_bytes": 320,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "view_copy/optimized_debug": {
+      "1": {
+        "allocs": 9,
+        "alloc_bytes": 544,
+        "frees": 9,
+        "reallocs": 0,
+        "peak_live_bytes": 320,
+        "live_bytes_at_exit": 0
+      }
+    },
+    "view_copy/no_facts": {
+      "1": {
+        "allocs": 9,
+        "alloc_bytes": 544,
+        "frees": 9,
+        "reallocs": 0,
+        "peak_live_bytes": 320,
+        "live_bytes_at_exit": 0
+      }
+    }
+  },
+  "accounting": {
+    "normal_return_checked_lanes": 10,
+    "normal_return_ordinary_controls": 1,
+    "expected_fatal_trap_lanes": 12,
+    "all_normal_return_checked_lanes_rc_and_leak_free": true,
+    "fatal_traps_unwind_local_owners": false,
+    "fatal_trap_cleanup_changed_by_patch": false
+  }
+}

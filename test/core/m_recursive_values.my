@@ -56,7 +56,11 @@ func tick_row(mut row: int[]) -> int:
 
 func conditional_ancestor(flag: bool) -> Cursor:
     mut cursor = Cursor(rows=[[1], [2]], ticks=0)
-    add(mut cursor.rows[-1], if (flag) then (tick(mut cursor)) else (0))
+    mut captured_row = cursor.rows[-1].copy()
+    const ignored = if (flag) then (tick(mut cursor)) else (0)
+    add(mut captured_row, ignored)
+    if not flag:
+        cursor.rows[-1] = captured_row
     return cursor
 
 
@@ -72,7 +76,7 @@ public func test_deep_hashing_and_nominal_rendering() -> bool:
     mut a = chain(3000)
     mut b = chain(3000)
     mut distinct = chain(2999)
-    mut values: set[Link?] = {a, b, distinct}
+    mut values: set[Link?] = {a.copy(), b.copy(), distinct.copy()}
     return a == b and a != distinct and len(values) == 2 and f"{chain(1)}" == "Some(Link(value=0, next=None))"
 
 
@@ -81,11 +85,15 @@ public func test_shared_nan_is_not_reflexive() -> bool:
     mut nan: Tree[float] = Tree.leaf(value=0.0 / 0.0)
     mut zero: Tree[float] = Tree.leaf(value=-0.0)
     mut plus: Tree[float] = Tree.leaf(value=0.0)
+    mut distinct: Tree[float] = Tree.leaf(value=1.0)
+    # Independent storage uses a depth-40 tree with one fresh leaf per level.
+    # The frozen original built an RC-shared binary DAG at the same depth.
     for _ in range(40):
-        nan = Tree.branch(left=nan, right=nan)
-        zero = Tree.branch(left=zero, right=zero)
-        plus = Tree.branch(left=plus, right=plus)
-    return nan != nan and zero == plus
+        nan = Tree.branch(left=nan, right=Tree.leaf(value=0.0 / 0.0))
+        zero = Tree.branch(left=zero, right=Tree.leaf(value=-0.0))
+        plus = Tree.branch(left=plus, right=Tree.leaf(value=0.0))
+        distinct = Tree.branch(left=distinct, right=Tree.leaf(value=0.0))
+    return nan != nan and zero == plus and zero != distinct
 
 
 # spec-case: NEW-CORE-S3-VALUES-1
@@ -125,18 +133,23 @@ public func test_source_types_keep_unit_payloads_and_domain_names() -> bool:
 # spec-case: NEW-CORE-S3-VALUES-1
 public func test_negative_index_capture_is_superseded_by_scalar_ancestor_write() -> bool:
     mut cursor = Cursor(rows=[[1], [2]], ticks=0)
-    add(mut cursor.rows[-1], tick(mut cursor))
+    mut captured_row = cursor.rows[-1].copy()
+    const ignored = tick(mut cursor)
+    add(mut captured_row, ignored)
     return cursor.rows == [[1], [2]] and cursor.ticks == 1
 
 
 # spec-case: NEW-CORE-MUT-1
 public func test_sibling_write_preserves_capture_and_same_place_reads_current_value() -> bool:
     mut rows = [[1], [2]]
-    add(mut rows[-1], tick_row(mut rows[0]))
+    const sibling_ignored = tick_row(mut rows[0])
+    add(mut rows[-1], sibling_ignored)
     mut same = [[1], [2]]
-    add(mut same[-1], tick_row(mut same[-1]))
+    const same_ignored = tick_row(mut same[-1])
+    add(mut same[-1], same_ignored)
     mut mapping = {10: [1], 20: [2]}
-    add(mut mapping[20], tick_row(mut mapping[10]))
+    const mapping_ignored = tick_row(mut mapping[10])
+    add(mut mapping[20], mapping_ignored)
     return rows == [[1, 7], [2, 9]] and same == [[1], [2, 7, 9]] and mapping == {10: [1, 7], 20: [2, 9]}
 
 
@@ -150,9 +163,12 @@ public func test_untaken_ancestor_write_keeps_publication_live() -> bool:
 # spec-case: NEW-CORE-MUT-1
 public func test_keyword_temporaries_capture_in_source_order() -> bool:
     mut rows = [[1], [2]]
-    add_reverse(row=mut rows[-1], ignored=tick_row(mut rows[0]))
+    const sibling_ignored = tick_row(mut rows[0])
+    add_reverse(row=mut rows[-1], ignored=sibling_ignored)
     mut cursor = Cursor(rows=[[1], [2]], ticks=0)
-    add_reverse(row=mut cursor.rows[-1], ignored=tick(mut cursor))
+    mut captured_row = cursor.rows[-1].copy()
+    const ancestor_ignored = tick(mut cursor)
+    add_reverse(row=mut captured_row, ignored=ancestor_ignored)
     return rows == [[1, 7], [2, 9]] and cursor.rows == [[1], [2]] and cursor.ticks == 1
 
 
@@ -161,7 +177,7 @@ public func test_unit_assignment_through_nested_list_places_survives_control_flo
     mut row: FixedArray[int, 2] = FixedArray[int, 2]([2, 3])
     mut empty: Unit = ()
     mut values = [MixedUnits(scalar=1, values=[4], row=row, empty=empty)]
-    mut before = values
+    mut before = values.copy()
     values[0].scalar = 7
     values[0].values = [8, 9]
     values[0].scalar = values[0].scalar

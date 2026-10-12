@@ -1,0 +1,380 @@
+--- a/src/core/runtime/core_rt.c
++++ b/src/core/runtime/core_rt.c
+@@ -1,13 +1,10 @@
+ /* The new core's runtime (docs/design/new-core-ir.md §8, new-core-s1.md §5-§6).
+  *
+- * Blocks: a 32-byte header {u32 count, u32 kind, i64 len, i64 cap, i64 reserved}
+- * followed by 32-byte-aligned data. `count` is the single saturating 32-bit
+- * reference count of D4; every block starts with count 1, and the emitted code
+- * counts inline and frees through `myl_core_free`. `reserved` holds the element
+- * layout of a list or box whose elements hold blocks (null otherwise), so a free
+- * releases the children. There is no collector and no memory budget in a program
+- * (L3): an allocation the OS refuses ends the process with one message. A test
+- * child alone may carry a byte ceiling (`--max-memory`, `heap_ceiling` below).
++ * Blocks use the proven owned ABI: a 32-byte header with storage kind at
++ * offset 0, followed by i64 length, capacity and layout words. Each dynamic
++ * block has one owner; destruction walks its guarded child layouts directly.
++ * Static leaves carry a storage-kind tag. There is no memory reference count.
++ * The allocator retains its ordinary fatal OOM and test-only budget behavior.
+  *
+  * Output: one buffer per standard stream, flushed when full, at exit and before a
+  * trap report, so stdout keeps program order relative to a trap. */
+@@ -93,9 +90,6 @@
+ /* ---- blocks ------------------------------------------------------------------ */
+ 
+ typedef struct {
+-#ifndef MYL_ZERO_RC
+-    uint32_t count;
+-#endif
+     uint32_t kind;
+     int64_t len;
+     int64_t cap;
+@@ -104,112 +98,18 @@
+ 
+ enum { MYL_KIND_LIST = 0, MYL_KIND_STR = 1, MYL_KIND_BOX = 2, MYL_KIND_BYTES = 3, MYL_KIND_DICT = 4 };
+ enum { MYL_HEADER = 32, MYL_ALIGN = 32 };
+-/* A saturated count (D4): the block is immortal, never written and never freed. */
+-#define MYL_SATURATED UINT32_MAX
+-#define MYL_SHARED UINT32_C(0x80000000)
+-#define MYL_PLAIN_MAX UINT32_C(0x7ffffffe)
+ #define MYL_STATIC_STORAGE (1u << 23)
+-#ifdef MYL_ZERO_RC
+ #define MYL_STATIC_HEADER MYL_STATIC_STORAGE |
+-#else
+-#define MYL_STATIC_HEADER MYL_SATURATED,
+-#endif
+-
+-/* SHARED-COUNTS-1: only unpublished/plain blocks may use non-atomic writes.
+-   A count read can race with shared retains/releases, even a uniqueness test.
+-   C's relaxed load is the weakest available atomic load; the LLVM emitter uses
+-   unordered so its loop-invariant uniqueness tests can still be hoisted. */
+-#ifndef MYL_ZERO_RC
+-static uint32_t count_load(const myl_block *block) {
+-    return __atomic_load_n(&block->count, __ATOMIC_RELAXED);
+-}
+-
+-static bool count_is_unique(const myl_block *block) { return count_load(block) == 1; }
+-
+-/* A plain aggregate becoming immortal must first mark its descendants:
+-   later publication stops at an immortal root, just as at a shared root. */
+-void myl_core_share(myl_block *root);
+-__attribute__((cold, noinline, preserve_most)) static void count_saturate_plain(myl_block *block) {
+-    myl_core_share(block);
+-    block->count = MYL_SATURATED;
+-}
+-
+-/* CAS keeps immortality sticky even if a retain saturates while a release is
+-   in flight. An unconditional fetch-add/sub after testing for immortality
+-   could wrap or decrement the immortal sentinel. Both operations are cold. */
+-__attribute__((cold, noinline, preserve_most)) void myl_core_retain_slow(myl_block *block) {
+-    uint32_t count = count_load(block);
+-    if (count < MYL_SHARED) {
+-        count_saturate_plain(block);
+-        return;
+-    }
+-    while (count != MYL_SATURATED) {
+-        if (__atomic_compare_exchange_n(&block->count, &count, count + 1, true,
+-                                        __ATOMIC_RELAXED, __ATOMIC_RELAXED)) return;
+-    }
+-}
+-
+-/* Drop a shared owner; only the thread that removed the last one may free.
+-   Its acquire makes every prior owner's release visible to destruction. */
+-__attribute__((cold, noinline, preserve_most)) static bool count_release_shared(myl_block *block) {
+-    uint32_t count = count_load(block);
+-    while (count != MYL_SATURATED) {
+-        /* Acquire on the last-owner RMW is equivalent to the following acquire
+-           fence, and is visible to TSan's atomic synchronization model. */
+-        const int order = count == MYL_SHARED + 1 ? __ATOMIC_ACQ_REL : __ATOMIC_RELEASE;
+-        if (__atomic_compare_exchange_n(&block->count, &count, count - 1, true,
+-                                        order, __ATOMIC_RELAXED)) return count == MYL_SHARED + 1;
+-    }
+-    return false;
+-}
+-
+-static void count_retain(myl_block *block) {
+-    if (!block) return;
+-    uint32_t count = count_load(block);
+-    if (count < MYL_PLAIN_MAX) block->count = count + 1;
+-    else if (count != MYL_SATURATED) myl_core_retain_slow(block);
+-}
+-
+-/* Return last-owner status rather than recurse: the free walk enqueues children. */
+-static bool count_release(myl_block *block) {
+-    if (!block) return false;
+-    uint32_t count = count_load(block);
+-    if (count < MYL_SHARED) {
+-        if (count == 1) return true;
+-        block->count = count - 1;
+-        return false;
+-    }
+-    if (count == MYL_SATURATED) return false;
+-    return count_release_shared(block);
+-}
+-
+-__attribute__((cold)) void myl_core_free_block(myl_block *block);
+-/* Keep an immortal release from paying the ordinary free call's register save.
+-   The last shared owner alone crosses this second preserve-most boundary. */
+-__attribute__((cold, noinline, preserve_most)) static void count_free_shared(myl_block *block) {
+-    myl_core_free_block(block);
+-}
+-
+-__attribute__((cold, noinline, preserve_most)) void myl_core_release_slow(myl_block *block) {
+-    if (count_release_shared(block)) count_free_shared(block);
+-}
+-
+-#endif
++
+ /* The zero-RC ABI has no count member. Alignment still rounds its header to
+    32 bytes; its kind moves to offset zero. LLVM and the runtime agree on both. */
+ _Static_assert(sizeof(myl_block) == MYL_HEADER, "managed header size");
+-#ifdef MYL_ZERO_RC
+ _Static_assert(offsetof(myl_block, kind) == 0, "owned header kind");
+ #pragma GCC poison count_load count_is_unique count_retain count_release
+ #pragma GCC poison myl_core_retain_slow myl_core_release_slow myl_core_share myl_core_release
+ #pragma GCC poison core_release_child myl_core_release_child_pending retain_block
+-#endif
+ static bool core_text_can_cache(const myl_block *block) {
+-#ifdef MYL_ZERO_RC
+     return !(block->kind & MYL_STATIC_STORAGE);
+-#else
+-    return count_load(block) < MYL_SHARED;
+-#endif
+ }
+ 
+ static unsigned char *block_data(myl_block *block) { return (unsigned char *)block + MYL_HEADER; }
+@@ -391,9 +291,6 @@
+         *room = data;
+         core_live_add(1);
+     }
+-    #ifndef MYL_ZERO_RC
+-    block->count = 1;
+-    #endif
+     block->kind = kind | (class << MYL_CLASS_SHIFT);
+     block->len = 0;
+     block->reserved = 0;
+@@ -455,14 +352,14 @@
+  *   `offset` equals `value`, and guard `parent` holds too (0: none).
+  * Generated layouts store -(G + 1) at [2] and append aligned callback pointers
+  * (whole element, dictionary key, dictionary value) after the same pairs/triples.
+- * Nonnegative [2] is the legacy interpreted layout, used by C-created blocks.
++ * Nonnegative [2] is the compact interpreted layout used by C-created blocks.
+  * A union's payload references are guarded by its tag, so an integer in a
+  * payload word is never taken for a pointer. */
+ typedef const int32_t myl_layout;
+ 
+ static myl_layout *layout_of(const myl_block *block) { return (myl_layout *)(intptr_t)block->reserved; }
+ 
+-/* NEW-CORE-U2-RELEASE-1: specialized walks keep count operations in the runtime. */
++/* Generated callbacks destroy dictionary key/value owners directly. */
+ typedef void (*core_layout_release)(const unsigned char *, void *);
+ static core_layout_release layout_release(myl_layout *layout, unsigned part) {
+     if (!layout || layout[2] >= 0) return NULL;
+@@ -701,7 +598,6 @@
+     return grown;
+ }
+ 
+-#ifdef MYL_ZERO_RC
+ /* OWNED-LIST-MUTATION-1: permutations consume and return the sole list owner.
+    Child bits move between slots; no child is copied, allocated or destroyed.
+    A one-byte temporary also bounds scratch space for wide aggregate elements. */
+@@ -743,18 +639,9 @@
+     }
+     return list;
+ }
+-#endif
+-
+-/* One more owner of `block` (D4: a count that reaches the saturated value stays there). */
+-#ifndef MYL_ZERO_RC
+-static void retain_block(myl_block *block) {
+-    count_retain(block);
+-}
+-#endif
+-
+-/* A fresh copy of `list` with room for one more element: the copy arm of a
+-   copy-on-write update (`own.zig`), so the original block stays intact. The
+-   copy is a second owner of every block the elements hold. */
++
++/* Independent scalar-element storage. Managed children use the compiler's
++   deep-copy adapter, which preserves the same owned layout and cleanup ABI. */
+ myl_block *myl_core_list_copy(myl_block *list, int64_t element_size) {
+     if (list->len < 0 || list->len == INT64_MAX) out_of_memory();
+     myl_block *copy = block_new(MYL_KIND_LIST, list->len + 1, element_size);
+@@ -762,20 +649,8 @@
+     copy->len = list->len;
+     copy->reserved = list->reserved;
+     myl_layout *layout = layout_of(list);
+-#ifdef MYL_ZERO_RC
+     /* Managed element copies use the compiler's deep-copy adapter. */
+     if (layout && layout[1]) abort();
+-#else
+-    if (layout) {
+-        for (int64_t i = 0; i < list->len; ++i) {
+-            const unsigned char *element = block_data(list) + i * (int64_t)layout[0];
+-            for (int32_t r = 0; r < layout[1]; ++r) {
+-                myl_block *child = reference_at(layout, element, r);
+-                if (child) retain_block(child);
+-            }
+-        }
+-    }
+-#endif
+     return copy;
+ }
+ 
+@@ -798,23 +673,10 @@
+     return box;
+ }
+ 
+-/* ---- one-count RC (docs/design/new-core-s1.md §6) ------------------------------
+- * Retain and release are emitted inline: the count is a u32 at offset 0,
+- * 0xFFFFFFFF is saturated (D4) and never changes. A release that drops the last
+- * owner calls `myl_core_free` (emitted: a small block without children goes
+- * straight back to its free list), else `myl_core_free_block`, which frees the block and releases the blocks its
+- * elements hold, iteratively: a child whose last owner goes joins a pending
+- * chain linked through its `cap` word (a dying block needs only `kind`, `len`
+- * and `reserved`), so freeing a list of lists nested a million deep uses no
+- * stack. The emitted release does not store the final 0, so a dying block is
+- * recognized by the caller, never by its count. */
+-/* SHARED-COUNTS-2: destruction and publication use this one enumeration.
+-   Each occurrence is visited, including aliases; guards exclude inactive arms. */
++/* ---- direct owned-child destruction --------------------------------------- */
++/* Every live child occurrence is visited; union guards exclude inactive arms. */
+ typedef void (*core_child_visitor)(myl_block *, void *);
+ static void core_dict_children(myl_block *dict, core_child_visitor visit, void *context);
+-#ifndef MYL_ZERO_RC
+-__attribute__((always_inline)) static inline void core_release_child(myl_block *child, void *context);
+-#endif
+ static void core_dict_finalize(myl_block *dict);
+ static void core_task_finalize(myl_block *block);
+ static void core_tasks_quiesce(void);
+@@ -831,27 +693,9 @@
+     if (kind == MYL_KIND_STR || kind == MYL_KIND_BYTES) return;
+     myl_layout *layout = layout_of(block);
+     if (!layout || layout[1] == 0) return;
+-    /* A guardless pointer list needs no per-element indirect callback. The
+-       ordinary child release still handles null, shared and saturated counts. */
+-#ifndef MYL_ZERO_RC
+-    if (visit == core_release_child && kind == MYL_KIND_LIST &&
+-        layout[0] == sizeof(myl_block *) && layout[1] == 1 &&
+-        layout[2] == -1 && layout[3] == 0 && layout[4] == 0) {
+-        for (int64_t i = 0; i < block->len; ++i) {
+-            myl_block *child;
+-            memcpy(&child, block_data(block) + i * sizeof child, sizeof child);
+-            core_release_child(child, context);
+-        }
+-        return;
+-    }
+-    core_layout_release release = visit == core_release_child ? layout_release(layout, 0) : NULL;
+-#else
+-    core_layout_release release = NULL;
+-#endif
+     int64_t count = element_count(block);
+     for (int64_t i = 0; i < count; ++i) {
+         const unsigned char *element = block_data(block) + i * (int64_t)layout[0];
+-        if (release) { release(element, context); continue; }
+         for (int32_t r = 0; r < layout[1]; ++r) {
+             myl_block *child = reference_at(layout, element, r);
+             if (child) visit(child, context);
+@@ -859,67 +703,6 @@
+     }
+ }
+ 
+-#ifndef MYL_ZERO_RC
+-__attribute__((always_inline)) static inline void core_release_child(myl_block *child, void *context) {
+-    myl_block **pending = context;
+-    if (count_release(child)) {
+-        child->cap = (int64_t)(intptr_t)*pending;
+-        *pending = child;
+-    }
+-}
+-
+-/* The generated walk calls this boundary; count_release remains authoritative
+-   for plain, shared and saturated blocks, including null children. */
+-void myl_core_release_child_pending(myl_block *child, void *context) {
+-    core_release_child(child, context);
+-}
+-
+-__attribute__((cold)) void myl_core_free_block(myl_block *block) {
+-    block->cap = 0;
+-    myl_block *pending = block;
+-    while (pending) {
+-        myl_block *dying = pending;
+-        pending = (myl_block *)(intptr_t)dying->cap;
+-        core_task_finalize(dying);
+-        core_io_finalize(dying);
+-        core_children(dying, core_release_child, &pending);
+-        if (kind_of(dying) == MYL_KIND_DICT) core_dict_finalize(dying);
+-        block_free(dying);
+-    }
+-}
+-
+-typedef struct { myl_block **blocks; size_t length, capacity; } core_share_work;
+-static void core_share_child(myl_block *child, void *context) {
+-    uint32_t count = count_load(child);
+-    if (count >= MYL_SHARED) return;
+-    /* A plain block is confined to this thread until the whole walk returns. */
+-    child->count = count | MYL_SHARED;
+-    core_share_work *work = context;
+-    if (work->length == work->capacity) {
+-        size_t capacity = work->capacity ? work->capacity * 2 : 32;
+-        if (capacity < work->capacity || capacity > SIZE_MAX / sizeof *work->blocks) out_of_memory();
+-        myl_block **blocks = realloc(work->blocks, capacity * sizeof *blocks);
+-        if (!blocks) out_of_memory();
+-        work->blocks = blocks;
+-        work->capacity = capacity;
+-    }
+-    work->blocks[work->length++] = child;
+-}
+-
+-void myl_core_share(myl_block *root) {
+-    if (!root || count_load(root) >= MYL_SHARED) return;
+-    core_share_work work = {0};
+-    core_share_child(root, &work);
+-    while (work.length) core_children(work.blocks[--work.length], core_share_child, &work);
+-    free(work.blocks);
+-}
+-
+-/* Drop one owner of `block` out of line: the C entry's `args` and `main`'s error. */
+-void myl_core_release(myl_block *block) {
+-    if (count_release(block)) myl_core_free_block(block);
+-}
+-
+-#endif
+ 
+ /* Zero-RC owners are destroyed directly. Static leaves have a storage-kind tag.
+    The pending chain reuses dying headers and requires no allocation or count. */
+@@ -1629,8 +1412,8 @@
+ 
+ /* With MYL_CORE_LEAKCHECK=1, a program that ends with blocks still allocated says
+    how many on stderr (the exit status is unchanged). Every path that returns from
+-   `main` releases what it owns, so a nonzero count is an ownership bug; a trap
+-   runs no releases (RC-TRAP-TEARDOWN-1) and is not checked. */
++   `main` destroys what it owns, so a nonzero count is an ownership bug; a trap
++   runs no managed cleanup (RC-TRAP-TEARDOWN-1) and is not checked. */
+ static void leak_report(void) {
+     const char *flag = getenv("MYL_CORE_LEAKCHECK");
+     if (!flag || strcmp(flag, "1") != 0) return;
+--- a/src/core/runtime/core_bytes.c
++++ b/src/core/runtime/core_bytes.c
+@@ -137,19 +137,10 @@
+     buffer->len += (int64_t)length;
+     return buffer;
+ }
+-/* A buffer handed over to an append (an owned argument, `Signature.owned` bit 0): it is
+-   updated in place when it holds the only reference, else copied first and the caller's
+-   reference released. The builder emits these as one call between the read of a `mut`
+-   place's buffer and its write-back, so the ownership pass takes the field over. */
++/* An append consumes its exclusive buffer receiver. The builder performs the
++   call between the read of a mut place and its writeback. */
+ static myl_block *core_buffer_owned(myl_block *buffer) {
+-#ifdef MYL_ZERO_RC
+     return buffer;
+-#else
+-    if (count_is_unique(buffer)) return buffer;
+-    myl_block *copy = myl_core_buffer_copy(buffer);
+-    myl_core_release(buffer);
+-    return copy;
+-#endif
+ }
+ /* `buffer.append_range(source, start, end)`: the octets `source[start:end]` when the range
+    is valid, else nothing (the caller reports the validity it computed separately). */

@@ -1,12 +1,8 @@
-# The collector is generational: a survivor stays marked and old, and a minor
-# collection follows no reference into the old generation. These cases build a
-# long-lived structure, let collections promote it, and then give it a young
-# object in every way a program can — a field store into an old class body
-# (the store barrier), an append to an old list and a store into an old list
-# slot (rescanned without a barrier) — before churning enough garbage to run
-# more collections. A young object an old one references must survive them.
-# Under `--gc-stress` every allocation collects, and every third collection
-# is full.
+# These historical collector regressions now check ownership and value stability
+# while long-lived structures are updated and temporary allocations churn. The
+# test names retain their original identities; they do not imply that the
+# checked-ownership runtime has generations, promotion, or collection barriers.
+# The borrowed chain traversal is recursive and its largest fixture is 201 nodes.
 record Node:
     next: Node?
     value: int
@@ -20,15 +16,11 @@ func chain(n: int) -> Node:
 
 
 func length(node: Node) -> int:
-    mut count = 1
-    mut cursor = node
-    while True:
-        match cursor.next:
-            case Some(next):
-                cursor = next
-                count += 1
-            case None:
-                return count
+    match node.next:
+        case Some(next):
+            return 1 + length(next)
+        case None:
+            return 1
 
 
 # Allocate about 8 KB of short-lived text per round, so a few hundred rounds

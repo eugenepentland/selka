@@ -1,0 +1,156 @@
+{
+  "scope": "fresh whole-program managed counters on Support7, including startup/teardown; not RSS, timing, or a paired savings claim",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "rows": [
+    {
+      "case": "combined/release",
+      "workers": 1,
+      "allocs": 5740,
+      "alloc_bytes": 491816,
+      "frees": 5740,
+      "reallocs": 8,
+      "peak_live_bytes": 60896,
+      "live_bytes_at_exit": 0
+    },
+    {
+      "case": "combined/release",
+      "workers": 2,
+      "allocs": 6547,
+      "alloc_bytes": 545256,
+      "frees": 6547,
+      "reallocs": 8,
+      "peak_live_bytes": 60888,
+      "live_bytes_at_exit": 0
+    },
+    {
+      "case": "combined/release",
+      "workers": 8,
+      "allocs": 8696,
+      "alloc_bytes": 700936,
+      "frees": 8696,
+      "reallocs": 8,
+      "peak_live_bytes": 63640,
+      "live_bytes_at_exit": 0
+    },
+    {
+      "case": "result_list/release",
+      "workers": 1,
+      "allocs": 2898,
+      "alloc_bytes": 222488,
+      "frees": 2898,
+      "reallocs": 2,
+      "peak_live_bytes": 33464,
+      "live_bytes_at_exit": 0
+    },
+    {
+      "case": "result_list/release",
+      "workers": 2,
+      "allocs": 3120,
+      "alloc_bytes": 237280,
+      "frees": 3120,
+      "reallocs": 2,
+      "peak_live_bytes": 33520,
+      "live_bytes_at_exit": 0
+    },
+    {
+      "case": "result_list/release",
+      "workers": 8,
+      "allocs": 3564,
+      "alloc_bytes": 268832,
+      "frees": 3564,
+      "reallocs": 2,
+      "peak_live_bytes": 36016,
+      "live_bytes_at_exit": 0
+    },
+    {
+      "case": "result_direct/release",
+      "workers": 1,
+      "allocs": 1566,
+      "alloc_bytes": 122744,
+      "frees": 1566,
+      "reallocs": 2,
+      "peak_live_bytes": 29368,
+      "live_bytes_at_exit": 0
+    },
+    {
+      "case": "result_direct/release",
+      "workers": 2,
+      "allocs": 1629,
+      "alloc_bytes": 126752,
+      "frees": 1629,
+      "reallocs": 2,
+      "peak_live_bytes": 29368,
+      "live_bytes_at_exit": 0
+    },
+    {
+      "case": "result_direct/release",
+      "workers": 8,
+      "allocs": 1851,
+      "alloc_bytes": 141920,
+      "frees": 1851,
+      "reallocs": 2,
+      "peak_live_bytes": 33464,
+      "live_bytes_at_exit": 0
+    },
+    {
+      "case": "tuple_unpack/release",
+      "workers": 1,
+      "allocs": 266,
+      "alloc_bytes": 17984,
+      "frees": 266,
+      "reallocs": 0,
+      "peak_live_bytes": 896,
+      "live_bytes_at_exit": 0
+    },
+    {
+      "case": "tuple_unpack/release",
+      "workers": 2,
+      "allocs": 266,
+      "alloc_bytes": 17984,
+      "frees": 266,
+      "reallocs": 0,
+      "peak_live_bytes": 896,
+      "live_bytes_at_exit": 0
+    },
+    {
+      "case": "tuple_unpack/release",
+      "workers": 8,
+      "allocs": 266,
+      "alloc_bytes": 17984,
+      "frees": 266,
+      "reallocs": 0,
+      "peak_live_bytes": 896,
+      "live_bytes_at_exit": 0
+    },
+    {
+      "case": "tuple_generic/release",
+      "workers": 1,
+      "allocs": 18,
+      "alloc_bytes": 1152,
+      "frees": 18,
+      "reallocs": 0,
+      "peak_live_bytes": 704,
+      "live_bytes_at_exit": 0
+    },
+    {
+      "case": "tuple_generic/release",
+      "workers": 2,
+      "allocs": 18,
+      "alloc_bytes": 1152,
+      "frees": 18,
+      "reallocs": 0,
+      "peak_live_bytes": 704,
+      "live_bytes_at_exit": 0
+    },
+    {
+      "case": "tuple_generic/release",
+      "workers": 8,
+      "allocs": 18,
+      "alloc_bytes": 1152,
+      "frees": 18,
+      "reallocs": 0,
+      "peak_live_bytes": 704,
+      "live_bytes_at_exit": 0
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+test_counter_metric_change_rejected (test_report.ReportTests.test_counter_metric_change_rejected) ... ok
+test_failed_arm_remains_unavailable (test_report.ReportTests.test_failed_arm_remains_unavailable) ... ok
+test_identity_change_rejected (test_report.ReportTests.test_identity_change_rejected) ... ok
+test_missing_sample_rejected (test_report.ReportTests.test_missing_sample_rejected) ... ok
+test_paired_bootstrap_constant_ratio (test_report.ReportTests.test_paired_bootstrap_constant_ratio) ... ok
+test_wrong_output_rejected (test_report.ReportTests.test_wrong_output_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.008s
+
+OK

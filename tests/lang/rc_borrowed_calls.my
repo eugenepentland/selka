@@ -6,7 +6,7 @@ record Node:
 func pick(nodes: Node[], key: int) -> Node:
     mut i = 0
     while i < len(nodes):
-        mut node = nodes[i]
+        mut node = nodes[i].copy()
         if node.key == key:
             return node
         i += 1
@@ -17,7 +17,7 @@ func rank(node: Node, nodes: Node[]) -> int:
     mut i = 0
     mut score = node.key
     while i < len(nodes):
-        mut candidate = nodes[i]
+        mut candidate = nodes[i].copy()
         if candidate.key < node.key:
             score += 1
         i += 1
@@ -39,7 +39,7 @@ func swapped(left: Node[], right: Node[]) -> Node:
 func unchanged(value: bytes) -> bytes:
     if len(value) == 0:
         return b""
-    return value
+    return value.copy()
 
 
 func late(first: bytes, second: bytes) -> bytes:
@@ -50,14 +50,14 @@ func late(first: bytes, second: bytes) -> bytes:
             return result
         result = unchanged(second)
         i += 1
-    return first
+    return first.copy()
 
 
 public func test_nested_calls_preserve_results_after_parent_replacement() -> bool:
     mut nodes = [Node(text=bytes([65]), key=1), Node(text=bytes([66]), key=2)]
     mut result = choose(nodes, 1, 2)
     mut fallback = choose(nodes, 3, 4)
-    mut snapshot = nodes
+    mut snapshot = nodes.copy()
     nodes[0] = Node(text=bytes([67]), key=1)
     nodes.clear()
     return result.text == b"A" and snapshot[0].text == b"A" and fallback.text == b""

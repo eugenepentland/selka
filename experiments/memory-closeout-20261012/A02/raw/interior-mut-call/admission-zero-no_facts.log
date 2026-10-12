@@ -1,0 +1,7 @@
+plain zero no_facts True
+dictionary zero no_facts True
+child zero no_facts True
+build-slot: FIFO ticket 795, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 795, position 1; all 3 build slot(s) busy; waiting (60s so far)
+build-slot: FIFO ticket 795, position 1; all 3 build slot(s) busy; waiting (120s so far)
+build-slot: build slot 2, FIFO ticket 795 after 135s

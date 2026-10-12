@@ -1,0 +1,11 @@
+# alloc_churn (arena variant): the same batch body inside a per-batch arena.
+func main(out: Stream) -> int:
+    mut total = 0
+    for batch in range(1000000):
+        mut values: int[] = []
+        for j in range(16):
+            values.append(batch + j)
+        for v in values:
+            total = (total + v) % 1000003
+    out.print(total)
+    return 0

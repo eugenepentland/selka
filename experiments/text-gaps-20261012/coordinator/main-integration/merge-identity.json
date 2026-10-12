@@ -1,0 +1,17 @@
+{
+  "main_before": "4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9",
+  "feature": "5b2da3a908d02a7a2ef3dd7f7aa88dec54c54a76",
+  "candidate": "bdb22087ac70fde1067fb3cf7cce8f995b881ea0",
+  "resolved_files": [
+    "build_test_inputs.zig",
+    "scripts/verify_cache.py",
+    "src/config_core_tool_platform.zig",
+    "src/core/root_test.zig"
+  ],
+  "normal_main_first_merge_tree": "296027cccadec6fd4f2afd9fe2b21f632379fcea",
+  "candidate_tree": "296027cccadec6fd4f2afd9fe2b21f632379fcea",
+  "identical": true,
+  "guardian_initial_diff_bytes": 222286870,
+  "guardian_feature_first_diff_bytes": 41127648,
+  "guardian_git_output_limit_bytes": 67108864
+}

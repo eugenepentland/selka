@@ -1,0 +1,564 @@
+diff --git a/SPEC.md b/SPEC.md
+index 02fcaa9d6..618ec01e6 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -1423,7 +1423,7 @@ The separate `mylang-core` executable (`zig build core`, `docs/design/new-core-i
+ - [NEW-CORE-S4-FRAMES-1] `mylang-core test --max-frames N` (also `--max-frames=N`, or `limits.test.max_frames` in `mylang.json`) bounds the calls of original program functions one test trial may nest, 1,024 by default as in the old core: each call enters a frame on its first block and leaves it before every return, and the call past the budget traps `R_FRAME_LIMIT` with the old core's advice line (`R_STEP_LIMIT` and `R_MEMORY_BUDGET` end with theirs); generated adapters are not counted and programs built outside tests are not instrumented. The trial runs on a stack mapped for the whole budget (32 KiB per frame plus 8 MiB, one guard page), so recursion within the budget never depends on the native stack limit. A zero budget is a usage error, and a budget whose stack the byte ceiling cannot back is refused before anything is built with the old core's text and exit status 2.
+ - [NEW-CORE-S4-MEMORY-1] `mylang-core test --max-memory SIZE` (bytes or a `K`/`M`/`G` size; else `MYLANG_MEMORY_LIMIT`, else `limits.test.max_memory`, else 512 MiB; `0` removes it) bounds each test process: the runtime counts the chunks small blocks are carved from and every live large block, and an allocation past the ceiling traps `R_MEMORY_BUDGET`; the process's `RLIMIT_AS` is lowered (never raised) to the ceiling plus 256 MiB, and an allocation the OS then refuses reports `R_MEMORY_BUDGET` too. The ceiling and the frame budget are part of the test receipt key. Programs built outside tests carry no ceiling and pay nothing on the inline allocation paths.
+ - [NEW-CORE-S4-TAKE-1] A `mut` record's managed field read and written back in one block is taken over by the read even when a branch leaves the record untouched on another edge into a join: a phi sees the record only on edges that cannot follow the read, so `if c: r.items.append(x)` updates the list in place when unique instead of copying it per call. `byte_buffer.append_byte`, `append_range` and `append_utf8` read the receiver, hand it to one runtime call (an owned argument that is updated in place when its count is one and copied otherwise) and write it back in the statement's block, so `byte_builder` appends through a `mut` builder are linear; an out-of-range octet or an invalid range appends nothing and the method still returns the validity.
+-- [NEW-CORE-TAKE-READS-1] A `mut` record's managed field that a read takes over and a later `record_set` replaces may be read before that read, and the two may sit in different blocks. The take needs three things: the taking read runs ahead of the set on every path, every path from it reaches the set or a trap, and every earlier read of the field, with the parts read out of it, is used only before the taking read or only after the set. A part still used after the set holds its own count, because the set consumes the record it was read from. Every `record_set` that replaces a field of the record is considered, so arms of a branch can each update another field. Identical reads of one record's field in one block are merged first (a record value never changes), so a nested `h.marker.marks.append(x)`, which reads `h.marker` twice, takes `h.marker` and then its list. Then `slot = len(rt.objects)` ahead of `rt.objects.append(x)`, `rt.objects[i] = v` (whose negative-index branch splits it into blocks), and the Lox heap's reuse-or-grow allocation update their lists in place when unique instead of copying them on every call, so appends and writes through list fields of a `mut` record stay linear. A copy of the field still read after the update keeps the record's reference, so that update copies the field and the copy keeps the old list.
++- [NEW-CORE-TAKE-READS-1] A `mut` record's managed field that a read takes over and a later `record_set` replaces may be read before that read, and the two may sit in different blocks. The take needs three things: the taking read runs ahead of the set on every path, every path from it reaches the set or a trap, and every earlier read of the field, with the parts read out of it, is used only before the taking read or only after the set. A part still used after the set holds its own count, because the set consumes the record it was read from. Every `record_set` that replaces a field of the record is considered, so arms of a branch can each update another field. Identical reads of one record's field in one block are merged first (a record value never changes), so a nested `h.marker.marks.append(x)`, which reads `h.marker` twice, takes `h.marker` and then its list. Then `slot = len(rt.objects)` ahead of `rt.objects.append(x)`, `rt.objects[i] = v` (whose negative-index branch splits it into blocks), and the Lox heap's reuse-or-grow allocation update their lists in place when unique instead of copying them on every call, so appends and writes through list fields of a `mut` record stay linear. A copy of the field still read after the update keeps the record's reference, so that update copies the field and the copy keeps the old list. In checked ownership, an exact fixed-array slot reconstruction may transfer the old slot through a matching writeback when the owner and captured normalized index agree and the same borrow-window and path requirements hold; other live aliases or unmatched indices refuse. Index expressions are evaluated once for that source reconstruction.
+ - [NEW-CORE-S4-SITES-1] Traps, assertions, effect sites and error traces carry pointers to private immutable site records containing the original source path. Debug compile units and file tables preserve caller paths across separately compiled modules. Core clones retain their exact specialized callee and original call positions in sparse optimizer metadata outside the IR, composed through loop duplication, ownership edits and LLVM inline records. Ancestry deeper than 32 frames refuses expansion before changing IR.
+ - [PY-REPEAT-2] A contextual list constructor in repetition keeps its list element type independently of a runtime integer count: `[0] * width` and `width * [0]` typecheck in both cores, including a declared `list[u8]` result.
+ - [NEW-CORE-BUFFER-S4-1] Numeric byte-buffer append formats integers and binary64 values in bounded stack storage with the ordinary string spelling, then reserves once and copies the fragment once. COW and fact-verification uniqueness checks precede the consuming append; no temporary string block or per-octet append loop is constructed.
+diff --git a/src/core/a06_nested_write_test.zig b/src/core/a06_nested_write_test.zig
+index 8ab4854f3..145c230d7 100644
+--- a/src/core/a06_nested_write_test.zig
++++ b/src/core/a06_nested_write_test.zig
+@@ -172,6 +172,7 @@ const slot_records =
+ ;
+ 
+ // spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
++// spec-case: NEW-CORE-TAKE-READS-1
+ test "zero RC fixed array writeback captures a dynamic signed index once" {
+     try counted(std.testing.allocator, slot_records ++
+         \\func select_last(mut calls: int) -> int:
+@@ -191,6 +192,7 @@ test "zero RC fixed array writeback captures a dynamic signed index once" {
+ }
+ 
+ // spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
++// spec-case: NEW-CORE-TAKE-READS-1
+ test "zero RC array transfer analysis preserves unknown index and conditional live borrows" {
+     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+     defer arena.deinit();
+diff --git a/src/core/build.zig b/src/core/build.zig
+index 577837ae4..aad205006 100644
+--- a/src/core/build.zig
++++ b/src/core/build.zig
+@@ -443,6 +443,8 @@ const Ssa = struct {
+     resources: std.ArrayList(build_cap.Scope) = .empty,
+     /// Parents already detached for a hidden receiver's imminent write-back.
+     prepared: std.AutoHashMapUnmanaged(u32, PreparedPath) = .empty,
++    /// Exact nested reconstruction reads share their parent's normalized index.
++    array_indices: std.AutoHashMapUnmanaged(typed.NodeId, ir.Ref) = .empty,
+ };
+ 
+ /// Where `break` and `continue` of one checked loop go.
+@@ -772,7 +774,7 @@ const FnBuilder = struct {
+     }
+ 
+     fn providerStore(self: *FnBuilder, store: typed.Store, place: ?Place, value: ir.Ref, assign: bool, span: u32) Error!void {
+-        if (!self.module().zero_rc or self.typeOfRef(value) != .capability) return;
++        if (!self.module().zero_rc or value == .none or self.typeOfRef(value) != .capability) return;
+         const slot = self.local(store.slot);
+         const info = self.checked.scope.locals[slot];
+         if (std.mem.startsWith(u8, info.name, "<")) return;
+@@ -1142,14 +1144,17 @@ const FnBuilder = struct {
+         if (self.version(place.root) != place.root_version) return self.mb.refuse("write to a receiver's place while its arguments are evaluated", span);
+         const root = try self.read(place.root, self.current.?);
+         const root_kind = self.mb.module.kind(self.typeOfRef(root));
+-        if (root_kind != .list and root_kind != .dict) return alias;
++        if (root_kind != .list and root_kind != .dict and !self.module().zero_rc) return alias;
+         const parents = try self.allocator().alloc(ir.Ref, place.steps.len);
+         const children = try self.allocator().alloc(ir.Ref, place.steps.len);
+         var value = root;
+         for (place.steps, 0..) |step, index| {
+             value = try self.prepareParent(value, span);
+             parents[index] = value;
+-            value = try self.stepGet(value, step, span);
++            value = if (self.module().zero_rc and step == .payload)
++                try self.propagatedPayload(value, step.payload, span)
++            else
++                try self.stepGet(value, step, span);
+             children[index] = value;
+             const kind = self.mb.module.kind(self.typeOfRef(parents[index]));
+             if ((kind == .list or kind == .dict) and self.mb.module.managed(self.typeOfRef(value))) self.function.insts.items[value.index()].data = flags.place_read;
+@@ -1426,7 +1431,7 @@ const FnBuilder = struct {
+                 if (self.mb.module.kind(buffer_type) == .dict and self.typeOfRef(capacity) != .u64) capacity = try self.emit(.{ .op = .convert, .ty = .u64, .a = capacity, .check = .exact, .span = span });
+                 return self.emit(.{ .op = if (self.mb.module.kind(buffer_type) == .dict) .dict_new else .list_new, .ty = buffer_type, .a = capacity, .span = span });
+             },
+-            .index => |index| return self.indexExpression(index, n.ty, try self.typeOf(id), span, out),
++            .index => return self.indexExpression(id, try self.typeOf(id), span, out),
+             .arena_escape => |value| return self.expression(value),
+             .length => |operand| return self.stringLength(operand, span),
+             .variant => |case| return self.variantMake(id, case.tag, case.value, span),
+@@ -1513,15 +1518,17 @@ const FnBuilder = struct {
+     }
+ 
+     /// Read a dictionary or array element and remember its place for mut write-back.
+-    fn arrayGet(self: *FnBuilder, index: @FieldType(@FieldType(typed.Node, "data"), "index"), span: u32, out: ?*?Place) Error!ir.Ref {
++    fn arrayGet(self: *FnBuilder, id: typed.NodeId, span: u32, out: ?*?Place) Error!ir.Ref {
++        const index = self.nodeOf(id).data.index;
+         var base_place: ?Place = null;
+         const base = try self.expressionPlace(index.base, if (out != null) &base_place else null);
+-        const raw = try self.expression(index.index);
++        const captured = self.ssa.array_indices.get(id);
++        const raw = if (captured == null) try self.expression(index.index) else ir.Ref.none;
+         if (self.current == null) return .none;
+         const ty = self.typeOfRef(base);
+         const dictionary = self.mb.module.kind(ty) == .dict;
+         if (!dictionary and self.mb.module.kind(ty) != .array) return self.mb.refuse("index of a non-array", span);
+-        const at = if (dictionary) try build_dict.find(@TypeOf(self), self, base, raw, span) else try self.arrayIndex(base, raw, index.from_end, span);
++        const at = captured orelse if (dictionary) try build_dict.find(@TypeOf(self), self, base, raw, span) else try self.arrayIndex(base, raw, index.from_end, span);
+         if (dictionary) try build_dict.requirePresent(@TypeOf(self), self, at, span);
+         if (out) |place| if (base_place) |found| {
+             place.* = try self.extendPlace(found, .{ .element = at });
+@@ -1534,6 +1541,19 @@ const FnBuilder = struct {
+     fn arrayReplace(self: *FnBuilder, replacement: @FieldType(@FieldType(typed.Node, "data"), "replace"), span: u32) Error!ir.Ref {
+         const base = try self.expression(replacement.base);
+         const raw = try self.expression(replacement.index);
++        if (self.current == null) return .none;
++        const shared = if (self.module().zero_rc and self.mb.module.kind(self.typeOfRef(base)) == .array) self.reconstructedIndex(replacement) else null;
++        if (shared) |index| {
++            const normalized = try self.arrayIndex(base, raw, replacement.from_end, span);
++            const previous = self.ssa.array_indices.get(index);
++            try self.ssa.array_indices.put(self.allocator(), index, normalized);
++            defer {
++                if (previous) |old| self.ssa.array_indices.getPtr(index).?.* = old else _ = self.ssa.array_indices.remove(index);
++            }
++            const value = try self.expression(replacement.value);
++            if (self.current == null) return .none;
++            return self.arraySet(base, normalized, value, span);
++        }
+         const value = try self.expression(replacement.value);
+         if (self.current == null) return .none;
+         if (self.mb.module.kind(self.typeOfRef(base)) == .dict) return build_dict.put(@TypeOf(self), self, base, raw, value, span);
+@@ -1541,6 +1561,21 @@ const FnBuilder = struct {
+         return self.arraySet(base, try self.arrayIndex(base, raw, replacement.from_end, span), value, span);
+     }
+ 
++    /// Only the exact typed projection being rebuilt can reuse this normalization.
++    fn reconstructedIndex(self: *FnBuilder, replacement: @FieldType(@FieldType(typed.Node, "data"), "replace")) ?typed.NodeId {
++        const base = switch (self.nodeOf(replacement.value).data) {
++            .update => |update| update.base,
++            .replace => |replace| replace.base,
++            else => return null,
++        };
++        const projection = switch (self.nodeOf(base).data) {
++            .index => |index| index,
++            else => return null,
++        };
++        if (projection.base != replacement.base or projection.index != replacement.index or projection.from_end != replacement.from_end) return null;
++        return base;
++    }
++
+     /// Replace one normalized array element, preserving aggregate ownership semantics.
+     fn arraySet(self: *FnBuilder, base: ir.Ref, index: ir.Ref, value: ir.Ref, span: u32) Error!ir.Ref {
+         const ty = self.typeOfRef(base);
+@@ -2247,15 +2282,17 @@ const FnBuilder = struct {
+         return build_text.operation(@TypeOf(self), self, operation, ty, span);
+     }
+ 
+-    fn indexExpression(self: *FnBuilder, index: @FieldType(@FieldType(typed.Node, "data"), "index"), source_type: typed.Type, result: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
++    fn indexExpression(self: *FnBuilder, id: typed.NodeId, result: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
++        const node = self.nodeOf(id);
++        const index = node.data.index;
+         const base_type = try self.typeOf(index.base);
+         if (base_type == .str_view) {
+             const text = self.mb.input.program.records[self.nodeOf(index.base).ty.recordIndex()].collection.kind == .string;
+             return build_view.indexed(@TypeOf(self), self, try self.expression(index.base), try self.expression(index.index), text, result, span);
+         }
+         if (base_type == .str or base_type == .bytes or base_type == .byte_buffer) return build_text.indexed(@TypeOf(self), self, index.base, index.index, span, result);
+-        const value = try self.arrayGet(index, span, out);
+-        return if (source_type == .unit) .none else value;
++        const value = try self.arrayGet(id, span, out);
++        return if (node.ty == .unit) .none else value;
+     }
+ 
+     fn bufferOperation(self: *FnBuilder, operation: BufferOperation, ty: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
+diff --git a/src/core/build_dict.zig b/src/core/build_dict.zig
+index 57419696a..c66d3dd18 100644
+--- a/src/core/build_dict.zig
++++ b/src/core/build_dict.zig
+@@ -223,6 +223,7 @@ pub fn operation(comptime Context: type, b: Context, op: Operation, ty: ir.Type,
+             const dict = try b.writableReceiverOf(owner, span);
+             const stored_key = try storedKey(Context, b, dict, key);
+             const probe = try find(Context, b, dict, stored_key, span);
++            if (b.module().zero_rc) return ownedDefault(Context, b, owner, dict, probe, .{ .key = stored_key, .fallback = fallback }, span);
+             const result = try selectValue(Context, b, dict, probe, fallback, false, span);
+             const missing = try b.newBlock();
+             const join = try b.newBlock();
+@@ -240,6 +241,29 @@ pub fn operation(comptime Context: type, b: Context, op: Operation, ty: ir.Type,
+     }
+ }
+ 
++/// Insert first and borrow from the joined owner, never from an owning payload phi.
++fn ownedDefault(comptime Context: type, b: Context, owner: typed.LocalId, dict: ir.Ref, probe: ir.Ref, values: struct { key: ir.Ref, fallback: ir.Ref }, span: u32) Error!ir.Ref {
++    const entry = try b.synthetic(.i64);
++    try b.write(entry, b.current.?, probe);
++    const missing = try b.newBlock();
++    const join = try b.newBlock();
++    try b.branch(try present(Context, b, probe, span), join, missing, span);
++    try b.seal(missing);
++    b.current = missing;
++    const inserted = try b.emit(.{ .op = .dict_insert, .ty = b.typeOfRef(dict), .a = dict, .b = probe, .data = try b.extraSlice(&.{ values.key, values.fallback }), .span = span });
++    // Insertion appends one entry even after tombstones or storage growth.
++    // The physical entry count gives its slot without a second key lookup.
++    const count = try b.emit(.{ .op = .dict_entries, .ty = .u64, .a = inserted, .span = span });
++    const last = try b.emit(.{ .op = .sub, .ty = .u64, .a = count, .b = try b.constant(.u64, 1), .span = span });
++    const index = try b.emit(.{ .op = .convert, .ty = .i64, .a = last, .span = span });
++    try b.write(entry, b.current.?, index);
++    try b.writeOwner(owner, inserted, span);
++    try b.jump(join);
++    try b.seal(join);
++    b.enter(join);
++    return valueAt(Context, b, try b.receiverOf(owner), try b.read(entry, join), span);
++}
++
+ /// Order-independent dictionary equality compares each live key and value.
+ pub fn equal(comptime Context: type, b: Context, left: ir.Ref, right: ir.Ref, span: u32) Error!ir.Ref {
+     const len_left = try b.emit(.{ .op = .dict_len, .ty = .u64, .a = left, .span = span });
+diff --git a/src/core/own.zig b/src/core/own.zig
+index 8b4e446f6..24aa4d9f7 100644
+--- a/src/core/own.zig
++++ b/src/core/own.zig
+@@ -135,6 +135,7 @@ pub fn functionWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator,
+     var work = std.heap.ArenaAllocator.init(backing);
+     defer work.deinit();
+     const scratch = work.allocator();
++    _ = try @import("phi_cleanup.zig").run(backing, f);
+     var stats: Stats = .{};
+     var marks: Marks = .{ .origin = if (options.provenance) |table| table.context(options.function_index) else null };
+     if (options.facts) |known| {
+@@ -1430,9 +1431,18 @@ fn mergeable(arena: std.mem.Allocator, f: *const ir.Function, group: ReadGroup,
+ fn takeFields(arena: std.mem.Allocator, module: *const ir.Module, f: *const ir.Function, marks: *Marks) Error!void {
+     const graph = try UseGraph.of(arena, f);
+     for (f.insts.items, 0..) |record, i| {
+-        if (module.kind(record.ty) != .record or !module.managed(record.ty)) continue;
++        const kind = module.kind(record.ty);
++        if ((kind != .record and kind != .array) or !module.managed(record.ty)) continue;
+         if (!ownedRecord(f, record) and !marks.owned_get.contains(@intCast(i))) continue;
+         const ref: ir.Ref = @fromBackingInt(@intCast(i));
++        const ctx: Taking = .{ .arena = arena, .module = module, .f = f, .graph = graph, .marks = marks };
++        if (kind == .array) {
++            for (graph.uses[i].items) |user| {
++                const inst = f.inst(user);
++                if (inst.op == .array_set and f.resolve(inst.a) == ref) try ctx.takeArrayReplaced(ref, user);
++            }
++            continue;
++        }
+         var reads_only = true;
+         var sets: std.ArrayList(ir.Ref) = .empty;
+         for (graph.uses[i].items) |user| {
+@@ -1443,7 +1453,6 @@ fn takeFields(arena: std.mem.Allocator, module: *const ir.Module, f: *const ir.F
+                 try sets.append(arena, user);
+             } else reads_only = false;
+         }
+-        const ctx: Taking = .{ .arena = arena, .module = module, .f = f, .graph = graph, .marks = marks };
+         // Each set replaces its own field: arms of a branch may each update another one.
+         for (sets.items) |update| try ctx.takeReplaced(ref, update);
+         if (sets.items.len == 0 and reads_only) try ctx.empty(ref);
+@@ -1524,6 +1533,46 @@ const Taking = struct {
+         try self.marks.taken.put(self.arena, @backingInt(update), {});
+     }
+ 
++    /// An inline array lends its exact selected slot to a nested update, under
++    /// the same path and borrow-window checks used for named record fields.
++    fn takeArrayReplaced(self: Taking, array: ir.Ref, update: ir.Ref) Error!void {
++        const f = self.f;
++        if (!self.module.managed(self.module.compound(f.inst(array).ty).array.elem)) return;
++        const index = f.inst(update).b;
++        const def = if (f.inst(array).op == .param) 0 else self.graph.block_of[array.index()];
++        var reads: std.ArrayList(ir.Ref) = .empty;
++        for (self.graph.uses[array.index()].items) |user| {
++            const inst = f.inst(user);
++            if (inst.op == .array_get and f.resolve(inst.a) == array and arrayIndex(f, index, inst.b) != .different)
++                try addUnique(self.arena, &reads, user);
++        }
++        for (reads.items) |get| {
++            if (arrayIndex(f, index, f.inst(get).b) != .same) continue;
++            if (!try self.takes(get, update, reads.items, def)) continue;
++            if (!try self.arrayWindow(array, get, update, def)) continue;
++            try self.marks.owned_get.put(self.arena, @backingInt(get), {});
++            try self.marks.taken.put(self.arena, @backingInt(update), {});
++            return;
++        }
++    }
++
++    fn arrayWindow(self: Taking, array: ir.Ref, get: ir.Ref, update: ir.Ref, def: u32) Error!bool {
++        const f = self.f;
++        for (self.graph.uses[array.index()].items) |user| {
++            if (user == get or user == update) continue;
++            const inst = f.inst(user);
++            if (inst.op == .array_get and arrayIndex(f, f.inst(get).b, inst.b) == .different) continue;
++            if (inst.op == .phi) {
++                if (try phiAfter(self, array, get, user, def)) return false;
++                continue;
++            }
++            if (!try runsAfter(self.arena, f, self.graph.block_of, get, user, def)) continue;
++            if (self.borrowsFirst(array, get, user)) continue;
++            return false;
++        }
++        return true;
++    }
++
+     /// `update` replaces a field of `record`, which updates of other fields made from an earlier
+     /// record: a read of the field from that earlier record takes it over the same way, when
+     /// nothing but reads of other fields and those updates uses the records in between while
+@@ -1757,7 +1806,7 @@ fn reachesOrTrapsBlock(arena: std.mem.Allocator, f: *const ir.Function, from: u3
+ /// Whether `op` reads a part of its first operand that borrows from it (§5).
+ fn readsPart(op: ir.Op) bool {
+     return switch (op) {
+-        .list_get, .list_get_field, .record_get, .union_payload, .box_get => true,
++        .list_get, .list_get_field, .record_get, .array_get, .union_payload, .box_get => true,
+         else => false,
+     };
+ }
+@@ -1812,11 +1861,22 @@ fn blockReachable(arena: std.mem.Allocator, f: *const ir.Function, from: u32, ta
+     return false;
+ }
+ 
++/// An unresolved pair may alias: only exact SSA identity or two constants prove it.
++fn arrayIndex(f: *const ir.Function, left: ir.Ref, right: ir.Ref) enum { same, different, unknown } {
++    const a = f.resolve(left);
++    const b = f.resolve(right);
++    if (a == b) return .same;
++    const x = f.inst(a);
++    const y = f.inst(b);
++    if (x.op != .iconst or y.op != .iconst or x.ty != y.ty) return .unknown;
++    return if (x.data == y.data) .same else .different;
++}
++
+ /// Whether a record value is owned where it is defined: built, updated, joined,
+ /// returned by a call, or a `mut` parameter.
+ fn ownedRecord(f: *const ir.Function, record: ir.Inst) bool {
+     return switch (record.op) {
+-        .record_make, .record_set, .phi, .call, .union_take, .box_take => true,
++        .record_make, .record_set, .array_set, .phi, .call, .union_take, .box_take => true,
+         .param => ownedParameter(f.signature, record.data),
+         else => false,
+     };
+diff --git a/src/core/single_owner.zig b/src/core/single_owner.zig
+index babbd1398..8af240d71 100644
+--- a/src/core/single_owner.zig
++++ b/src/core/single_owner.zig
+@@ -161,7 +161,14 @@ const State = struct {
+     transferable: bool = false,
+     dependency: usize = none,
+ };
+-const Access = enum { read, move, mutate, update };
++const Access = enum { read, move, mutate, update, writeback };
++fn writebackBase(access: Access) Access {
++    return switch (access) {
++        .writeback => .read,
++        .update => .mutate,
++        else => .move,
++    };
++}
+ const Loan = struct { root: usize, write: bool };
+ const Loop = struct { id: usize, before: []const State };
+ 
+@@ -314,7 +321,7 @@ const Checker = struct {
+             .block_value => |block| c.origin(block.value),
+             .buffer_operation => |operation| switch (operation.kind) {
+                 .read => if (c.zero_rc and c.program.records[c.function.scope.locals[@backingInt(operation.owner)].ty.recordIndex()].collection.kind == .string) null else c.rootOf(@backingInt(operation.owner)),
+-                .get, .key_at, .value_at, .borrow_view => c.rootOf(@backingInt(operation.owner)),
++                .get, .key_at, .value_at, .setdefault, .borrow_view => c.rootOf(@backingInt(operation.owner)),
+                 .slice => if (c.view(node.ty)) c.rootOf(@backingInt(operation.owner)) else null,
+                 else => null,
+             },
+@@ -349,6 +356,41 @@ const Checker = struct {
+         return c.zero_rc and ty.isAggregate() and c.program.records[ty.recordIndex()].collection.kind == .string;
+     }
+ 
++    /// An element update can read only the exact element being rebuilt. Keep
++    /// the containing operation's loan active for all replacement operands.
++    fn sameIndexWriteback(c: *const Checker, base: typed.NodeId, index: typed.NodeId, from_end: bool, value: typed.NodeId) bool {
++        const nested_base = switch (c.program.nodes[@backingInt(value)].data) {
++            .update => |update| update.base,
++            .replace => |replace| replace.base,
++            else => return false,
++        };
++        return switch (c.program.nodes[@backingInt(nested_base)].data) {
++            .index => |projection| projection.base == base and projection.index == index and projection.from_end == from_end,
++            else => false,
++        };
++    }
++
++    /// The front end's field destination captures a slot in a synthetic local
++    /// and later writes the rebuilt value to that same collection and key.
++    /// Ordinary extracted values and unrelated keys cannot take this path.
++    fn sameSlotWriteback(c: *const Checker, owner: typed.LocalId, index: typed.NodeId, value: typed.NodeId) bool {
++        const base = switch (c.program.nodes[@backingInt(value)].data) {
++            .update => |update| update.base,
++            .replace => |replace| replace.base,
++            else => return false,
++        };
++        const slot = switch (c.program.nodes[@backingInt(base)].data) {
++            .local => |local| @backingInt(local),
++            else => return false,
++        };
++        if (!c.temporary(slot) or !c.state[slot].borrowed) return false;
++        const definition = c.state[slot].view_definition orelse return false;
++        return switch (c.program.nodes[@backingInt(definition)].data) {
++            .buffer_operation => |read| read.kind == .read and read.owner == owner and read.arguments.len == 1 and read.arguments[0] == index,
++            else => false,
++        };
++    }
++
+     fn wholeOwner(c: *const Checker, id: typed.NodeId) bool {
+         return switch (c.program.nodes[@backingInt(id)].data) {
+             .local => |slot| c.state[@backingInt(slot)].root == none or c.state[@backingInt(slot)].transferable,
+@@ -390,6 +432,7 @@ const Checker = struct {
+                     .writable = local.origin != .iteration and c.state[source].writable,
+                     .root = source,
+                     .transferable = c.wholeOwner(store.value),
++                    .view_definition = store.value,
+                     .dependency = c.state[source].dependency,
+                 };
+                 return;
+@@ -458,13 +501,13 @@ const Checker = struct {
+             .array => |items| for (items) |item| try c.expression(item, .move),
+             .record => |fields| try c.recordFields(fields),
+             .update => |update| {
+-                try c.expression(update.base, if (access == .update) .mutate else .move);
+-                for (update.fields) |field| try c.expression(field.value, if (access == .update and c.sameFieldWriteback(update.base, field)) .update else .move);
++                try c.expression(update.base, writebackBase(access));
++                for (update.fields) |field| try c.expression(field.value, if ((access == .update or access == .writeback) and c.sameFieldWriteback(update.base, field)) access else .move);
+             },
+             .replace => |replace| {
+-                try c.expression(replace.base, if (access == .update) .mutate else .move);
++                try c.expression(replace.base, writebackBase(access));
+                 try c.expression(replace.index, .read);
+-                try c.expression(replace.value, .move);
++                try c.expression(replace.value, if ((access == .update or access == .writeback) and c.sameIndexWriteback(replace.base, replace.index, replace.from_end, replace.value)) access else .move);
+             },
+             .acquire_buffer => |buffer| try c.expression(buffer.capacity, .read),
+             .buffer_operation => try c.collection(node, access),
+@@ -653,7 +696,8 @@ const Checker = struct {
+                     .pop_default => index == 1,
+                     else => false,
+                 } else operation.kind == .append or (operation.kind == .write and index == 1) or (operation.kind == .insert and index == 1);
+-                try c.expression(argument, if (consumes) .move else .read);
++                const writeback = schema.collection.kind == .list and operation.kind == .write and index == 1 and c.sameSlotWriteback(operation.owner, operation.arguments[0], argument);
++                try c.expression(argument, if (writeback) .writeback else if (consumes) .move else .read);
+             }
+             // These methods implicitly duplicate elements. Nested owned
+             // lists need an explicit deep copy, which .copy() provides.
+@@ -735,7 +779,17 @@ const Checker = struct {
+         var joined: ?[]State = null;
+         for (arms) |arm| {
+             @memcpy(c.state, before);
+-            if (arm.slot) |slot| c.state[@backingInt(slot)] = .{ .available = true, .borrowed = !owned, .root = if (owned) none else source orelse none, .dependency = dependency orelse none };
++            if (arm.slot) |slot| {
++                const local = c.function.scope.locals[@backingInt(slot)];
++                const narrowing = std.mem.startsWith(u8, local.name, "<");
++                c.state[@backingInt(slot)] = .{
++                    .available = true,
++                    .borrowed = !owned,
++                    .writable = narrowing and local.mutable and source != null and c.state[source.?].writable,
++                    .root = if (owned) none else source orelse none,
++                    .dependency = dependency orelse none,
++                };
++            }
+             const body = if (owned and arm.unpack != null) unpacked: {
+                 // This is the whole hidden payload, split before source statements.
+                 // Each binding is now its own owner; the original is unavailable.
+@@ -746,7 +800,11 @@ const Checker = struct {
+                 break :unpacked arm.unpack.?.body;
+             } else arm.body;
+             if (!try c.checkStatement(body)) continue;
+-            if (arm.slot) |slot| c.state[@backingInt(slot)].available = false;
++            // A generated narrowing binding is read by its enclosing block value.
++            // Source pattern bindings instead end with the arm's lexical scope.
++            if (arm.slot) |slot| if (!std.mem.startsWith(u8, c.function.scope.locals[@backingInt(slot)].name, "<")) {
++                c.state[@backingInt(slot)].available = false;
++            };
+             if (arm.unpack) |unpack| for (unpack.fields) |field| if (field) |slot| {
+                 c.state[@backingInt(slot)].available = false;
+             };
+@@ -781,6 +839,7 @@ const Checker = struct {
+             .assertion => |assertion| {
+                 try c.expression(assertion.condition, .read);
+                 if (assertion.message_value) |message| try c.expression(message, .read);
++                if (c.program.nodes[@backingInt(assertion.condition)].data == .boolean and !c.program.nodes[@backingInt(assertion.condition)].data.boolean) return false;
+             },
+             .branch => |branch| {
+                 try c.expression(branch.condition, .read);
+@@ -807,6 +866,7 @@ const Checker = struct {
+                         .dir_resource => |dir| try c.arguments(&.{ provider, dir.path }, &.{}, &.{}),
+                         .host_resource => |host| try c.arguments(&.{ provider, host.name }, &.{}, &.{}),
+                         .environment_only => |only| try c.arguments(&.{ provider, only.names }, &.{}, &.{}),
++                        .restrict_resource => try c.expression(provider, .read),
+                         else => try c.expression(source, .read),
+                     }
+                 }
+diff --git a/src/core/zero_rc_test.zig b/src/core/zero_rc_test.zig
+index 8d94af6f8..e471fbdfa 100644
+--- a/src/core/zero_rc_test.zig
++++ b/src/core/zero_rc_test.zig
+@@ -1657,6 +1657,74 @@ test "zero RC builtin file results preserve named provider origins through helpe
+     , "E_ZERO_RC_RESOURCE_ESCAPE");
+ }
+ 
++// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
++test "zero RC optional narrowing preserves hidden payload availability and mutation" {
++    try executes(std.testing.allocator,
++        \\record Node:
++        \\    items: int[]
++        \\    next: Node?
++        \\func size(node: Node) -> int:
++        \\    mut child = node.next.copy()
++        \\    if child is None:
++        \\        return len(node.items)
++        \\    child.items.append(9)
++        \\    return len(node.items) + size(child)
++        \\func main(out: Stream) -> int:
++        \\    const root = Node(items=[1], next=Some(Node(items=[2], next=None)))
++        \\    out.print(size(root), size(root))
++        \\    return 0
++    , "3 3\n");
++    try refuses(std.testing.allocator,
++        \\func escape(value: int[]?) -> int[]:
++        \\    if value is None:
++        \\        return []
++        \\    return value
++        \\func main() -> int:
++        \\    return len(escape(Some([1])))
++    , "E_SINGLE_OWNER_BORROW");
++}
++
++// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
++test "zero RC setdefault copies borrowed hit and inserted payloads independently" {
++    try executes(std.testing.allocator,
++        \\func fallback(mut calls: int, value: int) -> int[]:
++        \\    calls += 1
++        \\    return [value]
++        \\func key(mut calls: int, value: str) -> str:
++        \\    calls += 1
++        \\    return value.copy()
++        \\func main(out: Stream) -> int:
++        \\    mut mapping = {"a": [1]}
++        \\    mut key_calls = 0
++        \\    mut value_calls = 0
++        \\    const hit = mapping.setdefault(key(mut key_calls, "a"), fallback(mut value_calls, 99)).copy()
++        \\    const added = mapping.setdefault(key(mut key_calls, "b"), fallback(mut value_calls, 2)).copy()
++        \\    assert key_calls == 2
++        \\    assert value_calls == 2
++        \\    for i in range(40):
++        \\        const grown = mapping.setdefault(str(i), [i]).copy()
++        \\        assert grown[0] == i
++        \\    _ = mapping.pop("5")
++        \\    const after_hole = mapping.setdefault("again-" + str(5), [5]).copy()
++        \\    assert after_hole[0] == 5
++        \\    for i in range(30):
++        \\        _ = mapping.pop(str(i), [])
++        \\    for i in range(30):
++        \\        const compacted = mapping.setdefault("new-" + str(i), [i]).copy()
++        \\        assert compacted[0] == i
++        \\    mapping.clear()
++        \\    out.print(hit[0], added[0])
++        \\    return 0
++    , "1 2\n");
++    try refuses(std.testing.allocator,
++        \\func main() -> int:
++        \\    mut mapping = {"a": [1]}
++        \\    const borrowed = mapping.setdefault("a", [99])
++        \\    mapping.clear()
++        \\    return borrowed[0]
++    , "E_SINGLE_OWNER_BORROW");
++}
++
+ // spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+ test "zero RC conditional branch storage transfers owners instead of receiver loans" {
+     try executes(std.testing.allocator,

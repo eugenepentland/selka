@@ -1,0 +1,225 @@
+{
+  "archive": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-kicad/experiments/lox-eda-zero-rc-20261012/eda-kicad/preliminary-owned44.tar.gz",
+  "files": [
+    {
+      "file": "export_kicad.my",
+      "old_sha256": "b1eb683533b755c4e5eb947b9f542212289e3562fbcd9340ca3daadcf8106ae0",
+      "sha256": "23797848ff596fa8570b52ae3d3a29fd25ed7fa31b8fec66c64ba3bfefd57778"
+    },
+    {
+      "file": "export_kicad_footprint.my",
+      "old_sha256": "efc2670a5d3c3a8b220eb407579c11ea1e0e9a267f41ba4995719ac0ff9404b5",
+      "sha256": "9f5e8cd46fbcbd516b27f1494738d677b88dc1a8b25e8adfe7125192fcb7a961"
+    },
+    {
+      "file": "export_kicad_footprint_test.my",
+      "old_sha256": "376cd22513b55f315ea1a5e5ca2faa59103beb7fcd2545d6c8db275c3e1c7a04",
+      "sha256": "376cd22513b55f315ea1a5e5ca2faa59103beb7fcd2545d6c8db275c3e1c7a04"
+    },
+    {
+      "file": "export_kicad_model.my",
+      "old_sha256": "cbdedd06d870864cc6af917dadce49383ebf7d0a7d6b92440df0944f55e81bb5",
+      "sha256": "cb4165b53b9cd975c9821e4519f5af3f57415e8af446d9ee54f4868367e90748"
+    },
+    {
+      "file": "export_kicad_netlist.my",
+      "old_sha256": "c86e2ef4b0c5e2154360f0598e796899552fc33f5b82b7f26e63bb451e6148fc",
+      "sha256": "f84153cc9f5275156eb18c18ae7b8e79eecb0954f08a1267647649abacd8d0de"
+    },
+    {
+      "file": "export_kicad_netlist_test.my",
+      "old_sha256": "c83a5507a203863938d08e1a4e9502b4b5c96b0c0aa5283dafca03020c067adb",
+      "sha256": "a42cd8fe72c931bdfd2b9af623847de2d4bfdd08a9ce677993c7dbc836e63963"
+    },
+    {
+      "file": "export_kicad_test.my",
+      "old_sha256": "68bf501db53366b994cc333ad18660e1dab18644c006e065910fdda44fafa956",
+      "sha256": "34853d58e6b67fdd8bcf2162feafcea982cafa4173d99e586051bf458b588fef"
+    },
+    {
+      "file": "kicad_pcb_format.my",
+      "old_sha256": "352c634b3a4e0c1c1124a71baee4c39aa42c0761d75384ddcaa0a687411faff6",
+      "sha256": "fe5a6a47f7d34bb7f68abd9594056590fe3e668790a7db6c2ac370b2f6c0a72c"
+    },
+    {
+      "file": "kicad_pcb_format_test.my",
+      "old_sha256": "cd0b94ecd06b33b094c6f2d3f26162dea41c53b99ceec078859e7064e7d89d54",
+      "sha256": "cd0b94ecd06b33b094c6f2d3f26162dea41c53b99ceec078859e7064e7d89d54"
+    },
+    {
+      "file": "kicad_sch_bank.my",
+      "old_sha256": "d4ec36a876f316ea9b81b960b951c7bb8c993badc68f18976c84419d5518fc1b",
+      "sha256": "2e8a5fde257c5e6d58b750a8b63ea39388b9a23684bf9c5e190be338c08ff6ed"
+    },
+    {
+      "file": "kicad_sch_bank_test.my",
+      "old_sha256": "67a2750c114ef73fcd805586484c4f4f62bfd05b6816bc04ccc36cf8279ed6bf",
+      "sha256": "ae25c3d456166efa92a1e3d9d803621f48f95f8246f7c43f82c2571f0fe60f92"
+    },
+    {
+      "file": "kicad_sch_compose.my",
+      "old_sha256": "fbe7ddbaf24167329149f987f66b2a1e334ade392607080d459618d0ffa574ee",
+      "sha256": "d7d132e278dccfa568a466ed5c77d72970eefbc3d2f5316d404b3b5857f25dc0"
+    },
+    {
+      "file": "kicad_sch_compose_test.my",
+      "old_sha256": "a35f9ac5beccb5460534e02291fa693737c53472f9d4bbf62f6a29002cae0bb8",
+      "sha256": "9688b8edaddb7db9504aa0c2775baebf9ba88658b842489dba50971ff6bc7823"
+    },
+    {
+      "file": "kicad_sch_emit.my",
+      "old_sha256": "0714f3a190f4d7251dbfa195b6335e958e9ba551bccd4d9d7dddbc28a8fbd272",
+      "sha256": "2d2679b99e71e90f70dc45f5c28f34432def661f0b870bb0949bdb3ab1da93dd"
+    },
+    {
+      "file": "kicad_sch_emit_test.my",
+      "old_sha256": "f041b05048cff8e197df1f51422a00dd47fef6f52e1965b86668fe5df75f9a65",
+      "sha256": "ae44aa0ea128d93e8dd7dcee855e00810e029cac19f7d5e48e29db8d9c538849"
+    },
+    {
+      "file": "kicad_sch_gang.my",
+      "old_sha256": "efa8f4f3f4b59ab9b5dff4dea0d50903bad926623c20ec483795ba02a497d844",
+      "sha256": "384300687185fec3a472c9a5ad8c965276a0acaaafbf69d37c8a378b01b7e800"
+    },
+    {
+      "file": "kicad_sch_gang_test.my",
+      "old_sha256": "f5e98b89a959a6c1f719ae4f73811341ff47a807024039036abf2a50a621c88c",
+      "sha256": "254892cc4590d40c51248c38653bc897fa0d7daa296ba23efca47c1e92d01b57"
+    },
+    {
+      "file": "kicad_sch_glyph_test.my",
+      "old_sha256": "b0fdcffd6c068c50d31b025642301d5ac8205f92cabc41b5a792da2580749b02",
+      "sha256": "b0fdcffd6c068c50d31b025642301d5ac8205f92cabc41b5a792da2580749b02"
+    },
+    {
+      "file": "kicad_sch_plan.my",
+      "old_sha256": "0aa52227fb4d20f882dc4d4eb0601205c56abc69507e3783c03cbc10a12efaba",
+      "sha256": "0aa52227fb4d20f882dc4d4eb0601205c56abc69507e3783c03cbc10a12efaba"
+    },
+    {
+      "file": "kicad_sch_plan_test.my",
+      "old_sha256": "28881c19b5097325406126e07a523c1df74d52a80bda521bbd61f5b03b203058",
+      "sha256": "28881c19b5097325406126e07a523c1df74d52a80bda521bbd61f5b03b203058"
+    },
+    {
+      "file": "kicad_sch_project.my",
+      "old_sha256": "13dfaa5f68868d867d137829a8c9ff39fde8b3e10e78d645da6e160da38e43e8",
+      "sha256": "11f31dd94c588d648ad0754fe02ae08c20be5bf98c40f48d17e448cc4470d297"
+    },
+    {
+      "file": "kicad_sch_project_test.my",
+      "old_sha256": "5ad3a855297730d87cc9299ea7a7e016d400570cf89e6c57875e31780660a684",
+      "sha256": "5ad3a855297730d87cc9299ea7a7e016d400570cf89e6c57875e31780660a684"
+    },
+    {
+      "file": "kicad_sch_shape.my",
+      "old_sha256": "43c45b1f72c3ea6e47bd4f31d49f8b794d8824f43c74e46c20b00b78d1ba6939",
+      "sha256": "36b4e88b9e1ead0c6ad6f5740c8ef1af126e005cc1c2142989e9aeb0ed58cb4a"
+    },
+    {
+      "file": "kicad_sch_shape_test.my",
+      "old_sha256": "992cf327bab7737dee33c341563fd3f4e577b8546537d250a983c7de98b366f5",
+      "sha256": "bb6f544f1270d5998aa455fc0c5cced0a6136dd1f32d8dcf30593b7f2f82498d"
+    },
+    {
+      "file": "kicad_sch_sheet.my",
+      "old_sha256": "df965998a98143c724c439e08404031dadeb620a5ff347c902aa87b43c196a32",
+      "sha256": "df965998a98143c724c439e08404031dadeb620a5ff347c902aa87b43c196a32"
+    },
+    {
+      "file": "kicad_sch_sheet_test.my",
+      "old_sha256": "877b761d0119f5ae44430aeeba902f7492f9b09be7a87a6567e51a3792b4c5fe",
+      "sha256": "877b761d0119f5ae44430aeeba902f7492f9b09be7a87a6567e51a3792b4c5fe"
+    },
+    {
+      "file": "kicad_sch_stagger.my",
+      "old_sha256": "aa968e37f93424d00cd0c7e891420ac1d5c9475ea77faea7ee8fbcb0c72a30d1",
+      "sha256": "86f56e9b413e266f63fdac9528b0c0689d8b40d6ccaaf82a4ee4e8678499e36b"
+    },
+    {
+      "file": "kicad_sch_stagger_test.my",
+      "old_sha256": "61212a7e0b6b957cf7afd8b106a1b8c91f2c523f3701f4b523917bf9cfc878ae",
+      "sha256": "81ab32a05846c32b4d3f0c02334d21dfdcb45056b0a08a3c688e7b49e33a7f67"
+    },
+    {
+      "file": "kicad_sch_stub.my",
+      "old_sha256": "6ea2440c317595fb6d4b41a624fd3cab183d34e68abf3c40bb8741813a217c7c",
+      "sha256": "4de84c894e333f2b0d38aafe5ab111860e0ff3234ebc6deb227f3992b0a528cb"
+    },
+    {
+      "file": "kicad_sch_stub_test.my",
+      "old_sha256": "795a96e838610b02cd7d1bf1c39dda6fba7f1fadf271c9a01cf9a41761f67d3b",
+      "sha256": "8f8ac58c2075a67d0d8117aa2ce38c54292f4815fb684e97f43db931912628e8"
+    },
+    {
+      "file": "kicad_sch_testdata.my",
+      "old_sha256": "593d98a923eb78796eab45020591cc7443e18d70df8efeefff99352960236cca",
+      "sha256": "593d98a923eb78796eab45020591cc7443e18d70df8efeefff99352960236cca"
+    },
+    {
+      "file": "kicad_sch_textbox.my",
+      "old_sha256": "19431187b0ecf2dc571efd098882cb0790496715164d00b14aa89794eb533143",
+      "sha256": "e284b53cab442a5f2a615831087e7c361485d7edc3786c9da74d9c29dc4df995"
+    },
+    {
+      "file": "kicad_sch_textbox_test.my",
+      "old_sha256": "fe7921d51ac571d950dd4937e6358535d99ad43e1dfa6501e46b7ccbee8e9103",
+      "sha256": "fe7921d51ac571d950dd4937e6358535d99ad43e1dfa6501e46b7ccbee8e9103"
+    },
+    {
+      "file": "kicad_sch_vendor.my",
+      "old_sha256": "cadbb70d806479d0e4bd03aa64a746f2e575c658e34eda9eb4da9e1f10d1c518",
+      "sha256": "c80d53d013be7eeb9d9fa247f70f221b98f209fe9a72e8bc90d674f345c9d4ba"
+    },
+    {
+      "file": "kicad_sch_vendor_test.my",
+      "old_sha256": "cb81b892e2fe90c34d0702d9210167e2501d3d8e5e0f65d5534cf38db861e711",
+      "sha256": "12d2240754b91b2d5546c160c7c9c004544f6438e6eba316b600a93373bf340a"
+    },
+    {
+      "file": "kicad_sch_verify.my",
+      "old_sha256": "64b27b5090bf3a806ee7466cddc821f4aa178e2abbc42e4703caa3da7fc4ab40",
+      "sha256": "2e469b51f32a4d1fa48e72c7ddf2cd8ffa4a4b3da61600d4f0afd91a1433f4d6"
+    },
+    {
+      "file": "kicad_sch_verify_test.my",
+      "old_sha256": "b6956e6fcc9e2014d57092b1abb5f77b2fc6196847396f16d7ef37b7eafcf3b6",
+      "sha256": "e07b5b4f5224deac8d0d2b77fd427325102e766773fea1f2579526d441a07c09"
+    },
+    {
+      "file": "kicad_sch_wire.my",
+      "old_sha256": "56d56cef81c5877337233db10d5698e0d2ea798fcc3b1bba65bff8c07cdc720a",
+      "sha256": "56d56cef81c5877337233db10d5698e0d2ea798fcc3b1bba65bff8c07cdc720a"
+    },
+    {
+      "file": "kicad_sch_wire_test.my",
+      "old_sha256": "1f71df3479687dca2c397a36fea5a21502aa73d3ffaf28450c6fcd7dfaf2a5d6",
+      "sha256": "1f71df3479687dca2c397a36fea5a21502aa73d3ffaf28450c6fcd7dfaf2a5d6"
+    },
+    {
+      "file": "kicad_sym_library.my",
+      "old_sha256": "3c27732bf1710f938777515512ede403e8be9e286d4690f9a0db01c74ba980bd",
+      "sha256": "8ff1f5923b785a59fd4a7a3de01011bc49765f904696c5e75ffdec461f44e452"
+    },
+    {
+      "file": "kicad_sym_library_test.my",
+      "old_sha256": "8833c42f5e357fea45c91c1846bc89627a7359b3e1c8d1c28cb5a9f2e39d6a5f",
+      "sha256": "8833c42f5e357fea45c91c1846bc89627a7359b3e1c8d1c28cb5a9f2e39d6a5f"
+    },
+    {
+      "file": "kicad_sym_reader.my",
+      "old_sha256": "b3488cdcfdd62609b8c5a6be51e15f48517f6e891a3dab3c5474ec4c34e24e53",
+      "sha256": "82328ece020a1c75aab352e7dc4ed8c2c3e7e4f2f496c938f41bbeb9f89f2400"
+    },
+    {
+      "file": "kicad_sym_reader_test.my",
+      "old_sha256": "b035a6231450d46dfbff60b3fe89d37396e19779f20bef594b8b20daf260d1d7",
+      "sha256": "82b19bf244cbd15b31ce570526c1a862ee569f41b4568a371ae6e14116e0e17b"
+    },
+    {
+      "file": "kicad_sym_testdata.my",
+      "old_sha256": "2781e1545c6f48eb110742f7027f0b863b7c4479e77ede885f3f8ee62ebd3445",
+      "sha256": "2781e1545c6f48eb110742f7027f0b863b7c4479e77ede885f3f8ee62ebd3445"
+    }
+  ]
+}

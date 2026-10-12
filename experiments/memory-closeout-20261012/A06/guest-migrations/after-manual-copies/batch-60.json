@@ -1,0 +1,37 @@
+{
+  "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9",
+  "cases": [
+    {
+      "source": "tests/lang/rc_scope_inline.my",
+      "source_sha256": "046856a7f00318160cb816bf73e207625eb281c06e94aef972fedfd9845167a7",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_semantic_history.my",
+      "source_sha256": "e794e8361f35145924ae0b9f100e1ac22e17a859c3aba8a5d72d3b11facfbd5b",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_semantic_history.my:4:17: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut saved = list(mapping.values())\n                  ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_site_eliminations.my",
+      "source_sha256": "37e82c6ac7dece85311668053c56a3d11c2b3990fa1b3d461a48efc05668f01e",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_site_eliminations.my:54:5: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      m.stack[mutation_result_53] = item\n      ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_temporary_lifetimes.my",
+      "source_sha256": "f00a593691b8733d32da6b7b1eab15d5aaad83a2d55f5ec89340fd9bf059449d",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_temporary_lifetimes.my:61:19: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut ordered = sorted(source)\n                    ^\n",
+      "copy_changes": []
+    }
+  ]
+}

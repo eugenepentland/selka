@@ -1,0 +1,85 @@
+{
+  "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9",
+  "cases": [
+    {
+      "source": "tests/lang/iteration_identity.my",
+      "source_sha256": "77bfae351771b430a8521cdb56e93e688ce143e8516d20c8cab1e008305d7175",
+      "status": 1,
+      "stdout": "",
+      "stderr": "iteration_identity.my:5:9: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n          values[key] = values[key] + 1\n          ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/lambda_sort_keys.my",
+      "source_sha256": "0d7706f337900b9d0e084cec00d739433d65aa894a8ea5db2487c21096ccf561",
+      "status": 1,
+      "stdout": "",
+      "stderr": "lambda_sort_keys.my:21:12: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      return [for item in items yield item.name.copy()]\n             ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/live_place_iteration.my",
+      "source_sha256": "61679d50b0914d8a10faf46d9a5edd2f1ad7550050fb2585850e8b3578600ed8",
+      "status": 1,
+      "stdout": "",
+      "stderr": "live_place_iteration.my:78:9: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n          items[1] = 9\n          ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/migrated/surface_statements.my",
+      "source_sha256": "e73c5d3d6e90128bfa0c94a3a81b95e17da2efbd48820985f64ad5cb228c796d",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/migrated/surface_statements_case_2.my",
+      "source_sha256": "48546973725ae536313310c509f8e1e5049cd17d65979e40b3470d192fb1d0e5",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/move_elision.my",
+      "source_sha256": "6e634e3800fc3d67bab08f69b68e01e8ad0c733d3ed3a79fbb75c390ba8c858c",
+      "status": 1,
+      "stdout": "",
+      "stderr": "move_elision.my:59:13: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n              ps[i].x = ps[i].x + i\n              ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/properties.my",
+      "source_sha256": "1a126a85cadd1b2e018a84be17940d11d86051f80570c706e54d1f23339e84cc",
+      "status": 1,
+      "stdout": "",
+      "stderr": "properties.my:66:5: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      for key in d.keys():\n      ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/python_comprehension.my",
+      "source_sha256": "0af0792c14c6327a40a119ab5abfcad6faae4ee26a7e6c1e30491b76e04b3a42",
+      "status": 1,
+      "stdout": "",
+      "stderr": "python_comprehension.my:21:18: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut values = [for key in counts yield counts[key]]\n                   ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/python_core.my",
+      "source_sha256": "1d1bad086fd43989903778114842e7a50312a4ada2a3251cf6be606917d2b487",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_call_lifetimes.my",
+      "source_sha256": "ba4a5ef9061b8cac49863497fba9dde60a5b65f1688a150471f401e73e9ced1f",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    }
+  ]
+}

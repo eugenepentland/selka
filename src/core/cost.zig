@@ -23,43 +23,49 @@ pub fn allocation(module: *const ir.Module, function: *const ir.Function, inst: 
         .call_indirect => blk: {
             const target = function.inst(function.resolve(inst.a));
             if (target.op == .func_ref and target.data < module.functions.items.len)
-                break :blk calleeAllocation(&module.functions.items[@intCast(target.data)]);
+                break :blk calleeAllocation(module, &module.functions.items[@intCast(target.data)]);
             break :blk .unresolved;
         },
-        .call => if (inst.a.index() < module.functions.items.len) calleeAllocation(&module.functions.items[inst.a.index()]) else .unresolved,
+        .call => if (inst.a.index() < module.functions.items.len) calleeAllocation(module, &module.functions.items[inst.a.index()]) else .unresolved,
         else => .never,
     };
 }
 
-fn calleeAllocation(callee: *const ir.Function) Allocation {
+fn calleeAllocation(module: *const ir.Module, callee: *const ir.Function) Allocation {
+    if (@import("borrowed_provider.zig").declaration(module, callee) catch return .unresolved) return .never;
+    if (@import("borrowed_provider.zig").keepalive(module, callee) catch return .unresolved) return .never;
+    if (@import("borrow_selection.zig").declaration(module, callee) catch return .unresolved) return .never;
+    if (@import("aggregate_provider.zig").marker(module, callee) catch return .unresolved) return .never;
+    const allocation_free = runtimeAllocationFree(callee.name) or (!module.zero_rc and std.mem.eql(u8, callee.name, "myl_core_text_encode"));
     return switch (callee.signature.linkage) {
         .internal => .never,
         // Scalar runtime helpers use the extern ABI. Only declarations synthesized
         // by the compiler (no source name span) may use the audited allowlist;
         // source extern declarations remain opaque even with a helper's name.
-        .extern_c => if (callee.span == 0 and runtimeAllocationFree(callee.name)) .never else .unresolved,
-        .runtime_c => if (runtimeAllocationFree(callee.name)) .never else .may,
+        .extern_c => if (callee.span != 0) .unresolved else if (allocation_free) .never else if (std.mem.eql(u8, callee.name, "myl_core_text_encode") or std.mem.eql(u8, callee.name, "myl_core_buffer_reverse")) .may else .unresolved,
+        .runtime_c => if (allocation_free) .never else .may,
     };
 }
 
 /// Explicit audited allowlist: an unrecognized runtime helper may allocate.
-/// Identity encode retains its argument; reverse changes bytes without growing.
+/// Owned encode and buffer reverse allocate independent storage; borrowed views do not.
 pub fn runtimeAllocationFree(symbol: []const u8) bool {
     const names = [_][]const u8{
-        "myl_core_str_eq",                 "myl_core_str_chars",          "myl_core_str_offset",
-        "myl_core_str_index_offset",       "myl_core_bytes_index_offset", "myl_core_str_find",
-        "myl_core_str_contains",           "myl_core_str_starts",         "myl_core_str_ends",
-        "myl_core_str_parse_int",          "myl_core_parse_int_range",    "myl_core_parse_float_range",
-        "myl_core_saturating_integer",     "myl_core_bytes_valid_list",   "myl_core_bytes_find",
-        "myl_core_bytes_contains_value",   "myl_core_split_ws_start",     "myl_core_split_ws_end",
-        "myl_core_text_encode",            "myl_core_text_every",         "myl_core_text_scalar_valid",
-        "myl_core_text_ord",               "myl_core_text_bound",         "myl_core_text_search",
-        "myl_core_bytes_search",           "myl_core_bytes_find_any",     "myl_core_bytes_utf8_count",
-        "myl_core_bytes_utf8_count_range", "myl_core_buffer_capacity",    "myl_core_buffer_range_valid",
-        "myl_core_buffer_reserve_valid",   "myl_core_buffer_reverse",     "myl_core_from_hex_valid",
-        "myl_core_span_eq",                "myl_core_span_chars",         "myl_core_span_starts",
-        "myl_core_span_ends",              "myl_core_span_contains",      "myl_core_octets_compare",
-        "myl_core_dict_ordinal",
+        "myl_core_str_eq",               "myl_core_str_chars",          "myl_core_str_offset",
+        "myl_core_str_index_offset",     "myl_core_bytes_index_offset", "myl_core_str_find",
+        "myl_core_str_contains",         "myl_core_str_starts",         "myl_core_str_ends",
+        "myl_core_str_parse_int",        "myl_core_parse_int_range",    "myl_core_parse_float_range",
+        "myl_core_saturating_integer",   "myl_core_bytes_valid_list",   "myl_core_bytes_find",
+        "myl_core_bytes_contains_value", "myl_core_split_ws_start",     "myl_core_split_ws_end",
+        "myl_core_text_every",           "myl_core_text_scalar_valid",  "myl_core_text_ord",
+        "myl_core_text_bound",           "myl_core_text_search",        "myl_core_bytes_search",
+        "myl_core_bytes_find_any",       "myl_core_bytes_utf8_count",   "myl_core_bytes_utf8_count_range",
+        "myl_core_buffer_capacity",      "myl_core_buffer_range_valid", "myl_core_buffer_reserve_valid",
+        "myl_core_from_hex_valid",       "myl_core_span_eq",            "myl_core_span_chars",
+        "myl_core_span_starts",          "myl_core_span_ends",          "myl_core_span_contains",
+        "myl_core_octets_compare",       "myl_core_dict_ordinal",       "myl_core_view_slice",
+        "myl_core_view_chars",           "myl_core_view_index",         "myl_core_view_byte",
+        "myl_core_owned_same_block",     "myl_core_round_float",
     };
     for (names) |name| if (std.mem.eql(u8, name, symbol)) return true;
     return false;

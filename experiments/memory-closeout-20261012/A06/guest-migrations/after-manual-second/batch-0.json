@@ -1,0 +1,29 @@
+{
+  "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9",
+  "cases": [
+    {
+      "source": "tests/lang/rc_variant_reads.my",
+      "source_sha256": "73ce3d60da1a2dc9e1b56995e30684f23de97ddd49dd6abe0cfffda9bd8e9d03",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/value_equality.my",
+      "source_sha256": "9b3ae34e56a37dc4f8996933beb3bd482d37a9ca316876dd2f84f7da63d22a26",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_site_eliminations.my",
+      "source_sha256": "f5937dd17ca6d6a244d40a7730722bcdb2545dd6bff967d2b2c110d971dba260",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_site_eliminations.my:58:5: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      m.names[0] = name\n      ^\n",
+      "copy_changes": []
+    }
+  ]
+}

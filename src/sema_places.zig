@@ -206,8 +206,8 @@ fn checkTuple(comptime Checker: type, self: *Checker, node: ast.Node, inputs: []
     out.data = .{ .record = initializers };
 }
 /// Bind the names of a `x, y = value` target list to the positional fields of
-/// one tuple value. The value is evaluated once into its own slot before any
-/// name is written, which is what makes `a, b = b, a` swap.
+/// one tuple value. Evaluate it once and stage every field before any target's
+/// effects or writes, so checked owners transfer completely and swaps stay ordered.
 fn checkTupleAssignment(comptime Checker: type, self: *Checker, assignment: @FieldType(@FieldType(ast.Node, "data"), "field_assignment"), temporaries: []const typed.Type) Error!typed.Node {
     const target = self.syntax.nodes.items[@backingInt(assignment.target)];
     const names = target.data.tuple;
@@ -223,9 +223,15 @@ fn checkTupleAssignment(comptime Checker: type, self: *Checker, assignment: @Fie
     const b: collections.Builder(Checker) = .{ .checker = self, .span = target.span };
     var statements: std.ArrayList(typed.StatementId) = .empty;
     const value_slot = try b.local(value_type);
-    try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = value_slot, .value = checked } }));
-    for (names, 0..) |target_id, index| {
-        const element = try b.node(schema.fields[index].ty, .{ .field = .{ .base = try b.read(value_slot), .index = index } });
+    const fields = try self.allocator.alloc(?typed.LocalId, names.len);
+    for (names, schema.fields, fields) |target_id, field, *slot| {
+        const destination = self.syntax.nodes.items[@backingInt(target_id)];
+        const ignored = destination.data == .name and std.mem.eql(u8, self.src.text(destination.data.name), "_");
+        slot.* = if (ignored) null else try b.local(field.ty);
+    }
+    try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = value_slot, .value = checked, .unpack = fields } }));
+    for (names, fields) |target_id, slot| {
+        const element = try b.read(slot orelse continue);
         switch (self.syntax.nodes.items[@backingInt(target_id)].data) {
             .name => |name| try bindDestructured(Checker, self, name, element, assignment.declaration, &statements),
             else => try statements.append(self.allocator, try b.stmt(.{ .discard = try destructuredPlace(Checker, self, target_id, element, temporaries) })),
@@ -381,15 +387,13 @@ fn checkFieldAssignment(comptime Checker: type, self: *Checker, node: ast.Node, 
     try self.require(self.nodes.items[@backingInt(value)].ty, expected, node.span);
     const extending = assignment.op == .add and expected.isAggregate() and self.catalog.records[expected.recordIndex()].isCollection() and self.catalog.records[expected.recordIndex()].collection.kind == .list;
     if (extending) {
-        // Capture the field before the RHS, extend that value, then publish it
-        // through the same refreshed destination as other augmented fields.
+        // Capture the field before the RHS. The mutating collection operation
+        // writes its result through this exact receiver path, as field.extend
+        // does; rebuilding the record again would move a borrowed field loan.
         const receiver = try b.local(expected);
         try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = receiver, .value = current } }));
         try statements.append(self.allocator, try b.stmt(.{ .discard = try b.operation(receiver, .extend, try self.allocator.dupe(typed.NodeId, &.{value})) }));
-        const stored = try b.local(expected);
-        try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = stored, .value = try b.read(receiver) } }));
-        if (destination.refresh) |refresh| try statements.append(self.allocator, refresh);
-        value = try b.read(stored);
+        return b.block(statements.items, try b.node(.unit, .unit));
     }
     if (assignment.op != .set and !extending) {
         // `target.field op= value` reads the field through the same once-evaluated

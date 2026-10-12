@@ -11,15 +11,15 @@ enum Choice:
 
 
 func pair(items: int[]) -> Pair:
-    return Pair(left=items, right=items)
+    return Pair(left=items.copy(), right=items.copy())
 
 
 func selected(value: Choice) -> int[]:
     match value:
         case Choice.both(value=fields):
-            return fields.right
+            return fields.right.copy()
         case Choice.single(value=items):
-            return items
+            return items.copy()
         case Choice.empty:
             return []
 
@@ -34,7 +34,7 @@ public func test_record_fields_survive_original_and_sibling_replacement() -> boo
 
 public func test_record_update_preserves_prior_aggregate_snapshot() -> bool:
     mut value = Pair(left=[1], right=[2])
-    mut before = value
+    mut before = value.copy()
     value.right = [3, 4]
     return before.right[0] == 2 and len(value.right) == 2
 
@@ -67,18 +67,18 @@ public func test_fixed_array_constructor_owns_its_managed_elements() -> bool:
 
 public func test_fixed_array_replace_retires_only_the_replaced_snapshot() -> bool:
     mut values: FixedArray[int[], 2] = FixedArray[int[], 2]([[1], [2]])
-    mut before = values
+    mut before = values.copy()
     values[0] = [3]
     return before[0][0] == 1 and values[0][0] == 3 and values[1][0] == 2
 
 
 func unwrapped(candidate: int[]?) -> int[]?:
-    mut items = try candidate
+    mut items = try candidate.copy()
     return Some(items)
 
 
 func propagated(candidate: Result[int[], int[]]) -> Result[int[], int[]]:
-    mut items = try candidate
+    mut items = try candidate.copy()
     return Ok(items)
 
 
@@ -92,7 +92,7 @@ func wrapped(candidate: Result[int[], int[]]) -> Result[bool, Failure]:
         case Ok(items):
             return Ok(len(items) > 0)
         case Err(error):
-            return Err(Failure.details(value=error))
+            return Err(Failure.details(value=error.copy()))
 
 
 public func test_option_propagation_owns_success_and_releases_none() -> bool:
@@ -141,7 +141,7 @@ record Node:
 
 public func test_boxed_record_update_preserves_an_earlier_snapshot() -> bool:
     mut node = Node(values=[1], next=None)
-    mut before = node
+    mut before = node.copy()
     node.values = [2, 3]
     return before.values[0] == 1 and len(node.values) == 2
 
@@ -172,7 +172,7 @@ public func test_propagating_none_releases_preceding_constructor_operands() -> b
 
 public func test_reordered_constructor_fields_preserve_aliased_input_snapshots() -> bool:
     mut source = [17, 23]
-    mut result = Pair(right=source, left=source)
+    mut result = Pair(right=source.copy(), left=source.copy())
     source.append(99)
     result.left.append(31)
     return result.right == [17, 23] and result.left == [17, 23, 31] and source == [17, 23, 99]
@@ -187,14 +187,14 @@ public func test_constructor_publishes_nested_holds_and_converts_held_mapping_in
     mut mapping = {1: 7}
     mut live = list(mapping.values())
     mapping[1] = 13
-    mut prior = mapping
+    mut prior = mapping.copy()
     mut result = HeldFields(live=live, snapshot=mapping)
     result.snapshot[1] = 11
     return list(result.live) == [7] and result.snapshot[1] == 11 and prior[1] == 13
 
 
 func pinned_pair(mut items: int[]) -> Pair:
-    mut result = Pair(left=items, right=items)
+    mut result = Pair(left=items.copy(), right=items.copy())
     items.append(29)
     return result
 

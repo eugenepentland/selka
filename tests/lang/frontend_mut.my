@@ -27,7 +27,7 @@ public func test_scalar_and_nested_mut_writeback() -> bool:
 
 public func test_mut_snapshot_independence() -> bool:
     const original = Point(x=1, values=[2, 3])
-    mut changed = original
+    mut changed = original.copy()
     changed.values[0] = 9
     return original.values == [2, 3] and changed.values == [9, 3]
 
@@ -86,7 +86,7 @@ public func test_mut_callback_updates_caller_scalar() -> bool:
 
 public func test_snapshot_survives_whole_mut_rebinding() -> bool:
     mut values = [1, 2]
-    const original = values
+    const original = values.copy()
     replace_points(mut values)
     return original == [1, 2] and values == [7, 8]
 
@@ -98,7 +98,8 @@ func observe_snapshot(before: int[], mut changed: int[]) -> int:
 
 public func test_readonly_input_is_independent_of_mut_input() -> bool:
     mut values = [1, 2]
-    const observed = observe_snapshot(values, mut values)
+    const input_snapshot = values.copy()
+    const observed = observe_snapshot(input_snapshot, mut values)
     return observed == 1 and values == [9]
 
 

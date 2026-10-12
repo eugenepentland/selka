@@ -1,0 +1,38 @@
+{
+  "base": "78b4bb5934748d5942389b12dfe66cb0031cafdc",
+  "integration_branch": "codex/text-gaps-20261012",
+  "workers": [
+    {
+      "id": "split",
+      "worktree": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split",
+      "branch": "codex/text-gaps-20261012-split"
+    },
+    {
+      "id": "json",
+      "worktree": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-json",
+      "branch": "codex/text-gaps-20261012-json"
+    },
+    {
+      "id": "csv",
+      "worktree": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv",
+      "branch": "codex/text-gaps-20261012-csv"
+    },
+    {
+      "id": "bench",
+      "worktree": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-bench",
+      "branch": "codex/text-gaps-20261012-bench"
+    }
+  ],
+  "agent_model": "gpt-6.1-sol",
+  "agent_reasoning_effort": "low",
+  "target": "Improve unchanged string_split, json_transform and csv_aggregate microbenchmarks below 1.0 runtime ratio against Zig ReleaseFast, Rust and Go; report small and large, independent oracles, memory separately. Full application benchmarks explicitly deferred.",
+  "baseline_install": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install",
+  "baseline_compiler_sha256": "ec423f5ff7dba37f5d39489fec12b9c851754c0ad69125fc8aaafe85e31ea44e",
+  "constraints": [
+    "No historical evidence/benchmark port/source edits",
+    "No weakened correctness/ownership contracts or RC fallback",
+    "Shared build/timing admission",
+    "Coordinator integrates shared files",
+    "No push or Guardian FEEDBACK edits"
+  ]
+}

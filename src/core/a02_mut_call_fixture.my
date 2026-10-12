@@ -1,0 +1,79 @@
+# spec-case: NEW-CORE-ZERO-RC-OWNED-MUT-CALL-1
+record Bundle:
+    mapping: dict[int, int[][]]
+    label: str
+
+
+func selected(mut evaluations: int) -> int:
+    evaluations += 1
+    return -2
+
+
+func grow(mut values: int[], seed: int) -> str:
+    for i in range(40):
+        values.append(seed + i)
+    return "grown-" + str(seed)
+
+
+func replace(mut values: int[], seed: int) -> str:
+    values = [seed]
+    if seed > 0:
+        return "replaced-" + str(seed)
+    values.append(0)
+    return "zero"
+
+
+func pair(mut left: int[], mut right: int[]):
+    left.append(71)
+    right.append(72)
+
+
+func update(mut target: dict[int, int]):
+    target[1] = target[1] + 1
+
+
+func clone_during(mut target: dict[int, int], source: dict[int, dict[int, int]]) -> dict[int, dict[int, int]]:
+    target[1] = target[1]
+    return source.copy()
+
+
+func effect(mut values: int[], out: Stream):
+    out.print("callee-entered")
+    values.append(99)
+
+
+func main(args: str[], out: Stream) -> int:
+    mut bundle = Bundle(mapping={0: [[1], [2]]}, label="bundle-" + str(0))
+    if len(args) > 0:
+        if args[0] == "bounds":
+            effect(mut bundle.mapping[0][-3], out)
+        else:
+            _ = grow(mut bundle.mapping[9][0], 1)
+        return 9
+    const saved = bundle.copy()
+    mut evaluations = 0
+    const first = grow(mut bundle.mapping[0][selected(mut evaluations)], 10)
+    const action = replace
+    const second = action(mut bundle.mapping[0][1], 20)
+    assert evaluations == 1 and len(bundle.mapping[0][0]) == 41
+    assert bundle.mapping[0][0][40] == 49 and bundle.mapping[0][1] == [20]
+    assert saved.mapping[0] == [[1], [2]] and bundle.label == saved.label
+    assert first == "grown-10" and second == "replaced-20"
+    mut rows = [[3]]
+    pair(mut bundle.mapping[0][1], mut rows[0])
+    assert bundle.mapping[0][1] == [20, 71] and rows == [[3, 72]]
+    bundle.mapping.clear()
+    assert first == "grown-10" and second == "replaced-20"
+    mut original = {0: {1: 7}}
+    const source = original.copy()
+    mut copied = clone_during(mut original[0], source)
+    update(mut original[0])
+    copied[0][1] = 13
+    assert copied[0][1] == 13 and original[0][1] == 8 and source[0][1] == 7
+    const changed = original[0][1]
+    original.clear()
+    assert copied[0][1] == 13 and source[0][1] == 7
+    for i in range(20):
+        _ = replace(mut rows[0], i)
+    out.print(41, evaluations, changed, rows[0][0])
+    return 0

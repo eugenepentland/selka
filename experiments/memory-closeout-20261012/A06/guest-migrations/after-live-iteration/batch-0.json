@@ -1,0 +1,53 @@
+{
+  "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9",
+  "cases": [
+    {
+      "source": "tests/lang/root_liveness.my",
+      "source_sha256": "541ccfed4a18298e7d810effbaf05187b8637dd22a5ed1ddc1fb1527044e9d49",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/immutable_equal.my",
+      "source_sha256": "01abe1b809ddcb2ddf1971a38aabd6e6621d7edb285559fafeabed1b418da812",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/iteration_identity.my",
+      "source_sha256": "9265a1b7d2c1e8d0ce7f4839cb682021291183f6efbad1906c6c7a0b2a562933",
+      "status": 1,
+      "stdout": "",
+      "stderr": "iteration_identity.my:4:28: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      const iteration_keys = list(values.keys())\n                             ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/live_place_iteration.my",
+      "source_sha256": "7fb7b3b4ae150828c110cbd7b0868698686eb5ae2e016f498fbb630ab083501a",
+      "status": 1,
+      "stdout": "",
+      "stderr": "live_place_iteration.my:300:28: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      const iteration_keys = list(mapping.keys())\n                             ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_nonheld_captures.my",
+      "source_sha256": "26f7c379f923d67b2624f4db9a4bcb0c55c8605573b3a368d0a5ac59d1ee1b93",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_pin_elide.my",
+      "source_sha256": "f0fa5879ea45045b6aa20f7cc79ea4ae8bc8533c90fdda44d964d7114e33edee",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_pin_elide.my:193:5: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n      for i in range(4):\n      ^\n",
+      "copy_changes": []
+    }
+  ]
+}

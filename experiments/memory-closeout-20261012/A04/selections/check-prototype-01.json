@@ -1,0 +1,124 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+  "compiler_sha256": "d8fb53098216955392a1fe999f0d3a5ce151455ade959f161b26709f8b451be8",
+  "source_manifest": "source-manifest-prototype-01.json",
+  "cases": {
+    "a04_borrow_selections.my": {
+      "source_sha256": "2ee970b40ca3e130d48da34189ed0d103677b24bb6d5751ddf174852a23f15d2",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "check",
+        "tests/lang/a04_borrow_selections.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "affine_optional.my": {
+      "source_sha256": "059bf94faf6b9fddc96c0bdadaf7a3fc7864bb3849ceec2408cc4119cef51652",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A04/selections/affine_optional.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "experiments/memory-closeout-20261012/A04/selections/affine_optional.my:6:20: error[E_GENERIC_REQUIREMENT]: type argument does not guarantee the nominal template's required operations\n  func choose(value: Owned?, fallback: Owned) -> Owned effects(filesystem):\n                     ^\n  note: experiments/memory-closeout-20261012/A04/selections/affine_optional.my:1:1: type parameter requirements are declared here\n"
+    },
+    "second_parent_invalidated.my": {
+      "source_sha256": "db870a9aed1bdaeccfdc29d92d2b8fd53f6626ba0a78850fff074c51c2da18cc",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A04/selections/second_parent_invalidated.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "experiments/memory-closeout-20261012/A04/selections/second_parent_invalidated.my:11:44: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      return read(min(first, second), change(mut second))\n                                             ^\n"
+    },
+    "selected_view.my": {
+      "source_sha256": "31d9ab4f4d78e6cb6a41b6e6c2096646f9125a8c71dd81a0e5654d1fea370409",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A04/selections/selected_view.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "experiments/memory-closeout-20261012/A04/selections/selected_view.my:4:18: error[E_ZERO_RC_VIEW_ESCAPE]: a view cannot borrow from a selection with multiple possible owners; copy the selected value into a named owner first\n      const view = min(first, second).borrow(0, 1)\n                   ^\n"
+    },
+    "fresh_escape.my": {
+      "source_sha256": "b27453920243dcebe9f10159742c73d19cb6bc6e4cfe809fb2fbc22ae27776f0",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A04/selections/fresh_escape.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "experiments/memory-closeout-20261012/A04/selections/fresh_escape.my:2:12: error[E_SINGLE_OWNER_BORROW]: a borrowed selection cannot be stored or returned; make an explicit .copy()\n      return min(\"a\" + str(1), \"b\" + str(2))\n             ^\n"
+    },
+    "optional_receiver_invalidated.my": {
+      "source_sha256": "9605435dce64ca9324700a95f0c5291a5fe3286029924d4d5b9fb4d52f42accd",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A04/selections/optional_receiver_invalidated.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "experiments/memory-closeout-20261012/A04/selections/optional_receiver_invalidated.my:7:39: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      return len(value.unwrap_or(change(mut value)).copy())\n                                        ^\n"
+    },
+    "first_parent_invalidated.my": {
+      "source_sha256": "5ff292cffcae59422bab2ad1bf9d5f4a0717fc46351cec889867e63057110c4a",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A04/selections/first_parent_invalidated.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "experiments/memory-closeout-20261012/A04/selections/first_parent_invalidated.my:11:44: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      return read(min(first, second), change(mut first))\n                                             ^\n"
+    },
+    "first_argument_invalidated.my": {
+      "source_sha256": "91cb1678e8a7486b0e4530138204a0f31449b0399cedf41962fed65cacbd39f9",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A04/selections/first_argument_invalidated.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "experiments/memory-closeout-20261012/A04/selections/first_argument_invalidated.my:7:34: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      return len(min(value, change(mut value)).copy())\n                                   ^\n"
+    },
+    "pending_result_optional.my": {
+      "source_sha256": "f81d04dbe31eccde1a02ca2a8d6f2aa2243305f6c363aae56157b313c750a354",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A04/selections/pending_result_optional.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "experiments/memory-closeout-20261012/A04/selections/pending_result_optional.my:1:20: error[E_GENERIC_REQUIREMENT]: type argument does not guarantee the nominal template's required operations\n  func choose(value: Result[str, str]?, fallback: Result[str, str]) -> Result[str, str]:\n                     ^\n  note: experiments/memory-closeout-20261012/A04/selections/pending_result_optional.my:1:1: type parameter requirements are declared here\n"
+    }
+  }
+}

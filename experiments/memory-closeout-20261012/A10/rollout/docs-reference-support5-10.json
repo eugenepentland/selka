@@ -1,0 +1,267 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "default": false,
+  "total_blocks": 33,
+  "selected_blocks": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/python-syntax.md",
+      "line": 122,
+      "source": "# doc: expect 42\nfunc main() -> int:\n    mut flags = 6 | 1\n    mut mask = 12 & 10\n    if 1 | 2 ^ 3 & 1 != 3 or (5 ^ 3) != 6:\n        return 1\n    return flags * mask - 14\n",
+      "sha256": "bca101d670de341ed34c43962236bc86f71caf0dca544ad6ce1baff5bba04db1"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/python-syntax.md",
+      "line": 132,
+      "source": "# doc: expect 42\nfunc main() -> int:\n    mut x = 5\n    if not (0 < x < 10 and 1 <= x <= 5 and x == 5 != 6):\n        return 1\n    if not (\"abc\" < \"abd\") or \"ab\" * 2 != \"abab\":\n        return 3\n    return 42\n",
+      "sha256": "943f3b111672b8e92d7881b351db86c0713483262b51205a0292cea75354c3b9"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/python-syntax.md",
+      "line": 171,
+      "source": "# doc: expect 42\nfunc label(count: int, items: int[]) -> str:\n    return f\"total {count} of {len(items)}\"\n\nfunc main() -> int:\n    if label(7, [1, 2, 3]) == \"total 7 of 3\":\n        return 42\n    return 0\n",
+      "sha256": "2c93bd40c23dc320b247fb9aabf422f0a9e64e0cb34d3834494c8b9f43d2a0aa"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/python-syntax.md",
+      "line": 210,
+      "source": "# doc: expect 42\nfunc main() -> int:\n    mut source = [1, 2, 3, 4]\n    mut kept = [for value in source if value > 2 yield value * 7]\n    mut grid = [[1, 2], [3, 4]]\n    mut flat: int[] = []\n    for row in grid:\n        for x in row:\n            if x % 2 == 0:\n                flat.append(x)\n    return kept[0] + kept[1] - 7 + flat[1] - flat[0] - 2\n",
+      "sha256": "4537d85d28c52e5b8b61f58239aa209ba0cf7c09cf86cc52ab333b2c83d3a3b9"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/python-syntax.md",
+      "line": 232,
+      "source": "# doc: expect 42\nfunc main() -> int:\n    mut prices = {\"pear\": 3, \"fig\": 5, \"kiwi\": 2}\n    mut doubled = {name.copy(): price * 2 for name, price in prices.items() if price > 2}\n    mut squares = {x: x * x for x in range(5)}\n    mut paired = {k.copy(): v for k, v in zip([\"a\", \"b\"], [10, 20])}\n    return doubled[\"fig\"] + squares[4] + paired[\"a\"] + len({c for c in \"hello\"}) + 2\n",
+      "sha256": "be7846daf52ee36100b5e4c7cca222a0f54e966cb95fd0a0918a1c508e8fa28a"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/python-syntax.md",
+      "line": 254,
+      "source": "# doc: expect 42\nfunc main() -> int:\n    mut xs = [4, 1, 3]\n    if not any(x > 3 for x in xs) or all(x > 1 for x in xs):\n        return 1\n    mut ordered = sorted(x * 10 for x in xs)\n    mut text = \"-\".join(str(x) for x in xs)\n    return sum(x * x for x in xs) + max(x for x in xs) + ordered[0] + len(text) - 3\n",
+      "sha256": "47ce07782dd5038c7727aa6132cdf58ca13474e39463daf49d8208e7d7cc27dd"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/python-syntax.md",
+      "line": 269,
+      "source": "# doc: expect-error E_GENERATOR\nfunc main() -> int:\n    mut squares = (x * x for x in [1, 2, 3])\n    return 0\n",
+      "sha256": "0675c082deb3f2b21c7c163dfdd3cecdf9e38fc1e4a8a35904b9646ae9b43e01"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/python-syntax.md",
+      "line": 296,
+      "source": "func main() -> int:\n    mut items = [1, 2]\n    mut saved = items.copy()\n    mut total = 0\n    for value in items:\n        total += value\n        items[1] = 9\n        if value == 9:\n            items.append(3)\n    assert total == 13\n    assert saved == [1, 2]\n    return 0\n",
+      "sha256": "6be6c16116cc4fb9c5b9ea9ade2ad885abef05054909dee3cbd04e3cabd8b8fe"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/python-syntax.md",
+      "line": 323,
+      "source": "# doc: expect 42\nrecord Point:\n    x: int\n    y: int\n\nenum Shape:\n    empty\n    radius(value: int)\n    point(value: Point)\n\nfunc score(shape: Shape) -> int:\n    match shape:\n        case Shape.empty:\n            return 0\n        case Shape.radius(value=r):\n            return r * r\n        case Shape.point(value=p):\n            return p.x + p.y\n\nfunc main() -> int:\n    return score(Shape.point(value=Point(x=2, y=4))) + score(Shape.radius(value=6))\n",
+      "sha256": "047d5174f928eb780ae13e47a64a8fca54b2b000eb0c53c95b971fe609b47714"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/python-syntax.md",
+      "line": 360,
+      "source": "# doc: expect 42\nenum Status:\n    ok\n    missing\n\nfunc codes() -> [Status]int:\n    return {Status.missing: 4, Status.ok: 38}\n\nfunc total(values: FixedArray[int, 2]) -> int:\n    return values[0] + values[1]\n\nfunc main() -> int:\n    mut fixed: FixedArray[int, 2] = FixedArray[int, 2]([0, 0])\n    mut table = codes()\n    return total(fixed) + table[Status.ok] + table[Status.missing]\n",
+      "sha256": "a2d04744e6e82c8a2a22ac94850d85792bef071c4ccd3d1a3d05514cc847681e"
+    }
+  ],
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "doctest",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/docs-reference-support5-10",
+    "--jobs",
+    "1",
+    "--report",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/docs-reference-support5-10/report.json",
+    "--experimental-zero-rc"
+  ],
+  "status": 1,
+  "stdout": "  README.md: 7 run, 1 checked, 0 skipped, 0 mis-tagged, 2 failed\nFAILED README.md:47: exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SINGLE_OWNER_BORROW\",\"severity\":\"error\",\"message\":\"an element read is borrowed; use .copy() or pop() to obtain an owned value\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit004/main.my\",\"start\":{\"line\":3,\"column\":43},\"end\":{\"line\":3,\"column\":89},\"bytes\":{\"start\":112,\"end\":158}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\nFAILED README.md:75: exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SINGLE_OWNER_OVERLAP\",\"severity\":\"error\",\"message\":\"a value cannot be moved or mutated while another argument or iteration borrows it\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit007/main.my\",\"start\":{\"line\":7,\"column\":9},\"end\":{\"line\":7,\"column\":21},\"bytes\":{\"start\":145,\"end\":157}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\nDoc examples: 1 files scanned, 10 blocks found, 7 run, 1 checked, 0 skipped, 0 mis-tagged, 2 failed\n",
+  "stderr": "",
+  "doctest_report": {
+    "version": "doc-examples-v1",
+    "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+    "totals": {
+      "run": 7,
+      "checked": 1,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 2
+    },
+    "files": {
+      "README.md": {
+        "blocks": 10,
+        "run": 7,
+        "checked": 1,
+        "skipped": 0,
+        "mistagged": 0,
+        "failed": 2,
+        "skips": []
+      }
+    },
+    "units": [
+      {
+        "label": "README.md:1",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '42'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit000/main.my",
+          "--diagnostics=json",
+          "--print-result",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit000/objects"
+        ]
+      },
+      {
+        "label": "README.md:11",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '42'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit001/main.my",
+          "--diagnostics=json",
+          "--print-result",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit001/objects"
+        ]
+      },
+      {
+        "label": "README.md:22",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '42'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit002/main.my",
+          "--diagnostics=json",
+          "--print-result",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit002/objects"
+        ]
+      },
+      {
+        "label": "README.md:33",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '42'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit003/main.my",
+          "--diagnostics=json",
+          "--print-result",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit003/objects"
+        ]
+      },
+      {
+        "label": "README.md:47",
+        "kind": "block",
+        "document": "README.md",
+        "status": "failed",
+        "detail": "exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SINGLE_OWNER_BORROW\",\"severity\":\"error\",\"message\":\"an element read is borrowed; use .copy() or pop() to obtain an owned value\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit004/main.my\",\"start\":{\"line\":3,\"column\":43},\"end\":{\"line\":3,\"column\":89},\"bytes\":{\"start\":112,\"end\":158}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit004/main.my",
+          "--diagnostics=json",
+          "--print-result",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit004/objects"
+        ]
+      },
+      {
+        "label": "README.md:57",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '42'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit005/main.my",
+          "--diagnostics=json",
+          "--print-result",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit005/objects"
+        ]
+      },
+      {
+        "label": "README.md:68",
+        "kind": "block",
+        "document": "README.md",
+        "status": "checked",
+        "detail": "rejected with ['E_GENERATOR']",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit006/main.my",
+          "--diagnostics=json",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit006/objects"
+        ]
+      },
+      {
+        "label": "README.md:75",
+        "kind": "block",
+        "document": "README.md",
+        "status": "failed",
+        "detail": "exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SINGLE_OWNER_OVERLAP\",\"severity\":\"error\",\"message\":\"a value cannot be moved or mutated while another argument or iteration borrows it\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit007/main.my\",\"start\":{\"line\":7,\"column\":9},\"end\":{\"line\":7,\"column\":21},\"bytes\":{\"start\":145,\"end\":157}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit007/main.my",
+          "--diagnostics=json",
+          "--print-result",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit007/objects"
+        ]
+      },
+      {
+        "label": "README.md:90",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '42'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit008/main.my",
+          "--diagnostics=json",
+          "--print-result",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit008/objects"
+        ]
+      },
+      {
+        "label": "README.md:114",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '42'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit009/main.my",
+          "--diagnostics=json",
+          "--print-result",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit009/objects"
+        ]
+      }
+    ],
+    "mistagged": []
+  },
+  "success": false
+}

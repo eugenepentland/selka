@@ -1,0 +1,128 @@
+
+
+# Stable sorting with a comparator, the counterpart of Zig's `std.mem.sort`.
+#
+# `std.mem.sort(T, items, ctx, lessThan)` is stable and sorts in place; the two
+# functions below do the same for a `list[T]` held by the caller:
+#
+#     support_sort.sort_by(mut pins, pin_less)              # lessThan(a, b)
+#     support_sort.sort_by_ctx(mut ids, cands, cand_less)   # lessThan(ctx, a, b)
+#
+# `less(a, b)` must be a strict weak order ("a sorts strictly before b"), as in
+# Zig; elements that compare equal keep their input order.  mylang has no
+# closures, so a Zig comparator that reads `ctx` receives it as an explicit first
+# argument (`sort_by_ctx`).  When a comparator is only "field ascending" (or
+# ascending on a tuple of fields), `xs.sort(key=lambda p: (p.x, p.y))` is shorter
+# and equally stable; use these when the order needs a descending string, a
+# custom string comparison, or context.
+# `min` is not visible inside a generic function on the pinned compiler
+# (E_UNKNOWN_SYMBOL), so the two bounds go through this plain helper.
+func lower(a: int, b: int) -> int:
+    if a < b:
+        return a
+    return b
+
+
+# Merge the sorted halves items[lo:mid] and items[mid:hi] through `tmp`.
+func merge_run[T](mut items: T[], mut tmp: T[], lo: int, mid: int, hi: int, less: func(T, T) -> bool):
+    mut i = lo
+    mut j = mid
+    mut k = lo
+    while i < mid and j < hi:
+        # take from the right run only when it is strictly smaller: keeps stability
+        if less(items[j], items[i]):
+            tmp[k] = items[j]
+            j = j + 1
+        else:
+            tmp[k] = items[i]
+            i = i + 1
+        k = k + 1
+    while i < mid:
+        tmp[k] = items[i]
+        i = i + 1
+        k = k + 1
+    while j < hi:
+        tmp[k] = items[j]
+        j = j + 1
+        k = k + 1
+    k = lo
+    while k < hi:
+        items[k] = tmp[k]
+        k = k + 1
+
+
+# Sort `items` in place, stably, by `less` (Zig `std.mem.sort(T, items, {}, less)`).
+public func sort_by[T](mut items: T[], less: func(T, T) -> bool):
+    mut n = len(items)
+    if n < 2:
+        return
+    mut tmp = items.copy()
+    mut width = 1
+    while width < n:
+        mut lo = 0
+        while lo < n:
+            mut mid = lower(lo + width, n)
+            mut hi = lower(lo + 2 * width, n)
+            if mid < hi:
+                merge_run(mut items, mut tmp, lo, mid, hi, less)
+            lo = lo + 2 * width
+        width = width * 2
+
+
+# Sort `ids` in place, stably, by `less(ctx, a, b)` (Zig `std.mem.sort(T, items, ctx, less)`).
+public func sort_by_ctx[T, C](mut items: T[], ctx: C, less: func(C, T, T) -> bool):
+    # Sort a permutation of indexes with the ctx-free merge, then apply it.
+    mut n = len(items)
+    if n < 2:
+        return
+    mut order = [for k in range(n) yield k]
+    mut snapshot = items.copy()
+    sort_indexes(mut order, snapshot, ctx, less)
+    mut k = 0
+    while k < n:
+        items[k] = snapshot[order[k]]
+        k = k + 1
+
+
+func merge_index_run[T, C](mut order: int[], mut tmp: int[], snapshot: T[], ctx: C, span: int[], less: func(C, T, T) -> bool):
+    mut lo = span[0]
+    mut mid = span[1]
+    mut hi = span[2]
+    mut i = lo
+    mut j = mid
+    mut k = lo
+    while i < mid and j < hi:
+        if less(ctx, snapshot[order[j]], snapshot[order[i]]):
+            tmp[k] = order[j]
+            j = j + 1
+        else:
+            tmp[k] = order[i]
+            i = i + 1
+        k = k + 1
+    while i < mid:
+        tmp[k] = order[i]
+        i = i + 1
+        k = k + 1
+    while j < hi:
+        tmp[k] = order[j]
+        j = j + 1
+        k = k + 1
+    k = lo
+    while k < hi:
+        order[k] = tmp[k]
+        k = k + 1
+
+
+func sort_indexes[T, C](mut order: int[], snapshot: T[], ctx: C, less: func(C, T, T) -> bool):
+    mut n = len(order)
+    mut tmp = order.copy()
+    mut width = 1
+    while width < n:
+        mut lo = 0
+        while lo < n:
+            mut mid = lower(lo + width, n)
+            mut hi = lower(lo + 2 * width, n)
+            if mid < hi:
+                merge_index_run(mut order, mut tmp, snapshot, ctx, [lo, mid, hi], less)
+            lo = lo + 2 * width
+        width = width * 2

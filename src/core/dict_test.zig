@@ -187,3 +187,159 @@ test "a probe scans an index-less table's cached hashes inline, and a table that
     try std.testing.expectEqualStrings(expected, try smallTablesOutput(arena, root, &.{"--release"}));
     try std.testing.expectEqualStrings(expected, try smallTablesOutput(arena, root, &.{ "--release", "--verify-facts" }));
 }
+
+// spec-case: NEW-CORE-DICT-1
+test "gap_dict copy sinks only across safe scalar update regions" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    for (0..8) |variant| {
+        var module: ir.Module = .{ .zero_rc = true };
+        const list = try module.intern(a, .{ .list = .str });
+        const dict = try module.intern(a, .{ .dict = .{ .key = .str, .value = .i64 } });
+        try module.functions.append(a, .{ .name = "myl_core_owned_octets_copy", .signature = .{ .params = &.{.str}, .ret = .str, .linkage = if (variant == 1) .extern_c else .runtime_c } });
+        var hand = try support.Hand.init(a, &module, "update", .{ .params = &.{ list, dict }, .ret = dict });
+        const source_list = try hand.param(0);
+        const mapping = try hand.param(1);
+        const zero = try hand.int(.i64, 0);
+        const key = try hand.emit(.{ .op = .list_get, .ty = .str, .a = source_list, .b = zero });
+        const copied = try hand.emit(.{ .op = .call, .ty = .str, .a = @fromBackingInt(@as(u32, 0)), .data = try hand.extra(&.{key}) });
+        if (variant == 2) _ = try hand.emit(.{ .op = .list_copy, .ty = list, .a = source_list });
+        if (variant == 3) _ = try hand.emit(.{ .op = .call, .ty = .str, .a = @fromBackingInt(@as(u32, 0)), .data = try hand.extra(&.{key}) });
+        if (variant == 4) _ = try hand.emit(.{ .op = .list_push, .ty = list, .a = source_list, .b = copied });
+        const probe = try hand.emit(.{ .op = .dict_find, .ty = .i64, .a = mapping, .b = copied });
+        const found = try hand.newBlock();
+        const missing = try hand.newBlock();
+        const condition = try hand.emit(.{ .op = .cmp, .ty = .bool, .a = probe, .b = zero, .data = @backingInt(ir.Predicate.ge) });
+        try hand.branch(condition, found, missing);
+        hand.block = found;
+        const updated = try hand.emit(.{ .op = .dict_set_value, .ty = dict, .a = mapping, .b = probe, .data = try hand.extra(&.{zero}) });
+        _ = try hand.emit(.{ .op = .ret, .ty = .void, .a = updated });
+        hand.block = missing;
+        if (variant == 6) {
+            const insert_block = try hand.newBlock();
+            try hand.branch(condition, missing, insert_block);
+            hand.block = insert_block;
+        }
+        if (variant == 7) _ = try hand.emit(.{ .op = .dict_find, .ty = .i64, .a = mapping, .b = copied });
+        if (variant == 5) _ = try hand.emit(.{ .op = .list_set, .ty = list, .a = source_list, .b = zero, .data = try hand.extra(&.{key}) });
+        const inserted = try hand.emit(.{ .op = .dict_insert, .ty = dict, .a = mapping, .b = probe, .data = try hand.extra(&.{ copied, zero }) });
+        _ = try hand.emit(.{ .op = .ret, .ty = .void, .a = inserted });
+        const changed = try @import("fuse_dict.zig").updateCopies(a, &module, &hand.function);
+        try std.testing.expectEqual(@as(u32, if (variant == 0) 1 else 0), changed);
+        if (variant == 0) {
+            try std.testing.expectEqual(ir.Op.copy, hand.function.inst(copied).op);
+            const owned_key = hand.function.operands(hand.function.inst(inserted).data)[0];
+            try std.testing.expectEqual(ir.Op.call, hand.function.inst(owned_key).op);
+            try std.testing.expectEqual(key, hand.function.operands(hand.function.inst(owned_key).data)[0]);
+            try std.testing.expectEqual(owned_key, hand.function.blocks.items[missing.index()].insts.items[0]);
+        }
+    }
+}
+
+// spec-case: NEW-CORE-DICT-1
+test "gap_dict native inserted keys survive source replacement and early exits" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const program_source =
+        \\func fill(stop: bool) -> int:
+        \\    mut keys = ["alpha-" + str(1), "beta-" + str(2)]
+        \\    mut counts: dict[str, int] = {}
+        \\    for i in range(200):
+        \\        mut key = keys[i % 2].copy()
+        \\        counts[key] = counts.get(key, 0) + 1
+        \\        if stop and i == 17:
+        \\            return counts["alpha-1"] + counts["beta-2"]
+        \\    keys[0] = "replacement-" + str(3)
+        \\    keys.clear()
+        \\    return counts["alpha-1"] + counts["beta-2"]
+        \\func main(out: Stream) -> int:
+        \\    out.print(fill(False), fill(True))
+        \\    mut keys = ["saved-" + str(1)]
+        \\    mut counts: dict[str, int] = {}
+        \\    mut key = keys[0].copy()
+        \\    keys[0] = "changed-" + str(2)
+        \\    counts[key] = counts.get(key, 0) + 1
+        \\    keys.clear()
+        \\    out.print(counts["saved-1"])
+        \\    keys.append("managed-" + str(1))
+        \\    mut managed: dict[str, str] = {}
+        \\    for i in range(20):
+        \\        mut managed_key = keys[0].copy()
+        \\        managed[managed_key] = "value-" + str(i)
+        \\    keys[0] = "other-" + str(2)
+        \\    keys.clear()
+        \\    out.print(managed["managed-1"])
+        \\    return 0
+    ;
+    var unit = try @import("mylang").Compilation.init(a, "gap_dict.my", program_source);
+    try unit.check();
+    var failure: @import("single_owner.zig").Failure = .{};
+    try @import("single_owner.zig").checkMode(a, unit.program.?, &failure, true);
+    inline for (.{ false, true }) |optimized| {
+        var refusal: build.Refusal = .{};
+        var module = try build.buildExecutable(a, .{ .program = unit.program.?, .single_owner = true, .zero_rc = true }, &refusal);
+        const result = if (optimized) try @import("passes.zig").run(a, &module, .verify) else try @import("passes.zig").debug(a, &module);
+        try @import("single_owner.zig").verifyLowered(&module, &failure);
+        const run = try support.runOwned(a, &module, .{ .own = false, .release = optimized, .verify = optimized, .analysis = support.analysis(&result), .main = .{ .parameters = &.{"out"}, .capabilities = &.{0} } });
+        if (run.status != 0) report("gap_dict native: {s}{s}\n", .{ run.stdout, run.stderr });
+        try std.testing.expectEqual(@as(u8, 0), run.status);
+        try std.testing.expectEqualStrings("200 18\n1\nvalue-19\n", run.stdout);
+        try std.testing.expectEqualStrings("", run.stderr);
+        try std.testing.expect(@import("zero_rc.zig").emittedClean(run.llvm));
+    }
+}
+
+// spec-case: NEW-CORE-DICT-1
+test "gap_dict large functions conservatively retain copies within analysis budget" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var module: ir.Module = .{ .zero_rc = true };
+    var f: ir.Function = .{ .name = "large", .signature = .{ .params = &.{}, .ret = .void } };
+    try f.insts.resize(arena.allocator(), 4097);
+    @memset(f.insts.items, .{ .op = .undef, .ty = .void });
+    try std.testing.expectEqual(@as(u32, 0), try @import("fuse_dict.zig").updateCopies(arena.allocator(), &module, &f));
+}
+
+// spec-case: NEW-CORE-DICT-1
+test "gap_dict original migrated source exposes the local update shape" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const text =
+        \\func main(out: Stream) -> int:
+        \\    mut keys: str[] = []
+        \\    for i in range(1000):
+        \\        keys.append("key" + str(i))
+        \\    mut counts: dict[str, int] = {}
+        \\    for i in range(2000000):
+        \\        mut key = keys[(i * 7919) % 1000].copy()
+        \\        counts[key] = counts.get(key, 0) + 1
+        \\    mut total = 0
+        \\    for name in keys:
+        \\        total = (total + counts[name] * len(name)) % 1000003
+        \\    out.print(total)
+        \\    return 0
+    ;
+    var unit = try @import("mylang").Compilation.init(a, "shape.my", text);
+    try unit.check();
+    var refusal: build.Refusal = .{};
+    const module = try build.buildExecutable(a, .{ .program = unit.program.?, .single_owner = true, .zero_rc = true }, &refusal);
+    try gapDictMissPlacement(&module);
+    try support.verified(a, &module, &.{});
+}
+
+fn gapDictMissPlacement(module: *const ir.Module) !void {
+    var misses: usize = 0;
+    for (module.functions.items) |f| for (f.blocks.items) |block| for (block.insts.items, 0..) |ref, at| {
+        const inst = f.inst(ref);
+        if (inst.op != .dict_insert) continue;
+        const key = f.resolve(f.operands(inst.data)[0]);
+        try std.testing.expect(f.inst(key).op == .call);
+        try std.testing.expect(at >= 2 and block.insts.items[at - 2] == key);
+        try std.testing.expectEqual(ir.Op.dict_find, f.inst(block.insts.items[at - 1]).op);
+        misses += 1;
+    };
+    try std.testing.expectEqual(@as(usize, 1), misses);
+}

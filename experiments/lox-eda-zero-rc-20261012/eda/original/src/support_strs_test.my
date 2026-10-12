@@ -1,0 +1,128 @@
+
+import support_expect as ex
+import support_strs as ss
+
+# The expected values are Zig's (`std.mem`, `std.ascii`, `std.fs.path`) and the same
+# cases the Go port's support tests assert.
+public func test_text_and_byte_len_count_bytes_not_scalars(out: Stream) -> bool:
+    if not ex.eq_int(out, "len of é as str", len("é"), 1):
+        return False
+    if not ex.eq_int(out, "byte_len of é", ss.byte_len("é"), 2):
+        return False
+    if not ex.eq_str(out, "text", ss.text(b"caf\xc3\xa9"), "café"):
+        return False
+    return ex.eq_bytes(out, "round trip", ss.text(b"caf\xc3\xa9").encode(), b"caf\xc3\xa9")
+
+
+public func test_ascii_classes_and_case_are_byte_wise(out: Stream) -> bool:
+    if not ex.ok(out, "Power == POWER", ss.eql_ignore_case(b"Power", b"POWER")):
+        return False
+    if not ex.ok(out, "é != É byte-wise", not ss.eql_ignore_case(b"\xc3\xa9", b"\xc3\x89")):
+        return False
+    if not ex.eq_bytes(out, "upper keeps non-ASCII", ss.upper_bytes(b"abc\xc3\xa9"), b"ABC\xc3\xa9"):
+        return False
+    if not ex.eq_bytes(out, "lower", ss.lower_bytes(b"AbC-1"), b"abc-1"):
+        return False
+    if not ex.ok(out, "starts", ss.starts_with_ignore_case(b"GNDA", b"gnd")):
+        return False
+    if not ex.ok(out, "starts, needle longer", not ss.starts_with_ignore_case(b"GN", b"gnd")):
+        return False
+    if not ex.ok(out, "ends", ss.ends_with_ignore_case(b"VCC_3V3", b"_3v3")):
+        return False
+    if not ex.eq_int(out, "indexOfIgnoreCase", ss.index_of_ignore_case(b"xxVccyy", b"VCC"), 2):
+        return False
+    if not ex.eq_int(out, "indexOfIgnoreCase miss", ss.index_of_ignore_case(b"ab", b"abc"), -1):
+        return False
+    return ex.ok(out, "classes", ss.is_digit(53) and not ss.is_digit(65) and ss.is_alphanumeric(122) and ss.is_whitespace(11) and not ss.is_whitespace(160))
+
+
+public func test_order_is_bytewise_then_length(out: Stream) -> bool:
+    if not ex.eq_int(out, "lt", ss.bytes_order(b"abc", b"abd"), -1):
+        return False
+    if not ex.eq_int(out, "prefix is lt", ss.bytes_order(b"ab", b"abc"), -1):
+        return False
+    if not ex.eq_int(out, "gt", ss.bytes_order(b"b", b"abc"), 1):
+        return False
+    if not ex.eq_int(out, "eq", ss.bytes_order(b"", b""), 0):
+        return False
+    if not ex.eq_int(out, "high byte sorts last", ss.bytes_order(b"z", b"\xc3\xa9"), -1):
+        return False
+    if not ex.ok(out, "str_less", ss.str_less("Zed", "abc") and not ss.str_less("é", "z")):
+        return False
+    return ex.ok(out, "bytes_less", ss.bytes_less(b"a", b"b") and not ss.bytes_less(b"a", b"a"))
+
+
+public func test_search_from_an_offset(out: Stream) -> bool:
+    if not ex.eq_int(out, "indexOfPos", ss.index_of_pos(b"abcabc", 2, b"bc"), 4):
+        return False
+    if not ex.eq_int(out, "start past end", ss.index_of_pos(b"abc", 4, b"a"), -1):
+        return False
+    if not ex.eq_int(out, "start at end, empty needle", ss.index_of_pos(b"abc", 3, b""), 3):
+        return False
+    if not ex.eq_int(out, "indexOfScalarPos", ss.index_of_scalar_pos(b"a,b,c", 2, 44), 3):
+        return False
+    if not ex.eq_int(out, "indexOfScalarPos at end", ss.index_of_scalar_pos(b"a,b", 3, 44), -1):
+        return False
+    if not ex.eq_int(out, "indexOfAny", ss.index_of_any(b"a\xffb", b"\xff"), 1):
+        return False
+    if not ex.eq_int(out, "indexOfAny miss", ss.index_of_any(b"abc", b"xyz"), -1):
+        return False
+    return ex.eq_int(out, "lastIndexOfAny", ss.last_index_of_any(b"a.b.c", b".,"), 3)
+
+
+public func test_trim_and_tokenize_take_a_byte_set(out: Stream) -> bool:
+    if not ex.eq_bytes(out, "trim", ss.trim(b" \tx y\n", b" \t\n"), b"x y"):
+        return False
+    if not ex.eq_bytes(out, "trim_start", ss.trim_start(b"--a--", b"-"), b"a--"):
+        return False
+    if not ex.eq_bytes(out, "trim_end", ss.trim_end(b"--a--", b"-"), b"--a"):
+        return False
+    if not ex.eq_bytes(out, "all trimmed", ss.trim(b"---", b"-"), b""):
+        return False
+    if not ex.ok(out, "tokenizeAny", ss.tokenize_any(b"  a,b ,,c ", b" ,") == [b"a", b"b", b"c"]):
+        return False
+    if not ex.eq_int(out, "only delimiters", len(ss.tokenize_any(b" ,", b" ,")), 0):
+        return False
+    return ex.ok(out, "tokenizeScalar", ss.tokenize_scalar(b"1.2.3", 46) == [b"1", b"2", b"3"])
+
+
+func dirname_or(path: str, absent: str) -> str:
+    match ss.path_dirname(path):
+        case Some(d):
+            return d
+        case None:
+            return absent
+
+
+public func test_path_helpers_match_zig(out: Stream) -> bool:
+    if not ex.eq_str(out, "join", ss.path_join(["a", "b"]), "a/b"):
+        return False
+    if not ex.eq_str(out, "join, both separators", ss.path_join(["a/", "/b"]), "a/b"):
+        return False
+    if not ex.eq_str(out, "join keeps ./", ss.path_join(["./lib", "x"]), "./lib/x"):
+        return False
+    if not ex.eq_str(out, "join skips empties", ss.path_join(["", "a", "", "b"]), "a/b"):
+        return False
+    if not ex.eq_str(out, "dirname", dirname_or("/a/b/c///", "-"), "/a/b"):
+        return False
+    if not ex.eq_str(out, "dirname of a top-level path", dirname_or("/a", "-"), "/"):
+        return False
+    if not ex.eq_str(out, "dirname of a bare name", dirname_or("a/", "-"), "-"):
+        return False
+    if not ex.eq_str(out, "basename", ss.path_basename("/dir/basename.ext//"), "basename.ext"):
+        return False
+    return ex.eq_str(out, "basename of /", ss.path_basename("/"), "")
+
+
+public func test_integer_padding_matches_zig_format(out: Stream) -> bool:
+    if not ex.eq_str(out, "{x:0>2} of 10", ss.hex_pad(10, 2), "0a"):
+        return False
+    if not ex.eq_str(out, "{x:0>2} of 255", ss.hex_pad(255, 2), "ff"):
+        return False
+    if not ex.eq_str(out, "{x:0>8} of 0", ss.hex_pad(0, 8), "00000000"):
+        return False
+    if not ex.eq_str(out, "{x:0>2} is never cut", ss.hex_pad(4096, 2), "1000"):
+        return False
+    if not ex.eq_str(out, "{d:0>2}", ss.zero_pad(7, 2), "07"):
+        return False
+    return ex.eq_str(out, "{d:0>2} is never cut", ss.zero_pad(123, 2), "123")

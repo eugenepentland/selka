@@ -1,0 +1,24 @@
+enum Bundle:
+    parts(left: str[], right: str[], ignored: str[])
+
+record Pair:
+    left: str[]
+    right: str[]
+
+func make(n: int) -> Bundle:
+    return Bundle.parts(left=["llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll" + str(n), "LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL" + str(n)], right=["rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr" + str(n), "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR" + str(n)], ignored=["xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" + str(n), "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" + str(n)])
+
+func unpack(n: int) -> Pair:
+    match make(n):
+        case Bundle.parts(left=left, right=right, ignored=_):
+            return Pair(left=left, right=right)
+
+func score(value: Pair) -> int:
+    return len(value.left[0]) + len(value.left[1]) + len(value.right[0]) + len(value.right[1])
+
+func main(out: Stream) -> int:
+    mut total = 0
+    for i in range(200000):
+        total += score(unpack(i))
+    out.print(total)
+    return 0

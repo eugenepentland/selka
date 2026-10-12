@@ -1,0 +1,4 @@
+build-slot: build slot 1, FIFO ticket 1332 after 0s
+heap.my:184:5: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+      klass.methods = methods
+      ^

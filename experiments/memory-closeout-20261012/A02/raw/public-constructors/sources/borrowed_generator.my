@@ -1,0 +1,8 @@
+func main(out: Stream) -> int:
+    mut values: str[] = []
+    for i in range(32):
+        values.append("word-" + str(i))
+    const answer = max(value for value in values)
+    values.clear()
+    out.print(answer)
+    return 0

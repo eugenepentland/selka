@@ -1,0 +1,124 @@
+{
+  "status": "current-document inventory for owner dispatch; none edited by A10",
+  "historical_scope": "Dated design, ADR, legacy and experiment records are not proposals to rewrite immutable evidence. Current contract documents still need owner review and runnable source migration.",
+  "documents": [
+    {
+      "path": "docs/sets.md",
+      "sha256": "31290d8f85733085258c6c628ad68c3be4aec5a8422cb44147aea3df109aba43",
+      "matches": [
+        {
+          "line": 6,
+          "text": "dictionary it is reference counted. Assignment gives the destination an"
+        },
+        {
+          "line": 8,
+          "text": "(copy-on-write). A function that changes its caller's set declares the parameter `mut`,"
+        },
+        {
+          "line": 155,
+          "text": "list and open-addressing hash index, and the same reference count and"
+        },
+        {
+          "line": 156,
+          "text": "copy-on-write. Membership, `add`, `remove` and `discard` probe the index"
+        }
+      ]
+    },
+    {
+      "path": "docs/value-semantics.md",
+      "sha256": "ac61a4a4baf91ed0e27fd760f8c413c8c7fc06333d324dd1b8b73559a5c09ad2",
+      "matches": [
+        {
+          "line": 4,
+          "text": "runtime implements it with reference counting and copy-on-write; there is no"
+        },
+        {
+          "line": 291,
+          "text": "heap storage with a single reference count. Assignment, argument passing, storing"
+        },
+        {
+          "line": 294,
+          "text": "the copy written (copy-on-write). Nested writes repeat that step along their path,"
+        }
+      ]
+    },
+    {
+      "path": "docs/text.md",
+      "sha256": "9f513629e7fc43bbd6551f5581659b36a7689b9f649c376866f525918dc7e7c2",
+      "matches": [
+        {
+          "line": 3,
+          "text": "`str` is the language's Unicode text type: an immutable, reference-counted value"
+        },
+        {
+          "line": 18,
+          "text": "effect. Assignment shares one reference-counted value, which is safe precisely"
+        }
+      ]
+    },
+    {
+      "path": "docs/bytes.md",
+      "sha256": "386f50110c648550815e7dc80e872e183f91a048752151b64d5b838a895e551f",
+      "matches": [
+        {
+          "line": 3,
+          "text": "`bytes` is an immutable, reference-counted byte string with the same runtime"
+        },
+        {
+          "line": 219,
+          "text": "shares one reference-counted storage block. Dictionary keys remain `int` or `str`."
+        }
+      ]
+    },
+    {
+      "path": "docs/records-and-unions.md",
+      "sha256": "03bbb3bc2ffe55b794477fee8b76ae34f6d545936eaf82656d22727e5338ac46",
+      "matches": [
+        {
+          "line": 356,
+          "text": "Copying a recursive value shares its boxes by reference count without walking"
+        }
+      ]
+    },
+    {
+      "path": "docs/module-constants.md",
+      "sha256": "2bd469f5fd2c60e1432944d1c8a0286cd5eef87787ecf360ae610d98defebfb6",
+      "matches": [
+        {
+          "line": 124,
+          "text": "or shared mutable storage. Ordinary reference counting and allocation budgets apply."
+        }
+      ]
+    },
+    {
+      "path": "docs/effects.md",
+      "sha256": "3fe767b361a952b038e368aaaa403949b10dfb109bcbcc033a79077559369265",
+      "matches": [
+        {
+          "line": 160,
+          "text": "  allocation site, naming the bounded function and callee. Copy-on-write and"
+        }
+      ]
+    },
+    {
+      "path": "docs/standard-library.md",
+      "sha256": "499b7016b9723da73e6235297b1c2e6df01d969f855614215fcc747a13885813",
+      "matches": [
+        {
+          "line": 334,
+          "text": "function sequentially; experimental zero-RC builds borrow distinct input elements"
+        }
+      ]
+    },
+    {
+      "path": "docs/tooling/counters.md",
+      "sha256": "0b904252b6790b242fb2c5a41e8504f1464332cc6b797857fdca5b4e213f1e3d",
+      "matches": [
+        {
+          "line": 49,
+          "text": "| `list_copies`, `dict_copies`, `buffer_copies`, `text_copies` and their `_bytes` | Copy-on-write and value copies the runtime made: list elements, dictionary entries plus their hashes, buffer bytes, text bytes (`str_from_view`) |"
+        }
+      ]
+    }
+  ]
+}

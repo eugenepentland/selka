@@ -3,7 +3,7 @@ func overwrite(mut items: int[], value: int) -> unit:
 
 
 func capture_and_write(mut items: int[]) -> int[]:
-    mut before = items
+    mut before = items.copy()
     for value in range(20):
         items[0] = value
     overwrite(mut items, 21)
@@ -13,15 +13,15 @@ func capture_and_write(mut items: int[]) -> int[]:
 
 public func test_caller_and_callee_snapshots_survive_mutable_scalar_writes() -> bool:
     mut items = [1, 2]
-    mut caller = items
+    mut caller = items.copy()
     mut callee = capture_and_write(mut items)
     return items == [21, 22] and caller == [1, 2] and callee == [1, 2]
 
 
 func replace_and_write(mut items: int[], other: int[]) -> int[]:
-    items = other
+    items = other.copy()
     items[0] = 7
-    return items
+    return items.copy()
 
 
 public func test_rebinding_a_mutable_parameter_requires_fresh_uniqueness() -> bool:

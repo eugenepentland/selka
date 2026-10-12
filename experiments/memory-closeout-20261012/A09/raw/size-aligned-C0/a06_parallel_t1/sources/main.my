@@ -1,0 +1,30 @@
+import parallel
+import primes
+
+func repetitions(args: str[]) -> int:
+    if len(args) == 0:
+        return 1
+    match parse_int(args[0]):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+func main(args: str[], out: Stream) -> int:
+    const rounds = repetitions(args)
+    if rounds < 1 or rounds > 10000:
+        return 2
+    mut total = 0
+    for round in range(rounds):
+        mut input: int[] = []
+        for i in range(256):
+            input.append(i)
+        const output = parallel.map(input, primes.count)
+        input.clear()
+        for result in output:
+            total += result.count
+        if output[255].label != "batch-255":
+            return 1
+        _ = parallel.map([0, 1, 2], primes.count)
+    out.print(total)
+    return 0

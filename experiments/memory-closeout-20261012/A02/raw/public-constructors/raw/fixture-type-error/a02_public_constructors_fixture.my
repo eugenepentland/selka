@@ -1,0 +1,54 @@
+# spec-case: SET-1
+record Label:
+    text: str
+
+
+func make(mut seen: int[], i: int) -> str:
+    seen.append(i)
+    return "value-" + str(i)
+
+
+func main(args: str[], out: Stream) -> int:
+    if len(args) > 0:
+        mut empty: str[] = []
+        if args[0] == "min":
+            _ = min(w for w in empty)
+        else:
+            _ = max(w for w in empty)
+        return 9
+    mut words = ["pear-" + str(1), "fig-" + str(2), "kiwi-" + str(3), "pear-" + str(1)]
+    mut keys = set(words)
+    mut duplicated = set(keys)
+    mut mapping = {"alpha-" + str(1): "one", "beta-" + str(2): "two"}
+    const mapped = set(mapping)
+    const values = set(mapping.values())
+    const pairs = set(mapping.items())
+    mapping.clear()
+    keys.clear()
+    assert len(duplicated) == 3 and "pear-1" in duplicated
+    assert "alpha-1" in mapped and "two" in values and ("beta-2", "two") in pairs
+    const largest = max(w for w in words)
+    const smallest = min(w for w in words)
+    const copied = max(w.copy() for w in words)
+    words.clear()
+    assert largest == "pear-1" and smallest == "fig-2" and copied == "pear-1"
+    mut labels = [Label(text="a-" + str(1)), Label(text="b-" + str(2))]
+    const labelled = set(labels)
+    labels[0].text = "changed"
+    labels.clear()
+    assert Label(text="a-1") in labelled and len(labelled) == 2
+    mut seen: int[] = []
+    const fresh = max(make(mut seen, i) for i in [3, 1, 4, 2])
+    assert fresh == "value-4" and seen == [3, 1, 4, 2]
+    seen.clear()
+    const nested = min(make(mut seen, i) for row in [[8, 7], [5, 6]] for i in row)
+    assert nested == "value-5" and seen == [8, 7, 5, 6]
+    for n in range(20):
+        mut inputs = ["z-" + str(n), "a-" + str(n)]
+        const selected = min(w for w in inputs)
+        inputs.clear()
+        assert selected == "a-" + str(n)
+    assert set([1, 2, 1]) == {1, 2} and set(b"abca") == {97, 98, 99}
+    assert set("banana") == {"b", "a", "n"}
+    out.print(len(duplicated), len(mapped), len(labelled), largest, fresh, nested)
+    return 0

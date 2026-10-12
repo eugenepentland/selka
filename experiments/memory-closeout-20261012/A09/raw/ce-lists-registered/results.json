@@ -1,0 +1,101 @@
+{
+  "source_revision": "ebdfcdc9a1c0b4ac35ee76e492d22d4f1cbe87f6",
+  "candidate_label": "A09 continuation with approved A07 safety/exact-slot dependencies; not final C1",
+  "source_inputs": {
+    "src/core/ce_lists_test.zig": "9130ea189b1196d7face21f150694f366011f855dc5f3db8510cf437e456b4fa",
+    "build.zig": "4e9204e276f90118401d089d4179585228606a83d742e9f3d8c7d802b00685cb",
+    "test/core/ce_cow.my": "423128bd964643674ddc4eddd41ce3e18bd6433f5fe60cbaf7392c6a2f92d8ba",
+    "test/core/ce_elements.my": "d41dd10f73f10300e9a928d595f99e9d63b0e41b3a6ae9757f7fa1d3a876e474",
+    "test/core/ce_slices.my": "b791a8e4a01b0650934edd72c85437f22775e06fe9b9beec008f9735584890c8",
+    "test/core/ce_appends.my": "797837b9d0dba06c76c113217b13c270ebad4590be1b42c2e54dc760a4b0c970"
+  },
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.zig-cache/o/01fee97bc983b9ba0bcb9b88e1105997/mylang",
+    "sha256": "743fad2212b71b932071bc5547395f3ee4cf82b4b0fd33e8bd67fdaea73e87c4"
+  },
+  "test_binary": {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/ce-lists-install-final/focus/core-tests",
+    "sha256": "db85b5c6f1bfaf9ab4064a545f42293263582f2a64253e5de6331fe503d33269"
+  },
+  "admission": "one shared build lease covers matching compile/runtime filters",
+  "compile_filter": "ce_lists_test",
+  "runtime_filter": "ce_lists_test",
+  "staged_components": {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/libexec/mylang/components",
+    "qualification": "legacy staged Support5 components; not package qualification"
+  },
+  "native_modes": [
+    "unoptimized",
+    "release",
+    "verified release",
+    "optimized debug",
+    "release no facts"
+  ],
+  "raw_files": {
+    "ce-lists-field.log.gz": {
+      "sha256": "d6a149c294e67e2ddd12401aa98e9e62c3b5c5b2d50e2bf4dbf403669db0de89",
+      "bytes": 693
+    },
+    "ce-lists-final.log.gz": {
+      "sha256": "798fc0fe8e41c0afdb99ac33d30586f15e6bd46ef8a3d8568ccae37ba293a16d",
+      "bytes": 498
+    },
+    "ce-lists-structural.log.gz": {
+      "sha256": "756fec622db01476c52e97622fe249f2eb389271b6c3b990e15681646d80142b",
+      "bytes": 1664
+    },
+    "ce-lists-v2.log.gz": {
+      "sha256": "237fbf07547cdade9d18280de2486385ed2bd4b29aa7964e1a11292018886fc9",
+      "bytes": 946
+    },
+    "ce-lists-v3.log.gz": {
+      "sha256": "7d005a59f695a5d3cc2994fb4aea05bdb202e510fbcfa89b4c5cbec7101a5ff6",
+      "bytes": 787
+    },
+    "trap-full-debug.ll.gz": {
+      "sha256": "38e7c0c97add22b679d721c56c2125b03fef009d8cf5432a0bc552de1d85ce16",
+      "bytes": 54461
+    },
+    "trap-full-release.ll.gz": {
+      "sha256": "a27b2225bbda96acccc745cf7221f8148f6d22ec43bc9a170a66ce64d495efb4",
+      "bytes": 85014
+    },
+    "trap-probe.log.gz": {
+      "sha256": "62e429057cb437b9598a5980a36129f39ba55697a49c8d38c466b841347c66fd",
+      "bytes": 386
+    },
+    "trap-probe.py.gz": {
+      "sha256": "d66bfbddd7f76818a12c925796d24cdf66055c017e11aabac0b753354eef488e",
+      "bytes": 788
+    },
+    "trap-repro-debug.ll.gz": {
+      "sha256": "02e97c5d4c525a59b54b136867dd104f968bd7b459b0c553b846a37f303d3c6b",
+      "bytes": 4665
+    },
+    "trap-repro-release.ll.gz": {
+      "sha256": "f0b8f7ae8b4fb6f72a0757e2e28b637cc0d11f20597326abe38f4f6adeb8f1c3",
+      "bytes": 4258
+    },
+    "trap-repro.my.gz": {
+      "sha256": "5a35b57cd9ec6849d34363bee1fb04902dbba91212d41f55a75b68a0d6d99d73",
+      "bytes": 195
+    },
+    "trap-results.json.gz": {
+      "sha256": "767ba7f9445bc6a14d65b67c60cbe2207e3ca9d4d5fde989bbc5e6f41aa72a4e",
+      "bytes": 966
+    }
+  },
+  "limitations": [
+    "Focused selected registered tests; complete verification remains coordinator-owned",
+    "Fatal trap cleanup is not asserted",
+    "No runtime/RSS timing claim"
+  ],
+  "status": "passed",
+  "registered_tests": {
+    "passed": 6,
+    "failed": 0
+  },
+  "compile_command": "zig build core-test-binary -Dtest-filter=ce_lists_test -p .tmp/memory-closeout/A09/ce-lists-install-final -j4 --maxrss 8589934592",
+  "run_command": ".tmp/memory-closeout/A09/ce-lists-install-final/focus/core-tests --guardian-filter=ce_lists_test --cache-dir=.tmp/memory-closeout/A09/ce-lists-tests-cache-final",
+  "ce_cow_source_owner_commit": "8c91c509147df46f512dc810c0fe8da3703059e0"
+}

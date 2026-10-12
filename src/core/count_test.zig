@@ -325,7 +325,7 @@ test "single owner snapshots avoid eager child allocations while copy stays eage
 }
 
 // spec: NEW-CORE-COUNTERS-1
-test "a counting build records copies, count updates, uniqueness tests and memory, and prints what an ordinary build prints" {
+test "zero RC counting builds record explicit copies, growth, sites, cleanup and traps exactly" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
@@ -333,45 +333,118 @@ test "a counting build records copies, count updates, uniqueness tests and memor
     defer directory.cleanup();
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
     const plain = try counted(a, root, "counters.my", &.{}, &.{});
-    const debug = try counted(a, root, "counters.my", &.{ "--counters", "--unoptimized" }, &.{});
     try std.testing.expectEqualStrings("100 101 4\n", plain.stdout);
-    try std.testing.expectEqualStrings(plain.stdout, debug.stdout);
-    try std.testing.expectEqualStrings(plain.stderr, debug.stderr);
-    try std.testing.expectEqual(plain.status, debug.status);
-    try std.testing.expectEqualStrings("mylang-counters-v1", debug.counts.object.get("version").?.string);
-    // `ys = xs; ys.append(5)` copies the hundred elements of `xs` once.
-    try std.testing.expectEqual(@as(i64, 1), field(debug.counts, &.{ "kinds", "list_copy", "count" }));
-    try std.testing.expectEqual(@as(i64, 800), field(debug.counts, &.{ "kinds", "list_copy", "bytes" }));
-    try std.testing.expectEqual(@as(i64, 800), field(debug.counts, &.{ "totals", "list_copy_bytes" }));
-    // `bump` lends its 40-byte element to `bumped` where it lies (NEW-CORE-CE2-RESULTS-4), which
-    // copies it to update `a`, and copies the new record back in; the element it replaces is
-    // released where it is, never copied out (NEW-CORE-CE-LISTS-2).
-    try std.testing.expectEqual(@as(i64, 10), calls(debug.counts, "bump"));
-    try std.testing.expectEqual(@as(i64, 0), sites(debug.counts, "record_copy", "list_get", "bump", "bytes"));
-    try std.testing.expectEqual(@as(i64, 400), sites(debug.counts, "record_copy", "record_set", "bumped", "bytes"));
-    try std.testing.expectEqual(@as(i64, 400), sites(debug.counts, "record_copy", "list_set", "bump", "bytes"));
-    try std.testing.expectEqual(@as(i64, 0), sites(debug.counts, "record_copy", "list_set.old", "bump", "bytes"));
-    try std.testing.expectEqual(@as(i64, 10), sites(debug.counts, "unique_test", "is_unique", "bump", "count"));
-    try std.testing.expectEqual(@as(i64, 10), sites(debug.counts, "unique_test", "is_unique", "bump", "extra"));
-    try std.testing.expectEqual(@as(i64, 121), sites(debug.counts, "list_push", "list_push", "main", "count"));
-    // Growing `xs` to a hundred elements moves its earlier elements; the pushes that grew it say so.
-    try std.testing.expectEqual(field(debug.counts, &.{ "totals", "list_grow_bytes" }) + field(debug.counts, &.{ "totals", "realloc_moved_bytes" }), field(debug.counts, &.{ "kinds", "list_push", "extra" }));
-    try std.testing.expect(field(debug.counts, &.{ "kinds", "list_push", "extra" }) > 0);
-    try std.testing.expect(field(debug.counts, &.{ "kinds", "retain", "count" }) >= 10);
-    // Each retain in `bumped` shares one record's one-element list: 8 data bytes.
-    try std.testing.expectEqual(@as(i64, 80), sites(debug.counts, "retain", "retain", "bumped", "bytes"));
-    try std.testing.expect(field(debug.counts, &.{ "totals", "list_grows" }) > 0);
-    try std.testing.expectEqual(field(debug.counts, &.{ "totals", "allocs" }), field(debug.counts, &.{ "totals", "frees" }));
-    try std.testing.expectEqual(@as(i64, 0), field(debug.counts, &.{ "totals", "live_bytes_at_exit" }));
-    try std.testing.expect(field(debug.counts, &.{ "totals", "peak_live_bytes" }) >= 800);
-    // A release build counts the same copy; a trap still writes the counts.
-    const release = try counted(a, root, "counters.my", &.{ "--counters", "--release" }, &.{});
-    try std.testing.expectEqualStrings(plain.stdout, release.stdout);
-    try std.testing.expectEqual(@as(i64, 800), field(release.counts, &.{ "kinds", "list_copy", "bytes" }));
-    const trapped = try counted(a, root, "counters.my", &.{"--counters"}, &.{"trap"});
+    try std.testing.expectEqualStrings("", plain.stderr);
+    try std.testing.expectEqual(@as(u8, 0), plain.status);
+    const modes = [_][]const []const u8{
+        &.{ "--counters", "--experimental-zero-rc", "--unoptimized" },
+        &.{ "--counters", "--experimental-zero-rc", "--release" },
+        &.{ "--counters", "--experimental-zero-rc", "--release", "--verify-facts" },
+        &.{ "--counters", "--experimental-zero-rc", "--optimize-debug" },
+        &.{ "--counters", "--experimental-zero-rc", "--release", "--no-facts" },
+    };
+    for (modes) |flags| {
+        const result = try counted(a, root, "counters.my", flags, &.{});
+        try std.testing.expectEqualStrings(plain.stdout, result.stdout);
+        try std.testing.expectEqualStrings(plain.stderr, result.stderr);
+        try std.testing.expectEqual(plain.status, result.status);
+        try copiedFixtureCounts(result.counts);
+    }
+    // A fatal bounds error still writes all traffic accumulated before the trap.
+    // Fatal termination does not unwind the live owners; do not call this leak-free.
+    const trapped = try counted(a, root, "counters.my", &.{ "--counters", "--experimental-zero-rc" }, &.{"trap"});
+    try std.testing.expectEqualStrings(plain.stdout, trapped.stdout);
     try std.testing.expectEqual(@as(u8, 1), trapped.status);
     try std.testing.expect(contains(trapped.stderr, "R_LIST_BOUNDS"));
-    try std.testing.expectEqual(@as(i64, 800), field(trapped.counts, &.{ "kinds", "list_copy", "bytes" }));
+    try std.testing.expectEqual(@as(i64, 11), field(trapped.counts, &.{ "totals", "list_copies" }));
+    try std.testing.expectEqual(@as(i64, 880), field(trapped.counts, &.{ "totals", "list_copy_bytes" }));
+}
+
+fn copiedFixtureCounts(counts: std.json.Value) !void {
+    const list_copy = "list_copy";
+    const record_copy = "record_copy";
+    const list_push = "list_push";
+    try std.testing.expectEqualStrings("mylang-counters-v1", counts.object.get("version").?.string);
+    // One independent hundred-element list plus ten one-element record children.
+    try std.testing.expectEqual(@as(i64, 11), field(counts, &.{ "kinds", list_copy, "count" }));
+    try std.testing.expectEqual(@as(i64, 880), field(counts, &.{ "kinds", list_copy, "bytes" }));
+    try std.testing.expectEqual(@as(i64, 11), field(counts, &.{ "totals", "list_copies" }));
+    try std.testing.expectEqual(@as(i64, 880), field(counts, &.{ "totals", "list_copy_bytes" }));
+    try std.testing.expectEqual(@as(i64, 10), calls(counts, "bump"));
+    try std.testing.expectEqual(@as(i64, 0), sites(counts, record_copy, "list_get", "bump", "bytes"));
+    try std.testing.expectEqual(@as(i64, 0), sites(counts, record_copy, "record_set", "bumped", "bytes"));
+    try std.testing.expectEqual(@as(i64, 80), sites(counts, list_copy, list_copy, "bumped", "bytes"));
+    try std.testing.expectEqual(@as(i64, 400), sites(counts, record_copy, "list_set", "bump", "bytes"));
+    try std.testing.expectEqual(@as(i64, 0), sites(counts, record_copy, "list_set.old", "bump", "bytes"));
+    try std.testing.expectEqual(@as(i64, 121), sites(counts, list_push, list_push, "main", "count"));
+    try std.testing.expectEqual(@as(i64, 7), field(counts, &.{ "totals", "list_grows" }));
+    try std.testing.expectEqual(@as(i64, 1280), field(counts, &.{ "totals", "list_grow_bytes" }));
+    try std.testing.expectEqual(field(counts, &.{ "totals", "list_grow_bytes" }) + field(counts, &.{ "totals", "realloc_moved_bytes" }), field(counts, &.{ "kinds", list_push, "extra" }));
+    for ([_][]const u8{ "retain", "release", "unique_test" }) |kind|
+        try std.testing.expectEqual(@as(i64, 0), field(counts, &.{ "kinds", kind, "count" }));
+    for ([_][]const u8{ "runtime_retains", "runtime_releases", "shared_retains", "shared_releases", "share_marks" }) |name|
+        try std.testing.expectEqual(@as(i64, 0), field(counts, &.{ "totals", name }));
+    try std.testing.expectEqual(@as(i64, 31), field(counts, &.{ "totals", "allocs" }));
+    try std.testing.expectEqual(@as(i64, 31), field(counts, &.{ "totals", "frees" }));
+    try std.testing.expectEqual(@as(i64, 5416), field(counts, &.{ "totals", "alloc_bytes" }));
+    try std.testing.expectEqual(@as(i64, 0), field(counts, &.{ "totals", "live_bytes_at_exit" }));
+    try std.testing.expectEqual(@as(i64, 3560), field(counts, &.{ "totals", "peak_live_bytes" }));
+}
+
+// spec-case: NEW-CORE-COUNTERS-1
+test "zero RC counters include recursive boxed list copies without counting box shells twice" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    const source =
+        \\# Exact copy traffic: one 3-element scalar list and one 2-element list below
+        \\# recursive boxes. Box payload copying is not a list-copy event.
+        \\enum Tree:
+        \\    leaf(items: int[])
+        \\    node(child: Tree)
+        \\
+        \\func score(tree: Tree) -> int:
+        \\    match tree:
+        \\        case Tree.leaf(items=items):
+        \\            return len(items) + items[0]
+        \\        case Tree.node(child=child):
+        \\            return 1 + score(child)
+        \\
+        \\func main(args: str[], out: Stream) -> int:
+        \\    const seed = len(args) + 3
+        \\    mut values = [seed, seed + 1, seed + 2]
+        \\    const flat = values.copy()
+        \\    values.clear()
+        \\    mut tree = Tree.leaf(items=[seed, seed + 1])
+        \\    for i in range(3):
+        \\        tree = Tree.node(child=tree)
+        \\    const saved = tree.copy()
+        \\    tree = Tree.leaf(items=[])
+        \\    out.print(score(saved), flat[0], len(flat))
+        \\    return 0
+    ;
+    try directory.dir.writeFile(std.testing.io, .{ .sub_path = "recursive-copy-counts.my", .data = source });
+    const path = try std.fs.path.join(a, &.{ root, "recursive-copy-counts.my" });
+    const modes = [_][]const []const u8{
+        &.{ "--counters", "--experimental-zero-rc", "--unoptimized" },
+        &.{ "--counters", "--experimental-zero-rc", "--release" },
+    };
+    for (modes) |flags| {
+        const result = try counted(a, root, path, flags, &.{});
+        try std.testing.expectEqual(@as(u8, 0), result.status);
+        try std.testing.expectEqualStrings("8 3 3\n", result.stdout);
+        try std.testing.expectEqualStrings("", result.stderr);
+        // The ordinary list-copy helper accounts for 24 bytes exactly once;
+        // the descriptor copies another 16 bytes below three recursive boxes.
+        try std.testing.expectEqual(@as(i64, 2), field(result.counts, &.{ "totals", "list_copies" }));
+        try std.testing.expectEqual(@as(i64, 40), field(result.counts, &.{ "totals", "list_copy_bytes" }));
+        try std.testing.expectEqual(@as(i64, 0), field(result.counts, &.{ "totals", "dict_copies" }));
+        try std.testing.expectEqual(field(result.counts, &.{ "totals", "allocs" }), field(result.counts, &.{ "totals", "frees" }));
+        try std.testing.expectEqual(@as(i64, 0), field(result.counts, &.{ "totals", "live_bytes_at_exit" }));
+    }
 }
 
 // spec: NEW-CORE-COUNTERS-2

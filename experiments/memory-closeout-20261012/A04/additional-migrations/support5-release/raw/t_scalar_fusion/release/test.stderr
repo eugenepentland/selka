@@ -1,0 +1,3 @@
+t_scalar_fusion.my:143:143: error[E_SINGLE_OWNER_MOVED]: 'wide' was moved or is unavailable on this path; use .copy() when both values are needed
+      return result == "ézé" and source == "éz" and values == ["éz", "éz"] and expanded == wide + wide + wide + wide and aliases == [wide, wide] and wide == "123456789012345é€🙂\0"
+                                                                                                                                                ^

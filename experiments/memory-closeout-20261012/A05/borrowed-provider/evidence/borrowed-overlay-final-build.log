@@ -1,0 +1,11 @@
+build-slot: build slot 1, FIFO ticket 875 after 0s
+d6a75e1b585d0cfe67029cf7cd5c9bf3c10e47c16ea4a1cd2e3c2f2ab12f4410
+6f99d5b3d030a93549b02903968ca8a3edeb20e60a48d1d347deb130186edcdc
+test-core
++- verification action core member 0 w
+guardian/test: 9 test(s) selected by filter: "borrowed provider" — 8 match by name, 1 unnamed test block(s) run regardless
+guardian/test: test wall 0.00s
+guardian/test: PASS — 9 passed
+guardian/test: RESULT {"passed":9,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/libexec/mylang/components ./.tmp/memory-closeout/A05/borrowed-overlay/.zig-cache/o/022397e1f4166f57bb95ef2515e533bd/test "--guardian-filter=borrowed provider" --cache-dir=./.tmp/memory-closeout/A05/borrowed-overlay/.zig-cache --seed=0x700398aa --listen=-
+

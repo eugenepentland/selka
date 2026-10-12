@@ -1,0 +1,45 @@
+
+
+# Port of zig/src/net_name.zig: helpers for hierarchical net and
+# reference-designator names.
+# Index of the last `/` in `name`, or -1.
+func last_slash(name: bytes) -> int:
+    mut i = len(name) - 1
+    while i >= 0:
+        if name[i] == ord("/"):
+            return i
+        i -= 1
+    return -1
+
+
+# The final segment of a slash-delimited hierarchical name.
+public func leaf(name: bytes) -> bytes:
+    mut slash = last_slash(name)
+    if slash < 0:
+        return name
+    return name.view(slash + 1, len(name))
+
+
+# Everything before the final slash, or None for a name with no parent segment.
+public func parent(name: bytes) -> bytes?:
+    mut slash = last_slash(name)
+    if slash < 0:
+        return None
+    return Some(name.view(0, slash))
+
+
+# Uppercase `name`, dropping the separators net names, pin functions and part
+# numbers are spelled with (`_ - / . space #`). Truncates at `cap` bytes (the
+# Zig `buf.len`) rather than growing: callers match short prefixes and suffixes.
+public func strip_upper(name: bytes, cap: int) -> bytes:
+    mut out: int[] = []
+    for c in name:
+        if c == ord("_") or c == ord("-") or c == ord("/") or c == ord(".") or c == ord(" ") or c == ord("#"):
+            continue
+        if len(out) >= cap:
+            break
+        if c >= ord("a") and c <= ord("z"):
+            out.append(c - 32)
+        else:
+            out.append(c)
+    return bytes(out)

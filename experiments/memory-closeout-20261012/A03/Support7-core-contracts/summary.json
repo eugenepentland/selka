@@ -1,0 +1,304 @@
+{
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "compiler_commit": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "oracle_source_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "oracle_source_hashes": {
+    "src/core/value_e2e_test.zig": "a4cf1a923b573f644eb1c8f499f2dc27639caca3b77c46f711c507728be3f9ff",
+    "src/core/ce2_results_test.zig": "22ce405f62c602895e21b3619e357939da5eee7d48c60ec868cb550ce736188c",
+    "src/core/ce_records_test.zig": "2ba1665b437d6374fff9d76b8a1b179776b348b9439ca52fb4274303ed6c352a",
+    "src/core/ce2_effects_test.zig": "c29f7953731976c2918c7402a4379f8ed7f93a7daddfc778e46083e3bc101ada",
+    "src/core/ce_lists_test.zig": "96e311c392b96481c223d2fc4ca10a20a9ff2264a2c17705f9e249c5fb082b38",
+    "test/core/row_cow.expected": "456c04fc9d53502eb38b1186f2f88a32c2569d645b1e2fa56fdaa4f84a5f9cdf",
+    "src/core/u1_state_test.zig": "0f170ebda59babbaa16773b8c729c77d4e0e9f2db87a722e4e1a4e3969650ecd",
+    "src/core/f1_facts_test.zig": "3958b411099551842e5f345cc299684b34fc23aba3a25d739c8f94cfa686caf6",
+    "src/core/own_test.zig": "4bd48d2d6f10c269776523523e3464067be900ffb88af02c9d20dee40e4fb201"
+  },
+  "benchmark_reference": "Independent Python checksums from original input/kernel contracts; no C0 native execution or timing claim.",
+  "trap_cleanup": "Fatal traps retain reported managed live bytes; cleanup is not claimed at abort.",
+  "counts": {
+    "counted_builds": 110,
+    "passed_counted_builds": 110,
+    "counted_runs": 225,
+    "passed_counted_runs": 225,
+    "normal_or_validation_exits": 195,
+    "fatal_traps": 30,
+    "actual_guest_test_commands": 10,
+    "public_passed": 75,
+    "public_failed": 0,
+    "public_unsupported": 15,
+    "public_skipped": 0,
+    "public_cached": 0
+  },
+  "failures": [
+    {
+      "source": "test/core/m_recursive_values.my",
+      "mode": "release",
+      "test": {
+        "name": "m_recursive_values::test_deep_hashing_and_nominal_rendering",
+        "status": "unsupported",
+        "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+        "at": "1:1",
+        "cache": {
+          "action": "refuse",
+          "reason": "unsupported",
+          "key": null,
+          "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+          "key_method": "per-test-ir-fallback",
+          "work": null
+        }
+      }
+    },
+    {
+      "source": "test/core/m_recursive_values.my",
+      "mode": "release",
+      "test": {
+        "name": "m_recursive_values::test_shared_nan_is_not_reflexive",
+        "status": "unsupported",
+        "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+        "at": "1:1",
+        "cache": {
+          "action": "refuse",
+          "reason": "unsupported",
+          "key": null,
+          "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+          "key_method": "per-test-ir-fallback",
+          "work": null
+        }
+      }
+    },
+    {
+      "source": "test/core/m_recursive_values.my",
+      "mode": "release",
+      "test": {
+        "name": "m_recursive_values::test_subtraction_and_multiplication_saturate_at_each_width",
+        "status": "unsupported",
+        "reason": "unaudited zero-RC runtime helper myl_core_saturating_integer",
+        "at": "1:1",
+        "cache": {
+          "action": "refuse",
+          "reason": "unsupported",
+          "key": null,
+          "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+          "key_method": "per-test-ir-fallback",
+          "work": null
+        }
+      }
+    },
+    {
+      "source": "test/core/m_recursive_values.my",
+      "mode": "debug",
+      "test": {
+        "name": "m_recursive_values::test_deep_hashing_and_nominal_rendering",
+        "status": "unsupported",
+        "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+        "at": "1:1",
+        "cache": {
+          "action": "refuse",
+          "reason": "unsupported",
+          "key": null,
+          "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+          "key_method": "per-test-ir-fallback",
+          "work": null
+        }
+      }
+    },
+    {
+      "source": "test/core/m_recursive_values.my",
+      "mode": "debug",
+      "test": {
+        "name": "m_recursive_values::test_shared_nan_is_not_reflexive",
+        "status": "unsupported",
+        "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+        "at": "1:1",
+        "cache": {
+          "action": "refuse",
+          "reason": "unsupported",
+          "key": null,
+          "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+          "key_method": "per-test-ir-fallback",
+          "work": null
+        }
+      }
+    },
+    {
+      "source": "test/core/m_recursive_values.my",
+      "mode": "debug",
+      "test": {
+        "name": "m_recursive_values::test_subtraction_and_multiplication_saturate_at_each_width",
+        "status": "unsupported",
+        "reason": "unaudited zero-RC runtime helper myl_core_saturating_integer",
+        "at": "1:1",
+        "cache": {
+          "action": "refuse",
+          "reason": "unsupported",
+          "key": null,
+          "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+          "key_method": "per-test-ir-fallback",
+          "work": null
+        }
+      }
+    },
+    {
+      "source": "test/core/m_recursive_values.my",
+      "mode": "verify",
+      "test": {
+        "name": "m_recursive_values::test_deep_hashing_and_nominal_rendering",
+        "status": "unsupported",
+        "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+        "at": "1:1",
+        "cache": {
+          "action": "refuse",
+          "reason": "unsupported",
+          "key": null,
+          "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+          "key_method": "per-test-ir-fallback",
+          "work": null
+        }
+      }
+    },
+    {
+      "source": "test/core/m_recursive_values.my",
+      "mode": "verify",
+      "test": {
+        "name": "m_recursive_values::test_shared_nan_is_not_reflexive",
+        "status": "unsupported",
+        "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+        "at": "1:1",
+        "cache": {
+          "action": "refuse",
+          "reason": "unsupported",
+          "key": null,
+          "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+          "key_method": "per-test-ir-fallback",
+          "work": null
+        }
+      }
+    },
+    {
+      "source": "test/core/m_recursive_values.my",
+      "mode": "verify",
+      "test": {
+        "name": "m_recursive_values::test_subtraction_and_multiplication_saturate_at_each_width",
+        "status": "unsupported",
+        "reason": "unaudited zero-RC runtime helper myl_core_saturating_integer",
+        "at": "1:1",
+        "cache": {
+          "action": "refuse",
+          "reason": "unsupported",
+          "key": null,
+          "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+          "key_method": "per-test-ir-fallback",
+          "work": null
+        }
+      }
+    },
+    {
+      "source": "test/core/m_recursive_values.my",
+      "mode": "optimized_debug",
+      "test": {
+        "name": "m_recursive_values::test_deep_hashing_and_nominal_rendering",
+        "status": "unsupported",
+        "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+        "at": "1:1",
+        "cache": {
+          "action": "refuse",
+          "reason": "unsupported",
+          "key": null,
+          "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+          "key_method": "per-test-ir-fallback",
+          "work": null
+        }
+      }
+    },
+    {
+      "source": "test/core/m_recursive_values.my",
+      "mode": "optimized_debug",
+      "test": {
+        "name": "m_recursive_values::test_shared_nan_is_not_reflexive",
+        "status": "unsupported",
+        "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+        "at": "1:1",
+        "cache": {
+          "action": "refuse",
+          "reason": "unsupported",
+          "key": null,
+          "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+          "key_method": "per-test-ir-fallback",
+          "work": null
+        }
+      }
+    },
+    {
+      "source": "test/core/m_recursive_values.my",
+      "mode": "optimized_debug",
+      "test": {
+        "name": "m_recursive_values::test_subtraction_and_multiplication_saturate_at_each_width",
+        "status": "unsupported",
+        "reason": "unaudited zero-RC runtime helper myl_core_saturating_integer",
+        "at": "1:1",
+        "cache": {
+          "action": "refuse",
+          "reason": "unsupported",
+          "key": null,
+          "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+          "key_method": "per-test-ir-fallback",
+          "work": null
+        }
+      }
+    },
+    {
+      "source": "test/core/m_recursive_values.my",
+      "mode": "no_facts",
+      "test": {
+        "name": "m_recursive_values::test_deep_hashing_and_nominal_rendering",
+        "status": "unsupported",
+        "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+        "at": "1:1",
+        "cache": {
+          "action": "refuse",
+          "reason": "unsupported",
+          "key": null,
+          "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+          "key_method": "per-test-ir-fallback",
+          "work": null
+        }
+      }
+    },
+    {
+      "source": "test/core/m_recursive_values.my",
+      "mode": "no_facts",
+      "test": {
+        "name": "m_recursive_values::test_shared_nan_is_not_reflexive",
+        "status": "unsupported",
+        "reason": "unaudited zero-RC runtime helper myl_core_equal_15",
+        "at": "1:1",
+        "cache": {
+          "action": "refuse",
+          "reason": "unsupported",
+          "key": null,
+          "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+          "key_method": "per-test-ir-fallback",
+          "work": null
+        }
+      }
+    },
+    {
+      "source": "test/core/m_recursive_values.my",
+      "mode": "no_facts",
+      "test": {
+        "name": "m_recursive_values::test_subtraction_and_multiplication_saturate_at_each_width",
+        "status": "unsupported",
+        "reason": "unaudited zero-RC runtime helper myl_core_saturating_integer",
+        "at": "1:1",
+        "cache": {
+          "action": "refuse",
+          "reason": "unsupported",
+          "key": null,
+          "component": "361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11",
+          "key_method": "per-test-ir-fallback",
+          "work": null
+        }
+      }
+    }
+  ]
+}

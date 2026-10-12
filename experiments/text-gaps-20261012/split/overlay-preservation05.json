@@ -1,0 +1,9 @@
+{
+  "paths": {
+    "src/core/inline.zig": "0abfcf708b4847cf010d04e6cfed369ca1f6a4c86d0337352f42509d0eca1cc6",
+    "src/core/inline_cfg.zig": "d39c1990418c552900a89a950d5a4adc4615dedb3b63b6a911667ee9e89c039b",
+    "src/core/root_test.zig": "b04aacf51678e13846c5b08c7e5d699edd9473c7ea49097e265fb249d1d9db1a"
+  },
+  "backup": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/overlay-backup05",
+  "authorization": "Coordinator authorized exact-byte temporary HEAD restoration with finally restore."
+}

@@ -63,9 +63,33 @@ pub fn rewriteFunction(arena: std.mem.Allocator, module: *ir.Module, f: *ir.Func
 fn rewriteRecording(arena: std.mem.Allocator, module: *ir.Module, f: *ir.Function, requests: ?*std.ArrayList(u32)) std.mem.Allocator.Error!u32 {
     var changed: u32 = 0;
     const count = f.insts.items.len;
+    var copies: u32 = 0;
     for (0..count) |index| {
         const inst = f.insts.items[index];
+        // An explicit snapshot used solely for reads can borrow under the same
+        // complete-use and parent-stability proof as a slice. Inserts still
+        // construct an independent key on their miss path below.
+        if (module.zero_rc and count <= 4096 and copies < 32 and inst.ty == .str) {
+            if (@import("inline_snapshot.zig").source(module, f, inst)) |source| {
+                copies += 1;
+                const ref: ir.Ref = @fromBackingInt(@intCast(index));
+                if (!onlyReads(f, module, ref) or try updated(arena, f, module, source)) continue;
+                const zero: ir.Ref = @fromBackingInt(@intCast(f.insts.items.len));
+                try f.insts.append(arena, .{ .op = .iconst, .ty = .u64 });
+                const len: ir.Ref = @fromBackingInt(@intCast(f.insts.items.len));
+                try f.insts.append(arena, .{ .op = .str_len, .ty = .u64, .a = source, .span = inst.span });
+                try before(arena, f, ref, zero);
+                try before(arena, f, ref, len);
+                const start: u32 = @intCast(f.extra.items.len);
+                try f.extra.append(arena, len);
+                f.insts.items[index] = .{ .op = .str_view_of, .ty = .str_view, .a = source, .b = zero, .data = (ir.ExtraSlice{ .start = start, .len = 1 }).pack(), .span = inst.span };
+                try rewriteUsesRecording(arena, f, module, ref, requests);
+                changed += 1;
+                continue;
+            }
+        }
         if (inst.op == .str_from_view and onlyReads(f, module, @fromBackingInt(@intCast(index)))) {
+            if (module.zero_rc and try updated(arena, f, module, f.resolve(inst.a))) continue;
             f.insts.items[index] = .{ .op = .copy, .ty = .str_view, .a = inst.a, .span = inst.span };
             try rewriteUsesRecording(arena, f, module, f.resolve(inst.a), requests);
             changed += 1;
@@ -132,6 +156,7 @@ pub fn onlyReads(f: *const ir.Function, module: *const ir.Module, slice: ir.Ref)
 /// source live, so an update while the view is live would copy the whole source instead
 /// of updating it in place: such a slice stays a copy.
 pub fn updated(arena: std.mem.Allocator, f: *const ir.Function, module: *const ir.Module, source: ir.Ref) std.mem.Allocator.Error!bool {
+    if (module.zero_rc) return ownedUpdated(arena, f, module, source);
     const aliases = try arena.alloc(bool, f.insts.items.len);
     defer arena.free(aliases);
     @memset(aliases, false);
@@ -163,6 +188,86 @@ pub fn updated(arena: std.mem.Allocator, f: *const ir.Function, module: *const i
     return false;
 }
 
+// A checked owner cannot be retained to keep an optimizer-created view alive.
+// Follow its borrowed parent chain and phi aliases, and leave the source slice
+// materialized if any of those owners transfers into storage or an owning call.
+const AliasEdge = struct { target: ir.Ref, next: u32 };
+const no_edge = std.math.maxInt(u32);
+
+fn ownedUpdated(arena: std.mem.Allocator, f: *const ir.Function, module: *const ir.Module, source: ir.Ref) std.mem.Allocator.Error!bool {
+    const length = f.insts.items.len;
+    const heads = try arena.alloc(u32, length);
+    defer arena.free(heads);
+    @memset(heads, no_edge);
+    var edges: std.ArrayList(AliasEdge) = .empty;
+    defer edges.deinit(arena);
+    // Reverse phi edges let each alias be visited once, including loop backedges.
+    for (f.insts.items, 0..) |inst, index| {
+        if (inst.op != .phi) continue;
+        for (f.operands(inst.data)) |operand| {
+            const owner = f.resolve(operand).index();
+            try edges.append(arena, .{ .target = @fromBackingInt(@intCast(index)), .next = heads[owner] });
+            heads[owner] = @intCast(edges.items.len - 1);
+        }
+    }
+    const aliases = try arena.alloc(bool, length);
+    defer arena.free(aliases);
+    @memset(aliases, false);
+    var pending: std.ArrayList(ir.Ref) = .empty;
+    defer pending.deinit(arena);
+    try alias(arena, f, aliases, &pending, source);
+    while (pending.pop()) |ref| {
+        const inst = f.inst(ref);
+        if (borrowedParent(f, module, inst)) |parent| try alias(arena, f, aliases, &pending, parent);
+        if (inst.op == .phi) for (f.operands(inst.data)) |operand| try alias(arena, f, aliases, &pending, operand);
+        var edge = heads[ref.index()];
+        while (edge != no_edge) : (edge = edges.items[edge].next) try alias(arena, f, aliases, &pending, edges.items[edge].target);
+    }
+    for (f.insts.items) |inst| {
+        const operands = f.valueOperands(inst);
+        for (0..operands.len()) |at| {
+            const operand = f.resolve(operands.get(at));
+            if (aliases[operand.index()] and f.inst(operand).op != .str_const and takesOwner(f, module, inst, at)) return true;
+        }
+    }
+    return false;
+}
+
+fn alias(arena: std.mem.Allocator, f: *const ir.Function, aliases: []bool, pending: *std.ArrayList(ir.Ref), value: ir.Ref) std.mem.Allocator.Error!void {
+    const ref = f.resolve(value);
+    if (aliases[ref.index()]) return;
+    aliases[ref.index()] = true;
+    try pending.append(arena, ref);
+}
+
+fn borrowedParent(f: *const ir.Function, module: *const ir.Module, inst: ir.Inst) ?ir.Ref {
+    return switch (inst.op) {
+        .list_get, .list_get_field, .record_get, .union_payload, .box_get, .dict_entry_key, .dict_entry_value, .array_get, .str_view_of, .str_slice_view => inst.a,
+        .call => if (module.functions.items[inst.a.index()].signature.viewSource()) |at| f.operands(inst.data)[at] else null,
+        else => null,
+    };
+}
+
+fn takesOwner(f: *const ir.Function, module: *const ir.Module, inst: ir.Inst, at: usize) bool {
+    if (at == 0 and inst.op.consumesOperand0()) return true;
+    const signature: ?ir.Signature = switch (inst.op) {
+        .call => module.functions.items[inst.a.index()].signature,
+        .call_indirect => module.compound(f.inst(f.resolve(inst.a)).ty).@"fn",
+        else => null,
+    };
+    if (signature) |sig| {
+        // valueOperands includes the indirect callee before the arguments.
+        const first: usize = if (inst.op == .call_indirect) 1 else 0;
+        if (at < first or at - first >= 64) return false;
+        return (sig.owned | sig.consumes) & (@as(u64, 1) << @intCast(at - first)) != 0;
+    }
+    return switch (inst.op) {
+        .list_push, .record_set, .union_make, .union_take, .box_make, .box_take, .ret, .release, .record_make => true,
+        .list_set, .list_set_field, .array_set, .dict_set_value, .dict_insert => at >= 2,
+        else => false,
+    };
+}
+
 /// The span form of a direct call of a reading helper, every parameter a borrowed `str`.
 /// The builder declares these helpers `runtime_c` (`str_eq`) or `extern_c` (the others);
 /// either way the symbol is the runtime's own, since a second definition of a `myl_core_`
@@ -171,6 +276,7 @@ fn spanForm(module: *const ir.Module, call: ir.Inst) ?SpanForm {
     if (call.a.index() >= module.functions.items.len) return null;
     const callee = module.functions.items[call.a.index()];
     const signature = callee.signature;
+    if (decodeForm(module, callee)) |form| return form;
     if (signature.linkage == .internal or signature.owned != 0) return null;
     for (signature.params) |param| if (param != .str and param != .bytes) return null;
     for (span_forms) |form| {
@@ -182,6 +288,33 @@ fn spanForm(module: *const ir.Module, call: ir.Inst) ?SpanForm {
         if (offsets) return if (module.kind(signature.ret) == .list) form else null;
         const ret: ir.Type = if (std.mem.eql(u8, form.text, "myl_core_str_chars")) .u64 else .bool;
         return if (signature.ret == ret) form else null;
+    }
+    return null;
+}
+
+// Validation borrows exactly the selected octets; successful decoding constructs
+// an independent string. Admit only compiler-declared one-argument readers.
+fn decodeForm(module: *const ir.Module, callee: ir.Function) ?SpanForm {
+    const sig = callee.signature;
+    if (!module.zero_rc or sig.linkage != .runtime_c) return null;
+    if (sig.owned != 0 or sig.consumes != 0) return null;
+    const forms = [_]SpanForm{
+        .{ .text = "myl_core_bytes_utf8_count", .span = "myl_core_span_utf8_count" },
+        .{ .text = "myl_core_bytes_decode_text", .span = "myl_core_span_decode_text" },
+    };
+    for (forms, 0..) |form, i| {
+        const span = std.mem.eql(u8, callee.name, form.span);
+        if (!span and !std.mem.eql(u8, callee.name, form.text)) continue;
+        const ret: ir.Type = if (i == 0) .i64 else .str;
+        if (sig.ret != ret or sig.views != @as(u64, if (span) 1 else 0)) return null;
+        if (!std.mem.eql(ir.Type, sig.params, if (span) &.{.str} else &.{.bytes})) return null;
+        for (module.functions.items) |decl| {
+            if (!std.mem.eql(u8, decl.name, form.span)) continue;
+            const candidate = decl.signature;
+            if (candidate.linkage != .runtime_c or candidate.owned != 0 or candidate.consumes != 0) return null;
+            if (candidate.views != 1 or candidate.ret != ret or !std.mem.eql(ir.Type, candidate.params, &.{.str})) return null;
+        }
+        return form;
     }
     return null;
 }

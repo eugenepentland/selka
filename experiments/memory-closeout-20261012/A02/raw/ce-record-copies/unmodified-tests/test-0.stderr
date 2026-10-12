@@ -1,0 +1,32 @@
+guardian/test: 9 test(s) selected by filter: "a record whose old value has no later reader" — 1 match by name, 8 unnamed test block(s) run regardless
+expected 0, found 2
+3 ce_records_test.test.a record whose old value has no later reader is updated in place; a snapshot still read keeps a copy...FAIL (TestExpectedEqual)
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x2774109 in expectEqualInner__anon_279262 (std.zig)
+                return error.TestExpectedEqual;
+                ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x2775eb9 in expectEqual (root_test.zig)
+    return expectEqualInner(T, expected, actual);
+    ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/src/core/ce_records_test.zig:216:5: 0x2775f44 in test.a record whose old value has no later reader is updated in place; a snapshot still read keeps a copy (root_test.zig)
+    try std.testing.expectEqual(@as(usize, 0), copies(functionText(llvm, "@\"my.write_backs\"")));
+    ^
+expected 0, found 2
+4 ce_records_test.test.a mut record crosses a call in-out: one writable pointer, no sret, no copy in or out...FAIL (TestExpectedEqual)
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x2774109 in expectEqualInner__anon_279262 (std.zig)
+                return error.TestExpectedEqual;
+                ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x2774842 in expectEqual (root_test.zig)
+    return expectEqualInner(T, expected, actual);
+    ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/src/core/ce_records_test.zig:236:5: 0x27748cd in test.a mut record crosses a call in-out: one writable pointer, no sret, no copy in or out (root_test.zig)
+    try std.testing.expectEqual(@as(usize, 0), copies(pushes));
+    ^
+7 passed; 0 skipped; 2 failed.
+guardian/test: test wall 2.03s; slowest over 50ms:
+guardian/test:   1.06s  ce_records_test.test.shared homes, views, in-place updates and in-out calls keep value semantics, debug, release and verify, leak-free
+guardian/test:   0.59s  ce_records_test.test.a record whose old value has no later reader is updated in place; a snapshot still read keeps a copy
+guardian/test:   0.11s  ce_records_test.test.the CE-A shapes print what value semantics says, debug and release
+guardian/test:   0.10s  ce_records_test.test.a ret next to a value living in %ret builds its value in a temporary: a field swap reads both halves first
+guardian/test:   0.08s  ce_records_test.test.a call's result record read whole gets its in-out final values copied in after the call
+guardian/test: FAIL — 2 failed of 9
+guardian/test: RESULT {"passed":7,"failed":2,"skipped":0}

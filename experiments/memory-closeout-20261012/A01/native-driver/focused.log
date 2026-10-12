@@ -1,0 +1,27 @@
+build-slot: FIFO ticket 324, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 324 after 30s
+f20517e635ca2a8f6c81a5214eb33872f137ebca4ce57dd53fcbf5086fd52360
+d144d9b7a03164be1d63daccb1b8366c6fdc0f7d8c72146628287f20983a4058
+test-core
++- verification action core member 0 4 pass, 1 fail (5 total)
+guardian/test: test wall 17.44s; slowest over 50ms:
+guardian/test:   16.97s  driver_cache_test.test.an unchanged build replays, a lost record reuses every object and the program, and an edit compiles one unit
+guardian/test:   0.28s  driver_native_cache_test.test.linkNative refuses unproved tool native reuse and cleans private caches after ToolFailed
+guardian/test:   0.16s  a01_native_driver_test.test.A01 uncached native multiunit objects survive link and clean after success and failure
+guardian/test: FAIL — 1 failed of 5
+guardian/test: RESULT {"passed":4,"failed":1,"skipped":0}
+error: 'driver_cache_test.test.an unchanged build replays, a lost record reuses every object and the program, and an edit compiles one unit' failed:
+       guardian/test: 5 test(s) selected by filter: "A01", "linkNative refuses unproved", "an unchanged build replays"
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x13c5699 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A01/src/core/driver_cache_test.zig:163:5: 0x13c8a5b in test.an unchanged build replays, a lost record reuses every object and the program, and an edit compiles one unit (root_test.zig)
+           try std.testing.expect((try report(try project.build(&.{}))).replayed);
+           ^
+       guardian/test: SLOW  16.97s  driver_cache_test.test.an unchanged build replays, a lost record reuses every object and the program, and an edit compiles one unit
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A01/zig-out/libexec/mylang/components ./.zig-cache/o/8867856c949927cae364d04655054f32/test --guardian-filter=A01 "--guardian-filter=linkNative refuses unproved" "--guardian-filter=an unchanged build replays" --cache-dir=./.zig-cache --seed=0xdea2d2cf --listen=-
+
+Build Summary: 10/12 steps succeeded (1 failed); 4/5 tests passed (1 failed)
+test-core transitive failure
++- verification action core member 0 4 pass, 1 fail (5 total)
+

@@ -1,0 +1,5 @@
+resource File: filesystem
+func main() -> int:
+    const values: Result[File, str][] = []
+    _ = values
+    return 0

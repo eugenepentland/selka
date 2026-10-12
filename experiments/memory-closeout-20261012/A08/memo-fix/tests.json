@@ -1,0 +1,38 @@
+{
+  "base": "69f797479707dba0fbca18aad5c4fb5d3acbffb7",
+  "production_files": {
+    "src/semantic_type_recipe.zig": "ca8d293ed66d549f4c1a11f198ac29d0ef6b1f519eaae54252df443f83970294"
+  },
+  "registered_test_sha256": "07fa85cdf91bfba86a9a1fe46c4e70df4fd6df5cb9e5bda697f9ce39ea35b398",
+  "checks": [
+    {
+      "name": "original warm reproducer",
+      "status": "failed before fix",
+      "log": "logs/semantic-red-02.log",
+      "cause": "InternalError at module_names.reference on unsplit generic call.name"
+    },
+    {
+      "name": "strengthened frontend regression and eight prior v8/v9 controls",
+      "status": "passed9/9",
+      "log": "logs/semantic-green-06.log",
+      "scope": "separate durable cache instances; cold/warm/earlier declaration/invalid callback/recovery; observed reused independent bodies and conservative interned-record miss"
+    },
+    {
+      "name": "existing portable callable controls",
+      "status": "passed10/10",
+      "exit_code": 0,
+      "log": "logs/portable-callable-02.log",
+      "scope": "three named callable-recipe tests plus seven unnamed blocks, registered build test-units with actual owned component pin"
+    }
+  ],
+  "nonfinal_attempts": [
+    {
+      "log": "logs/semantic-green-05.log",
+      "cause": "new relocation fixture prepended a function before required leading import; corrected fixture preserves import order"
+    },
+    {
+      "log": "logs/portable-callable-01.log",
+      "cause": "direct zig test lacks generated memory_budget/native_test_options modules; registered build test-units passes"
+    }
+  ]
+}

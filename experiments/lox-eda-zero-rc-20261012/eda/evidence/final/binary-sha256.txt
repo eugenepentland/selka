@@ -1,0 +1,8 @@
+a476b06325c927157e99719fd3dd7adbc85661f0a8b1924ae28f585f8717140a  /home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/original-rc
+1774b721b091b419d768e621d4d7a3cbf5671a84c7984afaad2ab55829b83115  /home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/migrated-rc
+4a4edebac4ed58a4849301096c019cd85761939ca9732fd15ae5a4705f988bfb  /home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/zero-rc
+d007fe4847d3fff21449371b6170a12c1b3ce536a8944245caf8be5958fb29e0  /home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/original-rc-count
+661b44349e4843d851a3ec92064a24a8517f64c4d8bea983f6f714c9e712d866  /home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/migrated-rc-count
+19915b227d602697e666a31ac2a3e258543276a4a2677c073c2536bdc36f631a  /home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/zero-rc-count
+4e77a8455722909c4f8990e11e186f8314b015a0ba1dea567b04db91ce77382c  /home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/zero-verified
+a90ce4a96c19dc6bc0808ba2bace80006881c17770ca049a2a9519b102dead75  /home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/zero-debug

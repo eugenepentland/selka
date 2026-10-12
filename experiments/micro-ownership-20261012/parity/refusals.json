@@ -1,0 +1,50 @@
+[
+  {
+    "binding": "mut key = keys[(i * 7919) % 1000]",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/refusal-mut.my",
+      "--release",
+      "--experimental-zero-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/refusal",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/cache/refusal"
+    ],
+    "status": 1,
+    "diagnostic": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/refusal-mut.my:8:19: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          mut key = keys[(i * 7919) % 1000]\n                    ^\n"
+  },
+  {
+    "binding": "key = keys[(i * 7919) % 1000]",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/refusal-bare.my",
+      "--release",
+      "--experimental-zero-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/refusal",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/cache/refusal"
+    ],
+    "status": 1,
+    "diagnostic": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/refusal-bare.my:8:9: error[E_BINDING_DECLARATION]: declare this writable local with 'mut'\n          key = keys[(i * 7919) % 1000]\n          ^\n"
+  },
+  {
+    "binding": "const key = keys[(i * 7919) % 1000]",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/refusal-const.my",
+      "--release",
+      "--experimental-zero-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/refusal",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/cache/refusal"
+    ],
+    "status": 1,
+    "diagnostic": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/refusal-const.my:8:21: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          const key = keys[(i * 7919) % 1000]\n                      ^\n"
+  }
+]

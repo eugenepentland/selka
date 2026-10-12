@@ -1,0 +1,80 @@
+{
+  "validated_at_utc": "2026-10-12T12:48:57.409078+00:00",
+  "measurement_runner_exit": 0,
+  "receipts": 132,
+  "receipt_sha256_verification": "passed",
+  "cells": 60,
+  "completed_cells_by_arm": {
+    "zig-safe": 60,
+    "go": 60,
+    "mylang-zero-rc": 57,
+    "zig-fast": 60,
+    "mylang-migrated-rc": 60,
+    "rust": 60,
+    "mylang-original-rc": 60
+  },
+  "ordinary_runtime_censors": [
+    {
+      "cell": "lox/vm/equality",
+      "arm": "mylang-zero-rc",
+      "status": "timeout",
+      "phase": "warmup",
+      "timeout_seconds": 120.0,
+      "owner": "lox_owned",
+      "reproducer_argv": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/equality.vm.3000000.lox"
+      ],
+      "output_qualified": false,
+      "performance_action": "deferred to user; no further optimization authorized in this run"
+    },
+    {
+      "cell": "lox/vm/invocation",
+      "arm": "mylang-zero-rc",
+      "status": "timeout",
+      "phase": "warmup",
+      "timeout_seconds": 120.0,
+      "owner": "lox_owned",
+      "reproducer_argv": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/invocation.vm.1500000.lox"
+      ],
+      "output_qualified": false,
+      "performance_action": "deferred to user; no further optimization authorized in this run"
+    },
+    {
+      "cell": "lox/vm/string_equality",
+      "arm": "mylang-zero-rc",
+      "status": "timeout",
+      "phase": "warmup",
+      "timeout_seconds": 120.0,
+      "owner": "lox_owned",
+      "reproducer_argv": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+      ],
+      "output_qualified": false,
+      "performance_action": "deferred to user; no further optimization authorized in this run"
+    }
+  ],
+  "full_vm_zero_rc_geomeans": null,
+  "gate_commit": "4034a2fab29e3300b6f70549ce84727d647761db",
+  "post_gate_changed_paths_are_evidence_only": true,
+  "production_and_application_source_changes_after_gate": [],
+  "benchmark_compiler_sha256": "6e7938a14ad4abc46b76c149ef12551b170f6c7e6f462beec2f81db18d40a83d",
+  "gate_rebuilt_compiler_sha256": "8e58720cd72de8632aa48df373d18fc8238d46ec27010f8b182820a0eaaf10fa",
+  "final_report_commit": "c01d62ee8353f5846041c10d3f3af1d8e2b4d3e0",
+  "report_sha256": "935f3a5cec87042e4cfe00158b867a525b84d9365760b9dc0fcf43acad375a76",
+  "summary_sha256": "3015b5b0372b02bb4cdb89e88cb2f91807a758b0c52b0711aa7f37e9004e9d80",
+  "source_paths_checked": [
+    "src/",
+    "scripts/",
+    "tools/",
+    "experiments/lox-eda-zero-rc-20261012/lox/migrated/",
+    "experiments/lox-eda-zero-rc-20261012/eda/source/",
+    "experiments/lox-eda-zero-rc-20261012/eda/original/"
+  ]
+}

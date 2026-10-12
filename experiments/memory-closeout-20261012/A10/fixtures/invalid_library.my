@@ -1,0 +1,4 @@
+public func moved() -> str:
+    const value = "move-" + str(4)
+    const other = value
+    return value

@@ -1,0 +1,343 @@
+
+import sexpr_ast as ast
+import sexpr_parser as parser
+import numeric
+import math
+import support_sort as srt
+import support_strs as strs
+import support_parse as parse_mod
+
+public const per_mm: int = 10000
+
+
+public const max_coord: int = 100000000
+
+
+public const err_not_symbol_lib: str = "NotSymbolLib"
+
+
+public record Point:
+    x: int = 0
+    y: int = 0
+
+
+public enum Fill:
+    none
+    outline
+    background
+
+
+public record Style:
+    fill: Fill
+    width: int = 0
+
+
+public enum Kind:
+    rectangle
+    polyline
+    circle
+    arc
+    text
+
+
+public record Graphic:
+    kind: Kind
+    pts: Point[]
+    text: bytes
+    style: Style
+    radius: int = 0
+    angle: int = 0
+
+
+public record Pin:
+    pad: bytes
+    name: bytes
+    at: Point
+    angle: int = 0
+    length: int = 0
+    hidden: bool = False
+
+
+public record SymbolUnit:
+    number: int
+    pins: Pin[]
+    graphics: Graphic[]
+
+
+public record Symbol:
+    name: bytes
+    units: SymbolUnit[]
+
+
+public func parse_library(source: bytes) -> Result[Symbol[], str]:
+    mut nodes: ast.Node[] = []
+    match parser.parse(source):
+        case Err(e):
+            return Err(parser.error_name(e))
+        case Ok(parsed):
+            nodes = parsed
+    if len(nodes) == 0 or not ast.is_form(nodes[0], b"kicad_symbol_lib"):
+        return Err(err_not_symbol_lib)
+    mut root = ast.as_list(nodes[0])
+    if root is None:
+        return Err(err_not_symbol_lib)
+    mut out: Symbol[] = []
+    for child in root[1:len(root)]:
+        if not ast.is_form(child, b"symbol"):
+            continue
+        mut sym = read_symbol(child)
+        if sym is not None:
+            out.append(sym.copy())
+    return Ok(out)
+
+
+# Private in Zig; public here for the split-file unitId test.
+public record UnitId:
+    unit: int
+    style: int
+
+
+record Acc:
+    pins: Pin[]
+    graphics: Graphic[]
+
+
+# SymbolUnit contents accumulate in first-seen order; read_symbol sorts final units.
+func read_symbol(node: ast.Node) -> Symbol?:
+    mut cl = try ast.as_list(node)
+    if len(cl) < 2:
+        return None
+    mut name = try ast.as_text(cl[1])
+    mut units: dict[int, Acc] = {}
+    collect(cl[2:len(cl)], 0, mut units)
+    if len(units) == 0:
+        return None
+    mut out: SymbolUnit[] = []
+    for number in units:
+        mut acc = units[number].copy()
+        out.append(SymbolUnit(number=number, pins=acc.pins.copy(), graphics=acc.graphics.copy()))
+    srt.sort_by(mut out, less_unit)
+    return Some(Symbol(name=name, units=out))
+
+
+func less_unit(x: SymbolUnit, y: SymbolUnit) -> bool:
+    return x.number < y.number
+
+
+# Walk normal body children and per-unit sub-symbols. Electrical type and
+# shape are deliberately ignored: the exporter writes every pin as passive.
+func collect(children: ast.Node[], unit: int, mut units: dict[int, Acc]):
+    for child in children:
+        if ast.is_form(child, b"symbol"):
+            collect_sub(child, mut units)
+        elif ast.is_form(child, b"pin"):
+            mut pin = read_pin(child)
+            if pin is not None:
+                acc_for(mut units, unit)
+                units[unit].pins.append(pin.copy())
+        else:
+            mut graphic = read_graphic(child)
+            if graphic is not None:
+                acc_for(mut units, unit)
+                units[unit].graphics.append(graphic.copy())
+
+
+func collect_sub(node: ast.Node, mut units: dict[int, Acc]):
+    mut sub = ast.as_list(node)
+    if sub is None:
+        return
+    if len(sub) < 2:
+        return
+    mut name = ast.as_text(sub[1])
+    if name is None:
+        return
+    mut id_ = unit_id(name)
+    if id_ is None:
+        return
+    if id_.style > 1:
+        return
+    collect(sub[2:len(sub)], id_.unit, mut units)
+
+
+func acc_for(mut units: dict[int, Acc], unit: int):
+    if unit not in units:
+        units[unit] = Acc(pins=[], graphics=[])
+
+
+# The trailing <unit>_<style> numbers, allowing underscores in the base name.
+# private in Zig
+public func unit_id(name: bytes) -> UnitId?:
+    mut cut = -1
+    mut i = len(name) - 1
+    while i >= 0:
+        if name[i] == 95:
+            cut = i
+            break
+        i -= 1
+    if cut < 0:
+        return None
+    mut split = -1
+    mut j = cut - 1
+    while j >= 0:
+        if name[j] == 95:
+            split = j
+            break
+        j -= 1
+    if split < 0:
+        return None
+    mut number = try parse_mod.parse_u32(strs.text(name[split + 1:cut]))
+    mut style = try parse_mod.parse_u32(strs.text(name[cut + 1:len(name)]))
+    return Some(UnitId(unit=int(number), style=int(style)))
+
+
+func read_pin(node: ast.Node) -> Pin?:
+    mut cl = try ast.as_list(node)
+    mut p = Pin(pad=b"", name=b"", at=Point())
+    for child in cl[1:len(cl)]:
+        mut atom = ast.as_atom(child)
+        if atom is not None:
+            if atom == b"hide":
+                p.hidden = True
+        elif ast.is_form(child, b"at"):
+            p.at = point_at(child, 1).unwrap_or(p.at)
+            p.angle = degrees(scalar_at(child, 3).unwrap_or(0.0))
+        elif ast.is_form(child, b"length"):
+            p.length = unit_at(child, 1)
+        elif ast.is_form(child, b"hide"):
+            p.hidden = text_at(child, 1).unwrap_or(b"") == b"yes"
+        elif ast.is_form(child, b"name"):
+            p.name = text_at(child, 1).unwrap_or(b"").copy()
+        elif ast.is_form(child, b"number"):
+            p.pad = token_at(child, 1).unwrap_or(b"").copy()
+    if len(p.pad) == 0:
+        return None
+    return Some(p)
+
+
+func read_graphic(node: ast.Node) -> Graphic?:
+    if ast.is_form(node, b"rectangle"):
+        return corners(node, [b"start", b"end"], Kind.rectangle)
+    if ast.is_form(node, b"arc"):
+        return corners(node, [b"start", b"mid", b"end"], Kind.arc)
+    if ast.is_form(node, b"polyline"):
+        return vertices(node)
+    if ast.is_form(node, b"circle"):
+        return disc(node)
+    if ast.is_form(node, b"text"):
+        return label(node)
+    return None
+
+
+# Missing any named point makes a rectangle or arc malformed.
+func corners(node: ast.Node, names: bytes[], kind: Kind) -> Graphic?:
+    mut pts: Point[] = []
+    for name in names:
+        mut form = try find_form(node, name)
+        mut pt = try point_at(form, 1)
+        pts.append(pt)
+    return Some(Graphic(kind=kind.copy(), pts=pts, text=b"", style=read_style(node)))
+
+
+func vertices(node: ast.Node) -> Graphic?:
+    mut form = try find_form(node, b"pts")
+    mut cl = try ast.as_list(form)
+    mut out: Point[] = []
+    for child in cl[1:len(cl)]:
+        if not ast.is_form(child, b"xy"):
+            continue
+        mut pt = point_at(child, 1)
+        if pt is not None:
+            out.append(pt)
+    if len(out) < 2:
+        return None
+    return Some(Graphic(kind=Kind.polyline, pts=out, text=b"", style=read_style(node)))
+
+
+func disc(node: ast.Node) -> Graphic?:
+    mut centre_form = try find_form(node, b"center")
+    mut centre = try point_at(centre_form, 1)
+    mut radius_form = try find_form(node, b"radius")
+    mut radius = unit_at(radius_form, 1)
+    if radius <= 0:
+        return None
+    return Some(Graphic(kind=Kind.circle, pts=[centre], radius=radius, text=b"", style=read_style(node)))
+
+
+func label(node: ast.Node) -> Graphic?:
+    mut body = try text_at(node, 1)
+    if len(body) == 0:
+        return None
+    mut anchor = try find_form(node, b"at")
+    mut pt = try point_at(anchor, 1)
+    return Some(Graphic(kind=Kind.text, pts=[pt], angle=degrees(scalar_at(anchor, 3).unwrap_or(0.0)), text=body, style=Style(fill=Fill.none)))
+
+
+func read_style(node: ast.Node) -> Style:
+    mut st = Style(fill=Fill.none)
+    mut stroke = find_form(node, b"stroke")
+    if stroke is not None:
+        mut width = find_form(stroke, b"width")
+        if width is not None:
+            st.width = unit_at(width, 1)
+    mut fill = find_form(node, b"fill")
+    if fill is not None:
+        mut type_form = find_form(fill, b"type")
+        if type_form is not None:
+            st.fill = fill_of(text_at(type_form, 1).unwrap_or(b""))
+    return st
+
+
+func fill_of(name: bytes) -> Fill:
+    if name == b"background":
+        return Fill.background
+    if name == b"outline" or name == b"color":
+        return Fill.outline
+    return Fill.none
+
+
+func find_form(node: ast.Node, name: bytes) -> ast.Node?:
+    mut cl = try ast.as_list(node)
+    for child in cl[1:len(cl)]:
+        if ast.is_form(child, name):
+            return Some(child.copy())
+    return None
+
+
+func text_at(node: ast.Node, i: int) -> bytes?:
+    mut cl = try ast.as_list(node)
+    if len(cl) <= i:
+        return None
+    return ast.as_text(cl[i])
+
+
+func token_at(node: ast.Node, i: int) -> bytes?:
+    mut cl = try ast.as_list(node)
+    if len(cl) <= i:
+        return None
+    return ast.token_text(cl[i])
+
+
+func scalar_at(node: ast.Node, i: int) -> float?:
+    mut cl = try ast.as_list(node)
+    if len(cl) <= i:
+        return None
+    return ast.as_number(cl[i])
+
+
+func unit_at(node: ast.Node, i: int) -> int:
+    return to_unit(scalar_at(node, i).unwrap_or(0.0))
+
+
+func point_at(node: ast.Node, i: int) -> Point?:
+    mut x = try scalar_at(node, i)
+    mut y = try scalar_at(node, i + 1)
+    return Some(Point(x=to_unit(x), y=to_unit(y)))
+
+
+func to_unit(mm: float) -> int:
+    mut v = int(numeric.checked_i32(math.round(mm * float(per_mm))).unwrap_or(0i32))
+    return min(max(v, -max_coord), max_coord)
+
+
+func degrees(v: float) -> int:
+    return int(numeric.checked_i32(math.round(v)).unwrap_or(0i32))

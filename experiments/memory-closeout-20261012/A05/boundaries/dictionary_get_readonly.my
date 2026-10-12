@@ -1,0 +1,15 @@
+# spec-case: NEW-CORE-DICT-1
+# Bounded compiler limitation: managed get(default) without an explicit copy.
+# Probe check and build separately; this is not a qualified positive or a view.
+func fallback(key: str) -> bytes:
+    const text = "fallback-" + key
+    return text.encode()
+
+func selected_size(items: dict[str, bytes], key: str) -> int:
+    return len(items.get(key, fallback(key)))
+
+func main() -> int:
+    const items = {"present": b"yes"}
+    assert selected_size(items, "present") == 3
+    assert selected_size(items, "miss") == 13
+    return 0

@@ -1,0 +1,205 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-install/focus/mylang",
+  "compiler_sha256": "1e4d0146212d053a10c6c0a984c220ccb01de7069a7d32ef347745ec5f17c5c9",
+  "leakcheck": "0 for receipt eligibility; counted qualification is separate",
+  "default": false,
+  "source_sha256": "84024df21d4074fc5c9436f695e607c647642c2dc6402cfdba4db237aad81288",
+  "negative_source_sha256": "065419a3da7e11f6f2d073659497e3d91de5b5428374c28d267bb7e7d2f6cbde",
+  "results": [
+    {
+      "name": "coverage-owned",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-install/focus/mylang",
+        "coverage",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/one/app.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected": 0,
+      "stdout": "ok prefix_length\tproven=0 exact=0 stack=0\nok test_view\tproven=0 exact=0 stack=0\nok main\tproven=0 exact=0 stack=0\n",
+      "stderr": "",
+      "structural": {},
+      "passed": true
+    },
+    {
+      "name": "coverage-negative",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-install/focus/mylang",
+        "coverage",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/one/app.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "expected": 1,
+      "stdout": "frontend /home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/one/app.my\tapp.my:14:16: error[E_SINGLE_OWNER_MOVED]: 'data' was moved or is unavailable on this path; use .copy() when both values are needed\n",
+      "stderr": "",
+      "structural": {},
+      "passed": true
+    },
+    {
+      "name": "check-stats",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-install/focus/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/one/app.my",
+        "--stats",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/cache",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"core-check-work-v1\",\"typed\":false,\"functions\":3,\"work\":{\"checked\":3,\"reused\":0,\"summaries\":0,\"syntax_hits\":0,\"syntax_misses\":1,\"stored\":3,\"damaged\":0}}\n",
+      "structural": {},
+      "passed": true
+    },
+    {
+      "name": "check-stats-warm",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-install/focus/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/one/app.my",
+        "--stats",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/cache",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"core-check-work-v1\",\"typed\":false,\"functions\":3,\"work\":{\"checked\":1,\"reused\":2,\"summaries\":0,\"syntax_hits\":1,\"syntax_misses\":0,\"stored\":1,\"damaged\":0}}\n",
+      "structural": {},
+      "passed": true
+    },
+    {
+      "name": "dump-ir",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-install/focus/mylang",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/one/app.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected": 0,
+      "stdout": "fn main(cap) -> i64\nb0:\n  %2 = call i64 prefix_length(str0)\n  print param0, %2\n  ret 0:i64\nfn prefix_length(str) -> i64\nb0:\n  %1 = str_len u64 param0\n  %3 = str_view_of str_view param0, 0:u64, %1\n  %7 = call str_view myl_core_view_slice(%3, 0:i64, 2:i64, 1:bool)\n  %8 = call i64 myl_core_view_chars(%7)\n  ret %8\nfn myl_core_view_slice(str, i64, i64, bool) -> str_view extern\nfn myl_core_view_chars(str) -> i64 extern\n",
+      "stderr": "",
+      "structural": {},
+      "passed": true
+    },
+    {
+      "name": "build-owned",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-install/focus/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/one/app.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/app",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/app.ll",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/cache",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected": 0,
+      "stdout": "",
+      "stderr": "",
+      "structural": {
+        "owned_marker": true,
+        "no_retain": true,
+        "no_count_release": true
+      },
+      "passed": true
+    },
+    {
+      "name": "run-owned",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-install/focus/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/one/app.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/cache",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected": 0,
+      "stdout": "2\n",
+      "stderr": "",
+      "structural": {},
+      "passed": true
+    },
+    {
+      "name": "test-shared-first",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-install/focus/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/one/app.my",
+        "--json",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/shared",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/cache",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"app::test_view\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"no-success-receipt\",\"key\":\"cff57e5d313e5f12cd28e062296c323bfc7dd5c26a5ca73af04ea45d40e659c3\",\"component\":\"baedd0aa6543921c5fcaa190e1d2eca7649852429ea14db5c168af7d8d5e2c20\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/one/app.my#78897c5cf77c3e258a586443eab476bb63e060f84c26efe43b74b87842941f52\",\"producer\":{\"facts\":{\"fresh\":5,\"reused\":0,\"fallback\":2,\"decoded\":0},\"lowering\":{\"fresh\":2,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":5,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":20,\"index_edges\":20,\"affected_nodes\":5,\"closure_nodes\":10,\"closure_edges\":4,\"reused_tests\":0,\"planned_tests\":1},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":3079,\"save_bytes_prepared\":3442,\"sequence_locks\":12}},\"nanoseconds\":{\"lowering\":1714820,\"facts\":514833,\"graph\":124022,\"planner\":253853942,\"keys\":40238,\"publication\":3450322,\"total\":259908996},\"transport\":{\"request_bytes\":352,\"reply_bytes\":208,\"startups\":1}}}}],\"passed\":1,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/one/app.my\"]}\n",
+      "stderr": "",
+      "structural": {
+        "one_test": true,
+        "no_unsupported": true,
+        "no_failed": true
+      },
+      "passed": true
+    },
+    {
+      "name": "test-shared-relocated",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-install/focus/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/two/app.my",
+        "--json",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/shared",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/cache-two",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"app::test_view\",\"status\":\"cached\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"reuse\",\"reason\":\"shared-receipt-hit\",\"key\":\"c83b94c7670800eddf7e914754663ae76081c8588043b9f5267f19fab76824af\",\"component\":\"baedd0aa6543921c5fcaa190e1d2eca7649852429ea14db5c168af7d8d5e2c20\",\"key_method\":\"portable-reachable-ir\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/two/app.my#78897c5cf77c3e258a586443eab476bb63e060f84c26efe43b74b87842941f52\",\"producer\":{\"facts\":{\"fresh\":5,\"reused\":0,\"fallback\":2,\"decoded\":0},\"lowering\":{\"fresh\":2,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":5,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":20,\"index_edges\":20,\"affected_nodes\":5,\"closure_nodes\":10,\"closure_edges\":4,\"reused_tests\":0,\"planned_tests\":1},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":3076,\"save_bytes_prepared\":3442,\"sequence_locks\":12}},\"nanoseconds\":{\"lowering\":1828959,\"facts\":691684,\"graph\":122046,\"planner\":12409261,\"keys\":39757,\"publication\":3561400,\"total\":18840594},\"transport\":{\"request_bytes\":352,\"reply_bytes\":208,\"startups\":1}}}}],\"passed\":0,\"failed\":0,\"skipped\":0,\"cached\":1,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/two/app.my\"]}\n",
+      "stderr": "",
+      "structural": {
+        "one_test": true,
+        "no_unsupported": true,
+        "no_failed": true,
+        "shared_reuse": true,
+        "portable_key": true,
+        "shared_receipt": true
+      },
+      "passed": true
+    },
+    {
+      "name": "test-shared-unreachable-invalid",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-install/focus/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/two/app.my",
+        "--json",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/shared",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-matrix-final/cache-two",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "expected": 1,
+      "stdout": "",
+      "stderr": "app.my:14:16: error[E_SINGLE_OWNER_MOVED]: 'data' was moved or is unavailable on this path; use .copy() when both values are needed\n      return len(data)\n                 ^\n",
+      "structural": {},
+      "passed": true
+    }
+  ],
+  "success": true
+}

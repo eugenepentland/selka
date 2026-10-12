@@ -4,13 +4,13 @@ func published() -> int:
     for outer in range(3):
         for at in range(2):
             items.append(at)
-        saved.append(items)
+        saved.append(items.copy())
     return len(saved[0]) * 1000 + len(saved[1]) * 100 + len(saved[2]) * 10 + len(items)
 
 
 func snapshot(out: Stream) -> int:
     mut items = [1]
-    mut before = items
+    mut before = items.copy()
     for at in range(5):
         items.append(at)
     out.print(len(before), len(items), before == [1])

@@ -1,0 +1,55 @@
+build-slot: build slot 1, FIFO ticket 1308 after 0s
+value.my:65:5: error[E_BINDING_DECLARATION]: declare this writable local with 'mut'
+      text = str(x).encode()
+      ^
+value.my:14:8: error[E_FRONTEND_VARIANT]: declare all non-result variants with `enum`
+  public union Value:
+         ^
+value.my:15:8: error[E_FRONTEND_VARIANT]: enum cases end at newlines
+      nil,
+         ^
+value.my:16:12: error[E_FRONTEND_VARIANT]: declare a variant payload as a named field
+      boolean: bool,
+             ^
+value.my:16:18: error[E_FRONTEND_VARIANT]: enum cases end at newlines
+      boolean: bool,
+                   ^
+value.my:17:11: error[E_FRONTEND_VARIANT]: declare a variant payload as a named field
+      number: float,
+            ^
+value.my:17:18: error[E_FRONTEND_VARIANT]: enum cases end at newlines
+      number: float,
+                   ^
+value.my:18:8: error[E_FRONTEND_VARIANT]: declare a variant payload as a named field
+      obj: ObjRef
+         ^
+value.my:26:28: error[E_FRONTEND_VARIANT]: name the enum field bound by this pattern
+          case Value.boolean(flag):
+                             ^
+value.my:44:36: error[E_FRONTEND_VARIANT]: name the enum field bound by this pattern
+                  case Value.boolean(right):
+                                     ^
+value.my:50:35: error[E_FRONTEND_VARIANT]: name the enum field bound by this pattern
+                  case Value.number(right):
+                                    ^
+value.my:56:32: error[E_FRONTEND_VARIANT]: name the enum field bound by this pattern
+                  case Value.obj(right):
+                                 ^
+value.my:42:28: error[E_FRONTEND_VARIANT]: name the enum field bound by this pattern
+          case Value.boolean(left):
+                             ^
+value.my:48:27: error[E_FRONTEND_VARIANT]: name the enum field bound by this pattern
+          case Value.number(left):
+                            ^
+value.my:54:24: error[E_FRONTEND_VARIANT]: name the enum field bound by this pattern
+          case Value.obj(left):
+                         ^
+value.my:22:8: error[E_FRONTEND_SYNTAX]: declare a function or callable type with 'func'
+  public def is_falsey(value: Value) -> bool:
+         ^
+value.my:34:8: error[E_FRONTEND_SYNTAX]: declare a function or callable type with 'func'
+  public def values_equal(a: Value, b: Value) -> bool:
+         ^
+value.my:64:8: error[E_FRONTEND_SYNTAX]: declare a function or callable type with 'func'
+  public def format_number(x: float) -> bytes:
+         ^

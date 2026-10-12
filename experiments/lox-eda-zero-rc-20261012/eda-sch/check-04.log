@@ -1,0 +1,4 @@
+build-slot: build slot 1, FIFO ticket 1666 after 0s
+kicad_sch_compose.my:338:32: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+      note(mut self, it.id.uuid, self.req.shapes[it.shape].lib_name.copy())
+                                 ^

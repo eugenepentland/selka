@@ -1,0 +1,13 @@
+test_duplicate_embedding_refuses (extraction_test.Extraction.test_duplicate_embedding_refuses) ... ok
+test_exact_build_input_has_one_complete_readonly_embedding (extraction_test.Extraction.test_exact_build_input_has_one_complete_readonly_embedding) ... ok
+test_extra_bytes_after_exact_extent_refuse (extraction_test.Extraction.test_extra_bytes_after_exact_extent_refuse) ... ok
+test_foreign_machine_refuses (extraction_test.Extraction.test_foreign_machine_refuses) ... ok
+test_other_compilation_object_refuses (extraction_test.Extraction.test_other_compilation_object_refuses) ... ok
+test_truncated_elf_refuses (extraction_test.Extraction.test_truncated_elf_refuses) ... ok
+test_unknown_runtime_refuses (extraction_test.Extraction.test_unknown_runtime_refuses) ... ok
+test_writable_segment_refuses (extraction_test.Extraction.test_writable_segment_refuses) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.486s
+
+OK

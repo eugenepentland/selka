@@ -1,0 +1,3 @@
+func main() -> int:
+    mut values: float[] = []
+    return int(max(values))

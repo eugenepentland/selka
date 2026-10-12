@@ -178,8 +178,7 @@ fn chainBlock(comptime Checker: type, self: *Checker, span: source.Span, links: 
 }
 
 /// PY-REPEAT-1: `name *= count` on a `str`, `bytes` or list binding. Text and
-/// octets rebind the name to the repeated value; a list is repeated in place,
-/// as Python's `list.__imul__` is, so every alias observes it.
+/// octets and lists rebind the name to the independent repeated value.
 fn repeatAssignment(comptime Checker: type, self: *Checker, slot: typed.LocalId, a: @FieldType(@FieldType(ast.Statement, "data"), "assignment")) Error!@FieldType(typed.Statement, "data") {
     try self.requireReadable(slot, a.name);
     const count = try self.expression(a.value);
@@ -189,16 +188,7 @@ fn repeatAssignment(comptime Checker: type, self: *Checker, slot: typed.LocalId,
     self.locals.items[@backingInt(slot)].usage.writes += 1;
     const b: collections.Builder(Checker) = .{ .checker = self, .span = a.op_span };
     const product = try b.node(target_type, (try repetition.build(Checker, self, a.op_span, .{ .sequence = try b.read(slot), .count = count, .count_first = false })).data);
-    if (self.catalog.records[target_type.recordIndex()].collection.kind != .list) {
-        return .{ .assign = .{ .slot = slot, .value = product } };
-    }
-    const repeated = try b.local(target_type);
-    const arguments = try self.allocator.dupe(typed.NodeId, &.{try b.read(repeated)});
-    return .{ .block = try self.allocator.dupe(typed.StatementId, &.{
-        try b.stmt(.{ .initialize = .{ .slot = repeated, .value = product } }),
-        try b.stmt(.{ .discard = try b.operation(slot, .clear, &.{}) }),
-        try b.stmt(.{ .discard = try b.operation(slot, .extend, arguments) }),
-    }) };
+    return .{ .assign = .{ .slot = slot, .value = product } };
 }
 
 /// PY-FSTRING-SPEC-1: one `{value:spec}` field. The literal specification is

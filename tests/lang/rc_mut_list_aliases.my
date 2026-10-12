@@ -23,7 +23,7 @@ record Frame:
 
 
 func span(text: bytes) -> Span:
-    return Span(source=text, start=0, end=len(text))
+    return Span(source=text.copy(), start=0, end=len(text))
 
 
 func pin(part: int, net: bytes) -> Pin:
@@ -39,7 +39,7 @@ func churn() -> int:
 
 func replace_first(mut pins: Pin[], mut other: Pin[]) -> int:
     pins.append(pin(9, b"x"))
-    mut first = pins[0]
+    mut first = pins[0].copy()
     other[0] = pin(1, b"qq" + b"qq")
     mut n = churn()
     return first.part * 1000 + len(first.net.source) * 10 + int(first.net.source[0]) + n * 0
@@ -47,7 +47,7 @@ func replace_first(mut pins: Pin[], mut other: Pin[]) -> int:
 
 func clear_other(mut pins: Pin[], mut other: Pin[]) -> int:
     pins.append(pin(9, b"x"))
-    mut first = pins[0]
+    mut first = pins[0].copy()
     other.clear()
     mut n = churn()
     return first.part * 1000 + len(first.net.source) * 10 + int(first.net.source[0]) + n * 0
@@ -63,21 +63,21 @@ func wipe(mut rows: int[][]) -> int:
 
 func contained(mut frame: Frame, mut rows: int[][]) -> int:
     frame.n = frame.n + 1
-    mut first = frame.rows[0]
+    mut first = frame.rows[0].copy()
     mut k = wipe(mut rows)
     return len(first) * 10 + k
 
 
 public func test_an_element_read_survives_a_store_through_another_mut_list() -> bool:
     mut a = [pin(3, b"abc" + b"def"), pin(4, b"de")]
-    mut other = a
+    mut other = a.copy()
     mut seen = replace_first(mut a, mut other)
     return seen == 3157 and len(a) == 3 and a[0].part == 3 and other[0].part == 1 and len(other) == 2
 
 
 public func test_an_element_read_survives_a_clear_through_another_mut_list() -> bool:
     mut b = [pin(3, b"abc" + b"def"), pin(4, b"de")]
-    mut other = b
+    mut other = b.copy()
     mut seen = clear_other(mut b, mut other)
     return seen == 3157 and len(b) == 3 and len(other) == 0
 
@@ -91,7 +91,7 @@ public func test_distinct_mut_lists_still_answer_the_same() -> bool:
 
 public func test_a_record_read_survives_a_wipe_through_a_held_mut_list() -> bool:
     mut frame = Frame(rows=[[1, 2], [3]], n=0)
-    mut rows = frame.rows
+    mut rows = frame.rows.copy()
     mut seen = contained(mut frame, mut rows)
     return seen == 20 and frame.rows == [[1, 2], [3]] and frame.n == 1 and len(rows) == 0
 

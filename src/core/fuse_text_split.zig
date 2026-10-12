@@ -24,8 +24,12 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module) std.mem.Allocator.Error
         for (function.loops.items) |loop| {
             const graph = try facts.shape(arena, &function);
             const candidate = find(&function, module, loop, graph) orelse continue;
-            const source = function.operands(function.inst(candidate.split).data)[0];
-            if (try views.updated(arena, &function, module, function.resolve(source))) continue;
+            const inputs = function.operands(function.inst(candidate.split).data);
+            var unstable = false;
+            for (inputs) |input| {
+                if (try views.updated(arena, &function, module, function.resolve(input))) unstable = true;
+            }
+            if (unstable) continue;
             try rewrite(arena, &function, module, candidate);
         }
         module.functions.items[index] = function;
@@ -87,7 +91,7 @@ fn candidateFor(f: *const ir.Function, module: *const ir.Module, seed: Candidate
     if (!dominates(graph, block, out.loop.latch)) return null;
     if (!onlyUses(f, out.counter, &.{ condition, out.element, out.next })) return null;
     if (!onlyUses(f, out.length, &.{bound}) or !onlyUses(f, bound, &.{condition})) return null;
-    if (whitespace(f, module, out.split) and !keyUses(f, module, out.element)) return null;
+    if (whitespace(f, module, out.split) and !keyUses(f, module, out.element, 0)) return null;
     return out;
 }
 
@@ -136,12 +140,25 @@ fn onlyUses(f: *const ir.Function, value: ir.Ref, allowed: []const ir.Ref) bool 
     return true;
 }
 
-fn keyUses(f: *const ir.Function, module: *const ir.Module, element: ir.Ref) bool {
-    for (f.insts.items) |inst| {
+fn keyCopy(f: *const ir.Function, module: *const ir.Module, inst: ir.Inst) bool {
+    if (inst.op != .call or inst.ty != .str or inst.a.index() >= module.functions.items.len or f.operands(inst.data).len != 1) return false;
+    const target = module.functions.items[inst.a.index()];
+    return target.signature.linkage == .runtime_c and target.signature.owned == 0 and target.signature.views == 0 and target.signature.consumes == 0 and
+        target.signature.ret == .str and std.mem.eql(ir.Type, target.signature.params, &.{.str}) and
+        std.mem.eql(u8, target.name, "myl_core_owned_octets_copy");
+}
+
+fn keyUses(f: *const ir.Function, module: *const ir.Module, element: ir.Ref, depth: u8) bool {
+    // Bound recognition of explicit copy chains; deeper chains remain owned.
+    if (depth == 16) return false;
+    for (f.insts.items, 0..) |inst, index| {
         if (inst.op == .copy) continue;
         const operands = f.valueOperands(inst);
         for (0..operands.len()) |at| {
             if (f.resolve(operands.get(at)) != element) continue;
+            // An explicit independent copy may be deferred only when all its
+            // uses are probes or insertions; insertion still materializes a key.
+            if (keyCopy(f, module, inst) and keyUses(f, module, @fromBackingInt(@intCast(index)), depth + 1)) continue;
             const lookup_key = inst.op == .dict_find and at == 1;
             const insertion_key = inst.op == .dict_insert and at == 2;
             if (!lookup_key and !insertion_key) return false;
@@ -197,6 +214,7 @@ fn before(arena: std.mem.Allocator, f: *ir.Function, ref: ir.Ref, added: []const
 
 fn rewrite(arena: std.mem.Allocator, f: *ir.Function, module: *ir.Module, candidate: Candidate) std.mem.Allocator.Error!void {
     if (!whitespace(f, module, candidate.split)) return explicitRewrite(arena, f, module, candidate);
+    deferKeyCopies(f, module, candidate.element);
     const list_type = f.inst(candidate.split).ty;
     const source = f.operands(f.inst(candidate.split).data)[0];
     const start_fn = try runtime(arena, module, "myl_core_split_ws_start");
@@ -221,6 +239,19 @@ fn rewrite(arena: std.mem.Allocator, f: *ir.Function, module: *ir.Module, candid
         }
     }
     try materializeInsertions(arena, f, candidate.element);
+}
+
+fn deferKeyCopies(f: *ir.Function, module: *const ir.Module, element: ir.Ref) void {
+    // Repeat to cover nested explicit copies regardless of instruction order.
+    var changed = true;
+    while (changed) {
+        changed = false;
+        for (f.insts.items) |*inst| {
+            if (!keyCopy(f, module, inst.*) or f.resolve(f.operands(inst.data)[0]) != element) continue;
+            inst.* = .{ .op = .copy, .ty = .str_view, .a = element, .span = inst.span };
+            changed = true;
+        }
+    }
 }
 
 fn materializeInsertions(arena: std.mem.Allocator, f: *ir.Function, element: ir.Ref) std.mem.Allocator.Error!void {

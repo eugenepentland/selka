@@ -1,0 +1,132 @@
+
+import placement_geometry as m
+import sexpr_parser as parser
+import sexpr_ast as ast
+import infra_fs
+import support_expect as ex
+
+func children(source: bytes) -> ast.Node[]:
+    match parser.parse(source):
+        case Ok(nodes):
+            if len(nodes) > 0:
+                return ast.as_list(nodes[0]).unwrap_or([])
+        case Err(_):
+            assert False, "fixture parses"
+    return []
+
+
+func first(source: bytes) -> ast.Node:
+    match parser.parse(source):
+        case Ok(nodes):
+            return nodes[0]
+        case Err(_):
+            assert False, "fixture parses"
+    return ast.node_atom(ast.span_zero(), b"")
+
+
+# test "load parses a 0402 footprint's pads and courtyard"
+public func test_load_parses_a_0402_footprint_s_pads_and_courtyard(out: Stream) -> bool:
+    mut cl = children(b"(footprint \"C_0402\" (pad 1 smd roundrect (pos -0.48 0.00) (size 0.56 0.62)) (pad 2 smd roundrect (pos 0.48 0.00) (size 0.56 0.62)) (courtyard (rect -0.91 -0.46 0.91 0.46)))")
+    mut pads: m.Pad[] = []
+    mut ext: m.Ext? = None
+    for sub in cl[2:]:
+        if ast.is_form(sub, b"pad"):
+            mut p = m.parse_pad(sub)
+            if p is not None:
+                pads.append(p)
+        elif ast.is_form(sub, b"courtyard"):
+            ext = m.parse_courtyard(sub)
+    if not ex.eq_int(out, "pads", len(pads), 2) or not ex.eq_bytes(out, "pad id", pads[0].number, b"1") or not ex.near(out, "pad x", pads[0].x, -0.48, 1e-9):
+        return False
+    if ext is None:
+        return ex.ok(out, "courtyard exists", False)
+    return ex.near(out, "half width", ext.hw, 0.91, 1e-9) and ex.near(out, "half height", ext.hh, 0.46, 1e-9)
+
+
+# test "parsePad reads a per-pad mask margin and the no-paste keyword"
+public func test_parsepad_reads_a_per_pad_mask_margin_and_the_no_paste_keyword(out: Stream) -> bool:
+    mut cl = children(b"(footprint \"fiducial\" (pad 1 smd circle (pos 0.00 0.00) (size 0.75 0.75) (mask-margin 0.75) no-paste) (pad 2 smd rect (pos 2.00 0.00) (size 0.50 0.50)))")
+    mut target = m.parse_pad(cl[2])
+    mut plain = m.parse_pad(cl[3])
+    if target is None or plain is None:
+        return ex.ok(out, "pads parse", False)
+    if not ex.near(out, "own mask", target.overrides.mask_margin.unwrap_or(-1.0), 0.75, 1e-9) or not ex.ok(out, "no paste", m.pad_no_paste(target)):
+        return False
+    if not ex.near(out, "mask replaces board", m.pad_mask_margin(target, 0.05), 0.75, 1e-9) or not ex.ok(out, "plain no override", plain.overrides.mask_margin.is_none() and not m.pad_no_paste(plain)):
+        return False
+    return ex.near(out, "board default", m.pad_mask_margin(plain, 0.05), 0.05, 1e-9)
+
+
+# test "parsePad reads an RF minimum size independently of nominal size"
+public func test_parsepad_reads_an_rf_minimum_size_independently_of_nominal_size(out: Stream) -> bool:
+    mut cl = children(b"(footprint \"C_0402\" (pad 1 smd roundrect (pos -0.48 0) (size 0.56 0.62) (rf-min-size 0.45 0.50)) (pad 2 smd roundrect (pos 0.48 0) (size 0.56 0.62) (rf-min-size -1 0.50)))")
+    mut qualified = m.parse_pad(cl[2])
+    mut malformed = m.parse_pad(cl[3])
+    if qualified is None or malformed is None:
+        return ex.ok(out, "pads parse", False)
+    return ex.near(out, "nominal width", qualified.w, 0.56, 1e-9) and ex.near(out, "nominal height", qualified.h, 0.62, 1e-9) and ex.near(out, "RF width", qualified.overrides.rf_min_size[0], 0.45, 1e-9) and ex.near(out, "RF height", qualified.overrides.rf_min_size[1], 0.50, 1e-9) and ex.ok(out, "bad bound disabled", malformed.overrides.rf_min_size == [0.0, 0.0])
+
+
+# test "parseCopperPourKeepout reads its face and polygon"
+public func test_parsecopperpourkeepout_reads_its_face_and_polygon(out: Stream) -> bool:
+    mut keepout = m.parse_copper_pour_keepout(first(b"(copper-pour-keepout F.Cu (poly (-1 -1) (1 -1) (1 1) (-1 1)))"))
+    if keepout is None:
+        return ex.ok(out, "keepout parses", False)
+    return ex.ok(out, "face and points", keepout.side == m.CopperSide.front and len(keepout.poly) == 4) and ex.near(out, "first x", keepout.poly[0][0], -1.0, 1e-9) and ex.ok(out, "vias allowed", not keepout.vias_not_allowed)
+
+
+# test "parseCopperPourKeepout reads a through-via prohibition"
+public func test_parsecopperpourkeepout_reads_a_through_via_prohibition(out: Stream) -> bool:
+    mut keepout = m.parse_copper_pour_keepout(first(b"(copper-pour-keepout F.Cu (vias not_allowed) (poly (-1 -1) (1 -1) (1 1) (-1 1)))"))
+    return ex.ok(out, "through-via prohibition", keepout is not None and keepout.vias_not_allowed)
+
+
+# test "load falls back to a synthesized box for a missing footprint"
+public func test_load_falls_back_to_a_synthesized_box_for_a_missing_footprint(fs: Filesystem, out: Stream) -> bool:
+    mut g = m.load(fs, "/nonexistent-project-dir", b"does-not-exist", 10, m.bbox_margin_mm())
+    return ex.ok(out, "fallback", g.fallback and len(g.pads) == 0 and g.hw > 0.0 and g.hh > 0.0)
+
+
+# test "parsePad reads oval slots, pad rotation, and roundrect ratio"
+public func test_parsepad_reads_oval_slots_pad_rotation_and_roundrect_ratio(out: Stream) -> bool:
+    mut cl = children(b"(footprint \"SLOT\" (pad SH1 thru oval (pos -4.50 -5.60 30) (size 1.00 1.60) (drill oval 0.50 1.10)) (pad 1 smd roundrect (pos 0.48 0.00) (size 0.56 0.62) (roundrect_rratio 0.25)) (pad 2 smd rect (pos 1.00 0.00) (size 1.00 1.00) (drill 0.60)))")
+    mut pads: m.Pad[] = []
+    for sub in cl[2:]:
+        mut p = m.parse_pad(sub)
+        if p is not None:
+            pads.append(p)
+    if not ex.eq_int(out, "pad count", len(pads), 3):
+        return False
+    if not ex.ok(out, "slot", m.pad_is_slot(pads[0])) or not ex.near(out, "tool minor axis", pads[0].drill, 0.50, 1e-9) or not ex.near(out, "slot x", pads[0].slot_half[0], 0.0, 1e-9) or not ex.near(out, "slot y", pads[0].slot_half[1], 0.30, 1e-9) or not ex.near(out, "rotation", pads[0].rot, 30.0, 1e-9):
+        return False
+    return ex.near(out, "roundrect", m.pad_rratio(pads[1]), 0.25, 1e-9) and ex.ok(out, "round drills", not m.pad_is_slot(pads[1]) and not m.pad_is_slot(pads[2])) and ex.near(out, "round diameter", pads[2].drill, 0.60, 1e-9)
+
+
+# test "parseSilkscreen collects lines and circles"
+public func test_parsesilkscreen_collects_lines_and_circles(out: Stream) -> bool:
+    mut node = first(b"(silkscreen (line (-0.26 -0.74) (0.26 -0.74)) (circle (-2.90 -2.50) 0.13))")
+    mut lines: m.SilkLine[] = []
+    mut circles: m.SilkCircle[] = []
+    m.parse_silkscreen(node, mut lines, mut circles)
+    if not ex.eq_int(out, "line count", len(lines), 1) or not ex.near(out, "x1", lines[0].x1, -0.26, 1e-9) or not ex.near(out, "x2", lines[0].x2, 0.26, 1e-9):
+        return False
+    return ex.eq_int(out, "circle count", len(circles), 1) and ex.near(out, "radius", circles[0].r, 0.13, 1e-9)
+
+
+# test "circular courtyard survives footprint loading with an offset and placement margin"
+public func test_circular_courtyard_survives_footprint_loading_with_an_offset_and_placement_margin(fs: Filesystem, out: Stream) -> bool:
+    match infra_fs.make_path(fs, "project/lib/footprints"):
+        case Err(e):
+            return ex.eq_str(out, "mkdir", e, "")
+        case Ok(_):
+            pass
+    match fs.write_file("project/lib/footprints/round.sexp", b"(footprint \"round\" (pad 1 thru circle (pos 1 -2) (size 5.3 5.3) (drill 3)) (courtyard (circle (1 -2) 2.65)))"):
+        case Err(_):
+            return ex.ok(out, "write fixture", False)
+        case Ok(_):
+            pass
+    mut g = m.load(fs, "project", b"round", 1, 0.15)
+    mut c = g.features.courtyard_circle
+    if not ex.ok(out, "library geometry", not g.fallback) or c is None:
+        return False
+    return ex.ok(out, "authored circle", c.cx == 1.0 and c.cy == -2.0 and c.r == 2.65) and ex.near(out, "placement width", g.hw, 2.8, 1e-12) and ex.near(out, "placement height", g.hh, 2.8, 1e-12) and ex.ok(out, "origin offset", g.ccx == 1.0 and g.ccy == -2.0)

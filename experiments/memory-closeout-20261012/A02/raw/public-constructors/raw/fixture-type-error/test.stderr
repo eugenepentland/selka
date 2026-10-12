@@ -1,0 +1,20 @@
+guardian/test: 1 test(s) selected by filter: "zero RC A02 public constructors"
+A02 public constructors build: /home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/tmp/LzgFuG6hCAuh1VQC/methods.my:29:56: error[E_TYPE]: expected DictItem[str, str], found tuple[str, str]
+      assert "alpha-1" in mapped and "two" in values and ("beta-2", "two") in pairs
+                                                         ^
+
+1 a02_public_constructors_test.test.zero RC A02 public constructors preserve owned keys and generator results...FAIL (TestUnexpectedResult)
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x1281079 in expect (std.zig)
+    if (!ok) return error.TestUnexpectedResult;
+             ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/src/core/a02_public_constructors_test.zig:34:9: 0x128241d in qualifies (root_test.zig)
+        try std.testing.expect(built.term == .exited and built.term.exited == 0);
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/src/core/a02_public_constructors_test.zig:11:5: 0x1285525 in test.zero RC A02 public constructors preserve owned keys and generator results (root_test.zig)
+    try qualifies(std.testing.allocator, @embedFile("a02_public_constructors_fixture.my"), "3 2 2 pear-1 value-4 value-5\n");
+    ^
+0 passed; 0 skipped; 1 failed.
+guardian/test: test wall 0.08s; slowest over 50ms:
+guardian/test:   0.08s  a02_public_constructors_test.test.zero RC A02 public constructors preserve owned keys and generator results
+guardian/test: FAIL — 1 failed of 1
+guardian/test: RESULT {"passed":0,"failed":1,"skipped":0}

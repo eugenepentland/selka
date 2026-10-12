@@ -1,0 +1,17 @@
+{
+  "command": [
+    "python3",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "experiments/micro-ownership-20261012/tools",
+    "-p",
+    "test_*.py",
+    "-v"
+  ],
+  "exit_status": 0,
+  "passed": 5,
+  "harness_sha256": "cbd6d5591092e2b98db5e405a4006ae8b6c0fd2b4c20ca4e56232c0a3f12b778"
+}

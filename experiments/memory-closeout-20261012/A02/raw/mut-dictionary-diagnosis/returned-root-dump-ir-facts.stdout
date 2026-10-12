@@ -1,0 +1,98 @@
+fn main(cap) -> i64
+b0:
+  %2 = dict_new dict[i64, i64] 1:u64
+  %5 = dict_find i64 %2, 1:i64
+  %7 = cmp.ge bool %5, 0:i64
+  branch %7, b1, b2
+b1: ; preds b0
+  %9 = dict_set_value dict[i64, i64] %2, %5, 7:i64
+  jump b3
+b2: ; preds b0
+  %11 = dict_insert dict[i64, i64] %2, %5, 1:i64, 7:i64
+  jump b3
+b3: ; preds b1 b2
+  %13 = phi dict[i64, i64] %9, %11
+  %15 = dict_new dict[i64, dict[i64, i64]] 1:u64
+  %18 = dict_new dict[i64, i64] 1:u64
+  %21 = dict_find i64 %18, 1:i64
+  %23 = cmp.ge bool %21, 0:i64
+  branch %23, b4, b5
+b4: ; preds b3
+  %25 = dict_set_value dict[i64, i64] %18, %21, 7:i64
+  jump b6
+b5: ; preds b3
+  %27 = dict_insert dict[i64, i64] %18, %21, 1:i64, 7:i64
+  jump b6
+b6: ; preds b4 b5
+  %29 = phi dict[i64, i64] %25, %27
+  %30 = dict_find i64 %15, 0:i64
+  %32 = cmp.ge bool %30, 0:i64
+  branch %32, b7, b8
+b7: ; preds b6
+  %34 = dict_set_value dict[i64, dict[i64, i64]] %15, %30, %29
+  jump b9
+b8: ; preds b6
+  %36 = dict_insert dict[i64, dict[i64, i64]] %15, %30, 0:i64, %29
+  jump b9
+b9: ; preds b7 b8
+  %38 = phi dict[i64, dict[i64, i64]] %34, %36
+  %41 = call record{dict[i64, dict[i64, i64]], dict[i64, i64]} clone_during(%13, %38)
+  release %38
+  %42 = record_get dict[i64, dict[i64, i64]] %41, field0
+  %43 = record_get dict[i64, i64] %41, field1
+  %48 = dict_find i64 %42, 0:i64
+  %50 = cmp.ge bool %48, 0:i64
+  branch %50, b10, b11
+b10: ; preds b9
+  %53 = dict_entry_value dict[i64, i64] %42, %48
+  %55 = dict_find i64 %53, 1:i64
+  %57 = cmp.ge bool %55, 0:i64
+  branch %57, b12, b13
+b11: ; preds b9
+  unreachable
+b12: ; preds b10
+  %60 = dict_entry_value i64 %53, %55
+  release %42
+  print param0, %60
+  %63 = dict_find i64 %43, 1:i64
+  %65 = cmp.ge bool %63, 0:i64
+  branch %65, b14, b15
+b13: ; preds b10
+  unreachable
+b14: ; preds b12
+  %68 = dict_entry_value i64 %43, %63
+  release %43
+  print param0, %68
+  ret 0:i64
+b15: ; preds b12
+  unreachable
+fn clone_during(dict[i64, i64], dict[i64, dict[i64, i64]]) -> record{dict[i64, dict[i64, i64]], dict[i64, i64]}
+b0:
+  %3 = dict_find i64 param0, 1:i64
+  %5 = cmp.ge bool %3, 0:i64
+  branch %5, b1, b2
+b1: ; preds b0
+  %8 = dict_entry_value i64 param0, %3
+  %10 = dict_find i64 param0, 1:i64
+  %12 = cmp.ge bool %10, 0:i64
+  branch %12, b3, b4
+b2: ; preds b0
+  unreachable
+b3: ; preds b1
+  %14 = dict_set_value dict[i64, i64] param0, %10, %8
+  jump b5
+b4: ; preds b1
+  %16 = dict_insert dict[i64, i64] param0, %10, 1:i64, %8
+  jump b5
+b5: ; preds b3 b4
+  %18 = phi dict[i64, i64] %14, %16
+  %20 = call dict[i64, dict[i64, i64]] myl_core_owned_copy_16(param1)
+  %21 = record_make record{dict[i64, dict[i64, i64]], dict[i64, i64]} %20, %18
+  ret %21
+fn myl_core_owned_copy_16(dict[i64, dict[i64, i64]]) -> dict[i64, dict[i64, i64]] runtime
+facts main: %5=[-9223372036854775808,9223372036854775807] %7=[0,1] %21=[-9223372036854775808,9223372036854775807] %23=[0,1] %30=[-9223372036854775808,9223372036854775807] %32=[0,1] %48=[-9223372036854775808,9223372036854775807] %50=[0,1] %55=[-9223372036854775808,9223372036854775807] %57=[0,1] %60=[-9223372036854775808,9223372036854775807] %63=[-9223372036854775808,9223372036854775807] %65=[0,1] %68=[-9223372036854775808,9223372036854775807]
+list main %13: settled=true length=%-1
+list main %29: settled=true length=%-1
+list main %38: settled=true length=%-1
+facts clone_during: %3=[-9223372036854775808,9223372036854775807] %5=[0,1] %8=[-9223372036854775808,9223372036854775807] %10=[-9223372036854775808,9223372036854775807] %12=[0,1]
+list clone_during %18: settled=true length=%-1

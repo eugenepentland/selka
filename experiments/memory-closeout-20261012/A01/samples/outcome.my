@@ -1,0 +1,32 @@
+import parallel
+
+enum Outcome:
+    good(values: str[])
+    bad(message: str)
+
+func attempt(value: int) -> Outcome:
+    if value % 3 == 0:
+        return Outcome.bad(message="bad-" + str(value))
+    return Outcome.good(values=["good-" + str(value)])
+
+func inspect(value: Outcome) -> int:
+    match value:
+        case Outcome.good(values=values):
+            return len(values[0])
+        case Outcome.bad(message=message):
+            return len(message)
+
+func main(out: Stream) -> int:
+    mut source: int[] = []
+    for i in range(64):
+        source.append(i)
+    const outcomes = parallel.map(source, attempt)
+    const sizes = parallel.map(outcomes, inspect)
+    mut total = 0
+    for size in sizes:
+        total += size
+    if total != 416:
+        return 1
+    _ = parallel.map(source, attempt)
+    out.print(total)
+    return 0

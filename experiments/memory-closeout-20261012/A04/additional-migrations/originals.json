@@ -1,0 +1,136 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "sources": [
+    {
+      "source": "test/core/f_features.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/f_features.my.txt",
+      "original_sha256": "6edbc9f2f4056a37dc4c6c280992fedb0952f131b1ea916a15fd2ce88e8e17ee",
+      "public_tests": [
+        "test_callbacks_pass_return_and_live_fixed_array_writes",
+        "test_managed_array_mut_write_keeps_snapshot",
+        "test_mut_callback_copies_managed_list_back_without_changing_snapshot",
+        "test_keyed_records_remain_stable_and_snapshot_keeps_order",
+        "test_sort_narrow_numeric_and_tuple_keys"
+      ]
+    },
+    {
+      "source": "test/core/row_string_join.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/row_string_join.my.txt",
+      "original_sha256": "fbc884596e2884d63766eb12a883e2a0e69ec2a37b5a8a6252a0553f2b3f2964",
+      "public_tests": []
+    },
+    {
+      "source": "test/core/row_string_split.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/row_string_split.my.txt",
+      "original_sha256": "3abcd95f46ef2e20f2a554cc1ea50292d459504f5046c4d519ebcc3d0d7d968e",
+      "public_tests": []
+    },
+    {
+      "source": "test/core/s1_ascii.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/s1_ascii.my.txt",
+      "original_sha256": "ef966f7f75891080a7dc0b78ed397b30662b1903044f62ad569f90ccc9101b58",
+      "public_tests": []
+    },
+    {
+      "source": "test/core/s1_bytes.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/s1_bytes.my.txt",
+      "original_sha256": "5576c6c7e20e64456e520c0871a2cb00e7e62f738bcd315aa9f4826fbdbd38d1",
+      "public_tests": []
+    },
+    {
+      "source": "test/core/s1_collisions.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/s1_collisions.my.txt",
+      "original_sha256": "e4cb39b87fc3d31506cf04e2696ece5161015a65f50769e846aa87f41eaa8821",
+      "public_tests": []
+    },
+    {
+      "source": "test/core/s1_reads.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/s1_reads.my.txt",
+      "original_sha256": "754c854a3b1a744f877fe23ed9463d9ec5b69b9d617cabefb5bca037977b8d1e",
+      "public_tests": []
+    },
+    {
+      "source": "test/core/s1_views.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/s1_views.my.txt",
+      "original_sha256": "4499e2e9b6eaabf7003be4de59501c5fb203088d41b362833e7403693fc0ba85",
+      "public_tests": []
+    },
+    {
+      "source": "test/core/t_methods.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/t_methods.my.txt",
+      "original_sha256": "ea6ad0bdec8d3bb4e53984d47205d0207b921f7acc18330ca8967a45cdd08172",
+      "public_tests": [
+        "test_case_classify_replace_count_and_lines_preserve_snapshots",
+        "test_scalar_search_bounds_and_charset_trim",
+        "test_repr_scalar_ord_chr_and_packed_text_format",
+        "test_bytes_count_search_trim_and_find_any",
+        "test_decode_and_scalar_count_validate_utf8_and_clamped_ranges",
+        "test_extend_and_reverse_preserve_self_and_nested_snapshots",
+        "test_missing_index_traps_at_the_call",
+        "test_invalid_chr_traps_at_the_call",
+        "test_verified_lengths_survive_the_large_source_last_use"
+      ]
+    },
+    {
+      "source": "test/core/t_scalar_fusion.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/t_scalar_fusion.my.txt",
+      "original_sha256": "6c827a089aa6bc21b58f68a5fee84110595c76485912c2baea0fae2889a76bf2",
+      "public_tests": [
+        "test_comparisons_and_appends_preserve_all_unicode_scalars",
+        "test_comparison_only_reads_cover_nul_and_scalar_extremes",
+        "test_distinct_branches_and_repeated_appends_keep_the_selected_character",
+        "test_same_source_destination_keeps_the_ordinary_path_and_snapshot",
+        "test_distinct_ssa_aliases_share_input_but_copy_the_append_destination",
+        "test_rebinding_the_receiver_does_not_change_the_selected_bytes",
+        "test_escaping_and_multiscalar_consumers_remain_strings",
+        "test_empty_iteration_does_not_read_past_the_text",
+        "test_empty_comparison_only_read_traps",
+        "test_large_positive_index_traps",
+        "test_large_negative_index_traps",
+        "test_surrogate_construction_traps_before_scalar_uses",
+        "test_nonplace_unicode_index_reports_source_index_and_scalar_length",
+        "test_minimum_signed_index_reports_its_original_value",
+        "test_empty_separator_is_a_structured_native_trap",
+        "test_out_of_range_byte_is_a_structured_native_trap",
+        "test_missing_list_value_is_a_structured_native_trap"
+      ]
+    },
+    {
+      "source": "test/core/t_text.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/t_text.my.txt",
+      "original_sha256": "1fead4a9adc3567f8d18786b10fd14a88830addf37bb7b0c8f8b67da77bb325e",
+      "public_tests": [
+        "test_unicode_index_slice_and_loop",
+        "test_empty_split_join_and_find",
+        "test_encode_bytes_xor",
+        "test_append_keeps_shared_text",
+        "test_large_unicode_index_and_reverse_slice",
+        "test_long_byte_xor_reduction",
+        "test_doubling_and_self_character_append_preserve_snapshots",
+        "test_append_alias_through_phi_preserves_the_other_owner",
+        "test_empty_separator_traps",
+        "test_zero_slice_step_traps"
+      ]
+    },
+    {
+      "source": "test/core/v_buffer_format.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/v_buffer_format.my.txt",
+      "original_sha256": "62b308c773d20b55d697c035479c0d2836840b596a794f90a9284db7d06520bc",
+      "public_tests": [
+        "test_numeric_buffer_spelling_and_snapshots"
+      ]
+    },
+    {
+      "source": "test/core/v_buffer_mut.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/v_buffer_mut.my.txt",
+      "original_sha256": "15c0e86ec4f31a49a4ba146fdd87d87bacd93738853a0f2713a2391dcef3f358",
+      "public_tests": []
+    },
+    {
+      "source": "test/core/v_text.my",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/additional-migrations/originals/v_text.my.txt",
+      "original_sha256": "74dae6ff0f0853efbddfa542c824ea7e0b23b881bd58c99c9cdcefed850c8d96",
+      "public_tests": []
+    }
+  ]
+}

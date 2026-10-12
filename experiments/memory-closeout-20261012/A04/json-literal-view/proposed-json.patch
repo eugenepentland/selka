@@ -1,0 +1,11 @@
+--- a/src/stdlib/json.my
++++ b/src/stdlib/json.my
+@@ -516,7 +516,7 @@
+     mut start = scanner.position
+     if start + len(word) > len(scanner.data):
+         return Err(parse_error(scanner, "truncated JSON literal"))
+-    if scanner.data[start:start + len(word)] != word:
++    if scanner.data.borrow(start, start + len(word)) != word:
+         return Err(parse_error(scanner, "unknown JSON literal"))
+     scanner.position = start + len(word)
+     return Ok(value.copy())

@@ -1,5 +1,7 @@
 //! The front end: one request owns its source, syntax and checked program. The
 //! new core (`src/core/`) lowers the checked program from here.
+/// Opt-in checked ownership spelling shared by CLI entrypoints.
+pub const zero_rc_flag = "--experimental-zero-rc";
 pub const allocation_budget = @import("codec_memory.zig");
 /// Failures returned by format; callers must handle these boundary errors.
 pub const FormatError = error{

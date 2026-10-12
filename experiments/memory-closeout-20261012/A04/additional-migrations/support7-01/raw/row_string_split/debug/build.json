@@ -1,0 +1,24 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_split.my",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support7-01/cache",
+    "--experimental-zero-rc",
+    "--unoptimized",
+    "--counters",
+    "--emit-llvm",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support7-01/row_string_split/debug/program.ll",
+    "--link",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/benchmarks/runtime/ports/native_clock.c",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support7-01/row_string_split/debug/program"
+  ],
+  "status": 0,
+  "elapsed_ns": 81442773,
+  "stdout": "",
+  "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_split.my:44:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func inputs(kind: str, size: int, seed: int) -> Inputs:\n              ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_split.my:56:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:\n              ^\n"
+}

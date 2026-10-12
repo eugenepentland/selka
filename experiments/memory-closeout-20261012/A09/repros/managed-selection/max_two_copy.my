@@ -1,0 +1,6 @@
+func select(a: str, b: str) -> str:
+    return max(a, b).copy()
+
+func main(out: Stream) -> int:
+    out.print(select("z", "a"))
+    return 0

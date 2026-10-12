@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1433, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1433 after 10s
+scanner.my:66:27: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+      return Scanner(source=source, start=0, current=0, line=1)
+                            ^

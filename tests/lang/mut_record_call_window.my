@@ -1,9 +1,7 @@
-# A `mut` record argument writes the caller's whole tree when the call runs
-# (OWNERSHIP-MUT-RECORD-WRITE-1), not where the reference is pushed
-# (OWNERSHIP-MUT-RECORD-WRITE-2). A borrow read only for a scalar in the
-# call's later arguments may stay a borrow; one whose collection reaches the
-# callee, or is read after the call, is a real copy. Every answer is the value
-# semantics one under the collector and every RC build.
+# Record mutations update the caller. Copies taken before the call preserve
+# independent snapshots for observations made afterward. Earlier tests relied on
+# implicit RC snapshots; original overlapping call windows now have explicit
+# negative coverage in a03_migration_boundaries_test.zig.
 record Box:
     tag: int
     names: int[]
@@ -89,16 +87,17 @@ func outer(mut state: State, counted: int, tag: int) -> int:
 
 public func test_a_scalar_read_after_the_reference_sees_the_value_before_the_call() -> bool:
     mut state = State(boxes=[Box(tag=4, names=[1, 2])], seen=0)
-    mut box = state.boxes[0]
+    mut box = state.boxes[0].copy()
     replace_first(mut state, box.tag)
     return state.boxes[0].tag == 40 and state.boxes[0].names == [4, 4, 4] and state.seen == 36
 
 
 public func test_a_match_binding_read_for_a_scalar_survives_the_callee_replacing_its_element() -> bool:
     mut store = Store(slots=[Slot.full(value=Box(tag=5, names=[9]))], total=0)
-    match store.slots[0]:
+    match store.slots[0].copy():
         case Slot.full(value=box):
-            refill(mut store, box.tag)
+            const saved_tag = box.tag
+            refill(mut store, saved_tag)
         case Slot.empty:
             return False
     match store.slots[0]:
@@ -110,35 +109,35 @@ public func test_a_match_binding_read_for_a_scalar_survives_the_callee_replacing
 
 public func test_a_borrow_read_after_the_call_keeps_the_value_before_it() -> bool:
     mut state = State(boxes=[Box(tag=3, names=[1])], seen=0)
-    mut box = state.boxes[0]
+    mut box = state.boxes[0].copy()
     replace_first(mut state, box.tag)
     return box.tag == 3 and box.names == [1] and state.boxes[0].names == [3, 3, 3]
 
 
 public func test_a_collection_argument_read_from_the_borrow_is_a_snapshot() -> bool:
     mut state = State(boxes=[Box(tag=2, names=[5, 6])], seen=0)
-    mut box = state.boxes[0]
+    mut box = state.boxes[0].copy()
     mut seen = keep(mut state, box.names)
     return seen == 205 and state.boxes[0].tag == 0 and len(state.boxes[0].names) == 0
 
 
 public func test_the_whole_borrow_as_an_argument_is_a_snapshot() -> bool:
     mut state = State(boxes=[Box(tag=8, names=[1, 2, 3])], seen=0)
-    mut box = state.boxes[0]
+    mut box = state.boxes[0].copy()
     mut seen = hold(mut state, box)
     return seen == 308 and state.boxes[0].names == [1, 2, 3, 7]
 
 
 public func test_an_operand_pushed_before_the_reference_is_a_snapshot() -> bool:
     mut state = State(boxes=[Box(tag=1, names=[4])], seen=0)
-    mut box = state.boxes[0]
+    mut box = state.boxes[0].copy()
     mut seen = first(box.names, mut state)
     return seen == 1 and state.boxes[0].names == [4, 7]
 
 
 public func test_a_scalar_and_a_collection_from_one_borrow_in_one_call() -> bool:
     mut state = State(boxes=[Box(tag=6, names=[1, 1])], seen=0)
-    mut box = state.boxes[0]
+    mut box = state.boxes[0].copy()
     mut seen = mixed(mut state, box.tag, box.names)
     return seen == 2 and state.boxes[0].names == [1, 1, 6]
 
@@ -146,9 +145,10 @@ public func test_a_scalar_and_a_collection_from_one_borrow_in_one_call() -> bool
 public func test_a_match_binding_collection_argument_is_a_snapshot() -> bool:
     mut store = Store(slots=[Slot.full(value=Box(tag=1, names=[3, 4, 5]))], total=0)
     mut seen = 0
-    match store.slots[0]:
+    match store.slots[0].copy():
         case Slot.full(value=box):
-            seen = keep_slot(mut store, box.names)
+            const saved_names = box.names.copy()
+            seen = keep_slot(mut store, saved_names)
         case Slot.empty:
             seen = -1
     match store.slots[0]:
@@ -160,8 +160,9 @@ public func test_a_match_binding_collection_argument_is_a_snapshot() -> bool:
 
 public func test_a_nested_writing_call_between_the_reference_and_the_scalar_read() -> bool:
     mut state = State(boxes=[Box(tag=2, names=[1])], seen=0)
-    mut box = state.boxes[0]
-    mut seen = outer(mut state, count_boxes(mut state), box.tag)
+    mut box = state.boxes[0].copy()
+    const counted = count_boxes(mut state)
+    mut seen = outer(mut state, counted, box.tag)
     return seen == 102 and state.boxes[0].names == [1, 2] and state.seen == 1
 
 
@@ -169,8 +170,8 @@ public func test_a_nested_writing_call_between_the_reference_and_the_scalar_read
 # a second state copied out keeps the scalar read from the borrow.
 public func test_two_mut_states_with_a_scalar_from_a_borrow() -> bool:
     mut state = State(boxes=[Box(tag=9, names=[1])], seen=0)
-    mut box = state.boxes[0]
-    mut other = state
+    mut box = state.boxes[0].copy()
+    mut other = state.copy()
     mut seen = pair(mut state, mut other, box.tag)
     return seen == 20 and state.boxes[0].names == [1, 9] and other.boxes[0].tag == 9 and len(other.boxes[0].names) == 0
 
@@ -179,7 +180,7 @@ public func test_a_loop_of_scalar_reads_through_a_growing_state() -> bool:
     mut state = State(boxes=[Box(tag=1, names=[0])], seen=0)
     mut total = 0
     for i in range(20):
-        mut box = state.boxes[0]
+        mut box = state.boxes[0].copy()
         grow_first(mut state, box.tag + i)
         total = total + state.seen
     return len(state.boxes[0].names) == 21 and state.seen == 210 and total == 1540

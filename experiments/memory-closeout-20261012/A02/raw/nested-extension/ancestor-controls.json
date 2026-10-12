@@ -1,0 +1,2169 @@
+{
+  "base": "3c5d19c74b5e323306d76bcc0fed18f90290d1af",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/598f65078c8aa186bd4b2b4137657971/mylang",
+  "compiler_sha256": "adfbb043082b12264701664274e93efb642b4c410bef89f88fb4b1fb9592da94",
+  "runner_sha256": "d50f93dfd44e9c3a6224c157e1ba51e7f8a342182b711d872ff9592fb8321d16",
+  "source_sha256": {
+    "dynamic-ancestor.my": "5c7c62de74110abe343242a82ba135bbd19408548c6174704eaffdbc12449bc3",
+    "ancestor.my": "db890a012f76ccda8fc7fa18fe5c94434ad7f31abb269a757b5710abde22c962",
+    "copied.my": "98a413ada80cd6f83870954679f4005fb2c7f02b95a0ce6861e94f28427a103a"
+  },
+  "complete": true,
+  "qualified": true,
+  "negative": {
+    "ancestor": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/598f65078c8aa186bd4b2b4137657971/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/ancestor.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/ancestor.my:8:5: error[E_SINGLE_OWNER_OVERLAP]: extend cannot read an overlapping ancestor or ambiguous source; make an explicit .copy() before extending\n      tree.children[1].children.extend(tree.children)\n      ^\n",
+      "pass": true
+    },
+    "dynamic-ancestor": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/598f65078c8aa186bd4b2b4137657971/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/dynamic-ancestor.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/dynamic-ancestor.my:9:5: error[E_SINGLE_OWNER_OVERLAP]: extend cannot read an overlapping ancestor or ambiguous source; make an explicit .copy() before extending\n      tree.children[index].children.extend(tree.children)\n      ^\n",
+      "pass": true
+    }
+  },
+  "copy": {
+    "release": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/598f65078c8aa186bd4b2b4137657971/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+        "--experimental-zero-rc",
+        "--counters",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/cache",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/release/program.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/release/program"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "pass": true,
+      "binary_sha256": "042703690a945b1b4418b3e1284d93c020f3bb6623afb986009e1cd2719c4232",
+      "llvm_sha256": "6d81d4ef56e25cbc70d3d0869ca247c7fc90ac74c7005e6831a6e54c29f88d42",
+      "symbols_clean": true,
+      "llvm_clean": true,
+      "forbidden_symbols": [],
+      "forbidden_llvm": [],
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/release/program"
+        ],
+        "status": 0,
+        "stdout": "2 0\n",
+        "stderr": ""
+      },
+      "counts_present": true,
+      "counts_sha256": "5581f99a4deb2de3b53ea85f2c40a0079d73ded41ecc92b3fc55e664e8bbceb3",
+      "counts": {
+        "version": "mylang-counters-v1",
+        "totals": {
+          "calls": 1,
+          "allocs": 9,
+          "alloc_bytes": 480,
+          "frees": 9,
+          "free_bytes": 480,
+          "list_grows": 1,
+          "list_grow_bytes": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0,
+          "realloc_moves": 0,
+          "realloc_moved_bytes": 0,
+          "list_copies": 5,
+          "list_copy_bytes": 32,
+          "dict_copies": 0,
+          "dict_copy_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "text_copies": 0,
+          "text_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "dict_grows": 0,
+          "dict_grow_bytes": 0,
+          "buffer_grows": 0,
+          "buffer_grow_bytes": 0,
+          "text_grows": 0,
+          "text_grow_bytes": 0,
+          "text_appends": 0,
+          "text_append_bytes": 0,
+          "buffer_pushes": 0,
+          "buffer_appends": 0,
+          "buffer_append_bytes": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0,
+          "share_bytes": 0,
+          "peak_live_bytes": 448,
+          "live_bytes_at_exit": 0
+        },
+        "kinds": {
+          "retain": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "release": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "release_unique": {
+            "count": 2,
+            "bytes": 0,
+            "extra": 0
+          },
+          "unique_test": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "list_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "dict_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "buffer_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "text_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "record_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "list_push": {
+            "count": 4,
+            "bytes": 64,
+            "extra": 0
+          },
+          "element_load": {
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          "element_store": {
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          "bounds_check": {
+            "count": 4,
+            "bytes": 0,
+            "extra": 0
+          },
+          "overflow_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "division_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "shift_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "other_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          }
+        },
+        "functions": [
+          {
+            "name": "main",
+            "calls": 1,
+            "allocs": 9,
+            "alloc_bytes": 480,
+            "frees": 9,
+            "free_bytes": 480,
+            "list_grows": 1,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 5,
+            "list_copy_bytes": 32,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0
+          }
+        ],
+        "sites": [
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 7,
+            "column": 39,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 7,
+            "column": 39,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "element_load",
+            "detail": "list_get",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "element_store",
+            "detail": "list_set",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 2,
+            "bytes": 32,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 38,
+            "kind": "release_unique",
+            "detail": "release",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 19,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 51,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 51,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 19,
+            "kind": "release_unique",
+            "detail": "release",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          }
+        ]
+      },
+      "release_unique_sites": 2,
+      "leak_free": true,
+      "rc_events": 0
+    },
+    "debug": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/598f65078c8aa186bd4b2b4137657971/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+        "--experimental-zero-rc",
+        "--counters",
+        "--unoptimized",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/cache",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/debug/program.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/debug/program"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "pass": true,
+      "binary_sha256": "21c773f79665b142a76faf3bd59e2bd522f94208a3b9fded4e465648130588a8",
+      "llvm_sha256": "ced0c9dfc8c4906df38beba575d2f1daae0a8ad948473c59fb450f927aa2ec63",
+      "symbols_clean": true,
+      "llvm_clean": true,
+      "forbidden_symbols": [],
+      "forbidden_llvm": [],
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/debug/program"
+        ],
+        "status": 0,
+        "stdout": "2 0\n",
+        "stderr": ""
+      },
+      "counts_present": true,
+      "counts_sha256": "440a80c3f119e1c0125362b1b4b3fee6e0a8cac75ef63c7df870d1feca0f91dd",
+      "counts": {
+        "version": "mylang-counters-v1",
+        "totals": {
+          "calls": 1,
+          "allocs": 9,
+          "alloc_bytes": 480,
+          "frees": 9,
+          "free_bytes": 480,
+          "list_grows": 1,
+          "list_grow_bytes": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0,
+          "realloc_moves": 0,
+          "realloc_moved_bytes": 0,
+          "list_copies": 5,
+          "list_copy_bytes": 32,
+          "dict_copies": 0,
+          "dict_copy_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "text_copies": 0,
+          "text_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "dict_grows": 0,
+          "dict_grow_bytes": 0,
+          "buffer_grows": 0,
+          "buffer_grow_bytes": 0,
+          "text_grows": 0,
+          "text_grow_bytes": 0,
+          "text_appends": 0,
+          "text_append_bytes": 0,
+          "buffer_pushes": 0,
+          "buffer_appends": 0,
+          "buffer_append_bytes": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0,
+          "share_bytes": 0,
+          "peak_live_bytes": 448,
+          "live_bytes_at_exit": 0
+        },
+        "kinds": {
+          "retain": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "release": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "release_unique": {
+            "count": 2,
+            "bytes": 0,
+            "extra": 0
+          },
+          "unique_test": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "list_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "dict_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "buffer_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "text_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "record_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "list_push": {
+            "count": 4,
+            "bytes": 64,
+            "extra": 0
+          },
+          "element_load": {
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          "element_store": {
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          "bounds_check": {
+            "count": 8,
+            "bytes": 0,
+            "extra": 0
+          },
+          "overflow_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "division_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "shift_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "other_check": {
+            "count": 2,
+            "bytes": 0,
+            "extra": 0
+          }
+        },
+        "functions": [
+          {
+            "name": "main",
+            "calls": 1,
+            "allocs": 9,
+            "alloc_bytes": 480,
+            "frees": 9,
+            "free_bytes": 480,
+            "list_grows": 1,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 5,
+            "list_copy_bytes": 32,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0
+          }
+        ],
+        "sites": [
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 7,
+            "column": 39,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 7,
+            "column": 39,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "element_load",
+            "detail": "list_get",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "bounds_check",
+            "detail": "list_get",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "element_store",
+            "detail": "list_set",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "bounds_check",
+            "detail": "list_set",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 2,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 2,
+            "bytes": 32,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 38,
+            "kind": "release_unique",
+            "detail": "release",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 19,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 15,
+            "kind": "other_check",
+            "detail": "convert",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 51,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 51,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 19,
+            "kind": "release_unique",
+            "detail": "release",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 47,
+            "kind": "other_check",
+            "detail": "convert",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          }
+        ]
+      },
+      "release_unique_sites": 2,
+      "leak_free": true,
+      "rc_events": 0
+    },
+    "verify": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/598f65078c8aa186bd4b2b4137657971/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+        "--experimental-zero-rc",
+        "--counters",
+        "--release",
+        "--verify-facts",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/cache",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/verify/program.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/verify/program"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "pass": true,
+      "binary_sha256": "6b0c759bf054d2cf234fcb2b89731c709bab44fe4c88ef2927620bd6d9d93c13",
+      "llvm_sha256": "b77eec0cf4a7dd87958a89395bf14bd68eff3dc7fd598de9d67de8ecdd441323",
+      "symbols_clean": true,
+      "llvm_clean": true,
+      "forbidden_symbols": [],
+      "forbidden_llvm": [],
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/verify/program"
+        ],
+        "status": 0,
+        "stdout": "2 0\n",
+        "stderr": ""
+      },
+      "counts_present": true,
+      "counts_sha256": "9ef5f63599fe08859715e77d1a981680f2bb68ecb0d50d8c60ff0fbe369712bf",
+      "counts": {
+        "version": "mylang-counters-v1",
+        "totals": {
+          "calls": 1,
+          "allocs": 9,
+          "alloc_bytes": 480,
+          "frees": 9,
+          "free_bytes": 480,
+          "list_grows": 1,
+          "list_grow_bytes": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0,
+          "realloc_moves": 0,
+          "realloc_moved_bytes": 0,
+          "list_copies": 5,
+          "list_copy_bytes": 32,
+          "dict_copies": 0,
+          "dict_copy_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "text_copies": 0,
+          "text_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "dict_grows": 0,
+          "dict_grow_bytes": 0,
+          "buffer_grows": 0,
+          "buffer_grow_bytes": 0,
+          "text_grows": 0,
+          "text_grow_bytes": 0,
+          "text_appends": 0,
+          "text_append_bytes": 0,
+          "buffer_pushes": 0,
+          "buffer_appends": 0,
+          "buffer_append_bytes": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0,
+          "share_bytes": 0,
+          "peak_live_bytes": 448,
+          "live_bytes_at_exit": 0
+        },
+        "kinds": {
+          "retain": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "release": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "release_unique": {
+            "count": 2,
+            "bytes": 0,
+            "extra": 0
+          },
+          "unique_test": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "list_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "dict_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "buffer_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "text_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "record_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "list_push": {
+            "count": 4,
+            "bytes": 64,
+            "extra": 0
+          },
+          "element_load": {
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          "element_store": {
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          "bounds_check": {
+            "count": 4,
+            "bytes": 0,
+            "extra": 0
+          },
+          "overflow_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "division_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "shift_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "other_check": {
+            "count": 27,
+            "bytes": 0,
+            "extra": 0
+          }
+        },
+        "functions": [
+          {
+            "name": "main",
+            "calls": 1,
+            "allocs": 9,
+            "alloc_bytes": 480,
+            "frees": 9,
+            "free_bytes": 480,
+            "list_grows": 1,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 5,
+            "list_copy_bytes": 32,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0
+          }
+        ],
+        "sites": [
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 7,
+            "column": 39,
+            "kind": "other_check",
+            "detail": "list_new",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 7,
+            "column": 63,
+            "kind": "other_check",
+            "detail": "list_new",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 7,
+            "column": 39,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 7,
+            "column": 39,
+            "kind": "other_check",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 7,
+            "column": 91,
+            "kind": "other_check",
+            "detail": "list_new",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 7,
+            "column": 39,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 7,
+            "column": 39,
+            "kind": "other_check",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 7,
+            "column": 16,
+            "kind": "other_check",
+            "detail": "record_make",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 6,
+            "column": 6,
+            "kind": "other_check",
+            "detail": "jump",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "element_load",
+            "detail": "list_get",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "other_check",
+            "detail": "list_get",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "other_check",
+            "detail": "list_len",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "element_store",
+            "detail": "list_set",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "other_check",
+            "detail": "list_set",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "other_check",
+            "detail": "record_set",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 6,
+            "column": 6,
+            "kind": "other_check",
+            "detail": "jump",
+            "count": 3,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "other_check",
+            "detail": "list_get_field",
+            "count": 2,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 2,
+            "bytes": 32,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "other_check",
+            "detail": "add",
+            "count": 2,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 38,
+            "kind": "release_unique",
+            "detail": "release",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 6,
+            "column": 6,
+            "kind": "other_check",
+            "detail": "jump",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 19,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 15,
+            "kind": "other_check",
+            "detail": "list_len",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 15,
+            "kind": "other_check",
+            "detail": "convert",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 15,
+            "kind": "other_check",
+            "detail": "convert",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 6,
+            "column": 6,
+            "kind": "other_check",
+            "detail": "jump",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 51,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 6,
+            "column": 6,
+            "kind": "other_check",
+            "detail": "jump",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 51,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 47,
+            "kind": "other_check",
+            "detail": "list_len",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 19,
+            "kind": "release_unique",
+            "detail": "release",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 47,
+            "kind": "other_check",
+            "detail": "convert",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 47,
+            "kind": "other_check",
+            "detail": "convert",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          }
+        ]
+      },
+      "release_unique_sites": 2,
+      "leak_free": true,
+      "rc_events": 0
+    },
+    "optimized_debug": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/598f65078c8aa186bd4b2b4137657971/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+        "--experimental-zero-rc",
+        "--counters",
+        "--optimize-debug",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/cache",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/optimized_debug/program.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/optimized_debug/program"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "pass": true,
+      "binary_sha256": "d31bf60b7bb0176d8584c395c6bf2a9bacd75f2f7482534d5ee63496280c9ba9",
+      "llvm_sha256": "6d81d4ef56e25cbc70d3d0869ca247c7fc90ac74c7005e6831a6e54c29f88d42",
+      "symbols_clean": true,
+      "llvm_clean": true,
+      "forbidden_symbols": [],
+      "forbidden_llvm": [],
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/optimized_debug/program"
+        ],
+        "status": 0,
+        "stdout": "2 0\n",
+        "stderr": ""
+      },
+      "counts_present": true,
+      "counts_sha256": "5581f99a4deb2de3b53ea85f2c40a0079d73ded41ecc92b3fc55e664e8bbceb3",
+      "counts": {
+        "version": "mylang-counters-v1",
+        "totals": {
+          "calls": 1,
+          "allocs": 9,
+          "alloc_bytes": 480,
+          "frees": 9,
+          "free_bytes": 480,
+          "list_grows": 1,
+          "list_grow_bytes": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0,
+          "realloc_moves": 0,
+          "realloc_moved_bytes": 0,
+          "list_copies": 5,
+          "list_copy_bytes": 32,
+          "dict_copies": 0,
+          "dict_copy_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "text_copies": 0,
+          "text_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "dict_grows": 0,
+          "dict_grow_bytes": 0,
+          "buffer_grows": 0,
+          "buffer_grow_bytes": 0,
+          "text_grows": 0,
+          "text_grow_bytes": 0,
+          "text_appends": 0,
+          "text_append_bytes": 0,
+          "buffer_pushes": 0,
+          "buffer_appends": 0,
+          "buffer_append_bytes": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0,
+          "share_bytes": 0,
+          "peak_live_bytes": 448,
+          "live_bytes_at_exit": 0
+        },
+        "kinds": {
+          "retain": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "release": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "release_unique": {
+            "count": 2,
+            "bytes": 0,
+            "extra": 0
+          },
+          "unique_test": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "list_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "dict_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "buffer_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "text_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "record_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "list_push": {
+            "count": 4,
+            "bytes": 64,
+            "extra": 0
+          },
+          "element_load": {
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          "element_store": {
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          "bounds_check": {
+            "count": 4,
+            "bytes": 0,
+            "extra": 0
+          },
+          "overflow_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "division_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "shift_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "other_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          }
+        },
+        "functions": [
+          {
+            "name": "main",
+            "calls": 1,
+            "allocs": 9,
+            "alloc_bytes": 480,
+            "frees": 9,
+            "free_bytes": 480,
+            "list_grows": 1,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 5,
+            "list_copy_bytes": 32,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0
+          }
+        ],
+        "sites": [
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 7,
+            "column": 39,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 7,
+            "column": 39,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "element_load",
+            "detail": "list_get",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "element_store",
+            "detail": "list_set",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 2,
+            "bytes": 32,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 38,
+            "kind": "release_unique",
+            "detail": "release",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 19,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 51,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 51,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 19,
+            "kind": "release_unique",
+            "detail": "release",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          }
+        ]
+      },
+      "release_unique_sites": 2,
+      "leak_free": true,
+      "rc_events": 0
+    },
+    "no_facts": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/598f65078c8aa186bd4b2b4137657971/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+        "--experimental-zero-rc",
+        "--counters",
+        "--release",
+        "--no-facts",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/cache",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/no_facts/program.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/no_facts/program"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "pass": true,
+      "binary_sha256": "9748da3e0479bb8058400175e508ea47a41b53b142d144d47dc5f1e1d593e712",
+      "llvm_sha256": "ced0c9dfc8c4906df38beba575d2f1daae0a8ad948473c59fb450f927aa2ec63",
+      "symbols_clean": true,
+      "llvm_clean": true,
+      "forbidden_symbols": [],
+      "forbidden_llvm": [],
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/no_facts/program"
+        ],
+        "status": 0,
+        "stdout": "2 0\n",
+        "stderr": ""
+      },
+      "counts_present": true,
+      "counts_sha256": "440a80c3f119e1c0125362b1b4b3fee6e0a8cac75ef63c7df870d1feca0f91dd",
+      "counts": {
+        "version": "mylang-counters-v1",
+        "totals": {
+          "calls": 1,
+          "allocs": 9,
+          "alloc_bytes": 480,
+          "frees": 9,
+          "free_bytes": 480,
+          "list_grows": 1,
+          "list_grow_bytes": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0,
+          "realloc_moves": 0,
+          "realloc_moved_bytes": 0,
+          "list_copies": 5,
+          "list_copy_bytes": 32,
+          "dict_copies": 0,
+          "dict_copy_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "text_copies": 0,
+          "text_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "dict_grows": 0,
+          "dict_grow_bytes": 0,
+          "buffer_grows": 0,
+          "buffer_grow_bytes": 0,
+          "text_grows": 0,
+          "text_grow_bytes": 0,
+          "text_appends": 0,
+          "text_append_bytes": 0,
+          "buffer_pushes": 0,
+          "buffer_appends": 0,
+          "buffer_append_bytes": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0,
+          "share_bytes": 0,
+          "peak_live_bytes": 448,
+          "live_bytes_at_exit": 0
+        },
+        "kinds": {
+          "retain": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "release": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "release_unique": {
+            "count": 2,
+            "bytes": 0,
+            "extra": 0
+          },
+          "unique_test": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "list_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "dict_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "buffer_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "text_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "record_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "list_push": {
+            "count": 4,
+            "bytes": 64,
+            "extra": 0
+          },
+          "element_load": {
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          "element_store": {
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          "bounds_check": {
+            "count": 8,
+            "bytes": 0,
+            "extra": 0
+          },
+          "overflow_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "division_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "shift_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "other_check": {
+            "count": 2,
+            "bytes": 0,
+            "extra": 0
+          }
+        },
+        "functions": [
+          {
+            "name": "main",
+            "calls": 1,
+            "allocs": 9,
+            "alloc_bytes": 480,
+            "frees": 9,
+            "free_bytes": 480,
+            "list_grows": 1,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 5,
+            "list_copy_bytes": 32,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0
+          }
+        ],
+        "sites": [
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 7,
+            "column": 39,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 7,
+            "column": 39,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "element_load",
+            "detail": "list_get",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "bounds_check",
+            "detail": "list_get",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "element_store",
+            "detail": "list_set",
+            "count": 1,
+            "bytes": 16,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "bounds_check",
+            "detail": "list_set",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 2,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 5,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 2,
+            "bytes": 32,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 8,
+            "column": 38,
+            "kind": "release_unique",
+            "detail": "release",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 19,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 15,
+            "kind": "other_check",
+            "detail": "convert",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 51,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 51,
+            "kind": "bounds_check",
+            "detail": "list_get_field",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 19,
+            "kind": "release_unique",
+            "detail": "release",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/controls/copied.my",
+            "line": 9,
+            "column": 47,
+            "kind": "other_check",
+            "detail": "convert",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          }
+        ]
+      },
+      "release_unique_sites": 2,
+      "leak_free": true,
+      "rc_events": 0
+    }
+  }
+}

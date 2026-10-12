@@ -1,0 +1,7 @@
+build-slot: FIFO ticket 207, position 4; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 207 after 35s
+{"name": "fields-64-cold", "status": 0, "passed": true, "elapsed_ns": 5710552202, "max_rss_kib": "122440"}
+{"name": "fields-64-warm", "status": 0, "passed": true, "elapsed_ns": 102740016, "max_rss_kib": "11760"}
+{"name": "fields-64-receipt", "status": 0, "passed": true, "elapsed_ns": 103169668, "max_rss_kib": "12204"}
+{"name": "fields-64-replay", "status": 0, "passed": true, "elapsed_ns": 102728262, "max_rss_kib": "3940"}
+{"name": "fields-64-edit", "status": 0, "passed": true, "elapsed_ns": 303521081, "max_rss_kib": "78776"}

@@ -76,7 +76,27 @@ fn returnContribution(program: typed.Program, function: typed.Function, value: t
         .local, .call, .invoke, .complete_resource, .acquire_resource, .acquire_buffer, .array, .record, .variant, .update => {
             if (node.ty.isAggregate()) ctx.unknown.* = true;
         },
-        .binary, .unary, .cast, .wrap, .unwrap, .length, .field, .index, .replace, .buffer_operation, .file_access, .file_method, .print, .stream_write, .arena_escape, .block_value, .propagate, .restrict_resource, .dir_resource => {
+        .binary,
+        .unary,
+        .cast,
+        .wrap,
+        .unwrap,
+        .length,
+        .field,
+        .index,
+        .replace,
+        .buffer_operation,
+        .file_access,
+        .file_method,
+        .print,
+        .stream_write,
+        .arena_escape,
+        .block_value,
+        .borrow_selection,
+        .propagate,
+        .restrict_resource,
+        .dir_resource,
+        => {
             if (node.ty.isAggregate()) ctx.unknown.* = true;
         },
         .resource_io => {
@@ -174,6 +194,22 @@ fn elementWriteInput(program: typed.Program, function: typed.Function, statement
     return @intCast(slot);
 }
 
+/// Preserve the old field-projection origin when a tuple is staged completely.
+/// A fresh tuple shell alone does not prove that its individual fields are fresh.
+fn bindStoreFacts(program: typed.Program, function: typed.Function, store: typed.Store, fresh: []bool, origins: []?u16) void {
+    const index = @backingInt(store.slot);
+    if (index >= fresh.len) return;
+    const origin = valueOrigin(program, function, store.value, origins, 0);
+    fresh[index] = isFreshValue(program, store.value, 0);
+    origins[index] = origin;
+    if (store.unpack) |fields| for (fields) |field| {
+        const slot = @backingInt(field orelse continue);
+        if (slot >= fresh.len) continue;
+        fresh[slot] = false;
+        origins[slot] = origin;
+    };
+}
+
 /// Infer one function's direct write footprint and return-origin bound from its checked body.
 fn inferFacts(allocator: std.mem.Allocator, program: typed.Program, function: typed.Function) error{ OutOfMemory, InternalError }!Facts {
     var mutate_positions: std.ArrayList(u16) = .empty;
@@ -215,19 +251,8 @@ fn inferFacts(allocator: std.mem.Allocator, program: typed.Program, function: ty
                 try mutation.insertPosition(&mutate_positions, allocator, position);
             }
             switch (statement.data) {
-                .range_loop => |range| for ([_]typed.Store{ range.plan().start, range.plan().end }) |store| {
-                    if (@backingInt(store.slot) >= fresh.len) continue;
-                    fresh[@backingInt(store.slot)] = isFreshValue(program, store.value, 0);
-                    origins[@backingInt(store.slot)] = valueOrigin(program, function, store.value, origins, 0);
-                },
-                .initialize => |store| if (@backingInt(store.slot) < fresh.len) {
-                    fresh[@backingInt(store.slot)] = isFreshValue(program, store.value, 0);
-                    origins[@backingInt(store.slot)] = valueOrigin(program, function, store.value, origins, 0);
-                },
-                .assign => |store| if (@backingInt(store.slot) < fresh.len) {
-                    fresh[@backingInt(store.slot)] = isFreshValue(program, store.value, 0);
-                    origins[@backingInt(store.slot)] = valueOrigin(program, function, store.value, origins, 0);
-                },
+                .range_loop => |range| for ([_]typed.Store{ range.plan().start, range.plan().end }) |store| bindStoreFacts(program, function, store, fresh, origins),
+                .initialize, .assign => |store| bindStoreFacts(program, function, store, fresh, origins),
                 .ret => |value| {
                     var ctx: ReturnContext = .{
                         .allocator = allocator,
@@ -755,6 +780,7 @@ fn directEffect(program: typed.Program, function: typed.Function, node: typed.No
         .propagate,
         .wrap,
         .block_value,
+        .borrow_selection,
         .unwrap,
         .replace,
         .length,

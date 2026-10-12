@@ -210,6 +210,7 @@ fn finish(init: std.process.Init, ready: Ready, setup: Setup) Error!u8 {
     const view = setup.view();
     var session = frontend.Session.init(init.gpa, init.io, located.root);
     defer session.deinit();
+    session.setOwnership(options.build.show.codegen.single_owner, options.build.show.codegen.zero_rc);
     located.configure(&session);
     if (view == null) {
         try session.enableCache(init.gpa, options.build.cache);
@@ -386,6 +387,7 @@ const GroupRun = struct {
         const located = context.entry;
         var provider_session = frontend.Session.init(init.gpa, init.io, located.root);
         defer provider_session.deinit();
+        provider_session.setOwnership(context.options.build.show.codegen.single_owner, context.options.build.show.codegen.zero_rc);
         var program = self.base_checked orelse self.discovery;
         var cases = group.cases;
         var identity: ?report.Identity = null;
@@ -409,6 +411,12 @@ const GroupRun = struct {
             cases = try remap(a, self.discovery.program, program.program, group.cases, discovered);
             try addSources(a, &out.sources, context, try Loaded.of(a, &provider_session));
             identity = try providerIdentities(a, self.session, group.providers, self.selection.base);
+        }
+        if (context.options.build.show.codegen.single_owner) {
+            var problems: std.ArrayList(u8) = .empty;
+            if (!try @import("single_owner.zig").validateMode(a, program.program, program.src, .text, &problems, context.options.build.show.codegen.zero_rc)) {
+                return checkFailure(init, error.SourceError, problems.items, 1);
+            }
         }
         const selected = try select(init, context.options, program, cases, self.cases, self.selection);
         const items = selected.items;
@@ -614,6 +622,7 @@ fn checkEntry(session: *frontend.Session, allocator: std.mem.Allocator, located:
 fn providerGraph(init: std.process.Init, options: Options, located: project_entry.Entry, entry_text: EntryText, set: []const frontend.Provider, session: *frontend.Session) Error!?frontend.Checked {
     const a = init.arena.allocator();
     var problems: std.ArrayList(u8) = .empty;
+    session.setOwnership(options.build.show.codegen.single_owner, options.build.show.codegen.zero_rc);
     located.configure(session);
     try session.enableCache(init.gpa, options.build.cache);
     try session.enableSharedCache(init.environ_map);
@@ -718,7 +727,15 @@ fn chooseCases(init: std.process.Init, options: Options, located: project_entry.
         try filtered.append(allocator, case);
     };
     const reference = options.controls.against orelse return .{ .kept = filtered.items };
-    const request: affected.Request = .{ .arena = allocator, .backing = init.gpa, .io = init.io, .root = located.root, .entry = located.path, .reference = reference };
+    const request: affected.Request = .{
+        .arena = allocator,
+        .backing = init.gpa,
+        .io = init.io,
+        .root = located.root,
+        .entry = located.path,
+        .reference = reference,
+        .ownership = .{ .single_owner = options.build.show.codegen.single_owner, .zero_rc = options.build.show.codegen.zero_rc },
+    };
     return affected.narrow(request, checked, filtered.items);
 }
 
@@ -921,7 +938,7 @@ fn select(init: std.process.Init, options: Options, checked: frontend.Checked, c
         var scratch = std.heap.ArenaAllocator.init(init.gpa);
         defer scratch.deinit();
         var built: ?@import("ir.zig").Module = null;
-        if (try classify(scratch.allocator(), a, checked, item.case, item.settings, &built)) |refused| {
+        if (try classify(scratch.allocator(), a, .{ .options = options, .checked = checked }, item.case, item.settings, &built)) |refused| {
             item.verdict = refused;
             item.ready = false;
             continue;
@@ -983,7 +1000,7 @@ fn sharedKeys(init: std.process.Init, options: Options, checked: frontend.Checke
     var store = try stage_store.Store.initWithOptions(init.gpa, init.io, cache_root, .{ .compression = compression });
     defer store.deinit();
     const roots = try rootsFor(s, checked.program, cases.items);
-    const produced = try sharedFacts(s, .{ .checked = checked, .roots = roots, .catalog = planning_input.catalog }, &store, cache_plan.mode, work) orelse return null;
+    const produced = try sharedFacts(s, .{ .options = options, .checked = checked, .roots = roots, .catalog = planning_input.catalog }, &store, cache_plan.mode, work) orelse return null;
     const reachable = produced.module;
     const shared = produced.shared;
     if (!keyableRoots(&reachable, chosen)) return null;
@@ -1029,7 +1046,7 @@ fn sharedKeys(init: std.process.Init, options: Options, checked: frontend.Checke
             };
         }
         work.nanoseconds.keys = stage_metrics.elapsed(init.io, hashing);
-        if (cache_plan.mode == .shadow) try verifyShared(init, checked, roots, requests, derived);
+        if (cache_plan.mode == .shadow) try verifyShared(init, options, checked, roots, requests, derived);
         const publication = stage_metrics.now(init.io);
         @memcpy(cached.keys, derived);
         cached.publish(s, &store, planned.indexes, &work.graph) catch |err| {
@@ -1040,7 +1057,7 @@ fn sharedKeys(init: std.process.Init, options: Options, checked: frontend.Checke
         work.nanoseconds.publication = stage_metrics.elapsed(init.io, publication);
     } else {
         if (!try deriveLegacy(init, cache_plan, .{ .shared = shared, .requests = requests, .roots = root_sets }, derived, work)) return null;
-        if (cache_plan.mode == .shadow) try verifyShared(init, checked, roots, requests, derived);
+        if (cache_plan.mode == .shadow) try verifyShared(init, options, checked, roots, requests, derived);
     }
 
     var whole = std.crypto.hash.Blake3.init(.{});
@@ -1106,24 +1123,24 @@ fn attachWork(verdicts: []report.Verdict, ranges: []const WorkRange) void {
 }
 
 const Produced = struct { module: @import("ir.zig").Module, shared: test_keys.Shared, identities: ?[]const ?test_keys.Digest = null };
-const FactInput = struct { checked: frontend.Checked, roots: []const typed.FunctionId, catalog: ?*const lowering_cache.Catalog = null };
+const FactInput = struct { options: Options, checked: frontend.Checked, roots: []const typed.FunctionId, catalog: ?*const lowering_cache.Catalog = null };
 
 /// Header discovery validates raw input receipts before individual canonical fact lookup.
 fn sharedFacts(a: std.mem.Allocator, input: FactInput, store: *const stage_store.Store, mode: planner.Mode, work: *key_work.Work) Error!?Produced {
     const checked = input.checked;
     const roots = input.roots;
-    if (mode == .reference) return eagerFacts(a, checked, roots, store.io, work);
+    if (mode == .reference) return eagerFacts(a, input, store.io, work);
     var deferred: lowering_cache.Deferred = .{ .arena = a, .store = store };
     var cache: lowering_cache.Cache = .{ .store = store, .lazy = &deferred, .catalog = input.catalog };
     var why: build.Refusal = .{};
     const lowering_start = stage_metrics.now(store.io);
-    var module = build.buildRootsCached(a, roots, .{ .program = checked.program, .source = checked.src }, &why, &cache) catch |err| {
+    var module = build.buildRootsCached(a, roots, loweringInput(input.options, checked), &why, &cache) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         work.nanoseconds.lowering += stage_metrics.elapsed(store.io, lowering_start);
         work.producer.lowering.fresh = cache.lowered;
         work.producer.lowering.reused = cache.reused;
         work.producer.facts.fallback += 1;
-        return eagerFacts(a, checked, roots, store.io, work);
+        return eagerFacts(a, input, store.io, work);
     };
     try deferred.prepare(&module, checked.src);
     work.nanoseconds.lowering = stage_metrics.elapsed(store.io, lowering_start);
@@ -1135,7 +1152,7 @@ fn sharedFacts(a: std.mem.Allocator, input: FactInput, store: *const stage_store
         work.producer.lowering.materialized = deferred.restored;
         work.nanoseconds.facts += stage_metrics.elapsed(store.io, fact_start);
         work.producer.facts.fallback += 1;
-        return eagerFacts(a, checked, roots, store.io, work);
+        return eagerFacts(a, input, store.io, work);
     };
     work.producer.lowering.materialized = deferred.restored;
     work.nanoseconds.facts = stage_metrics.elapsed(store.io, fact_start);
@@ -1154,10 +1171,12 @@ fn workScope(a: std.mem.Allocator, path: []const u8, cases: []const discover.Cas
 }
 
 /// Complete independent lowering remains the conservative path for unknown facts.
-fn eagerFacts(a: std.mem.Allocator, checked: frontend.Checked, roots: []const typed.FunctionId, io: std.Io, work: *key_work.Work) Error!?Produced {
+fn eagerFacts(a: std.mem.Allocator, input: FactInput, io: std.Io, work: *key_work.Work) Error!?Produced {
+    const checked = input.checked;
+    const roots = input.roots;
     var why: build.Refusal = .{};
     const lowering_start = stage_metrics.now(io);
-    const module = build.buildRootsSource(a, checked.program, roots, checked.src, &why) catch |err| {
+    const module = build.buildRootsCached(a, roots, loweringInput(input.options, checked), &why, null) catch |err| {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         return null;
     };
@@ -1176,12 +1195,12 @@ fn eagerFacts(a: std.mem.Allocator, checked: frontend.Checked, roots: []const ty
 }
 
 /// Shadow keys come from independent eager lowering with all new metadata disabled.
-fn verifyShared(init: std.process.Init, checked: frontend.Checked, roots: []const typed.FunctionId, requests: []const test_keys.Test, derived: []const ?test_keys.Digest) Error!void {
+fn verifyShared(init: std.process.Init, options: Options, checked: frontend.Checked, roots: []const typed.FunctionId, requests: []const test_keys.Test, derived: []const ?test_keys.Digest) Error!void {
     var scratch = std.heap.ArenaAllocator.init(init.gpa);
     defer scratch.deinit();
     const a = scratch.allocator();
     var why: build.Refusal = .{};
-    const module = build.buildRootsSource(a, checked.program, roots, checked.src, &why) catch |err| return planFailure(init, err);
+    const module = build.buildRootsCached(a, roots, loweringInput(options, checked), &why, null) catch |err| return planFailure(init, err);
     const shared = test_keys.Shared.build(a, &module, pipeline.locator(&checked.src)) catch |err| return planFailure(init, err);
     for (requests, derived) |request, cached| if (cached) |key| {
         const expected = test_keys.key(shared, a, request) catch |err| return planFailure(init, err);
@@ -1336,12 +1355,16 @@ fn screen(keep: std.mem.Allocator, checked: frontend.Checked, case: discover.Cas
 
 /// The `unsupported` verdict of a screened test the builder cannot build, or null when
 /// it can be built and run; then `built` holds its reachable functions, allocated in `scratch`.
-fn classify(scratch: std.mem.Allocator, keep: std.mem.Allocator, checked: frontend.Checked, case: discover.Case, settings: std.json.Value, built: *?@import("ir.zig").Module) Error!?report.Verdict {
+const TestSource = struct { options: Options, checked: frontend.Checked };
+fn classify(scratch: std.mem.Allocator, keep: std.mem.Allocator, input: TestSource, case: discover.Case, settings: std.json.Value, built: *?@import("ir.zig").Module) Error!?report.Verdict {
+    const checked = input.checked;
+    const options = input.options;
     const expected = expects(settings);
     var why: build.Refusal = .{};
     const selected_roots = try rootsFor(scratch, checked.program, &.{case});
-    const module = build.buildRootsSource(scratch, checked.program, selected_roots, checked.src, &why) catch |err| switch (err) {
+    const module = build.buildRootsCached(scratch, selected_roots, loweringInput(options, checked), &why, null) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
+        error.CacheMiss => unreachable,
         error.Unsupported => {
             const at = frontend.position(checked.src, .{ .start = why.span, .end = why.span });
             return refusal(case, try keep.dupe(u8, why.reason), try std.fmt.allocPrint(keep, "{d}:{d}", .{ at.line, at.column }));
@@ -1505,9 +1528,9 @@ fn buildExecutable(init: std.process.Init, options: Options, checked: frontend.C
     return .{ .built = .{ .path = request.output, .program_key = program_key } };
 }
 
-fn programFor(allocator: std.mem.Allocator, options: Options, checked: frontend.Checked, cases: []const discover.Case, why: *build.Refusal) (Error || build.Error || batch_entry.Error)!@import("ir.zig").Module {
+fn programFor(allocator: std.mem.Allocator, options: Options, checked: frontend.Checked, cases: []const discover.Case, why: *build.Refusal) (Error || build.CachedError || batch_entry.Error)!@import("ir.zig").Module {
     const roots = try rootsFor(allocator, checked.program, cases);
-    const reachable = try build.buildRootsSource(allocator, checked.program, roots, checked.src, why);
+    const reachable = try build.buildRootsCached(allocator, roots, loweringInput(options, checked), why, null);
     return withEntry(allocator, options, checked, cases, reachable);
 }
 
@@ -1774,4 +1797,33 @@ test "portable test claim ordering is stable across reversed overlapping suites"
     try std.testing.expectEqual(right[0].key, left[0].key);
     try std.testing.expectEqual(right[1].key, left[1].key);
     try std.testing.expectEqual(left[1].key, left[2].key);
+}
+
+/// Every discovery, key and executable lowering uses the requested ownership ABI.
+fn loweringInput(options: Options, checked: frontend.Checked) build.Input {
+    return .{
+        .program = checked.program,
+        .source = checked.src,
+        .single_owner = options.build.show.codegen.single_owner,
+        .zero_rc = options.build.show.codegen.zero_rc,
+    };
+}
+
+// spec: NEW-CORE-ZERO-RC-TEST-1
+test "zero RC guest test adapter and reachable roots share the selected ABI" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const text = "public func test_value() -> bool:\n    const value = \"x-\" + str(7)\n    return value == \"x-7\"\n\nfunc main() -> int:\n    return 0\n";
+    var unit = try @import("mylang").Compilation.init(a, "owned.my", text);
+    defer unit.deinit();
+    try unit.check();
+    const checked: frontend.Checked = .{ .program = unit.program.?, .src = unit.src };
+    const cases = try discover.discover(a, checked.program, "owned", &.{.{ .name = "owned", .text = text }});
+    try std.testing.expectEqual(@as(usize, 1), cases.len);
+    var why: build.Refusal = .{};
+    const options: Options = .{ .path = "owned.my", .build = .{ .zig = "zig", .show = .{ .codegen = .{ .single_owner = true, .zero_rc = true } } } };
+    const module = try programFor(a, options, checked, cases, &why);
+    try std.testing.expect(module.single_owner and module.zero_rc);
+    try std.testing.expectEqualStrings(entry.entry_name, module.functions.items[module.entry].name);
 }

@@ -1,0 +1,4 @@
+build-slot: build slot 1, FIFO ticket 1333 after 0s
+heap.my:193:13: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+              rt.objects[ref] = object.Obj.instance(value=updated)
+              ^

@@ -1,0 +1,100 @@
+{
+  "evidence": "experiments/memory-closeout-20261012/A10/test-support-matrix-refactor.json",
+  "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9",
+  "stronger_assertions": "Expected test counts, no unsupported/failed tests, move diagnostic identity, exact run output",
+  "results": [
+    {
+      "name": "test-debug",
+      "passed": true
+    },
+    {
+      "name": "test-release",
+      "passed": true
+    },
+    {
+      "name": "test-verified-release",
+      "passed": true
+    },
+    {
+      "name": "test-optimized-debug",
+      "passed": true
+    },
+    {
+      "name": "test-release-no-facts",
+      "passed": true
+    },
+    {
+      "name": "test-cold",
+      "passed": true
+    },
+    {
+      "name": "test-warm",
+      "passed": true
+    },
+    {
+      "name": "test-planner-reference",
+      "passed": true
+    },
+    {
+      "name": "test-planner-shadow",
+      "passed": true
+    },
+    {
+      "name": "check-library",
+      "passed": true
+    },
+    {
+      "name": "check-library-invalid",
+      "passed": true
+    },
+    {
+      "name": "check",
+      "passed": true
+    },
+    {
+      "name": "dump-ir",
+      "passed": true
+    },
+    {
+      "name": "build",
+      "passed": true
+    },
+    {
+      "name": "run",
+      "passed": true
+    },
+    {
+      "name": "run-project",
+      "passed": true
+    },
+    {
+      "name": "result-ok",
+      "passed": true
+    },
+    {
+      "name": "result-error",
+      "passed": true
+    },
+    {
+      "name": "invalid-rc-control",
+      "passed": true
+    },
+    {
+      "name": "invalid-cold",
+      "passed": true
+    },
+    {
+      "name": "invalid-repeat",
+      "passed": true
+    },
+    {
+      "name": "directory",
+      "passed": true
+    },
+    {
+      "name": "directory-children",
+      "passed": true
+    }
+  ],
+  "success": true
+}

@@ -653,7 +653,7 @@ const v_capability_arrays_errors =
 ;
 
 // spec: NEW-CORE-S5-CAP-COLLECTIONS-1
-test "fixed arrays of Stream, Host and Filesystem as locals, fields, payloads and mut parameters print and exit as the old core does" {
+test "fixed arrays of Stream and Host plus named Filesystem owners preserve output and cleanup" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     try std.testing.expect(try matches(arena.allocator(), "v_capability_arrays", v_capability_arrays_output, 5));

@@ -566,7 +566,9 @@ const Writer = struct {
             const list = self.f.resolve(inst.a);
             if (contains(lists.items, list)) continue;
             try lists.append(self.arena, list);
-            try self.put("  %vd{d}.{d} = getelementptr inbounds i8, ptr {s}, i64 32\n", .{ n, list.index(), try self.scalar(list) });
+            if (self.f.inst(list).ty == .str_view) {
+                try self.put("  %vd{d}.{d} = extractvalue {{ ptr, i64 }} {s}, 0\n", .{ n, list.index(), try self.scalar(list) });
+            } else try self.put("  %vd{d}.{d} = getelementptr inbounds i8, ptr {s}, i64 32\n", .{ n, list.index(), try self.scalar(list) });
             try self.put("  %vp{d}.{d} = getelementptr inbounds {s}, ptr %vd{d}.{d}, i64 {s}\n", .{ n, list.index(), storage(inst.ty), n, list.index(), start });
         }
         try self.put("  %vhas{d} = icmp sgt i64 %vnv{d}, 0\n  br i1 %vhas{d}, label %vblock{d}, label %vexit{d}\n", .{ n, n, n, n, n });

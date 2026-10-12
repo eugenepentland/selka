@@ -1,0 +1,69 @@
+{
+  "base": "67348fc8ca14578af999c056891d3d318d311e12",
+  "status": "draft_unapplied_unqualified",
+  "files": [
+    "src/core/guest_abi.zig",
+    "src/core/ir.zig",
+    "src/core/single_owner_copy.zig",
+    "src/core/zero_rc.zig",
+    "src/core/own.zig",
+    "src/core/emit_llvm.zig",
+    "src/core/single_owner.zig",
+    "src/core/build.zig",
+    "src/core/verify_ir.zig",
+    "src/core/borrow_selection.zig",
+    "src/core/aggregate_provider.zig",
+    "src/core/build_cap.zig",
+    "src/core/build_dict.zig",
+    "src/core/emit_release.zig",
+    "src/core/emit_cap.zig",
+    "src/core/emit_text_split.zig"
+  ],
+  "abi": {
+    "tag_hex": "0x4f574e31",
+    "identity": "mylang-checked-owned-v1"
+  },
+  "patch_sha256": "07b9eb717426ed64a3f218c8c36a6da9d01e9e9c1e52c555f96cdd2fd1d5feb0",
+  "apply_check_exact_base": 0,
+  "validation": {
+    "zig_fmt": "pass",
+    "typecheck": "not_run_atomic_C3_dependencies_required",
+    "native": "not_run_C2_not_yet_qualified"
+  },
+  "inputs": {
+    "src/core/guest_abi.zig": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/core/ir.zig": "594ef6e802a787d33026e62b0e657ebb7518dc8e4a1dbed5d869d3f87abf8a2d",
+    "src/core/single_owner_copy.zig": "8ccf4b72f0123b98547a1d198e047534774cfd46934d3bc4db97a769e5c1528a",
+    "src/core/zero_rc.zig": "6ec5221f6ec43b53721b50aa73d176b1675fcfbeadada26532881e9b2676edb6",
+    "src/core/own.zig": "2ac64cacf087060d42db24f55c7335a444f16111b3582cfb0a3ebbe2d286dbca",
+    "src/core/emit_llvm.zig": "7fe54685ef9578ebca549dec82a99ba33abd9e96615e033eb9e57e1258066e06",
+    "src/core/single_owner.zig": "3f9895c94820f98a490c5694d991ec184e1b92cb395497647cb0714d2f76a854",
+    "src/core/build.zig": "dda9c2c2f8547e0a4ef581ac08a2cec91a0cd89e3ba5bff46d3f1689c5a98d13",
+    "src/core/verify_ir.zig": "8f539a5222a0d5648adff69c58dd06a15020b82cc74c00754adaed1afffc737c",
+    "src/core/borrow_selection.zig": "9e3a7612c0ef6ba55651c3bf73b315df8d37ea464b29bedf2679b9dc381380f0",
+    "src/core/aggregate_provider.zig": "846d7a8bf7d8322e2e64b74e236d6033b087cbb7fb620766dacf05a5646668f5",
+    "src/core/build_cap.zig": "803df16896607a6e83a9bc93d8f5067de54cd87a2967bdbf196786f95533ea75",
+    "src/core/build_dict.zig": "3fbdeef049eb39b49d9e40e6459e90b7a3715f4eb9842f85ddd8d60b754f3d11",
+    "src/core/emit_release.zig": "3afe217861e6cf99a716861ec3318d934a4f0387ef3c29eb8028f5e7d2e5ad11",
+    "src/core/emit_cap.zig": "545134a56e4f6df5d859972358a5e6b8c29edddd2c4067844cffa74e8d083d40",
+    "src/core/emit_text_split.zig": "a438b47c78c68b8eb67e61ac83956cd69bfb58edb60671090c56a86c6c765c04"
+  },
+  "prepared": {
+    "src/core/guest_abi.zig": "6688a73d2440ebf90839cdd3d12013d170fc4a647d2e960a8bfb2972c60e9676",
+    "src/core/ir.zig": "6b4bb7234e88017678ebc3dab5640c21f319a15c3ef7183cd8af86dce9a0cf53",
+    "src/core/single_owner_copy.zig": "84cbc4d6a4e9f25bd5b30fdeda390693edf297d9e02b7ebe0babc5708df51c08",
+    "src/core/zero_rc.zig": "8705746867e9a10b4e234ac6b602a6fb6ecc1f2aaa41d990755650772844c116",
+    "src/core/own.zig": "76a5b88915f39498c915aad4a8b92bbf69aeccaf90372f806b11d6c45dea85dc",
+    "src/core/emit_llvm.zig": "826c4350afde822d82af848592d0a643e2c8773151c693b0cf37aa887e914bb5",
+    "src/core/single_owner.zig": "7608969c647903f9c9b9c52d3044fde1c9747bddb1308e1c0cef0f4d63ffaabf",
+    "src/core/build.zig": "4da96735534fb078770465f665c12e31acc0b8b1c4286c40794e81e85f35951d",
+    "src/core/verify_ir.zig": "b385cfb743e9641c6f441b7ec16cc5fb0c75a6c8be503ec8ad568a744ec1206d",
+    "src/core/borrow_selection.zig": "e550ef83fc6b9497886f2dfb363c7a5b20a642b32da1c3a6b52e110b62e8056a",
+    "src/core/aggregate_provider.zig": "ae1008fd7e15fb44558627b7b3852bc63f20ad2793b8dd08dc3b128eee0933b7",
+    "src/core/build_cap.zig": "14b46dae82f61924c57b69b2c4b2f71f74e1f9600451489435ca69c9600e8802",
+    "src/core/build_dict.zig": "cb84ed05b2c1dd63bf8cdd09ffc9238915d048073669acf0ad923ebce0dc0ba2",
+    "src/core/emit_release.zig": "e2e255bc69857c70975d261b3e937162526f0e5db9efd6aaca4b48f3ed5d436c",
+    "src/core/emit_cap.zig": "ed3af99bab9935d92a65bc3127c3d7a45a69b2ae50f9eb2cce3e819b37b454e9",
+    "src/core/emit_text_split.zig": "debd7e5eda75a6448af4e014b92614bff0a1d4ea8f65a43bafedb957ac363bcf"
+  }
+}

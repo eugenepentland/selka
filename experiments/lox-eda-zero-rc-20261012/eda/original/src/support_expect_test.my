@@ -1,0 +1,28 @@
+
+import support_expect as ex
+
+# test "support_expect: passing checks return True and stay silent"
+public func test_support_expect_passing_checks_return_true_and_stay_silent(out: Stream) -> bool:
+    if not ex.ok(out, "one", 1 == 1):
+        return False
+    if not ex.eq_int(out, "n", 3, 3):
+        return False
+    if not ex.eq_str(out, "s", "a", "a"):
+        return False
+    if not ex.eq_bytes(out, "b", b"ab", b"ab"):
+        return False
+    if not ex.near(out, "f", 0.1 + 0.2, 0.3, 1e-9):
+        return False
+    return ex.eq_strs(out, "l", ["a", "b"], ["a", "b"])
+
+
+# test "support_expect: failing checks return False"
+public func test_support_expect_failing_checks_return_false(out: Stream) -> bool:
+    mut quiet = out
+    if ex.eq_int(quiet, "n", 3, 4):
+        return False
+    if ex.eq_bytes(quiet, "b", b"ab", b"ac"):
+        return False
+    if ex.near(quiet, "f", 1.0, 2.0, 0.5):
+        return False
+    return not ex.eq_strs(quiet, "l", ["a"], ["b"])

@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1150, position 7; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1150 after 55s
+/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/support7-selection/source/main.my:2:12: error[E_SINGLE_OWNER_BORROW]: a borrowed selection cannot be stored or returned; make an explicit .copy()
+      return min("a" + str(1), "b" + str(2))
+             ^

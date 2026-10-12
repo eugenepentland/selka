@@ -19,23 +19,23 @@ func fresh_table() -> Table:
 
 
 func store(mut table: Table, index: int, row: int[]):
-    table.rows[index] = row
+    table.rows[index] = row.copy()
 
 
 func add(mut table: Table, row: int[]):
-    table.rows.append(row)
+    table.rows.append(row.copy())
 
 
 func rename(mut table: Table, name: str):
-    table.names[0] = name
+    table.names[0] = name.copy()
 
 
 func copy_row(mut table: Table, to: int, from: int):
-    table.rows[to] = table.rows[from]
+    table.rows[to] = table.rows[from].copy()
 
 
 func plant(mut table: Table, tree: Tree):
-    table.trees[0] = tree
+    table.trees[0] = tree.copy()
 
 
 func size(tree: Tree) -> int:
@@ -70,7 +70,7 @@ public func test_appended_rows_and_negative_indices() -> bool:
 
 public func test_row_read_before_the_store_keeps_its_value() -> bool:
     mut table = fresh_table()
-    mut before = table.rows[1]
+    mut before = table.rows[1].copy()
     store(mut table, 1, [4])
     return before == [2, 3] and table.rows == [[1], [4]]
 

@@ -1,0 +1,28 @@
+{
+  "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9",
+  "cases": [
+    {
+      "source": "tests/lang/rc_pin_elide.my",
+      "source_sha256": "d9d3c958d7eb444a6ad702d70a7479a9b9550848bf47a4676285d5743cf0b09b",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": [
+        {
+          "line": 201,
+          "before": "    mut local = holder.items",
+          "after": "    mut local = holder.items.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/rc_site_eliminations.my",
+      "source_sha256": "f3a2fcdf69533a58a2d447bb1f78652d8e7c44d94299dc228079a0c5cebd8689",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_site_eliminations.my:149:24: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      return Loaded(code=made_unit().chunk.code.copy(), names=made_unit().chunk.names.copy(), at=0)\n                         ^\n",
+      "copy_changes": []
+    }
+  ]
+}

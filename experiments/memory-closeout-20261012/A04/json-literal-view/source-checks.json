@@ -1,0 +1,80 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "source_commit": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "rows": {
+    "original/checked": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/json-literal-view/original/main.my",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "original/ordinary": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/json-literal-view/original/main.my"
+      ],
+      "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "borrow/checked": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/json-literal-view/borrow/main.my",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "997a8f8b20c947fd6715ae657a71b9f7d71d52d277749035f5e44cf0255a72a4",
+      "status": 1,
+      "stdout": "",
+      "stderr": "a04_json.my:519:8: error[E_ZERO_RC_VIEW_UNSUPPORTED]: view binary operations are outside this prototype; use .copy()\n      if scanner.data.borrow(start, start + len(word)) != word:\n         ^\n"
+    },
+    "borrow/ordinary": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/json-literal-view/borrow/main.my"
+      ],
+      "source_sha256": "997a8f8b20c947fd6715ae657a71b9f7d71d52d277749035f5e44cf0255a72a4",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "invalidated/checked": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/json-literal-view/invalidated/main.my",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "73f1c5bf66ea6ad08b6a45d2c8dd5ac5a22c9d7a60d60068d84c2bf1cdb06951",
+      "status": 1,
+      "stdout": "",
+      "stderr": "a04_json.my:521:8: error[E_ZERO_RC_VIEW_UNSUPPORTED]: view binary operations are outside this prototype; use .copy()\n      if borrowed != word:\n         ^\n"
+    },
+    "invalidated/ordinary": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/json-literal-view/invalidated/main.my"
+      ],
+      "source_sha256": "73f1c5bf66ea6ad08b6a45d2c8dd5ac5a22c9d7a60d60068d84c2bf1cdb06951",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  "production_changed": false,
+  "used_harness_sha256": "d4bab5cd734ea00d16c95ba962e3147df3c9bd891ba10616103c40301339aa64",
+  "used_harness": "source-probe-used.txt",
+  "classification": "Explicit ByteView binary comparisons are an existing unsupported boundary (E_ZERO_RC_VIEW_UNSUPPORTED); no production change adopted and no source-check success treated as native success."
+}

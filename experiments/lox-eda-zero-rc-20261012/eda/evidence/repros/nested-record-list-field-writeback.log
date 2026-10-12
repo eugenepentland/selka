@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1705, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1705 after 36s
+experiments/lox-eda-zero-rc-20261012/eda/evidence/repros/nested-record-list-field-writeback.my:12:5: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression
+      state.req.children[0].at = 2
+      ^

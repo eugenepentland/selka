@@ -4,17 +4,17 @@ record Node:
 
 
 func total(node: Node) -> int:
-    mut child = node.next
+    mut child = node.next.copy()
     if child is None:
         return node.number
     return node.number + total(child)
 
 
 func rewrite_next(node: Node) -> Node:
-    mut child = node.next
+    mut child = node.next.copy()
     if child is None:
-        return node
-    mut rewritten = child
+        return node.copy()
+    mut rewritten = child.copy()
     rewritten.number = 9
     return Node(number=node.number, next=Some(rewritten))
 
@@ -27,7 +27,7 @@ public func test_pure_box_projection_retains_private_value_updates() -> bool:
 
 public func test_pure_box_read_remains_live_across_other_allocations() -> bool:
     mut original = Node(number=1, next=Some(Node(number=2, next=None)))
-    mut copied = original
+    mut copied = original.copy()
     mut junk: Node[] = []
     for i in range(100):
         junk.append(Node(number=i, next=Some(Node(number=i + 1, next=None))))

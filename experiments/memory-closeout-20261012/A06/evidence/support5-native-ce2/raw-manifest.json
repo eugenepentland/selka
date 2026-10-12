@@ -1,0 +1,12 @@
+{
+  "ce2_effects/release/build.json": {
+    "raw_sha256": "9eb0abfcf74e06e25062b7fd2e9491daa730f798f4bb38eb4667a05c177d8b99",
+    "compressed_sha256": "ef38035192f222216a7767f08b402d4c4149c724c1850e0efa5f51373eeaa524",
+    "raw_bytes": 932
+  },
+  "ce2_effects/release/run.json": {
+    "raw_sha256": "cdefdd40393b27c01e0a43fcbfbc0fcbf1e99e5a733a9db6aeb409a9f5cacf1b",
+    "compressed_sha256": "74278f1011ce0f558e9804f89d547bb7f14b14e7d2caf9fc99b3fbee97adf52b",
+    "raw_bytes": 280
+  }
+}

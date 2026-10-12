@@ -1,0 +1,336 @@
+error(SafeAllocator): leaked [addr: 7dcc43f91ef8, len: 136 (0x88) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f91ed8, len: 23 (0x17) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f91e70, len: 92 (0x5c) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f91928, len: 1344 (0x540) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f91898, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f91878, len: 23 (0x17) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f90fe0, len: 88 (0x58) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f90f50, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f90ec0, len: 136 (0x88) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f90ea0, len: 22 (0x16) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f90e40, len: 88 (0x58) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f90928, len: 1296 (0x510) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f90898, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f90878, len: 22 (0x16) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8ff48, len: 64 (0x40) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8feb8, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8fe28, len: 136 (0x88) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8fe10, len: 16 (0x10) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8fdc8, len: 64 (0x40) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8f8e0, len: 1248 (0x4e0) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8f850, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8f838, len: 16 (0x10) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8f008, len: 112 (0x70) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8ef78, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8eee8, len: 136 (0x88) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8eec0, len: 28 (0x1c) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8ee48, len: 112 (0x70) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8e968, len: 1236 (0x4d4) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8e8d8, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8e8b0, len: 28 (0x1c) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8e0a0, len: 92 (0x5c) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8e010, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8c488, len: 16 (0x10) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8c3f8, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8c368, len: 136 (0x88) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8c358, len: 4 (0x4) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8c340, len: 16 (0x10) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8c2a8, len: 144 (0x90) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8c218, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f8c208, len: 4 (0x4) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43dde0a0, len: 56 (0x38) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43dde010, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43dba6c8, len: 88 (0x58) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43dba638, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43dba5a8, len: 136 (0x88) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43dba588, len: 22 (0x16) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43dba528, len: 88 (0x58) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43dba010, len: 1296 (0x510) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43c97d10, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43c97cf8, len: 16 (0x10) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43c54fa0, len: 16 (0x10) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43c54f10, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43c54e80, len: 136 (0x88) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43c54e70, len: 4 (0x4) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43c54e58, len: 16 (0x10) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43c54dc0, len: 144 (0x90) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43c54d30, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43c54d20, len: 4 (0x4) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43de9f50, len: 136 (0x88) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43de9f38, len: 14 (0xe) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43de9ef8, len: 56 (0x38) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43de9b98, len: 852 (0x354) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43de9b08, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43de9af0, len: 14 (0xe) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43cc9a00, len: 112 (0x70) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43cc9970, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43cc98e0, len: 136 (0x88) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43cc98b8, len: 28 (0x1c) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43cc9840, len: 112 (0x70) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43cc9360, len: 1236 (0x4d4) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43cc92d0, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43cc92a8, len: 28 (0x1c) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43c8c678, len: 64 (0x40) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43c8c5e8, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43c8c558, len: 136 (0x88) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43c8c540, len: 16 (0x10) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43c8c4f8, len: 64 (0x40) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43c8c010, len: 1248 (0x4e0) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43d87dc0, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43d87da0, len: 23 (0x17) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43e6fd48, len: 112 (0x70) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43e6fbe8, len: 344 (0x158) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43e6fb58, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43e6faa0, len: 28 (0x1c) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43e6fa28, len: 112 (0x70) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43e6f530, len: 1260 (0x4ec) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43e6f4a0, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43e6f478, len: 28 (0x1c) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43dbfdb8, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43dbfd98, len: 22 (0x16) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f93cb8, len: 56 (0x38) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f93c28, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f93b98, len: 136 (0x88) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f93b80, len: 14 (0xe) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f93b40, len: 56 (0x38) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f937e0, len: 852 (0x354) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f93750, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f93738, len: 14 (0xe) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f93118, len: 112 (0x70) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f92fb8, len: 344 (0x158) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f92f28, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f92e70, len: 28 (0x1c) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f92df8, len: 112 (0x70) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f92900, len: 1260 (0x4ec) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f92870, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43f92848, len: 28 (0x1c) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43d7c700, len: 92 (0x5c) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43d7c670, len: 132 (0x84) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43d7c5e0, len: 136 (0x88) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43d7c5c0, len: 23 (0x17) align: 1] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43d7c558, len: 92 (0x5c) align: 4] allocated at: 
+(empty stack trace)
+
+error(SafeAllocator): leaked [addr: 7dcc43d7c010, len: 1344 (0x540) align: 4] allocated at: 
+(empty stack trace)
+

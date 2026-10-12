@@ -1,0 +1,1701 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "source_commit": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "prototype_diff": "",
+  "default_ownership": false,
+  "ownership_support_sha256": "9b9df63e0dd72e3e2984a77af8f888efe8e39626f65c34c5f0b51a643758f97b",
+  "harness_sha256": "3e5dee9c0ff082cf06e27b9bb98679748a228000ac20be2c20028109f02d3316",
+  "cases": {
+    "complete/release": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "29a31315bb1cef6f8220faca7e4b5dff018c17b14057f0916852baf76ca15c17",
+      "binary_sha256": "f5f53684bec25e2dc7b29e70243213bb26837aea61d39a160df3c0109db6972f",
+      "llvm_sha256": "f8f0de76dbc85931410b92282877851a69eff79f2ff621cea5c850525f5a2205",
+      "build_ns": 113069149,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/release/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1838496,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/complete/release/counts-1.json",
+            "counter_sha256": "b69affb4dc6405200e945ca4f1afa0ee03909e1e55c38efdc483fe99d7381b45",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 20,
+            "memory": {
+              "allocs": 38,
+              "alloc_bytes": 2432,
+              "frees": 38,
+              "reallocs": 0,
+              "peak_live_bytes": 544,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 12,
+            "allocs": 38,
+            "alloc_bytes": 2432,
+            "frees": 38,
+            "free_bytes": 2432,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 13,
+            "text_copy_bytes": 24,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 9,
+            "text_grow_bytes": 13,
+            "text_appends": 9,
+            "text_append_bytes": 9,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 544,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "complete/debug": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "29a31315bb1cef6f8220faca7e4b5dff018c17b14057f0916852baf76ca15c17",
+      "binary_sha256": "b7f7b95ac93821526ca2c0f41795cbca9a2af1d4e342e21cf4716c2fb0272430",
+      "llvm_sha256": "48c498c3e9e3da723a8508929e83cac48b2d3404bea1f999bf0377080d7410c2",
+      "build_ns": 78010029,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/debug/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1482505,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/complete/debug/counts-1.json",
+            "counter_sha256": "6a9c2808665e4a7099ae04aa23ab0bc183ca72a50dfcbfa7fcbfbd866b2e7d91",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 29,
+            "memory": {
+              "allocs": 47,
+              "alloc_bytes": 3008,
+              "frees": 47,
+              "reallocs": 0,
+              "peak_live_bytes": 544,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 12,
+            "allocs": 47,
+            "alloc_bytes": 3008,
+            "frees": 47,
+            "free_bytes": 3008,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 13,
+            "text_copy_bytes": 24,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 9,
+            "text_grow_bytes": 13,
+            "text_appends": 9,
+            "text_append_bytes": 9,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 544,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "complete/verify": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "29a31315bb1cef6f8220faca7e4b5dff018c17b14057f0916852baf76ca15c17",
+      "binary_sha256": "accaaace57309bd87d10e2de988d8834c6feb8342ed0c0db25b1ed82bc41a12b",
+      "llvm_sha256": "3ec50cb71a5e25f7cecf85cea7a25f601ebf322b2b6f5e0268a7bfb08d996453",
+      "build_ns": 168735841,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/verify/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1717514,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/complete/verify/counts-1.json",
+            "counter_sha256": "4dcd2a01ab0af25b79a69e6a221fd767cfebddde0a51f877758e2557ede8550a",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 20,
+            "memory": {
+              "allocs": 38,
+              "alloc_bytes": 2432,
+              "frees": 38,
+              "reallocs": 0,
+              "peak_live_bytes": 544,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 12,
+            "allocs": 38,
+            "alloc_bytes": 2432,
+            "frees": 38,
+            "free_bytes": 2432,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 13,
+            "text_copy_bytes": 24,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 9,
+            "text_grow_bytes": 13,
+            "text_appends": 9,
+            "text_append_bytes": 9,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 544,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "complete/optimized_debug": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "29a31315bb1cef6f8220faca7e4b5dff018c17b14057f0916852baf76ca15c17",
+      "binary_sha256": "fdb86bb063cd68ab0d7808cce6af9069f6d4e7a7ef38e3c0abe1a3aedad519b1",
+      "llvm_sha256": "2a18f451b1553596a737e933c55710cd33d0848a9eb0bd078a90f676a53ea56d",
+      "build_ns": 101375491,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/optimized_debug/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1427624,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/complete/optimized_debug/counts-1.json",
+            "counter_sha256": "863557ffee7062a71c3335964ff4860f4d638705516f698f23c8c38923064af3",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 20,
+            "memory": {
+              "allocs": 38,
+              "alloc_bytes": 2432,
+              "frees": 38,
+              "reallocs": 0,
+              "peak_live_bytes": 544,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 12,
+            "allocs": 38,
+            "alloc_bytes": 2432,
+            "frees": 38,
+            "free_bytes": 2432,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 13,
+            "text_copy_bytes": 24,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 9,
+            "text_grow_bytes": 13,
+            "text_appends": 9,
+            "text_append_bytes": 9,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 544,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "complete/no_facts": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "29a31315bb1cef6f8220faca7e4b5dff018c17b14057f0916852baf76ca15c17",
+      "binary_sha256": "f0c1f32ae22ffc7f857d6b5f58f3c28e985d1b36ace7f1a63619ae897910529f",
+      "llvm_sha256": "56c7e68bcf00c606bb0ee7f6aa10d4becec9d82faac1aad80353f71d9e77967d",
+      "build_ns": 157344156,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/no_facts/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1437978,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/complete/no_facts/counts-1.json",
+            "counter_sha256": "f5d69cb80672f81451e971b82964613c34eb9cdb88061b7c6e76d10239ea2b51",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 29,
+            "memory": {
+              "allocs": 47,
+              "alloc_bytes": 3008,
+              "frees": 47,
+              "reallocs": 0,
+              "peak_live_bytes": 544,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 12,
+            "allocs": 47,
+            "alloc_bytes": 3008,
+            "frees": 47,
+            "free_bytes": 3008,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 13,
+            "text_copy_bytes": 24,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 9,
+            "text_grow_bytes": 13,
+            "text_appends": 9,
+            "text_append_bytes": 9,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 544,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "complete/ordinary": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "29a31315bb1cef6f8220faca7e4b5dff018c17b14057f0916852baf76ca15c17",
+      "binary_sha256": "41be6550e223318ac0af11dede2d99ddd8ee0c65a9b3063cc83127d29c6df822",
+      "llvm_sha256": "fc652b3a6ee9067d05906ffae6fbcc4831d595084d83c167b64e4ed578391700",
+      "build_ns": 113290224,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/ordinary/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1763262,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/complete/ordinary/counts-1.json",
+            "counter_sha256": "cbf08163cc64c5752a5db9c371ec7dccb05e14b3e80338a7a4b577e69960f7b0",
+            "observed_rc_free": false,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 1,
+              "release": 15,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 9,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 2,
+            "memory": {
+              "allocs": 34,
+              "alloc_bytes": 2176,
+              "frees": 34,
+              "reallocs": 0,
+              "peak_live_bytes": 544,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [
+              {
+                "function": "test_dynamic_list_extrema_borrow_and_copy_independently",
+                "origin": "test_dynamic_list_extrema_borrow_and_copy_independently",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/ordinary/main.my",
+                "line": 21,
+                "column": 24,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "test_dynamic_list_extrema_borrow_and_copy_independently",
+                "origin": "test_dynamic_list_extrema_borrow_and_copy_independently",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/ordinary/main.my",
+                "line": 21,
+                "column": 39,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "test_dynamic_list_extrema_borrow_and_copy_independently",
+                "origin": "test_dynamic_list_extrema_borrow_and_copy_independently",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/ordinary/main.my",
+                "line": 21,
+                "column": 53,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "test_dynamic_list_extrema_borrow_and_copy_independently",
+                "origin": "test_dynamic_list_extrema_borrow_and_copy_independently",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/ordinary/main.my",
+                "line": 21,
+                "column": 67,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "test_dynamic_list_extrema_borrow_and_copy_independently",
+                "origin": "test_dynamic_list_extrema_borrow_and_copy_independently",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/ordinary/main.my",
+                "line": 21,
+                "column": 84,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "test_dynamic_list_extrema_borrow_and_copy_independently",
+                "origin": "test_dynamic_list_extrema_borrow_and_copy_independently",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/ordinary/main.my",
+                "line": 24,
+                "column": 17,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "test_dynamic_list_extrema_borrow_and_copy_independently",
+                "origin": "test_dynamic_list_extrema_borrow_and_copy_independently",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/ordinary/main.my",
+                "line": 21,
+                "column": 17,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "test_list_extrema_keep_scalar_ordering_and_first_ties",
+                "origin": "test_list_extrema_keep_scalar_ordering_and_first_ties",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/ordinary/main.my",
+                "line": 41,
+                "column": 8,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "test_list_extrema_keep_scalar_ordering_and_first_ties",
+                "origin": "test_list_extrema_keep_scalar_ordering_and_first_ties",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/ordinary/main.my",
+                "line": 41,
+                "column": 44,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "test_list_input_and_scalar_arguments_evaluate_once",
+                "origin": "test_list_input_and_scalar_arguments_evaluate_once",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/ordinary/main.my",
+                "line": 50,
+                "column": 22,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "test_list_input_and_scalar_arguments_evaluate_once",
+                "origin": "test_list_input_and_scalar_arguments_evaluate_once",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/ordinary/main.my",
+                "line": 49,
+                "column": 21,
+                "kind": "release",
+                "count": 1
+              },
+              {
+                "function": "smallest",
+                "origin": "smallest",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/ordinary/main.my",
+                "line": 2,
+                "column": 12,
+                "kind": "retain",
+                "count": 1
+              },
+              {
+                "function": "make_words",
+                "origin": "make_words",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/ordinary/main.my",
+                "line": 11,
+                "column": 19,
+                "kind": "release",
+                "count": 2
+              },
+              {
+                "function": "make_words",
+                "origin": "make_words",
+                "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/complete/ordinary/main.my",
+                "line": 11,
+                "column": 37,
+                "kind": "release",
+                "count": 2
+              }
+            ],
+            "runtime_rc_functions": [
+              {
+                "function": "test_dynamic_list_extrema_borrow_and_copy_independently",
+                "runtime_retains": 0,
+                "runtime_releases": 5,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              {
+                "function": "test_list_input_and_scalar_arguments_evaluate_once",
+                "runtime_retains": 0,
+                "runtime_releases": 4,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              }
+            ]
+          },
+          "memory": {
+            "calls": 12,
+            "allocs": 34,
+            "alloc_bytes": 2176,
+            "frees": 34,
+            "free_bytes": 2176,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 9,
+            "text_copy_bytes": 13,
+            "runtime_retains": 0,
+            "runtime_releases": 9,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 9,
+            "text_grow_bytes": 13,
+            "text_appends": 9,
+            "text_append_bytes": 9,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 544,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "view_copy/release": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "994e5f3f6fa2edc43acf613f3e38f5592097b320c4f675abbc8e2951a2d1eedc",
+      "binary_sha256": "e3570eba0de87dac6c93370a0798020b0f1e01882b81958b67b15aa71cd9a60d",
+      "llvm_sha256": "f47c7426e290294bc26f4333cb9bd1b0240cb75993a44632ba526a4dafd4780e",
+      "build_ns": 61910913,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/view_copy/release/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 3985452,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/view_copy/release/counts-1.json",
+            "counter_sha256": "2b14477c905ce009d2e1661f11e2540f32325e2c4dc7f8671d1a843ef41dc9b7",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 5,
+            "memory": {
+              "allocs": 9,
+              "alloc_bytes": 544,
+              "frees": 9,
+              "reallocs": 0,
+              "peak_live_bytes": 320,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 1,
+            "allocs": 9,
+            "alloc_bytes": 544,
+            "frees": 9,
+            "free_bytes": 544,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 3,
+            "text_copy_bytes": 4,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 2,
+            "text_grow_bytes": 2,
+            "text_appends": 2,
+            "text_append_bytes": 2,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 320,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "view_copy/debug": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "994e5f3f6fa2edc43acf613f3e38f5592097b320c4f675abbc8e2951a2d1eedc",
+      "binary_sha256": "0d4e5cb16f5ba1e6c2b89cec349da8fd1fa4e98acfc7869c0f7b1529bfb4fc9f",
+      "llvm_sha256": "bdaec5df0cf2886d0ecddef25f876ce84850bc7a5494f3607f31f891b640cd3c",
+      "build_ns": 52126636,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/view_copy/debug/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 945813,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/view_copy/debug/counts-1.json",
+            "counter_sha256": "45b0b3a8042cedbad0fee5965e14c3cc5a5f33c7a48a1b2fd7e8f593238659b0",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 5,
+            "memory": {
+              "allocs": 9,
+              "alloc_bytes": 544,
+              "frees": 9,
+              "reallocs": 0,
+              "peak_live_bytes": 320,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 1,
+            "allocs": 9,
+            "alloc_bytes": 544,
+            "frees": 9,
+            "free_bytes": 544,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 3,
+            "text_copy_bytes": 4,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 2,
+            "text_grow_bytes": 2,
+            "text_appends": 2,
+            "text_append_bytes": 2,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 320,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "view_copy/verify": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "994e5f3f6fa2edc43acf613f3e38f5592097b320c4f675abbc8e2951a2d1eedc",
+      "binary_sha256": "b898232ded2b4a261ab573d8ba7bc11df21d9f202416d3953911021cd11becb1",
+      "llvm_sha256": "7115c7cf6f937b7cdbcb51d9b631d1f35389f715180526c473678d28590711e4",
+      "build_ns": 56145173,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/view_copy/verify/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1286804,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/view_copy/verify/counts-1.json",
+            "counter_sha256": "5e4bbe840e2f2dd187fdaf0add5ba2b6b2c67e2eec1e26d2498c0fa5e0ba0136",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 5,
+            "memory": {
+              "allocs": 9,
+              "alloc_bytes": 544,
+              "frees": 9,
+              "reallocs": 0,
+              "peak_live_bytes": 320,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 1,
+            "allocs": 9,
+            "alloc_bytes": 544,
+            "frees": 9,
+            "free_bytes": 544,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 3,
+            "text_copy_bytes": 4,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 2,
+            "text_grow_bytes": 2,
+            "text_appends": 2,
+            "text_append_bytes": 2,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 320,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "view_copy/optimized_debug": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "994e5f3f6fa2edc43acf613f3e38f5592097b320c4f675abbc8e2951a2d1eedc",
+      "binary_sha256": "5d621da6725a2f9775a6ecbc6511886b24adaaee7a579d0b4a7da49c2bdbd003",
+      "llvm_sha256": "52f50877666cdd890d7d6be49434ec9614621be9acbcd7243513c9c0a9e4cc3e",
+      "build_ns": 61394025,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/view_copy/optimized_debug/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 988248,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/view_copy/optimized_debug/counts-1.json",
+            "counter_sha256": "f75781232f0d000faa5c2f6b067b8f4b96450ceab6bf999e45b6cf93fcd6d575",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 5,
+            "memory": {
+              "allocs": 9,
+              "alloc_bytes": 544,
+              "frees": 9,
+              "reallocs": 0,
+              "peak_live_bytes": 320,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 1,
+            "allocs": 9,
+            "alloc_bytes": 544,
+            "frees": 9,
+            "free_bytes": 544,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 3,
+            "text_copy_bytes": 4,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 2,
+            "text_grow_bytes": 2,
+            "text_appends": 2,
+            "text_append_bytes": 2,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 320,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "view_copy/no_facts": {
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_sha256": "994e5f3f6fa2edc43acf613f3e38f5592097b320c4f675abbc8e2951a2d1eedc",
+      "binary_sha256": "606e468a5e5dc4aadd0de7acb32f9e72dc21769fe2e1139d50f9f37b704cdca4",
+      "llvm_sha256": "5721c58566c6fa19b2384b4f2ee5c283d78f6a406838db068a897c27ad57ba2b",
+      "build_ns": 62539888,
+      "runs": {
+        "1": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/view_copy/no_facts/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 1037095,
+          "stdout": "",
+          "stderr": "",
+          "audit": {
+            "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/view_copy/no_facts/counts-1.json",
+            "counter_sha256": "8a3472a452d1eaef504596200881c4596338b5ff801f737b3e1e26d9a0ed66ea",
+            "observed_rc_free": true,
+            "managed_leak_free": true,
+            "emitted_rc": {
+              "retain": 0,
+              "release": 0,
+              "unique_test": 0
+            },
+            "runtime_rc": {
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0
+            },
+            "direct_frees": 5,
+            "memory": {
+              "allocs": 9,
+              "alloc_bytes": 544,
+              "frees": 9,
+              "reallocs": 0,
+              "peak_live_bytes": 320,
+              "live_bytes_at_exit": 0
+            },
+            "executed_rc_sites": [],
+            "runtime_rc_functions": []
+          },
+          "memory": {
+            "calls": 1,
+            "allocs": 9,
+            "alloc_bytes": 544,
+            "frees": 9,
+            "free_bytes": 544,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 3,
+            "text_copy_bytes": 4,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 2,
+            "text_grow_bytes": 2,
+            "text_appends": 2,
+            "text_append_bytes": 2,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 320,
+            "live_bytes_at_exit": 0
+          }
+        }
+      },
+      "status": "passed"
+    },
+    "empty_min/release": {
+      "status": "passed",
+      "source_sha256": "b2c050aa9111a249af5cdc25474aac7f136f75053321a82572e7201353b4f677",
+      "binary_sha256": "889e270409d947a8ec809bf8d06b5b797ad1b4990d905cefbcc5511c58d952fe",
+      "llvm_sha256": "4e3c416bda60b5400c7651a585bccc3d8de8e2331f458a0136249742fa754065",
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_min/release/program"
+        ],
+        "status": 1,
+        "elapsed_ns": 1244634,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_min/release/main.my:3:16: error[R_LIST_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_min/release/main.my:3:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n"
+      },
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/empty_min/release/counts.json",
+        "counter_sha256": "05c07d3904add2ce721fb11577d354c9650f5dd0289e9d6434f88431723d8f19",
+        "observed_rc_free": true,
+        "managed_leak_free": false,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 0,
+        "memory": {
+          "allocs": 1,
+          "alloc_bytes": 32,
+          "frees": 0,
+          "reallocs": 0,
+          "peak_live_bytes": 32,
+          "live_bytes_at_exit": 32
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    "empty_min/debug": {
+      "status": "passed",
+      "source_sha256": "b2c050aa9111a249af5cdc25474aac7f136f75053321a82572e7201353b4f677",
+      "binary_sha256": "909334731aa12c293604373173819e7589f2f6d0462be2603fc0d288ac54ad39",
+      "llvm_sha256": "82aa42e77ed1942db6a868e0bc89bfb4ea2722fdb13f9f997d0fead5766ef4ee",
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_min/debug/program"
+        ],
+        "status": 1,
+        "elapsed_ns": 1205980,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_min/debug/main.my:3:16: error[R_LIST_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_min/debug/main.my:3:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n"
+      },
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/empty_min/debug/counts.json",
+        "counter_sha256": "0bd24161a02ba5619a3c9f76889980d7b4d3bd7ce0f9104aba8fcbe050996b6a",
+        "observed_rc_free": true,
+        "managed_leak_free": false,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 0,
+        "memory": {
+          "allocs": 1,
+          "alloc_bytes": 32,
+          "frees": 0,
+          "reallocs": 0,
+          "peak_live_bytes": 32,
+          "live_bytes_at_exit": 32
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    "empty_min/verify": {
+      "status": "passed",
+      "source_sha256": "b2c050aa9111a249af5cdc25474aac7f136f75053321a82572e7201353b4f677",
+      "binary_sha256": "80c4773e73f4d5d5214ce26f4897edcd3101a2e30154f03715c8e38a11f5c71a",
+      "llvm_sha256": "7969cd750d6b3567db2c06be391b78f125d692a7ade0aeac49141e39752762c9",
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_min/verify/program"
+        ],
+        "status": 1,
+        "elapsed_ns": 1184130,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_min/verify/main.my:3:16: error[R_LIST_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_min/verify/main.my:3:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n"
+      },
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/empty_min/verify/counts.json",
+        "counter_sha256": "8fdae84d03cf3e88d38ef1d286bb777b1762d2f225d56850ae8dc35c392043ac",
+        "observed_rc_free": true,
+        "managed_leak_free": false,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 0,
+        "memory": {
+          "allocs": 1,
+          "alloc_bytes": 32,
+          "frees": 0,
+          "reallocs": 0,
+          "peak_live_bytes": 32,
+          "live_bytes_at_exit": 32
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    "empty_min/optimized_debug": {
+      "status": "passed",
+      "source_sha256": "b2c050aa9111a249af5cdc25474aac7f136f75053321a82572e7201353b4f677",
+      "binary_sha256": "a03af53b90dd50a7da50bf3692e55a3d9068866f46b3decad9d7b653eef76471",
+      "llvm_sha256": "f77efcf3a9e5aa6abca1c571939a6354b673d3c9371e1951413f2baa781a7eb7",
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_min/optimized_debug/program"
+        ],
+        "status": 1,
+        "elapsed_ns": 1233637,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_min/optimized_debug/main.my:3:16: error[R_LIST_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_min/optimized_debug/main.my:3:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n"
+      },
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/empty_min/optimized_debug/counts.json",
+        "counter_sha256": "b73794d8056daef8599a0416a66aceb41d478399cf92cb4001763b6e327a3320",
+        "observed_rc_free": true,
+        "managed_leak_free": false,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 0,
+        "memory": {
+          "allocs": 1,
+          "alloc_bytes": 32,
+          "frees": 0,
+          "reallocs": 0,
+          "peak_live_bytes": 32,
+          "live_bytes_at_exit": 32
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    "empty_min/no_facts": {
+      "status": "passed",
+      "source_sha256": "b2c050aa9111a249af5cdc25474aac7f136f75053321a82572e7201353b4f677",
+      "binary_sha256": "2af6ed873dd44c9fb8f71511fa5ce80ab586d746681fac5eb39a45373abf2eb3",
+      "llvm_sha256": "7a17f7d4144ad56d950ee62f0010016423da9a6793af0221fe8f9c951b09ddf3",
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_min/no_facts/program"
+        ],
+        "status": 1,
+        "elapsed_ns": 1192060,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_min/no_facts/main.my:3:16: error[R_LIST_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_min/no_facts/main.my:3:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n"
+      },
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/empty_min/no_facts/counts.json",
+        "counter_sha256": "7a2d00ba901f4b8a054c268ba4886ef3ed422f5a6de7539e127d3763c7043218",
+        "observed_rc_free": true,
+        "managed_leak_free": false,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 0,
+        "memory": {
+          "allocs": 1,
+          "alloc_bytes": 32,
+          "frees": 0,
+          "reallocs": 0,
+          "peak_live_bytes": 32,
+          "live_bytes_at_exit": 32
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    "empty_min/ordinary": {
+      "status": "passed",
+      "source_sha256": "b2c050aa9111a249af5cdc25474aac7f136f75053321a82572e7201353b4f677",
+      "binary_sha256": "fc14e963e4340c98a4ab6e6f07a716090848ea81679976fe55a04a6bf01d11ff",
+      "llvm_sha256": "02226ae06a26a4c5e738bd3fb5b3b184ee79362a8d9e465aec57f34eab083d4b",
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_min/ordinary/program"
+        ],
+        "status": 1,
+        "elapsed_ns": 1382535,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_min/ordinary/main.my:3:16: error[R_LIST_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_min/ordinary/main.my:3:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n"
+      },
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/empty_min/ordinary/counts.json",
+        "counter_sha256": "3cb232321f0fdb88097887b9c9a15db5f87f422264db25bd862c56ebe08e9bbe",
+        "observed_rc_free": true,
+        "managed_leak_free": false,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 0,
+        "memory": {
+          "allocs": 1,
+          "alloc_bytes": 32,
+          "frees": 0,
+          "reallocs": 0,
+          "peak_live_bytes": 32,
+          "live_bytes_at_exit": 32
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    "empty_max/release": {
+      "status": "passed",
+      "source_sha256": "40f54179e75f680ecae57b5a35e10b101ef1be3c8a3757d08f7b2c2dbdf058fc",
+      "binary_sha256": "7d29012ac29d8369558454a01d81fb61e6eee6de0d16aa2990e29ce09825231b",
+      "llvm_sha256": "09458731943ffe500352ae4e1544ade7db946e8ae142baa4087504820537da52",
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/release/program"
+        ],
+        "status": 1,
+        "elapsed_ns": 1190343,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/release/main.my:3:16: error[R_LIST_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/release/main.my:3:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n"
+      },
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/empty_max/release/counts.json",
+        "counter_sha256": "2e3955904700e9abf6f7fb015ba06bfddf872762cd810a1603be80dd32e4dfda",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 0,
+        "memory": {
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "peak_live_bytes": 0,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    "empty_max/debug": {
+      "status": "passed",
+      "source_sha256": "40f54179e75f680ecae57b5a35e10b101ef1be3c8a3757d08f7b2c2dbdf058fc",
+      "binary_sha256": "a66ca37adf288d309513f1dbd42ebad2ab93b8ef4052700a3bbdf2cd74e93086",
+      "llvm_sha256": "c26d2f476e0c945450d3d7db6db1d364c9dae05f52bff2f683574670117c5eca",
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/debug/program"
+        ],
+        "status": 1,
+        "elapsed_ns": 1140237,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/debug/main.my:3:16: error[R_LIST_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/debug/main.my:3:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n"
+      },
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/empty_max/debug/counts.json",
+        "counter_sha256": "b1a6e9fd3b0a1c438c49c5cd635d1e82710f9834ab2dcfa955d898275c49a3d2",
+        "observed_rc_free": true,
+        "managed_leak_free": false,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 0,
+        "memory": {
+          "allocs": 1,
+          "alloc_bytes": 32,
+          "frees": 0,
+          "reallocs": 0,
+          "peak_live_bytes": 32,
+          "live_bytes_at_exit": 32
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    "empty_max/verify": {
+      "status": "passed",
+      "source_sha256": "40f54179e75f680ecae57b5a35e10b101ef1be3c8a3757d08f7b2c2dbdf058fc",
+      "binary_sha256": "3adc636605cb4e3eb7bf480ebe2a8d89b63dd3a2e5c0b3c29d547e21d1138174",
+      "llvm_sha256": "3dc58e4b01e4f557b82482e64b155a5a85d0b407b41a8adb9bbbe3bead083b58",
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/verify/program"
+        ],
+        "status": 1,
+        "elapsed_ns": 1157228,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/verify/main.my:3:16: error[R_LIST_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/verify/main.my:3:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n"
+      },
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/empty_max/verify/counts.json",
+        "counter_sha256": "5ea19f37c70399fb2b8a1e23d918e54d5d747f8753602ef78ee7af31e83d8fef",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 0,
+        "memory": {
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "peak_live_bytes": 0,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    "empty_max/optimized_debug": {
+      "status": "passed",
+      "source_sha256": "40f54179e75f680ecae57b5a35e10b101ef1be3c8a3757d08f7b2c2dbdf058fc",
+      "binary_sha256": "f5fd8029d2e2fe9194c7c8fdfcb44e10e59f4a007640cc6ec102802d46883cf9",
+      "llvm_sha256": "d0fbf082e2a7967a93371378d00177cf6e4cd006a645c18129b5dd1f019b5266",
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/optimized_debug/program"
+        ],
+        "status": 1,
+        "elapsed_ns": 1177555,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/optimized_debug/main.my:3:16: error[R_LIST_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/optimized_debug/main.my:3:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n"
+      },
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/empty_max/optimized_debug/counts.json",
+        "counter_sha256": "207e951f25207cc06e84b6cd89b8597ea0567bacc19ed455d8fe5aa94b4046a1",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 0,
+        "memory": {
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "peak_live_bytes": 0,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    "empty_max/no_facts": {
+      "status": "passed",
+      "source_sha256": "40f54179e75f680ecae57b5a35e10b101ef1be3c8a3757d08f7b2c2dbdf058fc",
+      "binary_sha256": "8169b718623a6b86299658ed6fe832611fcaaa404f948a9767c4dc73cabe06ae",
+      "llvm_sha256": "50bf79adfa9e1dcfea62852de965da6f1715a34e7557ff947f55b93d4db7e777",
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/no_facts/program"
+        ],
+        "status": 1,
+        "elapsed_ns": 1192463,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/no_facts/main.my:3:16: error[R_LIST_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/no_facts/main.my:3:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n"
+      },
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/empty_max/no_facts/counts.json",
+        "counter_sha256": "a3ba8d00b6d3c39e1f9e26f35bfc27af38f7656db757b9da8e9c474298858571",
+        "observed_rc_free": true,
+        "managed_leak_free": false,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 0,
+        "memory": {
+          "allocs": 1,
+          "alloc_bytes": 32,
+          "frees": 0,
+          "reallocs": 0,
+          "peak_live_bytes": 32,
+          "live_bytes_at_exit": 32
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    },
+    "empty_max/ordinary": {
+      "status": "passed",
+      "source_sha256": "40f54179e75f680ecae57b5a35e10b101ef1be3c8a3757d08f7b2c2dbdf058fc",
+      "binary_sha256": "6d740d9d6ccccb04c6f2b6e38e2b5cb3543840fd475a0b3159f76b8e1191e0f1",
+      "llvm_sha256": "3da529a61fa2edc139310cadeb7f94742256715cd2f864e71b7401981567bc1c",
+      "run": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/ordinary/program"
+        ],
+        "status": 1,
+        "elapsed_ns": 1332031,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/ordinary/main.my:3:16: error[R_LIST_BOUNDS]: native execution failed (index 0, length 0)\n  in main at /home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/extrema/support7-01/empty_max/ordinary/main.my:3:16\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n"
+      },
+      "audit": {
+        "counter_file": ".tmp/memory-closeout/A04/extrema/support7-01/empty_max/ordinary/counts.json",
+        "counter_sha256": "0608b23a1a9097f84d6d86184d646bf44598dba9c53081d6cc7bc77985c62e4a",
+        "observed_rc_free": true,
+        "managed_leak_free": true,
+        "emitted_rc": {
+          "retain": 0,
+          "release": 0,
+          "unique_test": 0
+        },
+        "runtime_rc": {
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0
+        },
+        "direct_frees": 0,
+        "memory": {
+          "allocs": 0,
+          "alloc_bytes": 0,
+          "frees": 0,
+          "reallocs": 0,
+          "peak_live_bytes": 0,
+          "live_bytes_at_exit": 0
+        },
+        "executed_rc_sites": [],
+        "runtime_rc_functions": []
+      }
+    }
+  },
+  "negatives": {
+    "view_replaced": {
+      "status": "passed",
+      "source_sha256": "3c93559bd14e3632dce2f81aee4d6557cee25909bd78dad26fe42373f427dbcc",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/extrema/view_replaced.my",
+        "--experimental-zero-rc"
+      ],
+      "exit_status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/extrema/view_replaced.my:5:16: error[E_ZERO_RC_VIEW_INVALIDATED]: this view was invalidated by a move, mutation, replacement, or incompatible branch; copy it before changing its owner\n      return len(selected)\n                 ^\n",
+      "expected": "E_ZERO_RC_VIEW_INVALIDATED"
+    },
+    "view_moved": {
+      "status": "passed",
+      "source_sha256": "b224b9c3c301977ce357481d914d10613c18632c542526db827e1b8a0821c655",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/extrema/view_moved.my",
+        "--experimental-zero-rc"
+      ],
+      "exit_status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/extrema/view_moved.my:5:16: error[E_ZERO_RC_VIEW_INVALIDATED]: this view was invalidated by a move, mutation, replacement, or incompatible branch; copy it before changing its owner\n      return len(selected) + len(moved)\n                 ^\n",
+      "expected": "E_ZERO_RC_VIEW_INVALIDATED"
+    },
+    "borrow_escape": {
+      "status": "passed",
+      "source_sha256": "a8df5665d6b703405500b85dbb1ebb0b11352f9af615111fa99f911f5b210ba2",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/extrema/borrow_escape.my",
+        "--experimental-zero-rc"
+      ],
+      "exit_status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/extrema/borrow_escape.my:2:12: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      return min(words)\n             ^\n",
+      "expected": "E_SINGLE_OWNER_BORROW"
+    }
+  },
+  "limitations": "Semantic/counter/structural qualification; no exclusive runtime, compile scaling or RSS claim.",
+  "summary": {
+    "native_lanes": 23,
+    "negative_cases": 3,
+    "failed": 0
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "base": "0b6f765caceda171aad92fce80f9ce13b13d7dfb",
+  "production_changes": false,
+  "test_source": "src/core/emit_units_test.zig",
+  "test_source_sha256": "195b645505da4bc7d7213745238ef8328e669d576050ccd9430eaf95ed8763c2",
+  "test_binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/.zig-cache/o/a87035bf7b253b9b3afc6f0a7182abe3/test",
+  "test_binary_sha256": "34bca73e2ffdbe9916c5ca48d17c5647765ea67b7870f33d691397571e4e3c35",
+  "registered_focused_tests": 2,
+  "passed": 2,
+  "build_exit_code": 0,
+  "native_oracles": [
+    "18 4\n",
+    "[1.25, 2.5]\n"
+  ],
+  "dependency_checks": [
+    "exact source module owns number dependency; every other unit has none",
+    "direct values_render call; reached float descriptor; str_from_f64 declaration all coexist in rendering source module",
+    "fresh/cold/warm LLVM and dependencies agree",
+    "native handles retain exact dependencies without eagerly loading LLVM",
+    "native link from cached handles succeeds; guest exit0/output expected/stderr empty",
+    "counted native cached-handle run exits with live_bytes_at_exit0; MYLANG_COUNTERS path private"
+  ],
+  "memory_mode": "existing ordinary RC control; zero-RC retirement not claimed",
+  "historical_initial_counts": "initial-native-counts.json (first successful run before counter output path became private)"
+}

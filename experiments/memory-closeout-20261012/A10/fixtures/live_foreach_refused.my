@@ -1,0 +1,12 @@
+func main() -> int:
+    mut items = [1, 2]
+    mut saved = items.copy()
+    mut total = 0
+    for value in items:
+        total += value
+        items[1] = 9
+        if value == 9:
+            items.append(3)
+    assert total == 13
+    assert saved == [1, 2]
+    return 0

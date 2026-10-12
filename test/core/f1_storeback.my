@@ -22,7 +22,7 @@ func total(rows: float[][]) -> int:
 # reach `c`, while `keep` keeps the old row.
 func shared_row(n: int) -> int:
     mut c = grid(n, 1.0)
-    mut keep = c[1]
+    mut keep = c[1].copy()
     for i in range(n):
         for j in range(n):
             c[i][j] = c[i][j] * 2.0 + float(j)
@@ -44,10 +44,10 @@ func replaced_row(n: int) -> int:
 # copies it and only c[0] changes.
 func aliased_rows(n: int) -> int:
     mut c = grid(n, 3.0)
-    c[0] = c[1]
+    c[0] = c[1].copy()
     for j in range(n):
         c[0][j] = c[0][j] - 1.0
-    c[2] = c[0]
+    c[2] = c[0].copy()
     c[2][0] = 99.0
     return total(c) * 100 + int(c[1][0]) + int(c[0][0]) + int(c[2][0])
 
@@ -69,9 +69,9 @@ func early(n: int, stop: int) -> int:
 # (`names[i] += s`): the pointer moves when the block grows or was shared.
 func fields(n: int) -> int:
     mut bags = [for i in range(n) yield Bag(name="b" + str(i), items=[i])]
-    mut seen = bags[1].items
+    mut seen = bags[1].items.copy()
     mut names = [for i in range(n) yield "n" + str(i)]
-    mut held = names[2]
+    mut held = names[2].copy()
     for r in range(40):
         for i in range(n):
             bags[i].items.append(r * i)

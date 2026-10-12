@@ -1,0 +1,15 @@
+build-slot: FIFO ticket 1796, position 1; all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 1796 after 10s
+error: failed to open object /home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/component-cache/artifacts/4b2d35ed8df94fc36c6309ccbbbc995a243bae7c83e3bd79c056423f4fe48e1c.build/cache/native-link-84b916a78c22821784c28ab17b193de3/4292805a27bc2ec4837a2b5df9b60cdd2bd59c198054ac95594ef020a66ef11b.o: FileNotFound
+components: command failed (exit 2): /home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/component-cache/seeds/234ed167a218092282ba74b74fd057259d381aa074b73559b55dd083ebbe6ff3/source/zig-out/focus/mylang
+test-units
++- verification action unit member 0
+   +- verification action component-preparation member 0 failure
+error: process exited with code 1
+failed command: cd . && ./.zig-cache/o/d25f4101f9b52253a2f68040558360c7/selka-components --root /home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/. --zig /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --install-dir /home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/install/libexec/mylang/components
+
+Build Summary: 9/12 steps succeeded (1 failed)
+test-units transitive failure
++- verification action unit member 0 transitive failure
+   +- verification action component-preparation member 0 failure
+

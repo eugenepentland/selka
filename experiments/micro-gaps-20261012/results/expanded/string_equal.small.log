@@ -1,0 +1,2 @@
+build-slot: timing slot 1, FIFO ticket 432 after 0s
+micro-gaps/expanded/string_equal/small {'baseline-zero-rc': True, 'mylang-zero-rc': True}

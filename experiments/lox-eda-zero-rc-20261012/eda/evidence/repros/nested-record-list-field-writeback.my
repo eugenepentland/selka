@@ -1,0 +1,17 @@
+record Child:
+    name: str
+    at: int
+
+record Request:
+    children: Child[]
+
+record State:
+    req: Request
+
+func update(mut state: State):
+    state.req.children[0].at = 2
+
+func main() -> int:
+    mut state = State(req=Request(children=[Child(name="child", at=1)]))
+    update(mut state)
+    return state.req.children[0].at - 2

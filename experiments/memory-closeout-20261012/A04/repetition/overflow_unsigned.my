@@ -1,0 +1,4 @@
+func main() -> int:
+    const count: u64 = 18446744073709551615
+    const source: bytes = b"xy"
+    return len(count * source)

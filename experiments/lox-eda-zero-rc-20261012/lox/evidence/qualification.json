@@ -1,0 +1,148 @@
+{
+  "compiler": {
+    "source": "e2893d2707cbe057a09abf94e04c4b12d16b7b8b",
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012/zig-out/bin/mylang",
+    "sha256": "6e7938a14ad4abc46b76c149ef12551b170f6c7e6f462beec2f81db18d40a83d"
+  },
+  "directory_tests": {
+    "passed": 65,
+    "failed": 0,
+    "mode": "--experimental-zero-rc",
+    "leakcheck": true,
+    "evidence": "test-directory-frozen.log"
+  },
+  "conformance": {
+    "original-rc": {
+      "vm_normal": 246,
+      "vm_stress": 246,
+      "tree_normal": 241,
+      "tree_stress": 241,
+      "passed": 974,
+      "failed": 0,
+      "evidence": "conformance-original-rc-frozen.log"
+    },
+    "migrated-rc": {
+      "vm_normal": 246,
+      "vm_stress": 246,
+      "tree_normal": 241,
+      "tree_stress": 241,
+      "passed": 974,
+      "failed": 0,
+      "evidence": "conformance-migrated-rc-frozen.log"
+    },
+    "zero": {
+      "vm_normal": 246,
+      "vm_stress": 246,
+      "tree_normal": 241,
+      "tree_stress": 241,
+      "passed": 974,
+      "failed": 0,
+      "evidence": "conformance-zero-frozen.log"
+    },
+    "zero-debug": {
+      "vm_normal": 246,
+      "vm_stress": 246,
+      "tree_normal": 241,
+      "tree_stress": 241,
+      "passed": 974,
+      "failed": 0,
+      "evidence": "conformance-zero-debug-frozen.log"
+    },
+    "zero-verified": {
+      "vm_normal": 246,
+      "vm_stress": 246,
+      "tree_normal": 241,
+      "tree_stress": 241,
+      "passed": 974,
+      "failed": 0,
+      "evidence": "conformance-zero-verified-frozen.log"
+    }
+  },
+  "smoke": {
+    "cases": 52,
+    "arms": [
+      "original-rc",
+      "migrated-rc",
+      "zero"
+    ],
+    "stdout_and_lox_gc_stats_equal": true,
+    "evidence": "smoke-three-arms-frozen.log"
+  },
+  "clock": {
+    "vm": "true\ntrue\n",
+    "tree": "true\ntrue\n",
+    "stderr_empty": true
+  },
+  "rc_audit": {
+    "original-rc": {
+      "llvm_sha256": "9ab156dd1b9bf2b31be529ecd1a87bd7da1f04f70a9fb1fc07be75ad7456728b",
+      "llvm_rc_mentions": [
+        "@myl_core_release",
+        "@myl_core_release_child_pending",
+        "@myl_core_release_slow",
+        "@myl_core_retain_slow"
+      ],
+      "llvm_rc_call_count": 2153,
+      "native_rc_symbols": [
+        "0000000001021c00 T myl_core_release",
+        "0000000001021540 T myl_core_release_child_pending",
+        "00000000010542c0 T myl_core_release_slow",
+        "0000000001054240 T myl_core_retain_slow"
+      ]
+    },
+    "migrated-rc": {
+      "llvm_sha256": "ee416643291e37126d4b2218d18bf2cca6c5487289db9845e6c36e04930092bd",
+      "llvm_rc_mentions": [
+        "@myl_core_release",
+        "@myl_core_release_child_pending",
+        "@myl_core_release_slow",
+        "@myl_core_retain_slow"
+      ],
+      "llvm_rc_call_count": 2122,
+      "native_rc_symbols": [
+        "00000000010219c0 T myl_core_release",
+        "0000000001021300 T myl_core_release_child_pending",
+        "0000000001054080 T myl_core_release_slow",
+        "0000000001054000 T myl_core_retain_slow"
+      ]
+    },
+    "zero": {
+      "llvm_sha256": "1f12f15bbcb64c6c2a2bb62994541e1d415f600727b31e2d08ea5bde04951c16",
+      "llvm_rc_mentions": [],
+      "llvm_rc_call_count": 0,
+      "native_rc_symbols": []
+    },
+    "zero-counted": {
+      "llvm_sha256": "f6d82621a4f4c2c4fc7dff0dc46cfb73be0e9ea2c533e39850433de7bf269d0e",
+      "llvm_rc_mentions": [],
+      "llvm_rc_call_count": 0,
+      "native_rc_symbols": []
+    }
+  },
+  "limitations": [
+    "Strict single ownership requires explicit deep copies in frame publication and owning AST/state snapshots. Their allocation, runtime and memory costs are measured; VM representation is preserved.",
+    "Recovered original snapshot is bound by SHA manifest; historical comparison reports lack a per-source identity receipt."
+  ],
+  "counter_audit": {
+    "arm_runs": 78,
+    "checked_cases": 26,
+    "all_exit_live_bytes_zero": true,
+    "checked_all_managed_rc_zero": true,
+    "direct_destruction_range": {
+      "min": 43498,
+      "max": 14529136
+    },
+    "checked_peak_live_bytes": {
+      "min": 831536,
+      "max": 7171088
+    },
+    "counter_semantics": {
+      "release_unique": "Direct destruction with no RC count test; positive counts are expected and separate from managed RC traffic.",
+      "implementation": [
+        "src/core/emit_count.zig:30",
+        "src/core/emit_llvm.zig:3448",
+        "src/core/count_test.zig:691"
+      ]
+    }
+  }
+}

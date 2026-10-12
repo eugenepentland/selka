@@ -1,0 +1,21 @@
+--- original/legacy.my
++++ migrated/legacy.my
+@@ -50,8 +50,7 @@
+         mut index = seed % size
+         mut start = runtime_bench_now(host)
+         for step in range(iterations):
+-            mut item = records[index]
+-            mut result = read_item(item)
++            mut result = read_item(records[index])
+             checksum = (checksum + result) % 1000000007
+             index = (index + 2 * seed + 1) % size
+         elapsed = runtime_bench_now(host) - start
+@@ -105,7 +104,7 @@
+         for batch in range(iterations):
+             mut index = (seed + batch * 17) % size
+             if shared:
+-                mut snapshot = values
++                mut snapshot = values.copy()
+                 values[index] = (values[index] + batch + 1) % 1000003
+                 checksum = (checksum + snapshot[index] + values[index]) % 1000000007
+                 snapshot = []

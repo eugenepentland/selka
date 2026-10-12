@@ -1,0 +1,14 @@
+func identity(text: str) -> str:
+    return text.copy()
+
+
+func called(text: str, take: bool) -> str:
+    const ch = text[0]
+    const result = identity(ch)
+    return if (take) then (result) else ("!")
+
+
+func main() -> int:
+    assert called("éz", True) == "é"
+    assert called("éz", False) == "!"
+    return 0

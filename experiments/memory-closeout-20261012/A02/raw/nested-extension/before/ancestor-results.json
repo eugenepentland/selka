@@ -1,0 +1,111 @@
+{
+  "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+  "cases": {
+    "ancestor": {
+      "source_sha256": "db890a012f76ccda8fc7fa18fe5c94434ad7f31abb269a757b5710abde22c962",
+      "typed": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "dump-typed",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/ancestor-extend/ancestor.my"
+        ],
+        "status": 0,
+        "stdout": "fn main #0 params=1 ret=i64 cabi=false host=false\n  local %0 out: stream_cap\n  local %1 <collection>: List<Node> mut\n  local %2 <collection>: List<Node> mut\n  local %3 <collection>: List<Node> mut\n  local %4 tree: Node mut\n  local %5 <collection>: List<Node> mut\n  local %6 <collection>: i64 mut\n  local %7 <collection>: List<Node> mut\n  local %8 <collection>: List<Node> mut\n  local %9 <collection>: i64 mut\n  local %10 <collection>: List<Node> mut\n  local %11 <collection>: List<Node> mut\n  local %12 <collection>: i64 mut\n  local %13 <collection>: List<Node> mut\n  local %14 <collection>: i64 mut\n  local %15 <collection>: List<Node> mut\n  block\n    initialize %4\n      record : Node\n        field .0\n          integer : i64 0\n        field .1\n          block_value : List<Node>\n            block\n              initialize %3\n                acquire_buffer : List<Node>\n                  integer : i64 2\n              discard\n                buffer_operation : unit append owner=%3\n                  record : Node\n                    field .0\n                      integer : i64 1\n                    field .1\n                      block_value : List<Node>\n                        block\n                          initialize %1\n                            acquire_buffer : List<Node>\n                              integer : i64 0\n                        local : List<Node> %1\n              discard\n                buffer_operation : unit append owner=%3\n                  record : Node\n                    field .0\n                      integer : i64 2\n                    field .1\n                      block_value : List<Node>\n                        block\n                          initialize %2\n                            acquire_buffer : List<Node>\n                              integer : i64 0\n                        local : List<Node> %2\n            local : List<Node> %3\n    discard\n      block_value : unit\n        block\n          initialize %7\n            field : List<Node> .1\n              block_value : Node\n                block\n                  initialize %5\n                    field : List<Node> .1\n                      local : Node %4\n                buffer_operation : Node read owner=%5\n                  block_value : i64\n                    block\n                      initialize %6\n                        integer : i64 1\n                      branch\n                        binary : bool lt\n                          local : i64 %6\n                          integer : i64 0\n                        assign %6\n                          binary : i64 add\n                            cast : i64\n                              buffer_operation : u64 length owner=%5\n                            local : i64 %6\n                    local : i64 %6\n        buffer_operation : unit extend owner=%7\n          field : List<Node> .1\n            local : Node %4\n    discard\n      print : unit sink=stdout debug=false\n        local : stream_cap %0\n        block_value : i64\n          block\n            initialize %10\n              field : List<Node> .1\n                block_value : Node\n                  block\n                    initialize %8\n                      field : List<Node> .1\n                        local : Node %4\n                  buffer_operation : Node read owner=%8\n                    block_value : i64\n                      block\n                        initialize %9\n                          integer : i64 1\n                        branch\n                          binary : bool lt\n                            local : i64 %9\n                            integer : i64 0\n                          assign %9\n                            binary : i64 add\n                              cast : i64\n                                buffer_operation : u64 length owner=%8\n                              local : i64 %9\n                      local : i64 %9\n          cast : i64\n            buffer_operation : u64 length owner=%10\n        block_value : i64\n          block\n            initialize %15\n              field : List<Node> .1\n                block_value : Node\n                  block\n                    initialize %13\n                      field : List<Node> .1\n                        block_value : Node\n                          block\n                            initialize %11\n                              field : List<Node> .1\n                                local : Node %4\n                          buffer_operation : Node read owner=%11\n                            block_value : i64\n                              block\n                                initialize %12\n                                  integer : i64 1\n                                branch\n                                  binary : bool lt\n                                    local : i64 %12\n                                    integer : i64 0\n                                  assign %12\n                                    binary : i64 add\n                                      cast : i64\n                                        buffer_operation : u64 length owner=%11\n                                      local : i64 %12\n                              local : i64 %12\n                  buffer_operation : Node read owner=%13\n                    block_value : i64\n                      block\n                        initialize %14\n                          integer : i64 1\n                        branch\n                          binary : bool lt\n                            local : i64 %14\n                            integer : i64 0\n                          assign %14\n                            binary : i64 add\n                              cast : i64\n                                buffer_operation : u64 length owner=%13\n                              local : i64 %14\n                      local : i64 %14\n          cast : i64\n            buffer_operation : u64 length owner=%15\n    ret\n      integer : i64 0\n",
+        "stderr": ""
+      },
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/ancestor-extend/ancestor.my",
+          "--release",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/ancestor-extend/cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/ancestor-extend/ancestor-ordinary"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "run": {
+          "status": 0,
+          "stdout": "2 0\n",
+          "stderr": ""
+        }
+      },
+      "zero": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/ancestor-extend/ancestor.my",
+          "--experimental-zero-rc",
+          "--release",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/ancestor-extend/cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/ancestor-extend/ancestor-zero"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/ancestor-extend/ancestor.my:8:5: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression\n      tree.children[1].children.extend(tree.children)\n      ^\n"
+      }
+    },
+    "copied": {
+      "source_sha256": "98a413ada80cd6f83870954679f4005fb2c7f02b95a0ce6861e94f28427a103a",
+      "typed": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "dump-typed",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/ancestor-extend/copied.my"
+        ],
+        "status": 0,
+        "stdout": "fn main #0 params=1 ret=i64 cabi=false host=false\n  local %0 out: stream_cap\n  local %1 <collection>: List<Node> mut\n  local %2 <collection>: List<Node> mut\n  local %3 <collection>: List<Node> mut\n  local %4 tree: Node mut\n  local %5 <collection>: List<Node> mut\n  local %6 <collection>: i64 mut\n  local %7 <collection>: List<Node> mut\n  local %8 <collection>: List<Node> mut\n  local %9 <collection>: List<Node> mut\n  local %10 <collection>: i64 mut\n  local %11 <collection>: List<Node> mut\n  local %12 <collection>: List<Node> mut\n  local %13 <collection>: i64 mut\n  local %14 <collection>: List<Node> mut\n  local %15 <collection>: i64 mut\n  local %16 <collection>: List<Node> mut\n  block\n    initialize %4\n      record : Node\n        field .0\n          integer : i64 0\n        field .1\n          block_value : List<Node>\n            block\n              initialize %3\n                acquire_buffer : List<Node>\n                  integer : i64 2\n              discard\n                buffer_operation : unit append owner=%3\n                  record : Node\n                    field .0\n                      integer : i64 1\n                    field .1\n                      block_value : List<Node>\n                        block\n                          initialize %1\n                            acquire_buffer : List<Node>\n                              integer : i64 0\n                        local : List<Node> %1\n              discard\n                buffer_operation : unit append owner=%3\n                  record : Node\n                    field .0\n                      integer : i64 2\n                    field .1\n                      block_value : List<Node>\n                        block\n                          initialize %2\n                            acquire_buffer : List<Node>\n                              integer : i64 0\n                        local : List<Node> %2\n            local : List<Node> %3\n    discard\n      block_value : unit\n        block\n          initialize %8\n            field : List<Node> .1\n              block_value : Node\n                block\n                  initialize %5\n                    field : List<Node> .1\n                      local : Node %4\n                buffer_operation : Node read owner=%5\n                  block_value : i64\n                    block\n                      initialize %6\n                        integer : i64 1\n                      branch\n                        binary : bool lt\n                          local : i64 %6\n                          integer : i64 0\n                        assign %6\n                          binary : i64 add\n                            cast : i64\n                              buffer_operation : u64 length owner=%5\n                            local : i64 %6\n                    local : i64 %6\n        buffer_operation : unit extend owner=%8\n          block_value : List<Node>\n            block\n              initialize %7\n                field : List<Node> .1\n                  local : Node %4\n            buffer_operation : List<Node> copy owner=%7\n    discard\n      print : unit sink=stdout debug=false\n        local : stream_cap %0\n        block_value : i64\n          block\n            initialize %11\n              field : List<Node> .1\n                block_value : Node\n                  block\n                    initialize %9\n                      field : List<Node> .1\n                        local : Node %4\n                  buffer_operation : Node read owner=%9\n                    block_value : i64\n                      block\n                        initialize %10\n                          integer : i64 1\n                        branch\n                          binary : bool lt\n                            local : i64 %10\n                            integer : i64 0\n                          assign %10\n                            binary : i64 add\n                              cast : i64\n                                buffer_operation : u64 length owner=%9\n                              local : i64 %10\n                      local : i64 %10\n          cast : i64\n            buffer_operation : u64 length owner=%11\n        block_value : i64\n          block\n            initialize %16\n              field : List<Node> .1\n                block_value : Node\n                  block\n                    initialize %14\n                      field : List<Node> .1\n                        block_value : Node\n                          block\n                            initialize %12\n                              field : List<Node> .1\n                                local : Node %4\n                          buffer_operation : Node read owner=%12\n                            block_value : i64\n                              block\n                                initialize %13\n                                  integer : i64 1\n                                branch\n                                  binary : bool lt\n                                    local : i64 %13\n                                    integer : i64 0\n                                  assign %13\n                                    binary : i64 add\n                                      cast : i64\n                                        buffer_operation : u64 length owner=%12\n                                      local : i64 %13\n                              local : i64 %13\n                  buffer_operation : Node read owner=%14\n                    block_value : i64\n                      block\n                        initialize %15\n                          integer : i64 1\n                        branch\n                          binary : bool lt\n                            local : i64 %15\n                            integer : i64 0\n                          assign %15\n                            binary : i64 add\n                              cast : i64\n                                buffer_operation : u64 length owner=%14\n                              local : i64 %15\n                      local : i64 %15\n          cast : i64\n            buffer_operation : u64 length owner=%16\n    ret\n      integer : i64 0\n",
+        "stderr": ""
+      },
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/ancestor-extend/copied.my",
+          "--release",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/ancestor-extend/cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/ancestor-extend/copied-ordinary"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "run": {
+          "status": 0,
+          "stdout": "2 0\n",
+          "stderr": ""
+        }
+      },
+      "zero": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/ancestor-extend/copied.my",
+          "--experimental-zero-rc",
+          "--release",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/ancestor-extend/cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/ancestor-extend/copied-zero"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/ancestor-extend/copied.my:8:5: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression\n      tree.children[1].children.extend(tree.children.copy())\n      ^\n"
+      }
+    }
+  }
+}

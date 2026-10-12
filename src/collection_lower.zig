@@ -299,9 +299,10 @@ pub fn Builder(comptime Checker: type) type {
         pub fn access(self: Self, base: typed.NodeId, kind: Kind, inputs: []const typed.NodeId, signed_length: bool) Error!typed.Node {
             const ty = self.checker.nodes.items[@backingInt(base)].ty;
             const owner = try self.local(ty);
-            const init = try self.stmt(.{ .initialize = .{ .slot = owner, .value = base } });
-            const arguments = try self.checker.allocator.dupe(typed.NodeId, inputs);
             var statements: std.ArrayList(typed.StatementId) = .empty;
+            const rooted = try freshFieldReceiver(Checker, self, base, kind, &statements);
+            const init = try self.stmt(.{ .initialize = .{ .slot = owner, .value = rooted } });
+            const arguments = try self.checker.allocator.dupe(typed.NodeId, inputs);
             if (kind == .write) {
                 const value_slot = try self.local(self.checker.nodes.items[@backingInt(arguments[1])].ty);
                 try statements.append(self.checker.allocator, try self.stmt(.{ .initialize = .{ .slot = value_slot, .value = arguments[1] } }));
@@ -361,6 +362,11 @@ pub fn Builder(comptime Checker: type) type {
         /// Copy a bounded slice into a fresh list using existing checked loop instructions.
         pub fn slice(self: Self, base: typed.NodeId, start: ?typed.NodeId, end: ?typed.NodeId) Error!typed.Node {
             const ty = self.checker.nodes.items[@backingInt(base)].ty;
+            const element = self.checker.catalog.records[ty.recordIndex()].shape.buffer.?;
+            if (typed.requiresHandling(element, self.checker.catalog.records))
+                return self.checker.sink.fail("E_RESULT_OPERATION", self.span, "a list slice cannot duplicate pending result obligations");
+            if (typed.moveOnly(element, self.checker.catalog.records))
+                return self.checker.sink.fail(list_type_error, self.span, "a list slice cannot duplicate resource owners");
             const owner = try self.local(ty);
             const output = try self.local(ty);
             const index_slot = try self.local(.i64);
@@ -370,7 +376,12 @@ pub fn Builder(comptime Checker: type) type {
             const i = try self.read(index_slot);
             const loop_id = self.checker.loops.next;
             self.checker.loops.next += 1;
-            const body = try self.stmt(.{ .discard = try self.operation(output, .append, &.{try self.operation(owner, .read, &.{i})}) });
+            const child = try self.operation(owner, .read, &.{i});
+            const selected = if (element.isAggregate()) copied: {
+                const copy = try self.access(child, .copy, &.{}, false);
+                break :copied try self.node(copy.ty, copy.data);
+            } else child;
+            const body = try self.stmt(.{ .discard = try self.operation(output, .append, &.{selected}) });
             const step = try self.stmt(.{ .assign = .{ .slot = index_slot, .value = try self.binary(.add, i, try self.integer(1), .i64) } });
             return self.block(&.{
                 try self.stmt(.{ .initialize = .{ .slot = owner, .value = base } }),
@@ -381,4 +392,33 @@ pub fn Builder(comptime Checker: type) type {
             }, try self.read(output));
         }
     };
+}
+
+/// Keep a fresh whole result as the owner while a read-only receiver
+/// borrows its fields. Named assignments still cannot partially move it.
+fn freshFieldReceiver(comptime Checker: type, b: Builder(Checker), base: typed.NodeId, kind: Kind, statements: *std.ArrayList(typed.StatementId)) Error!typed.NodeId {
+    if (kind.writesReceiver() or kind == .borrow_view or kind == .view or kind == .snapshot) return base;
+    var path: [64]typed.NodeId = undefined;
+    var count: usize = 0;
+    var root = base;
+    while (b.checker.nodes.items[@backingInt(root)].data == .field) {
+        if (count == path.len) return base;
+        path[count] = root;
+        count += 1;
+        root = b.checker.nodes.items[@backingInt(root)].data.field.base;
+    }
+    const node = b.checker.nodes.items[@backingInt(root)];
+    if (count == 0 or (node.data != .call and node.data != .invoke)) return base;
+    const records = b.checker.catalog.records;
+    if (!typed.storable(node.ty, records) or typed.moveOnly(node.ty, records)) return base;
+    if (typed.requiresHandling(node.ty, records) or typed.isBorrowedView(records, node.ty)) return base;
+    const whole = try b.local(node.ty);
+    try statements.append(b.checker.allocator, try b.stmt(.{ .initialize = .{ .slot = whole, .value = root } }));
+    var value = try b.read(whole);
+    while (count != 0) {
+        count -= 1;
+        const field = b.checker.nodes.items[@backingInt(path[count])];
+        value = try b.node(field.ty, .{ .field = .{ .base = value, .index = field.data.field.index } });
+    }
+    return value;
 }

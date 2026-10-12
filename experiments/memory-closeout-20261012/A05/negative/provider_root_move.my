@@ -1,0 +1,13 @@
+# spec-case: CAPABILITY-FIELD-METHOD-1
+import filesystem
+
+record Store:
+    fs: Filesystem
+
+func main() -> int:
+    const root = Store(fs=filesystem.memory())
+    with root.fs.open("note", "w") as file:
+        const moved = root
+        _ = file.write("still live")
+        assert moved.fs.exists("note")
+    return 0

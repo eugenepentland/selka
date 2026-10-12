@@ -1,0 +1,26 @@
+[
+  {
+    "source": "temporary_encode",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+      "check",
+      "experiments/memory-closeout-20261012/A04/migrations/temporary_encode.my",
+      "--experimental-zero-rc"
+    ],
+    "status": 1,
+    "stdout": "",
+    "stderr": "temporary_encode.my:7:20: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed\n          assert len(str(value).encode()) > 0\n                     ^\n"
+  },
+  {
+    "source": "tuple_borrow",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+      "check",
+      "experiments/memory-closeout-20261012/A04/migrations/tuple_borrow.my",
+      "--experimental-zero-rc"
+    ],
+    "status": 1,
+    "stdout": "",
+    "stderr": "tuple_borrow.my:2:11: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      const number, word = pair\n            ^\n"
+  }
+]

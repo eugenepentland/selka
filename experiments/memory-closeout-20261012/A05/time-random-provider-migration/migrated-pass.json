@@ -1,0 +1,1469 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "overlay": false,
+  "library_source_overlay": false,
+  "compiler_source_overlay": false,
+  "check_only": false,
+  "harness_sha256": "8d0b8414f4c5220ac5e85b6474eb734bb889296ff83a07d039de51baf139d20e",
+  "cases": {
+    "time_random_provider": {
+      "release": {
+        "original_source": "src/stdlib/fixtures/time_random_provider.my",
+        "original_sha256": "5c2552826ce9c0a581a8fb2994c1a1838f2d6fea7bc85898e5b11d3d21d6a6aa",
+        "source_sha256": "5c2552826ce9c0a581a8fb2994c1a1838f2d6fea7bc85898e5b11d3d21d6a6aa",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/release/program.ll",
+          "--link",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "linked_provider": {
+          "path": "experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c",
+          "sha256": "b99c5f496e52b607b9072dfd9b4bca0400b9883ffd331b66d34c7930495dcd93"
+        },
+        "source_files": {
+          "main.my": "5c2552826ce9c0a581a8fb2994c1a1838f2d6fea7bc85898e5b11d3d21d6a6aa"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "9436e609239f2e0ae025dee1e08d5754b66a11b95fa06f4326e64f9829ca28a8",
+        "llvm_sha256": "dca683059441ee50ce3f9b38693b4afd52a1b3365b8196a8e6dbc46955738ebe",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/release/counts.json",
+          "counter_sha256": "bace6b3eaad24e9cde5c823c7097abd5b9d61c1cbd215e0e93695fd5453412b8",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 5,
+          "memory": {
+            "allocs": 11,
+            "alloc_bytes": 832,
+            "frees": 11,
+            "reallocs": 0,
+            "peak_live_bytes": 512,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": [],
+        "provider_error_runs": {
+          "clock_unavailable": {
+            "expected_status": 43,
+            "status": 43,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/release/clock_unavailable-counts.json",
+              "counter_sha256": "58f10d47d8c4482d0a2c1ee8b19e9808abfd47bfa80f8dcd434d63d7d88c5bb8",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 2,
+              "memory": {
+                "allocs": 5,
+                "alloc_bytes": 448,
+                "frees": 5,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "clock_denied": {
+            "expected_status": 42,
+            "status": 42,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/release/clock_denied-counts.json",
+              "counter_sha256": "58f10d47d8c4482d0a2c1ee8b19e9808abfd47bfa80f8dcd434d63d7d88c5bb8",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 2,
+              "memory": {
+                "allocs": 5,
+                "alloc_bytes": 448,
+                "frees": 5,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "clock_failed": {
+            "expected_status": 44,
+            "status": 44,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/release/clock_failed-counts.json",
+              "counter_sha256": "58f10d47d8c4482d0a2c1ee8b19e9808abfd47bfa80f8dcd434d63d7d88c5bb8",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 2,
+              "memory": {
+                "allocs": 5,
+                "alloc_bytes": 448,
+                "frees": 5,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "random_unavailable": {
+            "expected_status": 43,
+            "status": 43,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/release/random_unavailable-counts.json",
+              "counter_sha256": "52c750adee484b3864f6bc95a4e481c50cc212dc8bb7fbf5b725236d0d259fb1",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 3,
+              "memory": {
+                "allocs": 6,
+                "alloc_bytes": 512,
+                "frees": 6,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "random_denied": {
+            "expected_status": 42,
+            "status": 42,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/release/random_denied-counts.json",
+              "counter_sha256": "52c750adee484b3864f6bc95a4e481c50cc212dc8bb7fbf5b725236d0d259fb1",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 3,
+              "memory": {
+                "allocs": 6,
+                "alloc_bytes": 512,
+                "frees": 6,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "random_failed": {
+            "expected_status": 44,
+            "status": 44,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/release/random_failed-counts.json",
+              "counter_sha256": "52c750adee484b3864f6bc95a4e481c50cc212dc8bb7fbf5b725236d0d259fb1",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 3,
+              "memory": {
+                "allocs": 6,
+                "alloc_bytes": 512,
+                "frees": 6,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          }
+        }
+      },
+      "debug": {
+        "original_source": "src/stdlib/fixtures/time_random_provider.my",
+        "original_sha256": "5c2552826ce9c0a581a8fb2994c1a1838f2d6fea7bc85898e5b11d3d21d6a6aa",
+        "source_sha256": "5c2552826ce9c0a581a8fb2994c1a1838f2d6fea7bc85898e5b11d3d21d6a6aa",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/debug/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--unoptimized",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/debug/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/debug/program.ll",
+          "--link",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "linked_provider": {
+          "path": "experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c",
+          "sha256": "b99c5f496e52b607b9072dfd9b4bca0400b9883ffd331b66d34c7930495dcd93"
+        },
+        "source_files": {
+          "main.my": "5c2552826ce9c0a581a8fb2994c1a1838f2d6fea7bc85898e5b11d3d21d6a6aa"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "612657911f2db50d81a65f7fa40709d404edb997caeded25b514b8fabaa17479",
+        "llvm_sha256": "3f1408b91bb748d812cb079882fb8d1c0747f84ab3152555fb2776d832f13964",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/debug/counts.json",
+          "counter_sha256": "76237c8363eca0a39525011f6d08404acca6acd18f4ce86a2b5f2c1d6deefa04",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 5,
+          "memory": {
+            "allocs": 11,
+            "alloc_bytes": 832,
+            "frees": 11,
+            "reallocs": 0,
+            "peak_live_bytes": 512,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": [],
+        "provider_error_runs": {
+          "clock_unavailable": {
+            "expected_status": 43,
+            "status": 43,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/debug/clock_unavailable-counts.json",
+              "counter_sha256": "5a5f541126b4ca8467710f481f49689040ad0fbb09ef8c02f31057a78b8621d1",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 2,
+              "memory": {
+                "allocs": 5,
+                "alloc_bytes": 448,
+                "frees": 5,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "clock_denied": {
+            "expected_status": 42,
+            "status": 42,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/debug/clock_denied-counts.json",
+              "counter_sha256": "5a5f541126b4ca8467710f481f49689040ad0fbb09ef8c02f31057a78b8621d1",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 2,
+              "memory": {
+                "allocs": 5,
+                "alloc_bytes": 448,
+                "frees": 5,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "clock_failed": {
+            "expected_status": 44,
+            "status": 44,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/debug/clock_failed-counts.json",
+              "counter_sha256": "5a5f541126b4ca8467710f481f49689040ad0fbb09ef8c02f31057a78b8621d1",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 2,
+              "memory": {
+                "allocs": 5,
+                "alloc_bytes": 448,
+                "frees": 5,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "random_unavailable": {
+            "expected_status": 43,
+            "status": 43,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/debug/random_unavailable-counts.json",
+              "counter_sha256": "dc07872917ca6608875f9061af6c7480a5ed359913f3143cd13fb7e2b52be4f1",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 3,
+              "memory": {
+                "allocs": 6,
+                "alloc_bytes": 512,
+                "frees": 6,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "random_denied": {
+            "expected_status": 42,
+            "status": 42,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/debug/random_denied-counts.json",
+              "counter_sha256": "dc07872917ca6608875f9061af6c7480a5ed359913f3143cd13fb7e2b52be4f1",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 3,
+              "memory": {
+                "allocs": 6,
+                "alloc_bytes": 512,
+                "frees": 6,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "random_failed": {
+            "expected_status": 44,
+            "status": 44,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/debug/random_failed-counts.json",
+              "counter_sha256": "dc07872917ca6608875f9061af6c7480a5ed359913f3143cd13fb7e2b52be4f1",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 3,
+              "memory": {
+                "allocs": 6,
+                "alloc_bytes": 512,
+                "frees": 6,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          }
+        }
+      },
+      "verified": {
+        "original_source": "src/stdlib/fixtures/time_random_provider.my",
+        "original_sha256": "5c2552826ce9c0a581a8fb2994c1a1838f2d6fea7bc85898e5b11d3d21d6a6aa",
+        "source_sha256": "5c2552826ce9c0a581a8fb2994c1a1838f2d6fea7bc85898e5b11d3d21d6a6aa",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/verified/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--verify-facts",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/verified/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/verified/program.ll",
+          "--link",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "linked_provider": {
+          "path": "experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c",
+          "sha256": "b99c5f496e52b607b9072dfd9b4bca0400b9883ffd331b66d34c7930495dcd93"
+        },
+        "source_files": {
+          "main.my": "5c2552826ce9c0a581a8fb2994c1a1838f2d6fea7bc85898e5b11d3d21d6a6aa"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "958dbaf3668b7fb3aa3d859ffd2216ce20ce79b848cb8f1f26508e78f8c0cf12",
+        "llvm_sha256": "49d7c80a3271735d9e83a3fd79467a2561ad2d80d271641c1cd85f7952eab1ed",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/verified/counts.json",
+          "counter_sha256": "aaf7a3a0c5f5d922db03ffb9d97399320f8b1909f85a07032a0d5a5bd188ee20",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 5,
+          "memory": {
+            "allocs": 11,
+            "alloc_bytes": 832,
+            "frees": 11,
+            "reallocs": 0,
+            "peak_live_bytes": 512,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": [],
+        "provider_error_runs": {
+          "clock_unavailable": {
+            "expected_status": 43,
+            "status": 43,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/verified/clock_unavailable-counts.json",
+              "counter_sha256": "77b63f4edb17ba06627ca522d24822138846f4676fedf0e5620857dc19eb6a2d",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 2,
+              "memory": {
+                "allocs": 5,
+                "alloc_bytes": 448,
+                "frees": 5,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "clock_denied": {
+            "expected_status": 42,
+            "status": 42,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/verified/clock_denied-counts.json",
+              "counter_sha256": "77b63f4edb17ba06627ca522d24822138846f4676fedf0e5620857dc19eb6a2d",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 2,
+              "memory": {
+                "allocs": 5,
+                "alloc_bytes": 448,
+                "frees": 5,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "clock_failed": {
+            "expected_status": 44,
+            "status": 44,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/verified/clock_failed-counts.json",
+              "counter_sha256": "77b63f4edb17ba06627ca522d24822138846f4676fedf0e5620857dc19eb6a2d",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 2,
+              "memory": {
+                "allocs": 5,
+                "alloc_bytes": 448,
+                "frees": 5,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "random_unavailable": {
+            "expected_status": 43,
+            "status": 43,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/verified/random_unavailable-counts.json",
+              "counter_sha256": "00625efa181ad98f4c4341771bbcdad54bd02b550a22c0d4d29bd834f162682e",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 3,
+              "memory": {
+                "allocs": 6,
+                "alloc_bytes": 512,
+                "frees": 6,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "random_denied": {
+            "expected_status": 42,
+            "status": 42,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/verified/random_denied-counts.json",
+              "counter_sha256": "00625efa181ad98f4c4341771bbcdad54bd02b550a22c0d4d29bd834f162682e",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 3,
+              "memory": {
+                "allocs": 6,
+                "alloc_bytes": 512,
+                "frees": 6,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "random_failed": {
+            "expected_status": 44,
+            "status": 44,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/verified/random_failed-counts.json",
+              "counter_sha256": "00625efa181ad98f4c4341771bbcdad54bd02b550a22c0d4d29bd834f162682e",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 3,
+              "memory": {
+                "allocs": 6,
+                "alloc_bytes": 512,
+                "frees": 6,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          }
+        }
+      },
+      "optimized-debug": {
+        "original_source": "src/stdlib/fixtures/time_random_provider.my",
+        "original_sha256": "5c2552826ce9c0a581a8fb2994c1a1838f2d6fea7bc85898e5b11d3d21d6a6aa",
+        "source_sha256": "5c2552826ce9c0a581a8fb2994c1a1838f2d6fea7bc85898e5b11d3d21d6a6aa",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/optimized-debug/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--optimize-debug",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/optimized-debug/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/optimized-debug/program.ll",
+          "--link",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "linked_provider": {
+          "path": "experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c",
+          "sha256": "b99c5f496e52b607b9072dfd9b4bca0400b9883ffd331b66d34c7930495dcd93"
+        },
+        "source_files": {
+          "main.my": "5c2552826ce9c0a581a8fb2994c1a1838f2d6fea7bc85898e5b11d3d21d6a6aa"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "a574258c881f5b8faf047665caf6265840269a4390923c4eeaa52ff8aee3d67f",
+        "llvm_sha256": "dca683059441ee50ce3f9b38693b4afd52a1b3365b8196a8e6dbc46955738ebe",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/optimized-debug/counts.json",
+          "counter_sha256": "bace6b3eaad24e9cde5c823c7097abd5b9d61c1cbd215e0e93695fd5453412b8",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 5,
+          "memory": {
+            "allocs": 11,
+            "alloc_bytes": 832,
+            "frees": 11,
+            "reallocs": 0,
+            "peak_live_bytes": 512,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": [],
+        "provider_error_runs": {
+          "clock_unavailable": {
+            "expected_status": 43,
+            "status": 43,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/optimized-debug/clock_unavailable-counts.json",
+              "counter_sha256": "5a5f541126b4ca8467710f481f49689040ad0fbb09ef8c02f31057a78b8621d1",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 2,
+              "memory": {
+                "allocs": 5,
+                "alloc_bytes": 448,
+                "frees": 5,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "clock_denied": {
+            "expected_status": 42,
+            "status": 42,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/optimized-debug/clock_denied-counts.json",
+              "counter_sha256": "5a5f541126b4ca8467710f481f49689040ad0fbb09ef8c02f31057a78b8621d1",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 2,
+              "memory": {
+                "allocs": 5,
+                "alloc_bytes": 448,
+                "frees": 5,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "clock_failed": {
+            "expected_status": 44,
+            "status": 44,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/optimized-debug/clock_failed-counts.json",
+              "counter_sha256": "5a5f541126b4ca8467710f481f49689040ad0fbb09ef8c02f31057a78b8621d1",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 2,
+              "memory": {
+                "allocs": 5,
+                "alloc_bytes": 448,
+                "frees": 5,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "random_unavailable": {
+            "expected_status": 43,
+            "status": 43,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/optimized-debug/random_unavailable-counts.json",
+              "counter_sha256": "61e28983cfd00d8046168b47e881a4e65473a2fb15a44571137e5e021ea3c0ff",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 3,
+              "memory": {
+                "allocs": 6,
+                "alloc_bytes": 512,
+                "frees": 6,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "random_denied": {
+            "expected_status": 42,
+            "status": 42,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/optimized-debug/random_denied-counts.json",
+              "counter_sha256": "61e28983cfd00d8046168b47e881a4e65473a2fb15a44571137e5e021ea3c0ff",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 3,
+              "memory": {
+                "allocs": 6,
+                "alloc_bytes": 512,
+                "frees": 6,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "random_failed": {
+            "expected_status": 44,
+            "status": 44,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/optimized-debug/random_failed-counts.json",
+              "counter_sha256": "61e28983cfd00d8046168b47e881a4e65473a2fb15a44571137e5e021ea3c0ff",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 3,
+              "memory": {
+                "allocs": 6,
+                "alloc_bytes": 512,
+                "frees": 6,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          }
+        }
+      },
+      "no-facts": {
+        "original_source": "src/stdlib/fixtures/time_random_provider.my",
+        "original_sha256": "5c2552826ce9c0a581a8fb2994c1a1838f2d6fea7bc85898e5b11d3d21d6a6aa",
+        "source_sha256": "5c2552826ce9c0a581a8fb2994c1a1838f2d6fea7bc85898e5b11d3d21d6a6aa",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/no-facts/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--no-facts",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/no-facts/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/no-facts/program.ll",
+          "--link",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "linked_provider": {
+          "path": "experiments/memory-closeout-20261012/A05/samples/time_random_native_provider.c",
+          "sha256": "b99c5f496e52b607b9072dfd9b4bca0400b9883ffd331b66d34c7930495dcd93"
+        },
+        "source_files": {
+          "main.my": "5c2552826ce9c0a581a8fb2994c1a1838f2d6fea7bc85898e5b11d3d21d6a6aa"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "3f2fdf78dc8041f78eca3e019f7cda66ee4febad12600acbc4fb3286f1537fd6",
+        "llvm_sha256": "52a4f6da573375544404b7d97302e38969656507fc99afc01544e45c27672a9e",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/no-facts/counts.json",
+          "counter_sha256": "f0842fc5209daf0733ffe4bd15f6bb2be0701917ac7cfe2d746aab7f4788b3f8",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 5,
+          "memory": {
+            "allocs": 11,
+            "alloc_bytes": 832,
+            "frees": 11,
+            "reallocs": 0,
+            "peak_live_bytes": 512,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": [],
+        "provider_error_runs": {
+          "clock_unavailable": {
+            "expected_status": 43,
+            "status": 43,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/no-facts/clock_unavailable-counts.json",
+              "counter_sha256": "58f10d47d8c4482d0a2c1ee8b19e9808abfd47bfa80f8dcd434d63d7d88c5bb8",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 2,
+              "memory": {
+                "allocs": 5,
+                "alloc_bytes": 448,
+                "frees": 5,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "clock_denied": {
+            "expected_status": 42,
+            "status": 42,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/no-facts/clock_denied-counts.json",
+              "counter_sha256": "58f10d47d8c4482d0a2c1ee8b19e9808abfd47bfa80f8dcd434d63d7d88c5bb8",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 2,
+              "memory": {
+                "allocs": 5,
+                "alloc_bytes": 448,
+                "frees": 5,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "clock_failed": {
+            "expected_status": 44,
+            "status": 44,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/no-facts/clock_failed-counts.json",
+              "counter_sha256": "58f10d47d8c4482d0a2c1ee8b19e9808abfd47bfa80f8dcd434d63d7d88c5bb8",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 2,
+              "memory": {
+                "allocs": 5,
+                "alloc_bytes": 448,
+                "frees": 5,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "random_unavailable": {
+            "expected_status": 43,
+            "status": 43,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/no-facts/random_unavailable-counts.json",
+              "counter_sha256": "3a3cda314dcde3b5ce7bd0e7500b000f28805b9286852e0c730fc0e2b9997436",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 3,
+              "memory": {
+                "allocs": 6,
+                "alloc_bytes": 512,
+                "frees": 6,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "random_denied": {
+            "expected_status": 42,
+            "status": 42,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/no-facts/random_denied-counts.json",
+              "counter_sha256": "3a3cda314dcde3b5ce7bd0e7500b000f28805b9286852e0c730fc0e2b9997436",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 3,
+              "memory": {
+                "allocs": 6,
+                "alloc_bytes": 512,
+                "frees": 6,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          },
+          "random_failed": {
+            "expected_status": 44,
+            "status": 44,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A05/support7-time-random-provider-migrated-v2/time_random_provider/no-facts/random_failed-counts.json",
+              "counter_sha256": "3a3cda314dcde3b5ce7bd0e7500b000f28805b9286852e0c730fc0e2b9997436",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 3,
+              "memory": {
+                "allocs": 6,
+                "alloc_bytes": 512,
+                "frees": 6,
+                "reallocs": 0,
+                "peak_live_bytes": 448,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "passed": true
+          }
+        }
+      }
+    }
+  },
+  "compiler_source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "ownership_selection": "experimental-zero-rc",
+  "failures": 0
+}

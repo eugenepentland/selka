@@ -1,0 +1,59 @@
+import filesystem
+
+resource File: filesystem
+result Open:
+    ok: File,
+    err: int
+record Failure:
+    resource: File
+    code: int
+result Finish:
+    ok: bool,
+    err: Failure
+func request() -> FixedArray[u8, 6]:
+    return FixedArray[u8, 6]([114u8, 58u8, 100u8, 97u8, 116u8, 97u8])
+func open(fs: Filesystem) -> Open:
+    return acquire_resource[Open](fs, request())
+func finish(file: File) -> Finish:
+    return complete_resource[Finish](file)
+func attempt(fs: Filesystem) -> int:
+    match open(fs):
+        case Open.ok(file):
+            match finish(file):
+                case Finish.ok(done):
+                    if done:
+                        return 7
+                    return 0
+                case Finish.err(failure):
+                    const code = failure.code
+                    return code
+        case Open.err(code):
+            return code
+func partial(fs: Filesystem) -> Result[int, int]:
+    const first = try open(fs)
+    const second = try acquire_resource[Open](fs, FixedArray[u8, 3]([114u8, 58u8, 120u8]))
+    _ = first
+    _ = second
+    return Ok(1)
+func main(out: Stream) -> int:
+    mut fs = filesystem.memory()
+    with fs.open("data", "w") as file:
+        _ = file.write("abc")
+    out.print(attempt(fs))
+    with fs.read_only() as readonly:
+        out.print(attempt(readonly))
+        _ = open(readonly)
+    match partial(fs):
+        case Ok(code):
+            out.print(code)
+        case Err(code):
+            out.print(code)
+    for i in range(20):
+        _ = open(fs)
+        if i < 3:
+            continue
+        break
+    _ = open(fs)
+    fs = filesystem.memory()
+    out.print(fs.exists("data"))
+    return 0

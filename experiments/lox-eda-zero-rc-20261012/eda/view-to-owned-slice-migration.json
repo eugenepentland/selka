@@ -1,0 +1,87 @@
+[
+  {
+    "file": "escape_test.my",
+    "before": "decimal.view(0, at)",
+    "after": "decimal[0:at]"
+  },
+  {
+    "file": "escape_test.my",
+    "before": "hexed.view(0, at)",
+    "after": "hexed[0:at]"
+  },
+  {
+    "file": "escape_test.my",
+    "before": "decimal.view(at, at + 5)",
+    "after": "decimal[at:at + 5]"
+  },
+  {
+    "file": "escape_test.my",
+    "before": "hexed.view(at, at + 6)",
+    "after": "hexed[at:at + 6]"
+  },
+  {
+    "file": "escape_test.my",
+    "before": "decimal.view(at + 5, len(decimal))",
+    "after": "decimal[at + 5:len(decimal)]"
+  },
+  {
+    "file": "escape_test.my",
+    "before": "hexed.view(at + 6, len(hexed))",
+    "after": "hexed[at + 6:len(hexed)]"
+  },
+  {
+    "file": "sexpr_tokenizer.my",
+    "before": "src.view(start, end)",
+    "after": "src[start:end]"
+  },
+  {
+    "file": "kicad_sch_verify_test.my",
+    "before": "source.view(cursor, len(source))",
+    "after": "source[cursor:len(source)]"
+  },
+  {
+    "file": "support_strs.my",
+    "before": "haystack.view(0, len(needle))",
+    "after": "haystack[0:len(needle)]"
+  },
+  {
+    "file": "support_strs.my",
+    "before": "haystack.view(len(haystack) - len(needle), len(haystack))",
+    "after": "haystack[len(haystack) - len(needle):len(haystack)]"
+  },
+  {
+    "file": "support_strs.my",
+    "before": "haystack.view(i, i + len(needle))",
+    "after": "haystack[i:i + len(needle)]"
+  },
+  {
+    "file": "support_strs.my",
+    "before": "haystack.view(start, len(haystack))",
+    "after": "haystack[start:len(haystack)]"
+  },
+  {
+    "file": "escape.my",
+    "before": "s.view(i, min(i + len(name), n))",
+    "after": "s[i:min(i + len(name), n)]"
+  },
+  {
+    "file": "net_name.my",
+    "before": "name.view(slash + 1, len(name))",
+    "after": "name[slash + 1:len(name)]"
+  },
+  {
+    "file": "net_name.my",
+    "before": "name.view(0, slash)",
+    "after": "name[0:slash]"
+  },
+  {
+    "file": "sexpr_parser_test.my",
+    "before": "seed_text.view(0, cut)",
+    "after": "seed_text[0:cut]"
+  },
+  {
+    "file": "sexpr_parser.my",
+    "before": "text.view(0, num_end)",
+    "after": "text[0:num_end]"
+  }
+]

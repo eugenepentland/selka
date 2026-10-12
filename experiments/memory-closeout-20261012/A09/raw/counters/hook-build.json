@@ -1,0 +1,18 @@
+{
+  "base_commit": "47d6003451e8267c41979bb6d0ae50efe399be7a",
+  "compiler_sha256": "2c18c6240e744495507075f59f6724bda4c7964f76ce946c6790d72048d5ad8e",
+  "compiler_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/counter-hook-install/bin/mylang",
+  "patch_sha256": {
+    "src/core/count_runtime.zig": "1f98dd5f443cb411cb12a5adae0fdc2107342932089d1dc4b90b72de8d7870cc",
+    "src/core/count_test.zig": "91e5f5d58d1401934a1342f96835ce56e795c721478a55c05623d35af143aab3"
+  },
+  "components": "C0 unchanged complete installed layout; only compiler replaced with registered-test compiler",
+  "files": {
+    "bin/mylang": "2c18c6240e744495507075f59f6724bda4c7964f76ce946c6790d72048d5ad8e",
+    "tools/selka-components": "69c222bf0361ea763cab6222d9e9279b77bc380bc27ef6ee3ad56a1480a930c1",
+    "libexec/mylang/components/cache-plan-14501451340ebbb82684c4108f35b9a71cc2d407333ed50f6f90bc321954261e": "14501451340ebbb82684c4108f35b9a71cc2d407333ed50f6f90bc321954261e",
+    "libexec/mylang/components/test-index.json": "81006c7e1c24629159943474e4d0d0a7a5125d18c40f124b7274403fbad6f295",
+    "libexec/mylang/components/test-index-b3ad0140096fa33d2775a7f74bf4385b0750ee09ce885d5c0c23453a7d6c285e": "b3ad0140096fa33d2775a7f74bf4385b0750ee09ce885d5c0c23453a7d6c285e",
+    "libexec/mylang/components/cache-plan.json": "44e7c8ed5cb9698221a185056651e3dbe38ea3e5167f59859b49e10a09df1fce"
+  }
+}

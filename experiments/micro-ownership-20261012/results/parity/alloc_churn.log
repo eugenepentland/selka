@@ -1,0 +1,3 @@
+build-slot: FIFO ticket 261, position 1; waiting for memory-accounting settle delay or another measurement; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 261 after 5s
+parity/alloc_churn {'mylang-original-rc': True, 'mylang-migrated-rc': True, 'mylang-zero-rc': True, 'zig-fast': True, 'zig-safe': True, 'rust': True}

@@ -1,0 +1,45 @@
+{
+  "scope": "static prepared-patch audit only; not compiled/native/TSan qualification",
+  "synchronization_lines_identical": true,
+  "task_pending_declarations_identical": true,
+  "unchanged_function_bodies": {
+    "static void core_group_wait(": {
+      "same": true,
+      "sha256": "7fae083a75861e08c4d44eb65570b93e9716d5d3d5af47cc5b2c9790a2fed2e0"
+    },
+    "static void core_tasks_quiesce(": {
+      "same": true,
+      "sha256": "13b0c24cef989c1aadf535a5bbb1fb80528a457924030e41fef0a4e15be1ab1e"
+    },
+    "static core_task *core_task_find(": {
+      "same": true,
+      "sha256": "87d813d55aa06dc289f94430cd8db4c3b5001dbd13fb99edc7a07f2469d05379"
+    },
+    "static void core_task_push(": {
+      "same": true,
+      "sha256": "3d969ee887325d3f83975ee38dd871f5b091e008733f661ac93677ff8e9b5ff9"
+    },
+    "static core_task *core_task_pop(": {
+      "same": true,
+      "sha256": "4fac584fa3ad88558d790d96384cbf258504d330b9eb6d2d6a5022cd42249567"
+    },
+    "static core_task *core_task_steal(": {
+      "same": true,
+      "sha256": "bcbbbebf551138122580a2fb71f50f66ee8afc564403673f9fffa3063d91c19f"
+    },
+    "myl_block *myl_core_owned_map(": {
+      "same": true,
+      "sha256": "0959b7f43e386687f9675f72b55bd6408ab100ecddcf66e76758abac71ee9889"
+    }
+  },
+  "remaining_runtime_rc_symbols": {
+    "myl_core_share": 0,
+    "myl_core_release": 0,
+    "count_retain": 0,
+    "count_release": 0,
+    "count_is_unique": 0
+  },
+  "remaining_task_mode_selectors": 0,
+  "legacy_exported_names_absent": true,
+  "owned_exports_preserved": true
+}

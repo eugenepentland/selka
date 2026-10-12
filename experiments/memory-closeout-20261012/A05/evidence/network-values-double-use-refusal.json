@@ -1,0 +1,45 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+  "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+  "overlay": false,
+  "check_only": false,
+  "harness_sha256": "9241512d643050cf592d69810dddc20c8b39919a602634c9ca74360395aa8bc5",
+  "cases": {
+    "network_values": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/network_values.my",
+        "original_sha256": "1da99fb5a0b9553b2c3c6ce30de27fe835f1ec3e91e3b23a3ee1bfe4372ed069",
+        "source_sha256": "1da99fb5a0b9553b2c3c6ce30de27fe835f1ec3e91e3b23a3ee1bfe4372ed069",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support4-network-values/network_values/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support4-network-values/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support4-network-values/network_values/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support4-network-values/network_values/release/program.ll"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "main.my:7:9: error[E_OWNED_CONSUMED]: value has already been transferred or handled\n      _ = failed\n          ^\n  note: main.my:6:12: earlier transfer or handling on this path\n  note: main.my:5:11: value declared here\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "main.my": "1da99fb5a0b9553b2c3c6ce30de27fe835f1ec3e91e3b23a3ee1bfe4372ed069"
+        }
+      }
+    }
+  },
+  "compiler_source_revision": "66890fbc5135a771e6a423724d13c30018ab717f",
+  "ownership_selection": "experimental-zero-rc",
+  "failures": 1,
+  "classification": "Initial A05 fixture used an affine Failure carrier twice (scalar field access already consumes it). Corrected probe returns code-17 directly and retains the destructor/exit-status check; next source identity is recorded separately."
+}

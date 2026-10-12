@@ -1,0 +1,50 @@
+
+import kicad_sch_emit as emit
+import kicad_sch_shape as shape_mod
+import byte_builder
+import json_writer as json_writer
+
+public const sym_lib_name: bytes = b"netlisp"
+
+
+public const sym_lib_file: bytes = b"netlisp.kicad_sym"
+
+
+public const fp_lib_name: bytes = b"footprints"
+
+
+public const fp_lib_dir: bytes = b"footprints.pretty"
+
+
+public const sym_lib_table_file: bytes = b"sym-lib-table"
+
+
+public const fp_lib_table_file: bytes = b"fp-lib-table"
+
+
+public const project_ext: bytes = b".kicad_pro"
+
+
+public record Sidecar:
+    name: bytes
+    bytes: bytes
+
+
+public func sidecars(design: bytes, shapes: shape_mod.Shape[], rails: emit.Rail[]) -> Sidecar[]:
+    mut project_name = design + project_ext
+    mut sym_table = b"".join([b"(sym_lib_table\n\t(version 7)\n\t(lib (name \"netlisp\")(type \"KiCad\")", b"(uri \"${KIPRJMOD}/netlisp.kicad_sym\")(options \"\")", b"(descr \"Symbols exported by netlisp\"))\n)\n"])
+    mut fp_table = b"".join([b"(fp_lib_table\n\t(version 7)\n\t(lib (name \"footprints\")(type \"KiCad\")", b"(uri \"${KIPRJMOD}/footprints.pretty\")(options \"\")", b"(descr \"Footprints exported by netlisp export-kicad\"))\n)\n"])
+    return [Sidecar(name=sym_lib_table_file, bytes=sym_table), Sidecar(name=fp_lib_table_file, bytes=fp_table), Sidecar(name=project_name, bytes=project_file(project_name)), Sidecar(name=sym_lib_file, bytes=emit.library_file(shapes, rails))]
+
+
+# Private in Zig; public for the sibling hostile-name test.
+public func project_file(project_name: bytes) -> bytes:
+    mut out = byte_builder.create()
+    byte_builder.append(mut out, b"{\n  \"board\": {},\n  \"libraries\": {\n")
+    byte_builder.append(mut out, b"    \"pinned_footprint_libs\": [],\n    \"pinned_symbol_libs\": []\n  },\n")
+    byte_builder.append(mut out, b"  \"meta\": {\n    \"filename\": ")
+    json_writer.write_string(mut out, project_name)
+    byte_builder.append(mut out, b",\n    \"version\": 1\n  },\n")
+    byte_builder.append(mut out, b"  \"net_settings\": {},\n  \"pcbnew\": {},\n  \"schematic\": {},\n")
+    byte_builder.append(mut out, b"  \"sheets\": [],\n  \"text_variables\": {}\n}\n")
+    return byte_builder.finish(out)

@@ -1,0 +1,20 @@
+{
+  "builder": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/private-seed-builder/tools/selka-components",
+  "builder_sha256": "c24cf61e5413599c8e147a0cf4d6eb132f09e2686bcfb29bd300ae85285af8bd",
+  "source_files": {
+    "selfhost/components.zig": "b8ab3db2e32da7c55c6ef4aab7d0e2e37556f419b3a0c1fc818cc9073a94cb56",
+    "selfhost/test_components.py": "0ef4477e8d772c965e8be178c4cab675d2f299f27da64307b52e14f1ab94db28",
+    "selfhost/component_files.zig": "5abb3f52b1bd2cec6c7911d153aa93f34a90eb7209946ea77ecf347480c88def",
+    "selfhost/component_archive.zig": "d8adb175b1399e0a93ad856456be5cdd8b29df57af27e223baf357f33feb3aed"
+  },
+  "focused_build": "PASS 3-step component-builder target; no seed provisioning",
+  "fake_tools": {
+    "passed": 26,
+    "failed": 0,
+    "skipped": 0
+  },
+  "build_environment": "private-local-and-tmp-v1",
+  "global_cache": "preserved from caller",
+  "historical_seed_sha256": "a2e02f86f24b139c1b3b71c035ad0f376246f43b12081f3f5beac1bbc007da1c",
+  "source_package_qualification": "NOT YET RUN"
+}

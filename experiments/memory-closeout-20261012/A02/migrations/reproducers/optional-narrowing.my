@@ -1,0 +1,15 @@
+record Node:
+    number: int
+    next: Node?
+
+func number(node: Node) -> int:
+    return node.number
+
+func narrowed(node: Node) -> int:
+    mut child = node.next.copy()
+    if child is None:
+        return 0
+    return number(child)
+
+func main() -> int:
+    return narrowed(Node(number=1, next=Some(Node(number=2, next=None))))

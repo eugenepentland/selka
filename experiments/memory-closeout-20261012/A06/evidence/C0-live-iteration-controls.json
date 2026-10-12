@@ -1,0 +1,42 @@
+{
+  "purpose": "RC correctness control of explicit traversal migrations; not zero-RC qualification or performance evidence",
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "cases": [
+    {
+      "source": "tests/lang/live_place_iteration.my",
+      "source_sha256": "7fb7b3b4ae150828c110cbd7b0868698686eb5ae2e016f498fbb630ab083501a",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/live_place_iteration.my",
+        "--release",
+        "--counters",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/live-iteration-C0-RC-controls/cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/live-iteration-C0-RC-controls/live_place_iteration"
+      ],
+      "build_status": 2,
+      "build_stdout": "",
+      "build_stderr": "internal error[E_CORE_INVALID_IR]: invalid Core IR in test_zip_sees_shared_element_writes b21: edge to b5 appears 0 times in its predecessors\n"
+    },
+    {
+      "source": "tests/lang/iteration_identity.my",
+      "source_sha256": "9265a1b7d2c1e8d0ce7f4839cb682021291183f6efbad1906c6c7a0b2a562933",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/iteration_identity.my",
+        "--release",
+        "--counters",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/live-iteration-C0-RC-controls/cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/live-iteration-C0-RC-controls/iteration_identity"
+      ],
+      "build_status": 2,
+      "build_stdout": "",
+      "build_stderr": "error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/live-iteration-C0-RC-controls/cache/native-link-28bf40b30734c6d0ee23ad9e0fee4965/3045be84b82e706bcf89d55569cdea59615a3df2fb7a900dac7f311724880d36.o: FileNotFound\n"
+    }
+  ]
+}

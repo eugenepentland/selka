@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/v_text/release/program"
+  ],
+  "status": 0,
+  "elapsed_ns": 1563526,
+  "stdout": "total 7 of 3 items 2 True None a-xb\n-9223372036854775807 18446744073709551615 -5 200 False\nh\u00e9llo 5  True\nw0, w1, w4, w9 w0 True w0w1w4\n465 n4 6\n",
+  "stderr": ""
+}

@@ -1,0 +1,119 @@
+record Payload:
+    name: str
+    children: str[]
+    extra: str
+    code: int
+
+
+func choose_low(a: str, b: str) -> str:
+    return min(a, b).copy()
+
+
+func make_text(mut events: int, prefix: str) -> str:
+    events += 1
+    return prefix + str(events)
+
+
+func make_some(mut events: int) -> str?:
+    events += 1
+    return Some("some" + str(events))
+
+
+func make_none(mut events: int) -> str?:
+    events += 1
+    return None
+
+
+# spec-case: PRELUDE-EXTREME-1
+public func test_dynamic_selections_preserve_both_owners_and_copies() -> bool:
+    mut first = "é" + str(1)
+    mut second = "z" + str(2)
+    mut third = "😀" + str(3)
+    if min(first, second) != second or max(first, second) != first:
+        return False
+    const low = choose_low(first, second)
+    const high = max(min(first, second), third).copy()
+    first = "replaced first"
+    second = "replaced second"
+    third = "replaced third"
+    return low == "z2" and high == "😀3" and min("", first) == "" and max(second, second) == second
+
+
+# spec-case: PRELUDE-EXTREME-2
+public func test_fresh_selection_inputs_evaluate_once_and_discard_cleanly() -> bool:
+    mut events = 0
+    const low = min(make_text(mut events, "z"), make_text(mut events, "a")).copy()
+    const high = max(make_text(mut events, "b"), make_text(mut events, "c")).copy()
+    _ = min(make_text(mut events, "e"), make_text(mut events, "d"))
+    return events == 6 and low == "a2" and high == "c4"
+
+
+# spec-case: OPTION-METHODS-1
+public func test_optional_defaults_are_eager_and_selected_copies_survive() -> bool:
+    mut events = 0
+    const present = make_some(mut events).unwrap_or(make_text(mut events, "fallback")).copy()
+    const absent = make_none(mut events).unwrap_or(make_text(mut events, "fallback")).copy()
+    _ = make_some(mut events).unwrap_or(make_text(mut events, "ignored"))
+    if events != 6 or present != "some1" or absent != "fallback4":
+        return False
+    mut option: str? = Some("value" + str(7))
+    mut fallback = "other" + str(8)
+    const selected = option.unwrap_or(fallback).copy()
+    option = None
+    fallback = "changed"
+    return selected == "value7" and option.unwrap_or(fallback) == "changed"
+
+
+# spec-case: OPTION-METHODS-1
+public func test_optional_managed_children_remain_independent() -> bool:
+    mut values: int[]? = Some([1, 2, 3])
+    mut fallback = [4, 5]
+    const selected = values.unwrap_or(fallback).copy()
+    values = None
+    fallback.clear()
+    mut empty: int[]? = None
+    mut fresh = [8, 9]
+    const from_default = empty.unwrap_or(fresh).copy()
+    fresh.clear()
+    return selected == [1, 2, 3] and from_default == [8, 9]
+
+
+# spec-case: OPTION-METHODS-1
+public func test_repeated_optional_replacement_and_scalar_controls() -> bool:
+    mut value: str? = Some("seed" + str(0))
+    for i in range(12):
+        value = Some(value.unwrap_or("").copy() + ".")
+    const saved = value.unwrap_or("").copy()
+    value = None
+    const number: int? = Some(7)
+    const absent: int? = None
+    const decimal: float? = Some(1.25)
+    return saved == "seed0............" and number.unwrap_or(9) == 7 and absent.unwrap_or(9) == 9 and decimal.unwrap_or(4.5) == 1.25
+
+
+# spec-case: OPTION-METHODS-1
+public func test_optional_wide_children_and_early_return() -> bool:
+    mut option: Payload? = Some(Payload(name="first" + str(1), children=["child" + str(2)], extra="extra" + str(3), code=7))
+    mut fallback = Payload(name="other" + str(4), children=["other child" + str(5)], extra="tail" + str(6), code=9)
+    const chosen = option.unwrap_or(fallback).copy()
+    option = None
+    fallback = Payload(name="replaced", children=[], extra="", code=0)
+    if chosen.name == "first1" and chosen.children == ["child2"] and chosen.extra == "extra3" and chosen.code == 7:
+        return True
+    return False
+
+
+func main() -> int:
+    if not test_dynamic_selections_preserve_both_owners_and_copies():
+        return 1
+    if not test_fresh_selection_inputs_evaluate_once_and_discard_cleanly():
+        return 2
+    if not test_optional_defaults_are_eager_and_selected_copies_survive():
+        return 3
+    if not test_optional_managed_children_remain_independent():
+        return 4
+    if not test_repeated_optional_replacement_and_scalar_controls():
+        return 5
+    if not test_optional_wide_children_and_early_return():
+        return 6
+    return 0

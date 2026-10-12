@@ -1,0 +1,63 @@
+{
+  "historical_01_through_09": {
+    "ordinary_rc": 3,
+    "checked_owned": 2,
+    "mode_arguments": [
+      [
+        "--unoptimized"
+      ],
+      [],
+      [
+        "--release",
+        "--verify-facts"
+      ],
+      [
+        "--experimental-zero-rc",
+        "--unoptimized"
+      ],
+      [
+        "--experimental-zero-rc",
+        "--release",
+        "--verify-facts"
+      ]
+    ],
+    "note": "Five total native modes; not five checked modes. Stage07 failed source checking; stage06 was unchanged05 repeat. Stage09 includes separate baseline four checked tests and seventeen existing ordinaryRC release tests."
+  },
+  "10_and_final": {
+    "ordinary_rc": 3,
+    "checked_owned": 5,
+    "mode_arguments": [
+      [
+        "--unoptimized"
+      ],
+      [],
+      [
+        "--release",
+        "--verify-facts"
+      ],
+      [
+        "--experimental-zero-rc",
+        "--unoptimized"
+      ],
+      [
+        "--experimental-zero-rc",
+        "--release",
+        "--verify-facts"
+      ],
+      [
+        "--experimental-zero-rc",
+        "--release"
+      ],
+      [
+        "--experimental-zero-rc",
+        "--optimize-debug"
+      ],
+      [
+        "--experimental-zero-rc",
+        "--release",
+        "--no-facts"
+      ]
+    ],
+    "recipe": "qualify.sh; tests standard_json,textgap_json,textgap_json_copy,textgap_json_dict"
+  }
+}

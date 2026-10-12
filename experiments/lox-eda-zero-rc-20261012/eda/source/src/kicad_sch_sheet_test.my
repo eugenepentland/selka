@@ -1,0 +1,46 @@
+
+import kicad_sch_sheet as m
+import support_expect as ex
+
+# test "kicad-sch: packSheet grid-snaps every spot and wraps rather than running out"
+public func test_kicad_sch_packsheet_grid_snaps_every_spot_and_wraps_rather_than_running_out(out: Stream) -> bool:
+    mut cells: m.Cell[] = []
+    for i in range(12):
+        cells.append(m.Cell(w=2540, h=2540, ox=1270, oy=1270))
+    mut layout = m.pack_sheet(cells)
+    if not ex.eq_int(out, "spots", len(layout.spots), 12):
+        return False
+    for s in layout.spots:
+        if not ex.ok(out, "grid and margin", s.x % 127 == 0 and s.y % 127 == 0 and s.x >= 1270 and s.y >= 1270):
+            return False
+    if not ex.ok(out, "wrapped legal page", layout.spots[11].y > layout.spots[0].y and layout.page_w >= 29700 and layout.page_h >= 29700):
+        return False
+    mut empty = m.pack_sheet([])
+    return ex.ok(out, "empty legal page", len(empty.spots) == 0 and empty.page_w >= 29700)
+
+
+# test "kicad-sch: packCells reports block extents and preserves member order"
+public func test_kicad_sch_packcells_reports_block_extents_and_preserves_member_order(out: Stream) -> bool:
+    mut cells = [m.Cell(w=5080, h=5080, ox=2540, oy=2540)]
+    for i in range(4):
+        cells.append(m.Cell(w=1270, h=1270, ox=635, oy=635))
+    mut block = m.pack_cells(cells)
+    if not ex.eq_int(out, "members", len(block.spots), 5):
+        return False
+    if not ex.ok(out, "hub placed first", block.spots[0].x == 2540 and block.spots[0].y == 2540):
+        return False
+    for j in range(len(cells)):
+        mut s = block.spots[j]
+        mut c = cells[j]
+        if not ex.ok(out, "member covered", s.x - c.ox >= 0 and s.y - c.oy + c.h <= block.h and s.x - c.ox + c.w <= block.w):
+            return False
+    return ex.eq_int(out, "empty block", len(m.pack_cells([]).spots), 0)
+
+
+# test "kicad-sch: isqrt and page clamping stay integral"
+public func test_kicad_sch_isqrt_and_page_clamping_stay_integral(out: Stream) -> bool:
+    if not ex.eq_int(out, "sqrt zero", m.isqrt(0), 0) or not ex.eq_int(out, "sqrt exact", m.isqrt(100), 10) or not ex.eq_int(out, "sqrt floor", m.isqrt(120), 10):
+        return False
+    if not ex.eq_int(out, "snap", m.snap_up(1200), 1270) or not ex.eq_int(out, "already snapped", m.snap_up(1270), 1270):
+        return False
+    return ex.ok(out, "page bounds", m.clamp_page(100) >= 29700 and m.clamp_page(560000) <= 280127)

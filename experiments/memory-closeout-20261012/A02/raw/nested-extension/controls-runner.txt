@@ -1,0 +1,25 @@
+from pathlib import Path
+import json,os,sys,shutil
+root=Path.cwd();here=root/'experiments/memory-closeout-20261012/A02';sys.path.insert(0,str(here))
+from qualification_support import artifact_audit,call,clean_env,counter_audit,owned_clean,save,sha
+out=root/'.tmp/memory-closeout/A02/nested-extension-validation/controls';out.mkdir()
+original=Path('/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/ancestor-extend')
+for name in ('ancestor.my','copied.my'):shutil.copyfile(original/name,out/name)
+text=(out/'ancestor.my').read_text().replace('func main(out: Stream)', 'func main(args: str[], out: Stream)').replace('    tree.children[1].children.extend(tree.children)', '    const index = len(args) % 2\n    tree.children[index].children.extend(tree.children)')
+(out/'dynamic-ancestor.my').write_text(text)
+registered=json.loads((out.parent/'registered.json').read_text());compiler=Path(registered['compiler']['path'])
+r={'base':registered['base'],'compiler':str(compiler),'compiler_sha256':sha(compiler),'runner_sha256':sha(__file__),'source_sha256':{p.name:sha(p) for p in out.glob('*.my')},'complete':False,'qualified':False,'negative':{},'copy':{}}
+assert r['compiler_sha256']==registered['compiler']['sha256']
+for name in ('ancestor','dynamic-ancestor'):
+    row=call([compiler,'check',out/(name+'.my'),'--experimental-zero-rc'],env=clean_env(),cwd=root)
+    row['pass']=row['status']==1 and 'E_SINGLE_OWNER_OVERLAP' in row['stderr'] and '.copy()' in row['stderr'];r['negative'][name]=row
+    save(out/'results.json',r);print(name,row['pass'],flush=True)
+for name,flags in [('release',['--release']),('debug',['--unoptimized']),('verify',['--release','--verify-facts']),('optimized_debug',['--optimize-debug']),('no_facts',['--release','--no-facts'])]:
+    directory=out/name;directory.mkdir();binary=directory/'program';llvm=directory/'program.ll';counts=directory/'counts.json'
+    row=call([compiler,'build',out/'copied.my','--experimental-zero-rc','--counters',*flags,'--zig',os.environ['ZIG'],'--cache-dir',out/'cache','--emit-llvm',llvm,'-o',binary],env=clean_env(),cwd=root);r['copy'][name]=row;row['pass']=False
+    if row['status']==0:
+        row.update(artifact_audit(binary,llvm));env=dict(clean_env(),MYLANG_COUNTERS=str(counts),MYL_CORE_LEAKCHECK='1');row['run']=call([binary],env=env,cwd=root);row.update(counter_audit(counts));row['pass']=row['run']['status']==0 and row['run']['stdout']=='2 0\n' and not row['run']['stderr'] and owned_clean(row,row)
+    save(out/'results.json',r);print(name,row['pass'],flush=True)
+assert sha(compiler)==r['compiler_sha256']
+r['complete']=True;r['qualified']=all(x['pass'] for x in r['negative'].values()) and all(x['pass'] for x in r['copy'].values());save(out/'results.json',r)
+raise SystemExit(0 if r['qualified'] else 1)

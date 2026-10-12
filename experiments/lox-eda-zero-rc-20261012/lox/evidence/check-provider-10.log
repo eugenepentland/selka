@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1477, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1477 after 5s
+parser.my:464:40: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+          interned.append(ast.Param(name=param, name_ref=intern_name(mut p, param)))
+                                         ^

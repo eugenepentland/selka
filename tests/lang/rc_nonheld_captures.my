@@ -1,7 +1,7 @@
 # Canonical scalar-list captures remain distinct from real iterator holds.
 func test_writes_then_iteration_preserve_snapshot() -> bool:
     mut flags = [True, True, True]
-    mut saved = flags
+    mut saved = flags.copy()
     for at in range(20):
         flags[0] = False
     mut count = 0
@@ -45,7 +45,7 @@ func test_user_loop_copy_remains_independent() -> bool:
     mut groups = [[True, True], [True, True]]
     mut count = 0
     for element in groups:
-        mut flags = element
+        mut flags = element.copy()
         flags[0] = False
         for flag in flags:
             if flag:
@@ -89,7 +89,10 @@ func mutate_parameter(mut flags: bool[]) -> int:
 func test_named_source_iteration_sees_element_changes() -> bool:
     mut flags = [True, True]
     mut count = 0
-    for flag in flags:
+    mut iteration_at = 0
+    while iteration_at < len(flags):
+        const flag = flags[iteration_at]
+        iteration_at += 1
         if flag:
             count += 1
         flags[1] = False

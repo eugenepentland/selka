@@ -1,0 +1,469 @@
+{
+  "status": "draft; native integrated compiler qualification pending",
+  "files": {
+    "tests/value_semantics/bindings.my": {
+      "original_sha256": "82bbb6ff5eccf3e6f9860b8e1e23fd591a07f73b1f45f9ebc69350d6fdbe0a89",
+      "migrated_sha256": "75dbe0b75d2cb4e6838627622668862ae028aab16524f811e60d9734eeaf709e",
+      "tests": 4,
+      "lines_added": 2,
+      "lines_removed": 2,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 2
+    },
+    "tests/value_semantics/calls.my": {
+      "original_sha256": "cfc750ccf08fa7ea2b7b473f6f1eafac10b394910d2bd9c16df20237dfc6d04a",
+      "migrated_sha256": "c3b643395ff12d933c0052d2c2942adec07e00f17bce227a04df51300f82799e",
+      "tests": 3,
+      "lines_added": 8,
+      "lines_removed": 4,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 4
+    },
+    "tests/value_semantics/collections.my": {
+      "original_sha256": "0286d93be9360363aabcf84e1bbe1b05d525304c77d2a1c5bc9c194757893b55",
+      "migrated_sha256": "56a45f3beae20041690bed02017eaf7fd65d36c62803e4ac113b9bc1ae31fce7",
+      "tests": 7,
+      "lines_added": 11,
+      "lines_removed": 11,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 11
+    },
+    "tests/value_semantics/copy_roots.my": {
+      "original_sha256": "3200c8d629387db51927426d8f4694caad704d5e34124c938ac81d407e0732d1",
+      "migrated_sha256": "1d2e7bb045d89f59032d6c2a158fe4f6a6a2dbbbf5d9dd9642c15f79c18b5dea",
+      "tests": 2,
+      "lines_added": 1,
+      "lines_removed": 1,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 1
+    },
+    "tests/value_semantics/copy_scratch.my": {
+      "original_sha256": "8c9bdc35055bf21b7129e0ebc72e663916071d18273fa199dc174eb16fd8dea0",
+      "migrated_sha256": "d8026055fc4002e22ba91ad17fae98533ef4d7d132ef4d86909896e4f8fe7c41",
+      "tests": 2,
+      "lines_added": 2,
+      "lines_removed": 2,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 2
+    },
+    "tests/value_semantics/field_return.my": {
+      "original_sha256": "0b714eb332816eef125ad16f132fb1cd18e8fc886ad37c404669f4001d3357b5",
+      "migrated_sha256": "e1c9e80ec8c73835ea98de1fc36a383a8cee264a7fe003540864bbefa4dcf582",
+      "tests": 11,
+      "lines_added": 21,
+      "lines_removed": 21,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 24
+    },
+    "tests/value_semantics/index_return.my": {
+      "original_sha256": "1b94330dfa730c623930b08806bc7b33336e54ae83e4e97f5bb848988d682529",
+      "migrated_sha256": "ffd24ebec47c2d636a47d8da687e5e2eb0ba2bbf5833d3dad5b7013cfa98a200",
+      "tests": 20,
+      "lines_added": 67,
+      "lines_removed": 66,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 53
+    },
+    "tests/value_semantics/interactions.my": {
+      "original_sha256": "29094dbc93692b8e5221543af05287d4a708cb82db8b2710d9759731b96d7b0c",
+      "migrated_sha256": "d1fd631c5edaac997e7a1ec5ccc6abd8d8f0431e91159406f80f2a0f0811cbe6",
+      "tests": 3,
+      "lines_added": 4,
+      "lines_removed": 4,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 4
+    },
+    "tests/value_semantics/nested_array_callbacks.my": {
+      "original_sha256": "e1139fcef4031adfe35849e40678beb5afb7985abb76a08e6c6d15f66d5f7a35",
+      "migrated_sha256": "afd92a351bf2e15618cacc2f5c1696f92b310bf28f3cd1f9f2c9f9aa36bd995b",
+      "tests": 18,
+      "lines_added": 34,
+      "lines_removed": 34,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 34
+    },
+    "tests/value_semantics/nested_arrays.my": {
+      "original_sha256": "a8d09a5b244ed91ca0b1e12c50580799c2f0c0dd3682e881c3db276bcffc564d",
+      "migrated_sha256": "6bc59f43bf3945e2aff1a482cd360dd984d413a966d3e1c9700bcb85efd7dc0b",
+      "tests": 17,
+      "lines_added": 17,
+      "lines_removed": 17,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 17
+    },
+    "tests/value_semantics/nested_collections.my": {
+      "original_sha256": "e2cdb93813a5ef9310deac768f42b8297557e012b3d77c41a0d34e2d1328f260",
+      "migrated_sha256": "a7a3f60fb39e7600cd2f0766e165c707d8748d5c9f7c28d6124571fc1f7bcf54",
+      "tests": 17,
+      "lines_added": 17,
+      "lines_removed": 17,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 17
+    },
+    "tests/value_semantics/packed_calls.my": {
+      "original_sha256": "2a9dc66704d73cc3073324bc594d27ccd54051b14ccf9be7e5424b86fc78e912",
+      "migrated_sha256": "1793edcc076ffbc599f04f2cfcf48a66da185bbfa1386ef857cc72b4e0d8b72a",
+      "tests": 1,
+      "lines_added": 2,
+      "lines_removed": 1,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 1
+    },
+    "tests/value_semantics/pending_receiver_arguments.my": {
+      "original_sha256": "a87f029af1115abe31ca4323747f8c43f53975c64d3c1f4b5651069f320208b8",
+      "migrated_sha256": "3b6e3b55ce27ce0b7c6509f955101ecfc92dee78ef23d110b6491bdfb0f52854",
+      "tests": 6,
+      "lines_added": 5,
+      "lines_removed": 5,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 5
+    },
+    "tests/value_semantics/pure_box.my": {
+      "original_sha256": "a3d34f0ae4b2fac32b3effb3ee654b25035fc2c08de1735e965089c412a4af3f",
+      "migrated_sha256": "059bf297c0187e705ae5c1775028e265855ca67d1ff42fbc9815fd8d971efb8b",
+      "tests": 2,
+      "lines_added": 5,
+      "lines_removed": 5,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 5
+    },
+    "tests/value_semantics/recursive.my": {
+      "original_sha256": "6b2b5c381514c54205f7f6bae9fe81ce2cc1d1aff68fcee81ac05f061c038c6c",
+      "migrated_sha256": "051315c66c265e2135e5e7d9ff357a09f6f7f988ce4b83f705a7a546b89b8e42",
+      "tests": 4,
+      "lines_added": 12,
+      "lines_removed": 11,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 11
+    },
+    "tests/value_semantics/stores.my": {
+      "original_sha256": "e92b14f8c823d1a2b4904c423613c9f2d9738f7b81ef91cef4d81b5cb243e249",
+      "migrated_sha256": "6bd2ca477282eeaccd3eb1e05d6590a4a47eb342ccb4b56ccb149c23a81f4309",
+      "tests": 8,
+      "lines_added": 10,
+      "lines_removed": 10,
+      "explicit_copy_before": 1,
+      "explicit_copy_after": 11
+    },
+    "tests/value_semantics/value_rules.my": {
+      "original_sha256": "71f3a3c30cd9aff2ffaf9e21fc2f9d21e1c9693aa28d13e8f029dc6354ab98e5",
+      "migrated_sha256": "643757becb1381b136843da48c70d1c40b65f9199a88910ca80c6040a15305bf",
+      "tests": 9,
+      "lines_added": 10,
+      "lines_removed": 8,
+      "explicit_copy_before": 2,
+      "explicit_copy_after": 10
+    },
+    "tests/value_semantics/variant_element.my": {
+      "original_sha256": "5e822635e4595e2f06861a0ee1809a79a90e4afb259493023ab0d1f4d136cb8d",
+      "migrated_sha256": "a338168291254a0e5391554f2216ff7aaa4d508784824752ca7a5b3518684d73",
+      "tests": 3,
+      "lines_added": 3,
+      "lines_removed": 3,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 3
+    },
+    "tests/lang/option_niche.my": {
+      "original_sha256": "6e389545e814ae38a6df16c488212b9cb203341c44a1926ea87b957883bab8cd",
+      "migrated_sha256": "21e3473276d19c0394bfbff506ddda1713a7b1919327c80646264fe0826ce6ec",
+      "tests": 12,
+      "lines_added": 3,
+      "lines_removed": 3,
+      "explicit_copy_before": 2,
+      "explicit_copy_after": 5
+    },
+    "tests/lang/option_propagation.my": {
+      "original_sha256": "68bbc52689eff22f078f2564ce5049f92ec6077285c7c866799c8ea25d405267",
+      "migrated_sha256": "8a6428ccad34539b01debffe74f81b5e52deba9f41bca9dd50022d8a1bf57d2b",
+      "tests": 4,
+      "lines_added": 8,
+      "lines_removed": 8,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 8
+    },
+    "tests/lang/positive_list_index.my": {
+      "original_sha256": "ba1fe40be1eec5449396f57b2c05e7fe1bd71605147ad0b715a1a1774a9c125a",
+      "migrated_sha256": "7cc8d71c5b9500006ca8cbc5f3ce72d1dab7a9592056bf2cd193c6fd79b4fc05",
+      "tests": 2,
+      "lines_added": 4,
+      "lines_removed": 2,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 2
+    },
+    "tests/lang/python_collections.my": {
+      "original_sha256": "f0b768a8195e8f25c09103b24e82ab304fb544fabe4d32e87405b1fdc742b0e8",
+      "migrated_sha256": "6ec3fc70898c7860cb59334b2f9a82eb3aab068f6af9d5c9c8d70258f5d2ee30",
+      "tests": 22,
+      "lines_added": 10,
+      "lines_removed": 10,
+      "explicit_copy_before": 2,
+      "explicit_copy_after": 12
+    },
+    "tests/lang/python_values.my": {
+      "original_sha256": "77235097eeff0f0d4b56de515c80862a8ad3d1bc49e012f08a519356ae8079f2",
+      "migrated_sha256": "77235097eeff0f0d4b56de515c80862a8ad3d1bc49e012f08a519356ae8079f2",
+      "tests": 8,
+      "lines_added": 0,
+      "lines_removed": 0,
+      "explicit_copy_before": 1,
+      "explicit_copy_after": 1
+    },
+    "tests/lang/python_variants.my": {
+      "original_sha256": "148d04c56d2978b861002b0437860ab6cebfd53e96760db843216d88094160a1",
+      "migrated_sha256": "a4c9887b76a0541c21121aff262a9657102ec74e5271ff828d0ea498ead39bf8",
+      "tests": 6,
+      "lines_added": 2,
+      "lines_removed": 2,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 3
+    },
+    "tests/lang/rc_aggregate_values.my": {
+      "original_sha256": "63435eb07bf875582904ec3c85303a66b926be8dddf8331c39338122fad4216e",
+      "migrated_sha256": "bf29c5e955a9ea5e72ecfa377856dbe00604fe0ec5e49925e92a97596eeab8f6",
+      "tests": 14,
+      "lines_added": 12,
+      "lines_removed": 12,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 15
+    },
+    "tests/lang/rc_anchored_shares.my": {
+      "original_sha256": "507adf11eaf4c229c066e86c7db943071af3a5cfb493c6b1ca9e7a787d968fa1",
+      "migrated_sha256": "f80e6ef52c0f81861b570556a05f5f6dfd585cdf1183c2db0319bc36d57a35b4",
+      "tests": 2,
+      "lines_added": 10,
+      "lines_removed": 3,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 3
+    },
+    "tests/lang/rc_append_loops.my": {
+      "original_sha256": "b487d0123569b473d5339a8191d6082381cc665470354c520153b0bd4713d7bb",
+      "migrated_sha256": "02e7db4c3a9250bcadbf6307d7fc52d4145397859f7fe20c8badc285df91a874",
+      "tests": 5,
+      "lines_added": 1,
+      "lines_removed": 1,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 1
+    },
+    "tests/lang/rc_borrowed_calls.my": {
+      "original_sha256": "0d72aff243b087096a35c0f3e6e9f9aa09f7c2a835439cc4d29ae7fc863bbf19",
+      "migrated_sha256": "84fa5f56dbdbf1fd9f4ec0e9d1a6e8563c5271b81ee299fac73bf04373883d74",
+      "tests": 4,
+      "lines_added": 5,
+      "lines_removed": 5,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 5
+    },
+    "tests/lang/rc_borrowed_loops.my": {
+      "original_sha256": "338b5ba31c5d07c77dfdedfb0013cff815245fca35be432d0b08b5f5d67b0727",
+      "migrated_sha256": "c0f85220e379331393584679b94bf697602371439036e08b0729ffda8a9a67af",
+      "tests": 4,
+      "lines_added": 5,
+      "lines_removed": 5,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 5
+    },
+    "tests/lang/rc_borrowed_readonly_entries.my": {
+      "original_sha256": "dea566b0f4ea47e362dc1238c24033a1c76cead8a31c99543990dbbdbe820f3f",
+      "migrated_sha256": "956eb3fc16aac32c8a524573e5affbea27f52e876131d5893ebe980e9f5a050f",
+      "tests": 2,
+      "lines_added": 2,
+      "lines_removed": 2,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 2
+    },
+    "tests/lang/rc_borrowed_results.my": {
+      "original_sha256": "1d207688907bdd8a6125a3a02cc646d691fa713e003ae368779b129b7603c23b",
+      "migrated_sha256": "af807d66c129f48448d8ad1b8b5e2cf93ee7e41fbc4b5e1826d37d7185e90923",
+      "tests": 4,
+      "lines_added": 2,
+      "lines_removed": 2,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 2
+    },
+    "tests/lang/rc_box_writeback.my": {
+      "original_sha256": "0cf0ed2142b5df047b0ce48225796a6edc7e4530c8fa3117e53ffa26c29da62b",
+      "migrated_sha256": "43e0fb35b366ce77bdf3c15b43b24f630d73f6793daebed1a8a828e0a897491c",
+      "tests": 3,
+      "lines_added": 1,
+      "lines_removed": 1,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 1
+    },
+    "tests/lang/rc_buffer_loops.my": {
+      "original_sha256": "50a8fca9f92acd0d0e5285729de06b003cefc9884ab2d388f7e1a58bece8bd91",
+      "migrated_sha256": "e9456ad4b830a2516ad105e724db368c292438d6e16ae6d8f320ed4a36a24311",
+      "tests": 5,
+      "lines_added": 1,
+      "lines_removed": 1,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 1
+    },
+    "tests/lang/rc_caller_field_reads.my": {
+      "original_sha256": "e5eb10546c0f8947b6ada8c5b32226ded8abc6c9058d60b4683f34d13a55dee5",
+      "migrated_sha256": "ed43c4b50434f0ecb74d5acf398e94129dd0741f28b35498397831a15c75c311",
+      "tests": 7,
+      "lines_added": 6,
+      "lines_removed": 4,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 4
+    },
+    "tests/lang/rc_collection_builtins.my": {
+      "original_sha256": "59ad24d576d50d2145621bd9261cb13352959a19023bbd45847752f54752a97c",
+      "migrated_sha256": "2789f093d67f282ece09425ced54088ed62c579f481a6f4de614cb2d2cb96941",
+      "tests": 6,
+      "lines_added": 4,
+      "lines_removed": 4,
+      "explicit_copy_before": 1,
+      "explicit_copy_after": 5
+    },
+    "tests/lang/rc_compact_journal.my": {
+      "original_sha256": "b1786c658e76a9e7ae67a1c4a279e7e6834536682445c2be549019e6322d64fe",
+      "migrated_sha256": "a8633f4c1ff05c196b080f7ec061db14ac0d9f3ad4e141d65a90e313d67fa14e",
+      "tests": 2,
+      "lines_added": 1,
+      "lines_removed": 1,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 1
+    },
+    "tests/lang/rc_counted_receivers.my": {
+      "original_sha256": "dad63f02811dd6fcb8c55be5094e087dce7b52954039a3e0d939bda48b7c17ee",
+      "migrated_sha256": "e4a472bc97f6326c67528474e4a08e3218d782320413d9cc215d9569a85b3e7c",
+      "tests": 6,
+      "lines_added": 6,
+      "lines_removed": 6,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 6
+    },
+    "tests/lang/rc_dictionary_keys.my": {
+      "original_sha256": "d68275ffafab59588c89e3cc8caf988f67967b0b863dd5982b5ba4d9a7142e76",
+      "migrated_sha256": "ab91ca04b174edeea0b1a5ad8e5644f4a7612c42b7a09da1d2d04f2a7c218817",
+      "tests": 10,
+      "lines_added": 24,
+      "lines_removed": 24,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 24
+    },
+    "tests/lang/rc_dictionary_loops.my": {
+      "original_sha256": "d49ab3041227cce21f00a640b06eaa81ccc2f157909b449909dc6fdabd4f34e5",
+      "migrated_sha256": "4988b595163dcf5030ce295e436908f0b10211ff86fa1a579e5c0f070a0d529a",
+      "tests": 6,
+      "lines_added": 9,
+      "lines_removed": 9,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 9
+    },
+    "tests/lang/rc_dictionary_tails.my": {
+      "original_sha256": "b9703a8cee8e42bc1fa9535f31fced628384c21cf8dd01e816bdfda284499cad",
+      "migrated_sha256": "47c21730a185c8d6e4e6beed9845cdd0aff226e11fae29b0ad68a79f81003295",
+      "tests": 6,
+      "lines_added": 7,
+      "lines_removed": 7,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 7
+    },
+    "tests/lang/rc_dictionary_views.my": {
+      "original_sha256": "9c09d89581d3b0e04ed79780852d9a8e5d4bb512340ecf76ce7cfe7252024cfe",
+      "migrated_sha256": "9c09d89581d3b0e04ed79780852d9a8e5d4bb512340ecf76ce7cfe7252024cfe",
+      "tests": 2,
+      "lines_added": 0,
+      "lines_removed": 0,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 0
+    },
+    "tests/lang/rc_element_moves.my": {
+      "original_sha256": "1e73df01f07cf209ee3703914073f8ba6e05c167e938cf90811c84d3bf6fc1db",
+      "migrated_sha256": "d3d5428684ab8d9d586a7afa09a7dc1d14547f7fb1faea323bd6700caaa95d2e",
+      "tests": 15,
+      "lines_added": 30,
+      "lines_removed": 30,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 23
+    },
+    "tests/lang/rc_empty_frames.my": {
+      "original_sha256": "8e9e994aecd2c724516ae980067861d663317df2f32f9149f32088de02f98e0f",
+      "migrated_sha256": "e1b68d4ed4d3170aa4d4bc12f899f2381e5f564cdc387cecdff505525dd1ad0e",
+      "tests": 2,
+      "lines_added": 2,
+      "lines_removed": 2,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 2
+    },
+    "tests/lang/rc_field_transfers.my": {
+      "original_sha256": "e664726b28f6c57bf4501c5abe877f18787e100ea3ce1ba88c59cb68fd7347e7",
+      "migrated_sha256": "59e8827a1dc4d3f13ae2e85d388d6fd741c9ece9779fcc09f5880da11d541626",
+      "tests": 8,
+      "lines_added": 13,
+      "lines_removed": 12,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 12
+    },
+    "tests/lang/rc_fresh_constructors.my": {
+      "original_sha256": "e90501eb1129e941d553fd370c64c37f7ed8201f110d07b749b1ef5251859280",
+      "migrated_sha256": "c8df0b51870045e6de4a502ec5444ad9210a4f40c3e9a959b05b358230b30b8e",
+      "tests": 4,
+      "lines_added": 2,
+      "lines_removed": 2,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 2
+    },
+    "tests/lang/rc_fresh_loop_roots.my": {
+      "original_sha256": "620b4b1f95b43fb30d60a39c097a2746005d4692f19a3c37be95c070f9360801",
+      "migrated_sha256": "e11f3d7905cd562805667a979fdf4ef94a7f9c3a5bd66a984bea84a6ae66e400",
+      "tests": 8,
+      "lines_added": 6,
+      "lines_removed": 6,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 6
+    },
+    "tests/lang/rc_fresh_spans.my": {
+      "original_sha256": "082bfc8a04f7bbaf9fd0a938808c1973428f01ed101c40a453c639fa544d009b",
+      "migrated_sha256": "f32566a7863d60f139ab627ebff32802ff48fc1aa6138def0306505e1c57dfb6",
+      "tests": 3,
+      "lines_added": 2,
+      "lines_removed": 2,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 2
+    },
+    "tests/lang/rc_glue_values.my": {
+      "original_sha256": "5f757845613e7e80baaf60a4ec2a4b878b79267ccf6fc92b230a0bb07af1f68b",
+      "migrated_sha256": "d2ff2fde0de61a4c23a627d92884fc6d38141c825fb416965e4168cd096e8ccc",
+      "tests": 6,
+      "lines_added": 9,
+      "lines_removed": 9,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 10
+    },
+    "tests/lang/rc_inert_receivers.my": {
+      "original_sha256": "6b43420fdb3c75557c3846f1a5045498175c20d8b8eccd572be7019241980303",
+      "migrated_sha256": "76f891e98c86eaf9f627d878a1637f45bb265997e8906aced5fe62249aabe58c",
+      "tests": 7,
+      "lines_added": 11,
+      "lines_removed": 11,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 12
+    },
+    "tests/lang/rc_inline_glue.my": {
+      "original_sha256": "f8b5e0dc3971fd994e044665f3cedde1909eeb0587ac368f88c3aaaec874ec6f",
+      "migrated_sha256": "3cb0db26010bb5973f5e78b689a4af2887fa0edf2a05f6f68ec7267f24f73594",
+      "tests": 4,
+      "lines_added": 4,
+      "lines_removed": 4,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 7
+    },
+    "tests/lang/rc_interval_anchors.my": {
+      "original_sha256": "f9351cbb6f4821449cbbb48326723bcf86c6176d03f2ce6ddff9bfa781b22935",
+      "migrated_sha256": "316c3ed795f6a6b00de2ab56071663b9ac1e4fae5423accae03d4c1434f96da0",
+      "tests": 5,
+      "lines_added": 8,
+      "lines_removed": 8,
+      "explicit_copy_before": 0,
+      "explicit_copy_after": 8
+    }
+  },
+  "total_tests": 341,
+  "changed_files": 49,
+  "added_lines": 441,
+  "removed_lines": 420,
+  "new_explicit_copies": 412
+}

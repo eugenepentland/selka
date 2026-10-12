@@ -34,7 +34,7 @@ func main(out: Stream) -> int:
     ys.append(4)
     out.print(len(xs), len(ys))
     mut zs = [7, 8]
-    mut snapshot = zs
+    mut snapshot = zs.copy()
     out.print(fill(mut zs), len(snapshot), len(zs))
     mut rows = [[1], [2]]
     rows.clear()
@@ -42,5 +42,6 @@ func main(out: Stream) -> int:
     out.print(len(rows), len(rows[0]))
     out.print(pair(b=3, a=4))
     mut ws = [1]
-    out.print(lst(b=push(mut ws), a=ws))
+    const pushed = push(mut ws)
+    out.print(lst(b=pushed, a=ws))
     return 0

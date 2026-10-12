@@ -1,0 +1,5 @@
+{
+  "base_file_sha256": "055ce8cca04a5854a593280c847ebd89c540a8223a5f1c90c53045056d80800f",
+  "proposed_file_sha256": "ccfbe37ba3c1f6b38ecddfc22c63aaefb6c4d95e94f80d3db19e606b202338a4",
+  "scope": "source-admission proposal only; A07 owns backend transfer correctness and application"
+}

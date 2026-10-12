@@ -1,0 +1,17 @@
+# bytes_scan: index an 8 MiB immutable bytes value and count one octet value, sixteen times.
+func main(out: Stream) -> int:
+    mut empty: int[] = []
+    mut buffer = byte_buffer(empty)
+    mut piece = b"mylang micro benchmark kernel payload 0123456789 abcdefghijklmno"
+    for i in range(131072):
+        _ = buffer.append_range(piece, 0, 64)
+    mut data = bytes(buffer)
+    mut size = len(data)
+    mut count = 0
+    for pass_index in range(16):
+        count += pass_index
+        for i in range(size):
+            if data[i] == 109:
+                count += 1
+    out.print(count)
+    return 0

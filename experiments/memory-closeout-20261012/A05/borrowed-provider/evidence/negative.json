@@ -1,0 +1,297 @@
+{
+  "phase": "negative",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/bin/mylang",
+  "compiler_sha256": "0fdd1d8afa9e7e833d5508888b3da0065b89935dbee4d6bb3aafb47e7254bc24",
+  "harness_sha256": "5d8b3785554e6277240f490e2bba3604388feb32c3027df9ca5f5559f4b67632",
+  "cases": {
+    "negative_aggregate_resource_return.my": {
+      "source_sha256": "683e1c3cc6336135c03cb5addfa68f2d22df6bc04f309f96517f3efc90c9c9ab",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_aggregate_resource_return.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-negative-style-final/cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "owned": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_aggregate_resource_return.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-negative-style-final/cache"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_aggregate_resource_return.my:5:6: error[E_ZERO_RC_RESOURCE_ORIGIN]: a resource result requires exactly one provider or resource input\n  func opened(ctx: Context) -> Result[TextFile, str]:\n       ^\n"
+      },
+      "diagnostics": [
+        "E_ZERO_RC_RESOURCE_ORIGIN"
+      ],
+      "passed": true
+    },
+    "negative_copy.my": {
+      "source_sha256": "830d963925b31e54f935e060be5b3f2b22131360d91d1ddfc3954905a2fc318e",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_copy.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-negative-style-final/cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "owned": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_copy.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-negative-style-final/cache"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_copy.my:7:19: error[E_ZERO_RC_UNSUPPORTED]: provider owners cannot be copied; borrow the enclosing record or move it\n      const saved = ctx.copy()\n                    ^\n"
+      },
+      "diagnostics": [
+        "E_ZERO_RC_UNSUPPORTED"
+      ],
+      "passed": true
+    },
+    "negative_field_move.my": {
+      "source_sha256": "d17735b08c3433d9468dfaeea2a6575402eff9ac2f1b7739b59c51eb3bcdcbd7",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_field_move.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-negative-style-final/cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "owned": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_field_move.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-negative-style-final/cache"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_field_move.my:7:22: error[E_SINGLE_OWNER_BORROW]: a borrowed provider context cannot transfer a provider field; pass it to a read-only helper\n      const selected = ctx.fs\n                       ^\n"
+      },
+      "diagnostics": [
+        "E_SINGLE_OWNER_BORROW"
+      ],
+      "passed": true
+    },
+    "negative_field_mutation.my": {
+      "source_sha256": "3c25289c30e3f3bacbee5c5add3dc0db7fdf94fe4f19486d79c72d8d6b7a3afc",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_field_mutation.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-negative-style-final/cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "owned": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_field_mutation.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-negative-style-final/cache"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_field_mutation.my:7:5: error[E_SINGLE_OWNER_BORROW]: a borrowed provider context is read-only and cannot be moved, stored or returned\n      ctx.env = env\n      ^\n"
+      },
+      "diagnostics": [
+        "E_SINGLE_OWNER_BORROW"
+      ],
+      "passed": true
+    },
+    "negative_mixed_owned.my": {
+      "source_sha256": "4853c9b110f0f87ef0d0e1c7628cd4733c99ca139678a1a7a7029ea5dff8ff9a",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_mixed_owned.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-negative-style-final/cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "owned": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_mixed_owned.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-negative-style-final/cache"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_mixed_owned.my:5:26: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      const ctx = Mixed(fs=fs, name=\"owned\")\n                           ^\n"
+      },
+      "diagnostics": [
+        "E_SINGLE_OWNER_BORROW"
+      ],
+      "passed": true
+    },
+    "negative_nested.my": {
+      "source_sha256": "30fd33c11d807f0762b1aa6ed91360d88cd53c8b226ed1428df1aabafa09be67",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_nested.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-negative-style-final/cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "owned": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_nested.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-negative-style-final/cache"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_nested.my:9:30: error[E_SINGLE_OWNER_BORROW]: a borrowed provider context is read-only and cannot be moved, stored or returned\n      const outer = Nested(ctx=ctx)\n                               ^\n"
+      },
+      "diagnostics": [
+        "E_SINGLE_OWNER_BORROW"
+      ],
+      "passed": true
+    },
+    "negative_rebind.my": {
+      "source_sha256": "59d06ae5a5f36bae6048e5935479ceacbc647dbfbd992057a26c592fbe2aa000",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_rebind.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-negative-style-final/cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "owned": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_rebind.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-negative-style-final/cache"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_rebind.my:7:5: error[E_SINGLE_OWNER_BORROW]: a borrowed provider context is read-only and cannot be moved, stored or returned\n      ctx = Context(fs=fs, env=env)\n      ^\n"
+      },
+      "diagnostics": [
+        "E_SINGLE_OWNER_BORROW"
+      ],
+      "passed": true
+    },
+    "negative_return.my": {
+      "source_sha256": "668f9433b108297e961eef9d9e829558bec67c88a61ac960b755f96208b23be0",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_return.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-negative-style-final/cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "owned": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_return.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-negative-style-final/cache"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_return.my:7:12: error[E_SINGLE_OWNER_BORROW]: a borrowed provider context is read-only and cannot be moved, stored or returned\n      return ctx\n             ^\n"
+      },
+      "diagnostics": [
+        "E_SINGLE_OWNER_BORROW"
+      ],
+      "passed": true
+    },
+    "negative_tuple_unpack.my": {
+      "source_sha256": "3db00c089b1615fa23b89b35966e674112ff3d2dc19f4c1bfd7f49d49322dba0",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_tuple_unpack.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-negative-style-final/cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "owned": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_tuple_unpack.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/borrowed-negative-style-final/cache"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/negative_tuple_unpack.my:3:25: error[E_SINGLE_OWNER_BORROW]: a borrowed provider context is read-only and cannot be moved, stored or returned\n      const left, right = pair\n                          ^\n"
+      },
+      "diagnostics": [
+        "E_SINGLE_OWNER_BORROW"
+      ],
+      "passed": true
+    }
+  },
+  "passed": true
+}

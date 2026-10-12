@@ -1,0 +1,9 @@
+import memo
+func compute(key: memo.Key) -> str[]:
+    return ["simple"]
+func main() -> int:
+    match memo.create[str[]](-1, compute):
+        case Ok(_):
+            return 1
+        case Err(_):
+            return 0

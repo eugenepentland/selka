@@ -1,0 +1,16 @@
+{
+  "benchmarks/runtime/expanded/registry.py": "04661575c2246c0848fa97196864f5d2a640994ef5b6f68919d87da402e4495b",
+  "benchmarks/runtime/expanded/coverage.json": "91aba29e546a881b50738a06b4f4e8d74efc97895bf8fd41c068a31765464bf7",
+  "benchmarks/runtime/CONTRACT.md": "49e683983659e717a487782264e2cc1610bd658099d86bbfd90a6adef27bce6c",
+  "benchmarks/runtime/expanded/compute/CONTRACT.md": "9b60f5180123de476db77b68736421160796b2c1a66644b240cb52d468ab3d66",
+  "benchmarks/runtime/expanded/collections/CONTRACT.md": "329903fff3fa6f001b613c8870449f8adca93cfdb3709e3ca429b4564dee5e6b",
+  "benchmarks/runtime/expanded/text/CONTRACT.md": "c63d967f5425ca1a48927c379cce84c6816a797ca1e00e5f3d3fcb4c4a2168e8",
+  "benchmarks/runtime/ports/main.my": "1f30d05701528c4460d625dc736cbe0615d964b1c13e845239e3017fa645b4ce",
+  "benchmarks/runtime/expanded/compute/main.my": "d0abe8dea7693c5c0c17f871d631264721f47b8c4cd35f76f865ef68499a02e9",
+  "benchmarks/runtime/expanded/collections/main.my": "09b900a51f725290311e158fed0295ce8d8bca8eeb1c18578d8b1f7f446891eb",
+  "benchmarks/runtime/expanded/text/main.my": "63c50defb2a59ab319bfcad20a5f789b5123662498628079b7e984781d1ec126",
+  "benchmarks/runtime/oracle.py": "14bff3ae5eec751b5182b81c2485448ceba02f01a7dc98b064bb6bc3af8889d5",
+  "benchmarks/runtime/expanded/compute/oracle.py": "fd1109575fbb29b4e54818fe04acf0c1c5b6a8466f54c9d3c6d18d703c7a297e",
+  "benchmarks/runtime/expanded/collections/oracle.py": "357785b3c650484955daef3f6ccc885e393f46f7566c825d8ddf670077affbb9",
+  "benchmarks/runtime/expanded/text/oracle.py": "9f955c24e2db9fd2af698f44d4bc0ec2f0b095ef93e99ee1befbd362907c6bde"
+}

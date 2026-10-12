@@ -1,0 +1,6 @@
+/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/tuples/prototype-01/all-tests/verify/main.my:26:11: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      const number, letter = found.copy()
+            ^
+/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/tuples/prototype-01/all-tests/verify/main.my:98:18: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+          case Err(message):
+                   ^

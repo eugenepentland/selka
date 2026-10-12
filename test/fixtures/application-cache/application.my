@@ -65,7 +65,7 @@ func chunk_step(chunk: bytes, state: bytes) -> durable.Step:
 
 func alternate_step(chunk: bytes, state: bytes) -> durable.Step:
     const value = chunk_step(chunk, state)
-    return durable.Step(output=value.output, state=value.state)
+    return value
 
 
 func chunks(input: bytes) -> bytes[]:
@@ -88,47 +88,47 @@ func chunks(input: bytes) -> bytes[]:
 func setting(value: str?, fallback: str) -> str:
     match value:
         case Some(found):
-            return found
+            return found.copy()
         case None:
-            return fallback
+            return fallback.copy()
 
 
 func persistent(fs: Filesystem, env: Environment, out: Stream, input: bytes) -> int:
     mut compute: func(memo.Key) -> bytes effects(managed_allocation) = computed
     if setting(env.get("WAVE7_ALTERNATE"), "0") == "1":
         compute = alternate
-    mut key = memo.Key.Data(value=input)
+    mut key = memo.Key.Data(value=input.copy())
     if setting(env.get("WAVE7_KEY"), "data") == "text":
         key = memo.Key.Text(value=text(input))
     if setting(env.get("WAVE7_KEY"), "data") == "number":
         key = memo.Key.Number(value=decimal(text(input)))
     mut options = persistent_memo.Options(max_entries=decimal(setting(env.get("WAVE7_ENTRIES"), "2")), max_bytes=decimal(setting(env.get("WAVE7_BYTES"), "1048576")))
-    mut store = fs.dir("persistent")
-    match persistent_memo.call(store, options, compute, key):
-        case Ok(value):
-            mut reused = "false"
-            if value.reused:
-                reused = "true"
-            out.print("{\"ok\":true,\"mode\":\"persistent\",\"reused\":" + reused + ",\"value_hex\":\"" + value.value.hex() + "\",\"function_digest\":\"" + function_digest(compute) + "\"}")
-            return 0
-        case Err(error):
-            out.print("{\"ok\":false,\"mode\":\"persistent\",\"error\":" + json.dumps(json.text(persistent_memo.message(error))) + "}")
-            return 1
+    with fs.dir("persistent") as store:
+        match persistent_memo.call(store, options, compute, key):
+            case Ok(value):
+                mut reused = "false"
+                if value.reused:
+                    reused = "true"
+                out.print("{\"ok\":true,\"mode\":\"persistent\",\"reused\":" + reused + ",\"value_hex\":\"" + value.value.hex() + "\",\"function_digest\":\"" + function_digest(compute) + "\"}")
+                return 0
+            case Err(error):
+                out.print("{\"ok\":false,\"mode\":\"persistent\",\"error\":" + json.dumps(json.text(persistent_memo.message(error))) + "}")
+                return 1
 
 
 func pipeline(fs: Filesystem, env: Environment, out: Stream, input: bytes) -> int:
     mut compute: func(bytes, bytes) -> durable.Step effects(managed_allocation) = chunk_step
     if setting(env.get("WAVE7_ALTERNATE"), "0") == "1":
         compute = alternate_step
-    mut request = durable.Request(input=input, chunks=chunks(input), initial_state=b"0", output_path="final.csv", max_bytes=decimal(setting(env.get("WAVE7_BYTES"), "1048576")))
-    mut store = fs.dir("durable")
-    match durable.run(store, request, compute):
-        case Ok(value):
-            out.print("{\"ok\":true,\"mode\":\"durable\",\"fresh\":" + str(value.fresh) + ",\"reused\":" + str(value.reused) + ",\"state_hex\":\"" + value.state.hex() + "\",\"output_digest\":\"" + value.output_digest + "\",\"function_digest\":\"" + function_digest(compute) + "\"}")
-            return 0
-        case Err(error):
-            out.print("{\"ok\":false,\"mode\":\"durable\",\"error\":" + json.dumps(json.text(durable.message(error))) + "}")
-            return 1
+    mut request = durable.Request(input=input.copy(), chunks=chunks(input), initial_state=b"0", output_path="final.csv", max_bytes=decimal(setting(env.get("WAVE7_BYTES"), "1048576")))
+    with fs.dir("durable") as store:
+        match durable.run(store, request, compute):
+            case Ok(value):
+                out.print("{\"ok\":true,\"mode\":\"durable\",\"fresh\":" + str(value.fresh) + ",\"reused\":" + str(value.reused) + ",\"state_hex\":\"" + value.state.hex() + "\",\"output_digest\":\"" + value.output_digest + "\",\"function_digest\":\"" + function_digest(compute) + "\"}")
+                return 0
+            case Err(error):
+                out.print("{\"ok\":false,\"mode\":\"durable\",\"error\":" + json.dumps(json.text(durable.message(error))) + "}")
+                return 1
 
 
 func main(fs: Filesystem, env: Environment, out: Stream) -> int:

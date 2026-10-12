@@ -1,0 +1,22 @@
+{
+  "tests/lang/mut_argument_places.my": {
+    "before_commit": "4480626113baea8532afb8bf3b0b1ac12d9ec6c2",
+    "before_sha256": "4fbc4c944c5f67d35233a05d16948a019820f299eba454a3cf823aa976eff87c",
+    "after_sha256": "82dd240f614004125f35a204743d8c516627b4c6972758c615e11ce82e18ab9f",
+    "added_lines": 10,
+    "removed_lines": 2,
+    "explicit_copy_calls_before": 16,
+    "explicit_copy_calls_after": 20,
+    "test_signatures_and_return_assertions_preserved": true
+  },
+  "tests/lang/mut_rebind_caller.my": {
+    "before_commit": "4480626113baea8532afb8bf3b0b1ac12d9ec6c2",
+    "before_sha256": "a2b26f7d0aea5967bb60b971eb4901cfdb57715c58397f4a28187e7e34f00c2d",
+    "after_sha256": "d1d23ad6b8bdaafa4723e1b1fb311a2c92c33fa0ac38ff60511eeb2ba7e01122",
+    "added_lines": 5,
+    "removed_lines": 1,
+    "explicit_copy_calls_before": 52,
+    "explicit_copy_calls_after": 54,
+    "test_signatures_and_return_assertions_preserved": true
+  }
+}

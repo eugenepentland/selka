@@ -1,0 +1,9 @@
+{
+  "status": "UNAPPLIED coordinator request; actual qualified selfhost/component-owned-compiler.json is a required prerequisite, not supplied or fabricated here",
+  "source_revision": "44947e6967d8eb0deeaa86b25ca2bb44bc58803d",
+  "base_sha256": "6e88c5026777c0365f0fa0ca9716452f5070b5d4cf3a4741dff7d86815f9d5b4",
+  "draft_sha256": "befeb6a6ab691b9b9ad042759f6550c0f52d691769a910e8a3a1d2bf810ff27c",
+  "patch_sha256": "fc7d73ae7b491f189d96989fc07ae8708cf3d1a1d4054dc164dc78e256d62f79",
+  "input_registration": "build_test_inputs.component_inputs already includes selfhost/component-*.json",
+  "historical_seed_unchanged": true
+}

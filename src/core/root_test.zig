@@ -1,10 +1,33 @@
 //! Test root of the new compiler core (`zig build test-core`): unit tests of
 //! each stage, then the end-to-end slice programs under `test/core`.
 comptime {
+    _ = @import("borrowed_provider_test.zig");
+    _ = @import("optional_provider_20261012_test.zig");
+    _ = @import("borrowed_provider_cache_test.zig");
+    _ = @import("a02_public_constructors_test.zig");
+    _ = @import("a02_field_augmented_test.zig");
+    _ = @import("a02_indirect_owned_test.zig");
+    _ = @import("a01_optional_writeback_test.zig");
+    _ = @import("a02_scalar_child_test.zig");
+    _ = @import("a08_borrow_cache_test.zig");
+    _ = @import("provider_store_test.zig");
+    _ = @import("a08_provider_cache_test.zig");
+    _ = @import("a01_parallel_map_test.zig");
+    _ = @import("a02_capacity_test.zig");
+    _ = @import("a02_mut_call_test.zig");
+    _ = @import("a02_list_methods_test.zig");
+    _ = @import("a06_nested_write_test.zig");
+    _ = @import("a04_extrema_test.zig");
+    _ = @import("a04_render_test.zig");
+    _ = @import("phi_cleanup_test.zig");
     _ = @import("single_owner_test.zig");
     _ = @import("test_paths_test.zig");
     _ = @import("zero_rc_test.zig");
+    _ = @import("a05_scalar_mut_test.zig");
+    _ = @import("a04_saturating_test.zig");
     _ = @import("a01_native_driver_test.zig");
+    _ = @import("a08_zero_rc_test.zig");
+    _ = @import("a03_migration_boundaries_test.zig");
     _ = @import("owned_payload_test.zig");
     _ = @import("owned_record_test.zig");
     _ = @import("zero_rc_task_test.zig");
@@ -26,6 +49,7 @@ comptime {
     _ = @import("native_receipt_test.zig");
     _ = @import("cli.zig");
     _ = @import("cost_test.zig");
+    _ = @import("cost_command.zig");
     _ = @import("cost_query_test.zig");
     _ = @import("count_test.zig");
     _ = @import("cli_args.zig");
@@ -36,6 +60,7 @@ comptime {
     _ = @import("emit_llvm_test.zig");
     _ = @import("emit_units_test.zig");
     _ = @import("inline_origins_test.zig");
+    _ = @import("a09_version_test.zig");
     _ = @import("driver.zig");
     _ = @import("driver_test.zig");
     _ = @import("driver_handles_test.zig");
@@ -114,6 +139,14 @@ comptime {
     _ = @import("s2_ir_test.zig");
     _ = @import("iteration_test.zig");
     _ = @import("text_test.zig");
+    _ = @import("fuse_encode_test.zig");
+    _ = @import("textgap_split_test.zig");
+    _ = @import("textgap_csv_test.zig");
+    _ = @import("textgap_decode_test.zig");
+    _ = @import("textgap_buffer_span_test.zig");
+    _ = @import("textgap_snapshot_test.zig");
+    _ = @import("textgap_literal_test.zig");
+    _ = @import("textgap_key_copy_test.zig");
     _ = @import("s1_views_test.zig");
     _ = @import("byte_index_test.zig");
     _ = @import("function_build_test.zig");
@@ -131,4 +164,10 @@ comptime {
     _ = @import("fuse_text_scalar_test.zig");
     _ = @import("emit_text_split_test.zig");
     _ = @import("s5_units_test.zig");
+    _ = @import("a01_dict_items_test.zig");
+    _ = @import("a04_slice_lifetime_test.zig");
+    _ = @import("a01_fresh_field_test.zig");
+    _ = @import("a01_tuple_unpack_test.zig");
+    _ = @import("a07_borrow_choice_test.zig");
+    _ = @import("a04_borrow_selection_test.zig");
 }

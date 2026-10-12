@@ -1,13 +1,7 @@
-# The collector's footprint rules: an object is promoted only after it
-# survives two minor collections, empty segments serve any size class, a
-# coallocated text's payload is not cleared before its builder fills it, a
-# minor collection tells an old object from its address, and each arena depth
-# keeps its own chunks. None of them may change a value. These programs build
-# structures across many collections — trees under construction, lists whose
-# element sizes change from phase to phase, texts made from stale storage,
-# nested arenas that open and close under a large outer one — and check every
-# value. The runner also runs them under `--gc-stress`, where every allocation
-# collects and every third collection is full.
+# Historical collector-footprint fixtures retained as ownership regressions.
+# Trees, lists, and text remain valid while other owned values are allocated and
+# destroyed. The old test names preserve coverage identity; they do not describe
+# a collector in the checked-ownership runtime.
 record Node:
     left: Node?
     right: Node?
@@ -22,11 +16,15 @@ func tree(depth: int, value: int) -> Node:
 
 # The trees are perfect, so a node has both children or neither.
 func total(node: Node) -> int:
-    mut left = node.left
-    mut right = node.right
-    if left is None or right is None:
-        return node.value
-    return node.value + total(left) + total(right)
+    match node.left:
+        case Some(left):
+            match node.right:
+                case Some(right):
+                    return node.value + total(left) + total(right)
+                case None:
+                    return node.value
+        case None:
+            return node.value
 
 
 # About 8 KB of short-lived text per round, so a few hundred rounds run minor
@@ -44,7 +42,7 @@ func churn(rounds: int) -> int:
 func words(prefix: str, count: int) -> str[]:
     mut items: str[] = []
     for index in range(count):
-        items.append(f"{prefix}{index}")
+        items.append(f"{prefix.copy()}{index}")
     return items
 
 

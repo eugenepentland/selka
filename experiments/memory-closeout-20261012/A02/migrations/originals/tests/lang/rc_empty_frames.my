@@ -1,0 +1,49 @@
+# A caller-pinned plain receiver needs no local owner or scope publication.
+record Point:
+    x: int
+    y: int
+
+
+func advance(mut points: Point[], index: int, delta: int) -> int:
+    mut old = points[index]
+    points[index].x = old.x + delta
+    return points[index].x
+
+
+func loop(mut points: Point[], count: int) -> int:
+    mut i = 0
+    while i < count:
+        mut old = points[0]
+        points[0].x = old.x + 1
+        i += 1
+    return points[0].x
+
+
+public func test_caller_snapshot_and_negative_index_survive_unlinked_callee() -> bool:
+    mut points = [Point(x=3, y=5), Point(x=7, y=11)]
+    mut before = points
+    mut result = advance(mut points, -1, 13)
+    return result == 20 and points[1].x == 20 and before[1].x == 7 and points[0].y == 5
+
+
+func changed(mut points: Point[]) -> int:
+    points.append(Point(x=17, y=19))
+    return 0
+
+
+func callback(mut points: Point[]):
+    mut mutation_result_57 = changed(mut points)
+    points[mutation_result_57].x = 23
+
+
+public func test_completed_callback_keeps_caller_and_snapshot_independent() -> bool:
+    mut points = [Point(x=3, y=5)]
+    mut before = points
+    callback(mut points)
+    return points[0].x == 23 and len(points) == 2 and before[0].x == 3 and len(before) == 1
+
+
+func main() -> int:
+    assert test_caller_snapshot_and_negative_index_survive_unlinked_callee()
+    assert test_completed_callback_keeps_caller_and_snapshot_independent()
+    return 0

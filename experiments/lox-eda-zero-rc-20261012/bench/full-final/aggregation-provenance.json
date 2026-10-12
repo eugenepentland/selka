@@ -1,0 +1,9 @@
+{
+  "expected_receipts": 132,
+  "expected_cells": 60,
+  "canonical_aggregator": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/summarize.py",
+  "canonical_aggregator_sha256": "bcbe2d08c9c20a21d943d500ccf0e48e7f96f2270fa2475d023a134a4d31d0f0",
+  "benchmark_compiler_sha256": "6e7938a14ad4abc46b76c149ef12551b170f6c7e6f462beec2f81db18d40a83d",
+  "later_integrated_gate_compiler_sha256": "8e58720cd72de8632aa48df373d18fc8238d46ec27010f8b182820a0eaaf10fa",
+  "guests_rebuilt_after_gate": false
+}

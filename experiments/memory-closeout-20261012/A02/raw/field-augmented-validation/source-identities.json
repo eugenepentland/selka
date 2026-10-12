@@ -1,0 +1,30 @@
+{
+  "rc_semantic_publication": {
+    "original_path": "tests/lang/rc_semantic_publication.my",
+    "original_sha256": "39b1f3f52140749b7c3ea2b398b3f5bf58e6a4ac460288d58f718eaecc9516c5",
+    "derived_sha256": "a19465442fcd26e8a27b5a022d588b90ac629f9a9beb73cdc82ea7373de7da8b",
+    "functions": [
+      "test_repeated_optional_unwrap_replaces_a_private_loan_with_an_owner",
+      "test_shallow_copy_marks_reused_children_before_a_later_view",
+      "test_slice_marks_reused_children_before_a_later_view",
+      "test_augmented_field_detaches_an_owned_edge_from_a_private_capture",
+      "test_dictionary_field_detachment_preserves_the_captured_snapshot",
+      "test_scoped_field_path_keeps_the_original_snapshot_during_a_callback"
+    ],
+    "transform": "Remove inert main if present and append assertion-only main; public functions unchanged."
+  },
+  "field_augmented": {
+    "original_path": "tests/lang/field_augmented.my",
+    "original_sha256": "ea426ef4a22899f286cbee67e339c253a2b16b775662b840712a650beb6c501e",
+    "derived_sha256": "388a8b236c47b5d1af5d71587def6754cc47d7f3474e3939e4ff499a65ce63c9",
+    "functions": [
+      "test_augmented_assignment_updates_a_record_value",
+      "test_augmented_assignment_reaches_records_nested_paths_and_list_slots",
+      "test_augmented_addition_to_a_list_field_extends_in_place",
+      "test_augmented_field_reads_the_current_field_after_the_mut_call",
+      "test_augmented_list_field_writeback_preserves_record_snapshot",
+      "test_augmented_list_field_updates_the_replacement_after_the_mut_call"
+    ],
+    "transform": "Remove inert main if present and append assertion-only main; public functions unchanged."
+  }
+}

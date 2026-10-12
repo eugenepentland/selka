@@ -1,0 +1,501 @@
+{
+  "scope": "31-second observation only, not full-run peak; system available memory plus all processes named zig/mylang/test/guardian (including other sessions); shared pages can be counted repeatedly",
+  "samples": [
+    {
+      "utc_ns": 1791771442523646311,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19972476928,
+        "SwapFree": 0
+      },
+      "sampled_compiler_process_sum_rss": 326656000,
+      "largest_compiler_processes": [
+        {
+          "pid": 2860006,
+          "name": "zig",
+          "rss": 116375552
+        },
+        {
+          "pid": 2860049,
+          "name": "zig",
+          "rss": 53956608
+        },
+        {
+          "pid": 2860034,
+          "name": "zig",
+          "rss": 40837120
+        },
+        {
+          "pid": 2860002,
+          "name": "zig",
+          "rss": 40824832
+        },
+        {
+          "pid": 2859992,
+          "name": "mylang",
+          "rss": 39043072
+        },
+        {
+          "pid": 2859907,
+          "name": "mylang",
+          "rss": 35618816
+        }
+      ]
+    },
+    {
+      "utc_ns": 1791771443535000455,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19811737600,
+        "SwapFree": 0
+      },
+      "sampled_compiler_process_sum_rss": 479756288,
+      "largest_compiler_processes": [
+        {
+          "pid": 2860073,
+          "name": "zig",
+          "rss": 228376576
+        },
+        {
+          "pid": 2860006,
+          "name": "zig",
+          "rss": 135184384
+        },
+        {
+          "pid": 2860002,
+          "name": "zig",
+          "rss": 40824832
+        },
+        {
+          "pid": 2859992,
+          "name": "mylang",
+          "rss": 39043072
+        },
+        {
+          "pid": 2859907,
+          "name": "mylang",
+          "rss": 36327424
+        }
+      ]
+    },
+    {
+      "utc_ns": 1791771444546482971,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19790053376,
+        "SwapFree": 0
+      },
+      "sampled_compiler_process_sum_rss": 523587584,
+      "largest_compiler_processes": [
+        {
+          "pid": 2860073,
+          "name": "zig",
+          "rss": 249262080
+        },
+        {
+          "pid": 2860006,
+          "name": "zig",
+          "rss": 158130176
+        },
+        {
+          "pid": 2860002,
+          "name": "zig",
+          "rss": 40824832
+        },
+        {
+          "pid": 2859992,
+          "name": "mylang",
+          "rss": 39043072
+        },
+        {
+          "pid": 2859907,
+          "name": "mylang",
+          "rss": 36327424
+        }
+      ]
+    },
+    {
+      "utc_ns": 1791771445570196453,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19710033920,
+        "SwapFree": 0
+      },
+      "sampled_compiler_process_sum_rss": 435458048,
+      "largest_compiler_processes": [
+        {
+          "pid": 2860073,
+          "name": "zig",
+          "rss": 281485312
+        },
+        {
+          "pid": 2860445,
+          "name": "zig",
+          "rss": 78131200
+        },
+        {
+          "pid": 2859992,
+          "name": "mylang",
+          "rss": 39514112
+        },
+        {
+          "pid": 2859907,
+          "name": "mylang",
+          "rss": 36327424
+        }
+      ]
+    },
+    {
+      "utc_ns": 1791771446581319353,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19546435584,
+        "SwapFree": 0
+      },
+      "sampled_compiler_process_sum_rss": 276140032,
+      "largest_compiler_processes": [
+        {
+          "pid": 2860445,
+          "name": "zig",
+          "rss": 236625920
+        },
+        {
+          "pid": 2859992,
+          "name": "mylang",
+          "rss": 39514112
+        }
+      ]
+    },
+    {
+      "utc_ns": 1791771447592587114,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19434344448,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 303529984,
+      "largest_compiler_processes": [
+        {
+          "pid": 2860445,
+          "name": "zig",
+          "rss": 264015872
+        },
+        {
+          "pid": 2859992,
+          "name": "mylang",
+          "rss": 39514112
+        }
+      ]
+    },
+    {
+      "utc_ns": 1791771448603611947,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19586478080,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 39682048,
+      "largest_compiler_processes": [
+        {
+          "pid": 2859992,
+          "name": "mylang",
+          "rss": 39682048
+        }
+      ]
+    },
+    {
+      "utc_ns": 1791771449617385769,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19183427584,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 0,
+      "largest_compiler_processes": []
+    },
+    {
+      "utc_ns": 1791771450630580947,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19168563200,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 0,
+      "largest_compiler_processes": []
+    },
+    {
+      "utc_ns": 1791771451643918015,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19182092288,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 0,
+      "largest_compiler_processes": []
+    },
+    {
+      "utc_ns": 1791771452656821714,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19737575424,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 0,
+      "largest_compiler_processes": []
+    },
+    {
+      "utc_ns": 1791771453666812573,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19864133632,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 0,
+      "largest_compiler_processes": []
+    },
+    {
+      "utc_ns": 1791771454697076570,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19726098432,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 0,
+      "largest_compiler_processes": []
+    },
+    {
+      "utc_ns": 1791771455710679293,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19722706944,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 0,
+      "largest_compiler_processes": []
+    },
+    {
+      "utc_ns": 1791771456723924308,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19715473408,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 0,
+      "largest_compiler_processes": []
+    },
+    {
+      "utc_ns": 1791771457735749265,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 20066258944,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 0,
+      "largest_compiler_processes": []
+    },
+    {
+      "utc_ns": 1791771458747646540,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19996901376,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 0,
+      "largest_compiler_processes": []
+    },
+    {
+      "utc_ns": 1791771459761517834,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19398569984,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 0,
+      "largest_compiler_processes": []
+    },
+    {
+      "utc_ns": 1791771460780209471,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19291840512,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 0,
+      "largest_compiler_processes": []
+    },
+    {
+      "utc_ns": 1791771461792532538,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19181314048,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 0,
+      "largest_compiler_processes": []
+    },
+    {
+      "utc_ns": 1791771462803280461,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19181096960,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 0,
+      "largest_compiler_processes": []
+    },
+    {
+      "utc_ns": 1791771463813896046,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19183329280,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 0,
+      "largest_compiler_processes": []
+    },
+    {
+      "utc_ns": 1791771464825347081,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19018010624,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 253919232,
+      "largest_compiler_processes": [
+        {
+          "pid": 2861559,
+          "name": "zig",
+          "rss": 253919232
+        }
+      ]
+    },
+    {
+      "utc_ns": 1791771465836128037,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 18994823168,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 272158720,
+      "largest_compiler_processes": [
+        {
+          "pid": 2861559,
+          "name": "zig",
+          "rss": 272158720
+        }
+      ]
+    },
+    {
+      "utc_ns": 1791771466848985598,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 18973220864,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 237948928,
+      "largest_compiler_processes": [
+        {
+          "pid": 2861559,
+          "name": "zig",
+          "rss": 237948928
+        }
+      ]
+    },
+    {
+      "utc_ns": 1791771467861359632,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19862122496,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 264507392,
+      "largest_compiler_processes": [
+        {
+          "pid": 2861559,
+          "name": "zig",
+          "rss": 264507392
+        }
+      ]
+    },
+    {
+      "utc_ns": 1791771468883953601,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19827310592,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 305340416,
+      "largest_compiler_processes": [
+        {
+          "pid": 2861559,
+          "name": "zig",
+          "rss": 305340416
+        }
+      ]
+    },
+    {
+      "utc_ns": 1791771469908492502,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19116347392,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 330502144,
+      "largest_compiler_processes": [
+        {
+          "pid": 2861559,
+          "name": "zig",
+          "rss": 330502144
+        }
+      ]
+    },
+    {
+      "utc_ns": 1791771470940829162,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 19081560064,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 339984384,
+      "largest_compiler_processes": [
+        {
+          "pid": 2861559,
+          "name": "zig",
+          "rss": 339984384
+        }
+      ]
+    },
+    {
+      "utc_ns": 1791771471952045524,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 18752008192,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 630927360,
+      "largest_compiler_processes": [
+        {
+          "pid": 2861559,
+          "name": "zig",
+          "rss": 630927360
+        }
+      ]
+    },
+    {
+      "utc_ns": 1791771472963124842,
+      "memory": {
+        "MemTotal": 32869060608,
+        "MemAvailable": 18696871936,
+        "SwapFree": 4096
+      },
+      "sampled_compiler_process_sum_rss": 704577536,
+      "largest_compiler_processes": [
+        {
+          "pid": 2861559,
+          "name": "zig",
+          "rss": 704577536
+        }
+      ]
+    }
+  ]
+}

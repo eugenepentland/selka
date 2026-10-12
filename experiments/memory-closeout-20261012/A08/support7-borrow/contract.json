@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "harness_sha256": "69a9429c67502876eed1ef23a0600f83490ef369e93f30137fa7b2e13b404427",
+  "engine_sha256": "8383389bf1c59130c58e0be8899597a4bccb0c7ad3ffe0e930b92adb34289cbd",
+  "fixture_sha256": "0185cf6d45fa2ee05791aaa1a79350e1a472ee3ee66b04f9271c6a508c137877",
+  "compiler_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "cases": 12,
+  "scope": "Native release correctness, LLVM RC audit, receipt replay, physical discovery edit, relocation and both-root source refusals.",
+  "boundaries": "Pure IR cache-corruption and debug-stage restoration have separate registered tests. No timing claim. No final milestone implied by an intermediate compiler."
+}

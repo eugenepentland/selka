@@ -1,0 +1,8 @@
+import math
+
+func main() -> int:
+    if math.sin(0.0) != 0.0 or math.cos(0.0) != 1.0:
+        return 1
+    if math.fabs(math.sin(math.pi() / 2.0) - 1.0) > 0.000001:
+        return 2
+    return 0

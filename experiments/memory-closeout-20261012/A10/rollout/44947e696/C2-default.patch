@@ -1,0 +1,128 @@
+diff --git a/src/core/check_command.zig b/src/core/check_command.zig
+--- a/src/core/check_command.zig
++++ b/src/core/check_command.zig
+@@ -16,8 +16,8 @@
+     stats: bool = false,
+     timings: bool = false,
+     no_cache: bool = false,
+-    single_owner: bool = false,
+-    zero_rc: bool = false,
++    single_owner: bool = true,
++    zero_rc: bool = true,
+ };
+ 
+ /// Check one file, emitting diagnostics or opt-in work/timing receipts.
+diff --git a/src/core/cli.zig b/src/core/cli.zig
+--- a/src/core/cli.zig
++++ b/src/core/cli.zig
+@@ -24,7 +24,7 @@
+ 
+ const qbe_emission = "QBE IL emission was retired with the old back end (S5); the compiler emits LLVM: use `mylang build FILE.my -o OUT --emit-llvm PATH`";
+ const host_retired = "host functions, libraries and providers were retired (S5-D5); use `extern` with `--link FILE.c` for C interop";
+-const runtime_retired = "runtime selection was retired (S5-D4): one-count reference counting is the only memory model; drop the flag";
++const runtime_retired = "runtime selection was retired (S5-D4): checked ownership is the default memory model; drop the flag";
+ const module_build_retired = "per-module QBE builds were retired (S5); `mylang build` compiles and caches one unit per module";
+ 
+ /// Commands the new core does not have, with what replaces them.
+@@ -157,9 +157,7 @@
+     \\Default: optimized debug; --optimize-debug and --mode Debug select the same mode.
+     \\--unoptimized disables Core and LLVM optimization; --release optimizes the whole program.
+     \\       [--cache-dir DIR] [--no-cache] [--zig PATH] [--report] [--cache-report] [--verify-cache] [--stats] [--diagnostics=text|json]
+-    \\       [--experimental-single-owner]    prototype: lists move; calls borrow; .copy() duplicates
+-    \\                                        .snapshot() opts a list family into copy-on-write
+-    \\       [--experimental-zero-rc]         prototype: strings/bytes also move; no sharing or RC
++    \\Checked ownership is the default: assignments move, parameters borrow, and .copy() duplicates storage.
+     \\
+ ;
+ 
+diff --git a/src/core/cost_command.zig b/src/core/cost_command.zig
+--- a/src/core/cost_command.zig
++++ b/src/core/cost_command.zig
+@@ -29,7 +29,7 @@
+     counters: ?[]const u8 = null,
+ };
+ const usage = "usage: mylang cost <entry.my> [function] [--json] [--debug | --no-facts | --verify-facts] " ++
+-    "[--llvm-remarks FILE.opt.yaml] [--counters FILE.json] [--cache-dir DIR] [--no-cache | --verify-cache] [--cache-report] [--experimental-zero-rc]\n";
++    "[--llvm-remarks FILE.opt.yaml] [--counters FILE.json] [--cache-dir DIR] [--no-cache | --verify-cache] [--cache-report]\n";
+ 
+ /// Parse supported modes and reject flags rather than silently changing the analysis.
+ pub fn parse(args: []const []const u8) ?Request {
+diff --git a/src/core/main.zig b/src/core/main.zig
+--- a/src/core/main.zig
++++ b/src/core/main.zig
+@@ -25,8 +25,7 @@
+ const usage =
+     \\usage: mylang build FILE.my -o OUT [--release | --unoptimized | --optimize-debug] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR] [--verify-cache] [--cache-report]
+     \\Default: optimized debug; --optimize-debug is a compatibility alias; --unoptimized disables optimization.
+-    \\Experimental: --experimental-single-owner or --experimental-zero-rc on build, run, check and dump-ir.
+-    \\              --experimental-zero-rc also applies to test.
++    \\Checked ownership is the default: assignments move, parameters borrow, and .copy() duplicates storage.
+     \\       mylang check FILE.my [--typed] [--stats] [--timings=json] [--cache-dir DIR] [--no-cache]
+     \\       mylang test FILE.my|DIR [options]   (`mylang test` alone lists them)
+     \\       mylang coverage FILE.my...   (one line per function: ok with its checks, or the refusal reason)
+@@ -41,7 +40,6 @@
+     \\Default: optimized debug; --optimize-debug and --mode Debug select the same mode.
+     \\  --release | --unoptimized | --optimize-debug           --mode Debug|ReleaseFast
+     \\  --no-facts | --verify-facts
+-    \\  --experimental-zero-rc                checked moves and borrows, direct destruction
+     \\  --affected --against REF                run only tests reaching a declaration changed since REF
+     \\  --jobs N                                tests at once (default: CPUs, capped by free memory)
+     \\  --max-steps N --max-frames N --max-memory SIZE --timeout-ms N   per-test budgets
+@@ -75,8 +73,8 @@
+     if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-typed")) return dumpTyped(init, args[2], if (args.len >= 4) args[3] else null);
+     if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-ir")) {
+         var with_facts = false;
+-        var single_owner = false;
+-        var zero_rc = false;
++        var single_owner = true;
++        var zero_rc = true;
+         for (args[3..]) |arg| {
+             if (std.mem.eql(u8, arg, "--facts")) {
+                 with_facts = true;
+diff --git a/src/core/pipeline.zig b/src/core/pipeline.zig
+--- a/src/core/pipeline.zig
++++ b/src/core/pipeline.zig
+@@ -73,11 +73,11 @@
+     compiler_cache_disabled: bool = false,
+ };
+ 
+-/// Compilation choices controlling experimental semantics and generated code.
++/// Compilation choices controlling checked ownership and generated code.
+ pub const Codegen = struct {
+-    /// Validate the experimental single-owner source contract before code generation.
+-    single_owner: bool = false,
+-    zero_rc: bool = false,
++    /// Validate checked source ownership before code generation.
++    single_owner: bool = true,
++    zero_rc: bool = true,
+     /// Emit only generic LLVM vector code, no x86 intrinsics (`--generic-vectors`): the
+     /// portable fallback a target without AVX2 would get, testable on this one.
+     generic_vectors: bool = false,
+diff --git a/src/doctest_command.zig b/src/doctest_command.zig
+--- a/src/doctest_command.zig
++++ b/src/doctest_command.zig
+@@ -58,7 +58,7 @@
+ 
+ /// Usage and directive summary for `mylang doctest --help` and bad arguments.
+ const usage =
+-    "usage: mylang doctest [<repo-root>] [--filter GLOB] [--report PATH] [--jobs N] [--verbose] [--experimental-zero-rc]\n" ++
++    "usage: mylang doctest [<repo-root>] [--filter GLOB] [--report PATH] [--jobs N] [--verbose]\n" ++
+     "  Runs every fenced ```mylang / ```my example in README.md, SPEC.md and\n" ++
+     "  docs/**/*.md (except docs/legacy/) through this compiler. Leading `# doc:`\n" ++
+     "  directives pin expected output, expected diagnostic codes, projects, files,\n" ++
+diff --git a/src/main.zig b/src/main.zig
+--- a/src/main.zig
++++ b/src/main.zig
+@@ -840,7 +840,11 @@
+ fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Parsed {
+     if (args.len < 2) return error.Usage;
+     const command = std.meta.stringToEnum(Command, args[0]) orelse return error.Usage;
+-    var parser: ArgumentParser = .{ .command = command, .allocator = allocator };
++    const checked_ownership = switch (command) {
++        .check, .@"check-project", .@"check-module", .@"check-session", .lint => true,
++        else => false,
++    };
++    var parser: ArgumentParser = .{ .command = command, .allocator = allocator, .single_owner = checked_ownership, .zero_rc = checked_ownership };
+     var index: usize = 1;
+     while (index < args.len) : (index += 1) {
+         const arg = args[index];

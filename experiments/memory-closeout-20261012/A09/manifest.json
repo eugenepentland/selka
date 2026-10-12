@@ -1,0 +1,247 @@
+{
+  "cases": [
+    {
+      "id": "array",
+      "source": "experiments/memory-closeout-20261012/A09/samples/array_long.my",
+      "expected": "array 512000000\n",
+      "cpus": [
+        0
+      ],
+      "input_note": "128 sibling JSON items, 4000000 lookups selecting independently owned nested result"
+    },
+    {
+      "id": "object",
+      "source": "experiments/memory-closeout-20261012/A09/samples/object_long.my",
+      "expected": "object 512000000\n",
+      "cpus": [
+        0
+      ],
+      "input_note": "128 sibling JSON items, 4000000 lookups selecting independently owned nested result"
+    },
+    {
+      "id": "record",
+      "source": "experiments/memory-closeout-20261012/A09/samples/record.my",
+      "expected": "55555560\n",
+      "cpus": [
+        0
+      ],
+      "input_note": "200000 fresh owned record payload unpacks with two kept fields and ignored-field cleanup"
+    },
+    {
+      "id": "parallel_cheap_1",
+      "source": "experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+      "expected": "206163673120\n",
+      "args": [
+        "65537",
+        "32",
+        "cheap"
+      ],
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "input_note": "Identical source, args, worker count on both arms; all allowed CPUs to support worker matrix"
+    },
+    {
+      "id": "parallel_cheap_2",
+      "source": "experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+      "expected": "206163673120\n",
+      "args": [
+        "65537",
+        "32",
+        "cheap"
+      ],
+      "env": {
+        "MYLANG_THREADS": "2"
+      },
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "input_note": "Identical source, args, worker count on both arms; all allowed CPUs to support worker matrix"
+    },
+    {
+      "id": "parallel_cheap_8",
+      "source": "experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+      "expected": "206163673120\n",
+      "args": [
+        "65537",
+        "32",
+        "cheap"
+      ],
+      "env": {
+        "MYLANG_THREADS": "8"
+      },
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "input_note": "Identical source, args, worker count on both arms; all allowed CPUs to support worker matrix"
+    },
+    {
+      "id": "parallel_expensive_1",
+      "source": "experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+      "expected": "32757232392\n",
+      "args": [
+        "8193",
+        "8",
+        "expensive"
+      ],
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "input_note": "Identical source, args, worker count on both arms; all allowed CPUs to support worker matrix"
+    },
+    {
+      "id": "parallel_expensive_2",
+      "source": "experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+      "expected": "32757232392\n",
+      "args": [
+        "8193",
+        "8",
+        "expensive"
+      ],
+      "env": {
+        "MYLANG_THREADS": "2"
+      },
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "input_note": "Identical source, args, worker count on both arms; all allowed CPUs to support worker matrix"
+    },
+    {
+      "id": "parallel_expensive_8",
+      "source": "experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+      "expected": "32757232392\n",
+      "args": [
+        "8193",
+        "8",
+        "expensive"
+      ],
+      "env": {
+        "MYLANG_THREADS": "8"
+      },
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "input_note": "Identical source, args, worker count on both arms; all allowed CPUs to support worker matrix"
+    }
+  ]
+}

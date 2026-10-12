@@ -1,0 +1,25 @@
+build-slot: FIFO ticket 592, position 19; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 592, position 11; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 592, position 4; earlier build tickets must run first; waiting (120s so far)
+build-slot: build slot 2, FIFO ticket 592 after 150s
+{"name": "mode-0-rc", "status": 0, "passed": true, "elapsed_ns": 2907603990, "max_rss_kib": "167152"}
+{"name": "mode-1-zero", "status": 0, "passed": true, "elapsed_ns": 2907716089, "max_rss_kib": "162176"}
+{"name": "mode-2-single", "status": 0, "passed": true, "elapsed_ns": 103671174, "max_rss_kib": "59308"}
+{"name": "mode-3-zero", "status": 0, "passed": true, "elapsed_ns": 103398552, "max_rss_kib": "27120"}
+{"name": "mode-4-rc", "status": 0, "passed": true, "elapsed_ns": 103432386, "max_rss_kib": "27140"}
+{"name": "mode-5-single", "status": 0, "passed": true, "elapsed_ns": 103739455, "max_rss_kib": "27084"}
+{"name": "zero-oracle", "status": 0, "passed": true, "elapsed_ns": 103394615, "max_rss_kib": "46852"}
+{"name": "whole-build-receipt", "status": 0, "passed": true, "elapsed_ns": 103780895, "max_rss_kib": "27152"}
+{"name": "whole-build-replay", "status": 0, "passed": true, "elapsed_ns": 103485942, "max_rss_kib": "9676"}
+{"name": "invalid-under-rc", "status": 0, "passed": true, "elapsed_ns": 105625256, "max_rss_kib": "29936"}
+{"name": "invalid-owner-edit", "status": 1, "passed": true, "elapsed_ns": 103670686, "max_rss_kib": "20220"}
+{"name": "invalid-owner-edit-warm", "status": 1, "passed": true, "elapsed_ns": 103205124, "max_rss_kib": "20220"}
+{"name": "valid-owner-restored", "status": 0, "passed": true, "elapsed_ns": 103350126, "max_rss_kib": "27160"}
+{"name": "dependency-edit", "status": 0, "passed": true, "elapsed_ns": 203556967, "max_rss_kib": "58360"}
+{"name": "dependency-edit-warm", "status": 0, "passed": true, "elapsed_ns": 103612908, "max_rss_kib": "27008"}
+{"name": "dependency-restored", "status": 0, "passed": true, "elapsed_ns": 103399126, "max_rss_kib": "28944"}
+{"name": "source-relocated", "status": 0, "passed": true, "elapsed_ns": 103242402, "max_rss_kib": "28100"}
+{"name": "source-relocated-warm", "status": 0, "passed": true, "elapsed_ns": 110015766, "max_rss_kib": "27080"}
+{"name": "map-abi-baseline", "status": 0, "passed": true, "elapsed_ns": 204158522, "max_rss_kib": "60196"}
+{"name": "map-abi-receipt", "status": 0, "passed": true, "elapsed_ns": 103739384, "max_rss_kib": "30580"}
+{"name": "map-abi-replay", "status": 0, "passed": true, "elapsed_ns": 104896642, "max_rss_kib": "9676"}

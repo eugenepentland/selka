@@ -1,0 +1,7 @@
+func change(mut value: str) -> str:
+    value = "changed"
+    return "fallback"
+
+func main() -> int:
+    mut value = "a" + str(1)
+    return len(min(value, change(mut value)).copy())

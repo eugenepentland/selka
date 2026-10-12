@@ -1,0 +1,6 @@
+{
+  "status": "stopped after harness mode-flag defect; incomplete planned12 matrix",
+  "cause": "Generic A08 Run.build always supplied --release, so unoptimized/optimized-debug rows received conflicting flags and exited2 before compilation. All completed rows retained.",
+  "stop": "Orchestrator stopped before cancelling work; its last admitted no-facts command had already finished before orchestrator termination. No active compiler was killed.",
+  "retry": "native-02 uses exactly one mode flag and fresh paths."
+}

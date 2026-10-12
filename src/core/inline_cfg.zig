@@ -72,7 +72,8 @@ pub fn splice(arena: std.mem.Allocator, caller: *ir.Function, callee: *const ir.
                 try caller.blocks.items[tail.index()].preds.append(arena, @fromBackingInt(@intCast(base + index)));
                 inst = .{ .op = .jump, .ty = .void, .data = @backingInt(tail), .span = inst.span };
             } else {
-                inst.a = remap(callee, map, inst.a);
+                // A direct callee is a module reference; only its arguments are SSA.
+                if (inst.op != .call) inst.a = remap(callee, map, inst.a);
                 inst.b = remap(callee, map, inst.b);
                 if (inst.op.hasExtra()) inst.data = try extra(arena, caller, callee, map, callee.operands(inst.data));
                 if (inst.op == .jump) inst.data += base;

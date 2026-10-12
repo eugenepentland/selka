@@ -1,0 +1,48 @@
+{
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "scope": "source checking only; no runtime qualification of live host providers",
+  "cases": {
+    "examples/domain-codecs/main.my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "check",
+        "examples/domain-codecs/main.my",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "89156421d0ff771ef37e3a16b14d173fee71a96fec00f1d1a50616614729ba9a",
+      "status": 0,
+      "stdout": "",
+      "stderr": "build-slot: FIFO ticket 55, position 20; earlier build tickets must run first; waiting (0s so far)\nbuild-slot: FIFO ticket 55, position 10; earlier build tickets must run first; waiting (61s so far)\nbuild-slot: FIFO ticket 55, position 7; earlier build tickets must run first; waiting (121s so far)\nbuild-slot: FIFO ticket 55, position 3; earlier build tickets must run first; waiting (181s so far)\nbuild-slot: build slot 1, FIFO ticket 55 after 236s\n"
+    },
+    "examples/external-capabilities/main.my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "check",
+        "examples/external-capabilities/main.my",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "8ab66d8629443bf1518c46c0b1e8bc96633e893d9b4e2859a8100b0e89cdaa6b",
+      "status": 0,
+      "stdout": "",
+      "stderr": "build-slot: FIFO ticket 71, position 15; earlier build tickets must run first; waiting (0s so far)\nbuild-slot: FIFO ticket 71, position 8; earlier build tickets must run first; waiting (61s so far)\nbuild-slot: FIFO ticket 71, position 4; earlier build tickets must run first; waiting (121s so far)\nbuild-slot: build slot 2, FIFO ticket 71 after 146s\n"
+    },
+    "examples/generic-resources.my": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+        "check",
+        "examples/generic-resources.my",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "81c7c6b3cfa05f1cd37897c219260e12cd44f0f6e07ff7e4e8c8a7282f8565ca",
+      "status": 1,
+      "stdout": "",
+      "stderr": "build-slot: FIFO ticket 81, position 10; earlier build tickets must run first; waiting (0s so far)\nbuild-slot: FIFO ticket 81, position 7; earlier build tickets must run first; waiting (61s so far)\nbuild-slot: FIFO ticket 81, position 7; earlier build tickets must run first; waiting (121s so far)\nbuild-slot: FIFO ticket 81, position 7; earlier build tickets must run first; waiting (181s so far)\nbuild-slot: FIFO ticket 81, position 7; earlier build tickets must run first; waiting (241s so far)\nbuild-slot: FIFO ticket 81, position 4; earlier build tickets must run first; waiting (301s so far)\nbuild-slot: build slot 2, FIFO ticket 81 after 316s\ngeneric-resources.my:52:30: error[E_SINGLE_OWNER_UNSUPPORTED]: this expression is outside the single-owner prototype\n      mut first = handle[bool](acquire_resource[Open](fs, empty))\n                               ^\n"
+    }
+  }
+}

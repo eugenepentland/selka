@@ -37,7 +37,7 @@ func main(out: Stream) -> int:
     put_text(mut sink, "λx")
     out.print(spelled(sink.buffer), sink.count)
     # A copy taken before the appends keeps its own octets.
-    mut before = sink
+    mut before = sink.copy()
     _ = put(mut sink, b"abc", 0, 3)
     maybe(mut sink, 66)
     maybe(mut sink, 67)

@@ -62,6 +62,7 @@ pub const Node = struct {
         boolean: bool,
         unit,
         block_value: struct { body: StatementId, value: NodeId },
+        borrow_selection: BorrowSelection,
         function_value: FunctionId,
         invoke: struct { evaluation_order: []const usize = &.{}, callee: NodeId, arguments: []const NodeId, evaluation: ?struct { body: StatementId, cleanup: []const LocalId } = null },
         local: LocalId,
@@ -106,6 +107,14 @@ pub const Node = struct {
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
     },
 };
+/// Compiler-generated selection borrows one of two eagerly evaluated inputs.
+/// Inputs evaluate exactly once, first then second; no source syntax names this node.
+pub const BorrowSelection = struct {
+    kind: enum { min_text, max_text, optional_default },
+    first: NodeId,
+    second: NodeId,
+};
+
 /// An embedded file (`EMBED-1`) as checked code names it: the content digest
 /// that identifies its static object and the payload length. The bytes stay with
 /// the loaded source, so a checked tree carries no per-byte data.
@@ -362,7 +371,8 @@ fn equalitySupport(ty: Type, records: []const Record, visited: *[64]usize, depth
 pub fn moveOnly(ty: Type, records: []const Record) bool {
     return ty.isAggregate() and records[ty.recordIndex()].contract.move_only;
 }
-/// Values whose destruction requires neither result handling nor external provider effects.
+/// Values eligible for managed storage without external resource cleanup;
+/// pending Result obligations are tracked separately.
 pub fn storable(ty: Type, records: []const Record) bool {
     return !ty.isAggregate() or records[ty.recordIndex()].contract.storable;
 }
@@ -629,7 +639,14 @@ fn nameLessThan(_: void, left: []const u8, right: []const u8) bool {
 /// `element` marks the store an element write such as `a[i] = v` lowers to:
 /// the value rebuilds the local from its own current value with one element
 /// changed, so the write is a mutation of the binding rather than a rebinding.
-pub const Store = struct { slot: LocalId, value: NodeId, element: bool = false };
+pub const Store = struct {
+    slot: LocalId,
+    value: NodeId,
+    element: bool = false,
+    /// Initialize-only complete tuple staging: consume the hidden whole slot,
+    /// bind every non-null field slot, and destroy explicitly ignored fields.
+    unpack: ?[]const ?LocalId = null,
+};
 /// A checked source range keeps its endpoints and binding together. The
 /// normalized loop plan preserves the checked direction, overflow and exits.
 pub const RangeParts = struct {

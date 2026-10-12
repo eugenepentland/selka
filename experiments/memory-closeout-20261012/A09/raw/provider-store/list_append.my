@@ -1,0 +1,4 @@
+func main() -> int:
+    mut values: int[] = []
+    values.append(1)
+    return len(values)

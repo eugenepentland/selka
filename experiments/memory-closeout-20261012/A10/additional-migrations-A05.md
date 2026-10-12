@@ -1,0 +1,43 @@
+# A05 proposed additional fixture migrations
+
+proposed nonoverlapping reservations for coordinator dispatch; A10 edits none of these sources
+
+- `test/core/c_grants.my`
+  - c_grants.my:21:17: error[E_ZERO_RC_UNSUPPORTED]: dependent capabilities require a with scope in zero-RC mode
+  - Followup: pending resource scope contract; use named with scope if semantics equivalent, otherwise A07 reproducer.
+- `test/core/c_stack_handles.my`
+  - c_stack_handles.my:20:19: error[E_ZERO_RC_UNSUPPORTED]: dependent capabilities require a with scope in zero-RC mode
+  - Followup: pending resource scope contract; use named with scope if semantics equivalent, otherwise A07 reproducer.
+- `test/core/c_trap_handles.my`
+  - c_trap_handles.my:7:27: error[E_ZERO_RC_UNSUPPORTED]: dependent capabilities require a with scope in zero-RC mode
+  - Followup: pending resource scope contract; use named with scope if semantics equivalent, otherwise A07 reproducer.
+- `test/core/d_basic.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/d_basic.my:5:5: error[E_SINGLE_OWNER_MOVED]: 'd' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/d_collections.my`
+  - d_collections.my:13:5: error[E_SINGLE_OWNER_MOVED]: 'd' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/d_fact_inputs.my`
+  - d_fact_inputs.my:55:12: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+  - Followup: explicit independent copy/local source migration.
+- `test/core/d_scalar_stores.my`
+  - d_scalar_stores.my:4:5: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/m_none_keys.my`
+  - m_none_keys.my:29:19: error[E_SINGLE_OWNER_MOVED]: 'mapping' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/row_dict_lookup_str.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_dict_lookup_str.my:34:20: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value
+  - Followup: explicit independent copy/local source migration.
+- `test/core/row_dict_update_str.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_dict_update_str.my:8:22: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value
+  - Followup: explicit independent copy/local source migration.
+- `test/core/v_capability_arrays.my`
+  - v_capability_arrays.my:47:9: error[E_ZERO_RC_UNSUPPORTED]: store resource owners in named local scopes in the zero-RC prototype
+  - Followup: resource container boundary; A07/design review required, not an automatic .copy migration.
+- `test/fixtures/application-cache/application.my`
+  - application.my:68:32: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper
+  - Followup: borrowed field extraction; explicit copy for retained independent owner; retry pending whole-field fixes first.
+- `test/fixtures/attenuation.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/fixtures/attenuation.my:21:18: error[E_ZERO_RC_UNSUPPORTED]: dependent capabilities require a with scope in zero-RC mode
+  - Followup: pending resource scope contract; use named with scope if semantics equivalent, otherwise A07 reproducer.

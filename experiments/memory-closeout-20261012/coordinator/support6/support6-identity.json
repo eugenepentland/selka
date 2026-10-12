@@ -1,0 +1,17 @@
+{
+  "source_revision": "5167c588be79dd43d21d5013c36db15110bf239b",
+  "source_worktree": "/home/epentland/ai/canopy/mylang-memory-20261012-support6",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+  "files": {
+    "bin/mylang": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+    "tools/selka-components": "d0abb138ce2d12e6ba0dab9f32f6a8c89a712cbbb75a4fa000b8178c9af02681",
+    "libexec/mylang/components/test-index-dbd9fea31ee72550200d6f21c4a42dcfadf00321e9697eb9d4cc21cdbfa99a27": "dbd9fea31ee72550200d6f21c4a42dcfadf00321e9697eb9d4cc21cdbfa99a27",
+    "libexec/mylang/components/cache-plan-d69b536c904f109ef2d292ac376ce3ecb811da91db6e051b2a49a176a1c31840": "d69b536c904f109ef2d292ac376ce3ecb811da91db6e051b2a49a176a1c31840",
+    "libexec/mylang/components/test-index.json": "45db0752a31fc5ba1ce20cf35675bb9a0a8637717ba685b5f3a33fc63d27cb87",
+    "libexec/mylang/components/cache-plan.json": "f42692f375d51598bd85f8c81dc27764f22a9e2d2792ac74676780130a663c61"
+  },
+  "status": "intermediate support6 compiler, not C1",
+  "component_boundary": "libexec copied byte-for-byte from Support5; historical RC-seed-built components. New compiler includes scalar ownership and numeric ABI fixes, but actual owned installed-component qualification remains pending.",
+  "build_command": "zig build seed-compiler component-builder -p <support6-install> -j4 --maxrss8589934592",
+  "build_log": "support6-build.log"
+}

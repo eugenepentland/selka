@@ -32,6 +32,8 @@ void myl_core_s2_unsupported(int operation) {
 }
 
 static core_dict_meta *dict_meta(const myl_block *dict) { return (core_dict_meta *)(intptr_t)dict->reserved; }
+/* Only initial small tables place hashes inside the metadata allocation. */
+static bool dict_inline_hashes(const core_dict_meta *meta) { return meta->hashes == (const uint64_t *)(meta + 1); }
 static unsigned char *dict_entry(const myl_block *dict, uint64_t entry) {
     return (unsigned char *)dict + MYL_HEADER + entry * dict_meta(dict)->desc->stride;
 }
@@ -153,10 +155,11 @@ myl_block *myl_core_dict_new(uint64_t hint, const core_dict_descriptor *desc) {
     if (hint > UINT32_MAX / 2) out_of_memory();
     uint64_t cap = hint > 8 ? hint : 8;
     myl_block *dict = block_new(MYL_KIND_DICT, (int64_t)cap, desc->stride);
-    core_dict_meta *meta = calloc(1, sizeof *meta);
+    size_t inline_bytes = cap == DICT_SMALL ? DICT_SMALL * sizeof(uint64_t) : 0;
+    core_dict_meta *meta = calloc(1, sizeof *meta + inline_bytes);
     if (!meta) out_of_memory();
     meta->desc = desc;
-    meta->hashes = malloc((size_t)cap * sizeof(uint64_t));
+    meta->hashes = inline_bytes ? (uint64_t *)(meta + 1) : malloc((size_t)cap * sizeof(uint64_t));
     if (!meta->hashes) out_of_memory();
     dict->reserved = (int64_t)(intptr_t)meta;
     return dict;
@@ -171,8 +174,10 @@ static myl_block *dict_room(myl_block *dict) {
     grown->len = dict->len;
     grown->reserved = dict->reserved;
     memcpy(block_data(grown), block_data(dict), (size_t)meta->elen * meta->desc->stride);
-    uint64_t *hashes = realloc(meta->hashes, (size_t)cap * 8);
+    bool inline_hashes = dict_inline_hashes(meta);
+    uint64_t *hashes = inline_hashes ? malloc((size_t)cap * 8) : realloc(meta->hashes, (size_t)cap * 8);
     if (!hashes) out_of_memory();
+    if (inline_hashes) memcpy(hashes, meta->hashes, (size_t)meta->elen * 8);
     meta->hashes = hashes;
     if (meta->dead) {
         unsigned char *dead = realloc(meta->dead, (size_t)(cap + 7) / 8);
@@ -382,7 +387,8 @@ static void core_dict_children(myl_block *dict, core_child_visitor visit, void *
 static void core_dict_finalize(myl_block *dict) {
     core_dict_meta *meta = dict_meta(dict);
     free(meta->index);
-    free(meta->hashes);
+    /* Owned destruction may repurpose dict->cap for its pending chain. */
+    if (!dict_inline_hashes(meta)) free(meta->hashes);
     free(meta->dead);
     free(meta);
 }

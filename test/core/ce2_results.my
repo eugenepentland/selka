@@ -84,7 +84,7 @@ func next_in(src: bytes, mut t: Cursor) -> Result[Token, LexError]:
 # `r = next_in(...)`, then the cursor written back and `r` returned: `r` is a view of the call's
 # result, so that result is built where `r` is returned.
 func next(mut t: Tokenizer) -> Result[Token, LexError]:
-    mut src = t.source
+    mut src = t.source.copy()
     mut cur = t.cur
     mut r = next_in(src, mut cur)
     t.cur = cur
@@ -115,7 +115,7 @@ func next_checked(mut tok: Tokenizer, mut count: Diag) -> Result[Token, LexError
 
 
 func checked(text: bytes) -> str:
-    mut tok = Tokenizer(source=text, cur=Cursor(pos=0, line=1, col=1, error_span=Span(line=0, col=0, offset=0)))
+    mut tok = Tokenizer(source=text.copy(), cur=Cursor(pos=0, line=1, col=1, error_span=Span(line=0, col=0, offset=0)))
     mut count = Diag(count=0, last="")
     mut out = ""
     for _ in range(len(text)):
@@ -128,7 +128,7 @@ func checked(text: bytes) -> str:
 
 
 func tokens(text: bytes) -> str:
-    mut tok = Tokenizer(source=text, cur=Cursor(pos=0, line=1, col=1, error_span=Span(line=0, col=0, offset=0)))
+    mut tok = Tokenizer(source=text.copy(), cur=Cursor(pos=0, line=1, col=1, error_span=Span(line=0, col=0, offset=0)))
     mut errors = Diag(count=0, last="")
     mut out = ""
     for _ in range(len(text) + 2):
@@ -277,14 +277,15 @@ func lent() -> str:
     mut total = 0
     for i in range(len(xs)):
         total += weight(xs[i]) + bump(xs[i])
-    mut h = Holder(items=xs, n=0)
-    mut r = grow(mut h, h.items[0])
+    mut h = Holder(items=xs.copy(), n=0)
+    const first_item = h.items[0]
+    mut r = grow(mut h, first_item)
     # The element read, then its slot overwritten, then the read value passed: the old value.
     mut y = xs[1]
     xs[1] = Big(a=50, b=0, c=0, d=0, e=0)
     total += weight(y)
     mut objs = [Obj.free, Obj.big(value=Big(a=1, b=2, c=3, d=4, e=5)), Obj.name(value="hello"), Obj.free]
-    mut shared = objs
+    mut shared = objs.copy()
     objs[1] = Obj.name(value="xy")
     return str(total) + " " + str(r) + " " + str(h.items[0].a) + " " + str(len(h.items)) + " " + str(xs[0].a) + " " + str(xs[1].a) + " " + str(sweep(objs)) + " " + str(sweep(shared))
 
@@ -384,7 +385,7 @@ func hash_of(g: Globals, k: int) -> int:
 
 
 func grab(g: Globals) -> Table:
-    return g.table
+    return g.table.copy()
 
 
 func put(mut t: Table, k: int, h: int, v: int) -> bool:
@@ -397,7 +398,7 @@ func put(mut t: Table, k: int, h: int, v: int) -> bool:
 
 
 func set_global(mut g: Globals, k: int, v: int) -> bool:
-    mut wb = g.table
+    mut wb = g.table.copy()
     mut r = put(mut wb, k, hash_of(g, k), v)
     g.table = wb
     return r
@@ -405,7 +406,7 @@ func set_global(mut g: Globals, k: int, v: int) -> bool:
 
 # The borrowing call keeps the old table: the update must copy, and the kept table is the old one.
 func keep_then_put(mut g: Globals, k: int) -> int:
-    mut wb = g.table
+    mut wb = g.table.copy()
     mut kept = grab(g)
     _ = put(mut wb, k, 0, 99)
     g.table = wb
@@ -414,7 +415,7 @@ func keep_then_put(mut g: Globals, k: int) -> int:
 
 # A read of the field after the `mut` call sees the old table.
 func peek_after(mut g: Globals, k: int) -> int:
-    mut wb = g.table
+    mut wb = g.table.copy()
     mut r = put(mut wb, k, 0, 7)
     mut seen = hash_of(g, k) + g.table.entries[k % len(g.table.entries)].value
     g.table = wb
@@ -423,7 +424,7 @@ func peek_after(mut g: Globals, k: int) -> int:
 
 func globals() -> str:
     mut g = Globals(names=["a", "bb", "ccc"], table=Table(entries=[for _ in range(16) yield Slot(key=-1, value=0)], count=0))
-    mut snapshot = g.table
+    mut snapshot = g.table.copy()
     mut n = 0
     for k in range(40):
         if set_global(mut g, k, k * 2):
@@ -443,15 +444,15 @@ record Bucket:
 
 func buckets(n: int) -> str:
     mut xs = [for k in range(4) yield Bucket(name="b" + str(k), items=[], seen={}, a=k, b=0)]
-    mut before = xs
-    mut keep = xs[1].items
+    mut before = xs.copy()
+    mut keep = xs[1].items.copy()
     for i in range(n):
         xs[i % 4].items.append(i)
         xs[i % 3].seen[i % 5] = i
         if i % 7 == 0:
             _ = xs[i % 4].items.pop()
         if i == 10:
-            keep = xs[1].items
+            keep = xs[1].items.copy()
     mut total = 0
     for x in xs:
         total += len(x.items) * 100 + x.items[len(x.items) - 1] + len(x.seen) * 7 + x.a

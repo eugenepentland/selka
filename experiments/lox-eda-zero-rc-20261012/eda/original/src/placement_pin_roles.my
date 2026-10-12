@@ -1,0 +1,544 @@
+
+import sexpr_ast as ast
+import sexpr_parser as parser
+import infra_fs
+import eval_electrical as electrical
+import eval_env as env
+import eval_rails as rails_mod
+import eval_net_analysis as na
+import numeric
+import lib_limits
+import support_strs as strs
+import byte_builder
+
+# A pad on a supply net may be a config strap rather than a current terminal.
+# Explicit library electrical types take priority; ground/exposed-pad names are
+# the fallback. Real returns drive decoupling loops, not nearby config pads.
+public enum PinClass:
+    ground
+    optional_nc
+    power
+    strap
+    other
+
+
+public record PartRoles:
+    map: dict[str, PinClass]
+
+
+public func part_roles_class_of(self: PartRoles, pin: bytes) -> PinClass:
+    return self.map.get(strs.text(pin), PinClass.other)
+
+
+# Missing/malformed library files safely degrade to an empty classification.
+public func load(fs: Filesystem, project_dir: str, component: bytes) -> PartRoles:
+    if len(component) == 0:
+        return PartRoles(map={})
+    mut elec: dict[str, env.ElectricalType] = {}
+    mut pinout_name = component
+    mut children = load_list(fs, project_dir, "components", component)
+    if children is not None:
+        for child in children:
+            mut cl = ast.as_list(child)
+            if cl is None:
+                continue
+            if len(cl) < 2:
+                continue
+            mut head = ast.as_atom(cl[0])
+            if head is None:
+                continue
+            if head == b"pinout":
+                mut p = ast.as_text(cl[1])
+                if p is not None:
+                    pinout_name = p
+            elif head == b"electrical":
+                mut decl = electrical.parse(cl)
+                if decl is None:
+                    continue
+                mut t = decl.electrical_type
+                if t is not None:
+                    elec[strs.text(decl.pin)] = t
+    mut top = load_list(fs, project_dir, "pinouts", pinout_name)
+    if top is None:
+        return PartRoles(map={})
+    if len(top) < 2:
+        return PartRoles(map={})
+    if ast.as_atom(top[0]).unwrap_or(b"") != b"pinout":
+        return PartRoles(map={})
+    mut roles = PartRoles(map={})
+    for child2 in top[2:]:
+        mut cl2 = ast.as_list(child2)
+        if cl2 is None:
+            continue
+        if len(cl2) < 3:
+            continue
+        if ast.as_atom(cl2[0]).unwrap_or(b"") != b"pin":
+            continue
+        mut pad_id = node_text(cl2[1])
+        mut fn_name = ast.as_text(cl2[2])
+        if pad_id is None or fn_name is None:
+            continue
+        mut elec_type: env.ElectricalType? = None
+        mut fn_key = strs.text(fn_name)
+        if fn_key in elec:
+            elec_type = Some(elec[fn_key])
+        roles.map[strs.text(pad_id)] = classify(elec_type, fn_name)
+    return roles
+
+
+# Ordered twin of PartRoles retains names for consumers asking what each pin is.
+public record PadFunction:
+    pad: bytes
+    fn_name: bytes
+    class_: PinClass
+
+
+public func pad_functions(fs: Filesystem, project_dir: str, component: bytes) -> PadFunction[]:
+    if len(component) == 0:
+        return []
+    mut elec: dict[str, env.ElectricalType] = {}
+    mut pinout_name = component
+    mut children = load_list(fs, project_dir, "components", component)
+    if children is not None:
+        for child in children:
+            mut cl = ast.as_list(child)
+            if cl is None:
+                continue
+            if len(cl) < 2:
+                continue
+            mut head = ast.as_atom(cl[0])
+            if head is None:
+                continue
+            if head == b"pinout":
+                mut p = ast.as_text(cl[1])
+                if p is not None:
+                    pinout_name = p
+            elif head == b"electrical":
+                mut decl = electrical.parse(cl)
+                if decl is None:
+                    continue
+                mut t = decl.electrical_type
+                if t is not None:
+                    elec[strs.text(decl.pin)] = t
+    mut top = load_list(fs, project_dir, "pinouts", pinout_name)
+    if top is None:
+        return []
+    if len(top) < 2:
+        return []
+    if ast.as_atom(top[0]).unwrap_or(b"") != b"pinout":
+        return []
+    mut result: PadFunction[] = []
+    for child2 in top[2:]:
+        mut cl2 = ast.as_list(child2)
+        if cl2 is None:
+            continue
+        if len(cl2) < 3:
+            continue
+        if ast.as_atom(cl2[0]).unwrap_or(b"") != b"pin":
+            continue
+        mut pad_id = node_text(cl2[1])
+        mut fn_name = ast.as_text(cl2[2])
+        if pad_id is None or fn_name is None:
+            continue
+        mut elec_type: env.ElectricalType? = None
+        mut fn_key = strs.text(fn_name)
+        if fn_key in elec:
+            elec_type = Some(elec[fn_key])
+        result.append(PadFunction(pad=pad_id, fn_name=fn_name, class_=function_class(elec_type, fn_name)))
+    return result
+
+
+# Review names also infer undeclared supplies/straps; placement only trusts
+# declared types for those classes, so this never moves a placed pad's role.
+func function_class(elec_type: env.ElectricalType?, fn_name: bytes) -> PinClass:
+    if elec_type is not None:
+        return classify(elec_type, fn_name)
+    if is_supply_fn(fn_name):
+        return PinClass.power
+    if is_strap_fn(fn_name):
+        return PinClass.strap
+    return classify(None, fn_name)
+
+
+# First top-level library form; any read/parse failure returns None.
+func load_list(fs: Filesystem, project_dir: str, dir: str, name: bytes) -> ast.Node[]?:
+    mut path = project_dir + "/lib/" + dir + "/" + strs.text(name) + ".sexp"
+    mut source = b""
+    match infra_fs.read_file_alloc(fs, path, lib_limits.max_lib_file_bytes):
+        case Ok(data):
+            source = data
+        case Err(_):
+            return None
+    match parser.parse(source):
+        case Ok(nodes):
+            if len(nodes) == 0:
+                return None
+            return ast.as_list(nodes[0])
+        case Err(_):
+            return None
+
+
+# Stringify pad tokens like evaluator ids.pinId. Reject non-finite/range-invalid
+# numerics before conversion, as numeric.checkedInt does in the Zig source.
+func node_text(n: ast.Node) -> bytes?:
+    mut text = ast.as_text(n)
+    if text is not None:
+        return Some(text)
+    mut num = ast.as_number(n)
+    if num is not None:
+        mut i = numeric.checked_i64(num)
+        if i is None:
+            return None
+        return Some(str(int(i)).encode())
+    return None
+
+
+# private in Zig; public for its counterpart tests.
+public func classify(elec_type: env.ElectricalType?, fn_name: bytes) -> PinClass:
+    match elec_type:
+        case Some(t):
+            match t:
+                case env.ElectricalType.input:
+                    return PinClass.strap
+                case env.ElectricalType.output:
+                    return PinClass.strap
+                case env.ElectricalType.io:
+                    return PinClass.strap
+                case env.ElectricalType.power_in:
+                    return PinClass.power
+                case env.ElectricalType.power_out:
+                    return PinClass.power
+                case _:
+                    pass
+        case None:
+            pass
+    if is_optional_nc_name(fn_name):
+        return PinClass.optional_nc
+    if is_ground_fn(fn_name):
+        return PinClass.ground
+    return PinClass.other
+
+
+# These two predicates use the original shorter separator set; grouping
+# punctuation is discarded only by normalize_ident used for other aliases.
+public func is_ground_fn(fn_name: bytes) -> bool:
+    mut w = byte_builder.create()
+    mut n = 0
+    for c in fn_name:
+        if c == 95 or c == 45 or c == 47 or c == 46 or c == 32 or c == 35:
+            continue
+        if n >= 32:
+            break
+        _ = byte_builder.append_byte(mut w, strs.to_upper(c))
+        n += 1
+    mut s = byte_builder.finish(w)
+    for p in na.ground_fn_prefixes():
+        if s.startswith(p):
+            return True
+    mut exact: bytes[] = [b"EP", b"EPAD", b"PAD", b"TAB", b"THERMAL", b"EXP", b"EXPOSED", b"DAP", b"RTN", b"RETURN"]
+    for e in exact:
+        if s == e:
+            return True
+    return False
+
+
+# Ordinary NC package lands are optional; forbidden/reserved pads stay distinct.
+# private in Zig; public for its counterpart tests.
+public func is_optional_nc_name(fn_name: bytes) -> bool:
+    mut s = normalize_ident(fn_name, 32)
+    if s == b"NC" or s == b"NOCONNECT":
+        return True
+    if len(s) > 2 and s[0] == 78 and s[1] == 67:
+        for c in s[2:]:
+            if not strs.is_digit(c):
+                return False
+        return True
+    return False
+
+
+public func is_supply_fn(fn_name: bytes) -> bool:
+    mut w = byte_builder.create()
+    mut n = 0
+    for c in fn_name:
+        if c == 95 or c == 45 or c == 47 or c == 46 or c == 32 or c == 35:
+            continue
+        if n >= 32:
+            break
+        _ = byte_builder.append_byte(mut w, strs.to_upper(c))
+        n += 1
+    mut s = byte_builder.finish(w)
+    if is_ground_fn(s):
+        return False
+    # VDD_EN/VIN_SEL0 are supply-named straps. Check raw tokens before the
+    # supply prefix, inline to avoid mutual recursion with is_strap_fn.
+    if has_strap_token(fn_name):
+        return False
+    for p in rails_mod.supply_pad_prefixes():
+        if s.startswith(p):
+            return True
+    mut exact: bytes[] = [b"V+", b"VS"]
+    for e in exact:
+        if s == e:
+            return True
+    return False
+
+
+record ComponentElec:
+    elec: dict[str, env.ElectricalType]
+    pinout_name: bytes
+
+
+# Shared component-file half for ERC strap and floating-pad classification.
+func load_component_elec(fs: Filesystem, project_dir: str, component: bytes) -> ComponentElec:
+    mut elec: dict[str, env.ElectricalType] = {}
+    mut pinout_name = component
+    mut children = load_list(fs, project_dir, "components", component)
+    if children is not None:
+        for child in children:
+            mut cl = ast.as_list(child)
+            if cl is None:
+                continue
+            if len(cl) < 2:
+                continue
+            mut head = ast.as_atom(cl[0])
+            if head is None:
+                continue
+            if head == b"pinout":
+                mut p = ast.as_text(cl[1])
+                if p is not None:
+                    pinout_name = p
+            elif head == b"electrical":
+                mut decl = electrical.parse(cl)
+                if decl is None:
+                    continue
+                mut t = decl.electrical_type
+                if t is not None:
+                    elec[strs.text(decl.pin)] = t
+    return ComponentElec(elec=elec, pinout_name=pinout_name)
+
+
+# ERC-only name recognition complements type declarations, so richer strap
+# recognition never changes placement's older electrical-type-only classifier.
+public func strap_pads(fs: Filesystem, project_dir: str, component: bytes) -> dict[str, bytes]:
+    mut result: dict[str, bytes] = {}
+    if len(component) == 0:
+        return result
+    mut ce = load_component_elec(fs, project_dir, component)
+    mut top = load_list(fs, project_dir, "pinouts", ce.pinout_name)
+    if top is None:
+        return result
+    if len(top) < 2:
+        return result
+    if ast.as_atom(top[0]).unwrap_or(b"") != b"pinout":
+        return result
+    for child in top[2:]:
+        mut cl = ast.as_list(child)
+        if cl is None:
+            continue
+        if len(cl) < 3:
+            continue
+        if ast.as_atom(cl[0]).unwrap_or(b"") != b"pin":
+            continue
+        mut pad_id = node_text(cl[1])
+        mut fn_name = ast.as_text(cl[2])
+        if pad_id is None or fn_name is None:
+            continue
+        if is_positional_pin(pad_id, fn_name):
+            continue
+        mut elec_type: env.ElectricalType? = None
+        mut fn_key = strs.text(fn_name)
+        if fn_key in ce.elec:
+            elec_type = Some(ce.elec[fn_key])
+        mut strap = classify(elec_type, fn_name) == PinClass.strap or is_strap_fn(fn_name)
+        if strap:
+            result[strs.text(pad_id)] = fn_name
+    return result
+
+
+public enum NcRequirement:
+    skip
+    fine
+    suspect
+    required
+
+
+public record PadReq:
+    fn_name: bytes
+    req: NcRequirement
+
+
+# Confidence sets severity: supply/ground defer, declared input is required,
+# name-only config straps are suspect, and ordinary outputs/IO are fine.
+# private in Zig; public for its counterpart tests.
+public func connection_requirement(elec_type: env.ElectricalType?, fn_name: bytes) -> NcRequirement:
+    if is_supply_fn(fn_name) or is_ground_fn(fn_name):
+        return NcRequirement.skip
+    match elec_type:
+        case Some(t):
+            match t:
+                case env.ElectricalType.input:
+                    return NcRequirement.required
+                case env.ElectricalType.power_in:
+                    return NcRequirement.skip
+                case _:
+                    return NcRequirement.fine
+        case None:
+            pass
+    if is_explicit_nc_name(fn_name):
+        return NcRequirement.fine
+    if is_strap_fn(fn_name):
+        return NcRequirement.suspect
+    return NcRequirement.fine
+
+
+# Reserved/do-not-use pads are meant to float, never flag them.
+func is_explicit_nc_name(fn_name: bytes) -> bool:
+    if is_optional_nc_name(fn_name):
+        return True
+    mut s = normalize_ident(fn_name, 32)
+    mut exact: bytes[] = [b"DNC", b"DNU", b"RESERVED", b"RSVD", b"RSV", b"RFU"]
+    for e in exact:
+        if s == e:
+            return True
+    return False
+
+
+public func pad_requirements(fs: Filesystem, project_dir: str, component: bytes) -> dict[str, PadReq]:
+    mut result: dict[str, PadReq] = {}
+    if len(component) == 0:
+        return result
+    mut ce = load_component_elec(fs, project_dir, component)
+    mut top = load_list(fs, project_dir, "pinouts", ce.pinout_name)
+    if top is None:
+        return result
+    if len(top) < 2:
+        return result
+    if ast.as_atom(top[0]).unwrap_or(b"") != b"pinout":
+        return result
+    # A/B paired translator channels are benign data pins, not address straps.
+    mut fn_set: set[str] = set()
+    for child in top[2:]:
+        mut cl = ast.as_list(child)
+        if cl is None:
+            continue
+        if len(cl) < 3:
+            continue
+        if ast.as_atom(cl[0]).unwrap_or(b"") != b"pin":
+            continue
+        mut fnm = ast.as_text(cl[2])
+        if fnm is not None:
+            fn_set.add(strs.text(fnm))
+    for child2 in top[2:]:
+        mut cl2 = ast.as_list(child2)
+        if cl2 is None:
+            continue
+        if len(cl2) < 3:
+            continue
+        if ast.as_atom(cl2[0]).unwrap_or(b"") != b"pin":
+            continue
+        mut pad_id = node_text(cl2[1])
+        mut fn_name = ast.as_text(cl2[2])
+        if pad_id is None or fn_name is None:
+            continue
+        mut elec_type: env.ElectricalType? = None
+        mut fn_key = strs.text(fn_name)
+        if fn_key in ce.elec:
+            elec_type = Some(ce.elec[fn_key])
+        mut req = connection_requirement(elec_type, fn_name)
+        if req == NcRequirement.suspect or req == NcRequirement.required:
+            if is_translator_channel(fn_name, fn_set):
+                continue
+            result[strs.text(pad_id)] = PadReq(fn_name=fn_name, req=req)
+    return result
+
+
+# Only A<n>/B<n> names with the complementary twin in this exact pinout qualify.
+# private in Zig; public for its counterpart tests.
+public func is_translator_channel(fn_name: bytes, fn_set: set[str]) -> bool:
+    if len(fn_name) < 2 or len(fn_name) > 16:
+        return False
+    mut twin = b""
+    if fn_name[0] == 65:
+        twin = b"B"
+    elif fn_name[0] == 66:
+        twin = b"A"
+    else:
+        return False
+    for c in fn_name[1:]:
+        if not strs.is_digit(c):
+            return False
+    return strs.text(twin + fn_name[1:]) in fn_set
+
+
+# Whole alphanumeric tokens are anchored: PA1/PD15/ENC/GREEN are not straps.
+# private in Zig; public for its counterpart tests.
+public func is_strap_fn(fn_name: bytes) -> bool:
+    if is_ground_fn(fn_name) or is_supply_fn(fn_name):
+        return False
+    return has_strap_token(fn_name)
+
+
+func has_strap_token(fn_name: bytes) -> bool:
+    for raw in strs.tokenize_any(fn_name, b"_-/.# \t~{}()+"):
+        if len(raw) == 0 or len(raw) > 32:
+            continue
+        if is_strap_token(strs.upper_bytes(raw)):
+            return True
+    return False
+
+
+func is_strap_token(tok: bytes) -> bool:
+    mut exact: bytes[] = [b"ENABLE", b"NEN", b"ENN", b"CE", b"NCE", b"CEN", b"OE", b"NOE", b"OEN", b"WP", b"NWP", b"HOLD", b"NHOLD", b"MODE", b"SHDN", b"NSHDN", b"STBY", b"NSTBY", b"SLEEP", b"CFG", b"CONFIG", b"ILIM", b"NRST", b"RST", b"RSTN", b"RESET", b"NRESET", b"RESETN", b"PSHOLD", b"TEST"]
+    for e in exact:
+        if tok == e:
+            return True
+    for prefix in [b"EN", b"BOOT", b"SEL", b"ADDR"]:
+        if prefix_then_digits(tok, prefix):
+            return True
+    # Exactly one address digit; two-digit grid/bus labels are excluded.
+    return len(tok) == 2 and tok[0] == 65 and strs.is_digit(tok[1])
+
+
+# The doubled connector name is positional; plain equality is positional only
+# for a grid-like pad. A legitimate pad EN/function EN must remain a strap.
+func is_positional_pin(pad_id: bytes, fn_name: bytes) -> bool:
+    mut np = normalize_ident(pad_id, 32)
+    mut nf = normalize_ident(fn_name, 64)
+    if len(np) == 0:
+        return False
+    if len(nf) == 2 * len(np) and nf[:len(np)] == np and nf[len(np):] == np:
+        return True
+    return nf == np and is_grid_like_pad(np)
+
+
+# Uppercase with original bounded scratch-buffer length and separators removed.
+# Pin-function aliases discard grouping punctuation that module-policy ids keep.
+func normalize_ident(s: bytes, buf_len: int) -> bytes:
+    mut w = byte_builder.create()
+    mut n = 0
+    for c in s:
+        if c == 95 or c == 45 or c == 47 or c == 46 or c == 32 or c == 35 or c == 126 or c == 123 or c == 125 or c == 40 or c == 41:
+            continue
+        if n >= buf_len:
+            break
+        _ = byte_builder.append_byte(mut w, strs.to_upper(c))
+        n += 1
+    return byte_builder.finish(w)
+
+
+func is_grid_like_pad(s: bytes) -> bool:
+    if len(s) == 0 or not strs.is_alphabetic(s[0]):
+        return False
+    for c in s:
+        if strs.is_digit(c):
+            return True
+    return False
+
+
+func prefix_then_digits(tok: bytes, prefix: bytes) -> bool:
+    if not tok.startswith(prefix):
+        return False
+    for c in tok[len(prefix):]:
+        if not strs.is_digit(c):
+            return False
+    return True

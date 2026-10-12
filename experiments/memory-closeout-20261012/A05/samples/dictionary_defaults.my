@@ -1,0 +1,20 @@
+# spec-case: NEW-CORE-DICT-1
+func fallback(mut calls: int[], marker: int) -> bytes:
+    calls.append(marker)
+    const text = "default-" + str(marker)
+    return text.encode()
+
+func main() -> int:
+    mut values: dict[str, bytes] = {"present": b"original-" + b"value"}
+    mut calls: int[] = []
+    const hit = values.get("present", fallback(mut calls, 1)).copy()
+    const miss = values.get("absent", fallback(mut calls, 2)).copy()
+    mut supplied = b"caller-" + b"default"
+    const borrowed = values.get("other", supplied).copy()
+    values["present"] = b"replaced"
+    values.clear()
+    supplied = b"changed"
+    assert calls == [1, 2]
+    assert hit == b"original-value" and miss == b"default-2"
+    assert borrowed == b"caller-default" and supplied == b"changed"
+    return 0

@@ -33,6 +33,7 @@ pub fn run(given: std.process.Init, args: []const []const u8) Error!u8 {
     };
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
     defer session.deinit();
+    session.setOwnership(options.single_owner, options.zero_rc);
     if (!options.no_cache) {
         try session.enableCache(init.gpa, options.cache);
         try session.enableSharedCache(init.environ_map);

@@ -49,9 +49,10 @@ const buffers = @import("buffers.zig");
 const stores = @import("stores.zig");
 const effects = @import("effects.zig");
 const origins = @import("inline_origins.zig");
+const selections = @import("borrow_selection.zig");
 
 /// The pass only allocates.
-pub const Error = std.mem.Allocator.Error;
+pub const Error = std.mem.Allocator.Error || error{Unsupported};
 
 /// How the pass runs.
 pub const Options = struct {
@@ -111,6 +112,10 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, options: Options) Error
 
 /// Run ownership with independently reclaimable analysis backing.
 pub fn runWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, options: Options) Error!Stats {
+    @import("marker_validation.zig").validateModule(backing, module) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.UnsupportedInstruction => return error.Unsupported,
+    };
     var total: Stats = .{};
     const summaries = options.effects orelse &try effects.analyze(arena, module);
     for (module.functions.items, 0..) |*f, index| {
@@ -135,6 +140,14 @@ pub fn functionWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator,
     var work = std.heap.ArenaAllocator.init(backing);
     defer work.deinit();
     const scratch = work.allocator();
+    @import("marker_validation.zig").validate(backing, module, f) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.UnsupportedInstruction => return error.Unsupported,
+    };
+    if (module.zero_rc) for (f.insts.items) |*inst| {
+        if ((inst.op == .list_copy or inst.op == .dict_copy) and inst.data == flags.place_copy) inst.op = .copy;
+    };
+    _ = try @import("phi_cleanup.zig").run(backing, f);
     var stats: Stats = .{};
     var marks: Marks = .{ .origin = if (options.provenance) |table| table.context(options.function_index) else null };
     if (options.facts) |known| {
@@ -143,6 +156,9 @@ pub fn functionWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator,
         stats.promoted = promoted.lists;
         reserveFills(f, known);
     }
+    // Resolve duplicate record roots before matching an exact element-field round trip.
+    // Keep the later merge too: borrow forwarding can introduce fresh field reads.
+    if (module.zero_rc) try mergeFieldReads(scratch, f);
     // Element-field stores in place, before any update gets its copy-on-write form.
     _ = try elements.fieldStores(arena, module, f);
     // Byte-buffer appends become updates the emitter does inline.
@@ -157,10 +173,21 @@ pub fn functionWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator,
     }
     if (options.effects) |summaries| try @import("borrow_fields.zig").run(arena, module, f, summaries, marks.origin);
     try mergeFieldReads(scratch, f);
+    for (f.insts.items, 0..) |instruction, index| {
+        const selection = (selections.call(module, f, instruction) catch return error.Unsupported) orelse continue;
+        try marks.borrowed_selection.put(scratch, @intCast(index), {});
+        if (selection.phi) |phi| try marks.borrowed_selection.put(scratch, @intCast(phi.index()), {});
+    }
     try takeFields(scratch, module, f, &marks);
     try hoistTests(arena, scratch, module, f, &marks);
     var phase_a = try Analysis.of(scratch, arena, module, f, &marks);
     try phase_a.analyze();
+    if (try elideDeadCopies(&phase_a)) {
+        // Forwarded copies change the source's lifetime; all subsequent ownership
+        // decisions use a fresh analysis, including borrowed child liveness.
+        phase_a = try Analysis.of(scratch, arena, module, f, &marks);
+        try phase_a.analyze();
+    }
     try copyOnWrite(&phase_a, options, &stats);
     var phase_b = try Analysis.of(scratch, arena, module, f, &marks);
     try phase_b.analyze();
@@ -170,6 +197,33 @@ pub fn functionWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator,
     stats.retains -= stats.elided;
     stats.releases -= stats.elided;
     return stats;
+}
+
+/// A checked owner whose final use is an independent copy can move into the
+/// result. Any later use of it or a borrowed child keeps the explicit copy.
+fn elideDeadCopies(a: *Analysis) Error!bool {
+    const f = a.f;
+    if (!a.module.zero_rc or f.insts.items.len > 4096) return false;
+    const Site = struct { ref: ir.Ref, source: ir.Ref };
+    var sites: std.ArrayList(Site) = .empty;
+    var candidates: usize = 0;
+    outer: for (f.blocks.items, 0..) |block, b| {
+        if (!a.present(b)) continue;
+        for (block.insts.items, 0..) |ref, pos| {
+            const source = @import("inline_snapshot.zig").source(a.module, f, f.inst(ref)) orelse continue;
+            if (candidates == 32) break :outer;
+            candidates += 1;
+            if (a.class[source.index()] != .owned or a.promoted[source.index()]) continue;
+            if (a.marks.stack.contains(@intCast(source.index())) or a.live[source.index()] == null or
+                a.liveAfter(source, @intCast(b), @intCast(pos))) continue;
+            try sites.append(a.storage.scratch, .{ .ref = ref, .source = source });
+        }
+    }
+    for (sites.items) |site| {
+        const old = f.inst(site.ref);
+        f.insts.items[site.ref.index()] = .{ .op = .copy, .ty = old.ty, .a = site.source, .span = old.span };
+    }
+    return sites.items.len != 0;
 }
 
 /// Reserve known counted fills after stack promotion. Only detached i64/u64
@@ -254,6 +308,7 @@ const no_block = std.math.maxInt(u32);
 const Marks = struct {
     origin: ?origins.Context = null,
     owned_get: std.AutoHashMapUnmanaged(u32, void) = .empty,
+    borrowed_selection: std.AutoHashMapUnmanaged(u32, void) = .empty,
     /// Values of lists promoted to the stack: never counted.
     stack: std.AutoHashMapUnmanaged(u32, void) = .empty,
     /// `record_set`s whose old field a read took over (`takeFields`): nothing to drop.
@@ -289,6 +344,8 @@ const Analysis = struct {
     class: []Class,
     /// The value a borrowed part was read from (`none` for roots).
     parent: []ir.Ref,
+    /// Only explicit checked selections have a second possible owner.
+    second_parent: []ir.Ref = &.{},
     /// Per value: the borrowed parts read from it.
     children: []std.ArrayList(ir.Ref),
     promoted: []bool,
@@ -372,8 +429,17 @@ const Analysis = struct {
                 // Source `mut` and inferred consuming parameters both receive one count.
                 .param => if (ownedParameter(f.signature, instruction.data)) .owned else .borrowed,
                 .str_const, .undef => .immortal,
-                .call => if (self.viewSource(instruction) orelse self.encodedSource(instruction)) |source| blk: {
-                    self.parent[i] = source;
+                .call => blk: {
+                    if ((@import("borrowed_provider.zig").call(self.module, f, instruction) catch return error.Unsupported) != null)
+                        break :blk .borrowed;
+                    if (self.viewSource(instruction) orelse self.encodedSource(instruction)) |source| {
+                        self.parent[i] = source;
+                        break :blk .borrowed;
+                    }
+                    break :blk .owned;
+                },
+                .record_make => if (borrowedItem(self.module, f, instruction)) |parent| blk: {
+                    self.parent[i] = parent;
                     break :blk .borrowed;
                 } else .owned,
                 .copy => .none,
@@ -385,6 +451,7 @@ const Analysis = struct {
                 else => .owned,
             };
         }
+        try self.classifySelections();
         // A phi no live instruction reads is ignored (its operands are not consumed).
         const live_phi = try self.livePhis();
         for (f.insts.items, 0..) |instruction, i| {
@@ -393,6 +460,30 @@ const Analysis = struct {
         }
         for (self.parent, 0..) |p, child| {
             if (p != .none and self.class[child] == .borrowed) try self.children[p.index()].append(self.storage.scratch, @fromBackingInt(@intCast(child)));
+        }
+        for (self.second_parent, 0..) |p, child| {
+            if (p != .none and p != self.parent[child] and self.class[child] == .borrowed)
+                try self.children[p.index()].append(self.storage.scratch, @fromBackingInt(@intCast(child)));
+        }
+    }
+
+    fn classifySelections(self: *Analysis) Error!void {
+        for (self.f.insts.items, 0..) |instruction, index| {
+            const selection = (selections.call(self.module, self.f, instruction) catch return error.Unsupported) orelse continue;
+            if (self.second_parent.len == 0) {
+                self.second_parent = try self.storage.scratch.alloc(ir.Ref, self.parent.len);
+                @memset(self.second_parent, .none);
+            }
+            self.class[index] = .borrowed;
+            if (selection.phi) |phi| {
+                self.parent[index] = phi;
+                self.class[phi.index()] = .borrowed;
+                self.parent[phi.index()] = selection.dictionary;
+                self.second_parent[phi.index()] = selection.fallback;
+            } else {
+                self.parent[index] = selection.dictionary;
+                self.second_parent[index] = selection.fallback;
+            }
         }
     }
 
@@ -453,13 +544,15 @@ const Analysis = struct {
                 if (instruction.op == .phi) {
                     if (self.class[ref.index()] == .none) continue;
                     for (f.operands(instruction.data), block.preds.items) |operand, pred| {
-                        try self.addUse(f.resolve(operand), .{ .block = @backingInt(pred), .pos = 0, .succ = @intCast(b), .consume = 1 });
+                        const borrowed = self.class[ref.index()] == .borrowed;
+                        try self.addUse(f.resolve(operand), .{ .block = @backingInt(pred), .pos = 0, .succ = @intCast(b), .consume = @intFromBool(!borrowed), .borrow = @intFromBool(borrowed) });
                     }
                     continue;
                 }
                 const operands = f.valueOperands(instruction);
+                const borrowed_item = borrowedItem(self.module, f, instruction) != null;
                 for (0..operands.len()) |k| {
-                    const consumes = consuming(instruction, k) or self.handedOver(instruction, k);
+                    const consumes = (!borrowed_item and consuming(instruction, k)) or self.handedOver(instruction, k);
                     try self.addUse(f.resolve(operands.get(k)), .{ .block = @intCast(b), .pos = @intCast(pos), .consume = @intFromBool(consumes), .borrow = @intFromBool(!consumes) });
                 }
             }
@@ -504,12 +597,53 @@ const Analysis = struct {
     /// Every use that keeps `ref` live: its own and, as borrows, those of the borrowed
     /// parts read from it (transitively) that are not counted themselves.
     fn liveUses(self: *Analysis, ref: ir.Ref, out: *std.ArrayList(Use)) Error!void {
+        if (self.second_parent.len != 0) return self.sharedLiveUses(ref, out);
         try out.appendSlice(self.storage.scratch, self.uses[ref.index()].items);
         for (self.children[ref.index()].items) |child_ref| {
             if (self.counted(child_ref)) continue;
             var nested: std.ArrayList(Use) = .empty;
             try self.liveUses(child_ref, &nested);
             for (nested.items) |use| try out.append(self.storage.scratch, .{ .block = use.block, .pos = use.pos, .succ = use.succ, .borrow = use.consume + use.borrow });
+        }
+    }
+
+    /// Shared selection ancestry is a DAG: visit every descendant once instead
+    /// of recursively expanding repeated roots through nested hit/miss joins.
+    fn sharedLiveUses(self: *Analysis, ref: ir.Ref, out: *std.ArrayList(Use)) Error!void {
+        var visited = try std.DynamicBitSetUnmanaged.initEmpty(self.storage.scratch, self.class.len);
+        defer visited.deinit(self.storage.scratch);
+        var pending: std.ArrayList(ir.Ref) = .empty;
+        defer pending.deinit(self.storage.scratch);
+        try pending.append(self.storage.scratch, ref);
+        while (pending.pop()) |value| {
+            if (visited.isSet(value.index())) continue;
+            visited.set(value.index());
+            for (self.uses[value.index()].items) |use| {
+                const actual = if (value == ref) use else Use{ .block = use.block, .pos = use.pos, .succ = use.succ, .borrow = use.consume + use.borrow };
+                try out.append(self.storage.scratch, actual);
+            }
+            for (self.children[value.index()].items) |child| {
+                if (!self.counted(child)) try pending.append(self.storage.scratch, child);
+            }
+        }
+    }
+
+    fn selectionOwners(self: *Analysis, ref: ir.Ref, out: *std.ArrayList(ir.Ref)) Error!void {
+        var visited = try std.DynamicBitSetUnmanaged.initEmpty(self.storage.scratch, self.class.len);
+        defer visited.deinit(self.storage.scratch);
+        var pending: std.ArrayList(ir.Ref) = .empty;
+        defer pending.deinit(self.storage.scratch);
+        try pending.append(self.storage.scratch, self.parent[ref.index()]);
+        try pending.append(self.storage.scratch, self.second_parent[ref.index()]);
+        while (pending.pop()) |value| {
+            if (value == .none or visited.isSet(value.index())) continue;
+            visited.set(value.index());
+            if (self.counted(value)) {
+                try out.append(self.storage.scratch, value);
+            } else if (self.class[value.index()] == .borrowed) {
+                try pending.append(self.storage.scratch, self.parent[value.index()]);
+                try pending.append(self.storage.scratch, self.second_parent[value.index()]);
+            }
         }
     }
 
@@ -589,19 +723,28 @@ const Analysis = struct {
             if (self.f.insts.items[i].ty == .str_view) continue;
             if (class != .borrowed or self.promoted[i] or self.parent[i] == .none) continue;
             const ref: ir.Ref = @fromBackingInt(@intCast(i));
-            const holder = self.owner(ref);
-            if (holder == .none) continue;
-            for (self.uses[holder.index()].items) |use| {
-                if (use.consume == 0) continue;
-                const still = if (use.onEdge()) self.liveInto(ref, use.succ) else self.liveAfter(ref, use.block, use.pos) or self.borrowedAt(ref, use.block, use.pos);
-                if (!still) continue;
-                if (try self.onlyThroughParts(ref, use)) continue;
+            var holders: std.ArrayList(ir.Ref) = .empty;
+            if (self.second_parent.len == 0) {
+                const holder = self.owner(ref);
+                if (holder != .none) try holders.append(self.storage.scratch, holder);
+            } else try self.selectionOwners(ref, &holders);
+            for (holders.items) |holder| {
+                if (!try self.consumedDuringBorrow(ref, holder)) continue;
                 self.promoted[i] = true;
                 changed = true;
                 break;
             }
         }
         return changed;
+    }
+
+    fn consumedDuringBorrow(self: *Analysis, ref: ir.Ref, holder: ir.Ref) Error!bool {
+        for (self.uses[holder.index()].items) |use| {
+            if (use.consume == 0) continue;
+            const still = if (use.onEdge()) self.liveInto(ref, use.succ) else self.liveAfter(ref, use.block, use.pos) or self.borrowedAt(ref, use.block, use.pos);
+            if (still and !try self.onlyThroughParts(ref, use)) return true;
+        }
+        return false;
     }
 
     /// Whether `ref`, still needed when its owner is consumed at `use`, is needed there only
@@ -628,10 +771,29 @@ const Analysis = struct {
 
     /// Whether a borrowed text view hangs below `ref` (through uncounted parts).
     fn viewBelow(self: *Analysis, ref: ir.Ref) Error!bool {
+        if (self.second_parent.len != 0) return self.sharedViewBelow(ref);
         for (self.children[ref.index()].items) |child| {
             if (self.counted(child)) continue;
             if (self.f.inst(child).ty == .str_view) return true;
             if (try self.viewBelow(child)) return true;
+        }
+        return false;
+    }
+
+    fn sharedViewBelow(self: *Analysis, ref: ir.Ref) Error!bool {
+        var visited = try std.DynamicBitSetUnmanaged.initEmpty(self.storage.scratch, self.class.len);
+        defer visited.deinit(self.storage.scratch);
+        var pending: std.ArrayList(ir.Ref) = .empty;
+        defer pending.deinit(self.storage.scratch);
+        try pending.append(self.storage.scratch, ref);
+        while (pending.pop()) |value| {
+            if (visited.isSet(value.index())) continue;
+            visited.set(value.index());
+            for (self.children[value.index()].items) |child| {
+                if (self.counted(child)) continue;
+                if (self.f.inst(child).ty == .str_view) return true;
+                try pending.append(self.storage.scratch, child);
+            }
         }
         return false;
     }
@@ -666,6 +828,61 @@ const Analysis = struct {
         return live;
     }
 };
+
+/// Only the generated key/value pair of one dictionary entry is a borrowed
+/// record. Every other record construction keeps its ordinary owning operands.
+fn borrowedItem(module: *const ir.Module, f: *const ir.Function, inst: ir.Inst) ?ir.Ref {
+    if (!module.zero_rc or inst.op != .record_make) return null;
+    const fields = f.operands(inst.data);
+    if (fields.len != 2) return null;
+    const key = f.inst(f.resolve(fields[0]));
+    const value = f.inst(f.resolve(fields[1]));
+    if (flags.transferredRead(key) or flags.transferredRead(value)) return null;
+    if (key.op != .dict_entry_key or value.op != .dict_entry_value) return unitItemParent(module, f, key, value);
+    const owner = f.resolve(key.a);
+    if (owner != f.resolve(value.a) or !sameItemIndex(module, f, key.b, value.b)) return null;
+    return owner;
+}
+
+/// Unit members have no dictionary payload, but record storage represents
+/// them with a canonical false byte. The other member still borrows the table.
+fn unitItemParent(module: *const ir.Module, f: *const ir.Function, key: ir.Inst, value: ir.Inst) ?ir.Ref {
+    if (key.op == .dict_entry_key and unitItemField(value)) {
+        const owner = f.resolve(key.a);
+        if (module.compound(f.inst(owner).ty).dict.value == .void) return owner;
+    }
+    if (value.op == .dict_entry_value and unitItemField(key)) {
+        const owner = f.resolve(value.a);
+        if (module.compound(f.inst(owner).ty).dict.key == .bool) return owner;
+    }
+    return null;
+}
+
+fn unitItemField(inst: ir.Inst) bool {
+    return inst.op == .iconst and inst.ty == .bool and inst.data == 0;
+}
+
+/// The two source projections can each lower the same ordinal lookup. This
+/// helper only reads the same dictionary/ordinal; no general call equivalence
+/// or index algebra is used to classify the generated borrowed pair.
+fn sameItemIndex(module: *const ir.Module, f: *const ir.Function, left: ir.Ref, right: ir.Ref) bool {
+    const a = f.resolve(left);
+    const b = f.resolve(right);
+    if (a == b) return true;
+    const first = f.inst(a);
+    const second = f.inst(b);
+    if (first.op != .call or second.op != .call or first.a != second.a) return false;
+    const callee = module.functions.items[first.a.index()];
+    if (callee.signature.linkage == .internal or !std.mem.eql(u8, callee.name, "myl_core_dict_ordinal")) return false;
+    const signature = callee.signature;
+    if ((signature.owned | signature.consumes | signature.views) != 0 or signature.ret != .i64) return false;
+    if (signature.params.len != 2 or signature.params[1] != .i64) return false;
+    if (module.kind(signature.params[0]) != .dict) return false;
+    const x = f.operands(first.data);
+    const y = f.operands(second.data);
+    if (x.len != 2 or y.len != 2) return false;
+    return f.resolve(x[0]) == f.resolve(y[0]) and f.resolve(x[1]) == f.resolve(y[1]);
+}
 
 /// Whether parameter `index` of a function with `signature` is passed owned.
 fn ownedParameter(signature: ir.Signature, index: u64) bool {
@@ -1429,10 +1646,26 @@ fn mergeable(arena: std.mem.Allocator, f: *const ir.Function, group: ReadGroup, 
 ///   the write-back of a call with a result and `mut` parameters (or of its inlined body).
 fn takeFields(arena: std.mem.Allocator, module: *const ir.Module, f: *const ir.Function, marks: *Marks) Error!void {
     const graph = try UseGraph.of(arena, f);
-    for (f.insts.items, 0..) |record, i| {
-        if (module.kind(record.ty) != .record or !module.managed(record.ty)) continue;
-        if (!ownedRecord(f, record) and !marks.owned_get.contains(@intCast(i))) continue;
-        const ref: ir.Ref = @fromBackingInt(@intCast(i));
+    var pending: std.ArrayList(ir.Ref) = .empty;
+    const queued = try arena.alloc(bool, f.insts.items.len);
+    @memset(queued, false);
+    const ctx: Taking = .{ .arena = arena, .module = module, .f = f, .graph = graph, .marks = marks, .pending = &pending, .queued = queued };
+    // Inlining can append a producer after its users in instruction storage. Seed
+    // owners once, then visit newly transferred aggregates as their reads gain ownership.
+    for (0..f.insts.items.len) |i| try ctx.enqueue(@fromBackingInt(@intCast(i)));
+    var next: usize = 0;
+    while (next < pending.items.len) : (next += 1) {
+        const ref = pending.items[next];
+        const i = ref.index();
+        const record = f.inst(ref);
+        const kind = module.kind(record.ty);
+        if (kind == .array) {
+            for (graph.uses[i].items) |user| {
+                const inst = f.inst(user);
+                if (inst.op == .array_set and f.resolve(inst.a) == ref) try ctx.takeArrayReplaced(ref, user);
+            }
+            continue;
+        }
         var reads_only = true;
         var sets: std.ArrayList(ir.Ref) = .empty;
         for (graph.uses[i].items) |user| {
@@ -1443,7 +1676,6 @@ fn takeFields(arena: std.mem.Allocator, module: *const ir.Module, f: *const ir.F
                 try sets.append(arena, user);
             } else reads_only = false;
         }
-        const ctx: Taking = .{ .arena = arena, .module = module, .f = f, .graph = graph, .marks = marks };
         // Each set replaces its own field: arms of a branch may each update another one.
         for (sets.items) |update| try ctx.takeReplaced(ref, update);
         if (sets.items.len == 0 and reads_only) try ctx.empty(ref);
@@ -1487,6 +1719,26 @@ const Taking = struct {
     f: *const ir.Function,
     graph: UseGraph,
     marks: *Marks,
+    pending: *std.ArrayList(ir.Ref),
+    queued: []bool,
+
+    /// An aggregate enters the worklist at most once, only after the existing
+    /// ownership and borrowed-selection checks admit it.
+    fn enqueue(self: Taking, ref: ir.Ref) Error!void {
+        if (self.queued[ref.index()]) return;
+        const record = self.f.inst(ref);
+        const kind = self.module.kind(record.ty);
+        if ((kind != .record and kind != .array) or !self.module.managed(record.ty)) return;
+        if (self.marks.borrowed_selection.contains(@backingInt(ref))) return;
+        if (!ownedRecord(self.module, self.f, record) and !self.marks.owned_get.contains(@backingInt(ref))) return;
+        try self.pending.append(self.arena, ref);
+        self.queued[ref.index()] = true;
+    }
+
+    fn markOwned(self: Taking, ref: ir.Ref) Error!void {
+        try self.marks.owned_get.put(self.arena, @backingInt(ref), {});
+        try self.enqueue(ref);
+    }
 
     /// `g = record_get(r, f)` then `update = record_set(r, f, v)`: `g` owns the field (the
     /// record's reference goes to it, and the set drops nothing) when it is the last read
@@ -1520,8 +1772,48 @@ const Taking = struct {
             if (self.borrowsFirst(record, get, user)) continue;
             return;
         }
-        try self.marks.owned_get.put(self.arena, @backingInt(get), {});
+        try self.markOwned(get);
         try self.marks.taken.put(self.arena, @backingInt(update), {});
+    }
+
+    /// An inline array lends its exact selected slot to a nested update, under
+    /// the same path and borrow-window checks used for named record fields.
+    fn takeArrayReplaced(self: Taking, array: ir.Ref, update: ir.Ref) Error!void {
+        const f = self.f;
+        if (!self.module.managed(self.module.compound(f.inst(array).ty).array.elem)) return;
+        const index = f.inst(update).b;
+        const def = if (f.inst(array).op == .param) 0 else self.graph.block_of[array.index()];
+        var reads: std.ArrayList(ir.Ref) = .empty;
+        for (self.graph.uses[array.index()].items) |user| {
+            const inst = f.inst(user);
+            if (inst.op == .array_get and f.resolve(inst.a) == array and arrayIndex(f, index, inst.b) != .different)
+                try addUnique(self.arena, &reads, user);
+        }
+        for (reads.items) |get| {
+            if (arrayIndex(f, index, f.inst(get).b) != .same) continue;
+            if (!try self.takes(get, update, reads.items, def)) continue;
+            if (!try self.arrayWindow(array, get, update, def)) continue;
+            try self.markOwned(get);
+            try self.marks.taken.put(self.arena, @backingInt(update), {});
+            return;
+        }
+    }
+
+    fn arrayWindow(self: Taking, array: ir.Ref, get: ir.Ref, update: ir.Ref, def: u32) Error!bool {
+        const f = self.f;
+        for (self.graph.uses[array.index()].items) |user| {
+            if (user == get or user == update) continue;
+            const inst = f.inst(user);
+            if (inst.op == .array_get and arrayIndex(f, f.inst(get).b, inst.b) == .different) continue;
+            if (inst.op == .phi) {
+                if (try phiAfter(self, array, get, user, def)) return false;
+                continue;
+            }
+            if (!try runsAfter(self.arena, f, self.graph.block_of, get, user, def)) continue;
+            if (self.borrowsFirst(array, get, user)) continue;
+            return false;
+        }
+        return true;
     }
 
     /// `update` replaces a field of `record`, which updates of other fields made from an earlier
@@ -1541,7 +1833,8 @@ const Taking = struct {
             chain[len] = current;
             len += 1;
             const earlier = f.resolve(inst.a);
-            if (!ownedRecord(f, f.inst(earlier)) and !self.marks.owned_get.contains(@backingInt(earlier))) return;
+            if (self.marks.borrowed_selection.contains(@intCast(earlier.index()))) return;
+            if (!ownedRecord(self.module, f, f.inst(earlier)) and !self.marks.owned_get.contains(@backingInt(earlier))) return;
             const def_block = if (f.inst(earlier).op == .param) 0 else self.graph.block_of[earlier.index()];
             var reads: std.ArrayList(ir.Ref) = .empty;
             for (self.graph.uses[earlier.index()].items) |user| {
@@ -1551,7 +1844,7 @@ const Taking = struct {
             for (reads.items) |get| {
                 if (!try self.takes(get, update, reads.items, def_block)) continue;
                 if (!try self.clearThrough(.{ .earlier = earlier, .get = get, .update = update, .chain = chain[0..len] })) continue;
-                try self.marks.owned_get.put(self.arena, @backingInt(get), {});
+                try self.markOwned(get);
                 try self.marks.taken.put(self.arena, @backingInt(update), {});
                 return;
             }
@@ -1709,14 +2002,14 @@ const Taking = struct {
             if (self.module.managed(field) and n != 1) return;
         }
         for (self.graph.uses[record.index()].items) |user| {
-            if (self.module.managed(f.inst(user).ty)) try self.marks.owned_get.put(self.arena, @backingInt(user), {});
+            if (self.module.managed(f.inst(user).ty)) try self.markOwned(user);
         }
         try self.marks.emptied.put(self.arena, @backingInt(record), {});
     }
 };
 
 /// Whether every path from the entry block to `target` passes block `through`.
-pub fn dominatesBlock(arena: std.mem.Allocator, f: *const ir.Function, through: u32, target: u32) Error!bool {
+pub fn dominatesBlock(arena: std.mem.Allocator, f: *const ir.Function, through: u32, target: u32) std.mem.Allocator.Error!bool {
     if (through == 0) return true;
     const seen = try arena.alloc(bool, f.blocks.items.len);
     @memset(seen, false);
@@ -1757,7 +2050,7 @@ fn reachesOrTrapsBlock(arena: std.mem.Allocator, f: *const ir.Function, from: u3
 /// Whether `op` reads a part of its first operand that borrows from it (§5).
 fn readsPart(op: ir.Op) bool {
     return switch (op) {
-        .list_get, .list_get_field, .record_get, .union_payload, .box_get => true,
+        .list_get, .list_get_field, .record_get, .array_get, .union_payload, .box_get => true,
         else => false,
     };
 }
@@ -1812,11 +2105,26 @@ fn blockReachable(arena: std.mem.Allocator, f: *const ir.Function, from: u32, ta
     return false;
 }
 
+/// An unresolved pair may alias: only exact SSA identity or two constants prove it.
+fn arrayIndex(f: *const ir.Function, left: ir.Ref, right: ir.Ref) enum { same, different, unknown } {
+    const a = f.resolve(left);
+    const b = f.resolve(right);
+    if (a == b) return .same;
+    const x = f.inst(a);
+    const y = f.inst(b);
+    if (x.op != .iconst or y.op != .iconst or x.ty != y.ty) return .unknown;
+    return if (x.data == y.data) .same else .different;
+}
+
 /// Whether a record value is owned where it is defined: built, updated, joined,
 /// returned by a call, or a `mut` parameter.
-fn ownedRecord(f: *const ir.Function, record: ir.Inst) bool {
+fn ownedRecord(module: *const ir.Module, f: *const ir.Function, record: ir.Inst) bool {
+    if (borrowedItem(module, f, record) != null) return false;
+    if ((@import("borrowed_provider.zig").call(module, f, record) catch null) != null) return false;
+    if ((selections.call(module, f, record) catch null) != null) return false;
     return switch (record.op) {
-        .record_make, .record_set, .phi, .call, .union_take, .box_take => true,
+        // Indirect internal calls use the same owned result/writeback ABI as direct calls.
+        .record_make, .record_set, .array_set, .phi, .call, .call_indirect, .union_take, .box_take => true,
         .param => ownedParameter(f.signature, record.data),
         else => false,
     };

@@ -1,0 +1,77 @@
+fn main #0 params=0 ret=i64 cabi=false host=false
+  local %0 child: Option<Row> mut
+  local %1 <collection>: bool mut
+  local %2 <collection>: Row mut
+  local %3 <collection>: Row mut
+  local %4 <collection>: i64 mut
+  local %5 <collection>: Row mut
+  block
+    initialize %0
+      variant : Option<Row> tag=1
+        record : Row
+          field .0
+            integer : i64 1
+    branch
+      unary : bool not
+        block_value : bool
+          block
+            match borrowed=false
+              local : Option<Row> %0
+              arm tag=1
+                initialize %1
+                  boolean : bool false
+              arm tag=0
+                initialize %1
+                  boolean : bool true
+          local : bool %1
+      block
+        discard
+          block_value : unit
+            block
+              initialize %4
+                integer : i64 20
+              initialize %3
+                block_value : Row
+                  block
+                    match borrowed=false
+                      local : Option<Row> %0
+                      arm tag=1 bind=%2
+                        block
+                      arm tag=0
+                        assertion invalidated Option narrowing
+                          boolean : bool false
+                  local : Row %2
+              initialize %3
+                block_value : Row
+                  block
+                    match borrowed=false
+                      local : Option<Row> %0
+                      arm tag=1 bind=%2
+                        block
+                      arm tag=0
+                        assertion invalidated Option narrowing
+                          boolean : bool false
+                  local : Row %2
+              assign %0
+                variant : Option<Row> tag=1
+                  update : Row
+                    local : Row %3
+                    field .0
+                      local : i64 %4
+            unit : unit ...
+        ret
+          binary : i64 sub
+            field : i64 .0
+              block_value : Row
+                block
+                  match borrowed=false
+                    local : Option<Row> %0
+                    arm tag=1 bind=%5
+                      block
+                    arm tag=0
+                      assertion invalidated Option narrowing
+                        boolean : bool false
+                local : Row %5
+            integer : i64 20
+    ret
+      integer : i64 1

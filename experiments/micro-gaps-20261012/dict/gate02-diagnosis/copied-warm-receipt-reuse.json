@@ -1,0 +1,31 @@
+{
+  "note": "These legacy per-root directory JSON files retain original gate-02 timestamps; current together/in-process executions do not rewrite them. They demonstrate original warm producer reuse, not private per-run work counts. Coverage is the 871 copied test receipts, not all 1579 tests.",
+  "summary": {
+    "status": {
+      "passed": 870,
+      "unsupported": 1
+    },
+    "actions": {
+      "('execute', 'verify-facts')": 870,
+      "('refuse', 'unsupported')": 1
+    },
+    "producer_per_root": {
+      "facts.fresh": 541,
+      "facts.reused": 2084,
+      "facts.fallback": 0,
+      "facts.decoded": 2084,
+      "lowering.fresh": 0,
+      "lowering.reused": 2084,
+      "lowering.materialized": 0
+    },
+    "planner_per_root": {
+      "index_nodes": 18369,
+      "index_edges": 17266,
+      "affected_nodes": 45,
+      "closure_nodes": 0,
+      "closure_edges": 0,
+      "reused_tests": 868,
+      "planned_tests": 0
+    }
+  }
+}

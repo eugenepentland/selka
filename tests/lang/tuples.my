@@ -5,25 +5,25 @@ record Label:
 func split_first(text: str, sep: str) -> tuple[str, str]:
     mut at = text.find(sep)
     if at < 0:
-        return text, ""
+        return text.copy(), ""
     return text[0:at], text[at + 1:len(text)]
 
 
 func labelled(pair: tuple[int, str]) -> Label:
-    return Label(pair=pair)
+    return Label(pair=pair.copy())
 
 
 func find(pairs: tuple[int, str][], wanted: int) -> tuple[int, str]?:
     for number, letter in pairs:
         if number == wanted:
-            return Some((number, letter))
+            return Some((number, letter.copy()))
     return None
 
 
 func letter_of(found: tuple[int, str]?) -> str:
     if found is None:
         return ""
-    const number, letter = found
+    const _, letter = found.copy()
     return letter
 
 
@@ -39,14 +39,14 @@ func managed_pair() -> tuple[int, int[]]:
 
 
 func first_or[T](pair: tuple[T, int], fallback: T) -> T:
-    const value, count = pair
+    const value, count = pair.copy()
     if count > 0:
         return value
-    return fallback
+    return fallback.copy()
 
 
 func swap_pair[T](pair: tuple[T, T]) -> tuple[T, T]:
-    const left, right = pair
+    const left, right = pair.copy()
     return right, left
 
 
@@ -79,7 +79,7 @@ public func test_a_tuple_nests_in_a_list_and_in_a_record_field() -> bool:
     if total != 3:
         return False
     mut wrapped = labelled((4, "d"))
-    const number, letter = wrapped.pair
+    const number, letter = wrapped.pair.copy()
     return number == 4 and letter == "d"
 
 
@@ -93,9 +93,9 @@ public func test_an_option_and_a_result_payload_can_be_a_tuple() -> bool:
     mut ok: Result[tuple[int, str], str] = Ok((5, "e"))
     match ok:
         case Ok(pair):
-            const number, letter = pair
+            const number, letter = pair.copy()
             return number == 5 and letter == "e"
-        case Err(message):
+        case Err(_):
             return False
 
 

@@ -1,0 +1,9 @@
+{
+  "completed": [
+    "word_count",
+    "nested_json"
+  ],
+  "cancelled_waiter_pid": 1434224,
+  "reason": "coordinator-authorized checkpoint to load shared two-slot budget; cancelled queued wrapper before compilation",
+  "pending_command": "bash /home/epentland/ai/canopy/mylang-memory-20261012-A06/scripts/build-slot.sh build /home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang build /home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/programs/file_processing/main.my --zig /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --cache-dir /home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/c0-release/cache --release --experimental-zero-rc --counters -o /home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/c0-release/file_processing/release/program --emit-llvm /home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/c0-release/file_processing/release/program.ll "
+}

@@ -1,0 +1,32 @@
+{
+  "v_mut_window/release/build.json": {
+    "raw_sha256": "eaade08d08592531a23913b974f685a500941f1d0643792011a68bbd8ddb382b",
+    "compressed_sha256": "1f08c27067577ccdabbce2d81ec7745b3ae54b1b74ba9001806e3d0c0d8a8354",
+    "raw_bytes": 996
+  },
+  "v_mut_window/release/counts.json": {
+    "raw_sha256": "32f48b2bede4552b02b2e9e3a4911de5376f108424a947a936aa04a24a9b78d9",
+    "compressed_sha256": "071e1a179b40730f1df4da1d3410173daa0ab03f233381152569abda7c17e75e",
+    "raw_bytes": 9350
+  },
+  "v_mut_window/release/run.json": {
+    "raw_sha256": "ba4c8e0c52c445bef6f9c2cb9d9fa78ea21a43a2c94bdde1e1c7a24f0defe4c2",
+    "compressed_sha256": "ec4c4014e78b9aea6b44c825e190233fd580cd6d3c41ce5c95ab42876bab3142",
+    "raw_bytes": 294
+  },
+  "v_snapshot/release/build.json": {
+    "raw_sha256": "16d4937f451e8159569624db085234e762afc7388884108f5bd2f789b77dfc34",
+    "compressed_sha256": "f6cf325646a30867112ed3cbd9ac03200e21f3101d35065ad25203e6e91d8a2b",
+    "raw_bytes": 990
+  },
+  "v_snapshot/release/counts.json": {
+    "raw_sha256": "58dbd445156938f57b69650b19151e943b80db28d36837b3fc60b0d55abb26d9",
+    "compressed_sha256": "816b53be8f83ecf1db01a8d04268c62298cc9e7e0441cf12b894511831893a29",
+    "raw_bytes": 11867
+  },
+  "v_snapshot/release/run.json": {
+    "raw_sha256": "e126cb0bbfb59476449de6366f2c8a9ec1910877fada99bb33837b2d8f0628c8",
+    "compressed_sha256": "1528fe11e8f9db7b43175077829c133d9f54e9220300843819f4a8ddbc99684d",
+    "raw_bytes": 306
+  }
+}

@@ -1,0 +1,5 @@
+func choose() -> str:
+    return min("a" + str(1), "b" + str(2))
+
+func main() -> int:
+    return len(choose())

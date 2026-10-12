@@ -10,11 +10,11 @@ record Tagged:
 
 
 func byte_key(value: Tagged) -> bytes:
-    return value.word
+    return value.word.copy()
 
 
 func mixed_key(value: Tagged) -> tuple[bytes, str, int]:
-    return value.word, "same", 0
+    return value.word.copy(), "same", 0
 
 
 func generic_text[T: integer](value: T) -> str:
@@ -33,7 +33,7 @@ func generic_sorted[T: copy](marker: T) -> bytes[]:
 
 func generic_existing[T: copy](marker: T, values: bytes[]) -> bytes[]:
     _ = marker
-    mut copied = values
+    mut copied = values.copy()
     copied.sort(reverse=True)
     return sorted(copied)
 
@@ -53,7 +53,7 @@ public func test_sorted_bytes_unsigned_prefix_order_and_value_copy() -> bool:
 # spec-case: PY-BYTES-SORT-1
 public func test_sort_bytes_in_place_and_reverse() -> bool:
     mut values = [b"a", b"\xff", b"", b"a"]
-    mut alias = values
+    mut alias = values.copy()
     values.sort()
     return values == [b"", b"a", b"a", b"\xff"] and alias[0] == b"a" and sorted(values, reverse=True)[0] == b"\xff"
 
@@ -75,7 +75,7 @@ public func test_bytes_sort_and_keys_in_generic_body() -> bool:
 # spec: PY-TEXT-TRIM-1
 public func test_charset_is_a_set_empty_set_and_aliases() -> bool:
     mut text = "abévalueéba"
-    mut alias = text
+    mut alias = text.copy()
     return text.strip("abéa") == "value" and text.lstrip("éab") == "valueéba" and text.rstrip("éab") == "abévalue" and text.strip("") == text and alias == text
 
 
@@ -116,7 +116,7 @@ public func test_ranged_affixes_and_overlapping_reverse_search() -> bool:
 
 # spec-case: PY-TEXT-RANGE-1
 public func test_byte_ranges_views_and_constant_receivers() -> bool:
-    mut view = OCTETS.view(1, 5)
+    mut view = OCTETS[1:5]
     return OCTETS.find(b"\xff", 2) == 3 and OCTETS.rindex(b"\xff", 1, 4) == 3 and view.rfind(b"\xff") == 2 and view.count(b"", -100, 100) == 5 and view.endswith(b"a", 1, 4)
 
 

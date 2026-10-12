@@ -1,0 +1,66 @@
+{
+  "base": "3c5d19c74b5e323306d76bcc0fed18f90290d1af",
+  "source_sha256": {
+    "src/core/build_list_methods.zig": "a99c97682478f32812d1fa4c44a42520c43062f26cd77f783ebeaccda2023225",
+    "src/core/runtime/core_rt.c": "83449a8fdd78d5f4c23147b709b848929ae1e6ae4c3e0dcdfe6f806a70adc361",
+    "src/core/zero_rc.zig": "6ec5221f6ec43b53721b50aa73d176b1675fcfbeadada26532881e9b2676edb6",
+    "src/core/a02_list_methods_fixture.my": "378f3e1070e4cc11d227ab271b94dd87b9b6793d0c2a0ac5f33cd4e8fa2e1302",
+    "src/core/a02_list_methods_test.zig": "f716b3d42a2497054da15767dafc341be5cc86b2fa51b5ac3aa99a8e4b311ebe",
+    "src/core/build.zig": "2744f5e7e1c35c002556a2478367ac165d6edb666ce9d486022ce4a890621728",
+    "src/core/own.zig": "7a9765df601d167e62564249fa1dbde1893b64c68211ec631c72d4387287dd06",
+    "src/core/single_owner.zig": "dee8c1342e5c01be33726b5dfac12e1c90a7205a0484a27b57235614db4895ed",
+    "src/core/emit_llvm.zig": "b21826d7b196ebf3f84ed9cc8f100adbec8275ba182c37c8d83cae7f8b049f6c",
+    "src/core/verify_ir.zig": "ebf6ee88d460bbf804f0661716555685e821681d5107a60f7e7b3ba448b8a618"
+  },
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "components": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/libexec/mylang/components",
+  "component_boundary": "Support5 staged compiler components are legacy interim; this is guest ownership qualification, not an RC-free installed package claim",
+  "steps": [
+    {
+      "name": "build",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build",
+        "core-test-binary",
+        "-Dtest-filter=zero RC A02 list methods",
+        "-j4",
+        "--maxrss",
+        "8589934592",
+        "--prefix",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/install"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 5.945993138011545,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "test",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/nested-extension-validation/install/focus/core-tests",
+        "--guardian-filter=zero RC A02 list methods"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 6.303422894096002,
+      "stdout": "",
+      "stderr": "guardian/test: 1 test(s) selected by filter: \"zero RC A02 list methods\"\nguardian/test: SLOW  6.29s  a02_list_methods_test.test.zero RC A02 list methods move nested wide recursive children and preserve traps\nAll 1 tests passed.\nguardian/test: test wall 6.29s; slowest over 50ms:\nguardian/test:   6.29s  a02_list_methods_test.test.zero RC A02 list methods move nested wide recursive children and preserve traps\nguardian/test: PASS \u2014 1 passed\nguardian/test: RESULT {\"passed\":1,\"failed\":0,\"skipped\":0}\n"
+    }
+  ],
+  "complete": true,
+  "test_binary_sha256": "761dd5ea856e169a54b1121d417d2c9985f1a3e3ce51ca0954f25ee43cf9fdbc",
+  "pass": true,
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/598f65078c8aa186bd4b2b4137657971/mylang",
+    "sha256": "adfbb043082b12264701664274e93efb642b4c410bef89f88fb4b1fb9592da94",
+    "options": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/14ee327e78dbf4a407b6c480d446e500/options.zig",
+    "options_sha256": "97e021b9a6e3c31290946d227aba6443a82b9b34e2305735c0d8aa741c60fde8"
+  },
+  "registered_runner_sha256": "5254c08c93c43036bee993d4b8056a1c70b73c7a51ea65dfed273d86d60e8ffa",
+  "component_manifest_sha256": {
+    "cache-plan-d69b536c904f109ef2d292ac376ce3ecb811da91db6e051b2a49a176a1c31840": "d69b536c904f109ef2d292ac376ce3ecb811da91db6e051b2a49a176a1c31840",
+    "cache-plan.json": "f42692f375d51598bd85f8c81dc27764f22a9e2d2792ac74676780130a663c61",
+    "test-index-dbd9fea31ee72550200d6f21c4a42dcfadf00321e9697eb9d4cc21cdbfa99a27": "dbd9fea31ee72550200d6f21c4a42dcfadf00321e9697eb9d4cc21cdbfa99a27",
+    "test-index.json": "45db0752a31fc5ba1ce20cf35675bb9a0a8637717ba685b5f3a33fc63d27cb87"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "files": {
+    "src/core/aggregate_provider.zig": "010ff48b1dbf671ba49baf9a4c475ad00f7266d9e85eaca9e42024339abfaca2",
+    "src/core/marker_validation.zig": "6740e1e70d0484a1a9b4d327c2572f9cd8c03378327630ee5d57bda5e18d7cf1",
+    "src/core/zero_rc_test.zig": "3be04a8e35cbd24370da128cccb3c9577b8d620328512827044eba6260c10b8e"
+  },
+  "post_focused_change": "Remove unused hasMarker discovery query only"
+}

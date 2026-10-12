@@ -1,0 +1,3 @@
+import hashlib,json,os,subprocess
+from pathlib import Path
+p=Path(__file__).resolve().parent;w=Path.cwd()/'.tmp/memory-closeout/A02/retirement-c749ad5a9/native';argv=[os.environ['ZIG'],'cc','-O2','-std=c11','-pthread','-DMYL_ZERO_RC=1','-I',str(w),'-c',str(p/'count-member-negative.c'),'-o',str(w/'forbidden-count.o')];r=subprocess.run(argv,capture_output=True,text=True);result={'argv':argv,'status':r.returncode,'stdout':r.stdout,'stderr':r.stderr,'runtime_sha256':hashlib.sha256((w/'core_rt.c').read_bytes()).hexdigest(),'pass':r.returncode!=0 and 'no member named' in r.stderr and 'count' in r.stderr};(p/'count-member-negative.json').write_text(json.dumps(result,indent=2)+'\n');print(result['pass']);raise SystemExit(0 if result['pass'] else 1)

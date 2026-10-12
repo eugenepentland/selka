@@ -1,0 +1,57 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "overlay": false,
+  "check_only": true,
+  "harness_sha256": "794403b035c7a4a72c69281ceb5de72bcff79819087f0aaad2850aa4c43bec18",
+  "cases": {
+    "cache_record": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/cache_record.my",
+        "original_sha256": "9bd5e272720a3ae780c7a387b3bbf51810bcfe3efc238dea5b4ff09d00fcc996",
+        "source_sha256": "9bd5e272720a3ae780c7a387b3bbf51810bcfe3efc238dea5b4ff09d00fcc996",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-check-independent/cache_record/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-check-independent/cache"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "9bd5e272720a3ae780c7a387b3bbf51810bcfe3efc238dea5b4ff09d00fcc996"
+        }
+      }
+    },
+    "network_denied": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/network_denied.my",
+        "original_sha256": "2ea76a80a1c18726df21bacaf7ff0a5f4fff17a170c886988479fc7e34861650",
+        "source_sha256": "2ea76a80a1c18726df21bacaf7ff0a5f4fff17a170c886988479fc7e34861650",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-check-independent/network_denied/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/C0-check-independent/cache"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/network.my:71:12: error[E_SINGLE_OWNER_UNSUPPORTED]: this expression is outside the single-owner prototype\n      return acquire_resource[Connected](net, request)\n             ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "main.my": "2ea76a80a1c18726df21bacaf7ff0a5f4fff17a170c886988479fc7e34861650"
+        }
+      }
+    }
+  },
+  "failures": 1
+}

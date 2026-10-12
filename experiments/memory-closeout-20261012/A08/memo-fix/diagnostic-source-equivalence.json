@@ -1,0 +1,8 @@
+{
+  "reason": "Qualify.Run gained explicit build-mode selection for native matrix; generate() is unchanged. All frozen214 source identities and six expected outputs rechecked equal.",
+  "previous_generator_sha256": "acaf73543531bd65ce3939adc7c38af5d2b5cb35c9d652bcad623fa30f7b2c8b",
+  "generator_sha256": "58ae6e17892ec0afc01009deb80270833dd08df1f94e45a797dbaf2eeb13bac3",
+  "manifest_sha256": "22358d7536d596ee542a738012888cfb5df5506d859b662b0598675c12b9edcb",
+  "cases": 6,
+  "source_files": 214
+}

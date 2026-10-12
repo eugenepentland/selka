@@ -1,0 +1,16 @@
+b14:
+  %dictstore.53 = mul i64 %v47, 16
+  %dictstore.54 = add i64 %dictstore.53, 40
+  %dictstore.55 = getelementptr inbounds i8, ptr %v45, i64 %dictstore.54
+  store i64 %v56, ptr %dictstore.55, align 8, !tbaa !7
+  %v63 = getelementptr inbounds i8, ptr %v45, i64 0
+  br label %b16
+b15:
+  %v119 = call ptr @myl_core_owned_octets_copy(ptr %v42), !dbg !1000013
+  store ptr %v119, ptr %stack.56, align 8, !tbaa !7
+  %dicthash.57 = call i64 @myl.dict.0.hash(ptr %v119)
+  %v120 = call i64 @myl.dict.0.find(ptr %v45, ptr %stack.56, i64 %dicthash.57)
+  store ptr %v119, ptr %stack.58, align 8, !tbaa !7
+  store i64 %v56, ptr %stack.59, align 8, !tbaa !7
+  %v65 = call ptr @myl_core_dict_insert(ptr %v45, i64 %v120, ptr %stack.58, ptr %stack.59, i1 false)
+  br label %b16

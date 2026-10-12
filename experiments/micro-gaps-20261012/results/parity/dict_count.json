@@ -1,0 +1,916 @@
+{
+  "schema": "micro-ownership-cell-v1",
+  "spec": {
+    "cell": "micro-gaps/parity/dict_count",
+    "case": "dict_count",
+    "protocol": "fixed",
+    "expected_stdout": "779967\n",
+    "arms": {
+      "baseline-zero-rc": {
+        "case": "dict_count",
+        "arm": "baseline-zero-rc",
+        "kind": "runtime",
+        "binary": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc",
+        "sha256": "801e3d0d1dba954e51c426b4e16fbe7dcfbce57c5be379bac07c61b368cf1c15",
+        "status": "ok",
+        "source": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/dict_count.my",
+        "flags": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/dict_count.my",
+          "--release",
+          "--experimental-zero-rc",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/cache/dict_count-zero-rc"
+        ],
+        "expected": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/dict_count.expected"
+      },
+      "mylang-zero-rc": {
+        "case": "dict_count",
+        "arm": "mylang-zero-rc",
+        "kind": "runtime",
+        "binary": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-runtime",
+        "sha256": "77d8c4f258147f6757c3293286a5d6efad03057cae1e1eb03bca2799a087af39",
+        "status": "ok",
+        "source": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/dict_count.my",
+        "flags": [
+          "--release",
+          "--experimental-zero-rc",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-runtime",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/cache/parity-dict_count-runtime"
+        ],
+        "expected": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/dict_count.expected",
+        "source_sha256": "85f4031385261de61c57208a1ed38dbe65a5018f46338eeb16c675439fe49bec",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/dict_count.my",
+          "--release",
+          "--experimental-zero-rc",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-runtime",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/cache/parity-dict_count-runtime"
+        ],
+        "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/coordinator/build-logs/parity-dict_count-runtime.log",
+        "returncode": 0,
+        "elapsed_with_admission_seconds": 21.117571335984394
+      }
+    },
+    "counted": {
+      "baseline-zero-rc": {
+        "case": "dict_count",
+        "arm": "baseline-zero-rc",
+        "kind": "counted",
+        "binary": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc-count",
+        "sha256": "7f7d600a11374038de4282242f01155934c4929eabcbfeebcb07d600237f0f3a",
+        "status": "ok",
+        "source": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/dict_count.my",
+        "flags": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/dict_count.my",
+          "--release",
+          "--experimental-zero-rc",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc-count",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/cache/dict_count-zero-rc-count"
+        ],
+        "expected": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/dict_count.expected"
+      },
+      "mylang-zero-rc": {
+        "case": "dict_count",
+        "arm": "mylang-zero-rc",
+        "kind": "counted",
+        "binary": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-counted",
+        "sha256": "27c7f9773ea7991cbc87fcd18b6cfd3f68bff7a3670cf98a054df176bd7ede8a",
+        "status": "ok",
+        "source": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/dict_count.my",
+        "flags": [
+          "--release",
+          "--experimental-zero-rc",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-counted",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/cache/parity-dict_count-counted",
+          "--counters"
+        ],
+        "expected": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/dict_count.expected",
+        "source_sha256": "85f4031385261de61c57208a1ed38dbe65a5018f46338eeb16c675439fe49bec",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/dict_count.my",
+          "--release",
+          "--experimental-zero-rc",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-counted",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/cache/parity-dict_count-counted",
+          "--counters"
+        ],
+        "diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/coordinator/build-logs/parity-dict_count-counted.log",
+        "returncode": 0,
+        "elapsed_with_admission_seconds": 15.575142714893445
+      }
+    },
+    "files": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/bench/parity/micro/MICRO.md",
+      "/home/epentland/ai/canopy/mylang-memory-20261012/bench/parity/micro/common.zig",
+      "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-ownership-20261012/parity/handoff.json",
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/bench/parity/micro/dict_count.rs",
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/bench/parity/micro/dict_count.zig",
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/dict_count.expected",
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/dict_count.my",
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/original/dict_count.my",
+      "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/coordinator/builds.json",
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/bin/mylang",
+      "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/coordinator/build_candidate.py"
+    ],
+    "warmups": 2,
+    "rounds": 9,
+    "rss_rounds": 3,
+    "unit": "one full canonical kernel execution",
+    "baseline_cell": "parity/dict_count"
+  },
+  "started_utc": "2026-10-12T14:58:29.366847+00:00",
+  "identities": {
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-counted": "27c7f9773ea7991cbc87fcd18b6cfd3f68bff7a3670cf98a054df176bd7ede8a",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-runtime": "77d8c4f258147f6757c3293286a5d6efad03057cae1e1eb03bca2799a087af39",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/bin/mylang": "ec423f5ff7dba37f5d39489fec12b9c851754c0ad69125fc8aaafe85e31ea44e",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/bench/parity/micro/MICRO.md": "39f36859febb7dec9c8d24b89eef74cbe8d0d335bfc9a743f7554a0078cb6863",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/bench/parity/micro/common.zig": "ecd17fc37b07935bdb749dea072f4d2fe7f9141635887285e339a2b265d70552",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/coordinator/build_candidate.py": "c5df4bb701d7fabe048068217ede5596c69e225ba5636e1c8ce14f5800f146a1",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/coordinator/builds.json": "4c38c05b712932a3433e401e26fcd6923b3545042679efa3ab8441e5f5540e8f",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/tools/measure.py": "3b46106c5b8b2548bfddb9d00293bb024f4307d2f0afc2b65d79a8408be7b304",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-ownership-20261012/parity/handoff.json": "79dbf924d27ee8514c43dc3467147cec583b4da2bc769a7d90191e47c58bd57f",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc": "801e3d0d1dba954e51c426b4e16fbe7dcfbce57c5be379bac07c61b368cf1c15",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc-count": "7f7d600a11374038de4282242f01155934c4929eabcbfeebcb07d600237f0f3a",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/bench/parity/micro/dict_count.rs": "adb850c7af66caa8dfa8737589e7c10acd1451a4f31b0709952e0ea05a47536f",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/bench/parity/micro/dict_count.zig": "d0b6a32d08f2594ab93dbe9be0de0c99c963ca927d21dba4ceee5caa8b0df01d",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/dict_count.expected": "4561c81a11a51b8dc19629f530cf4b4d5f27edb937a404d61e9c1ecea9ad7a04",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/dict_count.my": "85f4031385261de61c57208a1ed38dbe65a5018f46338eeb16c675439fe49bec",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/original/dict_count.my": "a131ce57bad43436a65ae39e614bc713baf7e0efed6207070b3239c4d0a33167",
+    "experiments/micro-gaps-20261012/specs-parity/dict_count.json": "925fbf9f661a9d3fc4be5d51d0636a53fd71c39f70e770d11f77e0fc350dd578"
+  },
+  "cpu": 8,
+  "timeout_seconds": 120,
+  "loadavg_before": [
+    1.51318359375,
+    3.8603515625,
+    6.1689453125
+  ],
+  "environment": {
+    "GOMAXPROCS": "1",
+    "GOGC": "100",
+    "GOMEMLIMIT": "off",
+    "GOAMD64": "v1",
+    "GOFLAGS": "",
+    "GOEXPERIMENT": "",
+    "GOTOOLCHAIN": "local"
+  },
+  "arm_status": {
+    "baseline-zero-rc": {
+      "status": "ok"
+    },
+    "mylang-zero-rc": {
+      "status": "ok"
+    }
+  },
+  "pilots": [],
+  "warmups": [
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 51177047,
+      "phase": "warmups",
+      "round": -2
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 14368194,
+      "phase": "warmups",
+      "round": -2
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 14722487,
+      "phase": "warmups",
+      "round": -1
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 50216417,
+      "phase": "warmups",
+      "round": -1
+    }
+  ],
+  "samples": [
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 51168355,
+      "phase": "samples",
+      "round": 0
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 14170932,
+      "phase": "samples",
+      "round": 0
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 14094624,
+      "phase": "samples",
+      "round": 1
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 50543156,
+      "phase": "samples",
+      "round": 1
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 51449580,
+      "phase": "samples",
+      "round": 2
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 14091890,
+      "phase": "samples",
+      "round": 2
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 14042871,
+      "phase": "samples",
+      "round": 3
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 51901837,
+      "phase": "samples",
+      "round": 3
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 51722457,
+      "phase": "samples",
+      "round": 4
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 15358959,
+      "phase": "samples",
+      "round": 4
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 14668435,
+      "phase": "samples",
+      "round": 5
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 51670149,
+      "phase": "samples",
+      "round": 5
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 51398411,
+      "phase": "samples",
+      "round": 6
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 14564163,
+      "phase": "samples",
+      "round": 6
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 14950208,
+      "phase": "samples",
+      "round": 7
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 51929157,
+      "phase": "samples",
+      "round": 7
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 51407893,
+      "phase": "samples",
+      "round": 8
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 14083047,
+      "phase": "samples",
+      "round": 8
+    }
+  ],
+  "rss": [
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/usr/bin/time",
+        "-f",
+        "%M",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/work/tmp9rgkjgbz",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 51807661,
+      "peak_rss_kib": 1864,
+      "phase": "rss",
+      "round": 0
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/usr/bin/time",
+        "-f",
+        "%M",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/work/tmp1dh6cgb8",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 14177609,
+      "peak_rss_kib": 1864,
+      "phase": "rss",
+      "round": 0
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/usr/bin/time",
+        "-f",
+        "%M",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/work/tmp5ld_uix_",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 14763486,
+      "peak_rss_kib": 1864,
+      "phase": "rss",
+      "round": 1
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/usr/bin/time",
+        "-f",
+        "%M",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/work/tmpz4rb1jz3",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 52204007,
+      "peak_rss_kib": 1864,
+      "phase": "rss",
+      "round": 1
+    },
+    {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/usr/bin/time",
+        "-f",
+        "%M",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/work/tmpxxawctwa",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 51878654,
+      "peak_rss_kib": 1860,
+      "phase": "rss",
+      "round": 2
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/usr/bin/time",
+        "-f",
+        "%M",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/work/tmpuft6k3e4",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-runtime"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 14403892,
+      "peak_rss_kib": 1864,
+      "phase": "rss",
+      "round": 2
+    }
+  ],
+  "counted": {
+    "baseline-zero-rc": {
+      "arm": "baseline-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc-count"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 78657094,
+      "counter_path": "experiments/micro-gaps-20261012/results/parity/dict_count.baseline-zero-rc.counters.json",
+      "counter_sha256": "56e5ba26513027dc9b6ebe3e6fc1937a8fa0bab1a7824077e81bb51c8261bbb2",
+      "metrics": {
+        "allocs": 2003014,
+        "reallocs": 3,
+        "alloc_bytes": 128227120,
+        "realloc_added_bytes": 7168,
+        "peak_live_bytes": 152720,
+        "live_bytes_at_exit": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "cumulative_allocated_bytes": 128234288,
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0,
+        "release_unique": 2000002,
+        "rc_events": 0,
+        "direct_destructions": 2000002
+      }
+    },
+    "mylang-zero-rc": {
+      "arm": "mylang-zero-rc",
+      "iterations": 1,
+      "status": "ok",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-counted"
+      ],
+      "exit_status": 0,
+      "stdout": "779967\n",
+      "stderr": "",
+      "process_wall_ns": 17282360,
+      "counter_path": "experiments/micro-gaps-20261012/results/parity/dict_count.mylang-zero-rc.counters.json",
+      "counter_sha256": "79c3665660a8e9beb74aea67b1f890ad51ab909b379680b6282b935985c5188d",
+      "metrics": {
+        "allocs": 4014,
+        "reallocs": 3,
+        "alloc_bytes": 291120,
+        "realloc_added_bytes": 7168,
+        "peak_live_bytes": 152656,
+        "live_bytes_at_exit": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "cumulative_allocated_bytes": 298288,
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0,
+        "release_unique": 1002,
+        "rc_events": 0,
+        "direct_destructions": 1002
+      }
+    }
+  },
+  "iterations": 1,
+  "expected": "779967\n",
+  "summary": {
+    "baseline-zero-rc": {
+      "complete": true,
+      "status": {
+        "status": "ok"
+      },
+      "kernel_ns_per_iteration": null,
+      "process_wall_ns": {
+        "median": 51449580,
+        "min": 50543156,
+        "max": 51929157
+      },
+      "peak_rss_kib": {
+        "median": 1864,
+        "min": 1860,
+        "max": 1864
+      }
+    },
+    "mylang-zero-rc": {
+      "complete": true,
+      "status": {
+        "status": "ok"
+      },
+      "kernel_ns_per_iteration": null,
+      "process_wall_ns": {
+        "median": 14170932,
+        "min": 14042871,
+        "max": 15358959
+      },
+      "peak_rss_kib": {
+        "median": 1864,
+        "min": 1864,
+        "max": 1864
+      }
+    }
+  },
+  "identities_after": {
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-counted": "27c7f9773ea7991cbc87fcd18b6cfd3f68bff7a3670cf98a054df176bd7ede8a",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/parity-dict_count-runtime": "77d8c4f258147f6757c3293286a5d6efad03057cae1e1eb03bca2799a087af39",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install/bin/mylang": "ec423f5ff7dba37f5d39489fec12b9c851754c0ad69125fc8aaafe85e31ea44e",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/bench/parity/micro/MICRO.md": "39f36859febb7dec9c8d24b89eef74cbe8d0d335bfc9a743f7554a0078cb6863",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/bench/parity/micro/common.zig": "ecd17fc37b07935bdb749dea072f4d2fe7f9141635887285e339a2b265d70552",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/coordinator/build_candidate.py": "c5df4bb701d7fabe048068217ede5596c69e225ba5636e1c8ce14f5800f146a1",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/coordinator/builds.json": "4c38c05b712932a3433e401e26fcd6923b3545042679efa3ab8441e5f5540e8f",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-gaps-20261012/tools/measure.py": "3b46106c5b8b2548bfddb9d00293bb024f4307d2f0afc2b65d79a8408be7b304",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-ownership-20261012/parity/handoff.json": "79dbf924d27ee8514c43dc3467147cec583b4da2bc769a7d90191e47c58bd57f",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc": "801e3d0d1dba954e51c426b4e16fbe7dcfbce57c5be379bac07c61b368cf1c15",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc-count": "7f7d600a11374038de4282242f01155934c4929eabcbfeebcb07d600237f0f3a",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/bench/parity/micro/dict_count.rs": "adb850c7af66caa8dfa8737589e7c10acd1451a4f31b0709952e0ea05a47536f",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/bench/parity/micro/dict_count.zig": "d0b6a32d08f2594ab93dbe9be0de0c99c963ca927d21dba4ceee5caa8b0df01d",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/dict_count.expected": "4561c81a11a51b8dc19629f530cf4b4d5f27edb937a404d61e9c1ecea9ad7a04",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/dict_count.my": "85f4031385261de61c57208a1ed38dbe65a5018f46338eeb16c675439fe49bec",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/original/dict_count.my": "a131ce57bad43436a65ae39e614bc713baf7e0efed6207070b3239c4d0a33167",
+    "experiments/micro-gaps-20261012/specs-parity/dict_count.json": "925fbf9f661a9d3fc4be5d51d0636a53fd71c39f70e770d11f77e0fc350dd578"
+  },
+  "cpu_ticks_before": {
+    "cpu0": {
+      "total": 184131292,
+      "idle": 143932639
+    },
+    "cpu1": {
+      "total": 186105652,
+      "idle": 155118208
+    },
+    "cpu2": {
+      "total": 185369685,
+      "idle": 155222860
+    },
+    "cpu3": {
+      "total": 186217872,
+      "idle": 169260147
+    },
+    "cpu4": {
+      "total": 185659139,
+      "idle": 120363246
+    },
+    "cpu5": {
+      "total": 186487480,
+      "idle": 138610754
+    },
+    "cpu6": {
+      "total": 185673440,
+      "idle": 120057039
+    },
+    "cpu7": {
+      "total": 186518730,
+      "idle": 139753868
+    },
+    "cpu8": {
+      "total": 185390524,
+      "idle": 142309722
+    },
+    "cpu9": {
+      "total": 186484960,
+      "idle": 157601339
+    },
+    "cpu10": {
+      "total": 185432545,
+      "idle": 154223125
+    },
+    "cpu11": {
+      "total": 186364615,
+      "idle": 167010774
+    },
+    "cpu12": {
+      "total": 185924275,
+      "idle": 153538085
+    },
+    "cpu13": {
+      "total": 185962131,
+      "idle": 156092500
+    },
+    "cpu14": {
+      "total": 186015519,
+      "idle": 157075038
+    },
+    "cpu15": {
+      "total": 186128251,
+      "idle": 157292690
+    },
+    "cpu16": {
+      "total": 186211408,
+      "idle": 151727324
+    },
+    "cpu17": {
+      "total": 186196818,
+      "idle": 154239845
+    },
+    "cpu18": {
+      "total": 186204136,
+      "idle": 155283585
+    },
+    "cpu19": {
+      "total": 186272488,
+      "idle": 155599545
+    }
+  },
+  "cpu_ticks_after": {
+    "cpu0": {
+      "total": 184131410,
+      "idle": 143932756
+    },
+    "cpu1": {
+      "total": 186105773,
+      "idle": 155118329
+    },
+    "cpu2": {
+      "total": 185369806,
+      "idle": 155222981
+    },
+    "cpu3": {
+      "total": 186217993,
+      "idle": 169260268
+    },
+    "cpu4": {
+      "total": 185659261,
+      "idle": 120363366
+    },
+    "cpu5": {
+      "total": 186487602,
+      "idle": 138610875
+    },
+    "cpu6": {
+      "total": 185673561,
+      "idle": 120057158
+    },
+    "cpu7": {
+      "total": 186518851,
+      "idle": 139753989
+    },
+    "cpu8": {
+      "total": 185390644,
+      "idle": 142309725
+    },
+    "cpu9": {
+      "total": 186485081,
+      "idle": 157601460
+    },
+    "cpu10": {
+      "total": 185432665,
+      "idle": 154223245
+    },
+    "cpu11": {
+      "total": 186364736,
+      "idle": 167010895
+    },
+    "cpu12": {
+      "total": 185924395,
+      "idle": 153538205
+    },
+    "cpu13": {
+      "total": 185962251,
+      "idle": 156092620
+    },
+    "cpu14": {
+      "total": 186015639,
+      "idle": 157075158
+    },
+    "cpu15": {
+      "total": 186128371,
+      "idle": 157292810
+    },
+    "cpu16": {
+      "total": 186211529,
+      "idle": 151727444
+    },
+    "cpu17": {
+      "total": 186196939,
+      "idle": 154239966
+    },
+    "cpu18": {
+      "total": 186204257,
+      "idle": 155283704
+    },
+    "cpu19": {
+      "total": 186272609,
+      "idle": 155599666
+    }
+  },
+  "loadavg_after": [
+    1.51318359375,
+    3.8603515625,
+    6.1689453125
+  ],
+  "finished_utc": "2026-10-12T14:58:30.581957+00:00"
+}

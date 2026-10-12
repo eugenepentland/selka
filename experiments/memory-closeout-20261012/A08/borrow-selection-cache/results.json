@@ -1,0 +1,32 @@
+{
+  "base_commit": "006e2355a",
+  "dependency": "2cb87014c5345593904d0bd9e1240c4a39aefb32",
+  "local_dependency_commit": "1e2a8b976",
+  "status": "four_focused_tests_pass_without_allocator_leaks",
+  "tests_passed": 4,
+  "tests_failed": 0,
+  "compiler_allocator_leaks": 0,
+  "raw_log": "validation.log",
+  "test_source_sha256": "d0720f6a0004fed0f4fd6fede90e7f5f147bde0b225e6a6a4cbfb4be0a7a1b4d",
+  "root_cause": "Initial marker-local proof missed phi/predecessor association. Wrapper fixed it; a subsequent backing-allocator leak was fixed by a temporary verifier arena. Both intermediate failures retained; final tests pass.",
+  "native_cli_fixture": "Prepared but unexecuted; borrowed_cache.py has help-only validation.",
+  "scratch_fix": "522e66671",
+  "local_scratch_fix": "4536cb777428b07ea898090f37c9325ddc8cde35",
+  "new_A08_tests": 3,
+  "existing_A07_shared_root_chain_tests": 1,
+  "source_hashes": {
+    "src/core/a08_borrow_cache_test.zig": "d0720f6a0004fed0f4fd6fede90e7f5f147bde0b225e6a6a4cbfb4be0a7a1b4d",
+    "src/core/root_test.zig": "172327b3cbd5487f893693af4e7b7ffeac4e5dea89e5fb39a0a63a5350c91949",
+    "src/core/marker_validation.zig": "6282a149bc54633aa43bc9f8dfc0c5437b77bbc8e35a7846baea40955df48255",
+    "src/core/optimization_cache.zig": "d3eb93d72d0cbe588baed2c6e3fb0ea348c9e381118941005bf7d3b22c28e759"
+  },
+  "command": "scripts/build-slot.sh build \"$ZIG\" build test-core -Dtest-filter=\"borrowed selection\" -Dcomponent-owned-compiler-pin=A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json -Dcomponent-seed-source=A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar -j\"$MYLANG_DEV_JOBS\" --maxrss \"$MYLANG_DEV_MAXRSS\"",
+  "component_boundary": "MYLANG_COMPONENT_CACHE selects A10 independently source-pinned Support6 RF compiler and actual owned components; immutable historical seed unchanged.",
+  "guardian": {
+    "status": "passed",
+    "checks": 88,
+    "log": "guardian-pass.log"
+  },
+  "guardian_first_attempt": "Allocator-hygiene rejected a helper hardcoding testing allocator; fixed by passing backing allocator explicitly from the tests. Four focused tests rerun and pass without leaks.",
+  "commit": "46a42d5de1d4988ceffd380bc85032d6b658d9d2"
+}

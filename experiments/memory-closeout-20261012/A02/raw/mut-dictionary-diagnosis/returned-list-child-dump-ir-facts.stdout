@@ -1,0 +1,128 @@
+fn main(cap) -> i64
+b0:
+  %2 = list_new list[dict[i64, i64]] 1:i64
+  %4 = dict_new dict[i64, i64] 1:u64
+  %7 = dict_find i64 %4, 1:i64
+  %9 = cmp.ge bool %7, 0:i64
+  branch %9, b1, b2
+b1: ; preds b0
+  %11 = dict_set_value dict[i64, i64] %4, %7, 7:i64
+  jump b3
+b2: ; preds b0
+  %13 = dict_insert dict[i64, i64] %4, %7, 1:i64, 7:i64
+  jump b3
+b3: ; preds b1 b2
+  %15 = phi dict[i64, i64] %11, %13
+  %17 = list_push list[dict[i64, i64]] %2, %15
+  %19 = dict_new dict[i64, dict[i64, i64]] 1:u64
+  %22 = dict_new dict[i64, i64] 1:u64
+  %25 = dict_find i64 %22, 1:i64
+  %27 = cmp.ge bool %25, 0:i64
+  branch %27, b4, b5
+b4: ; preds b3
+  %29 = dict_set_value dict[i64, i64] %22, %25, 7:i64
+  jump b6
+b5: ; preds b3
+  %31 = dict_insert dict[i64, i64] %22, %25, 1:i64, 7:i64
+  jump b6
+b6: ; preds b4 b5
+  %33 = phi dict[i64, i64] %29, %31
+  %34 = dict_find i64 %19, 0:i64
+  %36 = cmp.ge bool %34, 0:i64
+  branch %36, b7, b8
+b7: ; preds b6
+  %38 = dict_set_value dict[i64, dict[i64, i64]] %19, %34, %33
+  jump b9
+b8: ; preds b6
+  %40 = dict_insert dict[i64, dict[i64, i64]] %19, %34, 0:i64, %33
+  jump b9
+b9: ; preds b7 b8
+  %42 = phi dict[i64, dict[i64, i64]] %38, %40
+  %47 = iconst bool 0
+  branch 0:bool, b10, b11
+b10: ; preds b9
+  %49 = list_len u64 %17
+  %50 = convert.exact i64 %49
+  %51 = add.exact i64 %50, 0:i64
+  jump b11
+b11: ; preds b9 b10
+  %53 = phi i64 0:i64, %51
+  %59 = list_get.proven dict[i64, i64] %17, %53
+  retain %59
+  %60 = call record{dict[i64, dict[i64, i64]], dict[i64, i64]} clone_during(%59, %42)
+  release %42
+  %61 = record_get dict[i64, dict[i64, i64]] %60, field0
+  %62 = record_get dict[i64, i64] %60, field1
+  %69 = dict_find i64 %61, 0:i64
+  %71 = cmp.ge bool %69, 0:i64
+  branch %71, b12, b13
+b12: ; preds b11
+  %74 = dict_entry_value dict[i64, i64] %61, %69
+  %76 = dict_find i64 %74, 1:i64
+  %78 = cmp.ge bool %76, 0:i64
+  branch %78, b14, b15
+b13: ; preds b11
+  unreachable
+b14: ; preds b12
+  %105 = list_set.proven list[dict[i64, i64]] %17, %53, %62
+  %81 = dict_entry_value i64 %74, %76
+  release %61
+  print param0, %81
+  %85 = iconst bool 0
+  branch 0:bool, b16, b17
+b15: ; preds b12
+  unreachable
+b16: ; preds b14
+  %87 = list_len u64 %105
+  %88 = convert.exact i64 %87
+  %89 = add.exact i64 %88, 0:i64
+  jump b17
+b17: ; preds b14 b16
+  %91 = phi i64 0:i64, %89
+  %93 = list_get.proven dict[i64, i64] %105, %91
+  %95 = dict_find i64 %93, 1:i64
+  %97 = cmp.ge bool %95, 0:i64
+  branch %97, b18, b19
+b18: ; preds b17
+  %100 = dict_entry_value i64 %93, %95
+  release %105
+  print param0, %100
+  ret 0:i64
+b19: ; preds b17
+  unreachable
+fn clone_during(dict[i64, i64], dict[i64, dict[i64, i64]]) -> record{dict[i64, dict[i64, i64]], dict[i64, i64]}
+b0:
+  %3 = dict_find i64 param0, 1:i64
+  %5 = cmp.ge bool %3, 0:i64
+  branch %5, b1, b2
+b1: ; preds b0
+  %8 = dict_entry_value i64 param0, %3
+  %10 = dict_find i64 param0, 1:i64
+  %12 = cmp.ge bool %10, 0:i64
+  branch %12, b3, b4
+b2: ; preds b0
+  unreachable
+b3: ; preds b1
+  %14 = dict_set_value dict[i64, i64] param0, %10, %8
+  jump b5
+b4: ; preds b1
+  %16 = dict_insert dict[i64, i64] param0, %10, 1:i64, %8
+  jump b5
+b5: ; preds b3 b4
+  %18 = phi dict[i64, i64] %14, %16
+  %20 = call dict[i64, dict[i64, i64]] myl_core_owned_copy_17(param1)
+  %21 = record_make record{dict[i64, dict[i64, i64]], dict[i64, i64]} %20, %18
+  ret %21
+fn myl_core_owned_copy_17(dict[i64, dict[i64, i64]]) -> dict[i64, dict[i64, i64]] runtime
+facts main: %7=[-9223372036854775808,9223372036854775807] %9=[0,1] %25=[-9223372036854775808,9223372036854775807] %27=[0,1] %34=[-9223372036854775808,9223372036854775807] %36=[0,1] %47=[0,0] %53=[0,0] %69=[-9223372036854775808,9223372036854775807] %71=[0,1] %76=[-9223372036854775808,9223372036854775807] %78=[0,1] %81=[-9223372036854775808,9223372036854775807] %85=[0,0] %91=[0,0] %95=[-9223372036854775808,9223372036854775807] %97=[0,1] %100=[-9223372036854775808,9223372036854775807]
+list main %2: settled=true length=%-1 len=[0,0]
+list main %15: settled=true length=%-1
+list main %17: settled=true length=%-1 len=[1,1]
+list main %33: settled=true length=%-1
+list main %42: settled=true length=%-1
+list main %55: settled=true length=%-1
+list main %59: settled=true length=%-1
+list main %63: settled=true length=%-1 len=[1,1]
+list main %93: settled=true length=%-1
+facts clone_during: %3=[-9223372036854775808,9223372036854775807] %5=[0,1] %8=[-9223372036854775808,9223372036854775807] %10=[-9223372036854775808,9223372036854775807] %12=[0,1]
+list clone_during %18: settled=true length=%-1

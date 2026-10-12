@@ -1,0 +1,5 @@
+func main() -> int:
+    mut words = ["pear", "fig", "kiwi"]
+    const selected = max(w.copy() for w in words)
+    words.clear()
+    return 0 if selected == "pear" else 1

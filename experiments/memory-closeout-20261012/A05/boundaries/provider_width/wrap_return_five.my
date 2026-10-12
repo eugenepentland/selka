@@ -1,0 +1,26 @@
+# spec-case: CAPABILITY-FIELD-METHOD-1
+import filesystem
+import environment
+import network
+import time
+import random
+
+record Ports:
+    fs: Filesystem
+    env: Environment
+    net: Network
+    clock: Clock
+    entropy: Entropy
+
+record App:
+    label: str
+    ports: Ports
+
+func make_app() -> App:
+    mut ports = Ports(fs=filesystem.memory(), env=environment.fixed({"LANG":"C"}), net=network.denied(), clock=time.simulated_clock(time.from_unix_nanoseconds(42)), entropy=random.seeded_entropy(7))
+    return App(label="test", ports=ports)
+
+func main() -> int:
+    const state = make_app()
+    assert not state.ports.fs.exists("missing")
+    return 0

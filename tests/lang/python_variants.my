@@ -115,7 +115,7 @@ func variant_atom_text(node: VariantSyntax) -> str:
         case VariantSyntax.form(items=_, span=_):
             return ""
         case VariantSyntax.atom(text=text, span=_, literal=_):
-            return text
+            return text.copy()
 
 
 enum VariantPair[T]:
@@ -140,7 +140,7 @@ public func test_a_parenthesized_case_constructs_positionally_by_name_and_with_d
     mut span = VariantSpan(start=1, end=4)
     mut positional = VariantSyntax.atom(text="abc", span=span)
     mut named = VariantSyntax.atom(text="abc", span=span, literal=Some("x"))
-    mut grouped = VariantSyntax.form(items=[positional, named], span=span)
+    mut grouped = VariantSyntax.form(items=[positional.copy(), named.copy()], span=span)
     return variant_syntax_size(positional) == 6 and variant_syntax_size(named) == 7 and variant_syntax_size(grouped) == 16
 
 

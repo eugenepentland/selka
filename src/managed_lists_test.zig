@@ -150,7 +150,7 @@ test "explicit effects reject transitive managed allocation while permitting fix
 }
 
 // spec: GC-SOURCE-7
-test "managed elements reject owned resources and unchecked results" {
+test "managed elements reject owned resources" {
     try rejectAll(&.{
         \\resource File: filesystem
         \\
@@ -170,16 +170,14 @@ test "managed elements reject owned resources and unchecked results" {
         \\    mut values: Wrapper[] = []
         \\    return len(values)
         ,
-        \\result Answer:
-        \\    ok: i64,
-        \\    err: i64
-        \\
-        \\
-        \\func main() -> i64:
-        \\    mut values: Answer[] = []
-        \\    return len(values)
-        ,
     }, "E_GENERIC_REQUIREMENT");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-RESULT-LISTS-1
+test "managed Result lists preserve obligations independently from storage eligibility" {
+    const prefix = "result Answer:\n    ok: i64,\n    err: i64\n\nfunc main() -> i64:\n    mut values: Answer[] = []\n";
+    try rejectAll(&.{prefix ++ "    return len(values)\n"}, "E_RESULT_UNHANDLED");
+    try t.expectEqual(@as(i64, 0), (try execute(prefix ++ "    const count = len(values)\n    _ = values\n    return count\n")).value);
 }
 
 // spec: GC-ROOTS-1

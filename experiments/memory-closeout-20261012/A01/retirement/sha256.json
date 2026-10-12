@@ -1,0 +1,12 @@
+{
+  "README.md": "56d76ca92b3e309ae8d038d6bb0e26a4a06302f6d82fadece3f81b9934d7d6e0",
+  "originals/src/core/a01_owned_scheduler_fixture.c.gz": "a8e34349aefb4633117f10c76bc5942c3502f70e1712b87a0c21823ae9e261c2",
+  "originals/src/core/runtime/core_tasks.c.gz": "76dda47568b20fb1f2d5af724904582f1fa3146fa9e5df1ecaed149642db13a0",
+  "originals/src/core/task_ir_program.zig.gz": "fbca347562c235d41c07b3a6522ae65405943ed6c748de82255835aefac7ebee",
+  "originals/src/core/task_ir_test.zig.gz": "f796a1c026e684407baba23ed263a4fd0a67a2aadfca24441f2294f435bef3f0",
+  "originals/src/core/task_scheduler_fixture.c.gz": "3b08a506d618285676ab135221f1f970d033b075216e3f67e1c7c7de9884a683",
+  "originals/src/core/task_scheduler_test.zig.gz": "3f7e208085065cc59de302b9fa4d38da1393e5ec6767897f8fe152e60838b732",
+  "originals/src/stdlib/parallel.my.gz": "f551da6dc166a1715ee2cc061c6c87e0573a1b5ad8adebe7879820a1e056031f",
+  "retirement.patch": "c8c83bd18cd0a64179a9bd7520fe94ab3327e22dcf47cf16c895d16a8eb29190",
+  "source-identities.json": "04061e63438731ba3e845e239f57d1206b3799b2b6e68345c3b096476f260c23"
+}

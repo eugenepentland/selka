@@ -26,7 +26,7 @@ public func test_empty_and_whole_slices_count_the_same() -> bool:
 func presence(seq: str, probe: str) -> int:
     mut found = 0
     mut counts: dict[str, int] = {}
-    counts[probe] = 0
+    counts[probe.copy()] = 0
     for i in range(len(seq)):
         mut key = seq[i:i + 1]
         if key in counts:
@@ -40,7 +40,7 @@ public func test_contains_and_get_read_the_borrowed_span() -> bool:
 
 
 func rewritten(input_seq: str, k: int) -> dict[str, int]:
-    mut seq = input_seq
+    mut seq = input_seq.copy()
     mut counts: dict[str, int] = {}
     for i in range(len(seq) - k + 1):
         mut key = seq[i:i + k]

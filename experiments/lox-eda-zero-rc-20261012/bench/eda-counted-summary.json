@@ -1,0 +1,3006 @@
+{
+  "summary": {
+    "mylang-migrated-rc": {
+      "runtime_total_ranges": {
+        "calls": {
+          "min": 805529,
+          "max": 52794907
+        },
+        "allocs": {
+          "min": 57207,
+          "max": 1985564
+        },
+        "alloc_bytes": {
+          "min": 6410312,
+          "max": 210921880
+        },
+        "frees": {
+          "min": 57207,
+          "max": 1985564
+        },
+        "free_bytes": {
+          "min": 6572104,
+          "max": 216666904
+        },
+        "list_grows": {
+          "min": 6512,
+          "max": 242341
+        },
+        "list_grow_bytes": {
+          "min": 163712,
+          "max": 6614016
+        },
+        "reallocs": {
+          "min": 41,
+          "max": 1176
+        },
+        "realloc_added_bytes": {
+          "min": 161792,
+          "max": 5792176
+        },
+        "realloc_moves": {
+          "min": 23,
+          "max": 1035
+        },
+        "realloc_moved_bytes": {
+          "min": 49751,
+          "max": 3960681
+        },
+        "list_copies": {
+          "min": 62,
+          "max": 1040
+        },
+        "list_copy_bytes": {
+          "min": 10600,
+          "max": 520392
+        },
+        "dict_copies": {
+          "min": 15,
+          "max": 1077
+        },
+        "dict_copy_bytes": {
+          "min": 568,
+          "max": 628224
+        },
+        "buffer_copies": {
+          "min": 0,
+          "max": 0
+        },
+        "buffer_copy_bytes": {
+          "min": 0,
+          "max": 0
+        },
+        "text_copies": {
+          "min": 296,
+          "max": 17320
+        },
+        "text_copy_bytes": {
+          "min": 7487,
+          "max": 61284
+        },
+        "runtime_retains": {
+          "min": 832,
+          "max": 68986
+        },
+        "runtime_releases": {
+          "min": 19678,
+          "max": 655414
+        },
+        "dict_grows": {
+          "min": 12,
+          "max": 1021
+        },
+        "dict_grow_bytes": {
+          "min": 9536,
+          "max": 951168
+        },
+        "buffer_grows": {
+          "min": 19,
+          "max": 1912
+        },
+        "buffer_grow_bytes": {
+          "min": 2813,
+          "max": 58081
+        },
+        "text_grows": {
+          "min": 646,
+          "max": 69099
+        },
+        "text_grow_bytes": {
+          "min": 14848,
+          "max": 311388
+        },
+        "text_appends": {
+          "min": 1413,
+          "max": 153247
+        },
+        "text_append_bytes": {
+          "min": 6341,
+          "max": 349996
+        },
+        "buffer_pushes": {
+          "min": 1701,
+          "max": 255818
+        },
+        "buffer_appends": {
+          "min": 33,
+          "max": 1012
+        },
+        "buffer_append_bytes": {
+          "min": 1156,
+          "max": 30556
+        },
+        "shared_retains": {
+          "min": 0,
+          "max": 0
+        },
+        "shared_releases": {
+          "min": 0,
+          "max": 0
+        },
+        "share_marks": {
+          "min": 0,
+          "max": 0
+        },
+        "share_bytes": {
+          "min": 0,
+          "max": 0
+        },
+        "peak_live_bytes": {
+          "min": 1939256,
+          "max": 51415480
+        },
+        "live_bytes_at_exit": {
+          "min": 0,
+          "max": 0
+        }
+      },
+      "complete_cells": 34,
+      "total_cells": 34,
+      "metrics": {
+        "allocs": {
+          "min": 57207,
+          "max": 1985564,
+          "sum_over_independent_runs": 28537663
+        },
+        "reallocs": {
+          "min": 41,
+          "max": 1176,
+          "sum_over_independent_runs": 12697
+        },
+        "alloc_bytes": {
+          "min": 6410312,
+          "max": 210921880,
+          "sum_over_independent_runs": 3050051288
+        },
+        "realloc_added_bytes": {
+          "min": 161792,
+          "max": 5792176,
+          "sum_over_independent_runs": 69013520
+        },
+        "peak_live_bytes": {
+          "min": 1939256,
+          "max": 51415480,
+          "sum_over_independent_runs": 359530440
+        },
+        "live_bytes_at_exit": {
+          "min": 0,
+          "max": 0,
+          "sum_over_independent_runs": 0
+        },
+        "runtime_retains": {
+          "min": 832,
+          "max": 68986,
+          "sum_over_independent_runs": 622329
+        },
+        "runtime_releases": {
+          "min": 19678,
+          "max": 655414,
+          "sum_over_independent_runs": 9927723
+        },
+        "cumulative_allocated_bytes": {
+          "min": 6572104,
+          "max": 216666904,
+          "sum_over_independent_runs": 3119064808
+        },
+        "compiler_retains": {
+          "min": 75463,
+          "max": 2486360,
+          "sum_over_independent_runs": 36247996
+        },
+        "compiler_releases": {
+          "min": 96882,
+          "max": 3469898,
+          "sum_over_independent_runs": 50343154
+        }
+      },
+      "event_count_ranges": {
+        "retain": {
+          "min": 75463,
+          "max": 2486360
+        },
+        "release": {
+          "min": 96882,
+          "max": 3469898
+        },
+        "release_unique": {
+          "min": 374,
+          "max": 7348
+        },
+        "unique_test": {
+          "min": 8371,
+          "max": 352173
+        },
+        "list_copy": {
+          "min": 62,
+          "max": 1040
+        },
+        "dict_copy": {
+          "min": 15,
+          "max": 1077
+        },
+        "buffer_copy": {
+          "min": 0,
+          "max": 0
+        },
+        "text_copy": {
+          "min": 296,
+          "max": 17320
+        },
+        "record_copy": {
+          "min": 34930,
+          "max": 1807705
+        },
+        "list_push": {
+          "min": 105626,
+          "max": 3750458
+        },
+        "element_load": {
+          "min": 1903,
+          "max": 16310164
+        },
+        "element_store": {
+          "min": 40,
+          "max": 12202
+        },
+        "bounds_check": {
+          "min": 448274,
+          "max": 13799433
+        },
+        "overflow_check": {
+          "min": 266680,
+          "max": 8050185
+        },
+        "division_check": {
+          "min": 62,
+          "max": 4068
+        },
+        "shift_check": {
+          "min": 0,
+          "max": 0
+        },
+        "other_check": {
+          "min": 4562,
+          "max": 171824
+        }
+      }
+    },
+    "mylang-original-rc": {
+      "runtime_total_ranges": {
+        "calls": {
+          "min": 805528,
+          "max": 52794906
+        },
+        "allocs": {
+          "min": 57206,
+          "max": 1985563
+        },
+        "alloc_bytes": {
+          "min": 6408736,
+          "max": 210915696
+        },
+        "frees": {
+          "min": 57206,
+          "max": 1985563
+        },
+        "free_bytes": {
+          "min": 6570528,
+          "max": 216660720
+        },
+        "list_grows": {
+          "min": 6512,
+          "max": 242341
+        },
+        "list_grow_bytes": {
+          "min": 163712,
+          "max": 6614016
+        },
+        "reallocs": {
+          "min": 41,
+          "max": 1176
+        },
+        "realloc_added_bytes": {
+          "min": 161792,
+          "max": 5792176
+        },
+        "realloc_moves": {
+          "min": 21,
+          "max": 1022
+        },
+        "realloc_moved_bytes": {
+          "min": 54363,
+          "max": 4196596
+        },
+        "list_copies": {
+          "min": 62,
+          "max": 1040
+        },
+        "list_copy_bytes": {
+          "min": 10600,
+          "max": 520392
+        },
+        "dict_copies": {
+          "min": 14,
+          "max": 1076
+        },
+        "dict_copy_bytes": {
+          "min": 360,
+          "max": 619280
+        },
+        "buffer_copies": {
+          "min": 0,
+          "max": 0
+        },
+        "buffer_copy_bytes": {
+          "min": 0,
+          "max": 0
+        },
+        "text_copies": {
+          "min": 296,
+          "max": 17320
+        },
+        "text_copy_bytes": {
+          "min": 7487,
+          "max": 61284
+        },
+        "runtime_retains": {
+          "min": 814,
+          "max": 68212
+        },
+        "runtime_releases": {
+          "min": 19588,
+          "max": 655099
+        },
+        "dict_grows": {
+          "min": 12,
+          "max": 1021
+        },
+        "dict_grow_bytes": {
+          "min": 9536,
+          "max": 951168
+        },
+        "buffer_grows": {
+          "min": 19,
+          "max": 1912
+        },
+        "buffer_grow_bytes": {
+          "min": 2813,
+          "max": 58081
+        },
+        "text_grows": {
+          "min": 646,
+          "max": 69099
+        },
+        "text_grow_bytes": {
+          "min": 14848,
+          "max": 311388
+        },
+        "text_appends": {
+          "min": 1413,
+          "max": 153247
+        },
+        "text_append_bytes": {
+          "min": 6341,
+          "max": 349996
+        },
+        "buffer_pushes": {
+          "min": 1701,
+          "max": 255818
+        },
+        "buffer_appends": {
+          "min": 33,
+          "max": 1012
+        },
+        "buffer_append_bytes": {
+          "min": 1156,
+          "max": 30556
+        },
+        "shared_retains": {
+          "min": 0,
+          "max": 0
+        },
+        "shared_releases": {
+          "min": 0,
+          "max": 0
+        },
+        "share_marks": {
+          "min": 0,
+          "max": 0
+        },
+        "share_bytes": {
+          "min": 0,
+          "max": 0
+        },
+        "peak_live_bytes": {
+          "min": 1939256,
+          "max": 51415480
+        },
+        "live_bytes_at_exit": {
+          "min": 0,
+          "max": 0
+        }
+      },
+      "complete_cells": 34,
+      "total_cells": 34,
+      "metrics": {
+        "allocs": {
+          "min": 57206,
+          "max": 1985563,
+          "sum_over_independent_runs": 28537629
+        },
+        "reallocs": {
+          "min": 41,
+          "max": 1176,
+          "sum_over_independent_runs": 12697
+        },
+        "alloc_bytes": {
+          "min": 6408736,
+          "max": 210915696,
+          "sum_over_independent_runs": 3049934936
+        },
+        "realloc_added_bytes": {
+          "min": 161792,
+          "max": 5792176,
+          "sum_over_independent_runs": 69009296
+        },
+        "peak_live_bytes": {
+          "min": 1939256,
+          "max": 51415480,
+          "sum_over_independent_runs": 359533656
+        },
+        "live_bytes_at_exit": {
+          "min": 0,
+          "max": 0,
+          "sum_over_independent_runs": 0
+        },
+        "runtime_retains": {
+          "min": 814,
+          "max": 68212,
+          "sum_over_independent_runs": 614625
+        },
+        "runtime_releases": {
+          "min": 19588,
+          "max": 655099,
+          "sum_over_independent_runs": 9920019
+        },
+        "cumulative_allocated_bytes": {
+          "min": 6570528,
+          "max": 216660720,
+          "sum_over_independent_runs": 3118944232
+        },
+        "compiler_retains": {
+          "min": 75641,
+          "max": 2488805,
+          "sum_over_independent_runs": 36278936
+        },
+        "compiler_releases": {
+          "min": 97059,
+          "max": 3472342,
+          "sum_over_independent_runs": 50374060
+        }
+      },
+      "event_count_ranges": {
+        "retain": {
+          "min": 75641,
+          "max": 2488805
+        },
+        "release": {
+          "min": 97059,
+          "max": 3472342
+        },
+        "release_unique": {
+          "min": 374,
+          "max": 7348
+        },
+        "unique_test": {
+          "min": 8398,
+          "max": 356223
+        },
+        "list_copy": {
+          "min": 62,
+          "max": 1040
+        },
+        "dict_copy": {
+          "min": 14,
+          "max": 1076
+        },
+        "buffer_copy": {
+          "min": 0,
+          "max": 0
+        },
+        "text_copy": {
+          "min": 296,
+          "max": 17320
+        },
+        "record_copy": {
+          "min": 34930,
+          "max": 1807705
+        },
+        "list_push": {
+          "min": 105626,
+          "max": 3750458
+        },
+        "element_load": {
+          "min": 1903,
+          "max": 16310164
+        },
+        "element_store": {
+          "min": 40,
+          "max": 12202
+        },
+        "bounds_check": {
+          "min": 448342,
+          "max": 13800867
+        },
+        "overflow_check": {
+          "min": 266681,
+          "max": 8050186
+        },
+        "division_check": {
+          "min": 62,
+          "max": 4068
+        },
+        "shift_check": {
+          "min": 0,
+          "max": 0
+        },
+        "other_check": {
+          "min": 4562,
+          "max": 171824
+        }
+      }
+    },
+    "mylang-zero-rc": {
+      "runtime_total_ranges": {
+        "calls": {
+          "min": 816543,
+          "max": 53179588
+        },
+        "allocs": {
+          "min": 477442,
+          "max": 22750392
+        },
+        "alloc_bytes": {
+          "min": 49010608,
+          "max": 2017520320
+        },
+        "frees": {
+          "min": 477442,
+          "max": 22750392
+        },
+        "free_bytes": {
+          "min": 49695728,
+          "max": 2588797232
+        },
+        "list_grows": {
+          "min": 9187,
+          "max": 325524
+        },
+        "list_grow_bytes": {
+          "min": 465472,
+          "max": 16923584
+        },
+        "reallocs": {
+          "min": 150,
+          "max": 26178
+        },
+        "realloc_added_bytes": {
+          "min": 274432,
+          "max": 571276912
+        },
+        "realloc_moves": {
+          "min": 128,
+          "max": 23976
+        },
+        "realloc_moved_bytes": {
+          "min": 220129,
+          "max": 361558695
+        },
+        "list_copies": {
+          "min": 119973,
+          "max": 4493556
+        },
+        "list_copy_bytes": {
+          "min": 16637176,
+          "max": 639008128
+        },
+        "dict_copies": {
+          "min": 94,
+          "max": 9003
+        },
+        "dict_copy_bytes": {
+          "min": 18968,
+          "max": 5900104
+        },
+        "buffer_copies": {
+          "min": 207550,
+          "max": 14928948
+        },
+        "buffer_copy_bytes": {
+          "min": 1433585,
+          "max": 111561053
+        },
+        "text_copies": {
+          "min": 88571,
+          "max": 3059141
+        },
+        "text_copy_bytes": {
+          "min": 654192,
+          "max": 19458355
+        },
+        "runtime_retains": {
+          "min": 0,
+          "max": 0
+        },
+        "runtime_releases": {
+          "min": 0,
+          "max": 0
+        },
+        "dict_grows": {
+          "min": 12,
+          "max": 1021
+        },
+        "dict_grow_bytes": {
+          "min": 9536,
+          "max": 951168
+        },
+        "buffer_grows": {
+          "min": 19,
+          "max": 1912
+        },
+        "buffer_grow_bytes": {
+          "min": 2813,
+          "max": 58081
+        },
+        "text_grows": {
+          "min": 646,
+          "max": 69099
+        },
+        "text_grow_bytes": {
+          "min": 14848,
+          "max": 311388
+        },
+        "text_appends": {
+          "min": 1413,
+          "max": 153247
+        },
+        "text_append_bytes": {
+          "min": 6341,
+          "max": 349996
+        },
+        "buffer_pushes": {
+          "min": 1701,
+          "max": 255818
+        },
+        "buffer_appends": {
+          "min": 33,
+          "max": 1012
+        },
+        "buffer_append_bytes": {
+          "min": 1156,
+          "max": 30556
+        },
+        "shared_retains": {
+          "min": 0,
+          "max": 0
+        },
+        "shared_releases": {
+          "min": 0,
+          "max": 0
+        },
+        "share_marks": {
+          "min": 0,
+          "max": 0
+        },
+        "share_bytes": {
+          "min": 0,
+          "max": 0
+        },
+        "peak_live_bytes": {
+          "min": 3748616,
+          "max": 86587128
+        },
+        "live_bytes_at_exit": {
+          "min": 0,
+          "max": 0
+        }
+      },
+      "complete_cells": 34,
+      "total_cells": 34,
+      "metrics": {
+        "allocs": {
+          "min": 477442,
+          "max": 22750392,
+          "sum_over_independent_runs": 229372904
+        },
+        "reallocs": {
+          "min": 150,
+          "max": 26178,
+          "sum_over_independent_runs": 132334
+        },
+        "alloc_bytes": {
+          "min": 49010608,
+          "max": 2017520320,
+          "sum_over_independent_runs": 23017257208
+        },
+        "realloc_added_bytes": {
+          "min": 274432,
+          "max": 571276912,
+          "sum_over_independent_runs": 1307411296
+        },
+        "peak_live_bytes": {
+          "min": 3748616,
+          "max": 86587128,
+          "sum_over_independent_runs": 561979920
+        },
+        "live_bytes_at_exit": {
+          "min": 0,
+          "max": 0,
+          "sum_over_independent_runs": 0
+        },
+        "runtime_retains": {
+          "min": 0,
+          "max": 0,
+          "sum_over_independent_runs": 0
+        },
+        "runtime_releases": {
+          "min": 0,
+          "max": 0,
+          "sum_over_independent_runs": 0
+        },
+        "cumulative_allocated_bytes": {
+          "min": 49695728,
+          "max": 2588797232,
+          "sum_over_independent_runs": 24324668504
+        },
+        "compiler_retains": {
+          "min": 0,
+          "max": 0,
+          "sum_over_independent_runs": 0
+        },
+        "compiler_releases": {
+          "min": 0,
+          "max": 0,
+          "sum_over_independent_runs": 0
+        }
+      },
+      "event_count_ranges": {
+        "retain": {
+          "min": 0,
+          "max": 0
+        },
+        "release": {
+          "min": 0,
+          "max": 0
+        },
+        "release_unique": {
+          "min": 150181,
+          "max": 5251318
+        },
+        "unique_test": {
+          "min": 0,
+          "max": 0
+        },
+        "list_copy": {
+          "min": 319,
+          "max": 6453
+        },
+        "dict_copy": {
+          "min": 0,
+          "max": 0
+        },
+        "buffer_copy": {
+          "min": 0,
+          "max": 0
+        },
+        "text_copy": {
+          "min": 269,
+          "max": 15342
+        },
+        "record_copy": {
+          "min": 92358,
+          "max": 3654406
+        },
+        "list_push": {
+          "min": 125396,
+          "max": 12327458
+        },
+        "element_load": {
+          "min": 1915,
+          "max": 16310693
+        },
+        "element_store": {
+          "min": 40,
+          "max": 12202
+        },
+        "bounds_check": {
+          "min": 459179,
+          "max": 22348857
+        },
+        "overflow_check": {
+          "min": 266751,
+          "max": 8052639
+        },
+        "division_check": {
+          "min": 62,
+          "max": 4068
+        },
+        "shift_check": {
+          "min": 0,
+          "max": 0
+        },
+        "other_check": {
+          "min": 4562,
+          "max": 171824
+        }
+      }
+    }
+  },
+  "cells": {
+    "eda/Cyclops-Flex": {
+      "cell": "eda/Cyclops-Flex",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-Cyclops-Flex.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-Cyclops-Flex.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 398148,
+            "reallocs": 89,
+            "alloc_bytes": 43860888,
+            "realloc_added_bytes": 171520,
+            "peak_live_bytes": 7223504,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 814,
+            "runtime_releases": 139115,
+            "cumulative_allocated_bytes": 44032408,
+            "compiler_retains": 508281,
+            "compiler_releases": 714124
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-Cyclops-Flex.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 398149,
+            "reallocs": 89,
+            "alloc_bytes": 43861688,
+            "realloc_added_bytes": 171520,
+            "peak_live_bytes": 7223504,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 832,
+            "runtime_releases": 139133,
+            "cumulative_allocated_bytes": 44033208,
+            "compiler_retains": 508227,
+            "compiler_releases": 714071
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-Cyclops-Flex.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 2054526,
+            "reallocs": 150,
+            "alloc_bytes": 222719496,
+            "realloc_added_bytes": 274432,
+            "peak_live_bytes": 8217632,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 222993928,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/adf5901": {
+      "cell": "eda/adf5901",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-adf5901.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-adf5901.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 454405,
+            "reallocs": 134,
+            "alloc_bytes": 49815120,
+            "realloc_added_bytes": 413312,
+            "peak_live_bytes": 7324160,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 2925,
+            "runtime_releases": 159854,
+            "cumulative_allocated_bytes": 50228432,
+            "compiler_retains": 582137,
+            "compiler_releases": 813861
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-adf5901.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 454406,
+            "reallocs": 134,
+            "alloc_bytes": 49815920,
+            "realloc_added_bytes": 413312,
+            "peak_live_bytes": 7324160,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 2971,
+            "runtime_releases": 159900,
+            "cumulative_allocated_bytes": 50229232,
+            "compiler_retains": 581990,
+            "compiler_releases": 813715
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-adf5901.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 2628602,
+            "reallocs": 479,
+            "alloc_bytes": 280374440,
+            "realloc_added_bytes": 1333856,
+            "peak_live_bytes": 8382992,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 281708296,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/barracuda-base": {
+      "cell": "eda/barracuda-base",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-barracuda-base.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-barracuda-base.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 1261432,
+            "reallocs": 625,
+            "alloc_bytes": 133983632,
+            "realloc_added_bytes": 3596672,
+            "peak_live_bytes": 9858296,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 21495,
+            "runtime_releases": 428072,
+            "cumulative_allocated_bytes": 137580304,
+            "compiler_retains": 1600211,
+            "compiler_releases": 2228086
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-barracuda-base.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 1261433,
+            "reallocs": 625,
+            "alloc_bytes": 133989816,
+            "realloc_added_bytes": 3596672,
+            "peak_live_bytes": 9858296,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 21900,
+            "runtime_releases": 428477,
+            "cumulative_allocated_bytes": 137586488,
+            "compiler_retains": 1598670,
+            "compiler_releases": 2226546
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-barracuda-base.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 10333713,
+            "reallocs": 3828,
+            "alloc_bytes": 1056726264,
+            "realloc_added_bytes": 15719168,
+            "peak_live_bytes": 17866448,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 1072445432,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/barracuda-via-fence": {
+      "cell": "eda/barracuda-via-fence",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-barracuda-via-fence.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-barracuda-via-fence.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 1020381,
+            "reallocs": 506,
+            "alloc_bytes": 109098936,
+            "realloc_added_bytes": 2380688,
+            "peak_live_bytes": 8194168,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 14146,
+            "runtime_releases": 339970,
+            "cumulative_allocated_bytes": 111479624,
+            "compiler_retains": 1276736,
+            "compiler_releases": 1795031
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-barracuda-via-fence.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 1020382,
+            "reallocs": 506,
+            "alloc_bytes": 109105120,
+            "realloc_added_bytes": 2380688,
+            "peak_live_bytes": 8194168,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 14515,
+            "runtime_releases": 340339,
+            "cumulative_allocated_bytes": 111485808,
+            "compiler_retains": 1275788,
+            "compiler_releases": 1794084
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-barracuda-via-fence.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 7767769,
+            "reallocs": 2167,
+            "alloc_bytes": 803080656,
+            "realloc_added_bytes": 6328320,
+            "peak_live_bytes": 10693664,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 809408976,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/barracuda": {
+      "cell": "eda/barracuda",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-barracuda.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-barracuda.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 1177128,
+            "reallocs": 577,
+            "alloc_bytes": 125147520,
+            "realloc_added_bytes": 2818624,
+            "peak_live_bytes": 8504216,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 15952,
+            "runtime_releases": 393299,
+            "cumulative_allocated_bytes": 127966144,
+            "compiler_retains": 1485650,
+            "compiler_releases": 2078002
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-barracuda.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 1177129,
+            "reallocs": 577,
+            "alloc_bytes": 125153704,
+            "realloc_added_bytes": 2818640,
+            "peak_live_bytes": 8504216,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 16402,
+            "runtime_releases": 393749,
+            "cumulative_allocated_bytes": 127972344,
+            "compiler_retains": 1484452,
+            "compiler_releases": 2076805
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-barracuda.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 9435449,
+            "reallocs": 2500,
+            "alloc_bytes": 972007720,
+            "realloc_added_bytes": 7276176,
+            "peak_live_bytes": 11718440,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 979283896,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/black-canyon+flat": {
+      "cell": "eda/black-canyon+flat",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-black-canyon+flat.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-black-canyon+flat.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 727359,
+            "reallocs": 278,
+            "alloc_bytes": 77735024,
+            "realloc_added_bytes": 1499104,
+            "peak_live_bytes": 11363144,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 9326,
+            "runtime_releases": 240931,
+            "cumulative_allocated_bytes": 79234128,
+            "compiler_retains": 899818,
+            "compiler_releases": 1275124
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-black-canyon+flat.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 727360,
+            "reallocs": 278,
+            "alloc_bytes": 77738136,
+            "realloc_added_bytes": 1499104,
+            "peak_live_bytes": 11363144,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 9551,
+            "runtime_releases": 241156,
+            "cumulative_allocated_bytes": 79237240,
+            "compiler_retains": 899145,
+            "compiler_releases": 1274452
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-black-canyon+flat.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 4939850,
+            "reallocs": 3254,
+            "alloc_bytes": 506498600,
+            "realloc_added_bytes": 21924928,
+            "peak_live_bytes": 20038592,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 528423528,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/black-canyon": {
+      "cell": "eda/black-canyon",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-black-canyon.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-black-canyon.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 753512,
+            "reallocs": 354,
+            "alloc_bytes": 80735464,
+            "realloc_added_bytes": 1369024,
+            "peak_live_bytes": 7781800,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 9388,
+            "runtime_releases": 249122,
+            "cumulative_allocated_bytes": 82104488,
+            "compiler_retains": 930469,
+            "compiler_releases": 1319213
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-black-canyon.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 753513,
+            "reallocs": 354,
+            "alloc_bytes": 80738576,
+            "realloc_added_bytes": 1369056,
+            "peak_live_bytes": 7781800,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 9613,
+            "runtime_releases": 249347,
+            "cumulative_allocated_bytes": 82107632,
+            "compiler_retains": 929841,
+            "compiler_releases": 1318586
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-black-canyon.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 4997546,
+            "reallocs": 1009,
+            "alloc_bytes": 522289632,
+            "realloc_added_bytes": 2618224,
+            "peak_live_bytes": 8997496,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 524907856,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/blinky-breakout": {
+      "cell": "eda/blinky-breakout",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-blinky-breakout.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-blinky-breakout.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 57206,
+            "reallocs": 41,
+            "alloc_bytes": 6408736,
+            "realloc_added_bytes": 161792,
+            "peak_live_bytes": 1939256,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 901,
+            "runtime_releases": 19588,
+            "cumulative_allocated_bytes": 6570528,
+            "compiler_retains": 75641,
+            "compiler_releases": 97059
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-blinky-breakout.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 57207,
+            "reallocs": 41,
+            "alloc_bytes": 6410312,
+            "realloc_added_bytes": 161792,
+            "peak_live_bytes": 1939256,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 991,
+            "runtime_releases": 19678,
+            "cumulative_allocated_bytes": 6572104,
+            "compiler_retains": 75463,
+            "compiler_releases": 96882
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-blinky-breakout.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 477442,
+            "reallocs": 253,
+            "alloc_bytes": 49010608,
+            "realloc_added_bytes": 685120,
+            "peak_live_bytes": 3748616,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 49695728,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/cyclops-analog+no-vendor-symbols": {
+      "cell": "eda/cyclops-analog+no-vendor-symbols",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-analog+no-vendor-symbols.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-analog+no-vendor-symbols.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 638428,
+            "reallocs": 430,
+            "alloc_bytes": 66708128,
+            "realloc_added_bytes": 2334272,
+            "peak_live_bytes": 5724264,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 27783,
+            "runtime_releases": 226451,
+            "cumulative_allocated_bytes": 69042400,
+            "compiler_retains": 823141,
+            "compiler_releases": 1103927
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-analog+no-vendor-symbols.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 638429,
+            "reallocs": 430,
+            "alloc_bytes": 66711240,
+            "realloc_added_bytes": 2334272,
+            "peak_live_bytes": 5724264,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 28008,
+            "runtime_releases": 226676,
+            "cumulative_allocated_bytes": 69045512,
+            "compiler_retains": 821924,
+            "compiler_releases": 1102711
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-analog+no-vendor-symbols.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 5882319,
+            "reallocs": 2557,
+            "alloc_bytes": 590509992,
+            "realloc_added_bytes": 8208624,
+            "peak_live_bytes": 11098136,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 598718616,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/cyclops-analog": {
+      "cell": "eda/cyclops-analog",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-analog.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-analog.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 991779,
+            "reallocs": 527,
+            "alloc_bytes": 106085008,
+            "realloc_added_bytes": 2498112,
+            "peak_live_bytes": 8385056,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 28661,
+            "runtime_releases": 358036,
+            "cumulative_allocated_bytes": 108583120,
+            "compiler_retains": 1274702,
+            "compiler_releases": 1759036
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-analog.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 991780,
+            "reallocs": 527,
+            "alloc_bytes": 106088120,
+            "realloc_added_bytes": 2498112,
+            "peak_live_bytes": 8385056,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 28886,
+            "runtime_releases": 358261,
+            "cumulative_allocated_bytes": 108586232,
+            "compiler_retains": 1273649,
+            "compiler_releases": 1757984
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-analog.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 7641900,
+            "reallocs": 3003,
+            "alloc_bytes": 782780256,
+            "realloc_added_bytes": 9645520,
+            "peak_live_bytes": 11237616,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 792425776,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/cyclops-breakout": {
+      "cell": "eda/cyclops-breakout",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-breakout.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-breakout.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 507134,
+            "reallocs": 171,
+            "alloc_bytes": 54983240,
+            "realloc_added_bytes": 515072,
+            "peak_live_bytes": 7299656,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 19443,
+            "runtime_releases": 189961,
+            "cumulative_allocated_bytes": 55498312,
+            "compiler_retains": 640123,
+            "compiler_releases": 898714
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-breakout.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 507135,
+            "reallocs": 171,
+            "alloc_bytes": 54984040,
+            "realloc_added_bytes": 515072,
+            "peak_live_bytes": 7299656,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 19479,
+            "runtime_releases": 189997,
+            "cumulative_allocated_bytes": 55499112,
+            "compiler_retains": 639892,
+            "compiler_releases": 898484
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-breakout.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 2999485,
+            "reallocs": 1271,
+            "alloc_bytes": 314453080,
+            "realloc_added_bytes": 5190016,
+            "peak_live_bytes": 8314776,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 319643096,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/cyclops-digital-pcb": {
+      "cell": "eda/cyclops-digital-pcb",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-digital-pcb.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-digital-pcb.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 1040660,
+            "reallocs": 348,
+            "alloc_bytes": 110736832,
+            "realloc_added_bytes": 3256304,
+            "peak_live_bytes": 24379256,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 68212,
+            "runtime_releases": 410655,
+            "cumulative_allocated_bytes": 113993136,
+            "compiler_retains": 1383809,
+            "compiler_releases": 1863075
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-digital-pcb.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 1040661,
+            "reallocs": 348,
+            "alloc_bytes": 110749160,
+            "realloc_added_bytes": 3256288,
+            "peak_live_bytes": 24379256,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 68986,
+            "runtime_releases": 411429,
+            "cumulative_allocated_bytes": 114005448,
+            "compiler_retains": 1381833,
+            "compiler_releases": 1861100
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-digital-pcb.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 11194782,
+            "reallocs": 14255,
+            "alloc_bytes": 1021072808,
+            "realloc_added_bytes": 232234688,
+            "peak_live_bytes": 44947208,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 1253307496,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/cyclops-interposer": {
+      "cell": "eda/cyclops-interposer",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-interposer.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-interposer.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 706970,
+            "reallocs": 312,
+            "alloc_bytes": 76099744,
+            "realloc_added_bytes": 1357312,
+            "peak_live_bytes": 7764480,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 21400,
+            "runtime_releases": 258501,
+            "cumulative_allocated_bytes": 77457056,
+            "compiler_retains": 899550,
+            "compiler_releases": 1250695
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-interposer.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 706971,
+            "reallocs": 312,
+            "alloc_bytes": 76101320,
+            "realloc_added_bytes": 1357312,
+            "peak_live_bytes": 7764480,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 21544,
+            "runtime_releases": 258645,
+            "cumulative_allocated_bytes": 77458632,
+            "compiler_retains": 898883,
+            "compiler_releases": 1250029
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-interposer.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 4949636,
+            "reallocs": 2311,
+            "alloc_bytes": 510633648,
+            "realloc_added_bytes": 8734144,
+            "peak_live_bytes": 10853936,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 519367792,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/cyclops-kband-breakout": {
+      "cell": "eda/cyclops-kband-breakout",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-kband-breakout.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-kband-breakout.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 764694,
+            "reallocs": 357,
+            "alloc_bytes": 82438368,
+            "realloc_added_bytes": 1579584,
+            "peak_live_bytes": 7827640,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 25215,
+            "runtime_releases": 279884,
+            "cumulative_allocated_bytes": 84017952,
+            "compiler_retains": 972072,
+            "compiler_releases": 1351347
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-kband-breakout.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 764695,
+            "reallocs": 357,
+            "alloc_bytes": 82441480,
+            "realloc_added_bytes": 1579584,
+            "peak_live_bytes": 7827640,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 25376,
+            "runtime_releases": 280045,
+            "cumulative_allocated_bytes": 84021064,
+            "compiler_retains": 971333,
+            "compiler_releases": 1350609
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-kband-breakout.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 5478737,
+            "reallocs": 3051,
+            "alloc_bytes": 562778224,
+            "realloc_added_bytes": 11501568,
+            "peak_live_bytes": 11094320,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 574279792,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/cyclops-kband-pcb": {
+      "cell": "eda/cyclops-kband-pcb",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-kband-pcb.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-kband-pcb.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 803436,
+            "reallocs": 309,
+            "alloc_bytes": 85832128,
+            "realloc_added_bytes": 1966384,
+            "peak_live_bytes": 16130944,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 26503,
+            "runtime_releases": 292496,
+            "cumulative_allocated_bytes": 87798512,
+            "compiler_retains": 1055593,
+            "compiler_releases": 1436972
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-kband-pcb.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 803437,
+            "reallocs": 309,
+            "alloc_bytes": 85838312,
+            "realloc_added_bytes": 1966384,
+            "peak_live_bytes": 16130944,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 26890,
+            "runtime_releases": 292883,
+            "cumulative_allocated_bytes": 87804696,
+            "compiler_retains": 1054301,
+            "compiler_releases": 1435681
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-kband-pcb.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 7199273,
+            "reallocs": 8976,
+            "alloc_bytes": 684384184,
+            "realloc_added_bytes": 105795072,
+            "peak_live_bytes": 28623720,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 790179256,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/cyclops-kband": {
+      "cell": "eda/cyclops-kband",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-kband.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-kband.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 928833,
+            "reallocs": 512,
+            "alloc_bytes": 99354440,
+            "realloc_added_bytes": 2442640,
+            "peak_live_bytes": 8268928,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 29769,
+            "runtime_releases": 335669,
+            "cumulative_allocated_bytes": 101797080,
+            "compiler_retains": 1176539,
+            "compiler_releases": 1638383
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-kband.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 928834,
+            "reallocs": 512,
+            "alloc_bytes": 99357552,
+            "realloc_added_bytes": 2442624,
+            "peak_live_bytes": 8268928,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 29949,
+            "runtime_releases": 335849,
+            "cumulative_allocated_bytes": 101800176,
+            "compiler_retains": 1175706,
+            "compiler_releases": 1637551
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-kband.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 6924355,
+            "reallocs": 2906,
+            "alloc_bytes": 711654616,
+            "realloc_added_bytes": 9020208,
+            "peak_live_bytes": 11409464,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 720674824,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/cyclops-xband-sip": {
+      "cell": "eda/cyclops-xband-sip",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-xband-sip.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-xband-sip.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 672743,
+            "reallocs": 320,
+            "alloc_bytes": 72562016,
+            "realloc_added_bytes": 1287872,
+            "peak_live_bytes": 7707672,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 18871,
+            "runtime_releases": 240300,
+            "cumulative_allocated_bytes": 73849888,
+            "compiler_retains": 841627,
+            "compiler_releases": 1186495
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-xband-sip.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 672744,
+            "reallocs": 320,
+            "alloc_bytes": 72563592,
+            "realloc_added_bytes": 1287872,
+            "peak_live_bytes": 7707672,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 18952,
+            "runtime_releases": 240381,
+            "cumulative_allocated_bytes": 73851464,
+            "compiler_retains": 841226,
+            "compiler_releases": 1186095
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-cyclops-xband-sip.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 4404737,
+            "reallocs": 1684,
+            "alloc_bytes": 459165576,
+            "realloc_added_bytes": 5088720,
+            "peak_live_bytes": 9164056,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 464254296,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/dual-flash": {
+      "cell": "eda/dual-flash",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-dual-flash.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-dual-flash.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 438291,
+            "reallocs": 112,
+            "alloc_bytes": 48040672,
+            "realloc_added_bytes": 297536,
+            "peak_live_bytes": 7309160,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 1668,
+            "runtime_releases": 152870,
+            "cumulative_allocated_bytes": 48338208,
+            "compiler_retains": 556835,
+            "compiler_releases": 782450
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-dual-flash.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 438292,
+            "reallocs": 112,
+            "alloc_bytes": 48041472,
+            "realloc_added_bytes": 297536,
+            "peak_live_bytes": 7309160,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 1704,
+            "runtime_releases": 152906,
+            "cumulative_allocated_bytes": 48339008,
+            "compiler_retains": 556648,
+            "compiler_releases": 782264
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-dual-flash.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 2414095,
+            "reallocs": 441,
+            "alloc_bytes": 258599920,
+            "realloc_added_bytes": 1173648,
+            "peak_live_bytes": 8319896,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 259773568,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/labstation+no-vendor-symbols": {
+      "cell": "eda/labstation+no-vendor-symbols",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-labstation+no-vendor-symbols.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-labstation+no-vendor-symbols.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 1184413,
+            "reallocs": 707,
+            "alloc_bytes": 123484880,
+            "realloc_added_bytes": 4966720,
+            "peak_live_bytes": 11430928,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 31800,
+            "runtime_releases": 402692,
+            "cumulative_allocated_bytes": 128451600,
+            "compiler_retains": 1530349,
+            "compiler_releases": 2070523
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-labstation+no-vendor-symbols.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 1184414,
+            "reallocs": 707,
+            "alloc_bytes": 123491064,
+            "realloc_added_bytes": 4966720,
+            "peak_live_bytes": 11430928,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 32322,
+            "runtime_releases": 403214,
+            "cumulative_allocated_bytes": 128457784,
+            "compiler_retains": 1528088,
+            "compiler_releases": 2068263
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-labstation+no-vendor-symbols.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 11219812,
+            "reallocs": 7352,
+            "alloc_bytes": 1121253624,
+            "realloc_added_bytes": 33711360,
+            "peak_live_bytes": 21151240,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 1154964984,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/labstation": {
+      "cell": "eda/labstation",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-labstation.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-labstation.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 1578013,
+            "reallocs": 801,
+            "alloc_bytes": 166893968,
+            "realloc_added_bytes": 5150528,
+            "peak_live_bytes": 12138320,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 32766,
+            "runtime_releases": 543973,
+            "cumulative_allocated_bytes": 172044496,
+            "compiler_retains": 2013606,
+            "compiler_releases": 2786804
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-labstation.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 1578014,
+            "reallocs": 801,
+            "alloc_bytes": 166900152,
+            "realloc_added_bytes": 5150672,
+            "peak_live_bytes": 12138320,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 33288,
+            "runtime_releases": 544495,
+            "cumulative_allocated_bytes": 172050824,
+            "compiler_retains": 2011369,
+            "compiler_releases": 2784568
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-labstation.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 13290913,
+            "reallocs": 7964,
+            "alloc_bytes": 1345631696,
+            "realloc_added_bytes": 36220240,
+            "peak_live_bytes": 21743848,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 1381851936,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/lmk05318b-clock": {
+      "cell": "eda/lmk05318b-clock",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-lmk05318b-clock.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-lmk05318b-clock.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 555200,
+            "reallocs": 189,
+            "alloc_bytes": 60262840,
+            "realloc_added_bytes": 816768,
+            "peak_live_bytes": 7503968,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 4077,
+            "runtime_releases": 193323,
+            "cumulative_allocated_bytes": 61079608,
+            "compiler_retains": 717864,
+            "compiler_releases": 998456
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-lmk05318b-clock.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 555201,
+            "reallocs": 189,
+            "alloc_bytes": 60264416,
+            "realloc_added_bytes": 816768,
+            "peak_live_bytes": 7503968,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 4167,
+            "runtime_releases": 193413,
+            "cumulative_allocated_bytes": 61081184,
+            "compiler_retains": 717550,
+            "compiler_releases": 998143
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-lmk05318b-clock.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 3691702,
+            "reallocs": 1427,
+            "alloc_bytes": 386778016,
+            "realloc_added_bytes": 5761648,
+            "peak_live_bytes": 12944472,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 392539664,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/max860-inverter": {
+      "cell": "eda/max860-inverter",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-max860-inverter.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-max860-inverter.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 411952,
+            "reallocs": 95,
+            "alloc_bytes": 45289544,
+            "realloc_added_bytes": 205312,
+            "peak_live_bytes": 7239952,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 905,
+            "runtime_releases": 143306,
+            "cumulative_allocated_bytes": 45494856,
+            "compiler_retains": 525574,
+            "compiler_releases": 738100
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-max860-inverter.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 411953,
+            "reallocs": 95,
+            "alloc_bytes": 45290344,
+            "realloc_added_bytes": 205312,
+            "peak_live_bytes": 7239952,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 941,
+            "runtime_releases": 143342,
+            "cumulative_allocated_bytes": 45495656,
+            "compiler_retains": 525509,
+            "compiler_releases": 738036
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-max860-inverter.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 2186688,
+            "reallocs": 157,
+            "alloc_bytes": 236176944,
+            "realloc_added_bytes": 314368,
+            "peak_live_bytes": 8252320,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 236491312,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/poe-pd-flyback-tps23757": {
+      "cell": "eda/poe-pd-flyback-tps23757",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-poe-pd-flyback-tps23757.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-poe-pd-flyback-tps23757.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 515135,
+            "reallocs": 162,
+            "alloc_bytes": 56215464,
+            "realloc_added_bytes": 593088,
+            "peak_live_bytes": 7438760,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 2447,
+            "runtime_releases": 178168,
+            "cumulative_allocated_bytes": 56808552,
+            "compiler_retains": 657759,
+            "compiler_releases": 920658
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-poe-pd-flyback-tps23757.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 515136,
+            "reallocs": 162,
+            "alloc_bytes": 56218576,
+            "realloc_added_bytes": 593088,
+            "peak_live_bytes": 7438760,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 2609,
+            "runtime_releases": 178330,
+            "cumulative_allocated_bytes": 56811664,
+            "compiler_retains": 657502,
+            "compiler_releases": 920402
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-poe-pd-flyback-tps23757.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 3115974,
+            "reallocs": 440,
+            "alloc_bytes": 330659856,
+            "realloc_added_bytes": 1133792,
+            "peak_live_bytes": 8561488,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 331793648,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/rds3+flat": {
+      "cell": "eda/rds3+flat",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rds3+flat.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rds3+flat.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 1753394,
+            "reallocs": 524,
+            "alloc_bytes": 185527928,
+            "realloc_added_bytes": 5792176,
+            "peak_live_bytes": 51415480,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 23918,
+            "runtime_releases": 583746,
+            "cumulative_allocated_bytes": 191320104,
+            "compiler_retains": 2207253,
+            "compiler_releases": 3070521
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rds3+flat.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 1753395,
+            "reallocs": 524,
+            "alloc_bytes": 185534112,
+            "realloc_added_bytes": 5792176,
+            "peak_live_bytes": 51415480,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 24233,
+            "runtime_releases": 584061,
+            "cumulative_allocated_bytes": 191326288,
+            "compiler_retains": 2204607,
+            "compiler_releases": 3067876
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rds3+flat.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 22750392,
+            "reallocs": 26178,
+            "alloc_bytes": 2017520320,
+            "realloc_added_bytes": 571276912,
+            "peak_live_bytes": 86587128,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 2588797232,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/rds3-rf-selector": {
+      "cell": "eda/rds3-rf-selector",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rds3-rf-selector.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rds3-rf-selector.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 418874,
+            "reallocs": 102,
+            "alloc_bytes": 46059504,
+            "realloc_added_bytes": 250048,
+            "peak_live_bytes": 7274568,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 1158,
+            "runtime_releases": 146257,
+            "cumulative_allocated_bytes": 46309552,
+            "compiler_retains": 535345,
+            "compiler_releases": 750148
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rds3-rf-selector.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 418875,
+            "reallocs": 102,
+            "alloc_bytes": 46060304,
+            "realloc_added_bytes": 250048,
+            "peak_live_bytes": 7274568,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 1194,
+            "runtime_releases": 146293,
+            "cumulative_allocated_bytes": 46310352,
+            "compiler_retains": 535251,
+            "compiler_releases": 750055
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rds3-rf-selector.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 2257578,
+            "reallocs": 193,
+            "alloc_bytes": 243222200,
+            "realloc_added_bytes": 412896,
+            "peak_live_bytes": 8279280,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 243635096,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/rds3": {
+      "cell": "eda/rds3",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rds3.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rds3.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 1985563,
+            "reallocs": 1176,
+            "alloc_bytes": 210915696,
+            "realloc_added_bytes": 5745024,
+            "peak_live_bytes": 11703320,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 24187,
+            "runtime_releases": 655099,
+            "cumulative_allocated_bytes": 216660720,
+            "compiler_retains": 2488805,
+            "compiler_releases": 3472342
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rds3.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 1985564,
+            "reallocs": 1176,
+            "alloc_bytes": 210921880,
+            "realloc_added_bytes": 5745024,
+            "peak_live_bytes": 11703320,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 24502,
+            "runtime_releases": 655414,
+            "cumulative_allocated_bytes": 216666904,
+            "compiler_retains": 2486360,
+            "compiler_releases": 3469898
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rds3.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 17795142,
+            "reallocs": 5878,
+            "alloc_bytes": 1804349240,
+            "realloc_added_bytes": 20913904,
+            "peak_live_bytes": 21057304,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 1825263144,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/remora-base": {
+      "cell": "eda/remora-base",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-remora-base.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-remora-base.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 912017,
+            "reallocs": 422,
+            "alloc_bytes": 97084648,
+            "realloc_added_bytes": 2261456,
+            "peak_live_bytes": 8534560,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 16941,
+            "runtime_releases": 311164,
+            "cumulative_allocated_bytes": 99346104,
+            "compiler_retains": 1143543,
+            "compiler_releases": 1605002
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-remora-base.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 912018,
+            "reallocs": 422,
+            "alloc_bytes": 97090832,
+            "realloc_added_bytes": 2261472,
+            "peak_live_bytes": 8534560,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 17283,
+            "runtime_releases": 311506,
+            "cumulative_allocated_bytes": 99352304,
+            "compiler_retains": 1142549,
+            "compiler_releases": 1604009
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-remora-base.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 6697770,
+            "reallocs": 3098,
+            "alloc_bytes": 688027840,
+            "realloc_added_bytes": 13366736,
+            "peak_live_bytes": 15360536,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 701394576,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/remora-rf": {
+      "cell": "eda/remora-rf",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-remora-rf.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-remora-rf.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 873504,
+            "reallocs": 360,
+            "alloc_bytes": 93752864,
+            "realloc_added_bytes": 2050944,
+            "peak_live_bytes": 8150344,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 7706,
+            "runtime_releases": 298782,
+            "cumulative_allocated_bytes": 95803808,
+            "compiler_retains": 1126382,
+            "compiler_releases": 1555268
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-remora-rf.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 873505,
+            "reallocs": 360,
+            "alloc_bytes": 93755976,
+            "realloc_added_bytes": 2050944,
+            "peak_live_bytes": 8150344,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 7922,
+            "runtime_releases": 298998,
+            "cumulative_allocated_bytes": 95806920,
+            "compiler_retains": 1125486,
+            "compiler_releases": 1554373
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-remora-rf.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 6814525,
+            "reallocs": 2393,
+            "alloc_bytes": 703293440,
+            "realloc_added_bytes": 8136768,
+            "peak_live_bytes": 12354896,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 711430208,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/rf-switch-8way": {
+      "cell": "eda/rf-switch-8way",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rf-switch-8way.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rf-switch-8way.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 490134,
+            "reallocs": 150,
+            "alloc_bytes": 53289376,
+            "realloc_added_bytes": 483600,
+            "peak_live_bytes": 7333120,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 3644,
+            "runtime_releases": 170311,
+            "cumulative_allocated_bytes": 53772976,
+            "compiler_retains": 624152,
+            "compiler_releases": 875647
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rf-switch-8way.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 490135,
+            "reallocs": 150,
+            "alloc_bytes": 53290176,
+            "realloc_added_bytes": 483600,
+            "peak_live_bytes": 7333120,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 3707,
+            "runtime_releases": 170374,
+            "cumulative_allocated_bytes": 53773776,
+            "compiler_retains": 623898,
+            "compiler_releases": 875394
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rf-switch-8way.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 2899585,
+            "reallocs": 1006,
+            "alloc_bytes": 306845184,
+            "realloc_added_bytes": 3762752,
+            "peak_live_bytes": 8398344,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 310607936,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/rf-switch-eval": {
+      "cell": "eda/rf-switch-eval",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rf-switch-eval.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rf-switch-eval.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 527036,
+            "reallocs": 201,
+            "alloc_bytes": 57188576,
+            "realloc_added_bytes": 592704,
+            "peak_live_bytes": 7361320,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 8242,
+            "runtime_releases": 181432,
+            "cumulative_allocated_bytes": 57781280,
+            "compiler_retains": 659197,
+            "compiler_releases": 927687
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rf-switch-eval.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 527037,
+            "reallocs": 201,
+            "alloc_bytes": 57189376,
+            "realloc_added_bytes": 592704,
+            "peak_live_bytes": 7361320,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 8305,
+            "runtime_releases": 181495,
+            "cumulative_allocated_bytes": 57782080,
+            "compiler_retains": 658970,
+            "compiler_releases": 927461
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-rf-switch-eval.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 3052083,
+            "reallocs": 521,
+            "alloc_bytes": 323637568,
+            "realloc_added_bytes": 1245792,
+            "peak_live_bytes": 8433016,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 324883360,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/stm32n6": {
+      "cell": "eda/stm32n6",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-stm32n6.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-stm32n6.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 1224802,
+            "reallocs": 540,
+            "alloc_bytes": 130058696,
+            "realloc_added_bytes": 3160192,
+            "peak_live_bytes": 12201712,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 67453,
+            "runtime_releases": 472897,
+            "cumulative_allocated_bytes": 133218888,
+            "compiler_retains": 1589191,
+            "compiler_releases": 2163277
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-stm32n6.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 1224803,
+            "reallocs": 540,
+            "alloc_bytes": 130061664,
+            "realloc_added_bytes": 3164208,
+            "peak_live_bytes": 12198496,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 67795,
+            "runtime_releases": 473239,
+            "cumulative_allocated_bytes": 133225872,
+            "compiler_retains": 1587481,
+            "compiler_releases": 2161568
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-stm32n6.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 10263705,
+            "reallocs": 5946,
+            "alloc_bytes": 1029918360,
+            "realloc_added_bytes": 34004944,
+            "peak_live_bytes": 23795408,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 1063923304,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/straps-base": {
+      "cell": "eda/straps-base",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-straps-base.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-straps-base.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 1285285,
+            "reallocs": 635,
+            "alloc_bytes": 135574552,
+            "realloc_added_bytes": 3889072,
+            "peak_live_bytes": 21148640,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 25666,
+            "runtime_releases": 416019,
+            "cumulative_allocated_bytes": 139463624,
+            "compiler_retains": 1594202,
+            "compiler_releases": 2224643
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-straps-base.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 1285286,
+            "reallocs": 635,
+            "alloc_bytes": 135577664,
+            "realloc_added_bytes": 3889104,
+            "peak_live_bytes": 21148640,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 25918,
+            "runtime_releases": 416271,
+            "cumulative_allocated_bytes": 139466768,
+            "compiler_retains": 1593009,
+            "compiler_releases": 2223451
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-straps-base.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 11192903,
+            "reallocs": 10354,
+            "alloc_bytes": 1096518064,
+            "realloc_added_bytes": 101713520,
+            "peak_live_bytes": 36929360,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 1198231584,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/straps": {
+      "cell": "eda/straps",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-straps.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-straps.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 918210,
+            "reallocs": 436,
+            "alloc_bytes": 97877984,
+            "realloc_added_bytes": 2233184,
+            "peak_live_bytes": 8080552,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 11194,
+            "runtime_releases": 304730,
+            "cumulative_allocated_bytes": 100111168,
+            "compiler_retains": 1156081,
+            "compiler_releases": 1615638
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-straps.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 918211,
+            "reallocs": 436,
+            "alloc_bytes": 97881096,
+            "realloc_added_bytes": 2233184,
+            "peak_live_bytes": 8080552,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 11455,
+            "runtime_releases": 304991,
+            "cumulative_allocated_bytes": 100114280,
+            "compiler_retains": 1155134,
+            "compiler_releases": 1614692
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-straps.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 6696333,
+            "reallocs": 3755,
+            "alloc_bytes": 687191848,
+            "realloc_added_bytes": 15667440,
+            "peak_live_bytes": 10251696,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 702859288,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    },
+    "eda/w55rp20": {
+      "cell": "eda/w55rp20",
+      "qualification_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-w55rp20.counted.qualification.json",
+      "arms": {
+        "mylang-original-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-w55rp20.mylang-original-rc.counters.json",
+          "metrics": {
+            "allocs": 561558,
+            "reallocs": 195,
+            "alloc_bytes": 60832520,
+            "realloc_added_bytes": 872656,
+            "peak_live_bytes": 7592512,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 10049,
+            "runtime_releases": 203346,
+            "cumulative_allocated_bytes": 61705176,
+            "compiler_retains": 726699,
+            "compiler_releases": 1007752
+          }
+        },
+        "mylang-migrated-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-w55rp20.mylang-migrated-rc.counters.json",
+          "metrics": {
+            "allocs": 561559,
+            "reallocs": 195,
+            "alloc_bytes": 60834096,
+            "realloc_added_bytes": 872656,
+            "peak_live_bytes": 7592512,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 10139,
+            "runtime_releases": 203436,
+            "cumulative_allocated_bytes": 61706752,
+            "compiler_retains": 726262,
+            "compiler_releases": 1007316
+          }
+        },
+        "mylang-zero-rc": {
+          "status": {
+            "status": "ok"
+          },
+          "counter_path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-w55rp20.mylang-zero-rc.counters.json",
+          "metrics": {
+            "allocs": 3723583,
+            "reallocs": 1577,
+            "alloc_bytes": 387493288,
+            "realloc_added_bytes": 7015792,
+            "peak_live_bytes": 13152576,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "cumulative_allocated_bytes": 394509080,
+            "compiler_retains": 0,
+            "compiler_releases": 0
+          }
+        }
+      }
+    }
+  },
+  "separate_instrumented_runs": true,
+  "release_unique_is_direct_destruction_not_rc": true,
+  "raw_counter_archive": "eda-counted-summary.json.gz"
+}

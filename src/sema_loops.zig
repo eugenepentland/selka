@@ -98,7 +98,7 @@ fn statementForEach(comptime Checker: type, self: *Checker, stmt: ast.Statement,
     defer self.option_facts.restore(loop_facts);
     if (try preludeIteration(Checker, self, stmt, each)) |statements| return .{ .block = statements };
     const b: collections.Builder(Checker) = .{ .checker = self, .span = stmt.span };
-    const source_value = try self.expression(each.iterable);
+    const source_value = try @import("sema_expressions.zig").borrowList(Checker, self, each.iterable, &.{});
     const view = dictionary_views.identify(self.catalog, self.nodes.items[@backingInt(source_value)].ty);
     const projected = view != null and view.? != .item;
     const iterable = if (projected) try dictionary_views.owner(Checker, self, stmt.span, source_value) else source_value;
@@ -134,17 +134,19 @@ fn statementForEach(comptime Checker: type, self: *Checker, stmt: ast.Statement,
         self.locals.items[@backingInt(slot)].name = self.src.text(name);
         self.locals.items[@backingInt(slot)].declaration = name;
         self.locals.items[@backingInt(slot)].ownership.initialized = true;
+        self.locals.items[@backingInt(slot)].ownership.transfer_available = self.transfers(self.locals.items[@backingInt(slot)].ty) and !isDiscard(self.src, name);
         self.locals.items[@backingInt(slot)].origin = .iteration;
         earlier.* = try self.bindScoped(self.src.text(name), slot);
     };
     defer for (names, hidden) |maybe_name, earlier| if (maybe_name) |name| self.unbindScoped(self.src.text(name), earlier);
-    const before = try self.pendingState(self.locals.items.len);
+    const before = try self.pendingState(@backingInt(first_slot));
     const loop_id = self.loops.next;
     self.loops.next += 1;
     try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before });
     defer _ = self.loops.active.pop();
     const init_before = try self.initSnapshot();
     const body = try self.statement(each.body);
+    if (!body.terminates) try self.requireHandled(@backingInt(first_slot), stmt.span);
     _ = self.counters.remove(index);
     const owner = try endWalk(Checker, self, b, &source_walk, each.body);
     const prepared = try walkSource(Checker, b, source_walk, iterable, owner, each.body);
@@ -156,16 +158,12 @@ fn statementForEach(comptime Checker: type, self: *Checker, stmt: ast.Statement,
     const iteration_check = try walkGuard(Checker, b, prepared, owner, limit);
     var iteration_statements: std.ArrayList(typed.StatementId) = .empty;
     if (iteration_check) |guarded| try iteration_statements.append(self.allocator, guarded);
-    const value = try iterationRead(Checker, self, b, owner, i, .{ .kind = kind, .fixed = fixed, .projection = if (projected) view else null });
+    const value = try bindingIterationRead(Checker, self, b, owner, i, .{ .kind = kind, .fixed = fixed, .projection = if (projected) view else null }, unpack);
     if (unpack) {
-        const pair = try b.local(element);
-        try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = pair, .value = value } }));
-        const first_value = try b.node(first_type, .{ .field = .{ .base = try b.read(pair), .index = 0 } });
-        const second_type = self.locals.items[@backingInt(second_slot)].ty;
-        const second_value = try b.node(second_type, .{ .field = .{ .base = try b.read(pair), .index = 1 } });
-        try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = first_value } }));
-        try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = second_slot, .value = second_value } }));
-    } else try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = value } }));
+        const values = try unpackedIteration(Checker, self, b, &iteration_statements, owner, i, value);
+        try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = values[0] } }));
+        try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = second_slot, .value = values[1] } }));
+    } else try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = value.? } }));
     try appendRebinding(Checker, self, b, &iteration_statements, position, i);
     try iteration_statements.append(self.allocator, body.id);
     const iteration = try b.stmt(.{ .block = try iteration_statements.toOwnedSlice(self.allocator) });
@@ -182,6 +180,30 @@ fn statementForEach(comptime Checker: type, self: *Checker, stmt: ast.Statement,
     };
     // Walking the array in place, the loop reads the variable itself.
     return finishWalk(Checker, self, source_walk, prepared, &setup);
+}
+
+// Direct item unpacking needs projections rather than a temporary owning pair.
+fn bindingIterationRead(comptime Checker: type, self: *Checker, b: collections.Builder(Checker), owner: typed.LocalId, index: typed.NodeId, shape: IterationShape, unpack: bool) Error!?typed.NodeId {
+    if (unpack and shape.projection == .items) return null;
+    const value = try iterationRead(Checker, self, b, owner, index, shape);
+    return value;
+}
+
+// Immediate items() destructuring binds borrowed fields directly. Other pair
+// sources keep their aggregate temporary and ordinary field projections.
+fn unpackedIteration(comptime Checker: type, self: *Checker, b: collections.Builder(Checker), statements: *std.ArrayList(typed.StatementId), owner: typed.LocalId, index: typed.NodeId, value: ?typed.NodeId) Error![2]typed.NodeId {
+    if (value == null) return .{
+        try dictionary_views.at(Checker, self, b.span, owner, index, .keys),
+        try dictionary_views.at(Checker, self, b.span, owner, index, .values),
+    };
+    const ty = self.nodes.items[@backingInt(value.?)].ty;
+    const fields = self.catalog.records[ty.recordIndex()].fields;
+    const pair = try b.local(ty);
+    try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = pair, .value = value.? } }));
+    return .{
+        try b.node(fields[0].ty, .{ .field = .{ .base = try b.read(pair), .index = 0 } }),
+        try b.node(fields[1].ty, .{ .field = .{ .base = try b.read(pair), .index = 1 } }),
+    };
 }
 
 fn walkGuard(comptime Checker: type, b: collections.Builder(Checker), prepared: ?iteration_place.Source, owner: typed.LocalId, limit: typed.LocalId) Error!?typed.StatementId {
@@ -286,7 +308,11 @@ fn preludeIteration(comptime Checker: type, self: *Checker, stmt: ast.Statement,
     if (paired != (each.index_name != null)) return self.sink.fail(eCollectionMethod, stmt.span, "zip binds two iteration names and reversed binds one");
     for (call.arguments) |id| try self.hintEmptyPreludeList(id, .i64);
     const sources = try self.allocator.alloc(typed.NodeId, call.arguments.len);
-    for (call.arguments, sources) |id, *slot| slot.* = try self.expression(id);
+    for (call.arguments, sources) |id, *slot| {
+        slot.* = try @import("sema_expressions.zig").borrowList(Checker, self, id, &.{});
+        if (@import("record_layouts.zig").pendingList(self.catalog.records, self.nodes.items[@backingInt(slot.*)].ty))
+            return self.sink.fail("E_RESULT_OPERATION", node.span, "iterate a pending Result list directly and acknowledge its remaining elements explicitly");
+    }
     const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
     const left_type = self.nodes.items[@backingInt(sources[0])].ty;
     const zip = if (paired) try builtins.reserveZip(stmt.span, left_type, self.nodes.items[@backingInt(sources[1])].ty) else null;

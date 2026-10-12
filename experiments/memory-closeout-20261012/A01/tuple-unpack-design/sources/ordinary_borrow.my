@@ -1,0 +1,13 @@
+func borrowed(pair: tuple[str[], str[]]) -> int:
+    mut left, right = pair
+    left.append("independent-" + str(3))
+    assert right == ["right-2"]
+    return len(left) + len(right)
+func main(out: Stream) -> int:
+    const pair = (["left-" + str(1)], ["right-" + str(2)])
+    assert borrowed(pair) == 3
+    assert borrowed(pair) == 3
+    const original_left, original_right = pair
+    assert original_left == ["left-1"] and original_right == ["right-2"]
+    out.print("ordinary-borrow", 2)
+    return 0

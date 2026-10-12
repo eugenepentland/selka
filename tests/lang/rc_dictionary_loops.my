@@ -3,7 +3,7 @@ func fresh(times: int) -> dict[str, int]:
     mut keys = ["al" + "pha", "beta"]
     mut counts: dict[str, int] = {}
     for i in range(times):
-        mut key = keys[i % 2]
+        mut key = keys[i % 2].copy()
         counts[key] = counts.get(key, 0) + 1
     assert len(keys) == 2
     return counts
@@ -20,9 +20,9 @@ func test_fresh_root_and_zero_iterations() -> bool:
 func shared_empty(times: int) -> int:
     mut keys = ["key"]
     mut counts: dict[str, int] = {}
-    mut saved = counts
+    mut saved = counts.copy()
     for i in range(times):
-        mut key = keys[0]
+        mut key = keys[0].copy()
         counts[key] = counts.get(key, 0) + 1
     assert len(saved) == 0
     return counts.get("key", 0)
@@ -37,8 +37,8 @@ func during(times: int) -> int:
     mut counts: dict[str, int] = {}
     mut saved: dict[str, int] = {}
     for i in range(times):
-        saved = counts
-        mut key = keys[0]
+        saved = counts.copy()
+        mut key = keys[0].copy()
         counts[key] = counts.get(key, 0) + 1
     return saved.get("key", 0)
 
@@ -56,7 +56,7 @@ func calls(times: int) -> int:
     mut keys = ["key"]
     mut counts: dict[str, int] = {}
     for i in range(times):
-        mut key = keys[0]
+        mut key = keys[0].copy()
         mut mutation_result_59 = change(mut counts)
         counts[key] = mutation_result_59
     return counts["key"]
@@ -71,7 +71,7 @@ func rebound(times: int) -> int:
     mut counts: dict[str, int] = {}
     for i in range(times):
         counts = {"key": 20}
-        mut key = keys[0]
+        mut key = keys[0].copy()
         counts[key] = counts.get(key, 0) + 1
     return counts["key"]
 
@@ -86,9 +86,9 @@ func enclosing() -> bool:
     mut saved: dict[str, int] = {}
     for outer in range(3):
         for i in range(2):
-            mut key = keys[0]
+            mut key = keys[0].copy()
             counts[key] = counts.get(key, 0) + 1
-        saved = counts
+        saved = counts.copy()
     counts["key"] = 9
     return saved["key"] == 6
 

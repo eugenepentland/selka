@@ -5,8 +5,8 @@ func test_repeated_negative_index_keys_and_real_iterator() -> bool:
         keys.append("key" + str(i))
     mut counts: dict[str, int] = {}
     for i in range(400):
-        mut key = keys[(i % 40) - 40]
-        counts[key] = counts.get(key, 0) + 1
+        mut key = keys[(i % 40) - 40].copy()
+        counts[key.copy()] = counts.get(key, 0) + 1
     mut total = 0
     for name in keys:
         total += counts[name]
@@ -20,8 +20,8 @@ func test_view_backed_keys_survive_dictionary_growth() -> bool:
     mut keys = ("alpha" + ",beta,gamma").split(",")
     mut counts: dict[str, int] = {}
     for i in range(60):
-        mut key = keys[i % 3]
-        counts[key] = counts.get(key, 0) + 1
+        mut key = keys[i % 3].copy()
+        counts[key.copy()] = counts.get(key, 0) + 1
     keys.clear()
     assert counts["alpha"] == 20
     assert counts["beta"] == 20
@@ -32,12 +32,12 @@ func test_view_backed_keys_survive_dictionary_growth() -> bool:
 # Dictionary first uniqueness remains even when key is a raw anchored pointer.
 func test_preexisting_list_and_dictionary_snapshots() -> bool:
     mut keys = ["left" + "-key", "right-key"]
-    mut saved_keys = keys
+    mut saved_keys = keys.copy()
     mut counts = {"left-key": 7}
-    mut saved_counts = counts
+    mut saved_counts = counts.copy()
     for i in range(2):
-        mut key = keys[i]
-        counts[key] = counts.get(key, 0) + 1
+        mut key = keys[i].copy()
+        counts[key.copy()] = counts.get(key, 0) + 1
     keys[0] = "changed"
     assert saved_keys[0] == "left-key"
     assert saved_counts["left-key"] == 7
@@ -50,8 +50,8 @@ func inherited_work() -> bool:
     mut keys = ("inner" + ",second").split(",")
     mut counts: dict[str, int] = {}
     for i in range(80):
-        mut key = keys[i % 2]
-        counts[key] = counts.get(key, 0) + 1
+        mut key = keys[i % 2].copy()
+        counts[key.copy()] = counts.get(key, 0) + 1
     return counts["inner"] == 40 and counts["second"] == 40
 
 
@@ -63,8 +63,8 @@ func change_key(mut keys: str[]) -> int:
 func test_rhs_callback_keeps_original_named_key() -> bool:
     mut keys = ["be" + "fore"]
     mut counts: dict[str, int] = {}
-    mut key = keys[0]
-    counts[key] = change_key(mut keys)
+    mut key = keys[0].copy()
+    counts[key.copy()] = change_key(mut keys)
     assert counts["before"] == 13
     assert keys[0] == "after"
     return True
@@ -73,8 +73,8 @@ func test_rhs_callback_keeps_original_named_key() -> bool:
 func test_later_key_use_keeps_ordinary_publication() -> bool:
     mut keys = ["be" + "fore"]
     mut counts: dict[str, int] = {}
-    mut key = keys[0]
-    counts[key] = 7
+    mut key = keys[0].copy()
+    counts[key.copy()] = 7
     keys.clear()
     assert key == "before"
     return True
@@ -83,8 +83,8 @@ func test_later_key_use_keeps_ordinary_publication() -> bool:
 func test_string_iterator_role_is_not_elided() -> bool:
     mut keys = ["be" + "fore"]
     mut counts: dict[str, int] = {}
-    mut key = keys[0]
-    counts[key] = 7
+    mut key = keys[0].copy()
+    counts[key.copy()] = 7
     mut length = 0
     for letter in key:
         length += len(letter)
@@ -94,8 +94,8 @@ func test_string_iterator_role_is_not_elided() -> bool:
 
 func parameter_work(keys: str[]) -> int:
     mut counts: dict[str, int] = {}
-    mut key = keys[0]
-    counts[key] = 11
+    mut key = keys[0].copy()
+    counts[key.copy()] = 11
     return counts["parameter"]
 
 
@@ -108,8 +108,8 @@ func test_user_loop_binding_is_not_an_ordinary_home_proof() -> bool:
     mut total = 0
     for keys in groups:
         mut counts: dict[str, int] = {}
-        mut key = keys[0]
-        counts[key] = 7
+        mut key = keys[0].copy()
+        counts[key.copy()] = 7
         total += counts[key]
     return total == 14
 
@@ -119,8 +119,8 @@ func test_rebound_source_and_empty_loop_keep_fallback() -> bool:
     keys = ["after"]
     mut counts: dict[str, int] = {}
     for i in range(0):
-        mut key = keys[i]
-        counts[key] = 7
+        mut key = keys[i].copy()
+        counts[key.copy()] = 7
     return len(counts) == 0
 
 
@@ -130,6 +130,6 @@ func test_preowned_key_reassigned_on_loop_backedges() -> bool:
     mut counts: dict[str, int] = {}
     mut key = "seed" + str(9)
     for i in range(8):
-        key = keys[i % 2]
-        counts[key] = counts.get(key, 0) + 1
+        key = keys[i % 2].copy()
+        counts[key.copy()] = counts.get(key, 0) + 1
     return counts["first"] == 4 and counts["second"] == 4

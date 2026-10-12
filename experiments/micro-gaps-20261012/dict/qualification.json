@@ -1,0 +1,86 @@
+{
+  "base_commit": "399013af36d41b78610e5ede22a9102ec5b17ffe",
+  "identities": {
+    "compiler": {
+      "path": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/.tmp/micro-gaps/dict/package/bin/mylang",
+      "sha256": "89863c690537fa80bef0cbd4b0773b9537f7ffb64838e66deac7024972b767c5"
+    },
+    "runtime": {
+      "path": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/.tmp/micro-gaps/dict/bin/dict_count-final",
+      "sha256": "83f8396918bbf166629adad1c5e4c20855adfb07c4b9ed980d3c9b7859bae144"
+    },
+    "counted": {
+      "path": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/.tmp/micro-gaps/dict/bin/dict_count-final-count",
+      "sha256": "921e1b9059e81dd243481a4fb93e701b09609b4607e51dfe17f5126d765a7778"
+    },
+    "source": {
+      "path": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/experiments/micro-ownership-20261012/parity/migrated/dict_count.my",
+      "sha256": "85f4031385261de61c57208a1ed38dbe65a5018f46338eeb16c675439fe49bec"
+    },
+    "llvm": {
+      "path": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/.tmp/micro-gaps/dict/dict_count-final-no-count.ll",
+      "sha256": "53224aa7b69415b2d3766b56310012aedad581c7c93066d01c0a01760bbb0e3e"
+    }
+  },
+  "compiler_optimize": "Debug",
+  "guest_flags": [
+    "--release",
+    "--experimental-zero-rc"
+  ],
+  "expected_stdout": "779967\n",
+  "counter_summary": {
+    "allocs": 4014,
+    "cumulative_allocated_bytes": 298288,
+    "peak_live_bytes": 152656,
+    "exit_live": 0,
+    "rc_events": 0,
+    "uniqueness_tests": 0
+  },
+  "known_core_rc_symbols": [],
+  "copy_calls": [
+    {
+      "block": "b15",
+      "instruction": "%v119 = call ptr @myl_core_owned_octets_copy(ptr %v42), !dbg !1000013"
+    }
+  ],
+  "component_provisioning": "Legacy seed failed missing native object. Complete frozen installation reused with candidate host replacing only bin/mylang.",
+  "reused_package_files": [
+    {
+      "path": "libexec/mylang/components/cache-plan-a3433084f84ddfce28db22e7bb3e1b10bc7d5610bfff9abad0503b24de9b68a9",
+      "sha256": "a3433084f84ddfce28db22e7bb3e1b10bc7d5610bfff9abad0503b24de9b68a9"
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan-d69b536c904f109ef2d292ac376ce3ecb811da91db6e051b2a49a176a1c31840",
+      "sha256": "d69b536c904f109ef2d292ac376ce3ecb811da91db6e051b2a49a176a1c31840"
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan-f670f2a1520a585015eabc7b1481badb9b2317c6c2a264b533177e82a5e11929",
+      "sha256": "f670f2a1520a585015eabc7b1481badb9b2317c6c2a264b533177e82a5e11929"
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan.json",
+      "sha256": "026c2156115c346d8e30e0ef11c967c0e14e358dd69b96aee465e0a6e00aaaac"
+    },
+    {
+      "path": "libexec/mylang/components/test-index-421c25cd90ec028fefd5f3f428bb7f8811428ee0ab8196839350fcb1d69e67a6",
+      "sha256": "421c25cd90ec028fefd5f3f428bb7f8811428ee0ab8196839350fcb1d69e67a6"
+    },
+    {
+      "path": "libexec/mylang/components/test-index-aad4a3ec908f250f5cd68a365bc88d0d2efdab41bbf0c830c915c042828ed83b",
+      "sha256": "aad4a3ec908f250f5cd68a365bc88d0d2efdab41bbf0c830c915c042828ed83b"
+    },
+    {
+      "path": "libexec/mylang/components/test-index-dbd9fea31ee72550200d6f21c4a42dcfadf00321e9697eb9d4cc21cdbfa99a27",
+      "sha256": "dbd9fea31ee72550200d6f21c4a42dcfadf00321e9697eb9d4cc21cdbfa99a27"
+    },
+    {
+      "path": "libexec/mylang/components/test-index.json",
+      "sha256": "0b789102fa506551c00a13e1e98fceb518f8263e2171f36690ae12aec043d27b"
+    },
+    {
+      "path": "tools/selka-components",
+      "sha256": "7861f4fba7df070b86f0c03dcc42c8231c609035a3f3c29f8df31c41792fa01b"
+    }
+  ],
+  "timing": "No timing samples collected; integration coordinator owns paired timing."
+}

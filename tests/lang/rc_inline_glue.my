@@ -22,7 +22,7 @@ record Wide:
 
 
 func load(holder: Holder) -> Frame:
-    return Frame(constants=holder.frame.constants, code=holder.items, names=holder.frame.names, ip=holder.frame.ip + 1)
+    return Frame(constants=holder.frame.constants.copy(), code=holder.items.copy(), names=holder.frame.names.copy(), ip=holder.frame.ip + 1)
 
 
 public func test_published_lists_are_independent_values() -> bool:
@@ -47,8 +47,8 @@ public func test_replaced_frames_release_their_lists() -> bool:
 
 public func test_frames_sharing_lists_keep_them_alive() -> bool:
     mut shared = [7, 8]
-    mut first = Frame(constants=shared, code=shared, names=["x"], ip=0)
-    mut second = first
+    mut first = Frame(constants=shared.copy(), code=shared.copy(), names=["x"], ip=0)
+    mut second = first.copy()
     first = Frame(constants=[], code=[], names=[], ip=1)
     second.code.append(9)
     return second.constants == [7, 8] and second.code == [7, 8, 9] and shared == [7, 8] and first.ip == 1
@@ -56,7 +56,7 @@ public func test_frames_sharing_lists_keep_them_alive() -> bool:
 
 public func test_wide_records_keep_their_glue_drop() -> bool:
     mut wide = Wide(a=[1], b=[2], c=[3], d=[4], e=[5])
-    mut other = wide
+    mut other = wide.copy()
     wide = Wide(a=[], b=[], c=[], d=[], e=[6])
     other.e.append(7)
     return other.e == [5, 7] and wide.e == [6] and other.a == [1]

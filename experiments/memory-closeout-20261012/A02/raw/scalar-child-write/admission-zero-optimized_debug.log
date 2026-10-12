@@ -1,0 +1,5 @@
+oracle zero optimized_debug True
+reduced zero optimized_debug True
+control zero optimized_debug True
+build-slot: FIFO ticket 858, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 858 after 5s

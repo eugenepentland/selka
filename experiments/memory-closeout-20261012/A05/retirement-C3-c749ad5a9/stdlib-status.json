@@ -1,0 +1,97 @@
+{
+  "status": "owned library source migrations already integrated; no additional C2 mode selector in owned modules",
+  "integration_revision": "c749ad5a9d2dfef5d5c4d7b9de2a30f03029999f",
+  "modules": [
+    {
+      "path": "src/stdlib/cache_record.my",
+      "integrated_sha256": "d12aae8879c0b3fdc07ff398d79d4daa44e5a45e33c6660bbecaeda7659fdd57",
+      "worker_sha256": "d12aae8879c0b3fdc07ff398d79d4daa44e5a45e33c6660bbecaeda7659fdd57",
+      "identical": true,
+      "active_RC_or_COW_prose": false
+    },
+    {
+      "path": "src/stdlib/durable.my",
+      "integrated_sha256": "6ee0ccaa4aefa27db5cdf515576193c54096deb91539fb211abc54fc3d1d00cf",
+      "worker_sha256": "6ee0ccaa4aefa27db5cdf515576193c54096deb91539fb211abc54fc3d1d00cf",
+      "identical": true,
+      "active_RC_or_COW_prose": false
+    },
+    {
+      "path": "src/stdlib/environment.my",
+      "integrated_sha256": "b2cefe6fd13933d1980d5d09740293465662875b4c35e513a650373f18ecd064",
+      "worker_sha256": "b2cefe6fd13933d1980d5d09740293465662875b4c35e513a650373f18ecd064",
+      "identical": true,
+      "active_RC_or_COW_prose": false
+    },
+    {
+      "path": "src/stdlib/filesystem.my",
+      "integrated_sha256": "454813fbe04d42fced7a9efde1813231a70fac3063c1bc259a36deab78310f67",
+      "worker_sha256": "454813fbe04d42fced7a9efde1813231a70fac3063c1bc259a36deab78310f67",
+      "identical": true,
+      "active_RC_or_COW_prose": false
+    },
+    {
+      "path": "src/stdlib/hashes.my",
+      "integrated_sha256": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+      "worker_sha256": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+      "identical": true,
+      "active_RC_or_COW_prose": false
+    },
+    {
+      "path": "src/stdlib/math.my",
+      "integrated_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "worker_sha256": "741732e76fb167f265ac325443579ae85ed038526c28bec0e8679bc36b3333ff",
+      "identical": true,
+      "active_RC_or_COW_prose": false
+    },
+    {
+      "path": "src/stdlib/memo.my",
+      "integrated_sha256": "c129a1311b4b69cc681778efc5fb4a08b3066988b3c8ecedde9d022011371bc3",
+      "worker_sha256": "c129a1311b4b69cc681778efc5fb4a08b3066988b3c8ecedde9d022011371bc3",
+      "identical": true,
+      "active_RC_or_COW_prose": false
+    },
+    {
+      "path": "src/stdlib/network.my",
+      "integrated_sha256": "22df6c837085a127a8d68ecaab3daf1c2a8e942bfa31f3e718a47fa3ed57c6cf",
+      "worker_sha256": "22df6c837085a127a8d68ecaab3daf1c2a8e942bfa31f3e718a47fa3ed57c6cf",
+      "identical": true,
+      "active_RC_or_COW_prose": false
+    },
+    {
+      "path": "src/stdlib/persistent_memo.my",
+      "integrated_sha256": "601aa015917fe3442301698c017d9460d09bc3be9c8ba2b6abd638ccf94a9f45",
+      "worker_sha256": "601aa015917fe3442301698c017d9460d09bc3be9c8ba2b6abd638ccf94a9f45",
+      "identical": true,
+      "active_RC_or_COW_prose": false
+    },
+    {
+      "path": "src/stdlib/pool.my",
+      "integrated_sha256": "e65e56a72b5c065bb01858a16da07c870679b6ba9011837661c5a3658ce6b4bc",
+      "worker_sha256": "e65e56a72b5c065bb01858a16da07c870679b6ba9011837661c5a3658ce6b4bc",
+      "identical": true,
+      "active_RC_or_COW_prose": false
+    },
+    {
+      "path": "src/stdlib/random.my",
+      "integrated_sha256": "6e5cd43641419b75257d1c3c24ba8ed6fdede3abf1b1fa822de28715e89f764c",
+      "worker_sha256": "6e5cd43641419b75257d1c3c24ba8ed6fdede3abf1b1fa822de28715e89f764c",
+      "identical": true,
+      "active_RC_or_COW_prose": false
+    },
+    {
+      "path": "src/stdlib/sort.my",
+      "integrated_sha256": "81837c998498b9ddb602fbc78c59c719aed4003d89af48ff659df69550129302",
+      "worker_sha256": "81837c998498b9ddb602fbc78c59c719aed4003d89af48ff659df69550129302",
+      "identical": true,
+      "active_RC_or_COW_prose": false
+    },
+    {
+      "path": "src/stdlib/time.my",
+      "integrated_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "worker_sha256": "06d409f0d3316fe69a2c3728be4bc3859eb84651407559ce64f70ed3f2d6b4a8",
+      "identical": true,
+      "active_RC_or_COW_prose": false
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+build-slot: build slot 1, FIFO ticket 1301 after 0s
+e8add4ed2f00920eaaff43adebe90db2d659dabcc156a75520c2b635a083574a
+e928a01235555193c60d84507323819036a6efea980cf592b74a94732aa3d3d3
+test-cli
++- verification action cli member 0 w
+guardian/test: 4 test(s) selected by filter: "CLI component bootstrap rebuilds" — 1 match by name, 3 unnamed test block(s) run regardless
+guardian/test: SLOW  11.11s  components.test.CLI component bootstrap rebuilds and installs without an interpreter on PATH
+guardian/test: test wall 11.11s; slowest over 50ms:
+guardian/test:   11.11s  components.test.CLI component bootstrap rebuilds and installs without an interpreter on PATH
+guardian/test: PASS — 4 passed
+guardian/test: RESULT {"passed":4,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A10-rollout/zig-out/libexec/mylang/components ./.zig-cache/o/d302aab26f00ad5c99198f7e56a695d9/test "--guardian-filter=CLI component bootstrap rebuilds" --cache-dir=./.zig-cache --seed=0x1cf28489 --listen=-
+

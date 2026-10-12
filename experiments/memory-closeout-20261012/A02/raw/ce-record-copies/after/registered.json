@@ -1,0 +1,55 @@
+{
+  "base": "723d2281ae98df97cf1503ad21ad2c9b4336df0b",
+  "source_sha256": {
+    "src/core/own.zig": "e04f3b509f42219c1614dcd60070e32cd483a0a1913b3f832c0279799cae6a38",
+    "src/core/build.zig": "7ddad513c6f6edea9f5e8dd8bfecc910698af6957ad5fe90a2a48cd2e2819b3c",
+    "src/core/emit_homes.zig": "b8f5402a14df5e1de90eedad62540a2d1707c806ebc7e51f9e6e4aab7964010f",
+    "src/core/ce_records_test.zig": "5700a5cc24bb8d9f27c6cc92429c418c1bbcf7fae5a5bc7966b914b99531e7ac",
+    "src/core/test_support.zig": "80b49b2d8d0faf2db687c9c811071b6c53b39f02619d4b95ae74230d676cef5b"
+  },
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "components": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/install/libexec/mylang/components",
+  "component_boundary": "Support6 independent owned pin supplies components; final default/retirement package qualification is separate",
+  "steps": [
+    {
+      "name": "build",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build",
+        "core-test-binary",
+        "-Dtest-filter=ce_records_test",
+        "-j4",
+        "--maxrss",
+        "8589934592",
+        "--prefix",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/ce-record-copies-final-alias/install",
+        "-Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+        "-Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 2.6197351759765297,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "test-0",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/ce-record-copies-final-alias/install/focus/core-tests",
+        "--guardian-filter=ce_records_test"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 1.090033131884411,
+      "stdout": "",
+      "stderr": "guardian/test: 10 test(s) selected by filter: \"ce_records_test\"\nAll 10 tests passed.\nguardian/test: test wall 1.05s; slowest over 50ms:\nguardian/test:   0.55s  ce_records_test.test.shared homes, views, in-place updates and in-out calls keep value semantics, debug, release and verify, leak-free\nguardian/test:   0.16s  ce_records_test.test.record loop writeback keeps readonly roots snapshots branch fields and later old reads independent\nguardian/test:   0.10s  ce_records_test.test.the CE-A shapes print what value semantics says, debug and release\nguardian/test:   0.09s  ce_records_test.test.a ret next to a value living in %ret builds its value in a temporary: a field swap reads both halves first\nguardian/test:   0.08s  ce_records_test.test.a call's result record read whole gets its in-out final values copied in after the call\nguardian/test: PASS \u2014 10 passed\nguardian/test: RESULT {\"passed\":10,\"failed\":0,\"skipped\":0}\n"
+    }
+  ],
+  "complete": true,
+  "compiler": {
+    "path": ".zig-cache/o/15ca7baf5ba09b7a6b948baeb06f5d73/mylang",
+    "sha256": "2e0c0386731c6ca4d8309b7b6673bc791609995d237e07a97017f3815c0a682f",
+    "options": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/bffbd05132ab084b881fe6d566ecdcfe/options.zig"
+  },
+  "test_binary_sha256": "fddeabd5066c333f43b84fdbb41119b73e4693cc51fd292114fe1542f772434d",
+  "pass": true
+}

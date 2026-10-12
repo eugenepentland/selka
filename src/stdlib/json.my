@@ -342,7 +342,7 @@ func append_code_point(mut out: byte_buffer, code: int):
 
 # Text for accumulated UTF-8 bytes, rejecting sequences the source made invalid.
 func decoded(values: byte_buffer) -> Result[str, str]:
-    match bytes(values).decode():
+    match values.decode():
         case Ok(rendered):
             return Ok(rendered)
         case Err(_):
@@ -415,14 +415,20 @@ func read_escape(mut scanner: Scanner, mut out: byte_buffer) -> Result[bool, str
     return read_unicode_escape(mut scanner, mut out)
 
 
-# One string body, with the opening quote under the cursor.
-func read_string(mut scanner: Scanner) -> Result[str, str]:
-    advance(mut scanner)
-    mut empty: int[] = []
-    mut out = byte_buffer(empty)
+# One ordinary string span, returned with independent validated text storage.
+func decoded_span(data: bytes, start: int, end: int) -> Result[str, str]:
+    match data[start:end].decode():
+        case Ok(rendered):
+            return Ok(rendered)
+        case Err(_):
+            return Err("JSON string is not valid UTF-8")
+
+
+# Continue a string only after its first escape needs an accumulator.
+func read_string_tail(mut scanner: Scanner, mut out: byte_buffer) -> Result[str, str]:
     mut span = scanner.position
     mut offset = span
-    while offset < len(scanner.data):
+    while offset >= 0 and offset < len(scanner.data):
         mut byte = scanner.data[offset]
         offset += 1
         if byte == 34:
@@ -438,6 +444,31 @@ func read_string(mut scanner: Scanner) -> Result[str, str]:
             _ = try read_escape(mut scanner, mut out)
             offset = scanner.position
             span = offset
+    scanner.position = offset
+    return Err(parse_error(scanner, "unterminated JSON string"))
+
+
+# One string body, allocating an accumulator only when an escape requires it.
+func read_string(mut scanner: Scanner) -> Result[str, str]:
+    advance(mut scanner)
+    mut start = scanner.position
+    mut offset = start
+    while offset >= 0 and offset < len(scanner.data):
+        mut byte = scanner.data[offset]
+        offset += 1
+        if byte == 34:
+            scanner.position = offset
+            return decoded_span(scanner.data, start, offset - 1)
+        if byte < 32:
+            scanner.position = offset
+            return Err(parse_error(scanner, "unescaped control character in JSON string"))
+        if byte == 92:
+            scanner.position = offset
+            mut empty: int[] = []
+            mut out = byte_buffer(empty)
+            _ = out.append_range(scanner.data, start, offset - 1)
+            _ = try read_escape(mut scanner, mut out)
+            return read_string_tail(mut scanner, mut out)
     scanner.position = offset
     return Err(parse_error(scanner, "unterminated JSON string"))
 
@@ -475,31 +506,54 @@ func read_fraction(mut scanner: Scanner) -> Result[bool, str]:
     return Ok(True)
 
 
-# The integer part of a number, rejecting a leading zero before more digits.
-func read_integer_part(mut scanner: Scanner) -> Result[bool, str]:
-    if peek(scanner) == 45:
-        advance(mut scanner)
-    if at_end(scanner) or not is_digit_byte(peek(scanner)):
+# Validate decimal grammar and accumulate an exact integer in the same pass.
+# Negative accumulation includes int64's asymmetric minimum without overflow.
+func read_integer_part(mut scanner: Scanner) -> Result[int?, str]:
+    mut offset = scanner.position
+    mut negative = False
+    if offset < len(scanner.data) and scanner.data[offset] == 45:
+        negative = True
+        offset += 1
+    if offset >= len(scanner.data) or not is_digit_byte(scanner.data[offset]):
+        scanner.position = offset
         return Err(parse_error(scanner, "JSON number needs a digit"))
-    if peek(scanner) != 48:
-        skip_digits(mut scanner)
-        return Ok(True)
-    advance(mut scanner)
-    if not at_end(scanner) and is_digit_byte(peek(scanner)):
-        return Err(parse_error(scanner, "JSON number has a leading zero"))
-    return Ok(True)
+    if scanner.data[offset] == 48:
+        offset += 1
+        scanner.position = offset
+        if offset < len(scanner.data) and is_digit_byte(scanner.data[offset]):
+            return Err(parse_error(scanner, "JSON number has a leading zero"))
+        return Ok(Some(0))
+    mut value = 0
+    mut exact = True
+    mut final_digit = (if (negative) then (8) else (7))
+    while offset < len(scanner.data):
+        mut digit = scanner.data[offset] - 48
+        if digit < 0 or digit > 9:
+            break
+        if exact:
+            if value < 0 - 922337203685477580 or (value == 0 - 922337203685477580 and digit > final_digit):
+                exact = False
+            else:
+                value = value * 10 - digit
+        offset += 1
+    scanner.position = offset
+    if not exact:
+        return Ok(None)
+    if negative:
+        return Ok(Some(value))
+    return Ok(Some(0 - value))
 
 
 # One number literal, exact when it has no fraction, exponent or overflow.
 func read_number(mut scanner: Scanner) -> Result[Json, str]:
     mut start = scanner.position
-    _ = try read_integer_part(mut scanner)
+    const integral = try read_integer_part(mut scanner)
     mut floating = try read_fraction(mut scanner)
     const exponent = try read_exponent(mut scanner)
     if exponent:
         floating = True
     if not floating:
-        match scanner.data.parse_int_range(start, scanner.position):
+        match integral:
             case Some(value):
                 return Ok(integer(value))
             case None:
@@ -511,12 +565,17 @@ func read_number(mut scanner: Scanner) -> Result[Json, str]:
             return Err(parse_error(scanner, "JSON number is malformed"))
 
 
+# Compare a borrowed byte range before the caller updates its scanner.
+func literal_matches(data: bytes, start: int, word: bytes) -> bool:
+    return data[start:start + len(word)] == word
+
+
 # One of the three bare literals, matched exactly.
 func read_literal(mut scanner: Scanner, word: bytes, value: Json) -> Result[Json, str]:
     mut start = scanner.position
     if start + len(word) > len(scanner.data):
         return Err(parse_error(scanner, "truncated JSON literal"))
-    if scanner.data[start:start + len(word)] != word:
+    if not literal_matches(scanner.data, start, word):
         return Err(parse_error(scanner, "unknown JSON literal"))
     scanner.position = start + len(word)
     return Ok(value.copy())
@@ -724,7 +783,7 @@ public func dumps(value: Json) -> str:
     mut empty: int[] = []
     mut out = byte_buffer(empty)
     write_value(mut out, value)
-    match bytes(out).decode():
+    match out.decode():
         case Ok(rendered):
             return rendered
         case Err(_):

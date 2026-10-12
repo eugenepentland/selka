@@ -33,6 +33,13 @@ pub fn operation(comptime Context: type, b: Context, node: Operation, result_ty:
         },
         .reverse, .clear => {
             const receiver = try b.writableReceiverOf(node.owner, span);
+            if (node.kind == .reverse and b.module().zero_rc) {
+                const ty = b.typeOfRef(receiver);
+                const size = try b.constant(.i64, b.module().size(b.module().compound(ty).list));
+                const result = try b.effectCall("myl_core_owned_list_reverse", &.{ ty, .i64 }, ty, &.{ receiver, size }, span);
+                try b.writeOwner(node.owner, result, span);
+                return .none;
+            }
             const capacity = if (node.kind == .clear) try b.constant(.u64, 0) else try length(Context, b, receiver, span);
             const empty = try fresh(Context, b, receiver, capacity, span);
             const result = if (node.kind == .clear) empty else try compose(Context, b, empty, receiver, true, span);
@@ -43,9 +50,48 @@ pub fn operation(comptime Context: type, b: Context, node: Operation, result_ty:
     return .none;
 }
 
-/// Append each source element once, preserving shared/self-extension snapshots.
+/// Append each source element once; a nested receiver can alias a distinct read.
 pub fn extend(comptime Context: type, b: Context, target: ir.Ref, source: ir.Ref, span: u32) Error!ir.Ref {
-    return compose(Context, b, target, source, false, span);
+    if (!b.module().zero_rc)
+        return compose(Context, b, target, source, false, span);
+    if (sameRecordProjection(&b.function, target, source))
+        return compose(Context, b, target, target, false, span);
+    const ty = b.typeOfRef(target);
+    const identical = try b.runtimeCall("myl_core_owned_same_block", &.{ ty, ty }, .i64, &.{ target, source }, span);
+    const result = try b.synthetic(ty);
+    const same = try b.newBlock();
+    const distinct = try b.newBlock();
+    const end = try b.newBlock();
+    try b.branch(try compare(Context, b, .ne, identical, try b.constant(.i64, 0), span), same, distinct, span);
+    try b.seal(same);
+    b.enter(same);
+    const extended_self = try compose(Context, b, target, target, false, span);
+    try b.write(result, b.current.?, extended_self);
+    try b.jump(end);
+    try b.seal(distinct);
+    b.enter(distinct);
+    const extended_other = try compose(Context, b, target, source, false, span);
+    try b.write(result, b.current.?, extended_other);
+    try b.jump(end);
+    try b.seal(end);
+    b.enter(end);
+    return b.read(result, end);
+}
+
+/// Exact immutable record projections can name one list before read merging.
+/// Unknown producers and paths deeper than 64 fields retain the runtime test.
+fn sameRecordProjection(function: *const ir.Function, target: ir.Ref, source: ir.Ref) bool {
+    var left = function.resolve(target);
+    var right = function.resolve(source);
+    for (0..64) |_| {
+        if (left == right) return true;
+        const first = function.inst(left);
+        const second = function.inst(right);
+        if (first.op != .record_get or second.op != .record_get or first.ty != second.ty or first.data != second.data) return false;
+        left = function.resolve(first.a);
+        right = function.resolve(second.a);
+    }
+    return left == right;
 }
 
 fn length(comptime Context: type, b: Context, source: ir.Ref, span: u32) Error!ir.Ref {
@@ -102,6 +148,11 @@ fn insert(comptime Context: type, b: Context, node: Operation, span: u32) Error!
     const low = try select(Context, b, try compare(Context, b, .lt, adjusted, zero, span), zero, adjusted, span);
     const clamped = try select(Context, b, try compare(Context, b, .gt, low, signed_count, span), signed_count, low, span);
     const at = try b.emit(.{ .op = .convert, .ty = .u64, .a = clamped, .span = span });
+    if (b.module().zero_rc) {
+        const pushed = try b.emit(.{ .op = .list_push, .ty = b.typeOfRef(source), .a = source, .b = value, .span = span });
+        try b.writeOwner(node.owner, try rotate(Context, b, pushed, at, true, span), span);
+        return .none;
+    }
     const empty = try fresh(Context, b, source, try b.emit(.{ .op = .add, .ty = .u64, .a = count, .b = try b.constant(.u64, 1), .check = .exact, .span = span }), span);
     const first = try range(Context, b, empty, source, .{ .start = try b.constant(.u64, 0), .stop = at }, span);
     const middle = try b.emit(.{ .op = .list_push, .ty = b.typeOfRef(source), .a = first, .b = value, .span = span });
@@ -127,11 +178,31 @@ fn remove(comptime Context: type, b: Context, node: Operation, result_ty: ir.Typ
         value = try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = index, .data = flags.pop_index_read, .check = .exact, .span = span });
         index = try b.emit(.{ .op = .convert, .ty = .u64, .a = index, .span = span });
     }
+    if (b.module().zero_rc) {
+        // The indexed read above retains the existing located pop bounds check.
+        // Rotate whole slots, then use the ordinary last-slot transfer protocol.
+        const rotated = try rotate(Context, b, source, index, false, span);
+        const last = try b.emit(.{ .op = .sub, .ty = .u64, .a = count, .b = try b.constant(.u64, 1), .span = span });
+        const element = b.module().compound(b.typeOfRef(source)).list;
+        const taken = try b.emit(.{ .op = .list_get, .ty = element, .a = rotated, .b = last, .data = flags.pop_read, .check = .exact, .span = span });
+        const rest = try b.emit(.{ .op = .list_pop, .ty = b.typeOfRef(source), .a = rotated, .check = .exact, .span = span });
+        try b.writeOwner(node.owner, rest, span);
+        return if (result_ty == .void) .none else taken;
+    }
     const empty = try fresh(Context, b, source, try b.emit(.{ .op = .sub, .ty = .u64, .a = count, .b = try b.constant(.u64, 1), .span = span }), span);
     const first = try range(Context, b, empty, source, .{ .start = try b.constant(.u64, 0), .stop = index }, span);
     const next = try b.emit(.{ .op = .add, .ty = .u64, .a = index, .b = try b.constant(.u64, 1), .span = span });
     try b.writeOwner(node.owner, try range(Context, b, first, source, .{ .start = next, .stop = count }, span), span);
     return if (result_ty == .void) .none else value;
+}
+
+// A consuming permutation moves the existing child owners without copying them.
+fn rotate(comptime Context: type, b: Context, source: ir.Ref, index: ir.Ref, last_to_index: bool, span: u32) Error!ir.Ref {
+    const ty = b.typeOfRef(source);
+    const size = try b.constant(.i64, b.module().size(b.module().compound(ty).list));
+    const direction = try b.constant(.i64, @intFromBool(last_to_index));
+    const at = if (b.typeOfRef(index) == .i64) index else try b.emit(.{ .op = .convert, .ty = .i64, .a = index, .span = span });
+    return b.effectCall("myl_core_owned_list_rotate", &.{ ty, .i64, .i64, .i64 }, ty, &.{ source, at, size, direction }, span);
 }
 
 fn range(comptime Context: type, b: Context, target: ir.Ref, source: ir.Ref, limits: Range, span: u32) Error!ir.Ref {
@@ -219,11 +290,13 @@ fn sliceCopy(comptime Context: type, b: Context, source: ir.Ref, plan: Slice, sp
     try b.branch(try compare(Context, b, .lt, counter, plan.count, span), body, end, span);
     try b.seal(body);
     b.enter(body);
-    const value = try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = index, .check = .exact, .span = span });
-    const pushed = try b.emit(.{ .op = .list_push, .ty = ty, .a = try b.read(list_slot, body), .b = value, .span = span });
-    try b.write(list_slot, body, pushed);
-    try b.write(counter_slot, body, try b.emit(.{ .op = .add, .ty = .u64, .a = counter, .b = try b.constant(.u64, 1), .span = span }));
-    try b.write(index_slot, body, try b.emit(.{ .op = .add, .ty = .i64, .a = index, .b = plan.step, .span = span }));
+    const borrowed = try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = index, .check = .exact, .span = span });
+    const value = if (b.module().zero_rc) try @import("single_owner_copy.zig").copy(Context, b, borrowed, span) else borrowed;
+    const current = b.current.?;
+    const pushed = try b.emit(.{ .op = .list_push, .ty = ty, .a = try b.read(list_slot, current), .b = value, .span = span });
+    try b.write(list_slot, current, pushed);
+    try b.write(counter_slot, current, try b.emit(.{ .op = .add, .ty = .u64, .a = counter, .b = try b.constant(.u64, 1), .span = span }));
+    try b.write(index_slot, current, try b.emit(.{ .op = .add, .ty = .i64, .a = index, .b = plan.step, .span = span }));
     try b.jump(header);
     try b.seal(header);
     try b.seal(end);
@@ -250,10 +323,16 @@ fn compose(comptime Context: type, b: Context, target: ir.Ref, source: ir.Ref, r
     try b.seal(body);
     b.enter(body);
     const selected = if (reverse) try b.emit(.{ .op = .sub, .ty = .u64, .a = try b.emit(.{ .op = .sub, .ty = .u64, .a = count, .b = try b.constant(.u64, 1), .span = span }), .b = index, .span = span }) else index;
-    const value = if (element == .void) try b.emit(.{ .op = .undef, .ty = .void }) else try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = selected, .check = .exact, .span = span });
-    const pushed = try b.emit(.{ .op = .list_push, .ty = ty, .a = try b.read(list_slot, body), .b = value, .span = span });
-    try b.write(list_slot, body, pushed);
-    try b.write(index_slot, body, try b.emit(.{ .op = .add, .ty = .u64, .a = index, .b = try b.constant(.u64, 1), .span = span }));
+    // Self-extension reads the original prefix through the current owner: a
+    // previous push may have grown and freed the old outer block. Each child
+    // is independently copied once before insertion, including self-extension.
+    const input = if (b.module().zero_rc and b.function.resolve(source) == b.function.resolve(target)) try b.read(list_slot, body) else source;
+    const borrowed = if (element == .void) try b.emit(.{ .op = .undef, .ty = .void }) else try b.emit(.{ .op = .list_get, .ty = element, .a = input, .b = selected, .check = .exact, .span = span });
+    const value = if (b.module().zero_rc) try @import("single_owner_copy.zig").copy(Context, b, borrowed, span) else borrowed;
+    const current = b.current.?;
+    const pushed = try b.emit(.{ .op = .list_push, .ty = ty, .a = try b.read(list_slot, current), .b = value, .span = span });
+    try b.write(list_slot, current, pushed);
+    try b.write(index_slot, current, try b.emit(.{ .op = .add, .ty = .u64, .a = index, .b = try b.constant(.u64, 1), .span = span }));
     try b.jump(header);
     try b.seal(header);
     try b.seal(exit);

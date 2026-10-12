@@ -1,0 +1,82 @@
+{
+  "status": "prepared_execution_waits_for_implementation_freeze",
+  "identity_contract": "Exact C1 full source SHA; ReleaseFast compiler SHA256; complete bin/libexec/tools identity and A10 actual owned component manifest. Private work/cache/output paths; preserve immutable C0.",
+  "native_scaling": {
+    "families": {
+      "matches": [
+        16,
+        64,
+        96,
+        128
+      ],
+      "fields": [
+        16,
+        64,
+        128
+      ],
+      "recursive": [
+        16,
+        64,
+        128
+      ],
+      "modules": [
+        16,
+        64,
+        128
+      ],
+      "generics": [
+        16,
+        64,
+        128
+      ]
+    },
+    "states": [
+      "cold_forced_llvm",
+      "warm_stages_forced_llvm",
+      "receipt",
+      "whole_build_replay",
+      "valid_edit"
+    ],
+    "compiler_invocations": 80,
+    "timeout_seconds_per_invocation": 120,
+    "admission": "One exclusive family/size lease, then ordinary FIFO admission barrier; CPU10."
+  },
+  "c0_native": {
+    "completed": 45,
+    "explicit_nesting_refusals": 5,
+    "native_object_compiler_failures": 10,
+    "unattempted_due_known_native_defect": [
+      "modules128",
+      "generics16",
+      "generics64",
+      "generics128"
+    ],
+    "paired_ratios": "Only completed matching source/mode/state/artifact executions. No full-build ratio against failed C0 native builds."
+  },
+  "diagnostic_scaling": {
+    "manifest": "diagnostic-sources.json",
+    "sha256": "55bc7f3f8249c93cff43a1f5fc249a083254081a2b9114dee90396b7b7fbc517",
+    "sources": 214,
+    "cases_per_compiler": 6,
+    "compilers": [
+      "immutable_C0_RF",
+      "final_C1_RF"
+    ],
+    "timeout_seconds_per_case": 120,
+    "scope": "dump-ir --facts: parse/check/eager ownership/Core lowering/release passes/IR formatting. No LLVM/native/link/guest admission. One exploratory sample; no speedup claim."
+  },
+  "cache_correctness": {
+    "existing_rows": 40,
+    "numeric_object_builds": 4,
+    "borrowed_selection_native_rows_prepared": 12,
+    "borrowed_selection_registered_tests": 3,
+    "tuple": "Actual producer/generic specialization source roundtrip prepared in tuple_cache.py; semantic-cache-v9 retains four tuple tests and adds four selection tests, all eight pass.",
+    "aggregate_provider": "Registered A08 cache/physical/signature tests are already integrated; rerun with final inputs.",
+    "commands": "A10 owns guest-test receipt/discovery/portable-cache matrix; A08 native/build tests do not replace it.",
+    "tuple_native_rows_prepared": 11,
+    "typed_selection_native_rows_prepared": 16,
+    "borrowed_provider": "A05 owns checksum-valid owned-parameter corruption and actual provider source replay tests; no duplicate A08 provider corruption test."
+  },
+  "memory": "Repeat fields64 matched process-tree sampling separately from timings using A09 tree_rss.py; preserve invalid replay sampling, shared-page double count, and missed-transient caveats.",
+  "rollout": "After C2 repeat ordinary flagless commands and affected contracts; after C3 repeat selectors refusal/old artifacts and package boundary. Earlier C1 binaries cannot be relabeled."
+}

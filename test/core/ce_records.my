@@ -121,9 +121,9 @@ func push_all(mut b: Bag, n: int):
 
 func counted() -> int:
     mut b = Bag(name="bag", items=[], count=0, total=0, last=-1)
-    mut keep = b
+    mut keep = b.copy()
     push_all(mut b, 5)
-    mut copy = b
+    mut copy = b.copy()
     b.items.append(100)
     b.name = b.name + "!"
     push_all(mut b, 2)
@@ -140,7 +140,7 @@ func shapes(k: int) -> int:
         case Shape.dot(value=d):
             total = d.line + d.col + d.offset
         case Shape.bag(value=g):
-            mut h = g
+            mut h = g.copy()
             h.total += 1
             total = g.total * 1000 + h.total + len(g.items)
         case Shape.none:
@@ -270,16 +270,16 @@ func pop(mut rt: Runtime) -> int:
 
 
 func interp_step(mut it: Interp, v: int) -> int:
-    mut wb = it.rt
+    mut wb = it.rt.copy()
     push(mut wb, v)
     it.rt = wb
     if v % 2 == 0:
-        mut wb2 = it.rt
+        mut wb2 = it.rt.copy()
         mut x = pop(mut wb2)
         it.rt = wb2
         return x
-    mut snap = it.rt
-    mut wb3 = it.rt
+    mut snap = it.rt.copy()
+    mut wb3 = it.rt.copy()
     push(mut wb3, v + 100)
     it.rt = wb3
     return snap.top * 1000 + it.rt.top
@@ -287,7 +287,7 @@ func interp_step(mut it: Interp, v: int) -> int:
 
 func writebacks() -> int:
     mut it = Interp(name="i", rt=Runtime(stack=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], top=0, a=0, b=0, c=0), depth=0)
-    mut shared = it
+    mut shared = it.copy()
     mut total = 0
     for i in range(7):
         total = total * 7 + interp_step(mut it, i)

@@ -1,0 +1,74 @@
+record RenderWide:
+    title: str
+    words: str[]
+    payload: bytes
+    ratio: float
+    count: int
+    empty: Unit
+
+
+record RenderLink:
+    label: str
+    next: RenderLink?
+
+
+enum RenderChoice:
+    small(value: u8)
+    empty(value: Unit)
+    words(value: str[])
+
+
+func render_wide(value: RenderWide) -> str:
+    return f"{value}"
+
+
+func render_pair(value: tuple[int, str]) -> str:
+    return f"{value}"
+
+
+func render_links(value: RenderLink?) -> str:
+    return f"{value}"
+
+
+# spec-case: NEW-CORE-S3-VALUES-1
+public func test_rendering_borrows_wide_values_and_returns_independent_text() -> bool:
+    mut value = RenderWide(title="item-" + str(1), words=["a" + str(2), "é"], payload=b"\xff\x00", ratio=1.5, count=-7, empty=())
+    const first = render_wide(value)
+    const second = render_wide(value)
+    if value.title != "item-1" or value.words != ["a2", "é"] or value.payload != b"\xff\x00":
+        return False
+    value = RenderWide(title="replacement", words=[], payload=b"", ratio=0.0, count=0, empty=())
+    return first == "RenderWide(title='item-1', words=['a2', 'é'], payload=b'\\xff\\x00', ratio=1.5, count=-7, empty=None)" and second == first
+
+
+# spec-case: NEW-CORE-S3-VALUES-1
+public func test_rendering_preserves_canonical_union_and_tuple_layouts() -> bool:
+    const pair: tuple[int, str] = (9, "n" + str(2))
+    const pair_text = render_pair(pair)
+    const small = RenderChoice.small(value=255u8)
+    const empty = RenderChoice.empty(value=())
+    mut words = RenderChoice.words(value=["x" + str(3)])
+    const word_text = f"{words}"
+    words = RenderChoice.words(value=[])
+    return pair_text == "(9, 'n2')" and render_pair(pair) == pair_text and f"{small}" == "RenderChoice.small(value=255)" and f"{empty}" == "RenderChoice.empty(value=None)" and word_text == "RenderChoice.words(value=['x3'])"
+
+
+# spec-case: NEW-CORE-S3-VALUES-1
+public func test_rendering_recursive_boxes_and_ordered_containers_borrows_children() -> bool:
+    mut links: RenderLink? = Some(RenderLink(label="head-" + str(1), next=Some(RenderLink(label="tail-" + str(2), next=None))))
+    const rendered = render_links(links)
+    if render_links(links) != rendered:
+        return False
+    links = None
+    mut mapping = {"b" + str(2): ["second"], "a" + str(1): ["first"]}
+    const ordered = f"{mapping}"
+    mapping.clear()
+    const rows: tuple[int, str][] = [(1, "x"), (2, "y")]
+    return rendered == "Some(RenderLink(label='head-1', next=Some(RenderLink(label='tail-2', next=None))))" and ordered == "{'b2': ['second'], 'a1': ['first']}" and f"{rows}" == "[(1, 'x'), (2, 'y')]" and len(rows) == 2
+
+
+func main() -> int:
+    assert test_rendering_borrows_wide_values_and_returns_independent_text()
+    assert test_rendering_preserves_canonical_union_and_tuple_layouts()
+    assert test_rendering_recursive_boxes_and_ordered_containers_borrows_children()
+    return 0

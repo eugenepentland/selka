@@ -40,7 +40,9 @@ func change(mut cursor: Cursor) -> int:
 
 
 func callback(mut cursor: Cursor) -> int:
-    mut item = cursor.code[change(mut cursor)]
+    const captured = cursor.code.copy()
+    const index = change(mut cursor)
+    mut item = captured[index]
     return item
 
 
@@ -71,7 +73,7 @@ public func test_direct_and_forwarded_references_keep_callers_value() -> bool:
 
 public func test_negative_index_and_later_replacement_keep_scalar_snapshot() -> bool:
     mut cursor = Cursor(code=[7, 11, 13], index=-1)
-    mut snapshot = cursor
+    mut snapshot = cursor.copy()
     mut item = replace_after(mut cursor)
     return item == 13 and cursor.code == [29] and snapshot.code == [7, 11, 13]
 
@@ -110,8 +112,8 @@ public func test_readonly_parameter_retains_its_separate_convention() -> bool:
 
 public func test_live_leaf_reached_through_parent_field() -> bool:
     mut rows = [Cursor(code=[7, 11], index=0)]
-    mut snapshot = rows
-    mut local = rows[0]
+    mut snapshot = rows.copy()
+    mut local = rows[0].copy()
     mut first = advance(mut local)
     rows[0] = local
     return first == 7 and rows[0].index == 1 and snapshot[0].index == 0

@@ -1,0 +1,46 @@
+import json
+
+public func document(n: int) -> str:
+    mut text = "{\"records\":["
+    for i in range(n):
+        if i > 0:
+            text += ","
+        text += "{\"id\":" + str(i) + ",\"meta\":{\"score\":" + str((i * 17 + 11) % 97) + ",\"name\":\"item-" + str(i) + "\"}}"
+    return text + "]}"
+
+public func score(source: str) -> Result[int, str]:
+    match json.loads(source):
+        case Ok(root):
+            match json.get(root, "records"):
+                case Some(records):
+                    match json.as_list(records):
+                        case Some(items):
+                            mut total = 0
+                            for item in items:
+                                match json.get(item, "meta"):
+                                    case Some(meta):
+                                        match json.get(meta, "score"):
+                                            case Some(value):
+                                                match json.as_int(value):
+                                                    case Some(number):
+                                                        total += number
+                                                    case None:
+                                                        return Err("score is not an integer")
+                                            case None:
+                                                return Err("missing score")
+                                    case None:
+                                        return Err("missing metadata")
+                            return Ok(total)
+                        case None:
+                            return Err("records is not an array")
+                case None:
+                    return Err("missing records")
+        case Err(error):
+            return Err(json.message(error))
+
+public func roundtrip(source: str) -> Result[str, str]:
+    match json.loads(source):
+        case Ok(value):
+            return Ok(json.dumps(value))
+        case Err(error):
+            return Err(json.message(error))

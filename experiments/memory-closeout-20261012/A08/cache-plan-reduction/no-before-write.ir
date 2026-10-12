@@ -1,0 +1,900 @@
+fn main(list[str], cap) -> i64
+b0:
+  %3 = list_new list[list[i64]] 2:i64
+  %5 = list_new list[i64] 1:i64
+  %7 = list_push list[i64] %5, 0:i64
+  %8 = list_push list[list[i64]] %3, %7
+  %10 = list_new list[i64] 1:i64
+  %12 = list_push list[i64] %10, 1:i64
+  %13 = list_push list[list[i64]] %8, %12
+  %15 = list_new list[list[i64]] 2:i64
+  %17 = list_new list[i64] 1:i64
+  %19 = list_push list[i64] %17, 1:i64
+  %20 = list_push list[list[i64]] %15, %19
+  %22 = list_new list[i64] 0:i64
+  %23 = list_push list[list[i64]] %20, %22
+  %25 = list_new list[list[i64]] 2:i64
+  %27 = list_new list[i64] 0:i64
+  %28 = list_push list[list[i64]] %25, %27
+  %30 = list_new list[i64] 0:i64
+  %31 = list_push list[list[i64]] %28, %30
+  %33 = list_new list[i64] 2:i64
+  %35 = list_push list[i64] %33, 0:i64
+  %37 = list_push list[i64] %35, 0:i64
+  %39 = list_new list[i64] 2:i64
+  %41 = list_push list[i64] %39, 0:i64
+  %43 = list_push list[i64] %41, 0:i64
+  %46 = list_new list[i64] 2:i64
+  %48 = list_push list[i64] %46, 0:i64
+  %50 = list_push list[i64] %48, 0:i64
+  %51 = record_make record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %13, %23, %31, %37, %43, 0:i64, %50
+  %59 = record_make record{i64, i64, i64, i64, i64, i64, i64} 0:i64, 0:i64, 0:i64, 0:i64, 0:i64, 0:i64, 0:i64
+  %60 = list_len u64 param0
+  %61 = convert.proven i64 %60
+  %63 = floor_rem.proven i64 %61, 2:i64
+  %64 = call record{option[str], record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]}, record{i64, i64, i64, i64, i64, i64, i64}} close_group(%51, %63, %59)
+  %65 = record_get option[str] %64, field0
+  %66 = record_get record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %64, field1
+  %67 = record_get record{i64, i64, i64, i64, i64, i64, i64} %64, field2
+  %68 = union_tag u32 %65
+  %70 = cmp.eq bool %68, 0:u32
+  branch %70, b2, b3
+b1: ; preds b5
+  ret 0:i64
+b2: ; preds b0
+  release %65
+  %72 = record_get list[list[i64]] %66, field2
+  %74 = iconst bool 0
+  branch 0:bool, b4, b5
+b3: ; preds b0
+  release %66
+  jump b6
+b4: ; preds b2
+  %76 = list_len u64 %72
+  %77 = convert.exact i64 %76
+  %78 = add.exact i64 %77, %63
+  jump b5
+b5: ; preds b2 b4
+  %80 = phi i64 %63, %78
+  %82 = list_get.exact list[i64] %72, %80
+  %83 = list_len u64 %82
+  release %66
+  %84 = convert.proven i64 %83
+  %86 = record_get i64 %67, field3
+  %87 = record_get i64 %67, field4
+  print param1, %84, %86, %87
+  jump b1
+b6: ; preds b3
+  %91 = union_take str tag1 %65
+  print param1, %91
+  release %91
+  ret 1:i64
+fn close_group(record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]}, i64, record{i64, i64, i64, i64, i64, i64, i64}) -> record{option[str], record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]}, record{i64, i64, i64, i64, i64, i64, i64}}
+b0:
+  %1040 = record_get i64 param2, field4
+  %1026 = record_get i64 param2, field3
+  %3 = record_get list[i64] param0, field3
+  %5 = iconst bool 0
+  branch 0:bool, b1, b2
+b1: ; preds b0
+  %7 = list_len u64 %3
+  %8 = convert.exact i64 %7
+  %9 = add.exact i64 %8, param1
+  jump b2
+b2: ; preds b0 b1
+  %11 = phi i64 param1, %9
+  %13 = list_get.exact i64 %3, %11
+  %15 = cmp.eq bool %13, 2:i64
+  branch %15, b3, b4
+b3: ; preds b2
+  %17 = union_make option[str] tag0
+  %20 = record_make record{option[str], record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]}, record{i64, i64, i64, i64, i64, i64, i64}} %17, param0, param2
+  ret %20
+b4: ; preds b2
+  %22 = record_get i64 param0, field5
+  %24 = add.exact i64 %22, 1:i64
+  %25 = record_set record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} param0, field5, %24
+  %28 = list_new list[i64] 1:i64
+  %30 = list_push list[i64] %28, param1
+  %32 = list_new list[i64] 0:i64
+  jump b5
+b5: ; preds b4 b7
+  %1039 = phi i64 %1040, %1041
+  %1025 = phi i64 %1026, %1027
+  %35 = phi i64 0:i64, %53
+  %36 = phi list[i64] %30, %522
+  %55 = phi record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %25, %530
+  %201 = phi record{i64, i64, i64, i64, i64, i64, i64} param2, %531
+  %214 = phi list[i64] %32, %533
+  %37 = list_len u64 %36
+  %38 = convert.proven i64 %37
+  %39 = cmp.lt bool %35, %38
+  branch %39, b6, b8
+b6: ; preds b5
+  %42 = iconst bool 0
+  branch 0:bool, b9, b10
+b7: ; preds b14
+  jump b5
+b8: ; preds b5
+  release %36
+  %541 = record_get list[list[i64]] %55, field2
+  %568 = iconst bool 0
+  branch 0:bool, b70, b71
+b9: ; preds b6
+  %44 = list_len u64 %36
+  %45 = convert.exact i64 %44
+  %46 = add.exact i64 %45, %35
+  jump b10
+b10: ; preds b6 b9
+  %48 = phi i64 %35, %46
+  %50 = list_get.proven i64 %36, %48
+  %53 = add.proven i64 %35, 1:i64
+  %56 = record_get list[i64] %55, field3
+  %58 = cmp.lt bool %50, 0:i64
+  branch %58, b11, b12
+b11: ; preds b10
+  %60 = list_len u64 %56
+  %61 = convert.proven i64 %60
+  %62 = add.proven i64 %61, %50
+  jump b12
+b12: ; preds b10 b11
+  %64 = phi i64 %50, %62
+  %66 = list_get.exact i64 %56, %64
+  %68 = cmp.eq bool %66, 2:i64
+  branch %68, b13, b15
+b13: ; preds b12
+  %72 = record_get list[list[i64]] %55, field2
+  %75 = cmp.lt bool %50, 0:i64
+  branch %75, b16, b17
+b14: ; preds b21 b57
+  %1041 = phi i64 %1042, %1045
+  %1027 = phi i64 %1028, %1030
+  %522 = phi list[i64] %36, %1000
+  %530 = phi record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %732, %1001
+  %531 = phi record{i64, i64, i64, i64, i64, i64, i64} %733, %1002
+  %533 = phi list[i64] %734, %866
+  jump b7
+b15: ; preds b12
+  %218 = record_get list[list[i64]] %55, field0
+  %220 = cmp.lt bool %50, 0:i64
+  branch %220, b34, b35
+b16: ; preds b13
+  %77 = list_len u64 %72
+  %78 = convert.proven i64 %77
+  %79 = add.proven i64 %78, %50
+  jump b17
+b17: ; preds b13 b16
+  %81 = phi i64 %50, %79
+  %83 = list_get.exact list[i64] %72, %81
+  %84 = list_len u64 %83
+  %85 = convert.proven i64 %84
+  jump b89
+b18: ; preds b91 b20
+  %1043 = phi i64 %1039, %1043
+  %1024 = phi i64 %1025, %120
+  %87 = phi i64 0:i64, %182
+  %91 = phi record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %55, %191
+  %117 = phi record{i64, i64, i64, i64, i64, i64, i64} %201, %121
+  %173 = phi list[i64] %214, %215
+  %89 = cmp.lt bool %87, %85
+  branch %89, b19, b21
+b19: ; preds b18
+  %92 = record_get list[list[i64]] %91, field2
+  %95 = iconst bool 0
+  branch 0:bool, b22, b23
+b20: ; preds b31
+  %182 = add.proven i64 %87, 1:i64
+  jump b18
+b21: ; preds b18 b74
+  %1042 = phi i64 %1043, %1044
+  %1028 = phi i64 %1024, %1029
+  %734 = phi list[i64] %173, %613
+  %733 = phi record{i64, i64, i64, i64, i64, i64, i64} %117, %611
+  %732 = phi record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %91, %609
+  jump b14
+b22: ; preds b19
+  %97 = list_len u64 %92
+  %98 = convert.exact i64 %97
+  %99 = add.exact i64 %98, %50
+  jump b23
+b23: ; preds b19 b22
+  %101 = phi i64 %50, %99
+  %103 = list_get.exact list[i64] %92, %101
+  %106 = iconst bool 0
+  branch 0:bool, b24, b25
+b24: ; preds b23
+  %108 = list_len u64 %103
+  %109 = convert.exact i64 %108
+  %110 = add.exact i64 %109, %87
+  jump b25
+b25: ; preds b23 b24
+  %112 = phi i64 %87, %110
+  %114 = list_get.exact i64 %103, %112
+  %120 = add.exact i64 %1024, 1:i64
+  %121 = record_set record{i64, i64, i64, i64, i64, i64, i64} %117, field3, %120
+  %122 = call option[str] check_work(%121)
+  %123 = union_tag u32 %122
+  %125 = cmp.eq bool %123, 1:u32
+  branch %125, b26, b27
+b26: ; preds b25
+  release %36
+  release %173
+  err_trace append
+  %128 = union_take str tag1 %122
+  %129 = union_make option[str] tag1 %128
+  %132 = record_make record{option[str], record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]}, record{i64, i64, i64, i64, i64, i64, i64}} %129, %91, %121
+  ret %132
+b27: ; preds b25
+  release %122
+  %134 = record_get list[i64] %91, field4
+  %136 = cmp.lt bool %114, 0:i64
+  branch %136, b28, b29
+b28: ; preds b27
+  %138 = list_len u64 %134
+  %139 = convert.proven i64 %138
+  %140 = add.proven i64 %139, %114
+  jump b29
+b29: ; preds b27 b28
+  %142 = phi i64 %114, %140
+  %144 = list_get.exact i64 %134, %142
+  %149 = cmp.ne bool %144, %24
+  branch %149, b30, b31
+b30: ; preds b29
+  %152 = record_get list[i64] %91, field4
+  %155 = cmp.lt bool %114, 0:i64
+  branch %155, b32, b33
+b31: ; preds b29 b33
+  %191 = phi record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %91, %167
+  %215 = phi list[i64] %173, %174
+  jump b20
+b32: ; preds b30
+  %157 = list_len u64 %152
+  %158 = convert.proven i64 %157
+  %159 = add.proven i64 %158, %114
+  jump b33
+b33: ; preds b30 b32
+  %161 = phi i64 %114, %159
+  %166 = list_set.proven list[i64] %152, %161, %24
+  %167 = record_set record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %91, field4, %166
+  %174 = list_push list[i64] %173, %114
+  jump b31
+b34: ; preds b15
+  %222 = list_len u64 %218
+  %223 = convert.proven i64 %222
+  %224 = add.proven i64 %223, %50
+  jump b35
+b35: ; preds b15 b34
+  %226 = phi i64 %50, %224
+  %228 = list_get.exact list[i64] %218, %226
+  %229 = list_len u64 %228
+  %230 = convert.proven i64 %229
+  jump b107
+b36: ; preds b109 b38
+  %1038 = phi i64 %1039, %1038
+  %1033 = phi i64 %1025, %265
+  %232 = phi i64 0:i64, %327
+  %236 = phi record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %55, %336
+  %262 = phi record{i64, i64, i64, i64, i64, i64, i64} %201, %266
+  %318 = phi list[i64] %214, %351
+  %234 = cmp.lt bool %232, %230
+  branch %234, b37, b39
+b37: ; preds b36
+  %237 = record_get list[list[i64]] %236, field0
+  %240 = iconst bool 0
+  branch 0:bool, b40, b41
+b38: ; preds b49
+  %327 = add.proven i64 %232, 1:i64
+  jump b36
+b39: ; preds b36 b92
+  %1037 = phi i64 %1038, %1047
+  %1032 = phi i64 %1033, %1034
+  %868 = phi record{i64, i64, i64, i64, i64, i64, i64} %262, %745
+  %867 = phi record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %236, %743
+  %866 = phi list[i64] %318, %747
+  %353 = record_get list[list[i64]] %867, field1
+  %355 = cmp.lt bool %50, 0:i64
+  branch %355, b52, b53
+b40: ; preds b37
+  %242 = list_len u64 %237
+  %243 = convert.exact i64 %242
+  %244 = add.exact i64 %243, %50
+  jump b41
+b41: ; preds b37 b40
+  %246 = phi i64 %50, %244
+  %248 = list_get.exact list[i64] %237, %246
+  %251 = iconst bool 0
+  branch 0:bool, b42, b43
+b42: ; preds b41
+  %253 = list_len u64 %248
+  %254 = convert.exact i64 %253
+  %255 = add.exact i64 %254, %232
+  jump b43
+b43: ; preds b41 b42
+  %257 = phi i64 %232, %255
+  %259 = list_get.exact i64 %248, %257
+  %265 = add.exact i64 %1033, 1:i64
+  %266 = record_set record{i64, i64, i64, i64, i64, i64, i64} %262, field3, %265
+  %267 = call option[str] check_work(%266)
+  %268 = union_tag u32 %267
+  %270 = cmp.eq bool %268, 1:u32
+  branch %270, b44, b45
+b44: ; preds b43
+  release %36
+  release %318
+  err_trace append
+  %273 = union_take str tag1 %267
+  %274 = union_make option[str] tag1 %273
+  %277 = record_make record{option[str], record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]}, record{i64, i64, i64, i64, i64, i64, i64}} %274, %236, %266
+  ret %277
+b45: ; preds b43
+  release %267
+  %279 = record_get list[i64] %236, field4
+  %281 = cmp.lt bool %259, 0:i64
+  branch %281, b46, b47
+b46: ; preds b45
+  %283 = list_len u64 %279
+  %284 = convert.proven i64 %283
+  %285 = add.proven i64 %284, %259
+  jump b47
+b47: ; preds b45 b46
+  %287 = phi i64 %259, %285
+  %289 = list_get.exact i64 %279, %287
+  %294 = cmp.ne bool %289, %24
+  branch %294, b48, b49
+b48: ; preds b47
+  %297 = record_get list[i64] %236, field4
+  %300 = cmp.lt bool %259, 0:i64
+  branch %300, b50, b51
+b49: ; preds b47 b51
+  %336 = phi record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %236, %312
+  %351 = phi list[i64] %318, %319
+  jump b38
+b50: ; preds b48
+  %302 = list_len u64 %297
+  %303 = convert.proven i64 %302
+  %304 = add.proven i64 %303, %259
+  jump b51
+b51: ; preds b48 b50
+  %306 = phi i64 %259, %304
+  %311 = list_set.proven list[i64] %297, %306, %24
+  %312 = record_set record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %236, field4, %311
+  %319 = list_push list[i64] %318, %259
+  jump b49
+b52: ; preds b39
+  %357 = list_len u64 %353
+  %358 = convert.proven i64 %357
+  %359 = add.proven i64 %358, %50
+  jump b53
+b53: ; preds b39 b52
+  %361 = phi i64 %50, %359
+  %363 = list_get.exact list[i64] %353, %361
+  %364 = list_len u64 %363
+  %365 = convert.proven i64 %364
+  jump b125
+b54: ; preds b127 b56
+  %1036 = phi i64 %1037, %400
+  %1031 = phi i64 %1032, %1031
+  %367 = phi i64 0:i64, %462
+  %371 = phi record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %867, %471
+  %397 = phi record{i64, i64, i64, i64, i64, i64, i64} %868, %401
+  %453 = phi list[i64] %36, %495
+  %369 = cmp.lt bool %367, %365
+  branch %369, b55, b57
+b55: ; preds b54
+  %372 = record_get list[list[i64]] %371, field1
+  %375 = iconst bool 0
+  branch 0:bool, b58, b59
+b56: ; preds b67
+  %462 = add.proven i64 %367, 1:i64
+  jump b54
+b57: ; preds b54 b110
+  %1045 = phi i64 %1036, %1046
+  %1030 = phi i64 %1031, %1035
+  %1002 = phi record{i64, i64, i64, i64, i64, i64, i64} %397, %879
+  %1001 = phi record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %371, %877
+  %1000 = phi list[i64] %453, %881
+  jump b14
+b58: ; preds b55
+  %377 = list_len u64 %372
+  %378 = convert.exact i64 %377
+  %379 = add.exact i64 %378, %50
+  jump b59
+b59: ; preds b55 b58
+  %381 = phi i64 %50, %379
+  %383 = list_get.exact list[i64] %372, %381
+  %386 = iconst bool 0
+  branch 0:bool, b60, b61
+b60: ; preds b59
+  %388 = list_len u64 %383
+  %389 = convert.exact i64 %388
+  %390 = add.exact i64 %389, %367
+  jump b61
+b61: ; preds b59 b60
+  %392 = phi i64 %367, %390
+  %394 = list_get.exact i64 %383, %392
+  %400 = add.exact i64 %1036, 1:i64
+  %401 = record_set record{i64, i64, i64, i64, i64, i64, i64} %397, field4, %400
+  %402 = call option[str] check_work(%401)
+  %403 = union_tag u32 %402
+  %405 = cmp.eq bool %403, 1:u32
+  branch %405, b62, b63
+b62: ; preds b61
+  release %453
+  release %866
+  err_trace append
+  %408 = union_take str tag1 %402
+  %409 = union_make option[str] tag1 %408
+  %412 = record_make record{option[str], record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]}, record{i64, i64, i64, i64, i64, i64, i64}} %409, %371, %401
+  ret %412
+b63: ; preds b61
+  release %402
+  %414 = record_get list[i64] %371, field6
+  %416 = cmp.lt bool %394, 0:i64
+  branch %416, b64, b65
+b64: ; preds b63
+  %418 = list_len u64 %414
+  %419 = convert.proven i64 %418
+  %420 = add.proven i64 %419, %394
+  jump b65
+b65: ; preds b63 b64
+  %422 = phi i64 %394, %420
+  %424 = list_get.exact i64 %414, %422
+  %429 = cmp.ne bool %424, %24
+  branch %429, b66, b67
+b66: ; preds b65
+  %432 = record_get list[i64] %371, field6
+  %435 = cmp.lt bool %394, 0:i64
+  branch %435, b68, b69
+b67: ; preds b65 b69
+  %471 = phi record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %371, %447
+  %495 = phi list[i64] %453, %454
+  jump b56
+b68: ; preds b66
+  %437 = list_len u64 %432
+  %438 = convert.proven i64 %437
+  %439 = add.proven i64 %438, %394
+  jump b69
+b69: ; preds b66 b68
+  %441 = phi i64 %394, %439
+  %446 = list_set.proven list[i64] %432, %441, %24
+  %447 = record_set record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %371, field6, %446
+  %454 = list_push list[i64] %453, %394
+  jump b67
+b70: ; preds b8
+  %570 = list_len u64 %541
+  %571 = convert.exact i64 %570
+  %572 = add.exact i64 %571, param1
+  jump b71
+b71: ; preds b8 b70
+  %574 = phi i64 param1, %572
+  %579 = list_set.exact list[list[i64]] %541, %574, %214
+  %580 = record_set record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %55, field2, %579
+  %582 = record_get list[i64] %580, field3
+  %585 = iconst bool 0
+  branch 0:bool, b72, b73
+b72: ; preds b71
+  %587 = list_len u64 %582
+  %588 = convert.exact i64 %587
+  %589 = add.exact i64 %588, param1
+  jump b73
+b73: ; preds b71 b72
+  %591 = phi i64 param1, %589
+  %596 = list_set.exact list[i64] %582, %591, 2:i64
+  %597 = record_set record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %580, field3, %596
+  %598 = union_make option[str] tag0
+  %601 = record_make record{option[str], record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]}, record{i64, i64, i64, i64, i64, i64, i64}} %598, %597, %201
+  ret %601
+b74: ; preds b90 b76
+  %1044 = phi i64 %1039, %1044
+  %1029 = phi i64 %1025, %658
+  %604 = phi i64 0:i64, %619
+  %609 = phi record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %55, %695
+  %611 = phi record{i64, i64, i64, i64, i64, i64, i64} %201, %659
+  %613 = phi list[i64] %214, %696
+  %614 = cmp.lt bool %604, %85
+  branch %614, b75, b21
+b75: ; preds b74
+  %616 = record_get list[list[i64]] %609, field2
+  %617 = iconst bool 1
+  branch 1:bool, b77, b78
+b76: ; preds b86
+  %619 = add.proven i64 %604, 1:i64
+  jump b74
+b77: ; preds b75
+  %621 = list_len u64 %616
+  %622 = convert.proven i64 %621
+  %623 = add.proven i64 %622, %50
+  jump b78
+b78: ; preds b75 b77
+  %625 = phi i64 %50, %623
+  %637 = list_get.exact list[i64] %616, %625
+  %638 = iconst bool 0
+  branch 0:bool, b79, b80
+b79: ; preds b78
+  %640 = list_len u64 %637
+  %641 = convert.exact i64 %640
+  %642 = add.exact i64 %641, %604
+  jump b80
+b80: ; preds b78 b79
+  %644 = phi i64 %604, %642
+  %656 = list_get.exact i64 %637, %644
+  %658 = add.exact i64 %1029, 1:i64
+  %659 = record_set record{i64, i64, i64, i64, i64, i64, i64} %611, field3, %658
+  %660 = call option[str] check_work(%659)
+  %661 = union_tag u32 %660
+  %662 = cmp.eq bool %661, 1:u32
+  branch %662, b81, b82
+b81: ; preds b80
+  release %36
+  release %613
+  err_trace append
+  %665 = union_take str tag1 %660
+  %666 = union_make option[str] tag1 %665
+  %667 = record_make record{option[str], record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]}, record{i64, i64, i64, i64, i64, i64, i64}} %666, %609, %659
+  ret %667
+b82: ; preds b80
+  release %660
+  %669 = record_get list[i64] %609, field4
+  %670 = cmp.lt bool %656, 0:i64
+  branch %670, b83, b84
+b83: ; preds b82
+  %672 = list_len u64 %669
+  %673 = convert.proven i64 %672
+  %674 = add.proven i64 %673, %656
+  jump b84
+b84: ; preds b82 b83
+  %676 = phi i64 %656, %674
+  %689 = list_get.exact i64 %669, %676
+  %690 = cmp.ne bool %689, %24
+  branch %690, b85, b86
+b85: ; preds b84
+  %692 = record_get list[i64] %609, field4
+  %693 = cmp.lt bool %656, 0:i64
+  branch %693, b87, b88
+b86: ; preds b84 b88
+  %695 = phi record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %609, %726
+  %696 = phi list[i64] %613, %727
+  jump b76
+b87: ; preds b85
+  %706 = list_len u64 %692
+  %707 = convert.proven i64 %706
+  %708 = add.proven i64 %707, %656
+  jump b88
+b88: ; preds b85 b87
+  %710 = phi i64 %656, %708
+  %725 = list_set.proven list[i64] %692, %710, %24
+  %726 = record_set record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %609, field4, %725
+  %727 = list_push list[i64] %613, %656
+  jump b86
+b89: ; preds b17
+  %603 = cmp.lt bool %50, 0:i64
+  branch %603, b90, b91
+b90: ; preds b89
+  jump b74
+b91: ; preds b89
+  jump b18
+b92: ; preds b108 b94
+  %1047 = phi i64 %1039, %1047
+  %1034 = phi i64 %1025, %792
+  %738 = phi i64 0:i64, %753
+  %743 = phi record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %55, %829
+  %745 = phi record{i64, i64, i64, i64, i64, i64, i64} %201, %793
+  %747 = phi list[i64] %214, %830
+  %748 = cmp.lt bool %738, %230
+  branch %748, b93, b39
+b93: ; preds b92
+  %750 = record_get list[list[i64]] %743, field0
+  %751 = iconst bool 1
+  branch 1:bool, b95, b96
+b94: ; preds b104
+  %753 = add.proven i64 %738, 1:i64
+  jump b92
+b95: ; preds b93
+  %755 = list_len u64 %750
+  %756 = convert.proven i64 %755
+  %757 = add.proven i64 %756, %50
+  jump b96
+b96: ; preds b93 b95
+  %759 = phi i64 %50, %757
+  %771 = list_get.exact list[i64] %750, %759
+  %772 = iconst bool 0
+  branch 0:bool, b97, b98
+b97: ; preds b96
+  %774 = list_len u64 %771
+  %775 = convert.exact i64 %774
+  %776 = add.exact i64 %775, %738
+  jump b98
+b98: ; preds b96 b97
+  %778 = phi i64 %738, %776
+  %790 = list_get.exact i64 %771, %778
+  %792 = add.exact i64 %1034, 1:i64
+  %793 = record_set record{i64, i64, i64, i64, i64, i64, i64} %745, field3, %792
+  %794 = call option[str] check_work(%793)
+  %795 = union_tag u32 %794
+  %796 = cmp.eq bool %795, 1:u32
+  branch %796, b99, b100
+b99: ; preds b98
+  release %36
+  release %747
+  err_trace append
+  %799 = union_take str tag1 %794
+  %800 = union_make option[str] tag1 %799
+  %801 = record_make record{option[str], record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]}, record{i64, i64, i64, i64, i64, i64, i64}} %800, %743, %793
+  ret %801
+b100: ; preds b98
+  release %794
+  %803 = record_get list[i64] %743, field4
+  %804 = cmp.lt bool %790, 0:i64
+  branch %804, b101, b102
+b101: ; preds b100
+  %806 = list_len u64 %803
+  %807 = convert.proven i64 %806
+  %808 = add.proven i64 %807, %790
+  jump b102
+b102: ; preds b100 b101
+  %810 = phi i64 %790, %808
+  %823 = list_get.exact i64 %803, %810
+  %824 = cmp.ne bool %823, %24
+  branch %824, b103, b104
+b103: ; preds b102
+  %826 = record_get list[i64] %743, field4
+  %827 = cmp.lt bool %790, 0:i64
+  branch %827, b105, b106
+b104: ; preds b102 b106
+  %829 = phi record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %743, %860
+  %830 = phi list[i64] %747, %861
+  jump b94
+b105: ; preds b103
+  %840 = list_len u64 %826
+  %841 = convert.proven i64 %840
+  %842 = add.proven i64 %841, %790
+  jump b106
+b106: ; preds b103 b105
+  %844 = phi i64 %790, %842
+  %859 = list_set.proven list[i64] %826, %844, %24
+  %860 = record_set record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %743, field4, %859
+  %861 = list_push list[i64] %747, %790
+  jump b104
+b107: ; preds b35
+  %737 = cmp.lt bool %50, 0:i64
+  branch %737, b108, b109
+b108: ; preds b107
+  jump b92
+b109: ; preds b107
+  jump b36
+b110: ; preds b126 b112
+  %1046 = phi i64 %1037, %926
+  %1035 = phi i64 %1032, %1035
+  %872 = phi i64 0:i64, %887
+  %877 = phi record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %867, %963
+  %879 = phi record{i64, i64, i64, i64, i64, i64, i64} %868, %927
+  %881 = phi list[i64] %36, %964
+  %882 = cmp.lt bool %872, %365
+  branch %882, b111, b57
+b111: ; preds b110
+  %884 = record_get list[list[i64]] %877, field1
+  %885 = iconst bool 1
+  branch 1:bool, b113, b114
+b112: ; preds b122
+  %887 = add.proven i64 %872, 1:i64
+  jump b110
+b113: ; preds b111
+  %889 = list_len u64 %884
+  %890 = convert.proven i64 %889
+  %891 = add.proven i64 %890, %50
+  jump b114
+b114: ; preds b111 b113
+  %893 = phi i64 %50, %891
+  %905 = list_get.exact list[i64] %884, %893
+  %906 = iconst bool 0
+  branch 0:bool, b115, b116
+b115: ; preds b114
+  %908 = list_len u64 %905
+  %909 = convert.exact i64 %908
+  %910 = add.exact i64 %909, %872
+  jump b116
+b116: ; preds b114 b115
+  %912 = phi i64 %872, %910
+  %924 = list_get.exact i64 %905, %912
+  %926 = add.exact i64 %1046, 1:i64
+  %927 = record_set record{i64, i64, i64, i64, i64, i64, i64} %879, field4, %926
+  %928 = call option[str] check_work(%927)
+  %929 = union_tag u32 %928
+  %930 = cmp.eq bool %929, 1:u32
+  branch %930, b117, b118
+b117: ; preds b116
+  release %866
+  release %881
+  err_trace append
+  %933 = union_take str tag1 %928
+  %934 = union_make option[str] tag1 %933
+  %935 = record_make record{option[str], record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]}, record{i64, i64, i64, i64, i64, i64, i64}} %934, %877, %927
+  ret %935
+b118: ; preds b116
+  release %928
+  %937 = record_get list[i64] %877, field6
+  %938 = cmp.lt bool %924, 0:i64
+  branch %938, b119, b120
+b119: ; preds b118
+  %940 = list_len u64 %937
+  %941 = convert.proven i64 %940
+  %942 = add.proven i64 %941, %924
+  jump b120
+b120: ; preds b118 b119
+  %944 = phi i64 %924, %942
+  %957 = list_get.exact i64 %937, %944
+  %958 = cmp.ne bool %957, %24
+  branch %958, b121, b122
+b121: ; preds b120
+  %960 = record_get list[i64] %877, field6
+  %961 = cmp.lt bool %924, 0:i64
+  branch %961, b123, b124
+b122: ; preds b120 b124
+  %963 = phi record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %877, %994
+  %964 = phi list[i64] %881, %995
+  jump b112
+b123: ; preds b121
+  %974 = list_len u64 %960
+  %975 = convert.proven i64 %974
+  %976 = add.proven i64 %975, %924
+  jump b124
+b124: ; preds b121 b123
+  %978 = phi i64 %924, %976
+  %993 = list_set.proven list[i64] %960, %978, %24
+  %994 = record_set record{list[list[i64]], list[list[i64]], list[list[i64]], list[i64], list[i64], i64, list[i64]} %877, field6, %993
+  %995 = list_push list[i64] %881, %924
+  jump b122
+b125: ; preds b53
+  %871 = cmp.lt bool %50, 0:i64
+  branch %871, b126, b127
+b126: ; preds b125
+  jump b110
+b127: ; preds b125
+  jump b54
+fn check_work(record{i64, i64, i64, i64, i64, i64, i64}) -> option[str]
+b0:
+  %1 = record_get i64 param0, field0
+  %2 = record_get i64 param0, field1
+  %3 = add.proven i64 %1, %2
+  %4 = record_get i64 param0, field2
+  %5 = add.proven i64 %3, %4
+  %6 = record_get i64 param0, field3
+  %7 = add.proven i64 %5, %6
+  %8 = record_get i64 param0, field4
+  %9 = add.exact i64 %7, %8
+  %11 = cmp.gt bool %9, 64000000:i64
+  branch %11, b1, b2
+b1: ; preds b0
+  %14 = union_make option[str] tag1 str0
+  err_trace origin
+  ret %14
+b2: ; preds b0
+  %17 = union_make option[str] tag0
+  ret %17
+facts main: %60=[0,140737488355328] %61=[0,140737488355328] %63=[0,1] %68=[0,4294967295] %70=[0,1] %74=[0,0] %80=[0,1] %83=[0,140737488355328] %84=[0,140737488355328] %86=[-9223372036854775806,9223372036854775807] %87=[-9223372036854775806,9223372036854775807]
+list main %3: settled=true length=%-1 len=[0,0]
+list main %5: settled=true length=%-1 len=[0,0]
+list main %7: settled=true length=%-1 elements=[0,0] len=[1,1]
+list main %8: settled=true length=%-1 len=[1,1]
+list main %10: settled=true length=%-1 len=[0,0]
+list main %12: settled=true length=%-1 elements=[1,1] len=[1,1]
+list main %13: settled=true length=%-1 len=[2,2]
+list main %15: settled=true length=%-1 len=[0,0]
+list main %17: settled=true length=%-1 len=[0,0]
+list main %19: settled=true length=%-1 elements=[1,1] len=[1,1]
+list main %20: settled=true length=%-1 len=[1,1]
+list main %22: settled=true length=%-1 len=[0,0]
+list main %23: settled=true length=%-1 len=[2,2]
+list main %25: settled=true length=%-1 len=[0,0]
+list main %27: settled=true length=%-1 len=[0,0]
+list main %28: settled=true length=%-1 len=[1,1]
+list main %30: settled=true length=%-1 len=[0,0]
+list main %31: settled=true length=%-1 len=[2,2]
+list main %33: settled=true length=%-1 len=[0,0]
+list main %35: settled=true length=%-1 elements=[0,0] len=[1,1]
+list main %37: settled=true length=%-1 elements=[0,0] len=[2,2]
+list main %39: settled=true length=%-1 len=[0,0]
+list main %41: settled=true length=%-1 elements=[0,0] len=[1,1]
+list main %43: settled=true length=%-1 elements=[0,0] len=[2,2]
+list main %46: settled=true length=%-1 len=[0,0]
+list main %48: settled=true length=%-1 elements=[0,0] len=[1,1]
+list main %50: settled=true length=%-1 elements=[0,0] len=[2,2]
+list main %82: settled=true length=%-1
+facts close_group: %1=[0,1] %5=[0,0] %11=[0,1] %13=[-9223372036854775808,9223372036854775807] %15=[0,1] %22=[-9223372036854775806,9223372036854775807] %24=[-9223372036854775805,9223372036854775807] %26=[-9223372036854775805,9223372036854775807] %29=[-9223372036854775808,9223372036854775807] %35=[0,140737488355328] %37=[0,140737488355328] %38=[0,140737488355328] %39=[0,1] %42=[0,0] %48=[0,140737488355328] %50=[-9223372036854775808,9223372036854775807] %51=[-9223372036854775808,9223372036854775807] %53=[1,140737488355328] %58=[0,1] %60=[0,140737488355328] %61=[0,140737488355328] %62=[-9223372036854775808,140737488355327] %64=[-9223372036854775808,9223372036854775807] %66=[-9223372036854775808,9223372036854775807] %68=[0,1] %73=[-9223372036854775808,9223372036854775807] %75=[0,1] %77=[0,140737488355328] %78=[0,140737488355328] %79=[-9223372036854775808,140737488355327] %81=[-9223372036854775808,9223372036854775807] %84=[0,140737488355328] %85=[0,140737488355328] %87=[0,140737488355328] %88=[-9223372036854775808,9223372036854775807] %89=[0,1] %93=[-9223372036854775808,9223372036854775807] %95=[0,0] %101=[0,9223372036854775807] %104=[-9223372036854775808,9223372036854775807] %106=[0,0] %112=[0,140737488355327] %114=[-9223372036854775808,9223372036854775807] %118=[-9223372036854775806,9223372036854775807] %120=[-9223372036854775805,9223372036854775807] %123=[0,4294967295] %125=[0,1] %136=[0,1] %138=[0,140737488355328] %139=[0,140737488355328] %140=[-9223372036854775808,140737488355327] %142=[-9223372036854775808,9223372036854775807] %144=[-9223372036854775808,9223372036854775807] %145=[-9223372036854775808,9223372036854775807] %146=[-9223372036854775808,9223372036854775807] %147=[-9223372036854775808,9223372036854775807] %148=[-9223372036854775808,9223372036854775807] %149=[0,1] %153=[-9223372036854775808,9223372036854775807] %155=[0,1] %157=[0,140737488355328] %158=[0,140737488355328] %159=[-9223372036854775808,140737488355327] %161=[-9223372036854775808,9223372036854775807] %162=[-9223372036854775808,9223372036854775807] %168=[-9223372036854775808,9223372036854775807] %177=[-9223372036854775808,9223372036854775807] %178=[-9223372036854775808,9223372036854775807] %179=[-9223372036854775808,9223372036854775807] %180=[-9223372036854775808,9223372036854775807] %182=[1,140737488355328] %184=[-9223372036854775808,9223372036854775807] %185=[-9223372036854775808,9223372036854775807] %186=[-9223372036854775808,9223372036854775807] %187=[-9223372036854775808,9223372036854775807] %188=[-9223372036854775808,9223372036854775807] %189=[-9223372036854775808,9223372036854775807] %192=[-9223372036854775808,9223372036854775807] %193=[-9223372036854775808,9223372036854775807] %194=[-9223372036854775808,9223372036854775807] %195=[-9223372036854775808,9223372036854775807] %196=[-9223372036854775808,9223372036854775807] %197=[-9223372036854775808,9223372036854775807] %205=[-9223372036854775808,9223372036854775807] %206=[-9223372036854775808,9223372036854775807] %207=[-9223372036854775808,9223372036854775807] %208=[-9223372036854775808,9223372036854775807] %209=[-9223372036854775808,9223372036854775807] %210=[-9223372036854775808,9223372036854775807] %220=[0,1] %222=[0,140737488355328] %223=[0,140737488355328] %224=[-9223372036854775808,140737488355327] %226=[-9223372036854775808,9223372036854775807] %229=[0,140737488355328] %230=[0,140737488355328] %232=[0,140737488355328] %233=[-9223372036854775808,9223372036854775807] %234=[0,1] %238=[-9223372036854775808,9223372036854775807] %240=[0,0] %246=[0,9223372036854775807] %249=[-9223372036854775808,9223372036854775807] %251=[0,0] %257=[0,140737488355327] %259=[-9223372036854775808,9223372036854775807] %263=[-9223372036854775806,9223372036854775807] %265=[-9223372036854775805,9223372036854775807] %268=[0,4294967295] %270=[0,1] %281=[0,1] %283=[0,140737488355328] %284=[0,140737488355328] %285=[-9223372036854775808,140737488355327] %287=[-9223372036854775808,9223372036854775807] %289=[-9223372036854775808,9223372036854775807] %290=[-9223372036854775808,9223372036854775807] %291=[-9223372036854775808,9223372036854775807] %292=[-9223372036854775808,9223372036854775807] %293=[-9223372036854775808,9223372036854775807] %294=[0,1] %298=[-9223372036854775808,9223372036854775807] %300=[0,1] %302=[0,140737488355328] %303=[0,140737488355328] %304=[-9223372036854775808,140737488355327] %306=[-9223372036854775808,9223372036854775807] %307=[-9223372036854775808,9223372036854775807] %313=[-9223372036854775808,9223372036854775807] %322=[-9223372036854775808,9223372036854775807] %323=[-9223372036854775808,9223372036854775807] %324=[-9223372036854775808,9223372036854775807] %325=[-9223372036854775808,9223372036854775807] %327=[1,140737488355328] %329=[-9223372036854775808,9223372036854775807] %330=[-9223372036854775808,9223372036854775807] %331=[-9223372036854775808,9223372036854775807] %332=[-9223372036854775808,9223372036854775807] %333=[-9223372036854775808,9223372036854775807] %334=[-9223372036854775808,9223372036854775807] %337=[-9223372036854775808,9223372036854775807] %338=[-9223372036854775808,9223372036854775807] %339=[-9223372036854775808,9223372036854775807] %340=[-9223372036854775808,9223372036854775807] %341=[-9223372036854775808,9223372036854775807] %342=[-9223372036854775808,9223372036854775807] %347=[-9223372036854775808,9223372036854775807] %348=[-9223372036854775808,9223372036854775807] %349=[-9223372036854775808,9223372036854775807] %355=[0,1] %357=[0,140737488355328] %358=[0,140737488355328] %359=[-9223372036854775808,140737488355327] %361=[-9223372036854775808,9223372036854775807] %364=[0,140737488355328] %365=[0,140737488355328] %367=[0,140737488355328] %368=[-9223372036854775808,9223372036854775807] %369=[0,1] %373=[-9223372036854775808,9223372036854775807] %375=[0,0] %381=[0,9223372036854775807] %384=[-9223372036854775808,9223372036854775807] %386=[0,0] %392=[0,140737488355327] %394=[-9223372036854775808,9223372036854775807] %398=[-9223372036854775806,9223372036854775807] %400=[-9223372036854775805,9223372036854775807] %403=[0,4294967295] %405=[0,1] %416=[0,1] %418=[0,140737488355328] %419=[0,140737488355328] %420=[-9223372036854775808,140737488355327] %422=[-9223372036854775808,9223372036854775807] %424=[-9223372036854775808,9223372036854775807] %425=[-9223372036854775808,9223372036854775807] %426=[-9223372036854775808,9223372036854775807] %427=[-9223372036854775808,9223372036854775807] %428=[-9223372036854775808,9223372036854775807] %429=[0,1] %433=[-9223372036854775808,9223372036854775807] %435=[0,1] %437=[0,140737488355328] %438=[0,140737488355328] %439=[-9223372036854775808,140737488355327] %441=[-9223372036854775808,9223372036854775807] %442=[-9223372036854775808,9223372036854775807] %448=[-9223372036854775808,9223372036854775807] %457=[-9223372036854775808,9223372036854775807] %458=[-9223372036854775808,9223372036854775807] %459=[-9223372036854775808,9223372036854775807] %460=[-9223372036854775808,9223372036854775807] %462=[1,140737488355328] %464=[-9223372036854775808,9223372036854775807] %465=[-9223372036854775808,9223372036854775807] %466=[-9223372036854775808,9223372036854775807] %467=[-9223372036854775808,9223372036854775807] %468=[-9223372036854775808,9223372036854775807] %469=[-9223372036854775808,9223372036854775807] %472=[-9223372036854775808,9223372036854775807] %473=[-9223372036854775808,9223372036854775807] %474=[-9223372036854775808,9223372036854775807] %475=[-9223372036854775808,9223372036854775807] %476=[-9223372036854775808,9223372036854775807] %477=[-9223372036854775808,9223372036854775807] %482=[-9223372036854775808,9223372036854775807] %483=[-9223372036854775808,9223372036854775807] %484=[-9223372036854775808,9223372036854775807] %499=[-9223372036854775808,9223372036854775807] %500=[-9223372036854775808,9223372036854775807] %501=[-9223372036854775808,9223372036854775807] %502=[-9223372036854775808,9223372036854775807] %503=[-9223372036854775808,9223372036854775807] %504=[-9223372036854775808,9223372036854775807] %505=[-9223372036854775808,9223372036854775807] %506=[-9223372036854775808,9223372036854775807] %507=[-9223372036854775808,9223372036854775807] %508=[-9223372036854775808,9223372036854775807] %509=[-9223372036854775808,9223372036854775807] %510=[-9223372036854775808,9223372036854775807] %511=[-9223372036854775808,9223372036854775807] %512=[-9223372036854775808,9223372036854775807] %513=[-9223372036854775808,9223372036854775807] %514=[-9223372036854775808,9223372036854775807] %515=[-9223372036854775808,9223372036854775807] %516=[-9223372036854775808,9223372036854775807] %517=[-9223372036854775808,9223372036854775807] %518=[-9223372036854775808,9223372036854775807] %519=[-9223372036854775808,9223372036854775807] %520=[-9223372036854775808,9223372036854775807] %521=[-9223372036854775808,9223372036854775807] %532=[-9223372036854775808,9223372036854775807] %542=[-9223372036854775808,9223372036854775807] %543=[-9223372036854775808,9223372036854775807] %544=[-9223372036854775808,9223372036854775807] %545=[-9223372036854775808,9223372036854775807] %546=[-9223372036854775808,9223372036854775807] %547=[-9223372036854775808,9223372036854775807] %548=[-9223372036854775808,9223372036854775807] %549=[-9223372036854775808,9223372036854775807] %550=[-9223372036854775808,9223372036854775807] %551=[-9223372036854775808,9223372036854775807] %552=[-9223372036854775808,9223372036854775807] %553=[-9223372036854775808,9223372036854775807] %554=[-9223372036854775808,9223372036854775807] %555=[-9223372036854775808,9223372036854775807] %556=[-9223372036854775808,9223372036854775807] %557=[-9223372036854775808,9223372036854775807] %558=[-9223372036854775808,9223372036854775807] %559=[-9223372036854775808,9223372036854775807] %560=[-9223372036854775808,9223372036854775807] %561=[-9223372036854775808,9223372036854775807] %562=[-9223372036854775808,9223372036854775807] %563=[-9223372036854775808,9223372036854775807] %564=[-9223372036854775808,9223372036854775807] %565=[-9223372036854775808,9223372036854775807] %566=[-9223372036854775808,9223372036854775807] %568=[0,0] %574=[0,1] %583=[-9223372036854775808,9223372036854775807] %585=[0,0] %591=[0,1] %592=[-9223372036854775808,9223372036854775807] %603=[0,1] %604=[0,140737488355328] %605=[-9223372036854775808,9223372036854775807] %607=[-9223372036854775808,9223372036854775807] %608=[-9223372036854775808,9223372036854775807] %610=[-9223372036854775808,9223372036854775807] %612=[-9223372036854775808,9223372036854775807] %614=[0,1] %617=[1,1] %619=[1,140737488355328] %621=[0,140737488355328] %622=[0,140737488355328] %623=[-9223372036854775808,140737488355327] %625=[-9223372036854775808,140737488355327] %626=[-9223372036854775808,9223372036854775807] %628=[-9223372036854775808,9223372036854775807] %629=[-9223372036854775808,9223372036854775807] %630=[-9223372036854775808,9223372036854775807] %632=[-9223372036854775808,9223372036854775807] %635=[-9223372036854775808,9223372036854775807] %638=[0,0] %644=[0,140737488355327] %645=[-9223372036854775808,9223372036854775807] %647=[-9223372036854775808,9223372036854775807] %648=[-9223372036854775808,9223372036854775807] %649=[-9223372036854775808,9223372036854775807] %650=[-9223372036854775808,9223372036854775807] %652=[-9223372036854775808,9223372036854775807] %656=[-9223372036854775808,9223372036854775807] %657=[-9223372036854775806,9223372036854775807] %658=[-9223372036854775805,9223372036854775807] %661=[0,4294967295] %662=[0,1] %670=[0,1] %672=[0,140737488355328] %673=[0,140737488355328] %674=[-9223372036854775808,140737488355327] %676=[-9223372036854775808,9223372036854775807] %677=[-9223372036854775808,9223372036854775807] %679=[-9223372036854775808,9223372036854775807] %681=[-9223372036854775808,9223372036854775807] %682=[-9223372036854775808,9223372036854775807] %683=[-9223372036854775808,9223372036854775807] %685=[-9223372036854775808,9223372036854775807] %687=[-9223372036854775808,9223372036854775807] %689=[-9223372036854775808,9223372036854775807] %690=[0,1] %693=[0,1] %697=[-9223372036854775808,9223372036854775807] %699=[-9223372036854775808,9223372036854775807] %700=[-9223372036854775808,9223372036854775807] %702=[-9223372036854775808,9223372036854775807] %703=[-9223372036854775808,9223372036854775807] %704=[-9223372036854775808,9223372036854775807] %706=[0,140737488355328] %707=[0,140737488355328] %708=[-9223372036854775808,140737488355327] %710=[-9223372036854775808,9223372036854775807] %711=[-9223372036854775808,9223372036854775807] %713=[-9223372036854775808,9223372036854775807] %714=[-9223372036854775808,9223372036854775807] %716=[-9223372036854775808,9223372036854775807] %717=[-9223372036854775808,9223372036854775807] %718=[-9223372036854775808,9223372036854775807] %720=[-9223372036854775808,9223372036854775807] %723=[-9223372036854775808,9223372036854775807] %737=[0,1] %738=[0,140737488355328] %739=[-9223372036854775808,9223372036854775807] %740=[-9223372036854775808,9223372036854775807] %742=[-9223372036854775808,9223372036854775807] %744=[-9223372036854775808,9223372036854775807] %746=[-9223372036854775808,9223372036854775807] %748=[0,1] %751=[1,1] %753=[1,140737488355328] %755=[0,140737488355328] %756=[0,140737488355328] %757=[-9223372036854775808,140737488355327] %759=[-9223372036854775808,140737488355327] %760=[-9223372036854775808,9223372036854775807] %761=[-9223372036854775808,9223372036854775807] %763=[-9223372036854775808,9223372036854775807] %764=[-9223372036854775808,9223372036854775807] %766=[-9223372036854775808,9223372036854775807] %769=[-9223372036854775808,9223372036854775807] %772=[0,0] %778=[0,140737488355327] %779=[-9223372036854775808,9223372036854775807] %780=[-9223372036854775808,9223372036854775807] %782=[-9223372036854775808,9223372036854775807] %783=[-9223372036854775808,9223372036854775807] %784=[-9223372036854775808,9223372036854775807] %786=[-9223372036854775808,9223372036854775807] %790=[-9223372036854775808,9223372036854775807] %791=[-9223372036854775806,9223372036854775807] %792=[-9223372036854775805,9223372036854775807] %795=[0,4294967295] %796=[0,1] %804=[0,1] %806=[0,140737488355328] %807=[0,140737488355328] %808=[-9223372036854775808,140737488355327] %810=[-9223372036854775808,9223372036854775807] %811=[-9223372036854775808,9223372036854775807] %812=[-9223372036854775808,9223372036854775807] %815=[-9223372036854775808,9223372036854775807] %816=[-9223372036854775808,9223372036854775807] %817=[-9223372036854775808,9223372036854775807] %819=[-9223372036854775808,9223372036854775807] %821=[-9223372036854775808,9223372036854775807] %823=[-9223372036854775808,9223372036854775807] %824=[0,1] %827=[0,1] %831=[-9223372036854775808,9223372036854775807] %832=[-9223372036854775808,9223372036854775807] %834=[-9223372036854775808,9223372036854775807] %836=[-9223372036854775808,9223372036854775807] %837=[-9223372036854775808,9223372036854775807] %838=[-9223372036854775808,9223372036854775807] %840=[0,140737488355328] %841=[0,140737488355328] %842=[-9223372036854775808,140737488355327] %844=[-9223372036854775808,9223372036854775807] %845=[-9223372036854775808,9223372036854775807] %846=[-9223372036854775808,9223372036854775807] %848=[-9223372036854775808,9223372036854775807] %850=[-9223372036854775808,9223372036854775807] %851=[-9223372036854775808,9223372036854775807] %852=[-9223372036854775808,9223372036854775807] %854=[-9223372036854775808,9223372036854775807] %857=[-9223372036854775808,9223372036854775807] %871=[0,1] %872=[0,140737488355328] %873=[-9223372036854775808,9223372036854775807] %875=[-9223372036854775808,9223372036854775807] %876=[-9223372036854775808,9223372036854775807] %878=[-9223372036854775808,9223372036854775807] %880=[-9223372036854775808,9223372036854775807] %882=[0,1] %885=[1,1] %887=[1,140737488355328] %889=[0,140737488355328] %890=[0,140737488355328] %891=[-9223372036854775808,140737488355327] %893=[-9223372036854775808,140737488355327] %894=[-9223372036854775808,9223372036854775807] %896=[-9223372036854775808,9223372036854775807] %897=[-9223372036854775808,9223372036854775807] %898=[-9223372036854775808,9223372036854775807] %900=[-9223372036854775808,9223372036854775807] %903=[-9223372036854775808,9223372036854775807] %906=[0,0] %912=[0,140737488355327] %913=[-9223372036854775808,9223372036854775807] %915=[-9223372036854775808,9223372036854775807] %916=[-9223372036854775808,9223372036854775807] %917=[-9223372036854775808,9223372036854775807] %918=[-9223372036854775808,9223372036854775807] %920=[-9223372036854775808,9223372036854775807] %924=[-9223372036854775808,9223372036854775807] %925=[-9223372036854775806,9223372036854775807] %926=[-9223372036854775805,9223372036854775807] %929=[0,4294967295] %930=[0,1] %938=[0,1] %940=[0,140737488355328] %941=[0,140737488355328] %942=[-9223372036854775808,140737488355327] %944=[-9223372036854775808,9223372036854775807] %945=[-9223372036854775808,9223372036854775807] %947=[-9223372036854775808,9223372036854775807] %949=[-9223372036854775808,9223372036854775807] %950=[-9223372036854775808,9223372036854775807] %951=[-9223372036854775808,9223372036854775807] %953=[-9223372036854775808,9223372036854775807] %955=[-9223372036854775808,9223372036854775807] %957=[-9223372036854775808,9223372036854775807] %958=[0,1] %961=[0,1] %965=[-9223372036854775808,9223372036854775807] %967=[-9223372036854775808,9223372036854775807] %968=[-9223372036854775808,9223372036854775807] %970=[-9223372036854775808,9223372036854775807] %971=[-9223372036854775808,9223372036854775807] %972=[-9223372036854775808,9223372036854775807] %974=[0,140737488355328] %975=[0,140737488355328] %976=[-9223372036854775808,140737488355327] %978=[-9223372036854775808,9223372036854775807] %979=[-9223372036854775808,9223372036854775807] %981=[-9223372036854775808,9223372036854775807] %982=[-9223372036854775808,9223372036854775807] %984=[-9223372036854775808,9223372036854775807] %985=[-9223372036854775808,9223372036854775807] %986=[-9223372036854775808,9223372036854775807] %988=[-9223372036854775808,9223372036854775807] %991=[-9223372036854775808,9223372036854775807] %1024=[-9223372036854775806,9223372036854775807] %1025=[-9223372036854775806,9223372036854775807] %1027=[-9223372036854775806,9223372036854775807] %1028=[-9223372036854775806,9223372036854775807] %1029=[-9223372036854775806,9223372036854775807] %1030=[-9223372036854775806,9223372036854775807] %1031=[-9223372036854775806,9223372036854775807] %1032=[-9223372036854775806,9223372036854775807] %1033=[-9223372036854775806,9223372036854775807] %1034=[-9223372036854775806,9223372036854775807] %1035=[-9223372036854775806,9223372036854775807] %1036=[-9223372036854775806,9223372036854775807] %1037=[-9223372036854775806,9223372036854775807] %1038=[-9223372036854775806,9223372036854775807] %1039=[-9223372036854775806,9223372036854775807] %1041=[-9223372036854775806,9223372036854775807] %1042=[-9223372036854775806,9223372036854775807] %1043=[-9223372036854775806,9223372036854775807] %1044=[-9223372036854775806,9223372036854775807] %1045=[-9223372036854775806,9223372036854775807] %1046=[-9223372036854775806,9223372036854775807] %1047=[-9223372036854775806,9223372036854775807]
+list close_group %13: settled=true length=%-1
+list close_group %28: settled=true length=%-1 len=[0,0]
+list close_group %30: settled=true length=%-1 elements=[0,1] len=[1,1]
+list close_group %32: settled=true length=%-1 len=[0,0]
+list close_group %36: settled=true length=%-1 elements=[-9223372036854775808,9223372036854775807] len=[0,140737488355328]
+list close_group %50: settled=true length=%-1
+list close_group %55: settled=true length=%-1
+list close_group %66: settled=true length=%-1
+list close_group %83: settled=true length=%-1
+list close_group %91: settled=true length=%-1
+list close_group %103: settled=true length=%-1
+list close_group %114: settled=true length=%-1
+list close_group %117: settled=true length=%-1
+list close_group %144: settled=true length=%-1
+list close_group %166: settled=true length=%-1
+list close_group %173: settled=true length=%-1 len=[0,140737488355328]
+list close_group %174: settled=true length=%-1 len=[1,140737488355328]
+list close_group %191: settled=true length=%-1
+list close_group %201: settled=true length=%-1
+list close_group %214: settled=true length=%-1 len=[0,140737488355328]
+list close_group %215: settled=true length=%-1 len=[0,140737488355328]
+list close_group %228: settled=true length=%-1
+list close_group %236: settled=true length=%-1
+list close_group %248: settled=true length=%-1
+list close_group %259: settled=true length=%-1
+list close_group %262: settled=true length=%-1
+list close_group %289: settled=true length=%-1
+list close_group %311: settled=true length=%-1
+list close_group %318: settled=true length=%-1 len=[0,140737488355328]
+list close_group %319: settled=true length=%-1 len=[1,140737488355328]
+list close_group %336: settled=true length=%-1
+list close_group %351: settled=true length=%-1 len=[0,140737488355328]
+list close_group %363: settled=true length=%-1
+list close_group %371: settled=true length=%-1
+list close_group %383: settled=true length=%-1
+list close_group %394: settled=true length=%-1
+list close_group %397: settled=true length=%-1
+list close_group %424: settled=true length=%-1
+list close_group %446: settled=true length=%-1
+list close_group %453: settled=true length=%-1 elements=[-9223372036854775808,9223372036854775807] len=[0,140737488355328]
+list close_group %454: settled=true length=%-1 elements=[-9223372036854775808,9223372036854775807] len=[1,140737488355328]
+list close_group %471: settled=true length=%-1
+list close_group %495: settled=true length=%-1 elements=[-9223372036854775808,9223372036854775807] len=[0,140737488355328]
+list close_group %522: settled=true length=%-1 elements=[-9223372036854775808,9223372036854775807] len=[0,140737488355328]
+list close_group %530: settled=true length=%-1
+list close_group %531: settled=true length=%-1
+list close_group %533: settled=true length=%-1 len=[0,140737488355328]
+list close_group %579: settled=true length=%-1
+list close_group %596: settled=true length=%-1
+list close_group %609: settled=true length=%-1
+list close_group %611: settled=true length=%-1
+list close_group %613: settled=true length=%-1 len=[0,140737488355328]
+list close_group %637: settled=true length=%-1
+list close_group %656: settled=true length=%-1
+list close_group %689: settled=true length=%-1
+list close_group %695: settled=true length=%-1
+list close_group %696: settled=true length=%-1 len=[0,140737488355328]
+list close_group %725: settled=true length=%-1
+list close_group %727: settled=true length=%-1 len=[1,140737488355328]
+list close_group %732: settled=true length=%-1
+list close_group %733: settled=true length=%-1
+list close_group %734: settled=true length=%-1 len=[0,140737488355328]
+list close_group %743: settled=true length=%-1
+list close_group %745: settled=true length=%-1
+list close_group %747: settled=true length=%-1 len=[0,140737488355328]
+list close_group %771: settled=true length=%-1
+list close_group %790: settled=true length=%-1
+list close_group %823: settled=true length=%-1
+list close_group %829: settled=true length=%-1
+list close_group %830: settled=true length=%-1 len=[0,140737488355328]
+list close_group %859: settled=true length=%-1
+list close_group %861: settled=true length=%-1 len=[1,140737488355328]
+list close_group %866: settled=true length=%-1 len=[0,140737488355328]
+list close_group %867: settled=true length=%-1
+list close_group %868: settled=true length=%-1
+list close_group %877: settled=true length=%-1
+list close_group %879: settled=true length=%-1
+list close_group %881: settled=true length=%-1 elements=[-9223372036854775808,9223372036854775807] len=[0,140737488355328]
+list close_group %905: settled=true length=%-1
+list close_group %924: settled=true length=%-1
+list close_group %957: settled=true length=%-1
+list close_group %963: settled=true length=%-1
+list close_group %964: settled=true length=%-1 elements=[-9223372036854775808,9223372036854775807] len=[0,140737488355328]
+list close_group %993: settled=true length=%-1
+list close_group %995: settled=true length=%-1 elements=[-9223372036854775808,9223372036854775807] len=[1,140737488355328]
+list close_group %1000: settled=true length=%-1 elements=[-9223372036854775808,9223372036854775807] len=[0,140737488355328]
+list close_group %1001: settled=true length=%-1
+list close_group %1002: settled=true length=%-1
+facts check_work: %1=[0,0] %2=[0,0] %3=[0,0] %4=[0,0] %5=[0,0] %6=[-9223372036854775806,9223372036854775807] %7=[-9223372036854775806,9223372036854775807] %8=[-9223372036854775806,9223372036854775807] %9=[-9223372036854775808,9223372036854775807] %11=[0,1]
+field type18.5: [-9223372036854775805, 9223372036854775807]
+field type19.0: [0, 0]
+field type19.1: [0, 0]
+field type19.2: [0, 0]
+field type19.3: [-9223372036854775805, 9223372036854775807]
+field type19.4: [-9223372036854775805, 9223372036854775807]
+field type19.5: [0, 0]
+field type19.6: [0, 0]

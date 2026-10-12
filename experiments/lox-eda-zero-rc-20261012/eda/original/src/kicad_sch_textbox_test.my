@@ -1,0 +1,105 @@
+
+import kicad_sch_textbox as m
+import sexpr_parser as parser
+import support_expect as ex
+import byte_builder
+
+func replace_bytes(src: bytes, old: bytes, new: bytes) -> bytes:
+    mut w = byte_builder.create()
+    mut pos = 0
+    while pos < len(src):
+        if src[pos:pos + len(old)] == old:
+            byte_builder.append(mut w, new)
+            pos += len(old)
+        else:
+            _ = byte_builder.append_byte(mut w, src[pos])
+            pos += 1
+    return byte_builder.finish(w)
+
+
+func scan_text(src: bytes) -> m.Report?:
+    match parser.parse(src):
+        case Err(_):
+            return None
+        case Ok(nodes):
+            if len(nodes) == 0:
+                return None
+            return Some(m.scan(nodes[0]))
+
+
+# test "kicad-sch: text boxes follow justification and orientation"
+public func test_kicad_sch_text_boxes_follow_justification_and_orientation(out: Stream) -> bool:
+    mut right = m.box_of(m.Placement(x=0, y=0, dir=0, w=400, h=100, just=m.Just.start, cross=m.Cross.below))
+    if not ex.eq_int(out, "right x0", right.x0, 0):
+        return False
+    if not ex.eq_int(out, "right x1", right.x1, 400):
+        return False
+    if not ex.eq_int(out, "right y0", right.y0, 0):
+        return False
+    if not ex.eq_int(out, "right y1", right.y1, 100):
+        return False
+    mut left = m.box_of(m.Placement(x=0, y=0, dir=180, w=400, h=100, just=m.Just.start, cross=m.Cross.below))
+    if not ex.eq_int(out, "left x0", left.x0, -400):
+        return False
+    if not ex.eq_int(out, "left x1", left.x1, 0):
+        return False
+    mut up = m.box_of(m.Placement(x=0, y=0, dir=90, w=400, h=100, just=m.Just.start, cross=m.Cross.center))
+    if not ex.eq_int(out, "up y0", up.y0, -400):
+        return False
+    if not ex.eq_int(out, "up y1", up.y1, 0):
+        return False
+    if not ex.eq_int(out, "up x0", up.x0, -50):
+        return False
+    if not ex.eq_int(out, "up x1", up.x1, 50):
+        return False
+    mut down = m.box_of(m.Placement(x=0, y=0, dir=270, w=400, h=100, just=m.Just.start, cross=m.Cross.center))
+    if not ex.eq_int(out, "down y0", down.y0, 0):
+        return False
+    return ex.eq_int(out, "down y1", down.y1, 400)
+
+
+# test "kicad-sch: the scan finds an overlapping label pair and clears a tidy sheet"
+public func test_kicad_sch_the_scan_finds_an_overlapping_label_pair_and_clears_a_tidy_sheet(out: Stream) -> bool:
+    mut clash = b"".join([b"(kicad_sch (lib_symbols)\n", b"(global_label \"VDD3V3\" (at 50 50 0) (effects (font (size 1.27 1.27)) (justify left)))\n", b"(global_label \"VDD3V3\" (at 50 50.5 0) (effects (font (size 1.27 1.27)) (justify left)))\n)\n"])
+    mut hit = scan_text(clash)
+    if hit is None:
+        return False
+    if not ex.eq_int(out, "texts", hit.texts, 2):
+        return False
+    if not ex.eq_int(out, "overlap", hit.overlaps, 1):
+        return False
+    mut first = hit.first
+    if first is None:
+        return False
+    if not ex.eq_bytes(out, "first party", first.a, b"VDD3V3"):
+        return False
+    if not ex.ok(out, "label kind", first.kind_a == m.Kind.label):
+        return False
+    mut clear = replace_bytes(clash, b"(at 50 50.5 0)", b"(at 50 55 0)")
+    mut ok = scan_text(clear)
+    if ok is None:
+        return False
+    if not ex.eq_int(out, "clear texts", ok.texts, 2):
+        return False
+    if not ex.eq_int(out, "clear overlap", ok.overlaps, 0):
+        return False
+    return ex.ok(out, "no first collision", ok.first.is_none())
+
+
+# test "kicad-sch: a zero-size pin name is not measured while its number still is"
+public func test_kicad_sch_a_zero_size_pin_name_is_not_measured_while_its_number_still_is(out: Stream) -> bool:
+    mut doc = b"".join([b"(kicad_sch (lib_symbols (symbol \"netlisp:BOX\" (pin_names (offset 0.254))\n", b"(symbol \"BOX_1_1\" (pin passive line (at -15.24 0 0) (length 2.54)\n", b"(name \"VSSAPM_U\" (effects (font (size 1.27 1.27))))\n", b"(number \"H14\" (effects (font (size 1.27 1.27))))))))\n", b"(symbol (lib_id \"netlisp:BOX\") (at 63.5 38.1 0) (unit 1)))\n"])
+    mut shown = scan_text(doc)
+    if shown is None:
+        return False
+    if not ex.eq_int(out, "name and number", shown.texts, 2):
+        return False
+    mut drawn = b"(name \"VSSAPM_U\" (effects (font (size 1.27 1.27))))"
+    mut muted = b"(name \"VSSAPM_U\" (effects (font (size 0 0))))"
+    mut quiet = replace_bytes(doc, drawn, muted)
+    mut after = scan_text(quiet)
+    if after is None:
+        return False
+    if not ex.eq_int(out, "number remains", after.texts, 1):
+        return False
+    return ex.eq_int(out, "no collision", after.overlaps, 0)

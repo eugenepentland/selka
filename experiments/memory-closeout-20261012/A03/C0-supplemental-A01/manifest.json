@@ -1,0 +1,174 @@
+{
+  "schema": "memory-closeout-census-manifest-v1",
+  "original_denominator": 0,
+  "scope": "New API supplement; preserves original30 and pinned81 as separate complete denominators",
+  "cases": [
+    {
+      "id": "supplemental/owned-list-methods",
+      "family": "supplemental-20261012",
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/supplemental/a02_list_methods.my",
+        "sha256": "4e1a375bd4f77675dcdc881e6edf519c2eb37acd1e616b22071f57751b4bb2c3"
+      },
+      "provenance": {
+        "owner": "A02",
+        "commit": "27861c3d7d543491556e42bdf015876e1a39f720",
+        "path": "src/core/a02_list_methods_fixture.my"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "500\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "baseline_expectation": "C0 refusal: managed list methods were not supported; refusal remains in denominator"
+    },
+    {
+      "id": "supplemental/a04-library-contracts",
+      "family": "supplemental-20261012",
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/supplemental/a04_memory_library_contracts.my",
+        "sha256": "098b000874425a9e030f449df148a39af73ad8817f285f63c7dbf45a968cbb7a"
+      },
+      "provenance": {
+        "owner": "A04",
+        "commit": "d36558ac3e18ef1ba5547b67d9e14c7101998ab1",
+        "path": "tests/lang/a04_memory_library_contracts.my"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "baseline_expectation": "C0 admitted"
+    },
+    {
+      "id": "supplemental/a04-repetition",
+      "family": "supplemental-20261012",
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/supplemental/a04_repetition_ownership.my",
+        "sha256": "87f833318f1e84ffa20ef35ec152fa2875a4485dba72ecf0faf03c12494de570"
+      },
+      "provenance": {
+        "owner": "A04",
+        "commit": "74162000205e384da5f7b134096a36370fbe6772",
+        "path": "tests/lang/a04_repetition_ownership.my"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "baseline_expectation": "C0 refusal expected for borrowed repetition"
+    },
+    {
+      "id": "supplemental/a07-resource-lifecycle",
+      "family": "supplemental-20261012",
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/supplemental/a07_resource_lifecycle.my",
+        "sha256": "3ee51fe54417747ff3c0d8fdabee048e89c4fc45ebae9aba9b226045de55f877"
+      },
+      "provenance": {
+        "owner": "A07",
+        "commit": "23f7d49c708f60e6919056dadd40966ce965dc33",
+        "path": "experiments/memory-closeout-20261012/A07/resources/lifecycle.my"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "7\n2\n3\nFalse\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "baseline_expectation": "C0 refusal expected for generic-resource lifecycle"
+    },
+    {
+      "id": "supplemental/a01-result-list",
+      "family": "supplemental-20261012",
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/supplemental/a01_result_list.my",
+        "sha256": "6c5ad78bda5b1908889e1a32956456bacbf615ecbc5d36b2fbc7100875865cf6"
+      },
+      "provenance": {
+        "owner": "A01",
+        "commit": "pending-feature-commit",
+        "path": "experiments/memory-closeout-20261012/A01/samples/result_list.my",
+        "initial_qualification_compiler_sha256": "a6795771960a0540e9c573b99dc5117d8450b8010e242ed485744eb725edf320"
+      },
+      "runs": [
+        {
+          "id": "workers-1",
+          "argv": [],
+          "stdout": "27 4 5 4 5\n3889\n",
+          "exit": 0,
+          "env": {
+            "MYLANG_THREADS": "1"
+          }
+        },
+        {
+          "id": "workers-2",
+          "argv": [],
+          "stdout": "27 4 5 4 5\n3889\n",
+          "exit": 0,
+          "env": {
+            "MYLANG_THREADS": "2"
+          }
+        },
+        {
+          "id": "workers-8",
+          "argv": [],
+          "stdout": "27 4 5 4 5\n3889\n",
+          "exit": 0,
+          "env": {
+            "MYLANG_THREADS": "8"
+          }
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "baseline_expectation": "C0 refusal: managed Result list generic constraint; refusal remains in denominator"
+    }
+  ]
+}

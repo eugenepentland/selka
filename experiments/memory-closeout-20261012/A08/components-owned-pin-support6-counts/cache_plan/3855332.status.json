@@ -1,0 +1,1 @@
+{"arguments": ["--request", "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/work/cache-plan-oracle-uxqbiool/request.bin"], "request_sha256": "fcafaf27fe94b6463de1a1e66ee38f149a156c74e05c4e78f78147b32aca65bc", "status": 2, "stderr": "cache-plan: request table count exceeds limit\n"}

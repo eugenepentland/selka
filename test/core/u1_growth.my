@@ -35,7 +35,7 @@ func shared_append(count: int) -> int:
     mut b = byte_buffer(empty)
     for i in range(count):
         _ = b.append_byte(i % 200)
-    mut kept = b
+    mut kept = b.copy()
     for i in range(count):
         _ = b.append_range(b"xyz", 0, 3)
     _ = kept.append_byte(7)
@@ -55,7 +55,7 @@ func list_growth(count: int) -> int:
     mut xs: int[] = []
     for i in range(count):
         xs.append(i * 3)
-    mut keep = xs
+    mut keep = xs.copy()
     xs.append(1)
     mut total = 0
     for x in keep:

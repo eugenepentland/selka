@@ -1,0 +1,38 @@
+# spec-case: NEW-CORE-S1-VIEW-4
+public func test_slice_survives_source_move_and_child_update() -> bool:
+    mut owner = "abc" + str(7)
+    const head = owner[0:3]
+    mut values: str[] = []
+    values.append(owner)
+    values[0] += "!"
+    return head == "abc" and head.startswith("ab") and len(head) == 3 and values[0] == "abc7!"
+
+
+# spec-case: NEW-CORE-S1-VIEW-1
+public func test_slice_key_survives_parent_element_replacement() -> bool:
+    mut values = ["abc" + str(7), "é" + str(8)]
+    mut counts: dict[str, int] = {}
+    for i in range(len(values)):
+        const key = values[i][0:3]
+        values[i] = "replacement"
+        counts[key] = counts.get(key, 0) + 1
+    return counts["abc"] == 1 and counts["é8"] == 1 and values == ["replacement", "replacement"]
+
+
+# spec-case: NEW-CORE-S1-VIEW-4
+public func test_explicit_view_copy_survives_owner_replacement() -> bool:
+    mut owner = "abc" + str(7)
+    const view = owner.borrow(0, 3)
+    const saved = view.copy()
+    owner = "changed"
+    return saved == "abc" and len(saved) == 3 and owner == "changed"
+
+
+func main() -> int:
+    if not test_slice_survives_source_move_and_child_update():
+        return 1
+    if not test_slice_key_survives_parent_element_replacement():
+        return 2
+    if not test_explicit_view_copy_survives_owner_replacement():
+        return 3
+    return 0

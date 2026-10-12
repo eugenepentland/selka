@@ -1,0 +1,62 @@
+{
+  "worker_base": "6509c6d7c9a84a98cf6ad6888124dcb19bdfa5d3",
+  "source_state": "base plus collection_lower fresh-field patch, coordinator test registration, new test, and unchanged dictionary_views validation dependency overlay",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.zig-cache/o/6c8d203f2bb1a3a47f957848dc4be9af/mylang",
+  "compiler_sha256": "fa7f693d2468759ef4d8de091ccf595af872326e32f1980d8b50deafab6709de",
+  "positive_test_binary_sha256": "3d3cdac04f63ea607ec68c3a77731a8299ba3d439b90e57465ed4ab47491b6a5",
+  "source_hashes": {
+    "src/collection_lower.zig": "3d36ec60a8956b3aeaa9072ab769b4b8d8da037b9b59d397a73906143006d8b5",
+    "src/core/a01_fresh_field_test.zig": "86878db384e4120d9a64be402f1922db7d391f6fa04a888a7f12bd774ab2a17e",
+    "src/core/root_test.zig": "c30853011aa69f7f62958434d937cec94c98c038c458192a139de051c641a86c",
+    "src/dictionary_views.zig": "a346eea892fe6d6831ba0fa07acdd4bc4d79d68e07efa87172316783964d3d16",
+    "experiments/memory-closeout-20261012/A01/samples/fresh_field.my": "4add19dbc92084854c1599663f564f5766d47b00d09bbeefdbf4a40e79ffbe6a"
+  },
+  "native_modes": [
+    "release",
+    "unoptimized",
+    "verified_release",
+    "optimized_debug",
+    "release_without_facts"
+  ],
+  "native_expected_output": "fresh-field 23\n",
+  "native_status": "passed all five modes",
+  "native_assertions": [
+    "exact output and empty stderr",
+    "runtime RC events zero",
+    "managed live bytes at exit zero",
+    "allocation and direct cleanup exercised",
+    "emitted LLVM clean",
+    "legacy RC symbols absent",
+    "fresh call/invoke evaluates once; ignored siblings and early/error exits clean up"
+  ],
+  "negative_cases": 6,
+  "negative_status": "passed all six cases in one focused test",
+  "positive_log": "test-1.log.gz",
+  "historical_test_failure": "One negative expected E_RESULT_UNHANDLED but existing frontend correctly emits E_RESULT_OPERATION for pending sibling operation. No production change after successful five-mode native test.",
+  "admission_wait_seconds": 797,
+  "guardian": {
+    "passed": 88,
+    "log": "guardian-3.log.gz",
+    "initial_failures": [
+      "boolean condition complexity",
+      "Builder cognitive complexity; extracted helper at file scope"
+    ],
+    "final_log": "guardian-4.log.gz"
+  },
+  "review": {
+    "owner": "A07",
+    "status": "approved",
+    "scope": "Hidden whole-owner rooting preserves evaluation order; read-only/bounded path with Result/resource/view exclusions; direct partial moves remain refused."
+  },
+  "limitations": [
+    "Intermediate worker qualification, not integrated C1/C2/C3 or installed package qualification.",
+    "Native test verifies counters inside temporary directories then deletes them; no allocation traffic, peak or performance comparison claimed.",
+    "Queue delay excluded from all timing claims.",
+    "dictionary_views.zig dependency overlay already integrated by root, excluded from feature commit."
+  ],
+  "negative_test_binary_sha256": "983d1e58a155d78ddf5873ee2bc2f6f41553eb3b9bf0e4cecc9c51f8dc17bfc8",
+  "negative_log": "test-2.log.gz",
+  "negative_command": "scripts/build-slot.sh build \"$ZIG\" build test-core -Dtest-filter='A01 zero RC fresh field receivers retain partial move' -j\"$MYLANG_DEV_JOBS\" --maxrss \"$MYLANG_DEV_MAXRSS\"",
+  "negative_exit": 0,
+  "positive_command": "scripts/build-slot.sh build \"$ZIG\" build test-core -Dtest-filter='A01 zero RC fresh field receivers' -j\"$MYLANG_DEV_JOBS\" --maxrss \"$MYLANG_DEV_MAXRSS\""
+}

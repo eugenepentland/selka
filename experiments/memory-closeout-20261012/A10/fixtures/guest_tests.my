@@ -1,0 +1,21 @@
+public func test_owned() -> bool:
+    const value = "value-" + str(7)
+    const duplicate = value.copy()
+    return duplicate == value
+
+public func test_generated(value: str, numbers: int[]) -> bool:
+    const duplicate = value.copy()
+    const independent = numbers.copy()
+    return duplicate == value and len(independent) == len(numbers)
+
+public func test_result() -> Result[bool, str]:
+    const value = "result-" + str(9)
+    if value == "result-9":
+        return Ok(True)
+    return Err(value)
+
+func main(out: Stream) -> int:
+    const value = "value-" + str(7)
+    const duplicate = value.copy()
+    out.print(duplicate)
+    return 0

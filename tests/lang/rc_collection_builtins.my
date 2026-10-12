@@ -2,7 +2,7 @@ public func test_nested_list_mutators_publish_owned_results() -> bool:
     mut values = [[1], [2]]
     mut first = values.pop(0)
     values.insert(0, [3])
-    values.append(first)
+    values.append(first.copy())
     values[1] = [4]
     if values != [[3], [4], [1]] or first != [1]:
         return False
@@ -12,8 +12,8 @@ public func test_nested_list_mutators_publish_owned_results() -> bool:
 
 public func test_dictionary_results_survive_receiver_clear() -> bool:
     mut mapping = {"a": [10], "b": [20]}
-    mut existing = mapping.setdefault("a", [99])
-    mut inserted = mapping.setdefault("c", [30])
+    mut existing = mapping.setdefault("a", [99]).copy()
+    mut inserted = mapping.setdefault("c", [30]).copy()
     mut removed = mapping.pop("b")
     mut fallback = mapping.pop("missing", [42])
     if existing != [10] or inserted != [30] or removed != [20] or fallback != [42]:
@@ -52,7 +52,7 @@ public func test_set_pop_owns_the_removed_key() -> bool:
 
 public func test_identity_text_conversion_retains_its_input() -> bool:
     mut parts = ("head" + "-tail").split("-")
-    mut converted = str(parts[0])
+    mut converted = str(parts[0]).copy()
     parts.clear()
     return converted == "head"
 

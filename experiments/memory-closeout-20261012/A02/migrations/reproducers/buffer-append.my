@@ -1,0 +1,4 @@
+func main() -> int:
+    mut buffer = byte_buffer([])
+    _ = buffer.append_byte(7)
+    return len(buffer)

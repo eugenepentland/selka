@@ -1,0 +1,50 @@
+# spec-case: STANDARD-POOL-1
+import pool
+
+record Payload:
+    name: str
+    chunks: bytes[]
+
+func payload(number: int) -> Payload:
+    const name = "entry-" + str(number)
+    const suffix = name + ":data"
+    const chunks = [name.encode(), suffix.encode()]
+    return Payload(name=name, chunks=chunks)
+
+func lookup(store: pool.Pool[Payload], handle: pool.Handle[Payload]) -> Payload:
+    match pool.get(store, handle):
+        case Some(value):
+            return value
+        case None:
+            assert False
+            return payload(0)
+
+func main() -> int:
+    mut seeds = [payload(1), payload(2)]
+    mut store = pool.create(seeds)
+    seeds = []
+    const handles = pool.handles(store)
+    const first = handles[0]
+    const second = handles[1]
+    const saved = lookup(store, first)
+    mut snapshot = store.copy()
+    const replacement = payload(3)
+    assert pool.set(mut store, first, replacement)
+    assert lookup(store, first).name == "entry-3"
+    assert lookup(snapshot, first).name == "entry-1"
+    const second_saved = lookup(snapshot, second)
+    assert pool.remove(mut snapshot, first)
+    assert not pool.occupied(snapshot, first)
+    assert pool.count(snapshot) == 1 and pool.capacity(snapshot) == 2
+    const inserted = pool.insert(mut snapshot, payload(4))
+    assert not pool.occupied(snapshot, first)
+    assert pool.occupied(snapshot, inserted)
+    assert pool.capacity(snapshot) == 2
+    assert lookup(snapshot, inserted).chunks == [b"entry-4", b"entry-4:data"]
+    const empty: Payload[] = []
+    store = pool.create(empty)
+    snapshot = pool.create(empty)
+    assert saved.name == "entry-1" and saved.chunks == [b"entry-1", b"entry-1:data"]
+    assert second_saved.name == "entry-2" and second_saved.chunks == [b"entry-2", b"entry-2:data"]
+    assert replacement.name == "entry-3" and replacement.chunks == [b"entry-3", b"entry-3:data"]
+    return 0

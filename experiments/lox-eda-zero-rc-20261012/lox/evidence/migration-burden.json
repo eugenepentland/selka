@@ -1,0 +1,165 @@
+{
+  "by_file": [
+    {
+      "file": "ast.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 1,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "chunk.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 0,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "compiler.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 31,
+      "scalar_staging_locals": 14
+    },
+    {
+      "file": "compiler_test.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 4,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "driver.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 0,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "driver_tests.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 2,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "heap.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 14,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "heap_test.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 2,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "interpreter.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 31,
+      "scalar_staging_locals": 23
+    },
+    {
+      "file": "lox_strings.my",
+      "old_copy_sites": 1,
+      "new_copy_sites": 5,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "lox_strings_test.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 0,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "main.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 1,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "natives.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 0,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "object.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 0,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "output.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 2,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "parser.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 31,
+      "scalar_staging_locals": 21
+    },
+    {
+      "file": "parser_test.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 0,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "resolver.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 27,
+      "scalar_staging_locals": 2
+    },
+    {
+      "file": "resolver_test.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 1,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "scanner.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 3,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "scanner_test.my",
+      "old_copy_sites": 1,
+      "new_copy_sites": 2,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "table.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 0,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "table_test.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 0,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "value.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 0,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "value_test.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 0,
+      "scalar_staging_locals": 0
+    },
+    {
+      "file": "vm.my",
+      "old_copy_sites": 0,
+      "new_copy_sites": 27,
+      "scalar_staging_locals": 16
+    }
+  ],
+  "totals": {
+    "old_copy_sites": 2,
+    "new_copy_sites": 184,
+    "scalar_staging_locals": 76
+  }
+}

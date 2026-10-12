@@ -1,0 +1,39 @@
+
+import kicad_sch_shape as m
+import support_expect as ex
+
+# test "kicad-sch: classify picks a glyph per passive class and boxes everything else"
+public func test_kicad_sch_classify_picks_a_glyph_per_passive_class_and_boxes_everything_else(out: Stream) -> bool:
+    mut inputs = [[b"res-0402", b"generic-res", b"R1"], [b"cap-0402", b"generic-cap", b"C12"], [b"cap-tantalum", b"generic-cap", b"C3"], [b"ind-0402", b"generic-ind", b"L2"], [b"ferrite-0402", b"generic-ind", b"L7"], [b"diode-0402", b"", b"D1"], [b"led-0603-1608metric", b"led", b"D4"], [b"testpoint", b"", b"TP3"], [b"mystery", b"", b"usb/C9"], [b"mystery", b"", b"FB2"], [b"fiducial", b"", b"FID1"], [b"stm32n657", b"", b"U9"], [b"", b"", b"REG3"]]
+    mut wants = [m.Class.resistor, m.Class.capacitor, m.Class.polarized_cap, m.Class.inductor, m.Class.ferrite_bead, m.Class.diode, m.Class.led, m.Class.testpoint, m.Class.capacitor, m.Class.ferrite_bead, m.Class.box, m.Class.box, m.Class.box]
+    for i in range(len(inputs)):
+        mut row = inputs[i]
+        if not ex.ok(out, "passive class", m.classify(row[0], row[1], row[2]) == wants[i]):
+            return False
+    return True
+
+
+# test "kicad-sch: a glyph unit keeps the stock pin endpoints and carries real body art"
+public func test_kicad_sch_a_glyph_unit_keeps_the_stock_pin_endpoints_and_carries_real_body_art(out: Stream) -> bool:
+    mut pads = [m.PadName(pad=b"1", name=b"1"), m.PadName(pad=b"2", name=b"2")]
+    mut u = m.unit_for(m.Class.resistor, pads)
+    if u is None:
+        return ex.ok(out, "resistor unit", False)
+    if not ex.ok(out, "stock endpoints", len(u.pins) == 2 and u.pins[0].x == -381 and u.pins[1].x == 381 and u.pins[0].side == m.Side.left and u.pins[1].side == m.Side.right and len(u.graphics) == 1):
+        return False
+    for p in u.pins:
+        if not ex.ok(out, "grid pins", p.x % m.grid == 0 and p.y % m.grid == 0):
+            return False
+    return ex.ok(out, "body within pins", u.half_w % m.grid == 0 and u.half_h % m.grid == 0 and u.half_w < 381) and ex.ok(out, "wrong class/count", m.unit_for(m.Class.testpoint, pads).is_none() and m.unit_for(m.Class.box, pads).is_none() and m.unit_for(m.Class.resistor, pads[0:1]).is_none())
+
+
+# test "kicad-sch: a diode glyph orients itself by pin function, not pad order"
+public func test_kicad_sch_a_diode_glyph_orients_itself_by_pin_function_not_pad_order(out: Stream) -> bool:
+    mut k_first = [m.PadName(pad=b"1", name=b"K"), m.PadName(pad=b"2", name=b"A")]
+    mut a_first = [m.PadName(pad=b"1", name=b"A"), m.PadName(pad=b"2", name=b"K")]
+    mut straight = m.unit_for(m.Class.diode, k_first)
+    mut flipped = m.unit_for(m.Class.led, a_first)
+    mut caps = m.unit_for(m.Class.capacitor, a_first)
+    if straight is None or flipped is None or caps is None:
+        return ex.ok(out, "glyph units", False)
+    return ex.eq_bytes(out, "cathode first", straight.pins[0].pad, b"1") and ex.eq_bytes(out, "cathode flipped", flipped.pins[0].pad, b"2") and ex.eq_bytes(out, "anode flipped", flipped.pins[1].pad, b"1") and ex.eq_bytes(out, "non-polar cap", caps.pins[0].pad, b"1")

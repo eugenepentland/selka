@@ -1,0 +1,278 @@
+
+# Guest tests translated from the `test "..."` blocks of
+# zig/src/sexpr/parser.zig. The Zig `std.testing.allocator` leak checks have no
+# analogue (values are reference counted); the fuzz test becomes a deterministic
+# generator loop plus a property test.
+import byte_builder
+import sexpr_ast as ast
+import sexpr_parser as parser
+
+# Parse or fail the test with the error name in the message.
+func parse_ok(source: bytes) -> ast.Node[]:
+    match parser.parse(source):
+        case Ok(nodes):
+            return nodes
+        case Err(_):
+            assert False, "parse failed"
+            return []
+
+
+func children_of(n: ast.Node) -> ast.Node[]:
+    match ast.as_list(n):
+        case Some(children):
+            return children
+        case None:
+            assert False, "expected a list node"
+            return []
+
+
+func num(n: ast.Node) -> float:
+    match ast.as_number(n):
+        case Some(v):
+            return v
+        case None:
+            assert False, "expected a numeric node"
+            return 0.0
+
+
+func rel_close(want: float, got: float, tol: float) -> bool:
+    return abs(want - got) <= tol * abs(want)
+
+
+func atom_of(n: ast.Node) -> bytes:
+    match ast.as_atom(n):
+        case Some(a):
+            return a
+        case None:
+            assert False, "expected an atom"
+            return b""
+
+
+func string_of(n: ast.Node) -> bytes:
+    match ast.as_string(n):
+        case Some(s):
+            return s
+        case None:
+            assert False, "expected a string"
+            return b""
+
+
+# test "parse simple list"
+public func test_parse_simple_list() -> bool:
+    mut nodes = parse_ok(b"(hello 42 \"world\")")
+    assert len(nodes) == 1, "one top-level node"
+    mut children = children_of(nodes[0])
+    assert len(children) == 3, "three children"
+    assert atom_of(children[0]) == b"hello", "head atom"
+    assert num(children[1]) == 42.0, "int child"
+    assert string_of(children[2]) == b"world", "string child"
+    return True
+
+
+# test "parse nested lists"
+public func test_parse_nested_lists() -> bool:
+    mut nodes = parse_ok(b"(a (b c) (d (e)))")
+    mut children = children_of(nodes[0])
+    assert len(children) == 3, "three children"
+    assert len(children_of(children[1])) == 2, "inner1 length"
+    assert len(children_of(children[2])) == 2, "inner2 length"
+    return True
+
+
+# test "parse numbers and units"
+public func test_parse_numbers_and_units() -> bool:
+    mut nodes = parse_ok(b"(pos 1.0mm 0.5mm 10mil)")
+    mut children = children_of(nodes[0])
+    assert abs(1.0 - num(children[1])) <= 0.001, "1.0mm"
+    assert abs(0.5 - num(children[2])) <= 0.001, "0.5mm"
+    assert abs(0.254 - num(children[3])) <= 0.001, "10mil"
+    return True
+
+
+# test "parse si scaled values"
+public func test_parse_si_scaled_values() -> bool:
+    mut nodes = parse_ok(b"(vals 220k 4.7k 1M 2G 10u 100n 22p 100nF 1uH 10mA 100mV 3.3V 0.5A 47R)")
+    mut c = children_of(nodes[0])
+    assert rel_close(220000.0, num(c[1]), 1e-12), "220k"
+    assert rel_close(4700.0, num(c[2]), 1e-12), "4.7k"
+    assert rel_close(1e6, num(c[3]), 1e-12), "1M"
+    assert rel_close(2e9, num(c[4]), 1e-12), "2G"
+    assert rel_close(1e-5, num(c[5]), 1e-12), "10u"
+    assert rel_close(1e-7, num(c[6]), 1e-12), "100n"
+    assert rel_close(22e-12, num(c[7]), 1e-12), "22p"
+    # 100nF == 100n: the unit letter carries no scale
+    assert rel_close(1e-7, num(c[8]), 1e-12), "100nF"
+    assert rel_close(1e-6, num(c[9]), 1e-12), "1uH"
+    assert rel_close(0.01, num(c[10]), 1e-12), "10mA"
+    assert rel_close(0.1, num(c[11]), 1e-12), "100mV"
+    assert rel_close(3.3, num(c[12]), 1e-12), "3.3V"
+    assert rel_close(0.5, num(c[13]), 1e-12), "0.5A"
+    assert rel_close(47.0, num(c[14]), 1e-12), "47R"
+    return True
+
+
+# test "suffixed literals retain their spelling"
+public func test_suffixed_literals_retain_their_spelling() -> bool:
+    mut nodes = parse_ok(b"(vals 100nF 4.7k 33R 10uH 10% 100 2.5 3mm)")
+    mut c = children_of(nodes[0])
+    mut expected: bytes?[] = [None, Some(b"100nF"), Some(b"4.7k"), Some(b"33R"), Some(b"10uH"), Some(b"10%"), None, None, None]
+    assert len(c) == len(expected), "child count"
+    for i in range(len(expected)):
+        match expected[i]:
+            case Some(text):
+                match ast.value_text(c[i]):
+                    case Some(v):
+                        assert v == text, "value_text"
+                    case None:
+                        assert False, "value_text missing"
+                match c[i].literal:
+                    case Some(l):
+                        assert l == text, "literal"
+                    case None:
+                        assert False, "literal missing"
+            case None:
+                assert c[i].literal is None, "literal must be None"
+    # The percent sign carries no scale: `10%` is the number 10.
+    assert rel_close(10.0, num(c[5]), 1e-12), "10%"
+    assert rel_close(1e-7, num(c[1]), 1e-12), "100nF"
+    return True
+
+
+# test "parse with comments"
+public func test_parse_with_comments() -> bool:
+    mut nodes = parse_ok(b"; top comment\n(pin 1 \"VIN\" power-in left 1)\n; another comment")
+    assert len(nodes) == 1, "one node"
+    mut children = children_of(nodes[0])
+    assert len(children) == 6, "six children"
+    assert atom_of(children[0]) == b"pin", "head"
+    return True
+
+
+# test "parse multiple top-level forms"
+public func test_parse_multiple_top_level_forms() -> bool:
+    mut nodes = parse_ok(b"(import a) (import b)")
+    assert len(nodes) == 2, "two nodes"
+    assert ast.is_form(nodes[0], b"import"), "first is import"
+    assert ast.is_form(nodes[1], b"import"), "second is import"
+    return True
+
+
+# test "parse isForm helper"
+public func test_parse_isform_helper() -> bool:
+    mut nodes = parse_ok(b"(net \"VIN\" (pin \"U1\" 6))")
+    assert ast.is_form(nodes[0], b"net"), "is a net form"
+    assert not ast.is_form(nodes[0], b"pin"), "not a pin form"
+    return True
+
+
+# test "parse rejects excessively deep nesting"
+public func test_parse_rejects_excessively_deep_nesting() -> bool:
+    # MAX_PARSE_DEPTH + a margin of open parens: deep enough to trip the guard.
+    mut depth = parser.MAX_PARSE_DEPTH + 16
+    mut b = byte_builder.create()
+    for _ in range(depth):
+        _ = byte_builder.append_byte(mut b, ord("("))
+    mut src = byte_builder.finish(b)
+    match parser.parse(src):
+        case Err(e):
+            assert e == parser.ParseError.too_deep, "expected TooDeep"
+        case Ok(_):
+            assert False, "expected TooDeep, parse succeeded"
+    return True
+
+
+# test "parseDiag locates a mid-file syntax error"
+public func test_parsediag_locates_a_mid_file_syntax_error() -> bool:
+    mut diag = parser.new_diagnostic()
+    # The top form closes on line 3 (first ')'), leaving a stray ')' at 3:4.
+    match parser.parse_diag(b"(a\n  (b c)\n  ))", mut diag):
+        case Err(e):
+            assert e == parser.ParseError.unexpected_rparen, "expected UnexpectedRparen"
+        case Ok(_):
+            assert False, "expected an error"
+    assert diag.span.line == 3, "diag line"
+    assert diag.span.col == 4, "diag col"
+    assert len(diag.message) > 0, "diag message"
+    return True
+
+
+# test "parseDiag column aligns a caret under the offending token"
+public func test_parsediag_column_aligns_a_caret_under_the_offending_token() -> bool:
+    mut diag = parser.new_diagnostic()
+    mut line = b"(bad ]x)"
+    match parser.parse_diag(line, mut diag):
+        case Err(e):
+            assert e == parser.ParseError.unexpected_character, "expected UnexpectedCharacter"
+        case Ok(_):
+            assert False, "expected an error"
+    assert diag.span.line == 1, "diag line"
+    assert diag.span.col == 6, "diag col"
+    # Build the caret the diag renderer would: (col-1) spaces then '^'.
+    mut n = diag.span.col - 1
+    mut caret: int[] = []
+    for _ in range(n):
+        caret.append(ord(" "))
+    caret.append(ord("^"))
+    # The caret lands exactly on the offending ']'.
+    assert line[n] == ord("]"), "caret column"
+    assert bytes(caret) == b"     ^", "caret text"
+    return True
+
+
+# test "parseDiag points an unterminated list at its open paren"
+public func test_parsediag_points_an_unterminated_list_at_its_open_paren() -> bool:
+    mut diag = parser.new_diagnostic()
+    match parser.parse_diag(b"(outer\n  (inner 1 2\n", mut diag):
+        case Err(e):
+            assert e == parser.ParseError.unexpected_eof, "expected UnexpectedEof"
+        case Ok(_):
+            assert False, "expected an error"
+    # Reported at the inner '(' (2:3), the innermost list left unclosed.
+    assert diag.span.line == 2, "diag line"
+    assert diag.span.col == 3, "diag col"
+    return True
+
+
+func fuzz_corpus() -> bytes[]:
+    return [b"(design-block \"X\" (instance \"R1\" (res-0402 \"10k\") (pin 1 \"A\") (pin 2 \"B\")))", b"(net \"VIN\" (pin \"U1\" 6) (pin \"C1\" 1))", b"(pad 1 smd rect (pos -1.25 1.75) (size 0.7 0.3))", b"(vals 220k 4.7k 1M 100nF 3.3V 10mA 1.0mm 10mil 42 -5 3.3)", b"(a (b (c (d (e (f))))))", b"; comment\n(after \"comment\")\n", b"(unterminated", b")", b"\"oops", b"(bad ]char)"]
+
+
+# One fuzz iteration: arbitrary bytes must never crash; every input either
+# parses or returns a ParseError.
+func fuzz_parse(input: bytes) -> bool:
+    match parser.parse(input):
+        case Ok(_):
+            return True
+        case Err(_):
+            return True
+
+
+# test "fuzz: parser never crashes on arbitrary bytes"
+# Deterministic stand-in for std.testing.fuzz: the seed corpus, every prefix of
+# it, and 2000 pseudo-random byte strings (LCG, biased toward the s-expression
+# alphabet so that lists, strings, numbers and comments all get exercised).
+public func test_fuzz_parser_never_crashes_on_arbitrary_bytes() -> bool:
+    mut alphabet = b"()()\"\\; \n\t-+.0123456789abcxyzkmMuVFAHR%$,?]"
+    for seed_text in fuzz_corpus():
+        assert fuzz_parse(seed_text), "corpus entry"
+        for cut in range(len(seed_text) + 1):
+            assert fuzz_parse(seed_text.view(0, cut)), "corpus prefix"
+    mut state = 12345
+    for _round in range(2000):
+        state = (state * 1103515245 + 12345) % 2147483648
+        mut length = (state // 65536) % 96
+        mut buf: int[] = []
+        for _ in range(length):
+            state = (state * 1103515245 + 12345) % 2147483648
+            mut pick = (state // 65536) % 100
+            if pick < 85:
+                buf.append(alphabet[(state // 256) % len(alphabet)])
+            else:
+                buf.append((state // 256) % 256)
+        assert fuzz_parse(bytes(buf)), "random input"
+    return True
+
+
+# The same property as mylang's own generated-input property test (100 runs).
+public func test_fuzz_parser_property(data: bytes) -> bool:
+    return fuzz_parse(data)

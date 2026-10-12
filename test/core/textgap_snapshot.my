@@ -1,0 +1,65 @@
+record Saved:
+    values: dict[str, str[]]
+
+
+func snapshot(values: dict[str, str[]]) -> Saved:
+    return Saved(values=values.copy())
+
+
+func borrowed_snapshot(values: dict[str, str[]]) -> Saved:
+    return snapshot(values)
+
+
+func donated(index: int, early: bool) -> Saved:
+    mut values: dict[str, str[]] = {"key-" + str(index): ["value-" + str(index)]}
+    if early:
+        return snapshot(values)
+    return snapshot(values)
+
+
+# spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+public func test_textgap_json_copy_owned_donors_survive_loops_and_early_returns() -> bool:
+    for index in range(40):
+        const saved = donated(index, index % 2 == 0)
+        if saved.values["key-" + str(index)][0] != "value-" + str(index):
+            return False
+    return True
+
+
+# spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+public func test_textgap_json_copy_borrowed_and_live_sources_keep_independent_snapshots() -> bool:
+    mut values: dict[str, str[]] = {"key": ["old-" + str(7)]}
+    const borrowed = borrowed_snapshot(values)
+    const direct = snapshot(values)
+    values["key"][0] = "changed-" + str(9)
+    values.clear()
+    return borrowed.values["key"][0] == "old-7" and direct.values["key"][0] == "old-7"
+
+
+# spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+public func test_textgap_json_copy_live_child_outlives_replaced_snapshot_owner() -> bool:
+    mut values: dict[str, str[]] = {"key": ["retained-" + str(12)]}
+    for child in values["key"]:
+        mut saved = snapshot(values)
+        saved = Saved(values={})
+        if child != "retained-12" or len(saved.values) != 0:
+            return False
+    return True
+
+
+# spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+public func test_textgap_json_copy_temporary_snapshot_and_nested_mutation_keep_owners() -> bool:
+    mut saved = snapshot({"key": ["before-" + str(5)]})
+    saved.values["key"].append("after-" + str(6))
+    const second = snapshot(saved.values)
+    saved.values["key"][0] = "changed-" + str(7)
+    saved.values.clear()
+    return len(second.values["key"]) == 2 and second.values["key"][0] == "before-5" and second.values["key"][1] == "after-6"
+
+
+func main(out: Stream) -> int:
+    out.print(test_textgap_json_copy_owned_donors_survive_loops_and_early_returns())
+    out.print(test_textgap_json_copy_borrowed_and_live_sources_keep_independent_snapshots())
+    out.print(test_textgap_json_copy_live_child_outlives_replaced_snapshot_owner())
+    out.print(test_textgap_json_copy_temporary_snapshot_and_nested_mutation_keep_owners())
+    return 0

@@ -1,0 +1,74 @@
+[
+  {
+    "baseline": "original",
+    "module": "render_block_types.my",
+    "added": 0,
+    "removed": 0,
+    "original_copy_count": 0,
+    "prepared_copy_count": 0,
+    "public_api_unchanged": true
+  },
+  {
+    "baseline": "original",
+    "module": "render_svg_context.my",
+    "added": 136,
+    "removed": 96,
+    "original_copy_count": 0,
+    "prepared_copy_count": 88,
+    "public_api_unchanged": true
+  },
+  {
+    "baseline": "original",
+    "module": "render_svg_context_test.my",
+    "added": 4,
+    "removed": 4,
+    "original_copy_count": 0,
+    "prepared_copy_count": 5,
+    "public_api_unchanged": true
+  },
+  {
+    "baseline": "original",
+    "module": "render_svg_draw_test.my",
+    "added": 0,
+    "removed": 0,
+    "original_copy_count": 0,
+    "prepared_copy_count": 0,
+    "public_api_unchanged": true
+  },
+  {
+    "baseline": "transferred",
+    "module": "render_block_types.my",
+    "added": 0,
+    "removed": 0,
+    "original_copy_count": 0,
+    "prepared_copy_count": 0,
+    "public_api_unchanged": true
+  },
+  {
+    "baseline": "transferred",
+    "module": "render_svg_context.my",
+    "added": 130,
+    "removed": 92,
+    "original_copy_count": 10,
+    "prepared_copy_count": 88,
+    "public_api_unchanged": true
+  },
+  {
+    "baseline": "transferred",
+    "module": "render_svg_context_test.my",
+    "added": 0,
+    "removed": 0,
+    "original_copy_count": 5,
+    "prepared_copy_count": 5,
+    "public_api_unchanged": true
+  },
+  {
+    "baseline": "transferred",
+    "module": "render_svg_draw_test.my",
+    "added": 0,
+    "removed": 0,
+    "original_copy_count": 0,
+    "prepared_copy_count": 0,
+    "public_api_unchanged": true
+  }
+]

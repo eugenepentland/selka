@@ -1,0 +1,105 @@
+fn main() -> i64
+b0:
+  %1 = list_new list[record{i64, list[i64]}] 2:i64
+  %4 = list_new list[i64] 1:i64
+  %6 = list_push list[i64] %4, 1:i64
+  %7 = record_make record{i64, list[i64]} 1:i64, %6
+  %8 = list_push list[record{i64, list[i64]}] %1, %7
+  %11 = list_new list[i64] 1:i64
+  %13 = list_push list[i64] %11, 2:i64
+  %14 = record_make record{i64, list[i64]} 2:i64, %13
+  %15 = list_push list[record{i64, list[i64]}] %8, %14
+  %16 = record_make record{list[record{i64, list[i64]}]} %15
+  %18 = call i64 deep(%16, 55:i64)
+  release %16
+  %20 = sub.exact i64 %18, 77:i64
+  ret %20
+fn deep(record{list[record{i64, list[i64]}]}, i64) -> i64
+b0:
+  %2 = record_get list[record{i64, list[i64]}] param0, field0
+  %3 = call list[record{i64, list[i64]}] myl_core_owned_copy_17(%2)
+  %4 = record_make record{list[record{i64, list[i64]}]} %3
+  %5 = record_get list[record{i64, list[i64]}] %4, field0
+  %8 = iconst bool 0
+  branch 0:bool, b1, b2
+b1: ; preds b0
+  %10 = list_len u64 %5
+  %11 = convert.exact i64 %10
+  %12 = add.exact i64 %11, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %14 = phi i64 0:i64, %12
+  %17 = list_get_field.exact list[i64] %5, %14, path 1
+  %20 = iconst bool 0
+  branch 0:bool, b3, b4
+b3: ; preds b2
+  %22 = list_len u64 %17
+  %23 = convert.exact i64 %22
+  %24 = add.exact i64 %23, 0:i64
+  jump b4
+b4: ; preds b2 b3
+  %26 = phi i64 0:i64, %24
+  %34 = list_get_field.proven list[i64] %5, %14, path 1
+  %35 = list_set.exact list[i64] %34, %26, param1
+  %37 = list_set_field.proven list[record{i64, list[i64]}] %5, %14, path 1, %35
+  %38 = record_set record{list[record{i64, list[i64]}]} %4, field0, %37
+  %39 = record_get list[record{i64, list[i64]}] %38, field0
+  %42 = iconst bool 0
+  branch 0:bool, b5, b6
+b5: ; preds b4
+  %44 = list_len u64 %39
+  %45 = convert.exact i64 %44
+  %46 = add.exact i64 %45, 1:i64
+  jump b6
+b6: ; preds b4 b5
+  %48 = phi i64 1:i64, %46
+  %51 = list_get_field.exact list[i64] %39, %48, path 1
+  %56 = add.proven i64 param1, 1:i64
+  %60 = list_get_field.proven list[i64] %39, %48, path 1
+  %61 = list_push list[i64] %60, %56
+  %63 = list_set_field.proven list[record{i64, list[i64]}] %39, %48, path 1, %61
+  %64 = record_set record{list[record{i64, list[i64]}]} %38, field0, %63
+  %66 = record_get list[record{i64, list[i64]}] %64, field0
+  %69 = iconst bool 0
+  branch 0:bool, b7, b8
+b7: ; preds b6
+  %71 = list_len u64 %66
+  %72 = convert.exact i64 %71
+  %73 = add.exact i64 %72, 1:i64
+  jump b8
+b8: ; preds b6 b7
+  %75 = phi i64 1:i64, %73
+  %83 = list_set_field.exact list[record{i64, list[i64]}] %66, %75, path 0, 77:i64
+  %84 = record_set record{list[record{i64, list[i64]}]} %64, field0, %83
+  %85 = record_get list[record{i64, list[i64]}] %84, field0
+  %88 = iconst bool 0
+  branch 0:bool, b9, b10
+b9: ; preds b8
+  %90 = list_len u64 %85
+  %91 = convert.exact i64 %90
+  %92 = add.exact i64 %91, 1:i64
+  jump b10
+b10: ; preds b8 b9
+  %94 = phi i64 1:i64, %92
+  %97 = list_get_field.exact i64 %85, %94, path 0
+  release %85
+  ret %97
+fn myl_core_owned_copy_17(list[record{i64, list[i64]}]) -> list[record{i64, list[i64]}] runtime
+facts main: %18=[-9223372036854775808,9223372036854775807] %20=[-9223372036854775808,9223372036854775730]
+list main %1: settled=true length=%-1 len=[0,0]
+list main %4: settled=true length=%-1 len=[0,0]
+list main %6: settled=true length=%-1 elements=[1,1] len=[1,1]
+list main %8: settled=true length=%-1 len=[1,1]
+list main %11: settled=true length=%-1 len=[0,0]
+list main %13: settled=true length=%-1 elements=[2,2] len=[1,1]
+list main %15: settled=true length=%-1 len=[2,2]
+facts deep: %1=[55,55] %8=[0,0] %14=[0,0] %20=[0,0] %26=[0,0] %27=[-9223372036854775808,9223372036854775807] %28=[-9223372036854775808,9223372036854775807] %42=[0,0] %48=[1,1] %52=[-9223372036854775808,9223372036854775807] %53=[-9223372036854775808,9223372036854775807] %54=[-9223372036854775808,9223372036854775807] %56=[56,56] %69=[0,0] %75=[1,1] %79=[-9223372036854775808,9223372036854775807] %88=[0,0] %94=[1,1] %97=[-9223372036854775808,9223372036854775807]
+list deep %33: settled=true length=%-1
+list deep %35: settled=true length=%-1
+list deep %37: settled=true length=%-1
+list deep %59: settled=true length=%-1
+list deep %61: settled=true length=%-1
+list deep %63: settled=true length=%-1
+list deep %77: settled=true length=%-1
+list deep %78: settled=true length=%-1
+list deep %83: settled=true length=%-1

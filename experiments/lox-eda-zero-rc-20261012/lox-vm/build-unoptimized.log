@@ -1,0 +1,8 @@
+build-slot: FIFO ticket 1544, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1544 after 10s
+natives.my:28:25: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  public func call_native(rt: heap.Runtime, id: int, clock: Clock?) -> value.Value:
+                          ^
+resolver.my:268:13: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression
+              r.program.functions[index].slot = slot
+              ^

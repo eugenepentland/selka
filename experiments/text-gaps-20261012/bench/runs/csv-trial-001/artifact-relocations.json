@@ -1,0 +1,30 @@
+{
+  "schema": "text-gap-artifact-relocation-v1",
+  "reason": "Preserve CSV01 originally supplied mutable paths before next worker build; measured identity hashes remain unchanged.",
+  "inputs": {
+    "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/.tmp/text-gaps/csv/install/bin/mylang": {
+      "sha256": "997e58c041938743b1d8352cfc92372ed3180eb5f219275db2d5c4449b7de3bc",
+      "archived_path": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-bench/.tmp/text-gaps/bench/artifact-store/997e58c041938743b1d8352cfc92372ed3180eb5f219275db2d5c4449b7de3bc"
+    },
+    "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/.tmp/text-gaps/csv/text-counted": {
+      "sha256": "09d1a8a315436a764fe4b618159417191a028ec9e5bb047d16254b2fdc265bb2",
+      "archived_path": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-bench/.tmp/text-gaps/bench/artifact-store/09d1a8a315436a764fe4b618159417191a028ec9e5bb047d16254b2fdc265bb2"
+    },
+    "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/.tmp/text-gaps/csv/text-runtime": {
+      "sha256": "2b5ee6bbc72d52b40f8095d3c16f18b91b3d530a4bd935f29dc92387753c07d1",
+      "archived_path": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-bench/.tmp/text-gaps/bench/artifact-store/2b5ee6bbc72d52b40f8095d3c16f18b91b3d530a4bd935f29dc92387753c07d1"
+    },
+    "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/benchmarks/runtime/ports/native_clock.c": {
+      "sha256": "0af3514346f4088770f0032ce422e322d02900437626f5a1af98e2a69200dfa5",
+      "archived_path": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-bench/.tmp/text-gaps/bench/artifact-store/0af3514346f4088770f0032ce422e322d02900437626f5a1af98e2a69200dfa5"
+    },
+    "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/experiments/micro-ownership-20261012/expanded/migrated/text.my": {
+      "sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+      "archived_path": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-bench/.tmp/text-gaps/bench/artifact-store/71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754"
+    },
+    "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/experiments/text-gaps-20261012/csv/build-receipt.json": {
+      "sha256": "1c79289b2a466479b78ca74d022a656753002e49c8f21d2735f35989f5582be6",
+      "archived_path": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-bench/.tmp/text-gaps/bench/artifact-store/1c79289b2a466479b78ca74d022a656753002e49c8f21d2735f35989f5582be6"
+    }
+  }
+}

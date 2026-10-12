@@ -1,0 +1,48 @@
+{
+  "source_base": "c749ad5a9d2dfef5d5c4d7b9de2a30f03029999f",
+  "worker_commits": [
+    "779ea9a62d0bdbe6f62f7fa1cb2fc243cb9ba33f",
+    "44ca315ee72739bddd2ecf6f3989fdf7c81b3a15"
+  ],
+  "status": "integrated focused checks passed; common native installation/full gate still pending",
+  "runs": [
+    {
+      "core_passed": 14,
+      "units_passed": 9,
+      "units_unnamed": 7,
+      "exit_code": 0
+    },
+    {
+      "core_passed": 3,
+      "units_passed": 13,
+      "units_unnamed": 7,
+      "exit_code": 0
+    }
+  ],
+  "source_sha256": {
+    "SPEC.md": "417c95ba255a0e8461d1e57cd9a3a58d5b9dd696fa71851131ca890a0422e4d9",
+    "src/a04_borrow_selection_test.zig": "f4a193893dc6a80da367083dfcc77575758f7ef2f059a95d81a2fbf0666658b1",
+    "src/core/a04_borrow_selection_test.zig": "cd6f9e505c4f6a8d77ce165188ec011f60eaa820c903314138acca38c9220d36",
+    "src/core/a07_borrow_choice_test.zig": "a3e499e0b7880fa5b3d32fed8122a376d7d30b4df5634c9c032b1e73a8a3453e",
+    "src/core/borrow_selection.zig": "62e32e55c9fbeb8f6adaf8beffea7b580cc0ffc62253492f935138d36a3515c4",
+    "src/core/build.zig": "7ddad513c6f6edea9f5e8dd8bfecc910698af6957ad5fe90a2a48cd2e2819b3c",
+    "src/core/build_borrow_selection.zig": "fdf87b7f46a9263eec87c7e597dcab33357ff9f0ee90db1098875b09fedcc592",
+    "src/core/marker_validation.zig": "c5c0b17aaa612279af1f9742acf21a14b03c2cb887043bf0c0c71ac7b7481240",
+    "src/core/root_test.zig": "1451eac16e18a10dc6d64d703b9bc1f644053608b327cc7009033d79a5189e4d",
+    "src/core/single_owner.zig": "79aa7b1ac6a14df0926d74e8049a925ba8337d011b7988c5d4c872dff7ef6e4a",
+    "src/core/typed_dump.zig": "c4659c83c7122fea9275a52ba478f98b9911d683ef68995d9c77ec01404765a5",
+    "src/duplicates.zig": "53e3fecae903d3e0fd7813f4445c075bba6ca035eab02b9d7b981ef49fbccdcb",
+    "src/effects.zig": "a0725e317be836a2c20197db63eb55cb4720be886ea27018eedf7232f3266986",
+    "src/option_flow.zig": "375443c563ca5f4d2559006756766b05e7e9bbd6a9095a2d3a67f7ca5166da65",
+    "src/origins.zig": "ccb833ea480cae028d3b46f96ed0238a7d02271a0b965c89be7f91741f75bb7f",
+    "src/prelude_builtins.zig": "8b7026b69cd8da6bcf56b7e741294c951ef4f53103ee1d51352e04e6a0d3a95b",
+    "src/root_test.zig": "f7ae389132c1276c7f3581849eb370f0e86a63da0828477cb7ca7241ffb886e4",
+    "src/sema_expressions.zig": "84f868986920b641100dca79ebc88f34653a4583df83b781da9b812d24355efa",
+    "src/semantic_copy.zig": "e885235eda8892b6b653ee7152c12dec5e6aea29421d1433ab7c1e18a9faffe0",
+    "src/semantic_store.zig": "2db32dd9352b24feb8bdabfe2a37174772811b9e58502ea6e5bf14d03dd668d4",
+    "src/typed.zig": "9c3e3fac8161e56b24eb97ce143a8d54ee4467ae913799b068d31670e50a6293",
+    "src/typed_walk.zig": "55c21e433b8ebf087eb6912656c640737a50e52dad2985b6dbdab8bc1638e419",
+    "src/value_semantics.zig": "f914bf3be10020e1ddffbbf0fee36d62aa983ac9be4116a16c29bc9df98b6c67"
+  },
+  "conflict_resolution": "Preserve aggregate-provider and borrowed-context checks plus scratch arena; recognize both selection marker identities. Keep provider-context readonly check and generalized selection diagnostic. Existing shared consuming-operand guard remains hardened."
+}

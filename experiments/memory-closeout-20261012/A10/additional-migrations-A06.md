@@ -1,0 +1,73 @@
+# A06 proposed additional fixture migrations
+
+proposed nonoverlapping reservations for coordinator dispatch; A10 edits none of these sources
+
+- `test/core/ce2_effects.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce2_effects.my:48:38: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+  - Followup: evaluation-order or lifetime review; extract local result before mutation, preserve observed order, escalate false refusal to A07.
+- `test/core/ce2_results.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce2_results.my:87:15: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper
+  - Followup: borrowed field extraction; explicit copy for retained independent owner; retry pending whole-field fixes first.
+- `test/core/ce_cow.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_cow.my:35:9: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+  - Followup: explicit independent copy/local source migration. Native RC/COW counter assertions require separate oracle review.
+- `test/core/ce_elements.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_elements.my:70:9: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+  - Followup: evaluation-order or lifetime review; extract local result before mutation, preserve observed order, escalate false refusal to A07.
+- `test/core/ce_records.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_records.my:125:14: error[E_SINGLE_OWNER_MOVED]: 'b' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/f1_storeback.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/f1_storeback.my:25:16: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value
+  - Followup: explicit independent copy/local source migration.
+- `test/core/m_recursive_values.my`
+  - m_recursive_values.my:59:51: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+  - Followup: evaluation-order or lifetime review; extract local result before mutation, preserve observed order, escalate false refusal to A07.
+- `test/core/rc_field_take.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_field_take.my:30:18: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper
+  - Followup: borrowed field extraction; explicit copy for retained independent owner; retry pending whole-field fixes first. Native RC/COW counter assertions require separate oracle review.
+- `test/core/rc_phi_fields.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_phi_fields.my:17:35: error[E_SINGLE_OWNER_MOVED]: 'xs' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration. Native RC/COW counter assertions require separate oracle review.
+- `test/core/row_cow.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_cow.my:13:17: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value
+  - Followup: explicit independent copy/local source migration. Native RC/COW counter assertions require separate oracle review.
+- `test/core/row_csv_aggregate.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_csv_aggregate.my:84:21: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+  - Followup: evaluation-order or lifetime review; extract local result before mutation, preserve observed order, escalate false refusal to A07.
+- `test/core/row_mutate_nested.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_mutate_nested.my:9:20: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+  - Followup: explicit independent copy/local source migration.
+- `test/core/row_mutate_shared.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_mutate_shared.my:29:26: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/row_record_reads.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_record_reads.my:40:20: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value
+  - Followup: explicit independent copy/local source migration.
+- `test/core/row_word_count.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_word_count.my:32:16: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+  - Followup: evaluation-order or lifetime review; extract local result before mutation, preserve observed order, escalate false refusal to A07.
+- `test/core/u1_sink.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/u1_sink.my:33:32: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+  - Followup: explicit independent copy/local source migration.
+- `test/core/u1_state.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/u1_state.my:63:28: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+  - Followup: explicit independent copy/local source migration.
+- `test/core/v_mut.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_mut.my:67:43: error[E_SINGLE_OWNER_MOVED]: 'st' was moved or is unavailable on this path; use .copy() when both values are needed
+  - Followup: explicit independent copy/local source migration.
+- `test/core/v_mut_window.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_mut_window.my:28:15: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value
+  - Followup: explicit independent copy/local source migration.
+- `test/core/v_nested.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_nested.my:11:16: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+  - Followup: explicit independent copy/local source migration.
+- `test/core/v_row_cow.my`
+  - v_row_cow.my:17:12: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value
+  - Followup: explicit independent copy/local source migration. Native RC/COW counter assertions require separate oracle review.
+- `test/core/v_snapshot.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_snapshot.my:28:36: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+  - Followup: evaluation-order or lifetime review; extract local result before mutation, preserve observed order, escalate false refusal to A07.
+- `test/core/v_wide_managed.my`
+  - /home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_wide_managed.my:21:13: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+  - Followup: explicit independent copy/local source migration.

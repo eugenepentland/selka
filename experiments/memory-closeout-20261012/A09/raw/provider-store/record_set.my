@@ -1,0 +1,6 @@
+record Holder:
+    items: set[str]
+func main() -> int:
+    mut value = Holder(items=set())
+    value.items.add("x")
+    return len(value.items)

@@ -1,0 +1,19 @@
+{
+  "base": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "phase": "green",
+  "test_filter": "context-only",
+  "result": {
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0
+  },
+  "files": {
+    "zig-out/focus/core-tests": "2b0f8cc2c8447c104e50c528e45428b61f6a767a710ef6187f4d9ab8145a374c",
+    "src/core/zero_rc_test.zig": "3be04a8e35cbd24370da128cccb3c9577b8d620328512827044eba6260c10b8e",
+    "src/core/marker_validation.zig": "6740e1e70d0484a1a9b4d327c2572f9cd8c03378327630ee5d57bda5e18d7cf1",
+    "src/core/borrowed_provider.zig": "be8fc7a098659b5b84fbbea140621abda4249eeeaa3bb51f08b64c685bbbd6ee",
+    "src/core/aggregate_provider.zig": "846d7a8bf7d8322e2e64b74e236d6033b087cbb7fb620766dacf05a5646668f5"
+  },
+  "command": "scripts/build-slot.sh build bash -c '\"$ZIG\" build core-test-binary -Doptimize=ReleaseFast -Dtest-filter=context-only -j4 && zig-out/focus/core-tests --guardian-filter=context-only'",
+  "scope": "Direct/fresh malformed IR; cache restore and lowering validation already reject malformed block references. No persisted-cache bypass demonstrated."
+}

@@ -1,0 +1,8 @@
+func converted(value: float) -> bytes:
+    return str(value).encode()
+
+
+func main() -> int:
+    for value in [0.1, 2.5]:
+        assert len(str(value).encode()) > 0
+    return 0

@@ -1,0 +1,131 @@
+import filesystem
+
+func evaluated_pair(mut events: int[]) -> tuple[str, str]:
+    events.append(1)
+    return "first-" + str(1), "second-" + str(2)
+func index(mut events: int[], value: int) -> int:
+    events.append(value)
+    return 0
+func owned() -> tuple[str, str[]]:
+    return "owned-" + str(3), ["child-" + str(4)]
+func clone(value: tuple[str, str[]]) -> tuple[str, str[]]:
+    const text, children = value.copy()
+    return text, children
+func optional(value: tuple[int, str]?) -> str:
+    if value is None:
+        return "missing"
+    const number, text = value.copy()
+    assert number == 7
+    return text
+func early() -> str:
+    const text, _ = owned()
+    return text
+func fallible() -> Result[str, str]:
+    const text, _ = owned()
+    return Err(text)
+func managed_test(out: Stream) -> int:
+    mut first = "first-" + str(1)
+    mut second = "second-" + str(2)
+    first, second = second, first
+    assert first == "second-2" and second == "first-1"
+    mut words = ["a" + str(1), "b" + str(2)]
+    words[0], words[1] = words[1].copy(), words[0].copy()
+    assert words == ["b2", "a1"]
+    mut events: int[] = []
+    words[index(mut events, 2)], words[index(mut events, 3)] = evaluated_pair(mut events)
+    assert events == [1, 2, 3] and words == ["second-2", "a1"]
+    const original = owned()
+    const duplicate = clone(original)
+    const original_text, original_rows = original
+    const copied_text, copied_rows = duplicate
+    assert original_text == copied_text and original_rows == copied_rows
+    const nested = (owned(), "sibling-" + str(5))
+    const child, sibling = nested
+    const child_text, child_rows = child
+    assert sibling == "sibling-5" and child_text == "owned-3" and child_rows == ["child-4"]
+    for i in range(16):
+        const _, rows = owned()
+        assert rows == ["child-4"]
+    assert early() == "owned-3"
+    match fallible():
+        case Ok(value):
+            assert False
+        case Err(error):
+            assert error == "owned-3"
+    assert optional(Some((7, "option-" + str(6)))) == "option-6"
+    assert optional(None) == "missing"
+    mut a = 3
+    mut b = 4
+    a, b = b, a
+    assert a == 4 and b == 3
+    out.print("tuple-unpack", len(events))
+    return 0
+
+func results() -> tuple[Result[str, str], Result[str, str]]:
+    return Ok("value-" + str(1)), Err("error-" + str(2))
+func consume(value: Result[str, str]) -> int:
+    match value:
+        case Ok(text):
+            return len(text)
+        case Err(text):
+            return len(text)
+func result_test(out: Stream) -> int:
+    const first, ignored = results()
+    _ = ignored
+    assert consume(first) == 7
+    const left, _ = results()
+    assert consume(left) == 7
+    const whole = results()
+    const duplicate = whole.copy()
+    const one, two = whole
+    const three, four = duplicate
+    assert consume(one) + consume(two) + consume(three) + consume(four) == 28
+    const _, _ = results()
+    out.print("tuple-results", 28)
+    return 0
+
+func providers() -> tuple[Filesystem, Filesystem]:
+    return (filesystem.memory(), filesystem.memory())
+
+func provider_test() -> int:
+    const pair = providers()
+    const moved = pair
+    const first_fs, second_fs = moved
+    _ = first_fs.write_text("note", "first")
+    _ = second_fs.write_text("note", "second")
+    mut checksum = 0
+    with first_fs.open("note", "r") as first:
+        with second_fs.open("note", "r") as second:
+            const first_text = first.read()
+            const second_text = second.read()
+            assert first_text == "first" and second_text == "second"
+            checksum = len(first_text) * 10 + len(second_text)
+    assert first_fs.exists("note") and second_fs.exists("note")
+    return checksum
+
+func chosen_provider() -> Filesystem:
+    const chosen, _ = providers()
+    return chosen
+func provider_extra() -> int:
+    const _, _ = providers()
+    const chosen = chosen_provider()
+    _ = chosen.write_text("chosen", "kept")
+    assert chosen.exists("chosen")
+    mut first, second = providers()
+    _ = first.write_text("first", "first")
+    _ = second.write_text("second", "second")
+    first, second = second, first
+    assert first.exists("second") and second.exists("first")
+    with first.open("second", "r") as one:
+        with second.open("first", "r") as two:
+            assert one.read() == "second" and two.read() == "first"
+    return 0
+
+func main(out: Stream) -> int:
+    assert managed_test(out) == 0
+    assert result_test(out) == 0
+    const provider_checksum = provider_test()
+    assert provider_checksum == 56
+    assert provider_extra() == 0
+    out.print("tuple-providers", provider_checksum)
+    return 0

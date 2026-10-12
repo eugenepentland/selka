@@ -1,0 +1,7 @@
+{
+  "file": "tests/lang/a04_saturating_integer.my",
+  "before_sha256": "ccd5917d7d58fb56aacfca6b6506fc08fc6a69d608a3a492df4f90a4eed45134",
+  "after_sha256": "74bd4f9baf61c17e2a8133b41bda863d0a1128feb0886a7f04f21cd1f6ed514f",
+  "change": "Only blank lines changed; every nonempty source line is identical. Earlier measured source retained in saturation raw evidence.",
+  "compiler_sha256": "ec89910347476ceec8a50e4196292bfcb5a9206bb025423110b8fbae0a74a58d"
+}

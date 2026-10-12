@@ -28,7 +28,7 @@ func lift(x: int) -> Result[int, Failure]:
 func describe(f: Failure) -> str:
     match f:
         case Failure.text(value=t):
-            return t
+            return t.copy()
         case Failure.code(value=_):
             return "code"
 

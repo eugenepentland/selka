@@ -1,0 +1,68 @@
+import cache_record
+import durable
+import hashes
+import memo
+import persistent_memo
+
+func computed(key: memo.Key) -> bytes:
+    match key:
+        case memo.Key.Number(value=value):
+            const decimal = str(value)
+            return decimal.encode()
+        case memo.Key.Text(value=value):
+            return value.encode()
+        case memo.Key.Data(value=value):
+            return value.copy()
+
+func step(chunk: bytes, state: bytes) -> durable.Step:
+    return durable.Step(output=chunk.copy(), state=state + chunk)
+
+func main(fs: Filesystem) -> int:
+    if hashes.sha256(b"abc") != "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad":
+        return 1
+    const fields = ["dynamic-" + str(7), "", "é"]
+    const encoded = cache_record.encode(fields)
+    match cache_record.decode(encoded):
+        case Ok(decoded):
+            if decoded != fields:
+                return 2
+        case Err(_):
+            return 3
+    match cache_record.decode(b"invalid"):
+        case Ok(_):
+            return 4
+        case Err(error):
+            if len(cache_record.message(error)) == 0:
+                return 5
+    const options = persistent_memo.Options(max_entries=2, max_bytes=1024)
+    const key = memo.Key.Text(value="persistent-" + str(7))
+    with fs.dir("persistent") as persistent:
+        match persistent_memo.call(persistent, options, computed, key):
+            case Ok(value):
+                if value.value != b"persistent-7":
+                    return 6
+            case Err(error):
+                _ = persistent_memo.message(error)
+                return 7
+        match persistent_memo.call(persistent, options, computed, key):
+            case Ok(value):
+                if not value.reused or value.value != b"persistent-7":
+                    return 8
+            case Err(_):
+                return 9
+    const request = durable.Request(input=b"ab", chunks=[b"a", b"b"], initial_state=b"", output_path="final.txt", max_bytes=1024)
+    with fs.dir("durable") as store:
+        match durable.run(store, request, step):
+            case Ok(report):
+                if report.state != b"ab":
+                    return 10
+            case Err(error):
+                _ = durable.message(error)
+                return 11
+        match durable.run(store, request, step):
+            case Ok(report):
+                if report.fresh != 0 or report.reused != 2 or report.state != b"ab":
+                    return 12
+            case Err(_):
+                return 13
+    return 0

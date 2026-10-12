@@ -1,0 +1,39 @@
+
+import kicad_sch_stub as m
+import flat_netlist as flat
+import support_expect as ex
+
+func fp(ref: bytes, pin: bytes) -> flat.FlatPin:
+    return flat.FlatPin(ref_des=ref, pin=pin)
+
+
+# test "kicad-sch: collapse renames a real bypass stub and refuses everything else"
+public func test_kicad_sch_collapse_renames_a_real_bypass_stub_and_refuses_everything_else(out: Stream) -> bool:
+    mut rail = [fp(b"U10", b"16"), fp(b"L2", b"1")]
+    mut nets = [flat.FlatNet(name=b"V1P8", pins=rail), flat.FlatNet(name=b"V1P8.U14.B4", pins=[fp(b"flash/U14", b"B4"), fp(b"flash/C147", b"1")]), flat.FlatNet(name=b"3.3V_SENSE", pins=[fp(b"U10", b"3"), fp(b"R9", b"2")]), flat.FlatNet(name=b"V1P8.U10.7", pins=[fp(b"R9", b"1")]), flat.FlatNet(name=b"V08CAP.U10.16", pins=rail)]
+    mut known: dict[str, int] = {"U10": 0, "L2": 1, "flash/U14": 2, "flash/C147": 3, "R9": 4}
+    mut map_: dict[str, bytes] = {}
+    mut n = m.collapse(nets, known, mut map_)
+    if not ex.eq_int(out, "collapsed", n, 1):
+        return False
+    if not ex.eq_bytes(out, "rail label", map_.get("V1P8.U14.B4", b""), b"V1P8"):
+        return False
+    return ex.ok(out, "non-stubs preserved", "3.3V_SENSE" not in map_ and "V1P8.U10.7" not in map_ and "V08CAP.U10.16" not in map_ and "V1P8" not in map_)
+
+
+# test "kicad-sch: split reads the last two dots and rejects a name without both"
+public func test_kicad_sch_split_reads_the_last_two_dots_and_rejects_a_name_without_both(out: Stream) -> bool:
+    mut s = m.split(b"buck/VIN.U12.VIN_1")
+    if s is None:
+        return ex.ok(out, "stub split", False)
+    if not ex.eq_bytes(out, "base", s.base, b"buck/VIN") or not ex.eq_bytes(out, "ref", s.ref, b"U12") or not ex.eq_bytes(out, "pad", s.pad, b"VIN_1"):
+        return False
+    mut dotted = m.split(b"3.3V.U1.5")
+    if dotted is None:
+        return ex.ok(out, "dotted rail", False)
+    if not ex.eq_bytes(out, "dotted base", dotted.base, b"3.3V"):
+        return False
+    for bad in [b"3.3V_SENSE", b"VDD3V3", b"VDD..5", b".U1.5", b"VDD.U1."]:
+        if not ex.ok(out, "reject malformed name", m.split(bad).is_none()):
+            return False
+    return True

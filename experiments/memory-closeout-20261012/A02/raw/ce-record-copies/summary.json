@@ -1,0 +1,33 @@
+{
+  "base": "723d2281ae98df97cf1503ad21ad2c9b4336df0b",
+  "compiler_sha256": "2e0c0386731c6ca4d8309b7b6673bc791609995d237e07a97017f3815c0a682f",
+  "raw_emit_memcopies": {
+    "write_backs": {
+      "before": 2,
+      "after": 0,
+      "bytes_per_copy": 40
+    },
+    "pushes": {
+      "before": 2,
+      "after": 0,
+      "bytes_per_copy": 40
+    }
+  },
+  "metric": "aggregate memcpy instructions in raw support.llvmText output, not heap allocation counters",
+  "proof": "Original assertions unchanged; before exact LLVM in before-diagnostic/test-0.stderr, after full registered suite10/10.",
+  "ce_records_tests": 10,
+  "a06_original_tests": 2,
+  "a06_expanded_native_passed": 21,
+  "checked_modes": [
+    "release",
+    "debug",
+    "verified_release",
+    "optimized_debug",
+    "no_facts"
+  ],
+  "ordinary_controls": [
+    "release",
+    "debug"
+  ],
+  "performance_claim": false
+}

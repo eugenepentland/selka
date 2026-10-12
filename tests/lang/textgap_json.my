@@ -1,0 +1,135 @@
+import json
+
+func rendered(source: str) -> str:
+    match json.loads(source):
+        case Ok(value):
+            return json.dumps(value)
+        case Err(error):
+            return "!" + json.message(error)
+
+
+func rejected(source: str) -> str:
+    match json.loads(source):
+        case Ok(_):
+            return "!accepted"
+        case Err(error):
+            return json.message(error)
+
+
+func parsed_text(source: str) -> str:
+    match json.loads(source):
+        case Ok(value):
+            match value:
+                case json.Json.text(value=body):
+                    return body.copy()
+                case _:
+                    return "!kind"
+        case Err(_):
+            return "!error"
+
+
+# spec-case: STANDARD-JSON-1
+public func test_textgap_json_plain_and_escaped_strings_keep_dynamic_unicode() -> bool:
+    for index in range(30):
+        mut plain = "\"key-" + str(index) + "λ日本語😀\""
+        if rendered(plain) != plain:
+            return False
+        mut escaped = "\"key-" + str(index) + "λ\\t日本語\\ud83d\\ude00\\\"\\\\\""
+        mut expected = "\"key-" + str(index) + "λ\\t日本語😀\\\"\\\\\""
+        if rendered(escaped) != expected:
+            return False
+    return rendered("\"\"") == "\"\"" and rendered("\"\\u0041\\u00e9\"") == "\"Aé\""
+
+
+# spec-case: STANDARD-JSON-1
+public func test_textgap_json_repeated_errors_keep_original_offsets() -> bool:
+    mut documents = ["\"a\nb\"", "\"\\x\"", "\"a\\u00x0\"", "\"\\u00", "\"\\ud800x\"", "{\"a\":1,\"a\":2}", "\"plain", "\"first\\nsecond"]
+    mut reasons = ["unescaped control character in JSON string at byte 3", "unknown JSON string escape at byte 3", "invalid JSON unicode escape at byte 6", "truncated JSON unicode escape at byte 5", "JSON high surrogate needs a low surrogate at byte 7", "JSON object has a duplicate key at byte 10", "unterminated JSON string at byte 6", "unterminated JSON string at byte 14"]
+    for index in range(80):
+        mut slot = index % len(documents)
+        if rejected(documents[slot]) != reasons[slot]:
+            return False
+    return rejected("\"\\udc00\"") == "JSON low surrogate has no high surrogate at byte 7"
+
+
+# spec-case: STANDARD-JSON-1
+public func test_textgap_json_results_remain_independent_after_source_and_builder_changes() -> bool:
+    mut source = "\"plain-" + str(31) + "λ😀\""
+    const kept = parsed_text(source)
+    source = "changed"
+    mut fields: dict[str, json.Json] = {"key": json.text("old-" + str(7))}
+    const object = json.object(fields)
+    fields["key"] = json.text("new-" + str(9))
+    fields.clear()
+    for index in range(25):
+        _ = rendered("{\"churn\":[" + str(index) + ",\"escaped\\nλ😀\"]}")
+    return kept == "plain-31λ😀" and json.dumps(object) == "{\"key\":\"old-7\"}"
+
+
+# spec-case: STANDARD-JSON-1
+public func test_textgap_json_depth_order_number_and_public_snapshot_contracts() -> bool:
+    mut nesting = "[]"
+    for index in range(json.max_depth() - 1):
+        nesting = "[" + nesting + "]"
+    if rendered(nesting) != nesting:
+        return False
+    if rejected("[" + nesting + "]") == "!accepted":
+        return False
+    mut elements = [json.integer(1), json.text("λ")]
+    const array = json.array(elements)
+    elements.clear()
+    if json.dumps(array) != "[1,\"λ\"]":
+        return False
+    return rendered("{\"z\":-0.0,\"a\":1e309,\"s\":\"normal\"}") == "{\"z\":-0.0,\"a\":null,\"s\":\"normal\"}"
+
+
+func retained_value() -> json.Json:
+    match json.loads("\"retained-" + str(12) + "λ😀\""):
+        case Ok(value):
+            return value
+        case Err(_):
+            return json.null_value()
+
+
+# spec-case: STANDARD-JSON-1
+public func test_textgap_json_returned_tree_keeps_its_own_strings_and_surrogate_boundaries() -> bool:
+    const kept = retained_value()
+    for index in range(30):
+        _ = rendered("[\"churn-" + str(index) + "\\t😀\"]")
+    if json.dumps(kept) != "\"retained-12λ😀\"":
+        return False
+    mut escaped = "\"\\uD7fF\\uE000\\uFFFF\\uDbFf\\uDfFf\""
+    mut expected = "\"" + chr(55295) + chr(57344) + chr(65535) + chr(1114111) + "\""
+    return rendered(escaped) == expected
+
+
+# spec-case: STANDARD-JSON-1
+public func test_textgap_json_integer_boundaries_float_fallback_and_number_error_offsets() -> bool:
+    mut exact = ["0", "-0", "17", "-42", "9223372036854775807", "-9223372036854775808"]
+    mut canonical = ["0", "0", "17", "-42", "9223372036854775807", "-9223372036854775808"]
+    for index in range(len(exact)):
+        if rendered(exact[index]) != canonical[index]:
+            return False
+    if rejected("-01") != "JSON number has a leading zero at byte 2":
+        return False
+    if rejected("--1") != "JSON number needs a digit at byte 1":
+        return False
+    if rendered("-0.0") != "-0.0" or rendered("1.25e2") != "125.0":
+        return False
+    mut big = "9223372036854775808"
+    match json.loads(big):
+        case Ok(value):
+            if json.as_int(value) != None:
+                return False
+        case Err(_):
+            return False
+    match json.loads("-" + big + "9"):
+        case Ok(value):
+            if json.as_int(value) != None:
+                return False
+        case Err(_):
+            return False
+    mut huge = "1"
+    for index in range(400):
+        huge += "9"
+    return rendered(huge) == "null"

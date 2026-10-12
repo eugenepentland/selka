@@ -1,0 +1,4 @@
+build-slot: FIFO ticket 449, position 1; waiting for memory-accounting settle delay or another measurement; waiting (0s so far)
+build-slot: FIFO ticket 449, position 1; draining active work (build2.lock); waiting (60s so far)
+build-slot: timing slot 1, FIFO ticket 449 after 80s
+text-gaps/csv-trial-001/csv_aggregate/large {'checked-baseline': True, 'checked-candidate': True, 'zig-safe': True, 'zig-fast': True, 'rust': True, 'go': True}

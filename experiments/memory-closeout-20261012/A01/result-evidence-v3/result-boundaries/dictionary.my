@@ -1,0 +1,4 @@
+func main() -> int:
+    const values: dict[int, Result[int, int]] = {}
+    _ = values
+    return 0

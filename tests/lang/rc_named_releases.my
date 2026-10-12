@@ -20,7 +20,7 @@ public func test_a_rebound_dictionary_is_released_before_the_next_value() -> boo
 
 public func test_values_read_out_of_a_dead_local_stay_alive() -> bool:
     mut rows = [[1, 2], [3, 4]]
-    mut first = rows[0]
+    mut first = rows[0].copy()
     mut word = "alpha" + "beta"
     mut piece = word[1:4]
     mut total = 0
@@ -35,7 +35,7 @@ public func test_a_local_read_again_on_a_later_iteration_is_kept() -> bool:
     mut marker = 0
     for index in range(4):
         if index % 2 == 0:
-            seen.append(names[index // 2])
+            seen.append(names[index // 2].copy())
         marker = index
     return seen == ["a", "b"] and marker == 3
 
@@ -47,7 +47,7 @@ func fill(mut values: int[]) -> int:
 
 public func test_written_and_snapshot_locals_keep_their_owners() -> bool:
     mut values = [1]
-    mut before = values
+    mut before = values.copy()
     mut count = fill(mut values)
     mut after = values
     values = [9]

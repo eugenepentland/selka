@@ -1,0 +1,97 @@
+{
+  "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7",
+  "harness_sha256": "f807849d9a4549a6170e692eb3c83ffaef358860fc859f0c963ce932ed9128b3",
+  "ownership": "zero",
+  "cases": [
+    {
+      "source": "tests/lang/python_comprehension.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/python_comprehension.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "0af0792c14c6327a40a119ab5abfcad6faae4ee26a7e6c1e30491b76e04b3a42",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_nested_read_loans.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_nested_read_loans.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "7eb51f5eb6a8d8bc42f75e31a8385f248b34cd1ed4b424ec63cc1a991c57dd9c",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_readonly_body.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_readonly_body.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "f3681fd2b7a0cc555ce220f06f42e1a39e4f98f7e4c594a994d027b7f7b41955",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_readonly_body.my:37:23: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed\n      return 1 + length(tail)\n                        ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_scalar_replacements.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_scalar_replacements.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "ed3e72d4e6e69d53e469580debf52c75815ab9d163268e8290a1adf66ff11bfa",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_scalar_replacements.my:44:5: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      values[0].scalar = 7\n      ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_semantic_history.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_semantic_history.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "e794e8361f35145924ae0b9f100e1ac22e17a859c3aba8a5d72d3b11facfbd5b",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_temporary_lifetimes.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_temporary_lifetimes.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "f00a593691b8733d32da6b7b1eab15d5aaad83a2d55f5ec89340fd9bf059449d",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    }
+  ]
+}

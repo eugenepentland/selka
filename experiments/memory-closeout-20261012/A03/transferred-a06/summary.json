@@ -1,0 +1,233 @@
+{
+  "schema": "a03-transferred-a06-v1",
+  "compiler_commit": "5167c588be79dd43d21d5013c36db15110bf239b",
+  "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "not_final_C1": true,
+  "census_denominators_unchanged": {
+    "original": 30,
+    "main": 81,
+    "supplement": 6
+  },
+  "assigned_files": [
+    "tests/lang/rc_owning_element_borrows.my",
+    "test/core/row_cow.my",
+    "test/core/v_nested.my"
+  ],
+  "source_checks": {
+    "incoming": {
+      "rc_owning_element_borrows": "admitted",
+      "row_cow": "refused E_SINGLE_OWNER_BORROW line175",
+      "v_nested": "admitted"
+    },
+    "reviewed": {
+      "row_cow": "admitted"
+    }
+  },
+  "modes": [
+    "release",
+    "debug",
+    "verify",
+    "optimized_debug",
+    "no_facts"
+  ],
+  "case_results": {
+    "rc_owning_element_borrows": {
+      "release": {
+        "status": "passed",
+        "build_exit": 0,
+        "executions": 1,
+        "output_matches": true,
+        "rc_free": true,
+        "exit_live": 0,
+        "allocs": 292,
+        "alloc_bytes": 23776,
+        "managed_peak": 2528,
+        "structural_passed": true
+      },
+      "debug": {
+        "status": "passed",
+        "build_exit": 0,
+        "executions": 1,
+        "output_matches": true,
+        "rc_free": true,
+        "exit_live": 0,
+        "allocs": 294,
+        "alloc_bytes": 23904,
+        "managed_peak": 2528,
+        "structural_passed": true
+      },
+      "verify": {
+        "status": "passed",
+        "build_exit": 0,
+        "executions": 1,
+        "output_matches": true,
+        "rc_free": true,
+        "exit_live": 0,
+        "allocs": 292,
+        "alloc_bytes": 23776,
+        "managed_peak": 2528,
+        "structural_passed": true
+      },
+      "optimized_debug": {
+        "status": "passed",
+        "build_exit": 0,
+        "executions": 1,
+        "output_matches": true,
+        "rc_free": true,
+        "exit_live": 0,
+        "allocs": 292,
+        "alloc_bytes": 23776,
+        "managed_peak": 2528,
+        "structural_passed": true
+      },
+      "no_facts": {
+        "status": "passed",
+        "build_exit": 0,
+        "executions": 1,
+        "output_matches": true,
+        "rc_free": true,
+        "exit_live": 0,
+        "allocs": 294,
+        "alloc_bytes": 23904,
+        "managed_peak": 2528,
+        "structural_passed": true
+      }
+    },
+    "v_nested": {
+      "release": {
+        "status": "refused",
+        "build_exit": 1
+      },
+      "debug": {
+        "status": "refused",
+        "build_exit": 1
+      },
+      "verify": {
+        "status": "refused",
+        "build_exit": 1
+      },
+      "optimized_debug": {
+        "status": "refused",
+        "build_exit": 1
+      },
+      "no_facts": {
+        "status": "refused",
+        "build_exit": 1
+      }
+    },
+    "row_cow": {
+      "release": {
+        "status": "passed",
+        "build_exit": 0,
+        "executions": 1,
+        "output_matches": true,
+        "rc_free": true,
+        "exit_live": 0,
+        "allocs": 299,
+        "alloc_bytes": 19328,
+        "managed_peak": 640,
+        "structural_passed": true
+      },
+      "debug": {
+        "status": "passed",
+        "build_exit": 0,
+        "executions": 1,
+        "output_matches": true,
+        "rc_free": true,
+        "exit_live": 0,
+        "allocs": 299,
+        "alloc_bytes": 19328,
+        "managed_peak": 640,
+        "structural_passed": true
+      },
+      "verify": {
+        "status": "passed",
+        "build_exit": 0,
+        "executions": 1,
+        "output_matches": true,
+        "rc_free": true,
+        "exit_live": 0,
+        "allocs": 299,
+        "alloc_bytes": 19328,
+        "managed_peak": 640,
+        "structural_passed": true
+      },
+      "optimized_debug": {
+        "status": "passed",
+        "build_exit": 0,
+        "executions": 1,
+        "output_matches": true,
+        "rc_free": true,
+        "exit_live": 0,
+        "allocs": 299,
+        "alloc_bytes": 19328,
+        "managed_peak": 640,
+        "structural_passed": true
+      },
+      "no_facts": {
+        "status": "passed",
+        "build_exit": 0,
+        "executions": 1,
+        "output_matches": true,
+        "rc_free": true,
+        "exit_live": 0,
+        "allocs": 299,
+        "alloc_bytes": 19328,
+        "managed_peak": 640,
+        "structural_passed": true
+      }
+    }
+  },
+  "archives": {
+    "transferred-a06-incoming": {
+      "raw_path": ".tmp/memory-closeout/A03/transferred-a06-incoming",
+      "results_sha256": "781084ca74868834c5ac53ee97f28a4289ada4b06fc65ec393cf7c68d692a1a3",
+      "archive": "experiments/memory-closeout-20261012/A03/transferred-a06/transferred-a06-incoming",
+      "archive_files": {
+        "raw.tar.gz": "0453224230c68de4a0679ab9c1af9e35b2c01ca20883fcccfc119921453d477a",
+        "results.json.gz": "29f090244b97a8cf63e028570464c5961c7522c8bde4a063967111044f65cacd"
+      }
+    },
+    "transferred-a06-accepted": {
+      "raw_path": ".tmp/memory-closeout/A03/transferred-a06-accepted",
+      "results_sha256": "7b5e58cdebcfeab02e6209b4b5d1794add95f026cabc39bdaf6361751929fc98",
+      "archive": "experiments/memory-closeout-20261012/A03/transferred-a06/transferred-a06-accepted",
+      "archive_files": {
+        "raw.tar.gz": "a01c6b2d0449e8e1dd37902ae414431159f7ec84f543d94cc5867889de7bffd5",
+        "results.json.gz": "f411079fa015884a0d32b1207de1fb5f95a67c5769c5fb5d69f574bdf5ffcf57"
+      }
+    },
+    "transferred-a06-reviewed": {
+      "raw_path": ".tmp/memory-closeout/A03/transferred-a06-reviewed",
+      "results_sha256": "a28a2dcee050c92fdcb22c8a84666035ef6c27cf7615611363962e81235ad202",
+      "archive": "experiments/memory-closeout-20261012/A03/transferred-a06/transferred-a06-reviewed",
+      "archive_files": {
+        "raw.tar.gz": "fffd1ab42688bb7ef1ac9303db1ff51e427ff2fa1123d3e97466b95c495fa733",
+        "results.json.gz": "f726463d358178a3c038beb02bd5a29e3dede87aa664b87c51d42d973ae40ec6"
+      }
+    }
+  },
+  "shared_file_requests": [],
+  "unresolved": {
+    "v_nested": {
+      "owner": "A07/coordinator; A02 informed",
+      "source": "test/core/v_nested.my",
+      "source_sha256": "d76cdd501472e7a458e274765f147dd59ee193fb2e08a39f493a3c49d05e6b5c",
+      "diagnostic": "E_ZERO_RC_LOWERING at line20 b.items[1].code = 77",
+      "source_check": "admitted",
+      "native_modes_refused": 5,
+      "guest_executions": 0
+    }
+  },
+  "source_contract_changes": [
+    "Explicit copies create independent storage; assignments no longer imply COW sharing.",
+    "row_s20 returns xs[i].copy and declares managed_allocation; matching callback effect type also declares allocation.",
+    "shape_s21 reads c[index].copy before each mutation using an index loop, preserving original live per-iteration observations (10 9) without a borrowed iterator across mutation."
+  ],
+  "tooling_failures": [
+    {
+      "path": ".tmp/memory-closeout/A03/transferred-a06-copy-pass",
+      "reason": "Incorrect compiler path; preflight FileNotFound before source compilation. No compiler result or refusal claimed."
+    }
+  ]
+}

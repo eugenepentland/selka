@@ -1,0 +1,1718 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "harness_sha256": "b13d0ba0f60f0c44f5cb46e8ae2c97fbad72ecc5a065b2e09bb3a4040284484d",
+  "cases": {
+    "cold": {
+      "source_sha256": "cdecc1cf99e2ad9a95cd458473ace540572248dabec266a41041c4606225307e",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/project/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/cache",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--report",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/cold.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/cold.bin"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":1,\"reused\":1,\"compiled\":0,\"verified\":0,\"processes\":1,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":2449221,\"lowering\":874684,\"optimizer\":4170112,\"emission\":1550202,\"native\":23154630,\"linker\":17389464,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":107931,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":580628,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":11805,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":43320,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":129279,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":659373,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":452,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":476,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":19320,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":365044,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":526,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":156026,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":228,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":1082,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":31904,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":1474216,\"inclusive\":true}]},\"frontend\":{\"checked\":7,\"reused\":0,\"summaries\":0,\"syntax_hits\":0,\"syntax_misses\":3,\"stored\":7,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":7,\"deferred\":0,\"fallbacks\":0,\"materialized\":7,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[7,7,7,0,7,7,0],\"bypassed\":0,\"active_functions\":7,\"fresh_work\":7,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":7},\"emission\":{\"units\":0,\"reused\":0,\"rendered\":0,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":0,\"work\":{\"receipts_checked\":0,\"keys_built\":0,\"llvm_loaded_bytes\":0,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,7,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,7,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":1226543,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":31276,\"save_bytes_prepared\":92382,\"sequence_locks\":60}}},\"program_shared\":false}\n",
+      "expected_refusal": false,
+      "reports": [
+        {
+          "version": "cache-report-v1",
+          "program": "linked",
+          "units": 1,
+          "reused": 1,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1,
+          "stages": {
+            "version": "stage-report-v3",
+            "nanoseconds": {
+              "frontend": 2449221,
+              "lowering": 874684,
+              "optimizer": 4170112,
+              "emission": 1550202,
+              "native": 23154630,
+              "linker": 17389464,
+              "frontend_phases": [
+                {
+                  "name": "load",
+                  "nanoseconds": 107931,
+                  "inclusive": false
+                },
+                {
+                  "name": "syntax_parse",
+                  "nanoseconds": 580628,
+                  "inclusive": false
+                },
+                {
+                  "name": "declarations_interfaces",
+                  "nanoseconds": 11805,
+                  "inclusive": false
+                },
+                {
+                  "name": "merge",
+                  "nanoseconds": 43320,
+                  "inclusive": false
+                },
+                {
+                  "name": "dependency_key_preparation",
+                  "nanoseconds": 129279,
+                  "inclusive": false
+                },
+                {
+                  "name": "retention_store_io",
+                  "nanoseconds": 659373,
+                  "inclusive": false
+                },
+                {
+                  "name": "symbolic_templates",
+                  "nanoseconds": 452,
+                  "inclusive": false
+                },
+                {
+                  "name": "stand_in_planning",
+                  "nanoseconds": 476,
+                  "inclusive": false
+                },
+                {
+                  "name": "ordinary_body_replay",
+                  "nanoseconds": 19320,
+                  "inclusive": false
+                },
+                {
+                  "name": "fresh_body_check",
+                  "nanoseconds": 365044,
+                  "inclusive": false
+                },
+                {
+                  "name": "entry_adaptation",
+                  "nanoseconds": 526,
+                  "inclusive": false
+                },
+                {
+                  "name": "effect_origin_passes",
+                  "nanoseconds": 156026,
+                  "inclusive": false
+                },
+                {
+                  "name": "domain_codec_validation",
+                  "nanoseconds": 228,
+                  "inclusive": false
+                },
+                {
+                  "name": "warning_derivation",
+                  "nanoseconds": 1082,
+                  "inclusive": false
+                },
+                {
+                  "name": "check_summaries",
+                  "nanoseconds": 31904,
+                  "inclusive": false
+                },
+                {
+                  "name": "check",
+                  "nanoseconds": 1474216,
+                  "inclusive": true
+                }
+              ]
+            },
+            "frontend": {
+              "checked": 7,
+              "reused": 0,
+              "summaries": 0,
+              "syntax_hits": 0,
+              "syntax_misses": 3,
+              "stored": 7,
+              "damaged": 0
+            },
+            "lowering": {
+              "reused": 0,
+              "lowered": 7,
+              "deferred": 0,
+              "fallbacks": 0,
+              "materialized": 7,
+              "unloaded": 0
+            },
+            "optimizer": {
+              "hits": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "misses": [
+                7,
+                7,
+                7,
+                0,
+                7,
+                7,
+                0
+              ],
+              "bypassed": 0,
+              "active_functions": 7,
+              "fresh_work": 7,
+              "restores": {
+                "final": 0,
+                "checkpoints": 0,
+                "fusions": 0
+              },
+              "final_loaded": 7
+            },
+            "emission": {
+              "units": 0,
+              "reused": 0,
+              "rendered": 0,
+              "seeds_reused": 0,
+              "seeds_rendered": 0,
+              "workers": 0,
+              "work": {
+                "receipts_checked": 0,
+                "keys_built": 0,
+                "llvm_loaded_bytes": 0,
+                "native_handles": 0
+              }
+            },
+            "frontend_misses": {
+              "total": [
+                0,
+                0,
+                7,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "lookup": [
+                0,
+                0,
+                7,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "retention": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "relocation": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "storage": {
+            "flush_nanoseconds": 1226543,
+            "flush_succeeded": true,
+            "compression": "zlib",
+            "reads": {
+              "packed_bytes_read": 0,
+              "decoded_bytes": 0,
+              "blocks_decoded": 0,
+              "payload_bytes_returned": 0,
+              "block_cache_hits": 0,
+              "publication": {
+                "filename_lookups": 2,
+                "refreshes": 3,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 31276,
+                "save_bytes_prepared": 92382,
+                "sequence_locks": 60
+              }
+            }
+          },
+          "program_shared": false
+        }
+      ],
+      "passed": true,
+      "run": {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "binary_sha256": "1c5a580f47f273aa15830fb28d77664fe0eaa229fb66a83634e575bb6744343b",
+      "llvm_sha256": "15fb1d26d4b10f5644c0240b40700a37b858719cdd06d2567d36ae0dbdf98d4f"
+    },
+    "warm": {
+      "source_sha256": "cdecc1cf99e2ad9a95cd458473ace540572248dabec266a41041c4606225307e",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/project/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/cache",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--report",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/warm.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/warm.bin"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"cache-report-v1\",\"program\":\"reused\",\"units\":1,\"reused\":1,\"compiled\":0,\"verified\":0,\"processes\":0,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":3793933,\"lowering\":1452520,\"optimizer\":1208117,\"emission\":1475317,\"native\":2747001,\"linker\":0,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":188614,\"inclusive\":false},{\"name\":\"syntax_replay\",\"nanoseconds\":210187,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":18360,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":65466,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":144088,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":1306978,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":589,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":18526,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":122003,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":373547,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":1250,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":233062,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":353,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":1687,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":10739,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":2393553,\"inclusive\":true}]},\"frontend\":{\"checked\":2,\"reused\":5,\"summaries\":3,\"syntax_hits\":3,\"syntax_misses\":0,\"stored\":2,\"damaged\":0},\"lowering\":{\"reused\":7,\"lowered\":0,\"deferred\":0,\"fallbacks\":0,\"materialized\":7,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,7,0],\"misses\":[0,0,0,0,0,0,0],\"bypassed\":7,\"active_functions\":7,\"fresh_work\":0,\"restores\":{\"final\":7,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":7},\"emission\":{\"units\":0,\"reused\":0,\"rendered\":0,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":0,\"work\":{\"receipts_checked\":0,\"keys_built\":0,\"llvm_loaded_bytes\":0,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0],\"lookup\":[0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":530814,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":25971,\"decoded_bytes\":98878,\"blocks_decoded\":2,\"payload_bytes_returned\":85123,\"block_cache_hits\":21,\"publication\":{\"filename_lookups\":3,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":4825,\"save_bytes_prepared\":18110,\"sequence_locks\":4}}},\"program_shared\":false}\n",
+      "expected_refusal": false,
+      "reports": [
+        {
+          "version": "cache-report-v1",
+          "program": "reused",
+          "units": 1,
+          "reused": 1,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0,
+          "stages": {
+            "version": "stage-report-v3",
+            "nanoseconds": {
+              "frontend": 3793933,
+              "lowering": 1452520,
+              "optimizer": 1208117,
+              "emission": 1475317,
+              "native": 2747001,
+              "linker": 0,
+              "frontend_phases": [
+                {
+                  "name": "load",
+                  "nanoseconds": 188614,
+                  "inclusive": false
+                },
+                {
+                  "name": "syntax_replay",
+                  "nanoseconds": 210187,
+                  "inclusive": false
+                },
+                {
+                  "name": "declarations_interfaces",
+                  "nanoseconds": 18360,
+                  "inclusive": false
+                },
+                {
+                  "name": "merge",
+                  "nanoseconds": 65466,
+                  "inclusive": false
+                },
+                {
+                  "name": "dependency_key_preparation",
+                  "nanoseconds": 144088,
+                  "inclusive": false
+                },
+                {
+                  "name": "retention_store_io",
+                  "nanoseconds": 1306978,
+                  "inclusive": false
+                },
+                {
+                  "name": "symbolic_templates",
+                  "nanoseconds": 589,
+                  "inclusive": false
+                },
+                {
+                  "name": "stand_in_planning",
+                  "nanoseconds": 18526,
+                  "inclusive": false
+                },
+                {
+                  "name": "ordinary_body_replay",
+                  "nanoseconds": 122003,
+                  "inclusive": false
+                },
+                {
+                  "name": "fresh_body_check",
+                  "nanoseconds": 373547,
+                  "inclusive": false
+                },
+                {
+                  "name": "entry_adaptation",
+                  "nanoseconds": 1250,
+                  "inclusive": false
+                },
+                {
+                  "name": "effect_origin_passes",
+                  "nanoseconds": 233062,
+                  "inclusive": false
+                },
+                {
+                  "name": "domain_codec_validation",
+                  "nanoseconds": 353,
+                  "inclusive": false
+                },
+                {
+                  "name": "warning_derivation",
+                  "nanoseconds": 1687,
+                  "inclusive": false
+                },
+                {
+                  "name": "check_summaries",
+                  "nanoseconds": 10739,
+                  "inclusive": false
+                },
+                {
+                  "name": "check",
+                  "nanoseconds": 2393553,
+                  "inclusive": true
+                }
+              ]
+            },
+            "frontend": {
+              "checked": 2,
+              "reused": 5,
+              "summaries": 3,
+              "syntax_hits": 3,
+              "syntax_misses": 0,
+              "stored": 2,
+              "damaged": 0
+            },
+            "lowering": {
+              "reused": 7,
+              "lowered": 0,
+              "deferred": 0,
+              "fallbacks": 0,
+              "materialized": 7,
+              "unloaded": 0
+            },
+            "optimizer": {
+              "hits": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                7,
+                0
+              ],
+              "misses": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "bypassed": 7,
+              "active_functions": 7,
+              "fresh_work": 0,
+              "restores": {
+                "final": 7,
+                "checkpoints": 0,
+                "fusions": 0
+              },
+              "final_loaded": 7
+            },
+            "emission": {
+              "units": 0,
+              "reused": 0,
+              "rendered": 0,
+              "seeds_reused": 0,
+              "seeds_rendered": 0,
+              "workers": 0,
+              "work": {
+                "receipts_checked": 0,
+                "keys_built": 0,
+                "llvm_loaded_bytes": 0,
+                "native_handles": 0
+              }
+            },
+            "frontend_misses": {
+              "total": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "lookup": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "retention": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "relocation": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "storage": {
+            "flush_nanoseconds": 530814,
+            "flush_succeeded": true,
+            "compression": "zlib",
+            "reads": {
+              "packed_bytes_read": 25971,
+              "decoded_bytes": 98878,
+              "blocks_decoded": 2,
+              "payload_bytes_returned": 85123,
+              "block_cache_hits": 21,
+              "publication": {
+                "filename_lookups": 3,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 4825,
+                "save_bytes_prepared": 18110,
+                "sequence_locks": 4
+              }
+            }
+          },
+          "program_shared": false
+        }
+      ],
+      "passed": true,
+      "run": {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "binary_sha256": "1c5a580f47f273aa15830fb28d77664fe0eaa229fb66a83634e575bb6744343b",
+      "llvm_sha256": "15fb1d26d4b10f5644c0240b40700a37b858719cdd06d2567d36ae0dbdf98d4f"
+    },
+    "earlier-record": {
+      "source_sha256": "bfbfffea0d9d461748a0d1dace81eff0f712657057949ee0882c8b54f6bec162",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/project/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/cache",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--report",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/earlier-record.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/earlier-record.bin"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":1,\"reused\":1,\"compiled\":0,\"verified\":0,\"processes\":1,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":2555440,\"lowering\":898016,\"optimizer\":2961021,\"emission\":957696,\"native\":20214299,\"linker\":17256013,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":113549,\"inclusive\":false},{\"name\":\"syntax_replay\",\"nanoseconds\":62601,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":318810,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":12784,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":49650,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":106553,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":840281,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":171,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":14494,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":45481,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":336511,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":869,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":151066,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":402,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":1143,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":6180,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":1620366,\"inclusive\":true}]},\"frontend\":{\"checked\":4,\"reused\":4,\"summaries\":3,\"syntax_hits\":2,\"syntax_misses\":1,\"stored\":4,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":8,\"deferred\":0,\"fallbacks\":0,\"materialized\":8,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[8,8,8,0,8,8,0],\"bypassed\":0,\"active_functions\":8,\"fresh_work\":8,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":8},\"emission\":{\"units\":0,\"reused\":0,\"rendered\":0,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":0,\"work\":{\"receipts_checked\":0,\"keys_built\":0,\"llvm_loaded_bytes\":0,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,2,0,0,0,0,0,2,0,0,0,0,0,0,0],\"lookup\":[0,0,2,0,0,0,0,0,2,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":1305481,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":968,\"decoded_bytes\":1033,\"blocks_decoded\":1,\"payload_bytes_returned\":921,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":4,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":34980,\"save_bytes_prepared\":103915,\"sequence_locks\":68}}},\"program_shared\":false}\n",
+      "expected_refusal": false,
+      "reports": [
+        {
+          "version": "cache-report-v1",
+          "program": "linked",
+          "units": 1,
+          "reused": 1,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 1,
+          "stages": {
+            "version": "stage-report-v3",
+            "nanoseconds": {
+              "frontend": 2555440,
+              "lowering": 898016,
+              "optimizer": 2961021,
+              "emission": 957696,
+              "native": 20214299,
+              "linker": 17256013,
+              "frontend_phases": [
+                {
+                  "name": "load",
+                  "nanoseconds": 113549,
+                  "inclusive": false
+                },
+                {
+                  "name": "syntax_replay",
+                  "nanoseconds": 62601,
+                  "inclusive": false
+                },
+                {
+                  "name": "syntax_parse",
+                  "nanoseconds": 318810,
+                  "inclusive": false
+                },
+                {
+                  "name": "declarations_interfaces",
+                  "nanoseconds": 12784,
+                  "inclusive": false
+                },
+                {
+                  "name": "merge",
+                  "nanoseconds": 49650,
+                  "inclusive": false
+                },
+                {
+                  "name": "dependency_key_preparation",
+                  "nanoseconds": 106553,
+                  "inclusive": false
+                },
+                {
+                  "name": "retention_store_io",
+                  "nanoseconds": 840281,
+                  "inclusive": false
+                },
+                {
+                  "name": "symbolic_templates",
+                  "nanoseconds": 171,
+                  "inclusive": false
+                },
+                {
+                  "name": "stand_in_planning",
+                  "nanoseconds": 14494,
+                  "inclusive": false
+                },
+                {
+                  "name": "ordinary_body_replay",
+                  "nanoseconds": 45481,
+                  "inclusive": false
+                },
+                {
+                  "name": "fresh_body_check",
+                  "nanoseconds": 336511,
+                  "inclusive": false
+                },
+                {
+                  "name": "entry_adaptation",
+                  "nanoseconds": 869,
+                  "inclusive": false
+                },
+                {
+                  "name": "effect_origin_passes",
+                  "nanoseconds": 151066,
+                  "inclusive": false
+                },
+                {
+                  "name": "domain_codec_validation",
+                  "nanoseconds": 402,
+                  "inclusive": false
+                },
+                {
+                  "name": "warning_derivation",
+                  "nanoseconds": 1143,
+                  "inclusive": false
+                },
+                {
+                  "name": "check_summaries",
+                  "nanoseconds": 6180,
+                  "inclusive": false
+                },
+                {
+                  "name": "check",
+                  "nanoseconds": 1620366,
+                  "inclusive": true
+                }
+              ]
+            },
+            "frontend": {
+              "checked": 4,
+              "reused": 4,
+              "summaries": 3,
+              "syntax_hits": 2,
+              "syntax_misses": 1,
+              "stored": 4,
+              "damaged": 0
+            },
+            "lowering": {
+              "reused": 0,
+              "lowered": 8,
+              "deferred": 0,
+              "fallbacks": 0,
+              "materialized": 8,
+              "unloaded": 0
+            },
+            "optimizer": {
+              "hits": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "misses": [
+                8,
+                8,
+                8,
+                0,
+                8,
+                8,
+                0
+              ],
+              "bypassed": 0,
+              "active_functions": 8,
+              "fresh_work": 8,
+              "restores": {
+                "final": 0,
+                "checkpoints": 0,
+                "fusions": 0
+              },
+              "final_loaded": 8
+            },
+            "emission": {
+              "units": 0,
+              "reused": 0,
+              "rendered": 0,
+              "seeds_reused": 0,
+              "seeds_rendered": 0,
+              "workers": 0,
+              "work": {
+                "receipts_checked": 0,
+                "keys_built": 0,
+                "llvm_loaded_bytes": 0,
+                "native_handles": 0
+              }
+            },
+            "frontend_misses": {
+              "total": [
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "lookup": [
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "retention": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "relocation": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "storage": {
+            "flush_nanoseconds": 1305481,
+            "flush_succeeded": true,
+            "compression": "zlib",
+            "reads": {
+              "packed_bytes_read": 968,
+              "decoded_bytes": 1033,
+              "blocks_decoded": 1,
+              "payload_bytes_returned": 921,
+              "block_cache_hits": 0,
+              "publication": {
+                "filename_lookups": 4,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 34980,
+                "save_bytes_prepared": 103915,
+                "sequence_locks": 68
+              }
+            }
+          },
+          "program_shared": false
+        }
+      ],
+      "passed": true,
+      "run": {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "binary_sha256": "4e125696ac4a925a57b41a0a0a5138cc3c70e7a0c8e51f178950826c2a0f9f7c",
+      "llvm_sha256": "6b8fca21a9d634afd40d2a22ce7f326b86016dbb83bfc0c1f5d864ac2ce58419"
+    },
+    "earlier-record-warm": {
+      "source_sha256": "bfbfffea0d9d461748a0d1dace81eff0f712657057949ee0882c8b54f6bec162",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/project/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/cache",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--report",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/earlier-record-warm.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/earlier-record-warm.bin"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"cache-report-v1\",\"program\":\"reused\",\"units\":1,\"reused\":1,\"compiled\":0,\"verified\":0,\"processes\":0,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":3872037,\"lowering\":996062,\"optimizer\":1751627,\"emission\":1470788,\"native\":3992916,\"linker\":0,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":170535,\"inclusive\":false},{\"name\":\"syntax_replay\",\"nanoseconds\":176496,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":23860,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":54394,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":160986,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":1539890,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":528,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":20725,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":103814,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":341343,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":1066,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":211779,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":287,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":1814,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":9056,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":2558746,\"inclusive\":true}]},\"frontend\":{\"checked\":2,\"reused\":6,\"summaries\":3,\"syntax_hits\":3,\"syntax_misses\":0,\"stored\":2,\"damaged\":0},\"lowering\":{\"reused\":8,\"lowered\":0,\"deferred\":0,\"fallbacks\":0,\"materialized\":8,\"unloaded\":0},\"optimizer\":{\"hits\":[1,1,1,0,1,8,0],\"misses\":[0,0,0,0,0,0,0],\"bypassed\":7,\"active_functions\":8,\"fresh_work\":0,\"restores\":{\"final\":8,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":8},\"emission\":{\"units\":0,\"reused\":0,\"rendered\":0,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":0,\"work\":{\"receipts_checked\":0,\"keys_built\":0,\"llvm_loaded_bytes\":0,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0],\"lookup\":[0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":558071,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":28923,\"decoded_bytes\":111307,\"blocks_decoded\":3,\"payload_bytes_returned\":96281,\"block_cache_hits\":27,\"publication\":{\"filename_lookups\":5,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":5250,\"save_bytes_prepared\":19005,\"sequence_locks\":4}}},\"program_shared\":false}\n",
+      "expected_refusal": false,
+      "reports": [
+        {
+          "version": "cache-report-v1",
+          "program": "reused",
+          "units": 1,
+          "reused": 1,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0,
+          "stages": {
+            "version": "stage-report-v3",
+            "nanoseconds": {
+              "frontend": 3872037,
+              "lowering": 996062,
+              "optimizer": 1751627,
+              "emission": 1470788,
+              "native": 3992916,
+              "linker": 0,
+              "frontend_phases": [
+                {
+                  "name": "load",
+                  "nanoseconds": 170535,
+                  "inclusive": false
+                },
+                {
+                  "name": "syntax_replay",
+                  "nanoseconds": 176496,
+                  "inclusive": false
+                },
+                {
+                  "name": "declarations_interfaces",
+                  "nanoseconds": 23860,
+                  "inclusive": false
+                },
+                {
+                  "name": "merge",
+                  "nanoseconds": 54394,
+                  "inclusive": false
+                },
+                {
+                  "name": "dependency_key_preparation",
+                  "nanoseconds": 160986,
+                  "inclusive": false
+                },
+                {
+                  "name": "retention_store_io",
+                  "nanoseconds": 1539890,
+                  "inclusive": false
+                },
+                {
+                  "name": "symbolic_templates",
+                  "nanoseconds": 528,
+                  "inclusive": false
+                },
+                {
+                  "name": "stand_in_planning",
+                  "nanoseconds": 20725,
+                  "inclusive": false
+                },
+                {
+                  "name": "ordinary_body_replay",
+                  "nanoseconds": 103814,
+                  "inclusive": false
+                },
+                {
+                  "name": "fresh_body_check",
+                  "nanoseconds": 341343,
+                  "inclusive": false
+                },
+                {
+                  "name": "entry_adaptation",
+                  "nanoseconds": 1066,
+                  "inclusive": false
+                },
+                {
+                  "name": "effect_origin_passes",
+                  "nanoseconds": 211779,
+                  "inclusive": false
+                },
+                {
+                  "name": "domain_codec_validation",
+                  "nanoseconds": 287,
+                  "inclusive": false
+                },
+                {
+                  "name": "warning_derivation",
+                  "nanoseconds": 1814,
+                  "inclusive": false
+                },
+                {
+                  "name": "check_summaries",
+                  "nanoseconds": 9056,
+                  "inclusive": false
+                },
+                {
+                  "name": "check",
+                  "nanoseconds": 2558746,
+                  "inclusive": true
+                }
+              ]
+            },
+            "frontend": {
+              "checked": 2,
+              "reused": 6,
+              "summaries": 3,
+              "syntax_hits": 3,
+              "syntax_misses": 0,
+              "stored": 2,
+              "damaged": 0
+            },
+            "lowering": {
+              "reused": 8,
+              "lowered": 0,
+              "deferred": 0,
+              "fallbacks": 0,
+              "materialized": 8,
+              "unloaded": 0
+            },
+            "optimizer": {
+              "hits": [
+                1,
+                1,
+                1,
+                0,
+                1,
+                8,
+                0
+              ],
+              "misses": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "bypassed": 7,
+              "active_functions": 8,
+              "fresh_work": 0,
+              "restores": {
+                "final": 8,
+                "checkpoints": 0,
+                "fusions": 0
+              },
+              "final_loaded": 8
+            },
+            "emission": {
+              "units": 0,
+              "reused": 0,
+              "rendered": 0,
+              "seeds_reused": 0,
+              "seeds_rendered": 0,
+              "workers": 0,
+              "work": {
+                "receipts_checked": 0,
+                "keys_built": 0,
+                "llvm_loaded_bytes": 0,
+                "native_handles": 0
+              }
+            },
+            "frontend_misses": {
+              "total": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "lookup": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "retention": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "relocation": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "storage": {
+            "flush_nanoseconds": 558071,
+            "flush_succeeded": true,
+            "compression": "zlib",
+            "reads": {
+              "packed_bytes_read": 28923,
+              "decoded_bytes": 111307,
+              "blocks_decoded": 3,
+              "payload_bytes_returned": 96281,
+              "block_cache_hits": 27,
+              "publication": {
+                "filename_lookups": 5,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 5250,
+                "save_bytes_prepared": 19005,
+                "sequence_locks": 4
+              }
+            }
+          },
+          "program_shared": false
+        }
+      ],
+      "passed": true,
+      "run": {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "binary_sha256": "4e125696ac4a925a57b41a0a0a5138cc3c70e7a0c8e51f178950826c2a0f9f7c",
+      "llvm_sha256": "6b8fca21a9d634afd40d2a22ce7f326b86016dbb83bfc0c1f5d864ac2ce58419"
+    },
+    "invalid-borrow": {
+      "source_sha256": "30c36c82943812f7d6872da3e094e4536dbb1248e8029ff5da732b1507a44f15",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/project/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/cache",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--report",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/invalid-borrow.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/invalid-borrow.bin"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "main.my:46:20: error[E_SINGLE_OWNER_BORROW]: a borrowed provider context is read-only and cannot be moved, stored or returned\n      const escape = ctx\n                     ^\n",
+      "expected_refusal": true,
+      "reports": [],
+      "passed": true
+    },
+    "restored": {
+      "source_sha256": "cdecc1cf99e2ad9a95cd458473ace540572248dabec266a41041c4606225307e",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/project/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/cache",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--report",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/restored.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/restored.bin"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"cache-report-v1\",\"program\":\"reused\",\"units\":1,\"reused\":1,\"compiled\":0,\"verified\":0,\"processes\":0,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":2128906,\"lowering\":932287,\"optimizer\":1867414,\"emission\":1419335,\"native\":2748489,\"linker\":0,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":138292,\"inclusive\":false},{\"name\":\"syntax_replay\",\"nanoseconds\":124067,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":9581,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":33178,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":77603,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":825054,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":173,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":9224,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":67657,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":184712,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":510,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":150597,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":110,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":1004,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":5203,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":1413375,\"inclusive\":true}]},\"frontend\":{\"checked\":2,\"reused\":5,\"summaries\":3,\"syntax_hits\":3,\"syntax_misses\":0,\"stored\":2,\"damaged\":0},\"lowering\":{\"reused\":7,\"lowered\":0,\"deferred\":0,\"fallbacks\":0,\"materialized\":7,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,7,0],\"misses\":[0,0,0,0,0,0,0],\"bypassed\":7,\"active_functions\":7,\"fresh_work\":0,\"restores\":{\"final\":7,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":7},\"emission\":{\"units\":0,\"reused\":0,\"rendered\":0,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":0,\"work\":{\"receipts_checked\":0,\"keys_built\":0,\"llvm_loaded_bytes\":0,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0],\"lookup\":[0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":552794,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":56578,\"decoded_bytes\":212629,\"blocks_decoded\":6,\"payload_bytes_returned\":87084,\"block_cache_hits\":17,\"publication\":{\"filename_lookups\":6,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":4826,\"save_bytes_prepared\":18110,\"sequence_locks\":4}}},\"program_shared\":false}\n",
+      "expected_refusal": false,
+      "reports": [
+        {
+          "version": "cache-report-v1",
+          "program": "reused",
+          "units": 1,
+          "reused": 1,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0,
+          "stages": {
+            "version": "stage-report-v3",
+            "nanoseconds": {
+              "frontend": 2128906,
+              "lowering": 932287,
+              "optimizer": 1867414,
+              "emission": 1419335,
+              "native": 2748489,
+              "linker": 0,
+              "frontend_phases": [
+                {
+                  "name": "load",
+                  "nanoseconds": 138292,
+                  "inclusive": false
+                },
+                {
+                  "name": "syntax_replay",
+                  "nanoseconds": 124067,
+                  "inclusive": false
+                },
+                {
+                  "name": "declarations_interfaces",
+                  "nanoseconds": 9581,
+                  "inclusive": false
+                },
+                {
+                  "name": "merge",
+                  "nanoseconds": 33178,
+                  "inclusive": false
+                },
+                {
+                  "name": "dependency_key_preparation",
+                  "nanoseconds": 77603,
+                  "inclusive": false
+                },
+                {
+                  "name": "retention_store_io",
+                  "nanoseconds": 825054,
+                  "inclusive": false
+                },
+                {
+                  "name": "symbolic_templates",
+                  "nanoseconds": 173,
+                  "inclusive": false
+                },
+                {
+                  "name": "stand_in_planning",
+                  "nanoseconds": 9224,
+                  "inclusive": false
+                },
+                {
+                  "name": "ordinary_body_replay",
+                  "nanoseconds": 67657,
+                  "inclusive": false
+                },
+                {
+                  "name": "fresh_body_check",
+                  "nanoseconds": 184712,
+                  "inclusive": false
+                },
+                {
+                  "name": "entry_adaptation",
+                  "nanoseconds": 510,
+                  "inclusive": false
+                },
+                {
+                  "name": "effect_origin_passes",
+                  "nanoseconds": 150597,
+                  "inclusive": false
+                },
+                {
+                  "name": "domain_codec_validation",
+                  "nanoseconds": 110,
+                  "inclusive": false
+                },
+                {
+                  "name": "warning_derivation",
+                  "nanoseconds": 1004,
+                  "inclusive": false
+                },
+                {
+                  "name": "check_summaries",
+                  "nanoseconds": 5203,
+                  "inclusive": false
+                },
+                {
+                  "name": "check",
+                  "nanoseconds": 1413375,
+                  "inclusive": true
+                }
+              ]
+            },
+            "frontend": {
+              "checked": 2,
+              "reused": 5,
+              "summaries": 3,
+              "syntax_hits": 3,
+              "syntax_misses": 0,
+              "stored": 2,
+              "damaged": 0
+            },
+            "lowering": {
+              "reused": 7,
+              "lowered": 0,
+              "deferred": 0,
+              "fallbacks": 0,
+              "materialized": 7,
+              "unloaded": 0
+            },
+            "optimizer": {
+              "hits": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                7,
+                0
+              ],
+              "misses": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "bypassed": 7,
+              "active_functions": 7,
+              "fresh_work": 0,
+              "restores": {
+                "final": 7,
+                "checkpoints": 0,
+                "fusions": 0
+              },
+              "final_loaded": 7
+            },
+            "emission": {
+              "units": 0,
+              "reused": 0,
+              "rendered": 0,
+              "seeds_reused": 0,
+              "seeds_rendered": 0,
+              "workers": 0,
+              "work": {
+                "receipts_checked": 0,
+                "keys_built": 0,
+                "llvm_loaded_bytes": 0,
+                "native_handles": 0
+              }
+            },
+            "frontend_misses": {
+              "total": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "lookup": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "retention": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "relocation": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "storage": {
+            "flush_nanoseconds": 552794,
+            "flush_succeeded": true,
+            "compression": "zlib",
+            "reads": {
+              "packed_bytes_read": 56578,
+              "decoded_bytes": 212629,
+              "blocks_decoded": 6,
+              "payload_bytes_returned": 87084,
+              "block_cache_hits": 17,
+              "publication": {
+                "filename_lookups": 6,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 4826,
+                "save_bytes_prepared": 18110,
+                "sequence_locks": 4
+              }
+            }
+          },
+          "program_shared": false
+        }
+      ],
+      "passed": true,
+      "run": {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "binary_sha256": "1c5a580f47f273aa15830fb28d77664fe0eaa229fb66a83634e575bb6744343b",
+      "llvm_sha256": "15fb1d26d4b10f5644c0240b40700a37b858719cdd06d2567d36ae0dbdf98d4f"
+    },
+    "relocated": {
+      "source_sha256": "cdecc1cf99e2ad9a95cd458473ace540572248dabec266a41041c4606225307e",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/relocated/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/cache",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--report",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/relocated.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-borrowed-cache/relocated.bin"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "{\"version\":\"cache-report-v1\",\"program\":\"reused\",\"units\":1,\"reused\":1,\"compiled\":0,\"verified\":0,\"processes\":0,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":1404360,\"lowering\":643291,\"optimizer\":1109626,\"emission\":1010253,\"native\":1883343,\"linker\":0,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":75933,\"inclusive\":false},{\"name\":\"syntax_replay\",\"nanoseconds\":72359,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":7179,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":26821,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":68272,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":547134,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":489,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":7630,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":47416,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":127581,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":384,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":82230,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":54,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":819,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":3362,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":969833,\"inclusive\":true}]},\"frontend\":{\"checked\":2,\"reused\":5,\"summaries\":3,\"syntax_hits\":3,\"syntax_misses\":0,\"stored\":2,\"damaged\":0},\"lowering\":{\"reused\":7,\"lowered\":0,\"deferred\":0,\"fallbacks\":0,\"materialized\":7,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,7,0],\"misses\":[0,0,0,0,0,0,0],\"bypassed\":7,\"active_functions\":7,\"fresh_work\":0,\"restores\":{\"final\":7,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":7},\"emission\":{\"units\":0,\"reused\":0,\"rendered\":0,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":0,\"work\":{\"receipts_checked\":0,\"keys_built\":0,\"llvm_loaded_bytes\":0,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0],\"lookup\":[0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":389319,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":55491,\"decoded_bytes\":211467,\"blocks_decoded\":5,\"payload_bytes_returned\":86034,\"block_cache_hits\":17,\"publication\":{\"filename_lookups\":7,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":4829,\"save_bytes_prepared\":18110,\"sequence_locks\":4}}},\"program_shared\":false}\n",
+      "expected_refusal": false,
+      "reports": [
+        {
+          "version": "cache-report-v1",
+          "program": "reused",
+          "units": 1,
+          "reused": 1,
+          "compiled": 0,
+          "verified": 0,
+          "processes": 0,
+          "stages": {
+            "version": "stage-report-v3",
+            "nanoseconds": {
+              "frontend": 1404360,
+              "lowering": 643291,
+              "optimizer": 1109626,
+              "emission": 1010253,
+              "native": 1883343,
+              "linker": 0,
+              "frontend_phases": [
+                {
+                  "name": "load",
+                  "nanoseconds": 75933,
+                  "inclusive": false
+                },
+                {
+                  "name": "syntax_replay",
+                  "nanoseconds": 72359,
+                  "inclusive": false
+                },
+                {
+                  "name": "declarations_interfaces",
+                  "nanoseconds": 7179,
+                  "inclusive": false
+                },
+                {
+                  "name": "merge",
+                  "nanoseconds": 26821,
+                  "inclusive": false
+                },
+                {
+                  "name": "dependency_key_preparation",
+                  "nanoseconds": 68272,
+                  "inclusive": false
+                },
+                {
+                  "name": "retention_store_io",
+                  "nanoseconds": 547134,
+                  "inclusive": false
+                },
+                {
+                  "name": "symbolic_templates",
+                  "nanoseconds": 489,
+                  "inclusive": false
+                },
+                {
+                  "name": "stand_in_planning",
+                  "nanoseconds": 7630,
+                  "inclusive": false
+                },
+                {
+                  "name": "ordinary_body_replay",
+                  "nanoseconds": 47416,
+                  "inclusive": false
+                },
+                {
+                  "name": "fresh_body_check",
+                  "nanoseconds": 127581,
+                  "inclusive": false
+                },
+                {
+                  "name": "entry_adaptation",
+                  "nanoseconds": 384,
+                  "inclusive": false
+                },
+                {
+                  "name": "effect_origin_passes",
+                  "nanoseconds": 82230,
+                  "inclusive": false
+                },
+                {
+                  "name": "domain_codec_validation",
+                  "nanoseconds": 54,
+                  "inclusive": false
+                },
+                {
+                  "name": "warning_derivation",
+                  "nanoseconds": 819,
+                  "inclusive": false
+                },
+                {
+                  "name": "check_summaries",
+                  "nanoseconds": 3362,
+                  "inclusive": false
+                },
+                {
+                  "name": "check",
+                  "nanoseconds": 969833,
+                  "inclusive": true
+                }
+              ]
+            },
+            "frontend": {
+              "checked": 2,
+              "reused": 5,
+              "summaries": 3,
+              "syntax_hits": 3,
+              "syntax_misses": 0,
+              "stored": 2,
+              "damaged": 0
+            },
+            "lowering": {
+              "reused": 7,
+              "lowered": 0,
+              "deferred": 0,
+              "fallbacks": 0,
+              "materialized": 7,
+              "unloaded": 0
+            },
+            "optimizer": {
+              "hits": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                7,
+                0
+              ],
+              "misses": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "bypassed": 7,
+              "active_functions": 7,
+              "fresh_work": 0,
+              "restores": {
+                "final": 7,
+                "checkpoints": 0,
+                "fusions": 0
+              },
+              "final_loaded": 7
+            },
+            "emission": {
+              "units": 0,
+              "reused": 0,
+              "rendered": 0,
+              "seeds_reused": 0,
+              "seeds_rendered": 0,
+              "workers": 0,
+              "work": {
+                "receipts_checked": 0,
+                "keys_built": 0,
+                "llvm_loaded_bytes": 0,
+                "native_handles": 0
+              }
+            },
+            "frontend_misses": {
+              "total": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "lookup": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                2,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "retention": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "relocation": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "storage": {
+            "flush_nanoseconds": 389319,
+            "flush_succeeded": true,
+            "compression": "zlib",
+            "reads": {
+              "packed_bytes_read": 55491,
+              "decoded_bytes": 211467,
+              "blocks_decoded": 5,
+              "payload_bytes_returned": 86034,
+              "block_cache_hits": 17,
+              "publication": {
+                "filename_lookups": 7,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 4829,
+                "save_bytes_prepared": 18110,
+                "sequence_locks": 4
+              }
+            }
+          },
+          "program_shared": false
+        }
+      ],
+      "passed": true,
+      "run": {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "binary_sha256": "1c5a580f47f273aa15830fb28d77664fe0eaa229fb66a83634e575bb6744343b",
+      "llvm_sha256": "15fb1d26d4b10f5644c0240b40700a37b858719cdd06d2567d36ae0dbdf98d4f"
+    }
+  },
+  "passed": true
+}

@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/t_scalar_fusion.my",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/cache",
+    "--experimental-zero-rc",
+    "--release",
+    "--force",
+    "--json",
+    "--jobs",
+    "1"
+  ],
+  "status": 1,
+  "elapsed_ns": 37755292,
+  "stdout": "",
+  "stderr": "t_scalar_fusion.my:143:143: error[E_SINGLE_OWNER_MOVED]: 'wide' was moved or is unavailable on this path; use .copy() when both values are needed\n      return result == \"\u00e9z\u00e9\" and source == \"\u00e9z\" and values == [\"\u00e9z\", \"\u00e9z\"] and expanded == wide + wide + wide + wide and aliases == [wide, wide] and wide == \"123456789012345\u00e9\u20ac\ud83d\ude42\\0\"\n                                                                                                                                                ^\n"
+}

@@ -1,0 +1,8 @@
+guardian/test: 3 test(s) selected by filter: "keyed sorting"
+All 3 tests passed.
+guardian/test: test wall 8.10s; slowest over 50ms:
+guardian/test:   4.30s  s3_list_methods_test.test.zero RC keyed sorting gathers wide managed records with stable independent children
+guardian/test:   3.64s  s3_list_methods_test.test.zero RC keyed sorting optional scratch failure preserves managed cycle fallback
+guardian/test:   0.15s  a08_zero_rc_test.test.zero RC A08 stable keyed sorting borrows callbacks and owns nested output
+guardian/test: PASS — 3 passed
+guardian/test: RESULT {"passed":3,"failed":0,"skipped":0}

@@ -1,0 +1,21 @@
+build-slot: FIFO ticket 2220, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 2220 after 10s
+guardian/test: 183 test(s) selected
+guardian/test: SLOW  5.96s  a02_public_constructors_test.test.zero RC A02 public constructors preserve owned keys and generator results
+guardian/test: SLOW  8.06s  a01_parallel_map_test.test.A01 zero RC scheduler million-submit stress has no ThreadSanitizer reports
+guardian/test: SLOW  7.27s  a02_list_methods_test.test.zero RC A02 list methods move nested wide recursive children and preserve traps
+guardian/test: SLOW  8.19s  zero_rc_task_test.test.zero RC task captures and results are free from ThreadSanitizer reports
+All 183 tests passed.
+guardian/test: test wall 93.96s; slowest over 50ms:
+guardian/test:   8.19s  zero_rc_task_test.test.zero RC task captures and results are free from ThreadSanitizer reports
+guardian/test:   8.06s  a01_parallel_map_test.test.A01 zero RC scheduler million-submit stress has no ThreadSanitizer reports
+guardian/test:   7.27s  a02_list_methods_test.test.zero RC A02 list methods move nested wide recursive children and preserve traps
+guardian/test:   5.96s  a02_public_constructors_test.test.zero RC A02 public constructors preserve owned keys and generator results
+guardian/test:   4.47s  a01_parallel_map_test.test.A01 zero RC scheduler million-submit nested and discarded-result stress
+guardian/test:   4.47s  durable_test.test.zero RC durable native storage preserves fault crash and lease cleanup contracts
+guardian/test:   4.02s  a02_mut_call_test.test.zero RC A02 interior mut calls preserve child ownership and selected places
+guardian/test:   3.37s  s3_list_methods_test.test.zero RC keyed sorting optional scratch failure preserves managed cycle fallback
+guardian/test:   2.99s  a05_scalar_mut_test.test.zero RC A05 scalar mut calls preserve sibling writes and argument order
+guardian/test:   2.92s  a08_provider_cache_test.test.zero RC A08 aggregate provider pins survive cache replay and earlier type discovery edits
+guardian/test: PASS — 183 passed
+guardian/test: RESULT {"passed":183,"failed":0,"skipped":0}

@@ -1,0 +1,606 @@
+{
+  "artifacts": {
+    "source_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+    "harness_sha256": "04c39c2a65d7e8fbb6b39c0d6ab7a7d2f3f7d50e55df60eb749c8d7e8a4510c3",
+    "fixture_sha256": "4b43a6641a7915a96525b42d128432d60c7f332559206002c647fdb85e70fd9e",
+    "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+    "policies": {
+      "baseline": {
+        "plain": {
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/baseline/plain/program",
+          "binary_sha256": "a1b03b45cbc27d5cb564c9cb9cca3e2cdb87a15d2533772335e1895116a09f4a",
+          "runtime_sha256": "be9779c8a76eb818fbf60d0a85fabb54102a385885d4f49efe6f9ae61cfa7d2f",
+          "build_argv": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-O2",
+            "-g",
+            "-std=c11",
+            "-pthread",
+            "-ffunction-sections",
+            "-Wl,--gc-sections",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/baseline/plain/fixture.c",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/baseline/plain/program"
+          ],
+          "build_stderr": ""
+        },
+        "counted": {
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/baseline/counted/program",
+          "binary_sha256": "05a6c062250bb49fb9ef6b73a1ea9d1d77924cf31eef61d5cd041d55aa0ae458",
+          "runtime_sha256": "ff1957e1db368eb0fc42bfa9d85f66871fb0eb9928f1f3799df8b8b2e1815574",
+          "build_argv": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-O2",
+            "-g",
+            "-std=c11",
+            "-pthread",
+            "-ffunction-sections",
+            "-Wl,--gc-sections",
+            "-DA02_COUNTED=1",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/baseline/counted/fixture.c",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/baseline/counted/program"
+          ],
+          "build_stderr": ""
+        }
+      },
+      "start_one": {
+        "plain": {
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/start_one/plain/program",
+          "binary_sha256": "2cd74c1a171aedc5573ebf6681f11ba4a2d672b74d4fc2b7184eee1bc68d21cd",
+          "runtime_sha256": "33839a486c3b082c7d3db4dbe21062152dcb16d5a1e59bb6d17e532580480749",
+          "build_argv": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-O2",
+            "-g",
+            "-std=c11",
+            "-pthread",
+            "-ffunction-sections",
+            "-Wl,--gc-sections",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/start_one/plain/fixture.c",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/start_one/plain/program"
+          ],
+          "build_stderr": ""
+        },
+        "counted": {
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/start_one/counted/program",
+          "binary_sha256": "1979ed807896ae121e14b43729a3eb9ed132a2bdf00586a5cf7fa207dad72e49",
+          "runtime_sha256": "4b28c133acd7f29a7d84ae5ceec590346da805f6055443f051793138e6e97f8e",
+          "build_argv": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-O2",
+            "-g",
+            "-std=c11",
+            "-pthread",
+            "-ffunction-sections",
+            "-Wl,--gc-sections",
+            "-DA02_COUNTED=1",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/start_one/counted/fixture.c",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/start_one/counted/program"
+          ],
+          "build_stderr": ""
+        }
+      },
+      "start_four": {
+        "plain": {
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/start_four/plain/program",
+          "binary_sha256": "2a15aa0bb1d488d80a6fff6906d96bfec4747725d07d7b91696d87061b15940a",
+          "runtime_sha256": "102899d5d20078541fab6f3e33199b17acb15c5a736dfe50b1a506a1f7f705c9",
+          "build_argv": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-O2",
+            "-g",
+            "-std=c11",
+            "-pthread",
+            "-ffunction-sections",
+            "-Wl,--gc-sections",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/start_four/plain/fixture.c",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/start_four/plain/program"
+          ],
+          "build_stderr": ""
+        },
+        "counted": {
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/start_four/counted/program",
+          "binary_sha256": "0a0310946254b55e5e5c0ca1ecb3def5a8d6741570ced5532c26e0594ee21f49",
+          "runtime_sha256": "0f668c4a1f825c95bb8b8f52f0076e1c423c9bd1d23e5acf3e0d2c729222a4d3",
+          "build_argv": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-O2",
+            "-g",
+            "-std=c11",
+            "-pthread",
+            "-ffunction-sections",
+            "-Wl,--gc-sections",
+            "-DA02_COUNTED=1",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/start_four/counted/fixture.c",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/start_four/counted/program"
+          ],
+          "build_stderr": ""
+        }
+      },
+      "three_halves": {
+        "plain": {
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/three_halves/plain/program",
+          "binary_sha256": "2c1c7c4910949c01f522a0ec23fad3d5094cbaa326c7389c957a043dd8b669a3",
+          "runtime_sha256": "c71db42d0941482b401a7c731739cf0ef36104633a7c7c6ddc8b202ce64f27e8",
+          "build_argv": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-O2",
+            "-g",
+            "-std=c11",
+            "-pthread",
+            "-ffunction-sections",
+            "-Wl,--gc-sections",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/three_halves/plain/fixture.c",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/three_halves/plain/program"
+          ],
+          "build_stderr": ""
+        },
+        "counted": {
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/three_halves/counted/program",
+          "binary_sha256": "f27d42c25e722bc9ba27659f64715e4c67c12b3763bf37c89dde59f44b602f21",
+          "runtime_sha256": "0f2f144d917baafc24fdd6f61ee1aacadcb5966a0330437935ee77f3430456cf",
+          "build_argv": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-O2",
+            "-g",
+            "-std=c11",
+            "-pthread",
+            "-ffunction-sections",
+            "-Wl,--gc-sections",
+            "-DA02_COUNTED=1",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/three_halves/counted/fixture.c",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity/three_halves/counted/program"
+          ],
+          "build_stderr": ""
+        }
+      }
+    }
+  },
+  "method": "2 warmup groups, 9 alternating groups; process wall clock; uninstrumented",
+  "cpu": 0,
+  "rss_scope": "single process max RSS via GNU time, excluding compilation",
+  "cases": {
+    "nested": {
+      "baseline": {
+        "ns": [
+          295066823,
+          112506705,
+          138332497,
+          642322007,
+          232338743,
+          104826061,
+          39545740,
+          763836772,
+          207768724
+        ],
+        "rss_kib": [
+          2060,
+          2032,
+          2056,
+          1876,
+          2036,
+          1876,
+          1872,
+          2040,
+          2036
+        ],
+        "repetitions": 20000,
+        "output": {
+          "checksum": 35400000,
+          "length": 60,
+          "capacity": 480
+        },
+        "median_ns": 207768724,
+        "range_ns": [
+          39545740,
+          763836772
+        ]
+      },
+      "start_one": {
+        "ns": [
+          921795325,
+          59850768,
+          264027242,
+          698437667,
+          845797020,
+          937419348,
+          167251389,
+          249439470,
+          307973393
+        ],
+        "rss_kib": [
+          2048,
+          1876,
+          1876,
+          2060,
+          2060,
+          2060,
+          2040,
+          1876,
+          1876
+        ],
+        "repetitions": 20000,
+        "output": {
+          "checksum": 35400000,
+          "length": 60,
+          "capacity": 60
+        },
+        "median_ns": 307973393,
+        "range_ns": [
+          59850768,
+          937419348
+        ]
+      },
+      "start_four": {
+        "ns": [
+          39597004,
+          840741549,
+          459633202,
+          643214610,
+          1125757826,
+          597131606,
+          913005838,
+          106584534,
+          1058867099
+        ],
+        "rss_kib": [
+          2060,
+          2060,
+          1876,
+          2056,
+          2052,
+          2060,
+          1876,
+          2052,
+          1876
+        ],
+        "repetitions": 20000,
+        "output": {
+          "checksum": 35400000,
+          "length": 60,
+          "capacity": 240
+        },
+        "median_ns": 643214610,
+        "range_ns": [
+          39597004,
+          1125757826
+        ]
+      },
+      "three_halves": {
+        "ns": [
+          103063984,
+          207916515,
+          664564192,
+          48219926,
+          812682199,
+          331259728,
+          63549310,
+          39271807,
+          454898226
+        ],
+        "rss_kib": [
+          2060,
+          2036,
+          2048,
+          2048,
+          2056,
+          2028,
+          1876,
+          2056,
+          2060
+        ],
+        "repetitions": 20000,
+        "output": {
+          "checksum": 35400000,
+          "length": 60,
+          "capacity": 480
+        },
+        "median_ns": 207916515,
+        "range_ns": [
+          39271807,
+          812682199
+        ]
+      }
+    },
+    "append": {
+      "baseline": {
+        "ns": [
+          964618848,
+          595388652,
+          965727705,
+          260957986,
+          482186791,
+          155368692,
+          714753054,
+          56819330,
+          56343438
+        ],
+        "rss_kib": [
+          9724,
+          9680,
+          9724,
+          9676,
+          9724,
+          9680,
+          9724,
+          9724,
+          9720
+        ],
+        "repetitions": 20,
+        "output": {
+          "checksum": 19999980,
+          "length": 1000000,
+          "capacity": 1048576
+        },
+        "median_ns": 482186791,
+        "range_ns": [
+          56343438,
+          965727705
+        ]
+      },
+      "start_one": {
+        "ns": [
+          60786364,
+          1757438449,
+          949728046,
+          252831478,
+          120620594,
+          1652863058,
+          793702113,
+          45595987,
+          99976198
+        ],
+        "rss_kib": [
+          9724,
+          9720,
+          9676,
+          9680,
+          9728,
+          9724,
+          9724,
+          9684,
+          9724
+        ],
+        "repetitions": 20,
+        "output": {
+          "checksum": 19999980,
+          "length": 1000000,
+          "capacity": 1048576
+        },
+        "median_ns": 252831478,
+        "range_ns": [
+          45595987,
+          1757438449
+        ]
+      },
+      "start_four": {
+        "ns": [
+          56378710,
+          402262106,
+          2167595840,
+          512663912,
+          341723403,
+          299206216,
+          456289648,
+          76031530,
+          107898419
+        ],
+        "rss_kib": [
+          9728,
+          9680,
+          9680,
+          9724,
+          9676,
+          9728,
+          9720,
+          9728,
+          9724
+        ],
+        "repetitions": 20,
+        "output": {
+          "checksum": 19999980,
+          "length": 1000000,
+          "capacity": 1048576
+        },
+        "median_ns": 341723403,
+        "range_ns": [
+          56378710,
+          2167595840
+        ]
+      },
+      "three_halves": {
+        "ns": [
+          117310877,
+          519628494,
+          2027248684,
+          1253540825,
+          569848323,
+          865665473,
+          1183089450,
+          76905278,
+          207797519
+        ],
+        "rss_kib": [
+          9792,
+          9792,
+          9792,
+          9784,
+          9788,
+          9784,
+          9792,
+          9788,
+          9788
+        ],
+        "repetitions": 20,
+        "output": {
+          "checksum": 19999980,
+          "length": 1000000,
+          "capacity": 1215486
+        },
+        "median_ns": 569848323,
+        "range_ns": [
+          76905278,
+          2027248684
+        ]
+      }
+    },
+    "reuse": {
+      "baseline": {
+        "ns": [
+          275430567,
+          106257943,
+          206875585,
+          95989362,
+          108772848,
+          104767280,
+          623656401,
+          145070681,
+          119722790
+        ],
+        "rss_kib": [
+          9332,
+          9332,
+          9328,
+          9328,
+          9328,
+          9332,
+          9332,
+          9332,
+          9332
+        ],
+        "repetitions": 20,
+        "output": {
+          "checksum": 19999980,
+          "length": 1000000,
+          "capacity": 1048576
+        },
+        "median_ns": 119722790,
+        "range_ns": [
+          95989362,
+          623656401
+        ]
+      },
+      "start_one": {
+        "ns": [
+          624272014,
+          418353654,
+          728792764,
+          112104330,
+          149645474,
+          704059310,
+          146270286,
+          101281476,
+          1018531092
+        ],
+        "rss_kib": [
+          9332,
+          9332,
+          9328,
+          9332,
+          9332,
+          9332,
+          9332,
+          9332,
+          9332
+        ],
+        "repetitions": 20,
+        "output": {
+          "checksum": 19999980,
+          "length": 1000000,
+          "capacity": 1048576
+        },
+        "median_ns": 418353654,
+        "range_ns": [
+          101281476,
+          1018531092
+        ]
+      },
+      "start_four": {
+        "ns": [
+          108846629,
+          201572921,
+          159816828,
+          92483200,
+          60221666,
+          207944381,
+          581804705,
+          60225011,
+          1997190030
+        ],
+        "rss_kib": [
+          9332,
+          9332,
+          9332,
+          9332,
+          9332,
+          9332,
+          9332,
+          9332,
+          9332
+        ],
+        "repetitions": 20,
+        "output": {
+          "checksum": 19999980,
+          "length": 1000000,
+          "capacity": 1048576
+        },
+        "median_ns": 159816828,
+        "range_ns": [
+          60221666,
+          1997190030
+        ]
+      },
+      "three_halves": {
+        "ns": [
+          78863286,
+          135017771,
+          286443551,
+          164643322,
+          161520970,
+          230507401,
+          519345073,
+          900704786,
+          1277622113
+        ],
+        "rss_kib": [
+          9492,
+          9492,
+          9492,
+          9492,
+          9492,
+          9492,
+          9492,
+          9492,
+          9488
+        ],
+        "repetitions": 20,
+        "output": {
+          "checksum": 19999980,
+          "length": 1000000,
+          "capacity": 1215486
+        },
+        "median_ns": 230507401,
+        "range_ns": [
+          78863286,
+          1277622113
+        ]
+      }
+    }
+  }
+}

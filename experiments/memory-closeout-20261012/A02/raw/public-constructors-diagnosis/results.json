@@ -1,0 +1,253 @@
+{
+  "compiler_source": "5167c588be79dd43d21d5013c36db15110bf239b",
+  "compiler_path": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+  "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "cases": {
+    "generator_arguments": {
+      "source_sha256": "50eb60df08637500cc26f486561fdb465f1ff4156e8ce4d4c576cfca50436a29",
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/generator_arguments.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "elapsed_admitted_seconds": 0.009535185061395168,
+        "stdout": "",
+        "stderr": "generator_arguments.my:41:84: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n      return min(x * 2 for x in xs) == -4 and max(x + 1 for x in xs) == 10 and max(w for w in words) == \"pear\" and min(len(w) for w in words) == 3 and max(x * 0.5 for x in xs) == 4.5\n                                                                                     ^\n"
+      }
+    },
+    "max_generator": {
+      "source_sha256": "7f3708f700f6796fe3d5e74a35d565a7ca7b4c73c905d123b08bb6af22d0ea47",
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/max_generator.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "elapsed_admitted_seconds": 0.004822646034881473,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/max_generator.my:3:28: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n      const selected = max(w for w in words)\n                             ^\n"
+      },
+      "typed": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "dump-typed",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/max_generator.my",
+          "main"
+        ],
+        "status": 0,
+        "elapsed_admitted_seconds": 0.003256235970184207,
+        "stdout": "fn main #0 params=0 ret=i64 cabi=false host=false\n  local %0 <collection>: List<str> mut\n  local %1 words: List<str> mut\n  local %2 <collection>: List<str> mut\n  local %3 <collection>: i64 mut\n  local %4 <collection>: i64 mut\n  local %5 w: str\n  local %6 <collection>: str mut\n  local %7 <collection>: bool mut\n  local %8 <collection>: str mut\n  local %9 selected: str\n  local %10 <conditional>: i64\n  block\n    initialize %1\n      block_value : List<str>\n        block\n          initialize %0\n            acquire_buffer : List<str>\n              integer : i64 3\n          discard\n            buffer_operation : unit append owner=%0\n              array : str\n                integer : u32 112\n                integer : u32 101\n                integer : u32 97\n                integer : u32 114\n          discard\n            buffer_operation : unit append owner=%0\n              array : str\n                integer : u32 102\n                integer : u32 105\n                integer : u32 103\n          discard\n            buffer_operation : unit append owner=%0\n              array : str\n                integer : u32 107\n                integer : u32 105\n                integer : u32 119\n                integer : u32 105\n        local : List<str> %0\n    initialize %9\n      block_value : str\n        block\n          initialize %6\n            array : str\n          initialize %7\n            boolean : bool false\n          block\n            initialize %2\n              local : List<str> %1\n            initialize %3\n              integer : i64 0\n            initialize %4\n              cast : i64\n                buffer_operation : u64 length owner=%2\n            loop id=0\n              binary : bool lt\n                local : i64 %3\n                local : i64 %4\n              block\n                block\n                  discard\n                    buffer_operation : unit iteration_check owner=%2\n                      local : i64 %4\n                initialize %5\n                  buffer_operation : str read owner=%2\n                    local : i64 %3\n                block\n                  initialize %8\n                    local : str %5\n                  branch\n                    unary : bool not\n                      local : bool %7\n                    block\n                      assign %6\n                        local : str %8\n                      assign %7\n                        boolean : bool true\n                    branch\n                      binary : bool lt\n                        local : str %6\n                        local : str %8\n                      assign %6\n                        local : str %8\n              step:\n                block\n                  block\n                    discard\n                      buffer_operation : unit iteration_check owner=%2\n                        local : i64 %4\n                  assign %3\n                    binary : i64 add\n                      local : i64 %3\n                      integer : i64 1\n          assertion max() arg is an empty sequence\n            local : bool %7\n        local : str %6\n    discard\n      buffer_operation : unit clear owner=%1\n    ret\n      block_value : i64\n        block\n          branch\n            binary : bool eq\n              local : str %9\n              array : str\n                integer : u32 112\n                integer : u32 101\n                integer : u32 97\n                integer : u32 114\n            assign %10\n              integer : i64 0\n            assign %10\n              integer : i64 1\n        local : i64 %10\n",
+        "stderr": ""
+      }
+    },
+    "max_generator_copy": {
+      "source_sha256": "87af161c0e77afd17b6cba28e66fc6a4143d47c3c027ed0676c3205a0401e25e",
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/max_generator_copy.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "elapsed_admitted_seconds": 0.004436437971889973,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/max_generator_copy.my:3:35: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n      const selected = max(w.copy() for w in words)\n                                    ^\n"
+      },
+      "typed": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "dump-typed",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/max_generator_copy.my",
+          "main"
+        ],
+        "status": 0,
+        "elapsed_admitted_seconds": 0.003396854968741536,
+        "stdout": "fn main #0 params=0 ret=i64 cabi=false host=false\n  local %0 <collection>: List<str> mut\n  local %1 words: List<str> mut\n  local %2 <collection>: List<str> mut\n  local %3 <collection>: i64 mut\n  local %4 <collection>: i64 mut\n  local %5 w: str\n  local %6 <collection>: str mut\n  local %7 <collection>: bool mut\n  local %8 <collection>: str mut\n  local %9 selected: str\n  local %10 <conditional>: i64\n  block\n    initialize %1\n      block_value : List<str>\n        block\n          initialize %0\n            acquire_buffer : List<str>\n              integer : i64 3\n          discard\n            buffer_operation : unit append owner=%0\n              array : str\n                integer : u32 112\n                integer : u32 101\n                integer : u32 97\n                integer : u32 114\n          discard\n            buffer_operation : unit append owner=%0\n              array : str\n                integer : u32 102\n                integer : u32 105\n                integer : u32 103\n          discard\n            buffer_operation : unit append owner=%0\n              array : str\n                integer : u32 107\n                integer : u32 105\n                integer : u32 119\n                integer : u32 105\n        local : List<str> %0\n    initialize %9\n      block_value : str\n        block\n          initialize %6\n            array : str\n          initialize %7\n            boolean : bool false\n          block\n            initialize %2\n              local : List<str> %1\n            initialize %3\n              integer : i64 0\n            initialize %4\n              cast : i64\n                buffer_operation : u64 length owner=%2\n            loop id=0\n              binary : bool lt\n                local : i64 %3\n                local : i64 %4\n              block\n                block\n                  discard\n                    buffer_operation : unit iteration_check owner=%2\n                      local : i64 %4\n                initialize %5\n                  buffer_operation : str read owner=%2\n                    local : i64 %3\n                block\n                  initialize %8\n                    buffer_operation : str copy owner=%5\n                  branch\n                    unary : bool not\n                      local : bool %7\n                    block\n                      assign %6\n                        local : str %8\n                      assign %7\n                        boolean : bool true\n                    branch\n                      binary : bool lt\n                        local : str %6\n                        local : str %8\n                      assign %6\n                        local : str %8\n              step:\n                block\n                  block\n                    discard\n                      buffer_operation : unit iteration_check owner=%2\n                        local : i64 %4\n                  assign %3\n                    binary : i64 add\n                      local : i64 %3\n                      integer : i64 1\n          assertion max() arg is an empty sequence\n            local : bool %7\n        local : str %6\n    discard\n      buffer_operation : unit clear owner=%1\n    ret\n      block_value : i64\n        block\n          branch\n            binary : bool eq\n              local : str %9\n              array : str\n                integer : u32 112\n                integer : u32 101\n                integer : u32 97\n                integer : u32 114\n            assign %10\n              integer : i64 0\n            assign %10\n              integer : i64 1\n        local : i64 %10\n",
+        "stderr": ""
+      }
+    },
+    "max_generator_manual": {
+      "source_sha256": "6dd4f503a989a3e049c60cde3f611b82e9c8d1300ea65983d994f1436392efe2",
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/max_generator_manual.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "elapsed_admitted_seconds": 0.0039451830089092255,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/max_generator_manual.my:11:5: error[E_OUTPUT_CAPABILITY]: print needs a Stream; add `out: Stream` to this function and pass one from main\n      print(selected)\n      ^\n  signature: stream.print(values..., sep: str, end: str) -> None\n"
+      },
+      "typed": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "dump-typed",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/max_generator_manual.my",
+          "main"
+        ],
+        "status": 1,
+        "elapsed_admitted_seconds": 0.0025602790992707014,
+        "stdout": "",
+        "stderr": "max_generator_manual.my:11:5: error[E_OUTPUT_CAPABILITY]: print needs a Stream; add `out: Stream` to this function and pass one from main\n      print(selected)\n      ^\n  signature: stream.print(values..., sep: str, end: str) -> None\n"
+      }
+    },
+    "set_list": {
+      "source_sha256": "b70fe92865a6e36ca5cba8e21a940a6650a866e8a61b062f3a70835341e9827f",
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_list.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 0,
+        "elapsed_admitted_seconds": 0.004831723868846893,
+        "stdout": "",
+        "stderr": ""
+      },
+      "typed": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "dump-typed",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_list.my",
+          "main"
+        ],
+        "status": 0,
+        "elapsed_admitted_seconds": 0.003481372958049178,
+        "stdout": "fn main #0 params=0 ret=i64 cabi=false host=false\n  local %0 <collection>: List<i64> mut\n  local %1 values: List<i64> mut\n  local %2 <collection>: List<i64> mut\n  local %3 <collection>: i64 mut\n  local %4 <collection>: i64 mut\n  local %5 <collection>: i64 mut\n  local %6 <collection>: set<i64> mut\n  local %7 copied: set<i64> mut\n  local %8 <collection>: set<i64> mut\n  local %9 <collection>: unit mut\n  local %10 <collection>: List<i64> mut\n  local %11 <conditional>: i64\n  block\n    initialize %1\n      block_value : List<i64>\n        block\n          initialize %0\n            acquire_buffer : List<i64>\n              integer : i64 2\n          discard\n            buffer_operation : unit append owner=%0\n              integer : i64 1\n          discard\n            buffer_operation : unit append owner=%0\n              integer : i64 2\n        local : List<i64> %0\n    initialize %7\n      block_value : set<i64>\n        block\n          initialize %2\n            local : List<i64> %1\n          initialize %3\n            integer : i64 0\n          initialize %4\n            cast : i64\n              buffer_operation : u64 length owner=%2\n          initialize %6\n            array : set<i64>\n          loop id=0\n            binary : bool lt\n              local : i64 %3\n              local : i64 %4\n            block\n              block\n                discard\n                  buffer_operation : unit iteration_check owner=%2\n                    local : i64 %4\n              initialize %5\n                buffer_operation : i64 read owner=%2\n                  local : i64 %3\n              discard\n                buffer_operation : unit write owner=%6\n                  local : i64 %5\n                  unit : unit ...\n            step:\n              block\n                block\n                  discard\n                    buffer_operation : unit iteration_check owner=%2\n                      local : i64 %4\n                assign %3\n                  binary : i64 add\n                    local : i64 %3\n                    integer : i64 1\n        local : set<i64> %6\n    discard\n      block_value : unit\n        block\n          initialize %9\n            unit : unit ...\n          initialize %8\n            local : set<i64> %7\n        buffer_operation : unit write owner=%8\n          integer : i64 3\n          local : unit %9\n    ret\n      block_value : i64\n        block\n          branch\n            binary : bool logical_and\n              binary : bool eq\n                block_value : i64\n                  block\n                    initialize %10\n                      local : List<i64> %1\n                  cast : i64\n                    buffer_operation : u64 length owner=%10\n                integer : i64 2\n              binary : bool eq\n                length : i64\n                  local : set<i64> %7\n                integer : i64 3\n            assign %11\n              integer : i64 0\n            assign %11\n              integer : i64 1\n        local : i64 %11\n",
+        "stderr": ""
+      }
+    },
+    "set_owner": {
+      "source_sha256": "ce3e0cbc89fdaf84bfa088967fbc18375532ac9857f549b5ac032d829a17d78b",
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_owner.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 0,
+        "elapsed_admitted_seconds": 0.004431752022355795,
+        "stdout": "",
+        "stderr": ""
+      },
+      "typed": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "dump-typed",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_owner.my",
+          "main"
+        ],
+        "status": 0,
+        "elapsed_admitted_seconds": 0.003099835943430662,
+        "stdout": "fn main #0 params=0 ret=i64 cabi=false host=false\n  local %0 <collection>: set<i64> mut\n  local %1 values: set<i64> mut\n  local %2 <collection>: set<i64> mut\n  local %3 <collection>: i64 mut\n  local %4 <collection>: i64 mut\n  local %5 <collection>: i64 mut\n  local %6 <collection>: set<i64> mut\n  local %7 copied: set<i64> mut\n  local %8 <collection>: set<i64> mut\n  local %9 <collection>: unit mut\n  local %10 <conditional>: i64\n  block\n    initialize %1\n      block_value : set<i64>\n        block\n          initialize %0\n            array : set<i64>\n          discard\n            buffer_operation : unit write owner=%0\n              integer : i64 1\n              unit : unit ...\n          discard\n            buffer_operation : unit write owner=%0\n              integer : i64 2\n              unit : unit ...\n        local : set<i64> %0\n    initialize %7\n      block_value : set<i64>\n        block\n          initialize %2\n            local : set<i64> %1\n          initialize %3\n            integer : i64 0\n          initialize %4\n            cast : i64\n              buffer_operation : i64 length owner=%2\n          initialize %6\n            array : set<i64>\n          loop id=0\n            binary : bool lt\n              local : i64 %3\n              local : i64 %4\n            block\n              block\n                discard\n                  buffer_operation : unit iteration_check owner=%2\n                    local : i64 %4\n              initialize %5\n                buffer_operation : i64 key_at owner=%2\n                  local : i64 %3\n              discard\n                buffer_operation : unit write owner=%6\n                  local : i64 %5\n                  unit : unit ...\n            step:\n              block\n                block\n                  discard\n                    buffer_operation : unit iteration_check owner=%2\n                      local : i64 %4\n                assign %3\n                  binary : i64 add\n                    local : i64 %3\n                    integer : i64 1\n        local : set<i64> %6\n    discard\n      block_value : unit\n        block\n          initialize %9\n            unit : unit ...\n          initialize %8\n            local : set<i64> %7\n        buffer_operation : unit write owner=%8\n          integer : i64 3\n          local : unit %9\n    ret\n      block_value : i64\n        block\n          branch\n            binary : bool logical_and\n              binary : bool eq\n                length : i64\n                  local : set<i64> %1\n                integer : i64 2\n              binary : bool eq\n                length : i64\n                  local : set<i64> %7\n                integer : i64 3\n            assign %10\n              integer : i64 0\n            assign %10\n              integer : i64 1\n        local : i64 %10\n",
+        "stderr": ""
+      }
+    },
+    "set_text_dict": {
+      "source_sha256": "2b8cce00acbfbd0c2ecb07c3ccbc08609a8bee62ab2c3adcda7de058013e7ae9",
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_text_dict.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "elapsed_admitted_seconds": 0.003386454889550805,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_text_dict.my:3:5: error[E_OUTPUT_CAPABILITY]: print needs a Stream; add `out: Stream` to this function and pass one from main\n      print(len(keys))\n      ^\n  signature: stream.print(values..., sep: str, end: str) -> None\n"
+      },
+      "typed": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "dump-typed",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_text_dict.my",
+          "main"
+        ],
+        "status": 1,
+        "elapsed_admitted_seconds": 0.0019691179040819407,
+        "stdout": "",
+        "stderr": "set_text_dict.my:3:5: error[E_OUTPUT_CAPABILITY]: print needs a Stream; add `out: Stream` to this function and pass one from main\n      print(len(keys))\n      ^\n  signature: stream.print(values..., sep: str, end: str) -> None\n"
+      }
+    },
+    "set_text_list": {
+      "source_sha256": "a96cfc6c43c04fa3acf8f67ff9e300b577ad1f04ce25843dd5dae12425d41797",
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_text_list.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "elapsed_admitted_seconds": 0.0030005781445652246,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_text_list.my:5:5: error[E_OUTPUT_CAPABILITY]: print needs a Stream; add `out: Stream` to this function and pass one from main\n      print(len(keys))\n      ^\n  signature: stream.print(values..., sep: str, end: str) -> None\n"
+      },
+      "typed": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "dump-typed",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_text_list.my",
+          "main"
+        ],
+        "status": 1,
+        "elapsed_admitted_seconds": 0.0025228571612387896,
+        "stdout": "",
+        "stderr": "set_text_list.my:5:5: error[E_OUTPUT_CAPABILITY]: print needs a Stream; add `out: Stream` to this function and pass one from main\n      print(len(keys))\n      ^\n  signature: stream.print(values..., sep: str, end: str) -> None\n"
+      }
+    },
+    "set_text_manual": {
+      "source_sha256": "82b1d153bac7f18fbb85d84baf996e9a60fbefa26d2100368eab2b6cb2e642e7",
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_text_manual.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "elapsed_admitted_seconds": 0.002822608919814229,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_text_manual.my:7:5: error[E_OUTPUT_CAPABILITY]: print needs a Stream; add `out: Stream` to this function and pass one from main\n      print(len(keys))\n      ^\n  signature: stream.print(values..., sep: str, end: str) -> None\n"
+      },
+      "typed": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "dump-typed",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_text_manual.my",
+          "main"
+        ],
+        "status": 1,
+        "elapsed_admitted_seconds": 0.0023531459737569094,
+        "stdout": "",
+        "stderr": "set_text_manual.my:7:5: error[E_OUTPUT_CAPABILITY]: print needs a Stream; add `out: Stream` to this function and pass one from main\n      print(len(keys))\n      ^\n  signature: stream.print(values..., sep: str, end: str) -> None\n"
+      }
+    },
+    "sets": {
+      "source_sha256": "cead8715e2c46a86830dbb3564d81e4d47f602c4916708d6c05e0f55bbd3f11c",
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/sets.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "elapsed_admitted_seconds": 0.019504916854202747,
+        "stdout": "",
+        "stderr": "sets.my:64:16: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      mut keys = set({\"b\": 1, \"a\": 2})\n                 ^\n"
+      }
+    }
+  }
+}

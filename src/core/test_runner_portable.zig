@@ -36,7 +36,13 @@ pub fn shareable(context: receipt.Context, checked: frontend.Checked, case: disc
     if (!try paths.settings()) return false;
     if (!try paths.addSource(checked.src)) return false;
     var why: build.Refusal = .{};
-    const module = build.buildRootsSource(context.arena, checked.program, &.{case.function}, checked.src, &why) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else false;
+    const codegen = context.options.build.show.codegen;
+    const module = build.buildRootsCached(context.arena, &.{case.function}, .{
+        .program = checked.program,
+        .source = checked.src,
+        .single_owner = codegen.single_owner,
+        .zero_rc = codegen.zero_rc,
+    }, &why, null) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else false;
     if (!portableModule(&module)) return false;
     var locations = Locations{ .original = pipeline.locator(&checked.src), .paths = &paths.names };
     _ = closure.Shared.build(context.arena, &module, .{ .context = &locations, .locate = Locations.locate }) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else false;
@@ -234,4 +240,37 @@ test "portable module refuses observable trace paths and unknown native provider
     module.functions.items[0].insts.clearRetainingCapacity();
     try module.functions.append(a, .{ .name = "foreign", .signature = .{ .params = &.{}, .ret = .bool, .linkage = .extern_c } });
     try std.testing.expect(!portableModule(&module));
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CACHE-1
+test "zero RC tests lower borrowed views in the selected ABI and share under an ownership-bound key" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    const source =
+        \\public func test_view() -> bool:
+        \\    const text = "abcd" + str(7)
+        \\    const part = text.borrow(0, 2)
+        \\    return len(part) == 2
+        \\func main() -> int:
+        \\    return 0
+        \\
+    ;
+    const input = try testInput(a, directory.dir, source, &environment);
+    defer input.session.deinit();
+    var context = input.context;
+    context.options.build.show.codegen.single_owner = true;
+    context.options.build.show.codegen.zero_rc = true;
+    try std.testing.expect(try shareable(context, input.checked, input.case));
+    var inputs: std.ArrayList(receipt.Dependency) = .empty;
+    try std.testing.expect(!std.mem.eql(u8, &try receipt.settings(input.context, &inputs), &try receipt.settings(context, &inputs)));
+    const changed = try testInput(a, directory.dir, try std.mem.replaceOwned(u8, a, source, "borrow(0, 2)", "borrow(1, 3)"), &environment);
+    defer changed.session.deinit();
+    var changed_context = changed.context;
+    changed_context.options.build.show.codegen = context.options.build.show.codegen;
+    try std.testing.expect(try shareable(changed_context, changed.checked, changed.case));
 }

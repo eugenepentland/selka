@@ -1,0 +1,15 @@
+# spec-case: CAPABILITY-FIELD-METHOD-1
+import filesystem
+import environment
+import network
+import time
+import random
+
+record Ports:
+    fs: Filesystem
+    clock: Clock
+
+func main() -> int:
+    const ports = Ports(fs=filesystem.memory(), clock=time.simulated_clock(time.from_unix_nanoseconds(42)))
+    assert not ports.fs.exists("missing")
+    return 0

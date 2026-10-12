@@ -1,0 +1,4 @@
+func main() -> int:
+    mut values = {1, 2}
+    values.add(3)
+    return len(values)

@@ -1,0 +1,5 @@
+oracle ordinary release True
+reduced ordinary release True
+control ordinary release True
+build-slot: FIFO ticket 861, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 861 after 15s

@@ -1,0 +1,38 @@
+import filesystem
+import process
+
+func main(args: str[], out: Stream) -> int:
+    mut n = 64
+    if len(args) > 0:
+        n = 8192
+    const fs = filesystem.memory()
+    with fs.open("input.txt", "w") as input:
+        _ = input.write(process.document(n))
+    for i in range(3):
+        match process.summarize(fs, False):
+            case Ok(total):
+                if i == 0:
+                    out.print(n, total)
+            case Err(_):
+                return 1
+    match process.summarize(fs, True):
+        case Ok(_):
+            return 2
+        case Err(_):
+            _ = 0
+    match process.missing(fs):
+        case Ok(_):
+            return 3
+        case Err(_):
+            _ = 0
+    with fs.open("input.txt", "w") as input:
+        _ = input.write("bad\n")
+    match process.summarize(fs, False):
+        case Ok(_):
+            return 4
+        case Err(_):
+            _ = 0
+    with fs.open("summary.txt", "r") as output:
+        if len(output.read()) == 0:
+            return 5
+    return 0

@@ -1,0 +1,78 @@
+{
+  "workload": "unchanged json_transform256/1/42; setup included; elapsed not timing evidence",
+  "checksum": 673682,
+  "rows": [
+    {
+      "arm": "baseline-01",
+      "allocs": 15703,
+      "alloc_bytes": 1249984,
+      "text_copies": 7077,
+      "dict_copies": 852,
+      "list_copies": 2,
+      "peak_live_bytes": 287408,
+      "runtime_retains": 0,
+      "runtime_releases": 0,
+      "live_bytes_at_exit": 0
+    },
+    {
+      "arm": "candidate-01",
+      "allocs": 12117,
+      "alloc_bytes": 1069424,
+      "text_copies": 7077,
+      "dict_copies": 852,
+      "list_copies": 2,
+      "peak_live_bytes": 287408,
+      "runtime_retains": 0,
+      "runtime_releases": 0,
+      "live_bytes_at_exit": 0
+    },
+    {
+      "arm": "candidate-02",
+      "allocs": 10965,
+      "alloc_bytes": 995696,
+      "text_copies": 7077,
+      "dict_copies": 852,
+      "list_copies": 2,
+      "peak_live_bytes": 287408,
+      "runtime_retains": 0,
+      "runtime_releases": 0,
+      "live_bytes_at_exit": 0
+    },
+    {
+      "arm": "candidate-03",
+      "allocs": 8749,
+      "alloc_bytes": 853872,
+      "text_copies": 4861,
+      "dict_copies": 852,
+      "list_copies": 2,
+      "peak_live_bytes": 287408,
+      "runtime_retains": 0,
+      "runtime_releases": 0,
+      "live_bytes_at_exit": 0
+    },
+    {
+      "arm": "candidate-04",
+      "allocs": 8749,
+      "alloc_bytes": 853872,
+      "text_copies": 4861,
+      "dict_copies": 852,
+      "list_copies": 2,
+      "peak_live_bytes": 287408,
+      "runtime_retains": 0,
+      "runtime_releases": 0,
+      "live_bytes_at_exit": 0
+    },
+    {
+      "arm": "candidate-05",
+      "allocs": 3719,
+      "alloc_bytes": 388864,
+      "text_copies": 685,
+      "dict_copies": 0,
+      "list_copies": 0,
+      "peak_live_bytes": 213528,
+      "runtime_retains": 0,
+      "runtime_releases": 0,
+      "live_bytes_at_exit": 0
+    }
+  ]
+}

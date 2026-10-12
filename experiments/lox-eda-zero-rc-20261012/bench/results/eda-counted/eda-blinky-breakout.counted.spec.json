@@ -1,0 +1,64 @@
+{
+  "cell": "eda/blinky-breakout",
+  "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+  "arms": {
+    "zig-safe": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-zig-safe",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/blinky-breakout"
+    ],
+    "mylang-original-rc": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/original-rc-count",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/blinky-breakout"
+    ],
+    "mylang-migrated-rc": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/migrated-rc-count",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/blinky-breakout"
+    ],
+    "mylang-zero-rc": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/zero-rc-count",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/blinky-breakout"
+    ]
+  },
+  "oracle": "zig-safe",
+  "files": [
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/manifest.json"
+  ],
+  "out_dir": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/blinky-breakout",
+  "golden_dir": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/expected",
+  "identity_dirs": [
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/expected"
+  ],
+  "env_by_arm": {
+    "mylang-original-rc": {
+      "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-blinky-breakout.mylang-original-rc.counters.json"
+    },
+    "mylang-migrated-rc": {
+      "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-blinky-breakout.mylang-migrated-rc.counters.json"
+    },
+    "mylang-zero-rc": {
+      "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-blinky-breakout.mylang-zero-rc.counters.json"
+    }
+  }
+}

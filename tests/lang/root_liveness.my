@@ -120,7 +120,11 @@ public func test_a_borrowed_element_handed_to_a_plain_call_reads_its_own_values(
     mut balls = [Ball(x=0.0, y=0.0, radius=1.0), Ball(x=3.0, y=0.0, radius=0.5), Ball(x=9.0, y=1.0, radius=2.0)]
     mut hits = 0
     mut last = -1
-    for k, ball in enumerate(balls):
+    mut iteration_at = 0
+    while iteration_at < len(balls):
+        const k = iteration_at
+        const ball = balls[iteration_at].copy()
+        iteration_at += 1
         if reach(ball, 3.2) < 0.0:
             hits += 1
             last = k

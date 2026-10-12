@@ -1,0 +1,4 @@
+func main(out: Stream) -> int:
+    const answer = set("bananabananabananabanana")
+    out.print(len(answer))
+    return 0

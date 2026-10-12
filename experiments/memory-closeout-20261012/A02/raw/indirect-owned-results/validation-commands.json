@@ -1,0 +1,47 @@
+[
+  {
+    "argv": [
+      "/usr/bin/python3",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/indirect-owned-results/matrix.py",
+      "--compiler",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/cd072e73238eac4dd68a1397de366cea/mylang",
+      "--case",
+      "indirect_owned",
+      "--output",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/indirect-owned-results/default",
+      "--expected-output",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/indirect-owned-results/expected.txt"
+    ],
+    "status": 0
+  },
+  {
+    "argv": [
+      "/usr/bin/python3",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/indirect-owned-results/matrix.py",
+      "--compiler",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/cd072e73238eac4dd68a1397de366cea/mylang",
+      "--case",
+      "indirect_owned",
+      "--output",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/indirect-owned-results/alternate",
+      "--expected-output",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/indirect-owned-results/expected.txt",
+      "--guest-arg",
+      "alternate"
+    ],
+    "status": 0
+  },
+  {
+    "argv": [
+      "/usr/bin/python3",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/indirect-owned-results/matrix.py",
+      "--compiler",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/cd072e73238eac4dd68a1397de366cea/mylang",
+      "--case",
+      "rc_pin_elide",
+      "--output",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/indirect-owned-results/rc_pin_elide"
+    ],
+    "status": 0
+  }
+]

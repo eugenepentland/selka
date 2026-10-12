@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1361, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1361 after 10s
+interpreter.my:141:39: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+      heap.push(mut it.rt, heap.env_obj(it.rt, env_at(it.rt, hops)).slots[slot])
+                                        ^

@@ -1,0 +1,33 @@
+import parallel
+
+record Wide:
+    first: str
+    second: str
+    values: int[]
+    names: str[]
+    number: int
+    last: str
+
+func make(value: int) -> Wide:
+    return Wide(first="a" + str(value), second="b" + str(value), values=[value, value + 1], names=["n" + str(value)], number=value, last="z" + str(value))
+
+func transform(value: Wide) -> Wide:
+    return Wide(first=value.first + "!", second=value.second.copy(), values=value.values.copy(), names=value.names.copy(), number=value.number + 1, last=value.last + "!")
+
+func main(out: Stream) -> int:
+    mut source: int[] = []
+    for i in range(65):
+        source.append(i)
+    mut initial = parallel.map(source, make)
+    const changed = parallel.map(initial, transform)
+    initial.clear()
+    mut total = 0
+    for i in range(65):
+        if changed[i].first != "a" + str(i) + "!" or changed[i].last != "z" + str(i) + "!":
+            return 1
+        if changed[i].values[1] != i + 1 or changed[i].names[0] != "n" + str(i):
+            return 2
+        total += changed[i].number
+    _ = parallel.map(source, make)
+    out.print(total)
+    return 0

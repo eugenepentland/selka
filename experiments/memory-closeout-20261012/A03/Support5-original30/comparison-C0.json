@@ -1,0 +1,5065 @@
+{
+  "schema": "memory-closeout-census-comparison-v1",
+  "baseline": {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/C0-release/results.json.gz",
+    "sha256": "7b1a4296af3f2d3267e35d565ad77ee148b5e036919201719783e0b5d0987fc1",
+    "compiler": {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+      "sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+      "commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432"
+    },
+    "ownership": "opt-in"
+  },
+  "candidate": {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/experiments/memory-closeout-20261012/A03/Support5-original30/results.json.gz",
+    "sha256": "f04a0d2cd2baa881d0990608b52ba9a6a4050c9e7d0261904df7222b3a5af32c",
+    "compiler": {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+      "sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+      "commit": "a1f19edf255c8c0886731d8d7cce450d5f657720"
+    },
+    "ownership": "opt-in"
+  },
+  "baseline_summary": {
+    "manifest_cases": 81,
+    "original_denominator": 30,
+    "planned_builds": 405,
+    "planned_executions": 655,
+    "completed_builds": 81,
+    "case_status": {
+      "release/passed": 81
+    },
+    "original_30": {
+      "4": {
+        "denominator": 30,
+        "allocating": 23,
+        "allocation_free": 7,
+        "executed_rc": 0,
+        "refused": 0,
+        "failed": 0,
+        "unmeasured": 0
+      },
+      "11": {
+        "denominator": 30,
+        "allocating": 23,
+        "allocation_free": 7,
+        "executed_rc": 0,
+        "refused": 0,
+        "failed": 0,
+        "unmeasured": 0
+      }
+    },
+    "original_source_checks": {
+      "admitted": 21,
+      "refused": 9,
+      "unmeasured": 0
+    },
+    "executions": 131,
+    "passed_executions": 131,
+    "executions_with_rc": 0,
+    "executions_with_managed_leaks": 0,
+    "complete_matrix": false
+  },
+  "candidate_summary": {
+    "manifest_cases": 30,
+    "original_denominator": 30,
+    "planned_builds": 150,
+    "planned_executions": 360,
+    "completed_builds": 30,
+    "case_status": {
+      "release/passed": 30
+    },
+    "original_30": {
+      "4": {
+        "denominator": 30,
+        "allocating": 23,
+        "allocation_free": 7,
+        "executed_rc": 0,
+        "refused": 0,
+        "failed": 0,
+        "unmeasured": 0
+      },
+      "11": {
+        "denominator": 30,
+        "allocating": 23,
+        "allocation_free": 7,
+        "executed_rc": 0,
+        "refused": 0,
+        "failed": 0,
+        "unmeasured": 0
+      }
+    },
+    "original_source_checks": {
+      "admitted": 21,
+      "refused": 9,
+      "failed": 0,
+      "unmeasured": 0
+    },
+    "executions": 72,
+    "passed_executions": 72,
+    "executions_with_rc": 0,
+    "executions_with_managed_leaks": 0,
+    "complete_matrix": false
+  },
+  "limitations": [
+    "Only identical source, linked-provider identity, input, environment and expected output contracts are paired.",
+    "Peaks are separate observations; no peak subtraction estimates allocation traffic or RSS.",
+    "List-copy telemetry can change from A09 instrumentation correction 8ba337fd6 without new allocation work.",
+    "These instrumented runs provide no runtime or compiler speed comparison."
+  ],
+  "cases": {
+    "batch/array_128_control": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "batch/array_128_hit": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "batch/array_128_miss": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "batch/array_16_control": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "batch/array_16_hit": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "batch/array_16_miss": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "batch/array_1_control": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "batch/array_1_hit": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "batch/array_1_miss": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "batch/object_128_control": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "batch/object_128_hit": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "batch/object_128_miss": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "batch/object_16_control": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "batch/object_16_hit": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "batch/object_16_miss": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "batch/object_1_control": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "batch/object_1_hit": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "batch/object_1_miss": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "batch/record_after": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "batch/record_before": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "census/01_scalar": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 12,
+                  "reallocs": 0,
+                  "alloc_bytes": 832,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 832,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 832
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 12,
+                  "reallocs": 0,
+                  "alloc_bytes": 832,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 832,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 832
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 320,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 320,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 320
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 320,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 320,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 320
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/02_local_list": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 12,
+                  "reallocs": 0,
+                  "alloc_bytes": 832,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 832,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 832
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 12,
+                  "reallocs": 0,
+                  "alloc_bytes": 832,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 832,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 832
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 320,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 320,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 320
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 320,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 320,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 320
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/03_borrowed_reader": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 12,
+                  "reallocs": 0,
+                  "alloc_bytes": 832,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 832,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 832
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 12,
+                  "reallocs": 0,
+                  "alloc_bytes": 832,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 832,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 832
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 320,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 320,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 320
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 320,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 320,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 320
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/04_returned_list": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 12,
+                  "reallocs": 0,
+                  "alloc_bytes": 832,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 832,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 832
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 12,
+                  "reallocs": 0,
+                  "alloc_bytes": 832,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 832,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 832
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 320,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 320,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 320
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 320,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 320,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 320
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/05_mut_destination": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 12,
+                  "reallocs": 0,
+                  "alloc_bytes": 832,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 832,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 832
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 12,
+                  "reallocs": 0,
+                  "alloc_bytes": 832,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 832,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 832
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 320,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 320,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 320
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 320,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 320,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 320
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/06_dynamic_list": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 128,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 128
+                },
+                "whole_program": {
+                  "allocs": 13,
+                  "reallocs": 0,
+                  "alloc_bytes": 960,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 960,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 960
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 128,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 128
+                },
+                "whole_program": {
+                  "allocs": 13,
+                  "reallocs": 0,
+                  "alloc_bytes": 960,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 960,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 960
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 64,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 64
+                },
+                "whole_program": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 384,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 384,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 384
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 64,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 64
+                },
+                "whole_program": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 384,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 384,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 384
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/07_large_list": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 4840,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 4840
+                },
+                "whole_program": {
+                  "allocs": 13,
+                  "reallocs": 0,
+                  "alloc_bytes": 5672,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 5672,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 5672
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 4840,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 4840
+                },
+                "whole_program": {
+                  "allocs": 13,
+                  "reallocs": 0,
+                  "alloc_bytes": 5672,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 5672,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 5672
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 4840,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 4840
+                },
+                "whole_program": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 5160,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 5160,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 5160
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 4840,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 4840
+                },
+                "whole_program": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 5160,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 5160,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 5160
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/08_snapshot_read": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 12,
+                  "reallocs": 0,
+                  "alloc_bytes": 832,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 832,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 832
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 12,
+                  "reallocs": 0,
+                  "alloc_bytes": 832,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 832,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 832
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 320,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 320,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 320
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 320,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 320,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 320
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/09_snapshot_mutate": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 384,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 64,
+                  "cumulative_allocation_bytes": 384
+                },
+                "whole_program": {
+                  "allocs": 15,
+                  "reallocs": 0,
+                  "alloc_bytes": 1216,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1216,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 64,
+                  "cumulative_allocation_bytes": 1216
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 384,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 64,
+                  "cumulative_allocation_bytes": 384
+                },
+                "whole_program": {
+                  "allocs": 15,
+                  "reallocs": 0,
+                  "alloc_bytes": 1216,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1216,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 64,
+                  "cumulative_allocation_bytes": 1216
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 384,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 64,
+                  "cumulative_allocation_bytes": 384
+                },
+                "whole_program": {
+                  "allocs": 8,
+                  "reallocs": 0,
+                  "alloc_bytes": 704,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 704,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 64,
+                  "cumulative_allocation_bytes": 704
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 384,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 64,
+                  "cumulative_allocation_bytes": 384
+                },
+                "whole_program": {
+                  "allocs": 8,
+                  "reallocs": 0,
+                  "alloc_bytes": 704,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 704,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 64,
+                  "cumulative_allocation_bytes": 704
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/10_loop_snapshots": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 13,
+                  "reallocs": 0,
+                  "alloc_bytes": 1344,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 11,
+                  "list_copy_bytes": 528,
+                  "cumulative_allocation_bytes": 1344
+                },
+                "whole_program": {
+                  "allocs": 25,
+                  "reallocs": 0,
+                  "alloc_bytes": 2176,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 2176,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 11,
+                  "list_copy_bytes": 528,
+                  "cumulative_allocation_bytes": 2176
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 13,
+                  "reallocs": 0,
+                  "alloc_bytes": 1344,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 11,
+                  "list_copy_bytes": 528,
+                  "cumulative_allocation_bytes": 1344
+                },
+                "whole_program": {
+                  "allocs": 25,
+                  "reallocs": 0,
+                  "alloc_bytes": 2176,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 2176,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 11,
+                  "list_copy_bytes": 528,
+                  "cumulative_allocation_bytes": 2176
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 416,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 4,
+                  "list_copy_bytes": 80,
+                  "cumulative_allocation_bytes": 416
+                },
+                "whole_program": {
+                  "allocs": 11,
+                  "reallocs": 0,
+                  "alloc_bytes": 736,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 736,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 4,
+                  "list_copy_bytes": 80,
+                  "cumulative_allocation_bytes": 736
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 416,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 4,
+                  "list_copy_bytes": 80,
+                  "cumulative_allocation_bytes": 416
+                },
+                "whole_program": {
+                  "allocs": 11,
+                  "reallocs": 0,
+                  "alloc_bytes": 736,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 736,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 4,
+                  "list_copy_bytes": 80,
+                  "cumulative_allocation_bytes": 736
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/11_record_scalar": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 12,
+                  "reallocs": 0,
+                  "alloc_bytes": 832,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 832,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 832
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 12,
+                  "reallocs": 0,
+                  "alloc_bytes": 832,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 832,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 832
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 320,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 320,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 320
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 320,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 320,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 320
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/12_record_list": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 128,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 128
+                },
+                "whole_program": {
+                  "allocs": 13,
+                  "reallocs": 0,
+                  "alloc_bytes": 960,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 960,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 960
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 128,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 128
+                },
+                "whole_program": {
+                  "allocs": 13,
+                  "reallocs": 0,
+                  "alloc_bytes": 960,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 960,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 960
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 64,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 64
+                },
+                "whole_program": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 384,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 384,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 384
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 64,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 64
+                },
+                "whole_program": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 384,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 384,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 384
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/13_record_snapshot": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 4,
+                  "reallocs": 0,
+                  "alloc_bytes": 384,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 16,
+                  "cumulative_allocation_bytes": 384
+                },
+                "whole_program": {
+                  "allocs": 16,
+                  "reallocs": 0,
+                  "alloc_bytes": 1216,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1152,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 16,
+                  "cumulative_allocation_bytes": 1216
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 4,
+                  "reallocs": 0,
+                  "alloc_bytes": 384,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 16,
+                  "cumulative_allocation_bytes": 384
+                },
+                "whole_program": {
+                  "allocs": 16,
+                  "reallocs": 0,
+                  "alloc_bytes": 1216,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1152,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 16,
+                  "cumulative_allocation_bytes": 1216
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 224,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 16,
+                  "cumulative_allocation_bytes": 224
+                },
+                "whole_program": {
+                  "allocs": 8,
+                  "reallocs": 0,
+                  "alloc_bytes": 544,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 544,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 16,
+                  "cumulative_allocation_bytes": 544
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 224,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 16,
+                  "cumulative_allocation_bytes": 224
+                },
+                "whole_program": {
+                  "allocs": 8,
+                  "reallocs": 0,
+                  "alloc_bytes": 544,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 544,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 16,
+                  "cumulative_allocation_bytes": 544
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/14_nested_lists": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 25,
+                  "reallocs": 0,
+                  "alloc_bytes": 1696,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1696
+                },
+                "whole_program": {
+                  "allocs": 37,
+                  "reallocs": 0,
+                  "alloc_bytes": 2528,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 2080,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 2528
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 25,
+                  "reallocs": 0,
+                  "alloc_bytes": 1696,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1696
+                },
+                "whole_program": {
+                  "allocs": 37,
+                  "reallocs": 0,
+                  "alloc_bytes": 2528,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 2080,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 2528
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 10,
+                  "reallocs": 0,
+                  "alloc_bytes": 640,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 640
+                },
+                "whole_program": {
+                  "allocs": 15,
+                  "reallocs": 0,
+                  "alloc_bytes": 960,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 832,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 960
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 10,
+                  "reallocs": 0,
+                  "alloc_bytes": 640,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 640
+                },
+                "whole_program": {
+                  "allocs": 15,
+                  "reallocs": 0,
+                  "alloc_bytes": 960,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 832,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 960
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/15_managed_elements": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "0": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 32,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 32
+                },
+                "whole_program": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 64,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 64,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 64
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 32,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 32
+                },
+                "whole_program": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 64,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 64,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 64
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 45,
+                  "reallocs": 0,
+                  "alloc_bytes": 3040,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 3040
+                },
+                "whole_program": {
+                  "allocs": 57,
+                  "reallocs": 0,
+                  "alloc_bytes": 3872,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 2528,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 3872
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 45,
+                  "reallocs": 0,
+                  "alloc_bytes": 3040,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 3040
+                },
+                "whole_program": {
+                  "allocs": 57,
+                  "reallocs": 0,
+                  "alloc_bytes": 3872,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 2528,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 3872
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 17,
+                  "reallocs": 0,
+                  "alloc_bytes": 1120,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1120
+                },
+                "whole_program": {
+                  "allocs": 22,
+                  "reallocs": 0,
+                  "alloc_bytes": 1440,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 992,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1440
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 17,
+                  "reallocs": 0,
+                  "alloc_bytes": 1120,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1120
+                },
+                "whole_program": {
+                  "allocs": 22,
+                  "reallocs": 0,
+                  "alloc_bytes": 1440,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 992,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1440
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "64": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 257,
+                  "reallocs": 0,
+                  "alloc_bytes": 17448,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 17448
+                },
+                "whole_program": {
+                  "allocs": 322,
+                  "reallocs": 0,
+                  "alloc_bytes": 22088,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 13960,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 22088
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 257,
+                  "reallocs": 0,
+                  "alloc_bytes": 17448,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 17448
+                },
+                "whole_program": {
+                  "allocs": 322,
+                  "reallocs": 0,
+                  "alloc_bytes": 22088,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 13960,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 22088
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/16_branch_alias": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 192,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 16,
+                  "cumulative_allocation_bytes": 192
+                },
+                "whole_program": {
+                  "allocs": 15,
+                  "reallocs": 0,
+                  "alloc_bytes": 1024,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1024,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 16,
+                  "cumulative_allocation_bytes": 1024
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 192,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 16,
+                  "cumulative_allocation_bytes": 192
+                },
+                "whole_program": {
+                  "allocs": 15,
+                  "reallocs": 0,
+                  "alloc_bytes": 1024,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1024,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 16,
+                  "cumulative_allocation_bytes": 1024
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 192,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 16,
+                  "cumulative_allocation_bytes": 192
+                },
+                "whole_program": {
+                  "allocs": 8,
+                  "reallocs": 0,
+                  "alloc_bytes": 512,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 512,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 16,
+                  "cumulative_allocation_bytes": 512
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 192,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 16,
+                  "cumulative_allocation_bytes": 192
+                },
+                "whole_program": {
+                  "allocs": 8,
+                  "reallocs": 0,
+                  "alloc_bytes": 512,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 512,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 16,
+                  "cumulative_allocation_bytes": 512
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/17_indirect_reader": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 64,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 64
+                },
+                "whole_program": {
+                  "allocs": 13,
+                  "reallocs": 0,
+                  "alloc_bytes": 896,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 896,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 896
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 64,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 64
+                },
+                "whole_program": {
+                  "allocs": 13,
+                  "reallocs": 0,
+                  "alloc_bytes": 896,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 896,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 896
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 64,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 64
+                },
+                "whole_program": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 384,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 384,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 384
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 64,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 64
+                },
+                "whole_program": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 384,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 384,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 384
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/18_recursive_reader": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 64,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 64
+                },
+                "whole_program": {
+                  "allocs": 13,
+                  "reallocs": 0,
+                  "alloc_bytes": 896,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 896,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 896
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 64,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 64
+                },
+                "whole_program": {
+                  "allocs": 13,
+                  "reallocs": 0,
+                  "alloc_bytes": 896,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 896,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 896
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 64,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 64
+                },
+                "whole_program": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 384,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 384,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 384
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 64,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 64
+                },
+                "whole_program": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 384,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 384,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 384
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/19_return_field": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 128,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 24,
+                  "cumulative_allocation_bytes": 128
+                },
+                "whole_program": {
+                  "allocs": 14,
+                  "reallocs": 0,
+                  "alloc_bytes": 960,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 960,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 24,
+                  "cumulative_allocation_bytes": 960
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 128,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 24,
+                  "cumulative_allocation_bytes": 128
+                },
+                "whole_program": {
+                  "allocs": 14,
+                  "reallocs": 0,
+                  "alloc_bytes": 960,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 960,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 24,
+                  "cumulative_allocation_bytes": 960
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 128,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 24,
+                  "cumulative_allocation_bytes": 128
+                },
+                "whole_program": {
+                  "allocs": 7,
+                  "reallocs": 0,
+                  "alloc_bytes": 448,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 448,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 24,
+                  "cumulative_allocation_bytes": 448
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 128,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 24,
+                  "cumulative_allocation_bytes": 128
+                },
+                "whole_program": {
+                  "allocs": 7,
+                  "reallocs": 0,
+                  "alloc_bytes": 448,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 448,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 1,
+                  "list_copy_bytes": 24,
+                  "cumulative_allocation_bytes": 448
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/20_loop_carried": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 1120,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1120
+                },
+                "whole_program": {
+                  "allocs": 17,
+                  "reallocs": 0,
+                  "alloc_bytes": 1952,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1664,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1952
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 1120,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1120
+                },
+                "whole_program": {
+                  "allocs": 17,
+                  "reallocs": 0,
+                  "alloc_bytes": 1952,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1664,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1952
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 128,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 128
+                },
+                "whole_program": {
+                  "allocs": 7,
+                  "reallocs": 0,
+                  "alloc_bytes": 448,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 448,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 448
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 128,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 128
+                },
+                "whole_program": {
+                  "allocs": 7,
+                  "reallocs": 0,
+                  "alloc_bytes": 448,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 448,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 448
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/21_dict_unique": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 448,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 448
+                },
+                "whole_program": {
+                  "allocs": 14,
+                  "reallocs": 0,
+                  "alloc_bytes": 1280,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1280,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1280
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 448,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 448
+                },
+                "whole_program": {
+                  "allocs": 14,
+                  "reallocs": 0,
+                  "alloc_bytes": 1280,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1280,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1280
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 160,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 160
+                },
+                "whole_program": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 480,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 480,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 480
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 160,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 160
+                },
+                "whole_program": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 480,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 480,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 480
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/22_dict_snapshot": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 736,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 736
+                },
+                "whole_program": {
+                  "allocs": 15,
+                  "reallocs": 0,
+                  "alloc_bytes": 1568,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1408,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1568
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 736,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 736
+                },
+                "whole_program": {
+                  "allocs": 15,
+                  "reallocs": 0,
+                  "alloc_bytes": 1568,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1408,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1568
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 320,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 320
+                },
+                "whole_program": {
+                  "allocs": 7,
+                  "reallocs": 0,
+                  "alloc_bytes": 640,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 640,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 640
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 320,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 320
+                },
+                "whole_program": {
+                  "allocs": 7,
+                  "reallocs": 0,
+                  "alloc_bytes": 640,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 640,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 640
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/23_dict_managed": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 57,
+                  "reallocs": 0,
+                  "alloc_bytes": 3968,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 3968
+                },
+                "whole_program": {
+                  "allocs": 69,
+                  "reallocs": 0,
+                  "alloc_bytes": 4800,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1952,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 4800
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 57,
+                  "reallocs": 0,
+                  "alloc_bytes": 3968,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 3968
+                },
+                "whole_program": {
+                  "allocs": 69,
+                  "reallocs": 0,
+                  "alloc_bytes": 4800,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1952,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 4800
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 21,
+                  "reallocs": 0,
+                  "alloc_bytes": 1440,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1440
+                },
+                "whole_program": {
+                  "allocs": 26,
+                  "reallocs": 0,
+                  "alloc_bytes": 1760,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 864,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1760
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 21,
+                  "reallocs": 0,
+                  "alloc_bytes": 1440,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1440
+                },
+                "whole_program": {
+                  "allocs": 26,
+                  "reallocs": 0,
+                  "alloc_bytes": 1760,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 864,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1760
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/24_text_builder": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "0": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 32,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 32,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 32
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "alloc_bytes": 0,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "whole_program": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 32,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 32,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 32
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 224,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 224
+                },
+                "whole_program": {
+                  "allocs": 15,
+                  "reallocs": 0,
+                  "alloc_bytes": 1056,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 992,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1056
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 224,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 224
+                },
+                "whole_program": {
+                  "allocs": 15,
+                  "reallocs": 0,
+                  "alloc_bytes": 1056,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 992,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1056
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 128,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 128
+                },
+                "whole_program": {
+                  "allocs": 7,
+                  "reallocs": 0,
+                  "alloc_bytes": 448,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 448,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 448
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 128,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 128
+                },
+                "whole_program": {
+                  "allocs": 7,
+                  "reallocs": 0,
+                  "alloc_bytes": 448,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 448,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 448
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "64": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 1216,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1216
+                },
+                "whole_program": {
+                  "allocs": 71,
+                  "reallocs": 0,
+                  "alloc_bytes": 5856,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 5472,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 5856
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 1216,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1216
+                },
+                "whole_program": {
+                  "allocs": 71,
+                  "reallocs": 0,
+                  "alloc_bytes": 5856,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 5472,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 5856
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/25_text_snapshot": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "0": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 64,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 64
+                },
+                "whole_program": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 96,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 96,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 96
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 64,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 64
+                },
+                "whole_program": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 96,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 96,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 96
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 4,
+                  "reallocs": 0,
+                  "alloc_bytes": 320,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 320
+                },
+                "whole_program": {
+                  "allocs": 16,
+                  "reallocs": 0,
+                  "alloc_bytes": 1152,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1024,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1152
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 4,
+                  "reallocs": 0,
+                  "alloc_bytes": 320,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 320
+                },
+                "whole_program": {
+                  "allocs": 16,
+                  "reallocs": 0,
+                  "alloc_bytes": 1152,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1024,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1152
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 192,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 192
+                },
+                "whole_program": {
+                  "allocs": 8,
+                  "reallocs": 0,
+                  "alloc_bytes": 512,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 448,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 512
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 192,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 192
+                },
+                "whole_program": {
+                  "allocs": 8,
+                  "reallocs": 0,
+                  "alloc_bytes": 512,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 448,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 512
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "64": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 7,
+                  "reallocs": 0,
+                  "alloc_bytes": 1536,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1536
+                },
+                "whole_program": {
+                  "allocs": 72,
+                  "reallocs": 0,
+                  "alloc_bytes": 6176,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 5504,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 6176
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 7,
+                  "reallocs": 0,
+                  "alloc_bytes": 1536,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1536
+                },
+                "whole_program": {
+                  "allocs": 72,
+                  "reallocs": 0,
+                  "alloc_bytes": 6176,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 5504,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 6176
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/26_text_slice": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "0": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 128,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 128
+                },
+                "whole_program": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 160,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 160,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 160
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 128,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 128
+                },
+                "whole_program": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 160,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 160,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 160
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 224,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 224
+                },
+                "whole_program": {
+                  "allocs": 15,
+                  "reallocs": 0,
+                  "alloc_bytes": 1056,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 992,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1056
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 224,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 224
+                },
+                "whole_program": {
+                  "allocs": 15,
+                  "reallocs": 0,
+                  "alloc_bytes": 1056,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 992,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1056
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 192,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 192
+                },
+                "whole_program": {
+                  "allocs": 8,
+                  "reallocs": 0,
+                  "alloc_bytes": 512,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 448,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 512
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 192,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 192
+                },
+                "whole_program": {
+                  "allocs": 8,
+                  "reallocs": 0,
+                  "alloc_bytes": 512,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 448,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 512
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "64": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 7,
+                  "reallocs": 0,
+                  "alloc_bytes": 1280,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1280
+                },
+                "whole_program": {
+                  "allocs": 72,
+                  "reallocs": 0,
+                  "alloc_bytes": 5920,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 5472,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 5920
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 7,
+                  "reallocs": 0,
+                  "alloc_bytes": 1280,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1280
+                },
+                "whole_program": {
+                  "allocs": 72,
+                  "reallocs": 0,
+                  "alloc_bytes": 5920,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 5472,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 5920
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/27_buffer_builder": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "0": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 64,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 64
+                },
+                "whole_program": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 96,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 96,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 96
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 2,
+                  "reallocs": 0,
+                  "alloc_bytes": 64,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 64
+                },
+                "whole_program": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 96,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 96,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 96
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 352,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 352
+                },
+                "whole_program": {
+                  "allocs": 18,
+                  "reallocs": 0,
+                  "alloc_bytes": 1184,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 992,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1184
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 352,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 352
+                },
+                "whole_program": {
+                  "allocs": 18,
+                  "reallocs": 0,
+                  "alloc_bytes": 1184,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 992,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1184
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 4,
+                  "reallocs": 0,
+                  "alloc_bytes": 192,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 192
+                },
+                "whole_program": {
+                  "allocs": 9,
+                  "reallocs": 0,
+                  "alloc_bytes": 512,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 448,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 512
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 4,
+                  "reallocs": 0,
+                  "alloc_bytes": 192,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 192
+                },
+                "whole_program": {
+                  "allocs": 9,
+                  "reallocs": 0,
+                  "alloc_bytes": 512,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 448,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 512
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "64": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 8,
+                  "reallocs": 0,
+                  "alloc_bytes": 800,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 800
+                },
+                "whole_program": {
+                  "allocs": 73,
+                  "reallocs": 0,
+                  "alloc_bytes": 5440,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 5088,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 5440
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 8,
+                  "reallocs": 0,
+                  "alloc_bytes": 800,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 800
+                },
+                "whole_program": {
+                  "allocs": 73,
+                  "reallocs": 0,
+                  "alloc_bytes": 5440,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 5088,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 5440
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/28_buffer_snapshot": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "0": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 4,
+                  "reallocs": 0,
+                  "alloc_bytes": 192,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 192
+                },
+                "whole_program": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 224,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 192,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 224
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 4,
+                  "reallocs": 0,
+                  "alloc_bytes": 192,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 192
+                },
+                "whole_program": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 224,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 192,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 224
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 7,
+                  "reallocs": 0,
+                  "alloc_bytes": 448,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 448
+                },
+                "whole_program": {
+                  "allocs": 19,
+                  "reallocs": 0,
+                  "alloc_bytes": 1280,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1024,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1280
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 7,
+                  "reallocs": 0,
+                  "alloc_bytes": 448,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 448
+                },
+                "whole_program": {
+                  "allocs": 19,
+                  "reallocs": 0,
+                  "alloc_bytes": 1280,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1024,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1280
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 256,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 256
+                },
+                "whole_program": {
+                  "allocs": 10,
+                  "reallocs": 0,
+                  "alloc_bytes": 576,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 448,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 576
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 5,
+                  "reallocs": 0,
+                  "alloc_bytes": 256,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 256
+                },
+                "whole_program": {
+                  "allocs": 10,
+                  "reallocs": 0,
+                  "alloc_bytes": 576,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 448,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 576
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "64": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 9,
+                  "reallocs": 0,
+                  "alloc_bytes": 1056,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1056
+                },
+                "whole_program": {
+                  "allocs": 74,
+                  "reallocs": 0,
+                  "alloc_bytes": 5696,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 5184,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 5696
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 9,
+                  "reallocs": 0,
+                  "alloc_bytes": 1056,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1056
+                },
+                "whole_program": {
+                  "allocs": 74,
+                  "reallocs": 0,
+                  "alloc_bytes": 5696,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 5184,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 5696
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/29_list_filter": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 4,
+                  "reallocs": 0,
+                  "alloc_bytes": 608,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 608
+                },
+                "whole_program": {
+                  "allocs": 16,
+                  "reallocs": 0,
+                  "alloc_bytes": 1440,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1408,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1440
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 4,
+                  "reallocs": 0,
+                  "alloc_bytes": 608,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 608
+                },
+                "whole_program": {
+                  "allocs": 16,
+                  "reallocs": 0,
+                  "alloc_bytes": 1440,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 1408,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 1440
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 256,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 256
+                },
+                "whole_program": {
+                  "allocs": 8,
+                  "reallocs": 0,
+                  "alloc_bytes": 576,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 576,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 576
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 3,
+                  "reallocs": 0,
+                  "alloc_bytes": 256,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 256
+                },
+                "whole_program": {
+                  "allocs": 8,
+                  "reallocs": 0,
+                  "alloc_bytes": 576,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 576,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 576
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "census/30_sort_scratch": {
+      "baseline_present": true,
+      "candidate_present": true,
+      "modes": {
+        "release": {
+          "baseline_status": "passed",
+          "candidate_status": "passed",
+          "runs": {
+            "11": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 2536,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 2536
+                },
+                "whole_program": {
+                  "allocs": 13,
+                  "reallocs": 0,
+                  "alloc_bytes": 3368,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 3368,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 3368
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 2536,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 2536
+                },
+                "whole_program": {
+                  "allocs": 13,
+                  "reallocs": 0,
+                  "alloc_bytes": 3368,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 3368,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 3368
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            },
+            "4": {
+              "paired": true,
+              "baseline": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 2472,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 2472
+                },
+                "whole_program": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 2792,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 2792,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 2792
+                }
+              },
+              "candidate": {
+                "workload": {
+                  "allocs": 1,
+                  "reallocs": 0,
+                  "alloc_bytes": 2472,
+                  "realloc_added_bytes": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 2472
+                },
+                "whole_program": {
+                  "allocs": 6,
+                  "reallocs": 0,
+                  "alloc_bytes": 2792,
+                  "realloc_added_bytes": 0,
+                  "peak_live_bytes": 2792,
+                  "live_bytes_at_exit": 0,
+                  "list_copies": 0,
+                  "list_copy_bytes": 0,
+                  "cumulative_allocation_bytes": 2792
+                }
+              },
+              "allocation_traffic_delta": {
+                "whole_program": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                },
+                "workload": {
+                  "allocs": 0,
+                  "reallocs": 0,
+                  "cumulative_allocation_bytes": 0
+                }
+              }
+            }
+          }
+        }
+      },
+      "same_source": true,
+      "same_linked_provider": true,
+      "same_run_contracts": true
+    },
+    "library/byte_builder": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "library/codecs": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "library/integer_extrema": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "library/json": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "library/math": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "library/path": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "library/pool": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "library/sort": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "library/strings": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "library/time_random": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "owned-payload/json_nested": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "tasks/parallel_map": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "tasks/parallel_outcome": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "views/borrow_only": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "views/bytes": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "views/text": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "zero-rc-containers-20261011/dictionary_copy": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "zero-rc-containers-20261011/dictionary_mutation": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "zero-rc-containers-20261011/dictionary_pop": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "zero-rc-containers-20261011/owned_options": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "zero-rc-containers-20261011/recursive_borrow": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "zero-rc-containers-20261011/recursive_copy": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "zero-rc-final-20261011/byte_helpers": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "zero-rc-final-20261011/environment_owned": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "zero-rc-final-20261011/text_helpers": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "zero-rc-final-20261011/view_boundaries": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "zero-rc-resources-20261011/early_return": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "zero-rc-resources-20261011/foreign_scalar": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "zero-rc-resources-20261011/native_readonly": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "zero-rc-resources-20261011/native_scopes": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    },
+    "zero-rc-resources-20261011/nested_error": {
+      "baseline_present": true,
+      "candidate_present": false,
+      "modes": {}
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "interpretation": "Compiler repair compares identical already-migrated sources; C0 source migrations are separately recorded and are not compiler-only savings.",
+  "sources": [
+    {
+      "source": "test/core/s1_reads.my",
+      "C0_source_sha256": "754c854a3b1a744f877fe23ed9463d9ec5b69b9d617cabefb5bca037977b8d1e",
+      "migrated_support5_sha256": "b17c73ef673004b6bacc36e59a45886d2ff70bc1f142ce4039af6a35b817a654",
+      "same_source_support6_sha256": "b17c73ef673004b6bacc36e59a45886d2ff70bc1f142ce4039af6a35b817a654",
+      "C0_extra_copy_calls": 1,
+      "support5_status": "failed",
+      "support6_status": "passed"
+    },
+    {
+      "source": "test/core/s1_views.my",
+      "C0_source_sha256": "4499e2e9b6eaabf7003be4de59501c5fb203088d41b362833e7403693fc0ba85",
+      "migrated_support5_sha256": "bb33e24fa121112f51a7df46a6db6b59010f8753970b23b1bc6ce4ca0cdb75d7",
+      "same_source_support6_sha256": "bb33e24fa121112f51a7df46a6db6b59010f8753970b23b1bc6ce4ca0cdb75d7",
+      "C0_extra_copy_calls": 3,
+      "support5_status": "failed",
+      "support6_status": "passed"
+    }
+  ]
+}

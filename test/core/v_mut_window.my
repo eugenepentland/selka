@@ -25,11 +25,12 @@ func first(names: int[], mut state: State) -> int:
 
 func main(out: Stream) -> int:
     mut state = State(boxes=[Box(tag=2, names=[1])], seen=0)
-    mut box = state.boxes[0]
-    mut seen = outer(mut state, count_boxes(mut state), box.tag)
+    mut box = state.boxes[0].copy()
+    const counted = count_boxes(mut state)
+    mut seen = outer(mut state, counted, box.tag)
     out.print(seen, state.boxes[0].names == [1, 2], state.seen)
     mut other = State(boxes=[Box(tag=4, names=[1, 2])], seen=0)
-    mut held = other.boxes[0]
+    mut held = other.boxes[0].copy()
     mut got = first(held.names, mut other)
     out.print(got, len(other.boxes[0].names), len(held.names))
     return 0

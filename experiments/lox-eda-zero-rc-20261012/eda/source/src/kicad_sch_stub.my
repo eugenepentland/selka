@@ -1,0 +1,48 @@
+
+import flat_netlist as flat
+import net_name
+import support_strs as strs
+
+public record Split:
+    base: bytes
+    ref: bytes
+    pad: bytes
+
+
+public func split(name: bytes) -> Split?:
+    mut dot = name.rfind(b".")
+    if dot < 0:
+        return None
+    mut prev = name[0:dot].rfind(b".")
+    if prev < 0:
+        return None
+    mut result = Split(base=name[0:prev], ref=name[prev + 1:dot], pad=name[dot + 1:])
+    if len(result.base) == 0 or len(result.ref) == 0 or len(result.pad) == 0:
+        return None
+    return Some(result)
+
+
+public func collapse(nets: flat.FlatNet[], known: dict[str, int], mut out: dict[str, bytes]) -> int:
+    mut names: set[str] = set()
+    for net in nets:
+        names.add(strs.text(net.name))
+    mut found = 0
+    for net2 in nets:
+        mut s = split(net2.name)
+        if s is None:
+            continue
+        if strs.text(s.base)not in names or not hosts_pad(net2, s, known):
+            continue
+        out[strs.text(net2.name)] = s.base.copy()
+        found += 1
+    return found
+
+
+# Structural detection: a placed part carries the pad the dotted name claims.
+func hosts_pad(net: flat.FlatNet, s: Split, known: dict[str, int]) -> bool:
+    for pin in net.pins:
+        if pin.pin != s.pad or net_name.leaf(pin.ref_des) != s.ref:
+            continue
+        if strs.text(pin.ref_des) in known:
+            return True
+    return False

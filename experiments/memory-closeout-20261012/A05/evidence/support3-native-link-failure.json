@@ -1,0 +1,326 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+  "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7",
+  "overlay": false,
+  "check_only": false,
+  "harness_sha256": "9dab898b56d68b36f8f755382ad75d00f4f86d675bb5abb00647bb92a057f82d",
+  "cases": {
+    "byte_repeat": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/byte_repeat.my",
+        "original_sha256": "ee301dd0db30c2c71e4eb5b3fdc79c4e25cc81691c9b67c0f917e89a8b66b88c",
+        "source_sha256": "ee301dd0db30c2c71e4eb5b3fdc79c4e25cc81691c9b67c0f917e89a8b66b88c",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/byte_repeat/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/byte_repeat/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/byte_repeat/release/program.ll"
+        ],
+        "build_status": 2,
+        "build_stdout": "",
+        "build_stderr": "error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache/native-link-078ffe1cdec11521977b6f582b439750/db64ed82b4d30a83e70ace1d7ae45ca4ab33b271c8eafde8673fe60576daa1b0.o: FileNotFound\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "main.my": "ee301dd0db30c2c71e4eb5b3fdc79c4e25cc81691c9b67c0f917e89a8b66b88c"
+        }
+      }
+    },
+    "network": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/network.my",
+        "original_sha256": "7a81a88fae0610802cd70ca08079fd116dbf229407721b28e21324af865822b7",
+        "source_sha256": "7a81a88fae0610802cd70ca08079fd116dbf229407721b28e21324af865822b7",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/network/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/network/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/network/release/program.ll"
+        ],
+        "build_status": 2,
+        "build_stdout": "",
+        "build_stderr": "error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache/native-link-6d60542886e7d1495e4641899131bfc6/803aec14a12140507a9e790c2703ec019af76653f9ea190be54a00bfb95b5d1f.o: FileNotFound\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "main.my": "7a81a88fae0610802cd70ca08079fd116dbf229407721b28e21324af865822b7"
+        }
+      }
+    },
+    "network_denied": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/network_denied.my",
+        "original_sha256": "2ea76a80a1c18726df21bacaf7ff0a5f4fff17a170c886988479fc7e34861650",
+        "source_sha256": "2ea76a80a1c18726df21bacaf7ff0a5f4fff17a170c886988479fc7e34861650",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/network_denied/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/network_denied/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/network_denied/release/program.ll"
+        ],
+        "build_status": 2,
+        "build_stdout": "",
+        "build_stderr": "error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache/native-link-19dfc37f1310d2f2536410e3d1e09d5d/f8abee3e7d132c631311c60278013c280dd40b69e5619cb07a0dbcce017e0931.o: FileNotFound\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "main.my": "2ea76a80a1c18726df21bacaf7ff0a5f4fff17a170c886988479fc7e34861650"
+        }
+      }
+    },
+    "network_errors": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/network_errors.my",
+        "original_sha256": "652dc5104b616b09a1d45add2b17462b981255f1aa57057f5d37abad82a217dc",
+        "source_sha256": "652dc5104b616b09a1d45add2b17462b981255f1aa57057f5d37abad82a217dc",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/network_errors/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/network_errors/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/network_errors/release/program.ll"
+        ],
+        "build_status": 2,
+        "build_stdout": "",
+        "build_stderr": "error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache/native-link-061c6321f11406da043c948fd0acc8a0/d22e3095fd468f346e217ee2201f36d6afc57525913a92d99c9fce718784cc5c.o: FileNotFound\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "main.my": "652dc5104b616b09a1d45add2b17462b981255f1aa57057f5d37abad82a217dc"
+        }
+      }
+    },
+    "storage": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/storage.my",
+        "original_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+        "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/storage/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/storage/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/storage/release/program.ll"
+        ],
+        "build_status": 2,
+        "build_stdout": "",
+        "build_stderr": "error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache/native-link-f128d1bb97bc1e9124bf61caa0291ecf/ba4aa53b96bb3e8b5c4f5a1986fded6ecc05739ed44c8aaea9822476f821e19c.o: FileNotFound\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "main.my": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31"
+        }
+      }
+    },
+    "stream_borrow": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/stream_borrow.my",
+        "original_sha256": "b3dcf788fadf87af10878f9be1c2f4adbc1bae6a363ed61596c0a530b32560dc",
+        "source_sha256": "b3dcf788fadf87af10878f9be1c2f4adbc1bae6a363ed61596c0a530b32560dc",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/stream_borrow/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/stream_borrow/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/stream_borrow/release/program.ll"
+        ],
+        "build_status": 2,
+        "build_stdout": "",
+        "build_stderr": "error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache/native-link-08609ce33494880ee63e50feedaa84ff/ab1a90cc2286b445176b97473652e9cab68a73b5300faf6db42da09cb14e6117.o: FileNotFound\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "main.my": "b3dcf788fadf87af10878f9be1c2f4adbc1bae6a363ed61596c0a530b32560dc"
+        }
+      }
+    },
+    "guest_application_cache": {
+      "release": {
+        "original_source": "tests/lang/application_cache.my",
+        "original_sha256": "d27bdb4039f9a4a753c4796bfd4a6ad525fd2598954dfa044c108555f10ba397",
+        "source_sha256": "d53ba38511e6a669ffecc3557e318fcc7458a38eb7196394650b2af789fdee9c",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/guest_application_cache/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/guest_application_cache/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/guest_application_cache/release/program.ll"
+        ],
+        "build_status": 2,
+        "build_stdout": "",
+        "build_stderr": "error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache/native-link-43b65db4da9c86e5f9542b895a4e9a91/4510a387074f4dcc7ce1fbcd64639d011b12d44af8b21e6fb18bbf3e20ac7aed.o: FileNotFound\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "main.my": "d53ba38511e6a669ffecc3557e318fcc7458a38eb7196394650b2af789fdee9c"
+        }
+      }
+    },
+    "guest_rc_capability_values": {
+      "release": {
+        "original_source": "tests/lang/rc_capability_values.my",
+        "original_sha256": "d151504ed8ae3e636bfa10be9a64e5a22a26cd6db59b15623bf82fa445d340ad",
+        "source_sha256": "d151504ed8ae3e636bfa10be9a64e5a22a26cd6db59b15623bf82fa445d340ad",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/guest_rc_capability_values/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/guest_rc_capability_values/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/guest_rc_capability_values/release/program.ll"
+        ],
+        "build_status": 2,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\nerror: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache/native-link-b940909f1c142256b4e2623e14263f09/b069da5c1055a27e95efed764ae4e325a8a724376b71b2e8e31c1ad0262b6604.o: FileNotFound\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "main.my": "d151504ed8ae3e636bfa10be9a64e5a22a26cd6db59b15623bf82fa445d340ad",
+          "test_capabilities.my": "2a9cc33b7b141e8540afcfdc092883c33604c0ae3f29700bddd2f5e298bab3bc"
+        }
+      }
+    },
+    "guest_test_capabilities": {
+      "release": {
+        "original_source": "tests/lang/test_capabilities.my",
+        "original_sha256": "2a9cc33b7b141e8540afcfdc092883c33604c0ae3f29700bddd2f5e298bab3bc",
+        "source_sha256": "9c90fd8fc2c873e1040a47d769e83fb8441c1197dddd04f60694b5bd7a137ebf",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/guest_test_capabilities/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/guest_test_capabilities/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/guest_test_capabilities/release/program.ll"
+        ],
+        "build_status": 2,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\nerror: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache/native-link-cee69736cef85d4aa8b59d1aa8f26e09/e46cc1bb130a27bdcb36807317726816bd7a1fa6337e12e3ac646a63fbf98204.o: FileNotFound\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "main.my": "9c90fd8fc2c873e1040a47d769e83fb8441c1197dddd04f60694b5bd7a137ebf"
+        }
+      }
+    },
+    "guest_stdlib": {
+      "release": {
+        "original_source": "tests/value_semantics/stdlib.my",
+        "original_sha256": "bb8a1c40b247cc767b7652b89c27885a964f28ab55d19224ed4e607e29fbbe61",
+        "source_sha256": "e78fe218b8906368a2d894585ef2b966bbc0bd2dc821329749089e559b0d41bb",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/guest_stdlib/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/guest_stdlib/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/guest_stdlib/release/program.ll"
+        ],
+        "build_status": 2,
+        "build_stdout": "",
+        "build_stderr": "error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support3-libraries/cache/native-link-255a3782022a409eb00176778db0ac8a/4349c9a40b46473fd407b84969aa35cd174844a7f3a497329772c36f38d46c1f.o: FileNotFound\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "main.my": "e78fe218b8906368a2d894585ef2b966bbc0bd2dc821329749089e559b0d41bb"
+        }
+      }
+    }
+  },
+  "compiler_source_revision": "0d17e4e130706639c0f49e78b60502bfb2151ebc",
+  "ownership_selection": "experimental-zero-rc",
+  "failures": 10,
+  "status_classification": "All ten guest builds reached native link; the compiler failed after LLVM emission because uncacheable staged object files were removed before linking. These are failed compiler executions, not ownership refusals or native pass evidence.",
+  "blocker_owner": "A01: coordinator-reserved src/core/driver.zig"
+}

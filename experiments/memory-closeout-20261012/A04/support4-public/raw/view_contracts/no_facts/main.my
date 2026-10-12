@@ -1,0 +1,19 @@
+func suffix(source: TextView) -> TextView:
+    return source.borrow(1, 99)
+
+
+func main() -> int:
+    mut source = "é😀-" + str(42)
+    const view = source.borrow(0, len(source))
+    const tail = suffix(view)
+    assert len(tail) == 4 and tail[0] == "😀"
+    const saved = tail.copy()
+    source = "replacement"
+    assert saved == "😀-42" and source == "replacement"
+    mut data = byte_buffer([0, 127, 128, 255])
+    const span = data.borrow(1, 4)
+    assert span[0] == 127 and span[-1] == 255
+    const copied = span.copy()
+    _ = data.append_byte(42)
+    assert copied == b"\x7f\x80\xff" and len(data) == 5
+    return 0

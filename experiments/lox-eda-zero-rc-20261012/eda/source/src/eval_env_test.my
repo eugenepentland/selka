@@ -1,0 +1,61 @@
+
+import eval_env as m
+import support_expect as ex
+
+# test "env get and put"
+public func test_env_get_and_put(out: Stream) -> bool:
+    mut scopes = m.EnvPool(scopes=[])
+    mut env = m.env_init(mut scopes, None)
+    m.env_put(mut scopes, env, b"x", m.Value.number(value=42.0))
+    mut v = m.env_get(scopes, env, b"x")
+    if v is None:
+        return ex.ok(out, "x exists", False)
+    mut n = m.value_as_number(v)
+    if n is None:
+        return ex.ok(out, "x is numeric", False)
+    if not ex.near(out, "x", n, 42.0, 0.0):
+        return False
+    return ex.ok(out, "y absent", m.env_get(scopes, env, b"y").is_none())
+
+
+# test "env parent chain"
+public func test_env_parent_chain(out: Stream) -> bool:
+    mut scopes = m.EnvPool(scopes=[])
+    mut parent = m.env_init(mut scopes, None)
+    m.env_put(mut scopes, parent, b"x", m.Value.number(value=1.0))
+    mut parent_opt: m.Env? = Some(parent)
+    mut child = m.env_init(mut scopes, parent_opt)
+    m.env_put(mut scopes, child, b"y", m.Value.number(value=2.0))
+    mut x = m.env_get(scopes, child, b"x")
+    if x is None:
+        return ex.ok(out, "parent x exists", False)
+    mut xv = m.value_as_number(x)
+    if xv is None:
+        return ex.ok(out, "parent x numeric", False)
+    if not ex.near(out, "parent x", xv, 1.0, 0.0):
+        return False
+    mut y = m.env_get(scopes, child, b"y")
+    if y is None:
+        return ex.ok(out, "child y exists", False)
+    mut yv = m.value_as_number(y)
+    if yv is None:
+        return ex.ok(out, "child y numeric", False)
+    if not ex.near(out, "child y", yv, 2.0, 0.0):
+        return False
+    if not ex.ok(out, "parent y absent", m.env_get(scopes, parent, b"y").is_none()):
+        return False
+    # The handle adaptation must keep later writes visible through the parent.
+    m.env_put(mut scopes, parent, b"x", m.Value.number(value=3.0))
+    mut x2 = m.env_get(scopes, child, b"x")
+    if x2 is None:
+        return False
+    mut x2v = m.value_as_number(x2)
+    if x2v is None:
+        return False
+    return ex.near(out, "parent sharing", x2v, 3.0, 0.0)
+
+
+# test "ground via distance protection is enabled by default"
+public func test_ground_via_distance_protection_is_enabled_by_default(out: Stream) -> bool:
+    mut rules = m.PourRules()
+    return ex.near(out, "ground via max", rules.ground_via_max, 1.0, 0.0)

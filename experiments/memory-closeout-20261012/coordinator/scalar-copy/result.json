@@ -1,0 +1,10 @@
+{
+  "base": "4c4c1663680fa4c290691867107eee24b504604d",
+  "fix": "Expression-receiver methods check operands in place and consume no parent work-queue temporaries, including scalar copy reusing a typed field/index/call node.",
+  "command": "scripts/build-slot.sh build \"$ZIG\" build test-units -Dtest-filter=\"generic scalar copies\" -j4 --maxrss 8589934592 --summary all",
+  "exit_code": 0,
+  "selected_tests": 8,
+  "passed_tests": 8,
+  "regression": "src/generic_execution_test.zig: generic scalar copies consume only their own expression temporaries",
+  "before": "before.stderr"
+}

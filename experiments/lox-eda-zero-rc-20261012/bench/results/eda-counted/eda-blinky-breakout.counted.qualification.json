@@ -1,0 +1,134 @@
+{
+  "started_utc": "2026-10-12T09:31:04.767340+00:00",
+  "measurement_harness_sha256": "2e24cadd16dc9eb5a711b8c100249d76ab8c1b31ab74c138eaae5f76273e0011",
+  "prior_receipt": null,
+  "host": [
+    "Linux",
+    "linuxserver",
+    "7.0.0-31-generic",
+    "#31-Ubuntu SMP PREEMPT_DYNAMIC Sat Aug  1 04:26:38 UTC 2026",
+    "x86_64"
+  ],
+  "loadavg_start": [
+    1.04052734375,
+    2.0263671875,
+    2.81298828125
+  ],
+  "spec": {
+    "cell": "eda/blinky-breakout",
+    "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+    "arms": {
+      "zig-safe": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-zig-safe",
+        "--model",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp",
+        "--project-dir",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout",
+        "--out-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/blinky-breakout"
+      ],
+      "mylang-original-rc": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/original-rc-count",
+        "--model",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp",
+        "--project-dir",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout",
+        "--out-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/blinky-breakout"
+      ],
+      "mylang-migrated-rc": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/migrated-rc-count",
+        "--model",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp",
+        "--project-dir",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout",
+        "--out-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/blinky-breakout"
+      ],
+      "mylang-zero-rc": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/zero-rc-count",
+        "--model",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp",
+        "--project-dir",
+        "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout",
+        "--out-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/blinky-breakout"
+      ]
+    },
+    "oracle": "zig-safe",
+    "files": [
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/manifest.json"
+    ],
+    "out_dir": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/.tmp/lox-eda-20261012/bench/eda-out/blinky-breakout",
+    "golden_dir": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/expected",
+    "identity_dirs": [
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/expected"
+    ],
+    "env_by_arm": {
+      "mylang-original-rc": {
+        "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-blinky-breakout.mylang-original-rc.counters.json"
+      },
+      "mylang-migrated-rc": {
+        "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-blinky-breakout.mylang-migrated-rc.counters.json"
+      },
+      "mylang-zero-rc": {
+        "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-counted/eda-blinky-breakout.mylang-zero-rc.counters.json"
+      }
+    }
+  },
+  "spec_sha256": "31ef950e734782941be990c11e0a005923377a106537b9f972920c65f1dedc12",
+  "cpu": 8,
+  "identities": {
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/model.sexp": "8a86e635b60cac0c8b859c225db5716a60fab236d078c5413e305cd867687a23",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/manifest.json": "4077dc7240898167b9080063bb811e11a54f52d1f486fdbec9f07138975109c0",
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/migrated-rc-count": "661b44349e4843d851a3ec92064a24a8517f64c4d8bea983f6f714c9e712d866",
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/original-rc-count": "d007fe4847d3fff21449371b6170a12c1b3ce536a8944245caf8be5958fb29e0",
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/.tmp/lox-eda-20261012/eda/final/zero-rc-count": "19915b227d602697e666a31ac2a3e258543276a4a2677c073c2536bdc36f631a",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-zig-safe": "d520d6a084a49d9962d240a2c6effc84ccd40321ff0c46ff6422b84110971771",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout/lib/footprints/soic-14.sexp": "3859c5b98d3428be2dbc11f18d2459fee14a897a623a973dc1e719ced1b8f7ee",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout/lib/footprints/sot23-5.sexp": "162d3155c2ee286ace4801208b0923d0f092f789be978d00ebeb9bab82736af8",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout/lib/footprints/testpoint-1mm.sexp": "6f701d2bc1275e38cdf91ae34aff5a24246317b9fab7ee2f3d1d42f370372583",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout/lib/pinouts/hex-inverter-schmitt.sexp": "0b3b5db356e97547498a286f2544c2db9e1b565ca96dcd4e963b09507ab3317f",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/blinky-breakout/lib/pinouts/ldo-3v3-sot23-5.sexp": "c07299bb701adf1129cd5760a64026c0cba851be02f2be6b9912ae202274a299",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/expected/blinky-breakout.kicad_pro": "939bbb43119c94926a8710723ef280d55348b4a62471319738c5f4e726d4c976",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/expected/blinky-breakout.kicad_sch": "2dbe293c149a5de56c067ed95be8a73507d379545dee7d86362582656e589c99",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/expected/blinky-breakout.net": "32453970daa8d0391a22d80d6e9c7df44982399cb3cd4ce88fa1567a8f73738f",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/expected/fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/expected/netlisp.kicad_sym": "0e9785f6bb0506358e9771fb680be0ead5c0b8c4b208a6ad3a1d05396c2e69e1",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/blinky-breakout/expected/sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+  },
+  "guest_timeout_seconds": 120.0,
+  "warmups": 1,
+  "round_start": 0,
+  "rounds": 0,
+  "wall_samples": [],
+  "rss_samples": [],
+  "arm_status": {
+    "zig-safe": {
+      "status": "ok"
+    },
+    "mylang-original-rc": {
+      "status": "ok"
+    },
+    "mylang-migrated-rc": {
+      "status": "ok"
+    },
+    "mylang-zero-rc": {
+      "status": "ok"
+    }
+  },
+  "summary": {
+    "zig-safe": {},
+    "mylang-original-rc": {},
+    "mylang-migrated-rc": {},
+    "mylang-zero-rc": {}
+  },
+  "loadavg_end": [
+    1.04052734375,
+    2.0263671875,
+    2.81298828125
+  ],
+  "finished_utc": "2026-10-12T09:31:04.868282+00:00"
+}

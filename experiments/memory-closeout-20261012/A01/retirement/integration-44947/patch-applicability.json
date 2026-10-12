@@ -1,0 +1,24 @@
+{
+  "base": "44947e6967d8eb0deeaa86b25ca2bb44bc58803d",
+  "status": "all3 dry-run patch applications pass in disposable snapshots; no production edits",
+  "results": [
+    {
+      "patch": "owned-runtime.patch",
+      "exit_status": 0,
+      "stdout": "checking file src/core/runtime/core_tasks.c\nchecking file src/stdlib/parallel.my\n",
+      "stderr": ""
+    },
+    {
+      "patch": "fixture-migration.patch",
+      "exit_status": 0,
+      "stdout": "checking file src/core/a01_owned_scheduler_fixture.c\nchecking file src/core/task_ir_program.zig\nchecking file src/core/task_ir_test.zig\nchecking file src/core/task_scheduler_fixture.c\nchecking file src/core/task_scheduler_test.zig\n",
+      "stderr": ""
+    },
+    {
+      "patch": "shared-selector-request.patch",
+      "exit_status": 0,
+      "stdout": "checking file src/core/build.zig\n",
+      "stderr": ""
+    }
+  ]
+}

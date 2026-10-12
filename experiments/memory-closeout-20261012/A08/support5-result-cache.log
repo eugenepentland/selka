@@ -1,0 +1,12 @@
+build-slot: FIFO ticket 560, position 10; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 560, position 8; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 560, position 8; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 560, position 4; earlier build tickets must run first; waiting (180s so far)
+build-slot: build slot 1, FIFO ticket 560 after 220s
+{"name": "result-old-compiler-refusal", "status": 1, "passed": true, "elapsed_ns": 103485885, "max_rss_kib": "12632"}
+{"name": "result-candidate-old-refusal", "status": 0, "passed": true, "elapsed_ns": 3010323395, "max_rss_kib": "164708"}
+{"name": "result-candidate-receipt", "status": 0, "passed": true, "elapsed_ns": 103592509, "max_rss_kib": "31848"}
+{"name": "result-candidate-replay", "status": 0, "passed": true, "elapsed_ns": 105160262, "max_rss_kib": "9676"}
+{"name": "result-candidate-unhandled-edit", "status": 1, "passed": true, "elapsed_ns": 103314128, "max_rss_kib": "21528"}
+{"name": "result-candidate-unhandled-edit-warm", "status": 1, "passed": true, "elapsed_ns": 104668937, "max_rss_kib": "20264"}
+{"name": "result-candidate-handling-restored", "status": 0, "passed": true, "elapsed_ns": 104136083, "max_rss_kib": "9664"}

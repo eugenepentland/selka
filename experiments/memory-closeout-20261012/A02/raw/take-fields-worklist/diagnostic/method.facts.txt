@@ -1,0 +1,131 @@
+fn main() -> i64
+b0:
+  %1 = list_new list[i64] 1:i64
+  %3 = list_push list[i64] %1, 1:i64
+  %5 = record_make record{list[i64], i64} %3, 1:i64
+  %86 = list_new list[i64] 1:i64
+  %87 = list_push list[i64] %86, 50:i64
+  %93 = record_get list[i64] %5, field0
+  %88 = record_set record{list[i64], i64} %5, field0, %87
+  release %93
+  %89 = record_set record{list[i64], i64} %88, field1, 7:i64
+  %90 = list_new list[i64] 1:i64
+  %91 = list_push list[i64] %90, 2:i64
+  %92 = record_make record{list[i64], record{list[i64], i64}} %91, %89
+  %7 = record_get list[i64] %92, field0
+  %8 = record_get record{list[i64], i64} %92, field1
+  %9 = record_get list[i64] %8, field0
+  %11 = call i64 myl_core_owned_same_block(%9, %7)
+  %13 = cmp.ne bool %11, 0:i64
+  branch %13, b1, b2
+b1: ; preds b0
+  release %7
+  %15 = list_len u64 %9
+  jump b4
+b2: ; preds b0
+  %28 = list_len u64 %7
+  jump b7
+b3: ; preds b6 b9
+  %41 = phi list[i64] %21, %35
+  %42 = record_set record{list[i64], i64} %8, field0, %41
+  %43 = record_get list[i64] %42, field0
+  %45 = list_new list[i64] 2:i64
+  %47 = list_push list[i64] %45, 50:i64
+  %49 = list_push list[i64] %47, 2:i64
+  %50 = list_len u64 %43
+  %51 = list_len u64 %49
+  %52 = cmp.eq bool %50, %51
+  branch %52, b15, b14
+b4: ; preds b1 b5
+  %18 = phi u64 0:u64, %25
+  %21 = phi list[i64] %9, %23
+  %19 = cmp.lt bool %18, %15
+  branch %19, b5, b6
+b5: ; preds b4
+  %22 = list_get.exact i64 %21, %18
+  %23 = list_push list[i64] %21, %22
+  %25 = add u64 %18, 1:u64
+  jump b4
+b6: ; preds b4
+  jump b3
+b7: ; preds b2 b8
+  %31 = phi u64 0:u64, %38
+  %35 = phi list[i64] %9, %36
+  %32 = cmp.lt bool %31, %28
+  branch %32, b8, b9
+b8: ; preds b7
+  %34 = list_get.proven i64 %7, %31
+  %36 = list_push list[i64] %35, %34
+  %38 = add u64 %31, 1:u64
+  jump b7
+b9: ; preds b7
+  release %7
+  jump b3
+b10: ; preds b14 b12
+  unreachable
+b11: ; preds b12
+  ret 0:i64
+b12: ; preds b14
+  %74 = record_get i64 %42, field1
+  release %42
+  %76 = cmp.eq bool %74, 7:i64
+  branch %76, b11, b10
+b13: ; preds b15 b18
+  %56 = phi u64 0:u64, %64
+  %57 = cmp.lt bool %56, %50
+  branch %57, b16, b17
+b14: ; preds b3 b19 b17
+  %70 = phi bool %52, 0:bool, 1:bool
+  branch %70, b12, b10
+b15: ; preds b3
+  jump b13
+b16: ; preds b13
+  %59 = list_get i64 %43, %56
+  %60 = list_get i64 %49, %56
+  %61 = cmp.eq bool %59, %60
+  branch %61, b18, b19
+b17: ; preds b13
+  jump b14
+b18: ; preds b16
+  %64 = add u64 %56, 1:u64
+  jump b13
+b19: ; preds b16
+  jump b14
+fn replace_items(record{list[i64], i64}) -> record{list[i64], record{list[i64], i64}}
+b0:
+  %2 = list_new list[i64] 1:i64
+  %4 = list_push list[i64] %2, 50:i64
+  %14 = record_get list[i64] param0, field0
+  %5 = record_set record{list[i64], i64} param0, field0, %4
+  release %14
+  %7 = record_set record{list[i64], i64} %5, field1, 7:i64
+  %9 = list_new list[i64] 1:i64
+  %11 = list_push list[i64] %9, 2:i64
+  %12 = record_make record{list[i64], record{list[i64], i64}} %11, %7
+  ret %12
+fn myl_core_owned_same_block(list[i64], list[i64]) -> i64 extern
+facts main: %11=[-9223372036854775808,9223372036854775807] %13=[0,1] %15=[0,140737488355328] %18=[0,140737488355328] %19=[0,1] %22=[-9223372036854775808,9223372036854775807] %25=[1,140737488355328] %28=[0,140737488355328] %31=[0,140737488355328] %32=[0,1] %34=[-9223372036854775808,9223372036854775807] %38=[1,140737488355328] %50=[0,140737488355328] %51=[2,2] %52=[0,1] %56=[0,140737488355328] %57=[0,1] %59=[-9223372036854775808,9223372036854775807] %60=[2,50] %61=[0,1] %64=[1,140737488355328] %70=[0,1] %74=[1,7] %76=[0,1]
+list main %1: settled=true length=%-1 len=[0,0]
+list main %3: settled=true length=%-1 elements=[1,1] len=[1,1]
+list main %21: settled=true length=%-1
+list main %22: settled=true length=%-1
+list main %23: settled=true length=%-1
+list main %34: settled=true length=%-1
+list main %35: settled=true length=%-1
+list main %36: settled=true length=%-1
+list main %41: settled=true length=%-1
+list main %45: settled=true length=%-1 len=[0,0]
+list main %47: settled=true length=%-1 elements=[50,50] len=[1,1]
+list main %49: settled=true length=%-1 elements=[2,50] len=[2,2]
+list main %59: settled=true length=%-1
+list main %60: settled=true length=%-1
+list main %86: settled=true length=%-1 len=[0,0]
+list main %87: settled=true length=%-1 elements=[50,50] len=[1,1]
+list main %90: settled=true length=%-1 len=[0,0]
+list main %91: settled=true length=%-1 elements=[2,2] len=[1,1]
+facts replace_items:
+list replace_items %2: settled=true length=%-1 len=[0,0]
+list replace_items %4: settled=true length=%-1 elements=[50,50] len=[1,1]
+list replace_items %9: settled=true length=%-1 len=[0,0]
+list replace_items %11: settled=true length=%-1 elements=[2,2] len=[1,1]
+field type16.1: [1, 7]

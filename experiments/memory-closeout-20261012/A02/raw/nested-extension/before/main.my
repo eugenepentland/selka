@@ -1,0 +1,13 @@
+func main(out: Stream) -> int:
+    mut rows: int[][][] = [[]]
+    for value in range(16):
+        rows[0].append([value])
+    rows[0].extend(rows[0])
+    assert len(rows[0]) == 32
+    for value in range(16):
+        assert rows[0][value][0] == value
+        assert rows[0][value + 16][0] == value
+    rows[0][0].append(99)
+    assert len(rows[0][16]) == 1
+    out.print("passed")
+    return 0

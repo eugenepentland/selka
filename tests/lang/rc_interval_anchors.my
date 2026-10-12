@@ -15,7 +15,7 @@ record Pin:
 
 
 func span(text: bytes) -> Span:
-    return Span(source=text, start=0, end=len(text))
+    return Span(source=text.copy(), start=0, end=len(text))
 
 
 func pin(part: int, net: bytes) -> Pin:
@@ -58,7 +58,7 @@ func unique_parts(count: int) -> Pin[]:
         mut found = False
         mut j = 0
         while j < len(out):
-            mut previous = out[j]
+            mut previous = out[j].copy()
             if previous.part == k % 4 and equal(previous.net, span(b"n")):
                 found = True
             j += 1
@@ -70,7 +70,7 @@ func unique_parts(count: int) -> Pin[]:
 
 public func test_a_mut_list_is_read_in_place_between_its_writes() -> bool:
     mut pins = [pin(0, b"VCC"), pin(1, b"GND"), pin(2, b"VCC"), pin(3, b"SDA"), pin(4, b"GND")]
-    mut before = pins
+    mut before = pins.copy()
     normalize(mut pins)
     mut ids = [pins[0].net_id, pins[1].net_id, pins[2].net_id, pins[3].net_id, pins[4].net_id]
     return ids == [0, 1, 0, 3, 1] and pins[4].display.source == b"GND?" and before[4].net_id == -1 and before[4].display.source == b"GND!"
@@ -83,7 +83,7 @@ public func test_a_local_list_is_read_in_place_between_appends() -> bool:
 
 # Near misses: the value is live when the list is written.
 func stale(mut pins: Pin[]) -> int:
-    mut first = pins[0]
+    mut first = pins[0].copy()
     pins[0].net = span(b"changed")
     pins[0].part = 90
     return first.part * 100 + first.net.end
@@ -96,7 +96,7 @@ func change(mut pins: Pin[]) -> int:
 
 
 func across_call(mut pins: Pin[]) -> int:
-    mut first = pins[0]
+    mut first = pins[0].copy()
     _ = change(mut pins)
     return first.part * 100 + first.net.end + pins[0].part
 
@@ -107,7 +107,7 @@ func argument_order(mut pins: Pin[]) -> int:
 
 func grown(count: int) -> int:
     mut out = [pin(5, b"first")]
-    mut first = out[0]
+    mut first = out[0].copy()
     mut k = 0
     while k < count:
         out.append(pin(k, b"xx"))
@@ -122,7 +122,7 @@ func returned(count: int) -> Pin:
     while k < count:
         out.append(pin(k, b"value"))
         k += 1
-    return out[count - 1]
+    return out[count - 1].copy()
 
 
 record Holder:
@@ -131,7 +131,7 @@ record Holder:
 
 func handed() -> int:
     mut out = [pin(1, b"abc"), pin(2, b"de")]
-    mut first = out[0]
+    mut first = out[0].copy()
     mut holder = Holder(items=out)
     holder.items.clear()
     holder.items.append(pin(9, b"zzzzzz"))

@@ -1,0 +1,9 @@
+build-slot: FIFO ticket 1119, position 14; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1119, position 6; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 1119, position 1; waiting for measurement or memory-accounting settle delay; waiting (121s so far)
+build-slot: FIFO ticket 1119, position 1; waiting for measurement or memory-accounting settle delay; waiting (181s so far)
+build-slot: FIFO ticket 1119, position 1; waiting for measurement or memory-accounting settle delay; waiting (241s so far)
+build-slot: build slot 2, FIFO ticket 1119 after 301s
+/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/support7-borrow/invalid-dictionary/main.my:12:56: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+      return use(values.get("absent", fallback), replace(mut values))
+                                                         ^

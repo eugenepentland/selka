@@ -1,0 +1,185 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+  "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "harness_sha256": "c0ed7598829952fc2d5c66ecc7f1cda3a177aeff9c8e3428f06551195ad8a761",
+  "ownership": "zero",
+  "cases": {
+    "u1_state": {
+      "source_sha256": "ea5281fb7cb07defe94103f086438c2073ff07d25a8ae48df0a502917b076fb6",
+      "oracle": {
+        "source": "src/core/u1_state_test.zig",
+        "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+        "sha256": "0f170ebda59babbaa16773b8c729c77d4e0e9f2db87a722e4e1a4e3969650ecd",
+        "constants": [
+          "state_expected"
+        ],
+        "stdout": "601814 6 132 7\n476744 90\n501100 5 6\n6000 0 10\n"
+      },
+      "modes": {
+        "release": {
+          "build": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+              "build",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/u1_state.my",
+              "--zig",
+              "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+              "--cache-dir",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/support4-migration-native-u1_state,ce2_effects/cache",
+              "--release",
+              "--experimental-zero-rc",
+              "--counters",
+              "-o",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/support4-migration-native-u1_state,ce2_effects/u1_state/release/program",
+              "--emit-llvm",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/support4-migration-native-u1_state,ce2_effects/u1_state/release/program.ll"
+            ],
+            "status": 0,
+            "elapsed_ns_including_admission": 6938864099,
+            "stdout": "",
+            "stderr": ""
+          },
+          "admitted": true,
+          "binary_sha256": "df943ce86086dc4c4e7d48f81566c7aed56d7502771883c0a3067b142af5cdf9",
+          "llvm_sha256": "03203bcca2a81ee637fcd43725faaf2979cf74e164384302d26323273b715d8a",
+          "structural_rc_free": true,
+          "run": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/support4-migration-native-u1_state,ce2_effects/u1_state/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns_including_admission": 1743955,
+            "stdout": "601814 6 132 7\n476744 90\n501100 5 6\n6000 0 10\n",
+            "stderr": "",
+            "correct": true,
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A06/support4-migration-native-u1_state,ce2_effects/u1_state/release/counts.json",
+              "counter_sha256": "21b63e5d965ebabf16d807494f2250d1add9a36241c4e457b0e2de2c79618e07",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 24,
+              "memory": {
+                "allocs": 57,
+                "alloc_bytes": 7648,
+                "frees": 57,
+                "reallocs": 0,
+                "peak_live_bytes": 4032,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "managed_totals": {
+              "calls": 16,
+              "allocs": 57,
+              "alloc_bytes": 7648,
+              "frees": 57,
+              "free_bytes": 7648,
+              "list_grows": 14,
+              "list_grow_bytes": 1344,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 17,
+              "list_copy_bytes": 1424,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 7,
+              "text_copy_bytes": 28,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 0,
+              "text_grow_bytes": 0,
+              "text_appends": 0,
+              "text_append_bytes": 0,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 4032,
+              "live_bytes_at_exit": 0
+            }
+          }
+        }
+      }
+    },
+    "ce2_effects": {
+      "source_sha256": "35fa15c69ea4cc28cc948ee06cd29c6219169b770625584050ae4e11e30d0671",
+      "oracle": {
+        "source": "src/core/ce2_effects_test.zig",
+        "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+        "sha256": "c29f7953731976c2918c7402a4379f8ed7f93a7daddfc778e46083e3bc101ada",
+        "constants": [
+          "fields_expected",
+          "takes_expected",
+          "stores_expected"
+        ],
+        "stdout": "20 30 2 3\n3103 103\n110153 7 new\n8005 5\n44 4\n43 9 4\n300 4 -1\n9 5 i\n8 4 renamed\n413 7 3 1\n23 6 2 2 1\n6 1 4 2 t5 6m 0m 0m 0m\n8 1 4 1 i6 t7 8m 0m 0m 0m\n3 1 4 0 t24 3m 5c 0m 0m\n3 1 4 1 t26 3m 7c 0m 0m\n-2 0 4 1 big:3 3m 0m 0m 4m\n5 1 6 0 t2 t4 5m 0m 0m 0m 1m 3m\n6 1 2 1 t2 t5 6m 1m\n5 1 4 1 i1 i4 5m 0m 0m 0m\n6 1 4 0 m!5 t3 m!!6 6m!! 0m 0m 0m\n3 1 4 0 3m 0m 0m 0m\n-2 0 4 0 deep:2666 2m 6c 6c 6c\n6 f1u c1 f0w f0u c2\n"
+      },
+      "modes": {
+        "release": {
+          "build": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+              "build",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/ce2_effects.my",
+              "--zig",
+              "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+              "--cache-dir",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/support4-migration-native-u1_state,ce2_effects/cache",
+              "--release",
+              "--experimental-zero-rc",
+              "--counters",
+              "-o",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/support4-migration-native-u1_state,ce2_effects/ce2_effects/release/program",
+              "--emit-llvm",
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/support4-migration-native-u1_state,ce2_effects/ce2_effects/release/program.ll"
+            ],
+            "status": 0,
+            "elapsed_ns_including_admission": 13584060126,
+            "stdout": "",
+            "stderr": ""
+          },
+          "admitted": true,
+          "binary_sha256": "4daa84449af45304cb4cab28bd66fbcf09589354ca4b701dec17c1b6eb87d2fb",
+          "llvm_sha256": "8abaf0cc71f8439ca4b12644ab729eb0d4c9da91f2df12ce613ee6853cdb1d39",
+          "structural_rc_free": true,
+          "run": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A06/.tmp/memory-closeout/A06/support4-migration-native-u1_state,ce2_effects/ce2_effects/release/program"
+            ],
+            "status": -6,
+            "elapsed_ns_including_admission": 1140470001,
+            "stdout": "",
+            "stderr": "free(): invalid size\n",
+            "correct": false
+          }
+        }
+      }
+    }
+  },
+  "scope": "Counted correctness only; no runtime or compile-time comparison."
+}

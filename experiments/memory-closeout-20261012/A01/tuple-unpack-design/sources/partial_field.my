@@ -1,0 +1,7 @@
+record Cell:
+    left: str
+    right: str
+func main() -> int:
+    const whole = Cell(left="a" + str(1), right="b" + str(2))
+    const left = whole.left
+    return len(left)

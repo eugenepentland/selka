@@ -1,0 +1,49 @@
+# spec-case: CAPABILITY-FIELD-METHOD-1
+import environment
+import filesystem
+
+record Ports:
+    fs: Filesystem
+    env: Environment
+
+record App:
+    ports: Ports
+    label: str
+
+func make_app() -> App:
+    return App(ports=Ports(fs=filesystem.memory(), env=environment.fixed({"KEEP": "yes"})), label="root")
+
+func borrowed(app: App) -> Result[str, str]:
+    _ = try app.ports.fs.mkdir("data")
+    with app.ports.fs.dir("data") as directory:
+        with try directory.open("note", "w") as file:
+            _ = file.write(app.label)
+        with directory.read_only() as reader:
+            return reader.read_text("note")
+
+func early(app: App) -> Result[bool, str]:
+    with try app.ports.fs.open("early", "w") as file:
+        _ = file.write("written")
+        return Err("expected")
+
+func main() -> int:
+    const original = make_app()
+    match borrowed(original):
+        case Ok(text):
+            assert text == "root"
+        case Err(_):
+            return 1
+    match early(original):
+        case Ok(_):
+            return 2
+        case Err(message):
+            assert message == "expected"
+    with original.ports.env.only("KEEP") as selected:
+        assert selected.names() == ["KEEP"]
+    const moved = original
+    match moved.ports.fs.read_text("early"):
+        case Ok(text):
+            assert text == "written"
+        case Err(_):
+            return 3
+    return 0

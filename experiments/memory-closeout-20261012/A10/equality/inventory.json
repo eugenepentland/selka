@@ -1,0 +1,128 @@
+{
+  "status": "parked-unintegrated",
+  "base": "b0fbca298e772369cafcc7b46e1da8fcef33fac6",
+  "inputs": {
+    "src/core/build_values.zig": "01d610844e37faf8e463ee0027d06e7563f7de9053997916c4c2b8f13653cbb6",
+    "src/core/canonical_ir.zig": "87b2cd14b689caf096592a80c9855f1bf9e536cd4274e6dad98e3d0959d319ae",
+    "src/core/cost.zig": "6066ef3d4b203c299bfe783e7ddebffb7058cf95a980f01eec8d0b8b7332eb42",
+    "src/core/emit_llvm.zig": "72b83ebf64b8b31b9e5e1c9334a6af0fa8ac049596837e7da8533e99eb47454c",
+    "src/core/emit_values.zig": "003b184ec7a4b5c35bd19f037fca7a05c034a50d8135c678198b5fb446effa91",
+    "src/core/marker_validation.zig": "222f1c520f567de5401193675be48ed6484ab39e4b037cc378a3f35cb4c4b179",
+    "src/core/root_test.zig": "1a829eb368cf7423e5e264d9e622529d0ece3367d9e83e488b5d4c4be137dea0",
+    "src/core/verify_ir.zig": "ea3a97913a8e20dda51b2e7533dd1d0cb46de368af70e82ae250cd172595d73c",
+    "src/core/build_equality.zig": "70e1b162647731bff370e33e8c7bf51bdc4dd958f5188fa1cd953379c63764bc",
+    "src/core/a10_equality_test.zig": "cf28850cb749d51cfbc57a9b6a3c0d656586d080bae2cfb018c5c3fc28508643"
+  },
+  "patch_sha256": "bbdbcc42c517f658b9b9fda5de3db06857281a48f8cb8c4fe7bccc0cdb740bcf",
+  "raw": [
+    {
+      "path": "raw/cache-leakcheck-first.json.gz",
+      "raw_sha256": "781d28caf6181e7c68647065f7ec83cee65b7096cc327b614fa64e9e8b5a0ea3"
+    },
+    {
+      "path": "raw/cache-v2.admission.log.gz",
+      "raw_sha256": "6318fdd7ec06c75b092ae8488956460ab57223f1357c7bb7f912d8229166ec74"
+    },
+    {
+      "path": "raw/cache.admission.log.gz",
+      "raw_sha256": "5f626eb96f3568b40d315d9b0ead9c266e9a369df475cf2d7b39c5dfdcbaeddd"
+    },
+    {
+      "path": "raw/cache.json.gz",
+      "raw_sha256": "94b97843f9701281d06ee385346a4dfee63c96440021fd10ec518bc38579ce69"
+    },
+    {
+      "path": "raw/cached.ir.gz",
+      "raw_sha256": "e0cbeb93d53ddea554ce8a6963ae6ea950cdd249728990c2169ce2131aca1a34"
+    },
+    {
+      "path": "raw/debug.admission.log.gz",
+      "raw_sha256": "c8578010fa9a5104ae199c7078f726f96b29a28d74eec6c459c2e6af769d4269"
+    },
+    {
+      "path": "raw/debug.json.gz",
+      "raw_sha256": "55aeef3586614d2cd965e624bf5cf92ed53b0fcdcc56793299e06030c4bdbb7c"
+    },
+    {
+      "path": "raw/eager.ir.gz",
+      "raw_sha256": "e0cbeb93d53ddea554ce8a6963ae6ea950cdd249728990c2169ce2131aca1a34"
+    },
+    {
+      "path": "raw/ir.diff.gz",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "raw/no_facts.admission.log.gz",
+      "raw_sha256": "e21a3ec303ee00776d6464dc3423660ceba164ac75b222c97b7b660205009c34"
+    },
+    {
+      "path": "raw/no_facts.json.gz",
+      "raw_sha256": "ba7213d488707f3a154ab48293ec4a25e55de80120e8dfe36ff786eff049e4b9"
+    },
+    {
+      "path": "raw/optimized_debug.admission.log.gz",
+      "raw_sha256": "027c53ef22efb9690ac38a7acdb82f9845f5e90da019fcbb4a821f666b269ccf"
+    },
+    {
+      "path": "raw/optimized_debug.json.gz",
+      "raw_sha256": "3eb4a6c6e3aed5d92d5d2500e1e2e13fc9f9a5d54cc1dbcafad5ba2d6146f7ed"
+    },
+    {
+      "path": "raw/ordinary.admission.log.gz",
+      "raw_sha256": "e5d6cbb9fda8434cd0bf7cbb0126ca5d0f653495a0b5e52738ff3cd27cd05372"
+    },
+    {
+      "path": "raw/ordinary.json.gz",
+      "raw_sha256": "c3e216eeb13da950e2fbb717c5e2a3728f316f50d5e56d58f25605d4ec4b8e46"
+    },
+    {
+      "path": "raw/release.admission.log.gz",
+      "raw_sha256": "7003961c8abe7c7d7b950d59ceb24251662d2e057b952c0a462459f8c9fdbb82"
+    },
+    {
+      "path": "raw/release.json.gz",
+      "raw_sha256": "18e4caf14a9c3c0d4ffa202ca76c8ce259ebb70152ab7537fc27efe82b81247b"
+    },
+    {
+      "path": "raw/trace.stderr.gz",
+      "raw_sha256": "8ca092d168edd19bd4b51ec391d9af8f81adc99b12ae77d3a71deb09ec04e5b8"
+    },
+    {
+      "path": "raw/trace.stdout.gz",
+      "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "raw/verified.admission.log.gz",
+      "raw_sha256": "c01eb2d0ef8063ba04406a9b6aa257f2272d62fc3f48999dc205a07806359b5a"
+    },
+    {
+      "path": "raw/verified.json.gz",
+      "raw_sha256": "55459376e4f7ed24294a11d89f76687102548f018c7073ea841ffbe0345e80f8"
+    },
+    {
+      "path": "raw/build1.log.gz",
+      "raw_sha256": "ec28121dbad2efcb5d953ba4b8d5e0d7f745789c937bdc013a62fb7bea1ab7ce"
+    },
+    {
+      "path": "raw/build2.log.gz",
+      "raw_sha256": "feeb323b2d93e452f27ab4a466cc21cd15357aaf64aacbbaf98b1fc10dbad213"
+    },
+    {
+      "path": "raw/build3.log.gz",
+      "raw_sha256": "272b41441b0cf556ba76ccfe4b0c03edcc5ea1d3368814d9931ca4e2fbf586a4"
+    },
+    {
+      "path": "raw/build4.log.gz",
+      "raw_sha256": "8f642555eb9b1ea3bf65ba5230659e0a7b854973e1f0249d5a052ef87b999aa5"
+    },
+    {
+      "path": "raw/cyclic-red.log.gz",
+      "raw_sha256": "a299d420233d2ffb54b4a4b161f0c05e52857b88598016d4657eac570399f5bd"
+    }
+  ],
+  "remaining": [
+    "Canonical recursive type digest discovery-order bug makes shadow mode disagree despite byte-identical Core IR.",
+    "New cyclic query-order witness not executed: test build failed first on unrelated removed Build.pathFromRoot API in package testoptions.",
+    "No C1 release integration or final gate qualification for this patch."
+  ]
+}

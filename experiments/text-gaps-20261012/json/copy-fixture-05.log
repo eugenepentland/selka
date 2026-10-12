@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 2147, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 2147 after 5s
+textgap_json_copy.my:42:19: error[E_SINGLE_OWNER_BORROW]: an indexed value is borrowed; use .copy() or pop() to obtain an owned value
+      const child = values["key"]
+                    ^

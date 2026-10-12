@@ -1,0 +1,75 @@
+{
+  "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9",
+  "cases": [
+    {
+      "source": "experiments/memory-closeout-20261012/A06/nested-write/negative-0.my",
+      "source_sha256": "10450e2996b30c9f58f14c67ad2e6463c2fcb5a128e705eb051208e131848d2d",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A06/nested-write/negative-0.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "experiments/memory-closeout-20261012/A06/nested-write/negative-0.my:10:26: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      owner.left = replace(owner.right, scalar=7)\n                           ^\n"
+    },
+    {
+      "source": "experiments/memory-closeout-20261012/A06/nested-write/negative-1.my",
+      "source_sha256": "2ff85a03912bca6f383968f8b9022380002b317ecd9d540fe82fdd0c68bb089b",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A06/nested-write/negative-1.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "experiments/memory-closeout-20261012/A06/nested-write/negative-1.my:11:26: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      owner.left = replace(other.left, scalar=7)\n                           ^\n"
+    },
+    {
+      "source": "experiments/memory-closeout-20261012/A06/nested-write/negative-2.my",
+      "source_sha256": "748ae177c70ce3b797623406d1dff56396287e5241cb2fd1f97a983950ed6390",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A06/nested-write/negative-2.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "experiments/memory-closeout-20261012/A06/nested-write/negative-2.my:9:12: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      return owner.left\n             ^\n"
+    },
+    {
+      "source": "experiments/memory-closeout-20261012/A06/nested-write/negative-3.my",
+      "source_sha256": "c9bb9e039e988e56539ea2d72ed97167d694115fe8cb78a7ce67ca0d0bc3d7cc",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A06/nested-write/negative-3.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "experiments/memory-closeout-20261012/A06/nested-write/negative-3.my:9:5: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      owner.left.scalar = 7\n      ^\n"
+    },
+    {
+      "source": "experiments/memory-closeout-20261012/A06/nested-write/positive.my",
+      "source_sha256": "22d26ec86d182085ef805910e89a888708659c703976c95c4f65ced1d916bcb2",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+        "check",
+        "experiments/memory-closeout-20261012/A06/nested-write/positive.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "experiments/memory-closeout-20261012/A06/nested-write/positive.my:10:5: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      owner.left.scalar += 3\n      ^\n"
+    }
+  ]
+}

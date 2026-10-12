@@ -1,0 +1,14 @@
+build-slot: FIFO ticket 540, position 19; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 540, position 10; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 540, position 8; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 540, position 3; earlier build tickets must run first; waiting (180s so far)
+build-slot: build slot 1, FIFO ticket 540 after 195s
+{"name": "old-mixed-first", "status": 0, "passed": true, "elapsed_ns": 2808460694, "max_rss_kib": "168336"}
+{"name": "old-mixed-receipt", "status": 0, "passed": true, "elapsed_ns": 104400999, "max_rss_kib": "27132"}
+{"name": "old-mixed-replay", "status": 0, "passed": true, "elapsed_ns": 104272254, "max_rss_kib": "9580"}
+{"name": "old-map-abi-first", "status": 0, "passed": true, "elapsed_ns": 205700703, "max_rss_kib": "60216"}
+{"name": "old-map-abi-receipt", "status": 0, "passed": true, "elapsed_ns": 103070328, "max_rss_kib": "30252"}
+{"name": "old-map-abi-replay", "status": 0, "passed": true, "elapsed_ns": 104114609, "max_rss_kib": "9516"}
+{"name": "old-rc-admitted-source-refused", "status": 1, "passed": true, "elapsed_ns": 104095665, "max_rss_kib": "23784"}
+{"name": "old-rc-admitted-source-refused-warm", "status": 1, "passed": true, "elapsed_ns": 105078381, "max_rss_kib": "20144"}
+{"name": "old-source-restored", "status": 0, "passed": true, "elapsed_ns": 103443501, "max_rss_kib": "9676"}

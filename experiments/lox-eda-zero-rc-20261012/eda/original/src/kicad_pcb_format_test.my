@@ -1,0 +1,55 @@
+
+import kicad_pcb_format as m
+import sexpr_parser as parser
+import sexpr_ast as ast
+import sexpr_tokenizer as tok
+import support_expect as ex
+
+# test "sexprUnescape inverts sexprEscape and is a no-op on clean text"
+public func test_sexprunescape_inverts_sexprescape_and_is_a_no_op_on_clean_text(out: Stream) -> bool:
+    if not ex.eq_bytes(out, "clean", m.sexpr_unescape(b"VIN"), b"VIN"):
+        return False
+    for raw in [b"a\"b", b"path\\", b"he said \"hi\" \\", b"plain"]:
+        if not ex.eq_bytes(out, "round trip", m.sexpr_unescape(m.sexpr_escape(raw)), raw):
+            return False
+    return True
+
+
+# test "sexprEscape escapes quotes and backslashes, passes clean text through"
+public func test_sexprescape_escapes_quotes_and_backslashes_passes_clean_text_through(out: Stream) -> bool:
+    if not ex.eq_bytes(out, "clean", m.sexpr_escape(b"VIN"), b"VIN"):
+        return False
+    if not ex.eq_bytes(out, "quote", m.sexpr_escape(b"a\"b"), b"a\\\"b"):
+        return False
+    if not ex.eq_bytes(out, "backslash", m.sexpr_escape(b"path\\"), b"path\\\\"):
+        return False
+    mut raw = b"he said \"hi\" \\"
+    mut quoted = b"\"" + m.sexpr_escape(raw) + b"\""
+    mut tokenizer = tok.tokenizer_init(quoted)
+    match tok.next(mut tokenizer):
+        case Err(_):
+            return ex.ok(out, "tokenizes", False)
+        case Ok(t):
+            if not ex.ok(out, "string token", t.tag == tok.TokenTag.string):
+                return False
+            return ex.eq_bytes(out, "production decoder", m.sexpr_unescape(t.text), raw)
+
+
+# test "padNumberText reads quoted, bare-atom, and bare-int pad numbers"
+public func test_padnumbertext_reads_quoted_bare_atom_and_bare_int_pad_numbers(out: Stream) -> bool:
+    for source in [b"(pad \"1\" smd)", b"(pad A1 smd)", b"(pad 2 smd)"]:
+        match parser.parse(source):
+            case Err(_):
+                return ex.ok(out, "parses", False)
+            case Ok(nodes):
+                mut children = ast.as_list(nodes[0])
+                if children is None:
+                    return False
+                mut want = b"2"
+                if source == b"(pad \"1\" smd)":
+                    want = b"1"
+                elif source == b"(pad A1 smd)":
+                    want = b"A1"
+                if not ex.eq_bytes(out, "pad number", m.pad_number_text(children[1]).unwrap_or(b""), want):
+                    return False
+    return True

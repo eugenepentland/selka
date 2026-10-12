@@ -6,6 +6,9 @@ test {
     _ = @import("environment_identity_test.zig");
     _ = @import("build_env_rules_test.zig");
     _ = @import("test_paths_units_test.zig");
+    _ = @import("a01_tuple_origins_test.zig");
+    _ = @import("a04_borrow_selection_test.zig");
+    _ = @import("a01_result_shapes_test.zig");
     _ = @import("frontend_migration_test.zig");
     _ = @import("iteration_place_test.zig");
     _ = @import("compiler.zig").module_syntax;
@@ -102,6 +105,7 @@ test {
     _ = @import("cache_command.zig");
     _ = @import("check_cache_test.zig");
     _ = @import("semantic_cache_test.zig");
+    _ = @import("a08_memo_cache_test.zig");
     _ = @import("check_scale_test.zig");
     _ = @import("module_interface_test.zig");
     _ = @import("semantic_key.zig");

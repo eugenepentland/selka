@@ -1,0 +1,54 @@
+{
+  "base": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "source_sha256": {
+    "src/sema_places.zig": "ffbc3805c220fa45d89f5f9b1cf2de65178c8d7c48f20cec055f911206edda5e",
+    "src/core/a02_field_augmented_test.zig": "74d2409ef0668c7694965b25df97bd8735769bfd0355490d24a37121372ef206",
+    "src/core/a02_field_augmented_fixture.my": "829778181a4425726050a989d2b5da3a77ba712a21566d2a5e5692516fddebe3",
+    "src/core/root_test.zig": "65e958519bb7a3e5862dca5a1020e29b1eb646c2edbb7ed4286a5c6e451a21bf"
+  },
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "components": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/install/libexec/mylang/components",
+  "component_boundary": "Support6 independent owned pin supplies components; final default/retirement package qualification is separate",
+  "steps": [
+    {
+      "name": "build",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build",
+        "core-test-binary",
+        "-Dtest-filter=zero RC A02 field augmentation",
+        "-j4",
+        "--maxrss",
+        "8589934592",
+        "--prefix",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-validation/install",
+        "-Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+        "-Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 5.682837866945192,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "test",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/field-augmented-validation/install/focus/core-tests",
+        "--guardian-filter=zero RC A02 field augmentation"
+      ],
+      "status": 1,
+      "elapsed_admitted_seconds": 0.10434835590422153,
+      "stdout": "",
+      "stderr": "guardian/test: 1 test(s) selected by filter: \"zero RC A02 field augmentation\"\nA02 field augmentation build: /home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/tmp/0Ja5b-trT7TQ7ae7/methods.my:46:11: error[E_TYPE]: operation requires a record value\n      maybe.items += [\"optional\"]\n            ^\n\n1 a02_field_augmented_test.test.zero RC A02 field augmentation preserves exact receiver ownership...FAIL (TestUnexpectedResult)\n/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x1281079 in expect (std.zig)\n    if (!ok) return error.TestUnexpectedResult;\n             ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/src/core/a02_field_augmented_test.zig:28:9: 0x1282391 in test.zero RC A02 field augmentation preserves exact receiver ownership (root_test.zig)\n        try std.testing.expect(built.term == .exited and built.term.exited == 0);\n        ^\n0 passed; 0 skipped; 1 failed.\nguardian/test: test wall 0.09s; slowest over 50ms:\nguardian/test:   0.09s  a02_field_augmented_test.test.zero RC A02 field augmentation preserves exact receiver ownership\nguardian/test: FAIL \u2014 1 failed of 1\nguardian/test: RESULT {\"passed\":0,\"failed\":1,\"skipped\":0}\n"
+    }
+  ],
+  "complete": true,
+  "compiler": {
+    "path": ".zig-cache/o/4adaf9b792cc2ec351338d318aaf1334/mylang",
+    "sha256": "40f9231d4a7b3d8e6bf98606304a8e5fed4d69aaa8fe427832effbd640e89d92",
+    "options": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/0514385051e598d4a3a41cddb8c3b1bd/options.zig"
+  },
+  "test_binary_sha256": "3c84aa0925b0496b0d3a74d211bba1d5a8864591c85654cbb17b8258ccd8faee",
+  "pass": false
+}

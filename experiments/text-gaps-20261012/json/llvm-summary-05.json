@@ -1,0 +1,23 @@
+{
+  "my.json::read_value": {
+    "myl_core_text_encode": 3,
+    "myl_core_span_utf8_count": 0,
+    "myl_core_span_decode_text": 0,
+    "myl_core_buffer_span_append_checked": 0,
+    "myl_core_values_copy_box": 0
+  },
+  "my.json::write_quoted": {
+    "myl_core_text_encode": 0,
+    "myl_core_span_utf8_count": 0,
+    "myl_core_span_decode_text": 0,
+    "myl_core_buffer_span_append_checked": 0,
+    "myl_core_values_copy_box": 0
+  },
+  "my.json::decoded_span": {
+    "myl_core_text_encode": 0,
+    "myl_core_span_utf8_count": 1,
+    "myl_core_span_decode_text": 1,
+    "myl_core_buffer_span_append_checked": 0,
+    "myl_core_values_copy_box": 0
+  }
+}

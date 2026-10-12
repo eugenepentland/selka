@@ -1,0 +1,38 @@
+{
+  "compiler_sha256": "ec89910347476ceec8a50e4196292bfcb5a9206bb025423110b8fbae0a74a58d",
+  "checks": [
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/text-cursor/install/focus/mylang",
+        "fmt",
+        "tests/lang/a04_list_extrema.my",
+        "--check"
+      ],
+      "exit_status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/text-cursor/install/focus/mylang",
+        "fmt",
+        "tests/lang/a04_saturating_integer.my",
+        "--check"
+      ],
+      "exit_status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/text-cursor/install/focus/mylang",
+        "lint",
+        "tests/lang/a04_list_extrema.my",
+        "--gate"
+      ],
+      "exit_status": 0,
+      "stdout": "lint: 16 finding(s): 0 blocking, 16 report, 0 waived, 0 accepted\n",
+      "stderr": "a04_list_extrema.my:40:6: warning[L_DECISION_POINTS]: decision-points: a04_list_extrema::scenario_list_extrema_keep_scalar_ordering_and_first_ties measures 29 (max 10)\n  func scenario_list_extrema_keep_scalar_ordering_and_first_ties() -> bool:\n       ^\n  note: a04_list_extrema.my:36:13: reached by tests: a04_list_extrema::test_list_extrema_keep_scalar_ordering_and_first_ties\na04_list_extrema.my:59:6: warning[L_DECISION_POINTS]: decision-points: a04_list_extrema::scenario_list_input_and_scalar_arguments_evaluate_once measures 12 (max 10)\n  func scenario_list_input_and_scalar_arguments_evaluate_once() -> bool:\n       ^\n  note: a04_list_extrema.my:55:13: reached by tests: a04_list_extrema::test_list_input_and_scalar_arguments_evaluate_once\na04_list_extrema.my:41:45: warning[L_REPEATED_LITERAL]: repeated-literal: literal -2 appears 3 times in module a04_list_extrema\n      if min([7, -2, 4, -2]) != -2 or max([7, -2, 4, 7]) != 7:\n                                              ^\na04_list_extrema.my:41:32: warning[L_REPEATED_LITERAL]: repeated-literal: literal 2 appears 7 times in module a04_list_extrema\n      if min([7, -2, 4, -2]) != -2 or max([7, -2, 4, 7]) != 7:\n                                 ^\na04_list_extrema.my:46:27: warning[L_REPEATED_LITERAL]: repeated-literal: literal 3 appears 6 times in module a04_list_extrema\n      const first_nan = min([nan, 2.0, 1.0])\n                            ^\na04_list_extrema.my:41:41: warning[L_REPEATED_LITERAL]: repeated-literal: literal 4 appears 5 times in module a04_list_extrema\n      if min([7, -2, 4, -2]) != -2 or max([7, -2, 4, 7]) != 7:\n                                          ^\na04_list_extrema.my:25:57: warning[L_REPEATED_LITERAL]: repeated-literal: literal 7 appears 9 times in module a04_list_extrema\n      mut words = [\"z\" + str(7), \"\u00e9\" + str(7), \"a\" + str(7), \"a\" + str(7), \"\ud83d\ude00\" + str(7)]\n                                                          ^\na04_list_extrema.my:49:70: warning[L_REPEATED_LITERAL]: repeated-literal: literal 48 appears 4 times in module a04_list_extrema\n      if repr(min([-0.0, 0.0])) != \"-0.0\" or repr(max([0.0, -0.0])) != \"0.0\":\n                                                                       ^\na04_list_extrema.my:32:19: warning[L_REPEATED_LITERAL]: repeated-literal: literal 55 appears 4 times in module a04_list_extrema\n      return low == \"a7\" and high == \"\ud83d\ude007\" and len(words) == 0\n                    ^\na04_list_extrema.my:25:47: warning[L_REPEATED_LITERAL]: repeated-literal: literal 97 appears 7 times in module a04_list_extrema\n      mut words = [\"z\" + str(7), \"\u00e9\" + str(7), \"a\" + str(7), \"a\" + str(7), \"\ud83d\ude00\" + str(7)]\n                                                ^\na04_list_extrema.my:51:47: warning[L_REPEATED_LITERAL]: repeated-literal: literal 111 appears 4 times in module a04_list_extrema\n      return min([9]) == 9 and max([\"solo\"]) == \"solo\"\n                                                ^\na04_list_extrema.my:63:45: warning[L_REPEATED_LITERAL]: repeated-literal: literal 122 appears 3 times in module a04_list_extrema\n      if calls != 2 or low != \"a1\" or high != \"z2\":\n                                              ^\na04_list_extrema.my:32:36: warning[L_REPEATED_LITERAL]: repeated-literal: literal 128512 appears 3 times in module a04_list_extrema\n      return low == \"a7\" and high == \"\ud83d\ude007\" and len(words) == 0\n                                     ^\na04_list_extrema.my:47:58: warning[L_REPEATED_LITERAL]: repeated-literal: literal 4607182418800017408 appears 3 times in module a04_list_extrema\n      if first_nan == first_nan or min([2.0, nan, 1.0]) != 1.0:\n                                                           ^\na04_list_extrema.my:43:52: warning[L_REPEATED_LITERAL]: repeated-literal: literal 4611686018427387904 appears 5 times in module a04_list_extrema\n      if min([1.5, -2.0, 4.0]) != -2.0 or max([1.5, -2.0, 4.0]) != 4.0:\n                                                     ^\na04_list_extrema.my:43:66: warning[L_REPEATED_LITERAL]: repeated-literal: literal 4616189618054758400 appears 3 times in module a04_list_extrema\n      if min([1.5, -2.0, 4.0]) != -2.0 or max([1.5, -2.0, 4.0]) != 4.0:\n                                                                   ^\n"
+    }
+  ]
+}

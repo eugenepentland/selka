@@ -1,0 +1,8 @@
+func main() -> int:
+    mut words = {"b": 1, "a": 2}
+    mut keys: set[str] = set()
+    for word in words:
+        keys.add(word.copy())
+    words.clear()
+    print(len(keys))
+    return 0

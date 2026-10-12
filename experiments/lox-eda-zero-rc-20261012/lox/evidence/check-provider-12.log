@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1482, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1482 after 5s
+resolver.my:212:19: error[E_SINGLE_OWNER_MOVED]: 'node' was moved or is unavailable on this path; use .copy() when both values are needed
+      define(mut r, node.name_ref)
+                    ^

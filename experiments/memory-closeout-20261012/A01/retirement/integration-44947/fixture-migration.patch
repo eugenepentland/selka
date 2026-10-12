@@ -1,0 +1,451 @@
+--- a/src/core/a01_owned_scheduler_fixture.c
++++ b/src/core/a01_owned_scheduler_fixture.c
+@@ -1,5 +1,4 @@
+ /* NEW-CORE-ZERO-RC-TASKS-1: count-free scheduler stress and take-once cleanup. */
+-#define MYL_ZERO_RC 1
+ #include "core_rt_all.c"
+ #undef NDEBUG
+ #include <assert.h>
+--- a/src/core/task_ir_program.zig
++++ b/src/core/task_ir_program.zig
+@@ -19,11 +19,15 @@
+ const Abi = struct { open: u32, submit: u32, result: u32, close: u32, threads: u32, thunk: ir.Type };
+ fn abi(a: std.mem.Allocator, m: *ir.Module, s: Shape) Error!Abi {
+     const thunk = try m.intern(a, .{ .@"fn" = .{ .params = try a.dupe(ir.Type, &.{s.env}), .ret = s.result } });
++    const submit = try builder.helper(a, m, "myl_core_owned_task_submit", &.{ s.handle, thunk, s.env, .i64 }, .void);
++    m.functions.items[submit].signature.owned = 4;
++    const close = try builder.helper(a, m, "myl_core_owned_group_end", &.{s.handle}, .void);
++    m.functions.items[close].signature.owned = 1;
+     return .{
+         .open = try builder.helper(a, m, "myl_core_group_open", &.{}, s.handle),
+-        .submit = try builder.helper(a, m, "myl_core_task_submit", &.{ s.handle, thunk, s.env, .i64 }, s.handle),
+-        .result = try builder.helper(a, m, "myl_core_task_result", &.{s.handle}, s.result),
+-        .close = try builder.helper(a, m, "myl_core_group_close", &.{s.handle}, .void),
++        .submit = submit,
++        .result = try builder.helper(a, m, "myl_core_owned_group_take", &.{ s.handle, .i64 }, s.result),
++        .close = close,
+         .threads = try builder.helper(a, m, "myl_core_threads", &.{}, .i64),
+         .thunk = thunk,
+     };
+@@ -46,6 +50,7 @@
+     return h.emit(.{ .op = .list_len, .ty = .u64, .a = value });
+ }
+ fn taskBody(a: std.mem.Allocator, m: *ir.Module, s: Shape, api: Abi, fail: bool) Error!u32 {
++    const copy_text = try builder.helper(a, m, "myl_core_owned_octets_copy", &.{.str}, .str);
+     var h = try Hand.init(a, m, "captured_task", m.compound(api.thunk).@"fn");
+     if (fail) _ = try h.emit(.{ .op = .div, .ty = .i64, .a = try h.int(.i64, 1), .b = try h.int(.i64, 0), .check = .exact, .span = 200 });
+     const record = try h.emit(.{ .op = .box_get, .ty = s.record, .a = try h.param(0) });
+@@ -63,24 +68,30 @@
+     const ab = try h.emit(.{ .op = .add, .ty = .i64, .a = a0, .b = b0, .check = .exact });
+     const sum = try h.emit(.{ .op = .add, .ty = .i64, .a = ab, .b = c0, .check = .exact });
+     const result_type = m.compound(s.result).box;
+-    const result = try h.emit(.{ .op = .record_make, .ty = result_type, .data = try h.extra(&.{ from_dict, text, sum }) });
++    const cloned_ints = try h.emit(.{ .op = .list_copy, .ty = s.ints, .a = from_dict });
++    const cloned_text = try call(&h, copy_text, &.{text});
++    const result = try h.emit(.{ .op = .record_make, .ty = result_type, .data = try h.extra(&.{ cloned_ints, cloned_text, sum }) });
+     const boxed = try h.emit(.{ .op = .box_make, .ty = s.result, .a = result });
+     _ = try h.emit(.{ .op = .ret, .ty = .void, .a = boxed });
+     return h.finish();
+ }
+ fn environment(h: *Hand, s: Shape, ints: ir.Ref) Error!ir.Ref {
+-    const nested = try list(h, s.nested, &.{ ints, ints });
++    const first = try h.emit(.{ .op = .list_copy, .ty = s.ints, .a = ints });
++    const second = try h.emit(.{ .op = .list_copy, .ty = s.ints, .a = ints });
++    const nested = try list(h, s.nested, &.{ first, second });
+     const key = try h.loose(.{ .op = .str_const, .ty = .str, .data = 0 });
+     const suffix = try h.loose(.{ .op = .str_const, .ty = .str, .data = 1 });
+     const text = try h.emit(.{ .op = .str_append, .ty = .str, .a = key, .b = suffix });
+     var dict = try h.emit(.{ .op = .dict_new, .ty = s.dict, .a = try h.int(.u64, 1) });
+     const probe = try h.emit(.{ .op = .dict_find, .ty = .i64, .a = dict, .b = key });
+-    dict = try h.emit(.{ .op = .dict_insert, .ty = s.dict, .a = dict, .b = probe, .data = try h.extra(&.{ key, ints }) });
+-    const record = try h.emit(.{ .op = .record_make, .ty = s.record, .data = try h.extra(&.{ ints, nested, dict, text }) });
++    const dict_ints = try h.emit(.{ .op = .list_copy, .ty = s.ints, .a = ints });
++    dict = try h.emit(.{ .op = .dict_insert, .ty = s.dict, .a = dict, .b = probe, .data = try h.extra(&.{ key, dict_ints }) });
++    const record_ints = try h.emit(.{ .op = .list_copy, .ty = s.ints, .a = ints });
++    const record = try h.emit(.{ .op = .record_make, .ty = s.record, .data = try h.extra(&.{ record_ints, nested, dict, text }) });
+     return h.emit(.{ .op = .box_make, .ty = s.env, .a = record });
+ }
+-/// Eight tasks retain shared list and string results from a mixed capture graph.
+-/// Parent mutation must copy, even if all workers finish before that mutation.
++/// Eight tasks receive independently owned mixed capture graphs. Explicit copies
++/// preserve snapshots while parent mutation and result cleanup remain independent.
+ pub fn captures(a: std.mem.Allocator) Error!ir.Module {
+     return captureProgram(a, false);
+ }
+@@ -91,7 +102,7 @@
+ }
+ 
+ fn captureProgram(a: std.mem.Allocator, fail: bool) Error!ir.Module {
+-    var m: ir.Module = .{};
++    var m: ir.Module = .{ .single_owner = true, .zero_rc = true };
+     try m.strings.appendSlice(a, &.{ "key", "é" });
+     const s = try shape(a, &m);
+     const api = try abi(a, &m, s);
+@@ -99,16 +110,17 @@
+     var h = try Hand.init(a, &m, "main", .{ .params = &.{.cap}, .ret = .i64 });
+     const stream = try h.param(0);
+     const ints = try list(&h, s.ints, &.{ try h.int(.i64, 10), try h.int(.i64, 20), try h.int(.i64, 30) });
+-    const env = try environment(&h, s, ints);
+     const group = try call(&h, api.open, &.{});
+     const run = try h.loose(.{ .op = .func_ref, .ty = api.thunk, .data = thunk });
+-    var tasks: [8]ir.Ref = undefined;
+-    for (&tasks) |*task| task.* = try call(&h, api.submit, &.{ group, run, env, try h.int(.i64, -1) });
++    for (0..8) |_| {
++        const env = try environment(&h, s, ints);
++        _ = try call(&h, api.submit, &.{ group, run, env, try h.int(.i64, -1) });
++    }
+     const changed = try h.emit(.{ .op = .list_push, .ty = s.ints, .a = ints, .b = try h.int(.i64, 99) });
+     try h.printValues(stream, &.{try length(&h, changed)});
+-    for (tasks) |task| {
+-        const boxed = try call(&h, api.result, &.{task});
+-        const again = try call(&h, api.result, &.{task});
++    for (0..8) |index| {
++        const boxed = try call(&h, api.result, &.{ group, try h.int(.i64, @intCast(index)) });
++        const again = boxed; // Borrow one transferred result repeatedly.
+         const result_type = m.compound(s.result).box;
+         const record = try h.emit(.{ .op = .box_get, .ty = result_type, .a = boxed });
+         const other = try h.emit(.{ .op = .box_get, .ty = result_type, .a = again });
+@@ -167,7 +179,7 @@
+     _ = try h.emit(.{ .op = .ret, .ty = .void, .a = boxed });
+     return h.finish();
+ }
+-/// P2-0 proof: a generated range thunk loops over shared items, borrows context,
++/// P2-0 proof: a generated range thunk loops over an explicit input copy, borrows context,
+ /// returns a fresh chunk list and the parent gathers results in input order.
+ pub fn mapRanges(a: std.mem.Allocator) Error!ir.Module {
+     return rangeProgram(a, false);
+@@ -177,41 +189,29 @@
+     return rangeProgram(a, true);
+ }
+ fn rangeProgram(a: std.mem.Allocator, fail: bool) Error!ir.Module {
+-    var m: ir.Module = .{};
++    var m: ir.Module = .{ .single_owner = true, .zero_rc = true };
+     const s = try rangeShape(a, &m);
+     const open = try builder.helper(a, &m, "myl_core_group_open", &.{}, s.handle);
+-    const submit = try builder.helper(a, &m, "myl_core_task_submit", &.{ s.handle, s.thunk, s.env, .i64 }, s.handle);
+-    const result = try builder.helper(a, &m, "myl_core_task_result", &.{s.handle}, s.result);
+-    const close = try builder.helper(a, &m, "myl_core_group_close", &.{s.handle}, .void);
++    const submit = try builder.helper(a, &m, "myl_core_owned_task_submit", &.{ s.handle, s.thunk, s.env, .i64 }, .void);
++    m.functions.items[submit].signature.owned = 4;
++    const result = try builder.helper(a, &m, "myl_core_owned_group_take", &.{ s.handle, .i64 }, s.result);
++    const close = try builder.helper(a, &m, "myl_core_owned_group_end", &.{s.handle}, .void);
++    m.functions.items[close].signature.owned = 1;
+     const chunks = try builder.helper(a, &m, "myl_core_map_chunks", &.{.i64}, .i64);
+-    const share = try builder.helper(a, &m, "myl_core_share", &.{s.items}, .void);
+-    const threads = try builder.helper(a, &m, "myl_core_threads", &.{}, .i64);
+     const thunk = try rangeBody(a, &m, s, fail);
+     var h = try Hand.init(a, &m, "main", .{ .params = &.{.cap}, .ret = .i64 });
+     var refs: [32]ir.Ref = undefined;
+     for (&refs, 0..) |*value, i| value.* = try h.int(.i64, @intCast(i));
+     const items = try list(&h, s.items, &refs);
+-    const count_threads = try call(&h, threads, &.{});
+-    const parallel = try h.emit(.{ .op = .cmp, .ty = .bool, .a = count_threads, .b = try h.int(.i64, 1), .data = @backingInt(ir.Predicate.gt) });
+-    const publish = try h.newBlock();
+-    const ready = try h.newBlock();
+-    try h.branch(parallel, publish, ready);
+-    h.block = publish;
+-    _ = try call(&h, share, &.{items});
+-    try h.jump(ready);
+-    h.block = ready;
+     const group = try call(&h, open, &.{});
+     const run = try h.loose(.{ .op = .func_ref, .ty = s.thunk, .data = thunk });
+     const k = try call(&h, chunks, &.{try h.int(.i64, 32)});
+-    const handles_type = try m.intern(a, .{ .list = s.handle });
+-    const handles = try list(&h, handles_type, &.{});
+     const header = try h.newBlock();
+     const body = try h.newBlock();
+     const gather = try h.newBlock();
+     try h.jump(header);
+     h.block = header;
+     const cursor = try h.emit(.{ .op = .phi, .ty = .i64 });
+-    const tasks = try h.emit(.{ .op = .phi, .ty = handles_type });
+     const more = try h.emit(.{ .op = .cmp, .ty = .bool, .a = cursor, .b = k, .data = @backingInt(ir.Predicate.lt) });
+     try h.branch(more, body, gather);
+     h.block = body;
+@@ -220,13 +220,12 @@
+     const right = try h.emit(.{ .op = .mul, .ty = .i64, .a = next, .b = try h.int(.i64, 32), .check = .exact });
+     const start = try h.emit(.{ .op = .div, .ty = .i64, .a = left, .b = k, .check = .exact });
+     const end = try h.emit(.{ .op = .div, .ty = .i64, .a = right, .b = k, .check = .exact });
+-    const record = try h.emit(.{ .op = .record_make, .ty = s.capture, .data = try h.extra(&.{ items, try h.int(.i64, 100), start, end }) });
++    const captured_items = try h.emit(.{ .op = .list_copy, .ty = s.items, .a = items });
++    const record = try h.emit(.{ .op = .record_make, .ty = s.capture, .data = try h.extra(&.{ captured_items, try h.int(.i64, 100), start, end }) });
+     const env = try h.emit(.{ .op = .box_make, .ty = s.env, .a = record });
+-    const task = try call(&h, submit, &.{ group, run, env, start });
+-    const pushed = try h.emit(.{ .op = .list_push, .ty = handles_type, .a = tasks, .b = task });
++    _ = try call(&h, submit, &.{ group, run, env, start });
+     try h.jump(header);
+     h.function.insts.items[cursor.index()].data = try h.extra(&.{ try h.int(.i64, 0), next });
+-    h.function.insts.items[tasks.index()].data = try h.extra(&.{ handles, pushed });
+     h.block = gather;
+     const outer = try h.newBlock();
+     const enter = try h.newBlock();
+@@ -240,8 +239,7 @@
+     const has_task = try h.emit(.{ .op = .cmp, .ty = .bool, .a = which, .b = k, .data = @backingInt(ir.Predicate.lt) });
+     try h.branch(has_task, enter, done);
+     h.block = enter;
+-    const held = try h.emit(.{ .op = .list_get, .ty = s.handle, .a = tasks, .b = which, .check = .exact });
+-    const boxed = try call(&h, result, &.{held});
++    const boxed = try call(&h, result, &.{ group, which });
+     const chunk = try h.emit(.{ .op = .box_get, .ty = s.items, .a = boxed });
+     const count = try h.emit(.{ .op = .convert, .ty = .i64, .a = try length(&h, chunk), .check = .exact });
+     try h.jump(inner);
+--- a/src/core/task_ir_test.zig
++++ b/src/core/task_ir_test.zig
+@@ -25,6 +25,8 @@
+     try support.verified(a, &module, &.{});
+     _ = try own.run(a, &module, .{ .verify = options.verify });
+     try support.verified(a, &module, &.{});
++    var failure: @import("single_owner.zig").Failure = .{};
++    try @import("single_owner.zig").verifyLowered(&module, &failure);
+     const context: u8 = 0;
+     var target = @import("target.zig").current;
+     if (!options.frames) target.traps = .posix_exit;
+@@ -36,6 +38,7 @@
+         .counters = options.counters,
+         .target = target,
+     });
++    try std.testing.expect(@import("zero_rc.zig").emittedClean(llvm));
+     var environment = try std.testing.environ.createMap(a);
+     if (options.sanitized) try environment.put("MYLANG_CORE_SANITIZE", "thread");
+     try environment.put("MYL_CORE_LEAKCHECK", "1");
+@@ -103,7 +106,7 @@
+ }
+ 
+ // spec-case: TASK-SCHEDULER-1
+-test "emitted task bridge preserves mixed captures results and parent copy-on-write at 1 2 8 threads" {
++test "emitted task bridge preserves mixed captures results and explicit snapshot copies at 1 2 8 threads" {
+     try std.testing.expectEqual(@as(usize, 3), try matrix(std.testing.allocator, .{}));
+ }
+ // spec-case: TASK-SCHEDULER-1
+--- a/src/core/task_scheduler_fixture.c
++++ b/src/core/task_scheduler_fixture.c
+@@ -1,5 +1,4 @@
+-/* TASK-SCHEDULER-1: C stress harness uses an explicit C-thunk bridge. P1-5
+- * separately exercises the real emitted fastcc bridge. */
++/* NEW-CORE-ZERO-RC-TASKS-1: count-free scheduler stress and take-once cleanup. */
+ #include "core_rt_all.c"
+ #undef NDEBUG
+ #include <assert.h>
+@@ -19,117 +18,81 @@
+ }
+ static void simple(uint64_t count) {
+     myl_block *group = myl_core_group_open();
+-    myl_block *env = number(41);
+     for (uint64_t i = 0; i < count; ++i) {
+-        myl_block *task = myl_core_task_submit(group, increment, env, (int64_t)i);
++        myl_core_owned_task_submit(group, increment, number(41), (int64_t)i);
+         if (i % 127 == 0) {
+-            myl_block *a = myl_core_task_result(task), *b = myl_core_task_result(task);
+-            assert(a == b && read_number(a) == 42);
+-            myl_core_release(a); myl_core_release(b);
++            myl_block *value = myl_core_owned_group_take(group, (int64_t)i);
++            assert(read_number(value) == 42);
++            myl_core_drop_owned(value);
+         }
+-        myl_core_release(task);
+     }
+-    myl_core_release(env); /* task-owned environments must survive */
+-    myl_core_group_close(group);
+-    myl_core_group_close(group);
+-    myl_core_release(group);
++    myl_core_owned_group_end(group);
+ }
+ static myl_block *nested(myl_block *env) {
+     int64_t depth = read_number(env);
+     if (!depth) return number(1);
+     myl_block *group = myl_core_group_open();
+-    myl_block *child = number(depth - 1);
+-    myl_block *left = myl_core_task_submit(group, nested, child, -1);
+-    myl_block *right = myl_core_task_submit(group, nested, child, -1);
+-    myl_core_release(child);
+-    /* Wait for the older task while our own deque still holds the newer one. */
+-    myl_block *a = myl_core_task_result(left), *b = myl_core_task_result(right);
++    myl_core_owned_task_submit(group, nested, number(depth - 1), -1);
++    myl_core_owned_task_submit(group, nested, number(depth - 1), -1);
++    /* Waiting for the older task must also service our newer queued work. */
++    myl_block *a = myl_core_owned_group_take(group, 0), *b = myl_core_owned_group_take(group, 1);
+     myl_block *answer = number(read_number(a) + read_number(b));
+-    myl_core_release(a); myl_core_release(b);
+-    myl_core_release(left); myl_core_release(right);
+-    /* Deliberately drop without explicit close: finalization must join. */
+-    myl_core_release(group);
++    myl_core_drop_owned(a); myl_core_drop_owned(b);
++    myl_core_drop_owned(group); /* Implicit group destruction still joins. */
+     return answer;
+ }
+ static myl_block *chain(myl_block *env) {
+     int64_t depth = read_number(env);
+     if (!depth) return number(0);
+-    myl_block *group = myl_core_group_open(), *child = number(depth - 1);
+-    myl_block *task = myl_core_task_submit(group, chain, child, -1);
+-    myl_core_release(child);
+-    myl_block *value = myl_core_task_result(task);
++    myl_block *group = myl_core_group_open();
++    myl_core_owned_task_submit(group, chain, number(depth - 1), -1);
++    myl_block *value = myl_core_owned_group_take(group, 0);
+     myl_block *result = number(read_number(value) + 1);
+-    myl_core_release(value); myl_core_release(task); myl_core_release(group);
++    myl_core_drop_owned(value); myl_core_owned_group_end(group);
+     return result;
+ }
+-static void deep_chain(void) {
+-    myl_block *group = myl_core_group_open(), *env = number(2048);
+-    myl_block *task = myl_core_task_submit(group, chain, env, -1);
+-    myl_core_release(env);
+-    myl_block *result = myl_core_task_result(task);
+-    assert(read_number(result) == 2048);
+-    myl_core_release(result); myl_core_release(task); myl_core_release(group);
++static void deep(void) {
++    myl_block *group = myl_core_group_open();
++    myl_core_owned_task_submit(group, nested, number(12), 19);
++    myl_core_owned_task_submit(group, chain, number(2048), 20);
++    myl_block *tree = myl_core_owned_group_take(group, 0), *line = myl_core_owned_group_take(group, 1);
++    assert(read_number(tree) == 4096 && read_number(line) == 2048);
++    myl_core_drop_owned(tree); myl_core_drop_owned(line);
++    myl_core_owned_group_end(group);
+ }
+-static void deep(void) {
+-    myl_block *group = myl_core_group_open(), *env = number(12);
+-    myl_block *task = myl_core_task_submit(group, nested, env, 19);
+-    myl_core_release(env);
+-    myl_block *result = myl_core_task_result(task);
+-    assert(read_number(result) == 4096);
+-    myl_core_release(result); myl_core_release(task); myl_core_release(group);
+-}
+-typedef struct { myl_block *expected; unsigned seen; } one_child;
+-static void observe_one(myl_block *child, void *context) {
+-    one_child *found = context;
+-    assert(child == found->expected);
+-    ++found->seen;
+-}
+-static myl_block *identity(myl_block *env) { return number(read_number(env)); }
+-static void post_close(void) {
+-    myl_block *group = myl_core_group_open(), *env = number(7);
+-    myl_block *task = myl_core_task_submit(group, identity, env, -1);
+-    if (myl_core_threads() == 1) assert(count_load(env) == 1);
+-    myl_core_release(env);
+-    myl_block *before = myl_core_task_result(task);
+-    one_child result = {before, 0};
+-    core_children(task, observe_one, &result);
+-    assert(result.seen == 1);
+-    one_child handles = {((core_group *)block_data(group))->tasks, 0};
+-    core_children(group, observe_one, &handles);
+-    assert(handles.seen == 1);
+-    myl_core_release(before);
+-    myl_core_group_close(group);
+-    one_child closed = {NULL, 0};
+-    core_children(group, observe_one, &closed);
+-    assert(closed.seen == 0);
+-    myl_core_release(group); /* the handle must no longer need this pointer */
+-    myl_block *a = myl_core_task_result(task), *b = myl_core_task_result(task);
+-    assert(a == b && read_number(a) == 7);
+-    myl_core_release(a); myl_core_release(b); myl_core_release(task);
++static void take_and_drop(bool twice) {
++    myl_block *group = myl_core_group_open();
++    myl_core_owned_task_submit(group, increment, number(6), 0);
++    myl_core_owned_task_submit(group, increment, number(7), 1);
++    myl_block *value = myl_core_owned_group_take(group, 0);
++    if (twice) {
++        myl_core_drop_owned(value);
++        (void)myl_core_owned_group_take(group, 0); /* A second transfer must refuse. */
++        abort();
++    }
++    myl_core_drop_owned(group); /* Joins and drops the other, untaken result. */
++    assert(read_number(value) == 7); /* The transferred result is independent. */
++    myl_core_drop_owned(value);
+ }
+ static void dropped(void) {
+-    myl_block *group = myl_core_group_open(), *env = number(99);
+-    for (int i = 0; i < 10000; ++i) {
+-        myl_block *task = myl_core_task_submit(group, increment, env, -1);
+-        myl_core_release(task);
+-    }
+-    myl_core_release(env);
+-    myl_core_release(group);
++    myl_block *group = myl_core_group_open();
++    for (int i = 0; i < 10000; ++i)
++        myl_core_owned_task_submit(group, increment, number(99), i);
++    myl_core_drop_owned(group);
+ }
+ int main(int argc, char **argv) {
+     alarm(180);
+     myl_core_start();
+     assert(!core_parallel());
++    if (argc > 1 && !strcmp(argv[1], "twice")) { take_and_drop(true); return 90; }
+     if (argc > 1 && !strcmp(argv[1], "lazy")) {
+-        assert(myl_core_threads() >= 1 && !core_parallel());
+-        myl_block *group = myl_core_group_open(); myl_core_group_close(group); myl_core_release(group);
++        myl_core_owned_group_end(myl_core_group_open());
+         assert(!core_parallel() && live_count() == 0);
+-        puts("lazy: no workers"); return 0;
++        puts("lazy: no workers"); return myl_core_exit(0);
+     }
+     if (argc > 1 && !strcmp(argv[1], "batch")) {
+         core_test_batch_parent = true;
+-        myl_block *group = myl_core_group_open(), *env = number(0);
+-        (void)myl_core_task_submit(group, increment, env, -1);
++        myl_core_owned_task_submit(myl_core_group_open(), increment, number(0), -1);
+         return 90;
+     }
+     if (argc > 1 && (!strcmp(argv[1], "budget") || !strcmp(argv[1], "frames"))) {
+@@ -137,29 +100,20 @@
+         else core_test_frame_limit = 100;
+         assert(myl_core_threads() == 1);
+         simple(10); assert(!core_parallel());
+-        puts("budget: sequential"); return 0;
++        puts("budget: sequential"); return myl_core_exit(0);
+     }
+     if (argc > 1 && !strcmp(argv[1], "fork")) {
+-        simple(10);
+-        assert(core_parallel());
+-        (void)myl_core_test_run();
+-        return 90;
++        simple(10); assert(core_parallel());
++        (void)myl_core_test_run(); return 90;
+     }
+     uint64_t count = argc > 1 && !strcmp(argv[1], "stress") ? 1000000 : 10000;
+     int64_t threads = myl_core_threads();
+-    assert(myl_core_map_chunks(0) == 0);
+-    assert(myl_core_map_chunks(1) == 1);
+-    assert(myl_core_map_chunks(1000) == (threads == 1 ? 1 : threads * 4));
+-    /* Exercise all one million submissions without retaining one million
+-     * completed results at once under TSan's allocation metadata. Each batch
+-     * still grows its deque/list, shares environments, and joins every task. */
+-    for (uint64_t submitted = 0; submitted < count; submitted += 10000)
+-        simple(count - submitted < 10000 ? count - submitted : 10000);
+-    deep(); deep_chain(); dropped(); post_close(); core_tasks_quiesce();
+-    assert(atomic_load_explicit(&executed, memory_order_relaxed) == count + 10000);
++    for (uint64_t submitted = 0; submitted < count; submitted += 10000) simple(10000);
++    deep(); dropped(); take_and_drop(false); core_tasks_quiesce();
++    assert(atomic_load_explicit(&executed, memory_order_relaxed) == count + 10002);
+     assert(live_count() == 0);
+     assert(core_parallel() == (threads > 1));
+     if (threads > 1) assert(atomic_load_explicit(&worker_bits, memory_order_relaxed) & ~UINT64_C(1));
+-    printf("tasks: %llu submits, binary depth 12, chain 2048, threads %lld, live 0\n", (unsigned long long)(count + 10000), (long long)threads);
++    printf("owned tasks: %llu submits, binary depth 12, chain 2048, threads %lld, live 0\n", (unsigned long long)(count + 10002), (long long)threads);
+     return myl_core_exit(0);
+ }
+--- a/src/core/task_scheduler_test.zig
++++ b/src/core/task_scheduler_test.zig
+@@ -18,9 +18,12 @@
+             try std.testing.expectEqual(@as(u8, 0), run.status);
+             try std.testing.expectEqualStrings("", run.stderr);
+             try std.testing.expect(run.stdout.len != 0);
+-            if (std.mem.eql(u8, mode, "stress")) try std.testing.expect(std.mem.indexOf(u8, run.stdout, "1010000 submits, binary depth 12, chain 2048") != null);
++            if (std.mem.eql(u8, mode, "stress")) try std.testing.expect(std.mem.indexOf(u8, run.stdout, "1010002 submits, binary depth 12, chain 2048") != null);
+             passed += 1;
+         }
++        const twice = try fixture.run("twice", threads);
++        try std.testing.expectEqual(@as(u8, 1), twice.status);
++        try std.testing.expect(std.mem.indexOf(u8, twice.stderr, "R_TASK_GROUP") != null);
+         const batch = try fixture.run("batch", threads);
+         try std.testing.expectEqual(@as(u8, 1), batch.status);
+         try std.testing.expect(std.mem.indexOf(u8, batch.stderr, "R_TASK_FORK") != null);
+@@ -48,6 +51,6 @@
+     const run = try fixture.run("stress", "8");
+     try std.testing.expectEqual(@as(u8, 0), run.status);
+     try std.testing.expectEqualStrings("", run.stderr);
+-    try std.testing.expect(std.mem.indexOf(u8, run.stdout, "1010000 submits, binary depth 12, chain 2048, threads 8, live 0") != null);
++    try std.testing.expect(std.mem.indexOf(u8, run.stdout, "1010002 submits, binary depth 12, chain 2048, threads 8, live 0") != null);
+     try fixture.exportBinary("native-tasks");
+ }

@@ -1,0 +1,188 @@
+{
+  "base_commit": "d45e2f33b953fc4c418289904913674031bfdd26",
+  "candidate_diff": "diff --git a/src/core/runtime/core_number.c b/src/core/runtime/core_number.c\nindex 8007ddff3..1d334e605 100644\n--- a/src/core/runtime/core_number.c\n+++ b/src/core/runtime/core_number.c\n@@ -12,6 +12,9 @@ myl_block *myl_core_number_text_new(size_t length) {\n     return text;\n }\n \n+/* The prebuilt Zig formatter must not guess the selected runtime's kind offset. */\n+void myl_core_number_text_clear_ascii(myl_block *text) { text->kind &= ~MYL_TEXT_ASCII; }\n+\n /* Invalid packed formats or impossible bounded-frame failures are internal errors. */\n _Noreturn void myl_core_number_text_invalid(void) { abort(); }\n \ndiff --git a/src/core/runtime/core_number_text.zig b/src/core/runtime/core_number_text.zig\nindex a29282d95..ca900527c 100644\n--- a/src/core/runtime/core_number_text.zig\n+++ b/src/core/runtime/core_number_text.zig\n@@ -4,8 +4,11 @@ const builtin = @import(\"builtin\");\n const grammar = @import(\"core_number_parse.zig\");\n const formatting = @import(\"core_number_format.zig\");\n \n-const Block = extern struct { count: u32, kind: u32, len: i64, cap: i64, reserved: u64 };\n+// The first word belongs to the selected C runtime: kind plus padding in the\n+// owned ABI, or count plus kind in the historical ABI. Never inspect it here.\n+const Block = extern struct { header_prefix: [8]u8, len: i64, cap: i64, reserved: u64 };\n extern fn myl_core_number_text_new(length: usize) *Block;\n+extern fn myl_core_number_text_clear_ascii(text: *Block) void;\n extern fn myl_core_buffer_append_spelled(buffer: *Block, bytes: [*]const u8, length: usize) *Block;\n extern fn myl_core_number_text_invalid() noreturn;\n \n@@ -60,7 +63,7 @@ fn rendered(spec: formatting.Spec, input: formatting.Input) *Block {\n     var out: formatting.Out = .{ .buffer = output(text)[0..measure.len] };\n     formatting.render(&out, spec, input);\n     // Numeric and text format fills may be non-ASCII. Publish no false ASCII premise.\n-    text.kind &= ~@as(u32, 1 << 8);\n+    myl_core_number_text_clear_ascii(text);\n     return text;\n }\n \n@@ -109,3 +112,11 @@ fn appendFloat(buffer: *Block, value: f64) callconv(.c) *Block {\n     const bytes = spelledFloat(&frame, value) catch return myl_core_number_text_invalid();\n     return myl_core_buffer_append_spelled(buffer, bytes.ptr, bytes.len);\n }\n+\n+// spec-case: NEW-CORE-S3-NUMBER-1\n+test \"number text adapter leaves selected runtime header fields opaque\" {\n+    try std.testing.expectEqual(@as(usize, 32), @sizeOf(Block));\n+    try std.testing.expectEqual(@as(usize, 8), @offsetOf(Block, \"len\"));\n+    try std.testing.expect(!@hasField(Block, \"count\"));\n+    try std.testing.expect(!@hasField(Block, \"kind\"));\n+}\n",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "runtime_sources": {
+    "src/core/runtime/core_rt.c": "09bebd4ba75c24b98f82d99defdffc26a79912132687e1f5a38be3bf5f10c1d6",
+    "src/core/runtime/core_dict.c": "379da380517be9cb7e6ef0dba0a16dded8f1b18d836002409c4555a3d53e5ba1",
+    "src/core/runtime/core_unicode_data.h": "668ed92a73281c3d22138b64719b4a30f2cd7472e31db9b6162f2e272292aeea",
+    "src/core/runtime/core_text.c": "d684a834ce0ad0a16eb96939deced5e723268acbd5ae2f77d56bc23c37b610f2",
+    "src/core/runtime/core_sort.c": "85da826333d5f157d32cf396ea29579bc050d9b95bb6acc9744f84e778f9383b",
+    "src/core/runtime/core_number.c": "5455e1833a885320fc9c0f8aca819512d6254792b80af3379cd4cd3f4c172c8f",
+    "src/core/runtime/core_io.c": "302102d37d20192ccba6a176c389f28b05278ecda5683c6914802088d2200ef7",
+    "src/core/runtime/core_durable.c": "168754b78294267aebbd64f98cc712dcb9a08646b1973440452c32f5cd4cb85a",
+    "src/core/runtime/core_host.c": "77fa8d5fe29bbaca29b580256bd6cd786c40f92c3dfd11f839a261d6456d80fb",
+    "src/core/runtime/core_bytes.c": "a4740e070873ff1acb2730ea75b0994b2b3bf2b91b230ea4bd0e093e2a861c09",
+    "src/core/runtime/core_values.c": "f14e1aa4dcddbf644925f7d49ffa9310e977c624046565c8a53d1e63ec16f996",
+    "src/core/runtime/core_owned_copy.c": "9f0fc3f83cd0a06f8171edb2f23867ef4a1f9213a5554625078df58dda86d450",
+    "src/core/runtime/core_test.c": "18535b83cd85b1f4ccd8bd55153c38a55299e561b8dd09429cba3c257d96e7fd",
+    "src/core/runtime/core_tasks.c": "e3d291ab113bd9f31c0b352761ab2523da20af08800c2010c44240bd5c622b85"
+  },
+  "c_source_sha256": "2ad369f962882fba7d405b1831417fc94cd3d4c37535609459ea817364ea6953",
+  "probe_sha256": "1c6bf3ab18cd185e44c7ec9de59639a6146a3c833aaca78218010f99873d4a98",
+  "objects": {
+    "before": {
+      "command": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build-obj",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/formatting/abi-03/before/core_number_text.zig",
+        "-OReleaseFast",
+        "-target",
+        "x86_64-linux-gnu.2.31",
+        "-mcpu",
+        "baseline",
+        "-fPIC",
+        "-fno-stack-check",
+        "-fno-stack-protector",
+        "-lc",
+        "-femit-bin=/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/formatting/abi-03/before/number.o"
+      ],
+      "status": 0,
+      "stderr": "",
+      "sources": {
+        "core_number_text.zig": "f96a4e88d290ab3587b8f90c64ad67eb1045f9143ecb7622bfccba3942ca05ea",
+        "core_number_format.zig": "002d54fdcf9409c54c43006ffc5da860cf730e6c80eb77021f1278f1719424a7",
+        "core_number_parse.zig": "53ad97811d5888d72102b60cb7a6535ba8718900b360ca39d5b30f01df3e0e1e"
+      },
+      "sha256": "edadb3dbb25e338889a13873db2b35e195171007eb1ae599cad5a381a925b537"
+    },
+    "after": {
+      "command": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build-obj",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/formatting/abi-03/after/core_number_text.zig",
+        "-OReleaseFast",
+        "-target",
+        "x86_64-linux-gnu.2.31",
+        "-mcpu",
+        "baseline",
+        "-fPIC",
+        "-fno-stack-check",
+        "-fno-stack-protector",
+        "-lc",
+        "-femit-bin=/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/formatting/abi-03/after/number.o"
+      ],
+      "status": 0,
+      "stderr": "",
+      "sources": {
+        "core_number_text.zig": "7dd341662cd3944ab3ed7f70f83ca780df1c9e4107d7a79d0c0faafea497dcc3",
+        "core_number_format.zig": "002d54fdcf9409c54c43006ffc5da860cf730e6c80eb77021f1278f1719424a7",
+        "core_number_parse.zig": "53ad97811d5888d72102b60cb7a6535ba8718900b360ca39d5b30f01df3e0e1e"
+      },
+      "sha256": "37cb57eca667564b921ee38bc360ddb1fb0f8bc83acd75ecc135141196f1a08c"
+    }
+  },
+  "runs": [
+    {
+      "variant": "before",
+      "mode": "ordinary",
+      "build_command": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "cc",
+        "-O1",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-Wl,--gc-sections",
+        "-pthread",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/formatting/abi-03/probe.c",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/formatting/abi-03/before/number.o",
+        "-lm",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/formatting/abi-03/before/ordinary"
+      ],
+      "build_status": 0,
+      "build_stderr": "",
+      "status": 1,
+      "stdout": "",
+      "stderr": "atomic_load_explicit(&live_blocks, memory_order_relaxed) == 0\n",
+      "binary_sha256": "8f942fb86241f7aae1868e8be27b825fc031c5fe67a37caa4fe1bbd8c2d03dd8"
+    },
+    {
+      "variant": "before",
+      "mode": "zero_rc",
+      "build_command": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "cc",
+        "-O1",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-Wl,--gc-sections",
+        "-pthread",
+        "-DMYL_ZERO_RC",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/formatting/abi-03/probe.c",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/formatting/abi-03/before/number.o",
+        "-lm",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/formatting/abi-03/before/zero_rc"
+      ],
+      "build_status": 0,
+      "build_stderr": "",
+      "status": 1,
+      "stdout": "",
+      "stderr": "(text->kind & MYL_TEXT_ASCII) == 0\n",
+      "binary_sha256": "1be8e3005d250e631c17ee4f1454bd47a262ca7002882e0fc73611860c0f3feb"
+    },
+    {
+      "variant": "after",
+      "mode": "ordinary",
+      "build_command": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "cc",
+        "-O1",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-Wl,--gc-sections",
+        "-pthread",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/formatting/abi-03/probe.c",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/formatting/abi-03/after/number.o",
+        "-lm",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/formatting/abi-03/after/ordinary"
+      ],
+      "build_status": 0,
+      "build_stderr": "",
+      "status": 1,
+      "stdout": "",
+      "stderr": "atomic_load_explicit(&live_blocks, memory_order_relaxed) == 0\n",
+      "binary_sha256": "c0a58efe2ec35ab6ffadcb0e7772b026805912618e7194fbceb4f2061ded0864"
+    },
+    {
+      "variant": "after",
+      "mode": "zero_rc",
+      "build_command": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "cc",
+        "-O1",
+        "-ffunction-sections",
+        "-fdata-sections",
+        "-Wl,--gc-sections",
+        "-pthread",
+        "-DMYL_ZERO_RC",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/formatting/abi-03/probe.c",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/formatting/abi-03/after/number.o",
+        "-lm",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/formatting/abi-03/after/zero_rc"
+      ],
+      "build_status": 0,
+      "build_stderr": "",
+      "status": 1,
+      "stdout": "",
+      "stderr": "atomic_load_explicit(&live_blocks, memory_order_relaxed) == 0\n",
+      "binary_sha256": "74dbe83a579f45dc416c2a941f5f6d3ffa67613f8fc04bdb384db9abc3098bb6"
+    }
+  ],
+  "unit": {
+    "command": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "test",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A04/src/core/runtime/core_number_text.zig",
+      "--test-filter",
+      "header fields opaque"
+    ],
+    "status": 0,
+    "stdout": "",
+    "stderr": "1/1 core_number_text.test.number text adapter leaves selected runtime header fields opaque...OK\nAll 1 tests passed.\n"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "status": "worker_sources_and_oracles_byte_equal_frozen_candidate",
+  "sources": {
+    "selfhost/components/test_index/codec.my": "e81c6d9535dbe66b704733d26462579057ae6798040eb3beeceb7790285bbdd2",
+    "selfhost/components/test_index/main.my": "365f56a9f40de9658fed629427a43ba8bcad59f2b4c9b144654a66b1e90cf6b4",
+    "selfhost/components/test_index/tests.my": "f4786bf0334689801af9ce7b8dfe9f7b5a7bade785f707c704f16d58862a4140",
+    "selfhost/components/test_index/graph.my": "8dec40f8e2e15e5d796b4c13262e21d1d9f22e8cdd6ed139060e6679c9fc2139",
+    "selfhost/components/cache_plan/codec.my": "fa0592f90fad2ac0efb7f1ca955e63a1a9059e03559e1c0c2bf97417c15102e5",
+    "selfhost/components/cache_plan/incremental.my": "e797876683a7483ab32f40c1578f2a49c12948f1ece9c22fd9396d9b25122472",
+    "selfhost/components/cache_plan/main.my": "03222396a6df8346c8dfe1396b384ba43adf63f370a536ad9bebf59e412cfda7",
+    "selfhost/components/cache_plan/tests.my": "1cdf4d70dd5397ec9f97ed111e39f5c003ee35c5851c3469f7f69054ed96d829",
+    "selfhost/components/cache_plan/graph.my": "ae55b3f4e713a1e86cee87e2e870e2fe65ca11e7604e0000759fcbaa0145a5a7",
+    "selfhost/components/cache_plan/codec_v2.my": "409a84cfb78d309421e855f97f24d674913213a8ae748e8de4a848970ba6eb05",
+    "selfhost/tests/run_test_index_component.py": "4e3965d9f20c0237632d08621780ae17b0ef4f7e8d54b155ee599204173de87c",
+    "selfhost/tests/run_cache_plan_component.py": "3b88c6a85b1f4bb7a5e508abf6eca35532ae4de88b1f8164d7c13bcef089a99c"
+  }
+}

@@ -1,0 +1,1 @@
+{"arguments": ["--request", "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/work/tmpvaslhdk6/request.bin"], "request_sha256": "42d75f29034b0024ae2aa939e1b938c5065bc222b0f855f99bb1c3f085c99f8a", "status": 2, "stderr": "test-index: response frame exceeds limit\n"}

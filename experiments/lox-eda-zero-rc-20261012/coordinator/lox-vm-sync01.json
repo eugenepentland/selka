@@ -1,0 +1,25 @@
+{
+  "archive_sha256": "f2de786476936150b50001b63547075154e3e899dbf1c8da883499959867fad6",
+  "files": [
+    {
+      "file": "vm.my",
+      "before_sha256": "1d8671412bc296ee5912834a76d64610309ed4ce8ff375b2a250178a80391a4b",
+      "after_sha256": "5a057913ca20e63e55f6f49693cf334b068fd3677c9e96b863cc228e2e93c2a9"
+    },
+    {
+      "file": "compiler.my",
+      "before_sha256": "6ecf2077cba14b9268313b2b47b1d50d9a64a6136e4cbca849f6956dfa6f1097",
+      "after_sha256": "2bdb518cb16803636ed98fd2175efd5ea9c5a05bcf11c632aee214585f007fcd"
+    },
+    {
+      "file": "chunk.my",
+      "before_sha256": "fa51a1ee06bb2d868a6c3bb1c2f4d1405dac15d073d911b451613499cdc167e3",
+      "after_sha256": "fa51a1ee06bb2d868a6c3bb1c2f4d1405dac15d073d911b451613499cdc167e3"
+    },
+    {
+      "file": "object.my",
+      "before_sha256": "92d819e2533fa5b46896b19a49ed000e5eefb07816c68b7004b0616ef4cb9b03",
+      "after_sha256": "92d819e2533fa5b46896b19a49ed000e5eefb07816c68b7004b0616ef4cb9b03"
+    }
+  ]
+}

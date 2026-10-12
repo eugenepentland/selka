@@ -5,6 +5,9 @@ const std = @import("std");
 const language = @import("mylang");
 const typed = language.typed;
 const ir = @import("ir.zig");
+const resources = @import("single_owner_resource.zig");
+const providers = @import("aggregate_provider.zig");
+const borrowed_provider = @import("borrowed_provider.zig");
 const Span = language.source.Span;
 const none = std.math.maxInt(usize);
 const zero_unsupported = "E_ZERO_RC_UNSUPPORTED";
@@ -14,6 +17,9 @@ const view_signature = "E_ZERO_RC_VIEW_SIGNATURE";
 const view_escape = "E_ZERO_RC_VIEW_ESCAPE";
 const view_unsupported = "E_ZERO_RC_VIEW_UNSUPPORTED";
 const overlap_error = "E_SINGLE_OWNER_OVERLAP";
+const resource_escape = "E_ZERO_RC_RESOURCE_ESCAPE";
+const resource_origin = "E_ZERO_RC_RESOURCE_ORIGIN";
+const resource_mode = "generic resource ownership requires checked zero-RC mode";
 
 /// Match may consume a freshly produced union, never a local or a projection.
 /// Shared by checking and lowering so the source rule does not depend on SSA use counts.
@@ -75,6 +81,8 @@ pub fn check(a: std.mem.Allocator, program: typed.Program, failure: *Failure) Er
 
 /// Zero-RC extends the move contract to every admitted owning leaf.
 pub fn checkMode(a: std.mem.Allocator, program: typed.Program, failure: *Failure, zero_rc: bool) Error!void {
+    const provider_types = try providers.classify(a, program);
+    defer a.free(provider_types);
     const linear = try a.alloc(bool, program.records.len);
     @memset(linear, false);
     var changed = true;
@@ -83,7 +91,7 @@ pub fn checkMode(a: std.mem.Allocator, program: typed.Program, failure: *Failure
         for (program.records, 0..) |record, index| {
             if (linear[index] or record.shape.builtin == .borrowed_view) continue;
             const owns = if (record.isCollection()) (record.collection.kind == .list or (zero_rc and (record.collection.kind == .string or record.collection.kind == .bytes or record.collection.kind == .dictionary))) else owns: {
-                if (zero_rc and record.collection.box) break :owns true;
+                if (zero_rc and (record.collection.box or record.shape.resource != null)) break :owns true;
                 for (record.fields) |field| if ((zero_rc and field.boxed) or isOwned(linear, field.ty, zero_rc)) break :owns true;
                 if (record.shape.array) |array| if (isOwned(linear, array.element, zero_rc)) break :owns true;
                 if (record.shape.variants) |variants| for (variants.cases) |case| {
@@ -106,6 +114,7 @@ pub fn checkMode(a: std.mem.Allocator, program: typed.Program, failure: *Failure
             .program = program,
             .function = function,
             .linear = linear,
+            .provider_types = provider_types,
             .zero_rc = zero_rc,
             .failure = failure,
             .state = try work.allocator().alloc(State, function.scope.locals.len),
@@ -113,14 +122,18 @@ pub fn checkMode(a: std.mem.Allocator, program: typed.Program, failure: *Failure
         @memset(c.state, .{});
         for (function.scope.locals, 0..) |local, index| {
             try c.supported(local.ty, local.declaration, 0);
+            if (zero_rc and borrowed_provider.optional(program, local.ty) and local.mutable) return c.reject(local.declaration, borrow_error, "optional provider parameters are read-only");
             if (index < function.signature.parameter_count and c.view(local.ty) and local.mutable) return c.reject(local.declaration, view_signature, "view parameters are read-only");
             if (index < function.signature.parameter_count) c.state[index] = .{
                 .available = true,
-                .borrowed = isOwned(linear, local.ty, zero_rc) or typed.isBorrowedView(program.records, local.ty),
+                .borrowed = (isOwned(linear, local.ty, zero_rc) or typed.isBorrowedView(program.records, local.ty)) and !(zero_rc and resources.affine(program, local.ty)),
+                .dependency = if (zero_rc and resources.dependent(program, local.ty)) index else none,
                 .writable = local.mutable,
             };
         }
         try c.supported(function.signature.return_type, function.declaration, 0);
+        if (zero_rc and borrowed_provider.optional(program, function.signature.return_type)) return c.reject(function.declaration, borrow_error, "optional providers cannot be returned");
+        if (zero_rc and resources.dependent(program, function.signature.return_type)) _ = try c.resourceParameter(function, function.declaration);
         if (typed.isBorrowedView(program.records, function.signature.return_type)) {
             _ = try c.returnSource(function, function.declaration);
             if (function.signature.declared_mutates.len != 0) return c.reject(function.declaration, view_signature, "a function returning a view cannot also take mut parameters in this prototype");
@@ -153,8 +166,20 @@ const State = struct {
     root: usize = none,
     view_definition: ?typed.NodeId = null,
     transferable: bool = false,
+    dependency: usize = none,
+    ambiguous_borrow: bool = false,
+    provider_context: bool = false,
 };
-const Access = enum { read, move, mutate, update };
+const Access = enum { read, move, mutate, update, writeback };
+fn writebackBase(access: Access) Access {
+    return switch (access) {
+        .writeback => .read,
+        .update => .mutate,
+        else => .move,
+    };
+}
+const PlaceStep = union(enum) { field: usize, index: typed.NodeId };
+const PlacePath = struct { root: usize = none, steps: std.ArrayList(PlaceStep) = .empty };
 const Loan = struct { root: usize, write: bool };
 const Loop = struct { id: usize, before: []const State };
 
@@ -164,10 +189,12 @@ const Checker = struct {
     program: typed.Program,
     function: typed.Function,
     linear: []const bool,
+    provider_types: []const bool,
     zero_rc: bool,
     failure: *Failure,
     state: []State,
     type_path: std.ArrayList(typed.Type) = .empty,
+    optional_argument: ?typed.NodeId = null,
     loans: std.ArrayList(Loan) = .empty,
     loops: std.ArrayList(Loop) = .empty,
 
@@ -195,7 +222,14 @@ const Checker = struct {
     }
 
     fn supported(c: *Checker, ty: typed.Type, span: Span, depth: usize) Error!void {
-        if (c.zero_rc and depth != 0) if (ty.isFile() or owningCapability(ty)) return c.reject(span, zero_unsupported, "store resource owners in named local scopes in the zero-RC prototype");
+        if (c.zero_rc and depth != 0) {
+            if (ty.isFile()) return c.reject(span, zero_unsupported, "store file owners in named local scopes");
+            if (owningCapability(ty)) for (c.type_path.items) |parent| {
+                const optional_root = c.type_path.items.len == 1 and borrowed_provider.optional(c.program, parent);
+                if (!providers.plainRecord(c.program.records[parent.recordIndex()]) and !optional_root)
+                    return c.reject(span, zero_unsupported, "owning providers can be stored only in ordinary records or tuples");
+            };
+        }
         if (typed.isBorrowedView(c.program.records, ty)) {
             if (!c.zero_rc or depth != 0) return c.reject(span, view_escape, "borrowed views require zero-RC mode and cannot be stored inside aggregates");
             return;
@@ -226,7 +260,10 @@ const Checker = struct {
         }
         if (record.shape.array) |array| try c.supported(array.element, span, depth + 1);
         if (record.shape.variants) |variants| for (variants.cases) |case| {
-            if (case.payload) |payload| try c.supported(payload, span, depth + 1);
+            if (case.payload) |payload| {
+                if (c.zero_rc and variants.fallible and payload.isFile()) continue;
+                try c.supported(payload, span, depth + 1);
+            }
         };
         if (record.contract.callback) |callback| {
             for (callback.parameters) |parameter| try c.supported(parameter, span, depth + 1);
@@ -274,10 +311,13 @@ const Checker = struct {
             const message = try std.fmt.allocPrint(c.diagnostic_allocator, "'{s}' was moved or is unavailable on this path; use .copy() when both values are needed", .{local.name});
             return c.reject(span, "E_SINGLE_OWNER_MOVED", message);
         }
+        if (c.state[root].provider_context and access != .read) return c.reject(span, borrow_error, "a borrowed provider context is read-only and cannot be moved, stored or returned");
+        if (c.state[slot].ambiguous_borrow and access != .read) return c.reject(span, borrow_error, "a borrowed selection is read-only; make an explicit .copy() before changing it");
         if (c.view(local.ty) and access != .read) return c.reject(span, view_escape, "views are read-only; use .copy() for independent owned storage");
         const write = access != .read;
+        if (c.zero_rc) try c.resourceAccess(slot, root, write, span);
         for (c.loans.items) |loan| if (loan.root == root and (loan.write or write)) {
-            return c.reject(span, overlap_error, "a list cannot be moved or mutated while another argument or iteration borrows it");
+            return c.reject(span, overlap_error, "a value cannot be moved or mutated while another argument or iteration borrows it");
         };
         if (access == .move) {
             if (c.state[slot].borrowed) {
@@ -297,11 +337,15 @@ const Checker = struct {
         return switch (node.data) {
             .local => |slot| c.rootOf(@backingInt(slot)),
             .field => |field| c.origin(field.base),
-            .index => |index| c.origin(index.base),
-            .cast, .wrap, .unwrap => |value| c.origin(value),
+            .variant => |variant| if (c.zero_rc and borrowed_provider.optionalArgument(c.program, c.function, id)) c.origin(variant.value.?) else null,
+            .record => |fields| if (c.borrowedItem(fields)) |owner| c.rootOf(@backingInt(owner)) else null,
+            .index => |index| if (c.freshCharacter(index.base)) null else c.origin(index.base),
+            .cast => |value| if (c.zero_rc and c.program.nodes[@backingInt(value)].ty != node.ty) null else c.origin(value),
+            .wrap, .unwrap => |value| c.origin(value),
             .block_value => |block| c.origin(block.value),
             .buffer_operation => |operation| switch (operation.kind) {
-                .read, .get, .key_at, .value_at, .borrow_view => c.rootOf(@backingInt(operation.owner)),
+                .read => if (c.zero_rc and c.program.records[c.function.scope.locals[@backingInt(operation.owner)].ty.recordIndex()].collection.kind == .string) null else c.rootOf(@backingInt(operation.owner)),
+                .get, .key_at, .value_at, .setdefault, .borrow_view => c.rootOf(@backingInt(operation.owner)),
                 .slice => if (c.view(node.ty)) c.rootOf(@backingInt(operation.owner)) else null,
                 else => null,
             },
@@ -317,6 +361,130 @@ const Checker = struct {
         };
     }
 
+    /// Only the exact projection reconstructed by its parent may write in place.
+    fn sameFieldWriteback(c: *const Checker, base: typed.NodeId, field: typed.FieldInit) bool {
+        const nested = c.program.nodes[@backingInt(field.value)];
+        const nested_base = switch (nested.data) {
+            .update => |update| update.base,
+            .replace => |replace| replace.base,
+            else => return false,
+        };
+        return switch (c.program.nodes[@backingInt(nested_base)].data) {
+            .field => |projection| projection.base == base and projection.index == field.index,
+            else => false,
+        };
+    }
+
+    fn freshCharacter(c: *const Checker, base: typed.NodeId) bool {
+        const ty = c.program.nodes[@backingInt(base)].ty;
+        return c.zero_rc and ty.isAggregate() and c.program.records[ty.recordIndex()].collection.kind == .string;
+    }
+
+    /// A dictionary default can borrow either the dictionary or its fallback.
+    /// Receiver temporaries may read/copy it, but cannot anchor a stored view.
+    fn ambiguousBorrow(c: *const Checker, id: typed.NodeId) bool {
+        return switch (c.program.nodes[@backingInt(id)].data) {
+            .local => |slot| c.state[@backingInt(slot)].ambiguous_borrow,
+            .borrow_selection => true,
+            .field => |field| c.ambiguousBorrow(field.base),
+            .index => |index| c.ambiguousBorrow(index.base),
+            .wrap, .unwrap, .cast => |value| c.ambiguousBorrow(value),
+            .block_value => |block| c.ambiguousBorrow(block.value),
+            .buffer_operation => |operation| switch (operation.kind) {
+                .get => true,
+                .read, .key_at, .value_at, .borrow_view, .slice => c.state[@backingInt(operation.owner)].ambiguous_borrow,
+                else => false,
+            },
+            else => false,
+        };
+    }
+
+    /// Preserve all possible roots of a generated default-selection receiver.
+    /// Only provenance edges are visited; ordinary calls produce independent owners.
+    fn loanExpression(c: *Checker, id: typed.NodeId, write: bool) Error!void {
+        if (!c.ambiguousBorrow(id)) {
+            if (c.origin(id)) |root| try c.loans.append(c.a, .{ .root = root, .write = write });
+            return;
+        }
+        var pending: std.ArrayList(typed.NodeId) = .empty;
+        var seen: std.AutoHashMapUnmanaged(typed.NodeId, void) = .empty;
+        try pending.append(c.a, id);
+        while (pending.pop()) |current| {
+            const visited = try seen.getOrPut(c.a, current);
+            if (visited.found_existing) continue;
+            if (c.origin(current)) |root| try c.loans.append(c.a, .{ .root = root, .write = write });
+            try c.borrowParents(current, &pending);
+        }
+    }
+
+    fn borrowLocal(c: *Checker, slot: usize, pending: *std.ArrayList(typed.NodeId)) Error!void {
+        const state = c.state[slot];
+        if (!state.ambiguous_borrow) return;
+        if (state.view_definition) |definition| try pending.append(c.a, definition);
+    }
+
+    fn borrowParents(c: *Checker, id: typed.NodeId, pending: *std.ArrayList(typed.NodeId)) Error!void {
+        switch (c.program.nodes[@backingInt(id)].data) {
+            .local => |slot| try c.borrowLocal(@backingInt(slot), pending),
+            .field => |field| try pending.append(c.a, field.base),
+            .index => |index| try pending.append(c.a, index.base),
+            .wrap, .unwrap, .cast => |value| try pending.append(c.a, value),
+            .block_value => |block| try pending.append(c.a, block.value),
+            .borrow_selection => |selection| {
+                try pending.append(c.a, selection.first);
+                try pending.append(c.a, selection.second);
+            },
+            .buffer_operation => |operation| {
+                try c.borrowLocal(@backingInt(operation.owner), pending);
+                if (operation.kind == .get and operation.arguments.len == 2)
+                    try pending.append(c.a, operation.arguments[1]);
+            },
+            else => {},
+        }
+    }
+
+    fn loanReceiver(c: *Checker, slot: usize) Error!void {
+        try c.loans.append(c.a, .{ .root = c.rootOf(slot), .write = false });
+        if (c.state[slot].ambiguous_borrow) {
+            if (c.state[slot].view_definition) |definition| try c.loanExpression(definition, false);
+        }
+    }
+
+    /// An element update can read only the exact element being rebuilt. Keep
+    /// the containing operation's loan active for all replacement operands.
+    fn sameIndexWriteback(c: *const Checker, base: typed.NodeId, index: typed.NodeId, from_end: bool, value: typed.NodeId) bool {
+        const nested_base = switch (c.program.nodes[@backingInt(value)].data) {
+            .update => |update| update.base,
+            .replace => |replace| replace.base,
+            else => return false,
+        };
+        return switch (c.program.nodes[@backingInt(nested_base)].data) {
+            .index => |projection| projection.base == base and projection.index == index and projection.from_end == from_end,
+            else => false,
+        };
+    }
+
+    /// The front end's field destination captures a slot in a synthetic local
+    /// and later writes the rebuilt value to that same collection and key.
+    /// Ordinary extracted values and unrelated keys cannot take this path.
+    fn sameSlotWriteback(c: *const Checker, owner: typed.LocalId, index: typed.NodeId, value: typed.NodeId) bool {
+        const base = switch (c.program.nodes[@backingInt(value)].data) {
+            .update => |update| update.base,
+            .replace => |replace| replace.base,
+            else => return false,
+        };
+        const slot = switch (c.program.nodes[@backingInt(base)].data) {
+            .local => |local| @backingInt(local),
+            else => return false,
+        };
+        if (!c.temporary(slot) or !c.state[slot].borrowed) return false;
+        const definition = c.state[slot].view_definition orelse return false;
+        return switch (c.program.nodes[@backingInt(definition)].data) {
+            .buffer_operation => |read| read.kind == .read and read.owner == owner and read.arguments.len == 1 and read.arguments[0] == index,
+            else => false,
+        };
+    }
+
     fn wholeOwner(c: *const Checker, id: typed.NodeId) bool {
         return switch (c.program.nodes[@backingInt(id)].data) {
             .local => |slot| c.state[@backingInt(slot)].root == none or c.state[@backingInt(slot)].transferable,
@@ -327,12 +495,21 @@ const Checker = struct {
 
     fn temporary(c: *const Checker, slot: usize) bool {
         const local = c.function.scope.locals[slot];
+        // Branch selections and fold accumulators hold owners, not receiver loans.
+        if (std.mem.eql(u8, local.name, "<conditional>") or std.mem.eql(u8, local.name, "<fold-accumulator>")) return false;
         return std.mem.startsWith(u8, local.name, "<") or local.origin == .iteration or local.origin == .pattern;
     }
 
     fn checkStore(c: *Checker, store: typed.Store, initializing: bool, span: Span) Error!void {
+        if (store.unpack != null) return c.checkUnpack(store, initializing, span);
         const slot = @backingInt(store.slot);
         const local = c.function.scope.locals[slot];
+        if (c.zero_rc and borrowed_provider.optional(c.program, local.ty)) return c.reject(span, borrow_error, "optional providers cannot be stored in owning locals");
+        if (c.zero_rc and initializing and borrowed_provider.initializer(c.program, c.function, store.value)) {
+            for (c.program.nodes[@backingInt(store.value)].data.record) |field| try c.expression(field.value, .read);
+            c.state[slot] = .{ .available = true, .borrowed = true, .provider_context = true };
+            return;
+        }
         if (c.view(local.ty)) {
             if (local.mutable and !c.temporary(slot)) return c.reject(span, view_unsupported, "view bindings are immutable in this prototype; create a new const view");
             try c.expression(store.value, .read);
@@ -347,6 +524,20 @@ const Checker = struct {
         // The front end introduces receiver/iteration aliases. They are temporary
         // loans, not source assignments, and cannot themselves escape.
         if (c.temporary(slot)) {
+            // Even two fresh inputs produce a borrow. Lack of a named root
+            // cannot turn a generated selection receiver into a new owner.
+            if (c.ambiguousBorrow(store.value)) {
+                try c.expression(store.value, .read);
+                const source = c.origin(store.value);
+                c.state[slot] = .{
+                    .available = true,
+                    .borrowed = true,
+                    .root = if (source) |root| if (root == slot) none else root else none,
+                    .view_definition = store.value,
+                    .ambiguous_borrow = true,
+                };
+                return;
+            }
             if (c.origin(store.value)) |source| {
                 try c.expression(store.value, .read);
                 if (source == slot) return;
@@ -356,21 +547,66 @@ const Checker = struct {
                     .writable = local.origin != .iteration and c.state[source].writable,
                     .root = source,
                     .transferable = c.wholeOwner(store.value),
+                    .view_definition = store.value,
+                    .dependency = c.state[source].dependency,
+                    .ambiguous_borrow = c.ambiguousBorrow(store.value),
                 };
                 return;
             }
         }
         const node = c.program.nodes[@backingInt(store.value)];
-        const updating = !initializing and (store.element or node.data == .update or node.data == .replace);
+        const optional = if (c.zero_rc and !initializing) c.optionalWriteback(store) else null;
+        const updating = !initializing and (store.element or node.data == .update or node.data == .replace or optional != null);
         if (updating) {
             try c.checkLocal(slot, .mutate, span);
-            try c.expression(store.value, .update);
+            try c.expression(optional orelse store.value, .update);
         } else {
             if (!initializing and c.state[slot].available) try c.checkLocal(slot, .mutate, span);
             try c.expression(store.value, .move);
         }
         const parameter = slot < c.function.signature.parameter_count;
-        c.state[slot] = .{ .available = true, .borrowed = parameter, .writable = local.mutable };
+        const affine = c.zero_rc and resources.affine(c.program, local.ty);
+        const dependency = if (c.zero_rc and resources.dependent(c.program, local.ty)) try c.resourceOrigin(store.value) else null;
+        c.state[slot] = .{ .available = true, .borrowed = parameter and !affine, .writable = local.mutable, .dependency = dependency orelse none };
+    }
+
+    /// Complete same-owner reconstruction is a writeback, never a borrowed move.
+    fn optionalWriteback(c: *const Checker, store: typed.Store) ?typed.NodeId {
+        const contract = @import("optional_writeback.zig");
+        const found = contract.shape(c.program, c.function, store) orelse return null;
+        const receiver = @backingInt(found.receiver);
+        if (!c.state[receiver].borrowed or c.rootOf(receiver) != @backingInt(store.slot)) return null;
+        const definition = c.state[receiver].view_definition orelse return null;
+        if (!contract.projection(c.program, c.function, store, found, definition)) return null;
+        return found.payload;
+    }
+
+    /// The entire tuple transfers once, before any destination expression runs.
+    fn checkUnpack(c: *Checker, store: typed.Store, initializing: bool, span: Span) Error!void {
+        const fields = @import("tuple_unpack.zig").fields(c.a, c.program, c.function, store, initializing) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.Invalid => return c.reject(span, zero_unsupported, "invalid complete tuple staging"),
+        };
+        try c.expression(store.value, .move);
+        const dependency = if (c.zero_rc) try c.resourceOrigin(store.value) else null;
+        if (dependency) |provider| if (!c.state[provider].available)
+            return c.reject(span, resource_escape, "tuple fields cannot outlive their dependent provider");
+        c.state[@backingInt(store.slot)] = .{};
+        for (fields, store.unpack.?) |field, optional| {
+            const slot = @backingInt(optional orelse continue);
+            c.state[slot] = .{
+                .available = true,
+                .writable = c.function.scope.locals[slot].mutable,
+                .dependency = if (c.zero_rc and resources.dependent(c.program, field.ty)) dependency orelse none else none,
+            };
+        }
+    }
+
+    fn checkProviderField(c: *Checker, base: typed.NodeId, ty: typed.Type, access: Access, span: Span) Error!void {
+        if (access == .read or !c.owns(ty)) return;
+        const root = c.origin(base) orelse return;
+        if (c.state[root].provider_context)
+            return c.reject(span, borrow_error, "a borrowed provider context cannot transfer a provider field; pass it to a read-only helper");
     }
 
     fn expression(c: *Checker, id: typed.NodeId, access: Access) Error!void {
@@ -379,6 +615,15 @@ const Checker = struct {
         switch (node.data) {
             .integer, .boolean, .unit, .blob, .function_value => {},
             .local => |slot| try c.checkLocal(@backingInt(slot), access, node.span),
+            .borrow_selection => |selection| {
+                if (!@import("build_borrow_selection.zig").valid(c.program, selection, node.ty)) return c.reject(node.span, zero_unsupported, "invalid borrowed selection type contract");
+                if (access != .read and c.owns(node.ty)) return c.reject(node.span, borrow_error, "a borrowed selection cannot be stored or returned; make an explicit .copy()");
+                const saved = c.loans.items.len;
+                defer c.loans.shrinkRetainingCapacity(saved);
+                try c.expression(selection.first, .read);
+                try c.loanExpression(selection.first, false);
+                try c.expression(selection.second, .read);
+            },
             .block_value => |block| {
                 _ = try c.checkStatement(block.body);
                 try c.expression(block.value, access);
@@ -398,13 +643,14 @@ const Checker = struct {
                 const saved = c.loans.items.len;
                 defer c.loans.shrinkRetainingCapacity(saved);
                 if (c.tracked(c.program.nodes[@backingInt(binary.left)].ty)) {
-                    if (c.origin(binary.left)) |root| try c.loans.append(c.a, .{ .root = root, .write = false });
+                    try c.loanExpression(binary.left, false);
                 }
                 // Conservatively join short-circuit paths: a move on the RHS
                 // makes its source unavailable after the expression.
                 try c.expression(binary.right, .read);
             },
             .field => |field| {
+                try c.checkProviderField(field.base, node.ty, access, node.span);
                 if (access == .move and c.owns(node.ty)) return c.reject(node.span, borrow_error, "moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper");
                 try c.expression(field.base, if (access == .mutate or access == .update) .mutate else .read);
             },
@@ -415,19 +661,23 @@ const Checker = struct {
                 try c.expression(index.base, .read);
                 const saved = c.loans.items.len;
                 defer c.loans.shrinkRetainingCapacity(saved);
-                if (c.origin(index.base)) |root| try c.loans.append(c.a, .{ .root = root, .write = false });
+                try c.loanExpression(index.base, false);
                 try c.expression(index.index, .read);
             },
             .array => |items| for (items) |item| try c.expression(item, .move),
-            .record => |fields| for (fields) |field| try c.expression(field.value, .move),
+            .record => |fields| {
+                if (access == .read and c.borrowedItem(fields) != null) {
+                    for (fields) |field| try c.expression(field.value, .read);
+                } else try c.recordFields(fields);
+            },
             .update => |update| {
-                try c.expression(update.base, if (access == .update) .mutate else .move);
-                for (update.fields) |field| try c.expression(field.value, .move);
+                try c.expression(update.base, writebackBase(access));
+                for (update.fields) |field| try c.expression(field.value, if ((access == .update or access == .writeback) and c.sameFieldWriteback(update.base, field)) access else .move);
             },
             .replace => |replace| {
-                try c.expression(replace.base, if (access == .update) .mutate else .move);
+                try c.expression(replace.base, writebackBase(access));
                 try c.expression(replace.index, .read);
-                try c.expression(replace.value, .move);
+                try c.expression(replace.value, if ((access == .update or access == .writeback) and c.sameIndexWriteback(replace.base, replace.index, replace.from_end, replace.value)) access else .move);
             },
             .acquire_buffer => |buffer| try c.expression(buffer.capacity, .read),
             .buffer_operation => try c.collection(node, access),
@@ -459,10 +709,60 @@ const Checker = struct {
                 try c.expression(write.stream, .read);
                 try c.expression(write.text, .read);
             },
-            .stand_in, .external_read, .environment_get, .environment_names, .dir_resource, .host_resource, .restrict_resource, .environment_only, .file_access, .file_method => try c.resourceExpression(node),
-            .propagate => |value| try c.expression(value.value, .move),
-            .variant => |variant| if (variant.value) |value| try c.expression(value, .move),
-            else => return c.reject(node.span, unsupported, "this expression is outside the single-owner prototype"),
+            .stand_in,
+            .external_read,
+            .environment_get,
+            .environment_names,
+            .dir_resource,
+            .host_resource,
+            .restrict_resource,
+            .environment_only,
+            .file_access,
+            .file_method,
+            .acquire_resource,
+            .complete_resource,
+            .resource_io,
+            => try c.resourceExpression(node),
+            .propagate => |value| try c.propagateResource(value.value, node.span),
+            .variant => |variant| try c.variantExpression(id, variant.value, access),
+        }
+    }
+
+    fn variantExpression(c: *Checker, id: typed.NodeId, payload: ?typed.NodeId, access: Access) Error!void {
+        const value = payload orelse return;
+        const node = c.program.nodes[@backingInt(id)];
+        if (!c.zero_rc or !borrowed_provider.optional(c.program, node.ty)) return c.expression(value, .move);
+        if (access != .read or c.optional_argument != id or !borrowed_provider.optionalArgument(c.program, c.function, id))
+            return c.reject(node.span, borrow_error, "Some(provider) may only borrow an immutable parameter in a read-only call argument");
+        try c.expression(value, .read);
+    }
+
+    /// A generated dictionary item is a pair of borrows from one entry. Source
+    /// record constructors cannot spell these internal projections, and copying
+    /// an item still follows the ordinary explicit deep-copy path.
+    fn borrowedItem(c: *const Checker, fields: []const typed.FieldInit) ?typed.LocalId {
+        if (!c.zero_rc or fields.len != 2) return null;
+        if (fields[0].index != 0 or fields[1].index != 1) return null;
+        const key = switch (c.program.nodes[@backingInt(fields[0].value)].data) {
+            .buffer_operation => |operation| operation,
+            else => return null,
+        };
+        const value = switch (c.program.nodes[@backingInt(fields[1].value)].data) {
+            .buffer_operation => |operation| operation,
+            else => return null,
+        };
+        if (key.kind != .key_at or value.kind != .value_at or key.owner != value.owner) return null;
+        if (key.arguments.len != 1 or value.arguments.len != 1) return null;
+        return if (key.arguments[0] == value.arguments[0]) key.owner else null;
+    }
+
+    fn recordFields(c: *Checker, fields: []const typed.FieldInit) Error!void {
+        const saved = c.loans.items.len;
+        defer c.loans.shrinkRetainingCapacity(saved);
+        for (fields) |field| {
+            try c.expression(field.value, .move);
+            if (c.zero_rc) if (try c.resourceOrigin(field.value)) |anchor|
+                try c.loans.append(c.a, .{ .root = anchor, .write = false });
         }
     }
 
@@ -484,16 +784,161 @@ const Checker = struct {
                 try c.checkLocal(@backingInt(file.owner), .read, node.span);
                 if (file.argument) |argument| try c.expression(argument, .read);
             },
+            .acquire_resource => |acquire| {
+                if (!c.zero_rc) return c.reject(node.span, unsupported, resource_mode);
+                try c.arguments(&.{ acquire.capability, acquire.request }, &.{}, &.{});
+                _ = c.origin(acquire.capability) orelse return c.reject(node.span, resource_origin, "bind the provider to a named local before acquiring a resource");
+            },
+            .complete_resource => |owner| {
+                if (!c.zero_rc) return c.reject(node.span, unsupported, resource_mode);
+                try c.expression(owner, .move);
+            },
+            .resource_io => |io| {
+                if (!c.zero_rc) return c.reject(node.span, unsupported, resource_mode);
+                try c.checkLocal(@backingInt(io.owner), .read, node.span);
+                if (io.value) |input| try c.expression(input, .read);
+            },
             else => unreachable,
         }
     }
 
+    fn propagateResource(c: *Checker, value: typed.NodeId, span: Span) Error!void {
+        try c.expression(value, .move);
+        if (!c.zero_rc) return;
+        const shape = typed.resultShape(c.program.nodes[@backingInt(value)].ty, c.program.records) orelse return;
+        if (resources.dependent(c.program, shape.error_type)) try c.resourceReturn(value, span);
+    }
+
+    fn resourceReturn(c: *Checker, value: typed.NodeId, span: Span) Error!void {
+        const anchor = try c.resourceParameter(c.function, span);
+        if (try c.resourceOrigin(value)) |actual| if (actual != anchor)
+            return c.reject(span, resource_escape, "a returned resource must depend on this function's single provider or resource input");
+    }
+
+    fn resourceParameter(c: *Checker, function: typed.Function, span: Span) Error!usize {
+        return resources.parameter(c.program, function) orelse return c.reject(span, resource_origin, "a resource result requires exactly one provider or resource input");
+    }
+
+    fn resourceOrigin(c: *Checker, id: typed.NodeId) Error!?usize {
+        const node = c.program.nodes[@backingInt(id)];
+        if (resources.provider(node.ty)) return c.origin(id);
+        if (!resources.dependent(c.program, node.ty)) return null;
+        return switch (node.data) {
+            .local => |slot| if (c.state[@backingInt(slot)].dependency == none) null else c.state[@backingInt(slot)].dependency,
+            .field => |field| c.resourceOrigin(field.base),
+            .block_value => |block| c.resourceOrigin(block.value),
+            .wrap, .unwrap, .cast, .complete_resource => |value| c.resourceOrigin(value),
+            .propagate => |value| c.resourceOrigin(value.value),
+            .variant => |variant| if (variant.value) |value| c.resourceOrigin(value) else null,
+            .file_access => |file| c.origin(file.arguments[0]) orelse return c.reject(node.span, resource_origin, "a file requires a named provider"),
+            .acquire_resource => |acquire| c.origin(acquire.capability) orelse return c.reject(node.span, resource_origin, "a resource requires a named provider"),
+            .call => |call| c.resourceOrigin(call.arguments[try c.resourceParameter(c.program.functions[@backingInt(call.function)], node.span)]),
+            .record => |fields| result: {
+                var anchor: ?usize = null;
+                for (fields) |field| if (try c.resourceOrigin(field.value)) |next| {
+                    if (anchor != null and anchor != next) return c.reject(node.span, resource_origin, "one resource carrier cannot combine different provider origins");
+                    anchor = next;
+                };
+                break :result anchor;
+            },
+            else => c.reject(node.span, resource_origin, "this resource origin is outside the local checked contract"),
+        };
+    }
+
+    fn resourceAccess(c: *Checker, slot: usize, root: usize, write: bool, span: Span) Error!void {
+        const dependency = c.state[slot].dependency;
+        if (dependency != none and providers.contains(c.provider_types, c.function.scope.locals[dependency].ty) and !c.state[dependency].available)
+            return c.reject(span, resource_escape, "the resource's provider is no longer available");
+        if (!write or !providers.contains(c.provider_types, c.function.scope.locals[root].ty)) return;
+        for (c.state, c.function.scope.locals, 0..) |state, local, other| {
+            if (state.available and c.state[c.rootOf(other)].available and state.dependency == root and resources.dependent(c.program, local.ty))
+                return c.reject(span, resource_escape, "a provider cannot move or change while a dependent resource is live");
+        }
+    }
+
+    /// Recover a receiver's local field/index path without assuming distinct
+    /// dynamic indices. Hidden aliases follow only their checked borrow source.
+    fn collectionPath(c: *Checker, start: ?typed.NodeId, owner: usize) Error!?PlacePath {
+        var path: PlacePath = .{};
+        var node = start;
+        var slot: ?usize = if (start == null) owner else null;
+        var remaining = c.program.nodes.len + c.state.len + 1;
+        while (remaining != 0) : (remaining -= 1) {
+            if (slot) |binding| {
+                const state = c.state[binding];
+                if (c.temporary(binding) and state.borrowed and state.view_definition != null) {
+                    node = state.view_definition;
+                    slot = null;
+                    continue;
+                }
+                if (state.root != none) return null;
+                path.root = binding;
+                return path;
+            }
+            switch (c.program.nodes[@backingInt(node.?)].data) {
+                .local => |binding| slot = @backingInt(binding),
+                .field => |field| {
+                    try path.steps.append(c.a, .{ .field = field.index });
+                    node = field.base;
+                },
+                .index => |index| {
+                    try path.steps.append(c.a, .{ .index = index.index });
+                    node = index.base;
+                },
+                .block_value => |block| node = block.value,
+                .wrap, .unwrap, .cast => |value| node = value,
+                .buffer_operation => |operation| {
+                    if (operation.kind != .read or operation.arguments.len != 1) return null;
+                    try path.steps.append(c.a, .{ .index = operation.arguments[0] });
+                    slot = @backingInt(operation.owner);
+                },
+                else => return null,
+            }
+        }
+        return null;
+    }
+
+    /// Same-depth list paths are either the same block or distinct siblings;
+    /// runtime identity selects self-extension. Prefix overlap needs a snapshot.
+    fn independentExtension(c: *Checker, owner: usize, source: typed.NodeId, span: Span) Error!void {
+        const message = "extend cannot read an overlapping ancestor or ambiguous source; make an explicit .copy() before extending";
+        if (c.ambiguousBorrow(source)) return c.reject(span, overlap_error, message);
+        const root = c.origin(source) orelse return;
+        if (root != c.rootOf(owner)) return;
+        const destination = (try c.collectionPath(null, owner)) orelse return c.reject(span, overlap_error, message);
+        const input = (try c.collectionPath(source, none)) orelse return c.reject(span, overlap_error, message);
+        if (destination.root != input.root) return;
+        const shared = @min(destination.steps.items.len, input.steps.items.len);
+        for (0..shared) |offset| {
+            const left = destination.steps.items[destination.steps.items.len - 1 - offset];
+            const right = input.steps.items[input.steps.items.len - 1 - offset];
+            switch (left) {
+                .field => |field| switch (right) {
+                    .field => |other| if (field != other) return,
+                    .index => return c.reject(span, overlap_error, message),
+                },
+                .index => switch (right) {
+                    .index => {}, // Unknown indices can coincide, never imply a prefix is safe.
+                    .field => return c.reject(span, overlap_error, message),
+                },
+            }
+        }
+        if (destination.steps.items.len != input.steps.items.len) return c.reject(span, overlap_error, message);
+    }
+
     fn collection(c: *Checker, node: typed.Node, access: Access) Error!void {
         const operation = node.data.buffer_operation;
+        if (operation.kind == .get and access != .read and c.owns(node.ty)) return c.reject(node.span, borrow_error, "a borrowed selection is read-only; make an explicit .copy() before changing it");
         if (c.zero_rc and (operation.kind == .snapshot or operation.kind == .view))
             return c.reject(node.span, zero_unsupported, "shared snapshots and retained views are unsupported; use .borrow() for a checked view or .copy() for ownership");
         const owner = @backingInt(operation.owner);
-        if (operation.kind == .copy) return c.checkLocal(owner, .read, node.span);
+        if (c.zero_rc and c.view(node.ty) and c.state[owner].ambiguous_borrow)
+            return c.reject(node.span, view_escape, "a view cannot borrow from a selection with multiple possible owners; copy the selected value into a named owner first");
+        if (operation.kind == .copy) {
+            if (c.zero_rc and providers.contains(c.provider_types, c.function.scope.locals[owner].ty))
+                return c.reject(node.span, zero_unsupported, "provider owners cannot be copied; borrow the enclosing record or move it");
+            return c.checkLocal(owner, .read, node.span);
+        }
         const linear = c.tracked(c.function.scope.locals[owner].ty);
         if (linear and operation.kind == .iteration_check) {
             try c.checkLocal(owner, .read, node.span);
@@ -510,7 +955,7 @@ const Checker = struct {
             defer c.loans.shrinkRetainingCapacity(saved);
             // Operands finish before the operation mutates. Permit reads (including
             // the generated negative-index length check), but forbid invalidation.
-            if (linear) try c.loans.append(c.a, .{ .root = c.rootOf(owner), .write = false });
+            if (linear) try c.loanReceiver(owner);
             const schema = c.program.records[c.function.scope.locals[owner].ty.recordIndex()];
             const borrowed_read = switch (operation.kind) {
                 .read, .get => schema.collection.kind == .list or schema.collection.kind == .dictionary,
@@ -526,12 +971,16 @@ const Checker = struct {
                     .pop_default => index == 1,
                     else => false,
                 } else operation.kind == .append or (operation.kind == .write and index == 1) or (operation.kind == .insert and index == 1);
-                try c.expression(argument, if (consumes) .move else .read);
+                const writeback = schema.collection.kind == .list and operation.kind == .write and index == 1 and c.sameSlotWriteback(operation.owner, operation.arguments[0], argument);
+                try c.expression(argument, if (writeback) .writeback else if (consumes) .move else .read);
+                if (c.zero_rc and schema.collection.kind == .list and operation.kind == .extend)
+                    try c.independentExtension(owner, argument, node.span);
             }
             // These methods implicitly duplicate elements. Nested owned
             // lists need an explicit deep copy, which .copy() provides.
             const duplicates = switch (operation.kind) {
-                .extend, .slice, .slice_step, .insert, .remove, .pop_at, .reverse => true,
+                .extend, .slice, .slice_step => !c.zero_rc,
+                .insert, .remove, .pop_at, .reverse => !c.zero_rc,
                 else => false,
             };
             if (linear and duplicates) {
@@ -548,9 +997,14 @@ const Checker = struct {
             const index = if (order.len == 0) position else order[position];
             const write = std.mem.indexOfScalar(u16, mutates, @intCast(index)) != null;
             const arg = args[index];
-            try c.expression(arg, if (write) .mutate else .read);
+            const affine = c.zero_rc and resources.affine(c.program, c.program.nodes[@backingInt(arg)].ty);
+            const optional_argument = c.optional_argument;
+            c.optional_argument = if (!write and !affine) arg else null;
+            try c.expression(arg, if (write) .mutate else if (affine) .move else .read);
+            c.optional_argument = optional_argument;
+            if (affine) if (try c.resourceOrigin(arg)) |provider| try c.loans.append(c.a, .{ .root = provider, .write = false });
             if (c.tracked(c.program.nodes[@backingInt(arg)].ty)) {
-                if (c.origin(arg)) |root| try c.loans.append(c.a, .{ .root = root, .write = write });
+                try c.loanExpression(arg, write);
             }
         }
     }
@@ -559,9 +1013,11 @@ const Checker = struct {
         for (c.state, first, second) |*out, left, right| {
             out.* = left;
             out.available = left.available and right.available;
+            out.ambiguous_borrow = left.ambiguous_borrow or right.ambiguous_borrow;
             // Only compiler-created loans have roots. A differing root cannot
             // describe one definite borrowed value after this join.
-            if (left.root != right.root or left.borrowed != right.borrowed or left.view_definition != right.view_definition or left.transferable != right.transferable) out.available = false;
+            const same_ownership = left.root == right.root and left.borrowed == right.borrowed and left.transferable == right.transferable;
+            if (!same_ownership or left.view_definition != right.view_definition or left.dependency != right.dependency) out.available = false;
         }
     }
 
@@ -594,8 +1050,9 @@ const Checker = struct {
     }
 
     fn matchArms(c: *Checker, value: typed.NodeId, arms: []const typed.MatchArm) Error!bool {
-        const owned = c.zero_rc and matchOwnsTemporary(c.program.nodes, value);
+        const owned = c.zero_rc and (matchOwnsTemporary(c.program.nodes, value) or resources.affine(c.program, c.program.nodes[@backingInt(value)].ty));
         try c.expression(value, if (owned) .move else .read);
+        const dependency = if (c.zero_rc) try c.resourceOrigin(value) else null;
         const before = try c.a.dupe(State, c.state);
         const saved = c.loans.items.len;
         defer c.loans.shrinkRetainingCapacity(saved);
@@ -604,17 +1061,35 @@ const Checker = struct {
         var joined: ?[]State = null;
         for (arms) |arm| {
             @memcpy(c.state, before);
-            if (arm.slot) |slot| c.state[@backingInt(slot)] = .{ .available = true, .borrowed = !owned, .root = if (owned) none else source orelse none };
+            if (arm.slot) |slot| {
+                const local = c.function.scope.locals[@backingInt(slot)];
+                const narrowing = std.mem.startsWith(u8, local.name, "<");
+                c.state[@backingInt(slot)] = .{
+                    .available = true,
+                    .borrowed = !owned,
+                    .writable = narrowing and local.mutable and source != null and c.state[source.?].writable,
+                    .root = if (owned) none else source orelse none,
+                    .dependency = dependency orelse none,
+                };
+            }
             const body = if (owned and arm.unpack != null) unpacked: {
                 // This is the whole hidden payload, split before source statements.
                 // Each binding is now its own owner; the original is unavailable.
                 if (arm.slot) |slot| c.state[@backingInt(slot)].available = false;
                 for (arm.unpack.?.fields) |field| if (field) |slot| {
-                    c.state[@backingInt(slot)] = .{ .available = true };
+                    c.state[@backingInt(slot)] = .{ .available = true, .dependency = dependency orelse none };
                 };
                 break :unpacked arm.unpack.?.body;
             } else arm.body;
             if (!try c.checkStatement(body)) continue;
+            // A generated narrowing binding is read by its enclosing block value.
+            // Source pattern bindings instead end with the arm's lexical scope.
+            if (arm.slot) |slot| if (!std.mem.startsWith(u8, c.function.scope.locals[@backingInt(slot)].name, "<")) {
+                c.state[@backingInt(slot)].available = false;
+            };
+            if (arm.unpack) |unpack| for (unpack.fields) |field| if (field) |slot| {
+                c.state[@backingInt(slot)].available = false;
+            };
             if (joined) |previous| c.merge(previous, c.state);
             if (joined == null) joined = try c.a.alloc(State, c.state.len);
             @memcpy(joined.?, c.state);
@@ -631,18 +1106,22 @@ const Checker = struct {
             },
             .initialize => |store| try c.checkStore(store, true, statement.span),
             .assign => |store| try c.checkStore(store, false, statement.span),
-            .discard => |value| try c.expression(value, .read),
+            .discard => |value| try c.expression(value, if (c.zero_rc and resources.affine(c.program, c.program.nodes[@backingInt(value)].ty)) .move else .read),
             .ret => |value| {
                 if (c.view(c.function.signature.return_type)) {
                     try c.expression(value, .read);
                     const source = try c.returnSource(c.function, statement.span);
                     if (c.origin(value) != source) return c.reject(statement.span, view_escape, "the returned view must borrow from this function's single view parameter");
-                } else try c.expression(value, .move);
+                } else {
+                    try c.expression(value, .move);
+                    if (c.zero_rc and resources.dependent(c.program, c.function.signature.return_type)) try c.resourceReturn(value, statement.span);
+                }
                 return false;
             },
             .assertion => |assertion| {
                 try c.expression(assertion.condition, .read);
                 if (assertion.message_value) |message| try c.expression(message, .read);
+                if (c.program.nodes[@backingInt(assertion.condition)].data == .boolean and !c.program.nodes[@backingInt(assertion.condition)].data.boolean) return false;
             },
             .branch => |branch| {
                 try c.expression(branch.condition, .read);
@@ -660,16 +1139,17 @@ const Checker = struct {
             .with_scope => |scope| {
                 const source = scope.resource orelse return c.reject(statement.span, zero_unsupported, "zero-RC scopes require an explicit file owner");
                 const node = c.program.nodes[@backingInt(source)];
-                const provider = @import("build_cap.zig").scopeProvider(node) orelse return c.reject(statement.span, zero_unsupported, "open a dependent scope directly from a named provider in this prototype");
-                if (c.program.nodes[@backingInt(provider)].data != .local) return c.reject(statement.span, zero_unsupported, "bind the provider to a local before opening a scoped file");
-                if (node.data == .file_access) {
+                const provider = @import("build_cap.zig").scopeProvider(c.program, source) orelse return c.reject(statement.span, zero_unsupported, "open a dependent scope directly from a named provider in this prototype");
+                if (providers.root(c.program, provider) == null) return c.reject(statement.span, zero_unsupported, "bind the provider or its enclosing record to a local before opening a scope");
+                if (node.data == .file_access or node.data == .propagate) {
                     try c.expression(source, .read);
                 } else {
                     switch (node.data) {
                         .dir_resource => |dir| try c.arguments(&.{ provider, dir.path }, &.{}, &.{}),
                         .host_resource => |host| try c.arguments(&.{ provider, host.name }, &.{}, &.{}),
                         .environment_only => |only| try c.arguments(&.{ provider, only.names }, &.{}, &.{}),
-                        else => try c.expression(provider, .read),
+                        .restrict_resource => try c.expression(provider, .read),
+                        else => try c.expression(source, .read),
                     }
                 }
                 const saved = c.loans.items.len;
@@ -678,6 +1158,10 @@ const Checker = struct {
                 const slot = @backingInt(scope.slot);
                 c.state[slot] = .{ .available = true, .borrowed = true };
                 const falls = try c.checkStatement(scope.body);
+                for (c.state, 0..) |*state, other| if (state.available and state.dependency == slot) {
+                    if (other < slot) return c.reject(statement.span, resource_escape, "a resource cannot escape its provider scope");
+                    state.available = false;
+                };
                 c.state[slot].available = false;
                 return falls;
             },

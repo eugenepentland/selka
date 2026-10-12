@@ -1,0 +1,29 @@
+record Item:
+    code: int
+    payload: int[]
+
+
+record Box:
+    items: Item[]
+
+
+func grow(rows0: int[][], i: int, v: int) -> int:
+    mut rows = rows0.copy()
+    rows[i].append(v)
+    return len(rows[i]) * 100 + len(rows0[i])
+
+
+func deep(b0: Box, v: int) -> int:
+    mut b = b0.copy()
+    b.items[0].payload[0] = v
+    b.items[1].payload.append(v + 1)
+    b.items[1].code = 77
+    return b.items[0].payload[0] * 10000 + len(b.items[1].payload) * 100 + b0.items[0].payload[0] + b.items[1].code
+
+
+func main(out: Stream) -> int:
+    mut rows = [[1], [2, 3]]
+    out.print(grow(rows, 1, 9), len(rows[1]))
+    mut items = [Item(code=1, payload=[1, 2]), Item(code=2, payload=[3])]
+    out.print(deep(Box(items=items.copy()), 55), items[0].payload[0], len(items[1].payload))
+    return 0

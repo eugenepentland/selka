@@ -4,7 +4,7 @@
 # after the receiver is captured. Answers match the collector; RC counting
 # builds balance.
 func keyed(mut table: dict[str, int]) -> int:
-    mut snapshot = table
+    mut snapshot = table.copy()
     table["k" + str(len(snapshot))] = 7
     return 0
 
@@ -13,13 +13,13 @@ func keyed_in_loop(mut table: dict[str, int[]]) -> int:
     mut round = 0
     while round < 2:
         round = round + 1
-        mut snapshot = table
+        mut snapshot = table.copy()
         table["k" + str(len(snapshot))] = [len(snapshot)]
     return round
 
 
 func kept(mut table: dict[str, int]) -> int:
-    mut snapshot = table
+    mut snapshot = table.copy()
     table["k" + str(len(snapshot))] = 7
     return len(snapshot)
 
@@ -56,7 +56,7 @@ func snapshot_rounds(mut parts: Part[]) -> int:
     mut round = 0
     while round < 3:
         round = round + 1
-        mut snapshot = parts
+        mut snapshot = parts.copy()
     return extend_parts(mut parts)
 
 

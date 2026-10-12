@@ -1,0 +1,46 @@
+{
+  "purpose": "Ordinary RC frontend syntax/type validation only; no zero-RC qualification",
+  "compiler_revision": "66890fbc5135a771e6a423724d13c30018ab717f",
+  "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+  "cases": {
+    "provider_record.my": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/samples/provider_record.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/aggregate-syntax-corrected/cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "sha256": "7822fef72c7d488c10ac6a6628a750f2f6e5326e14abeca31d9f9ff2a71e9771"
+    },
+    "provider_tuple.my": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/samples/provider_tuple.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/aggregate-syntax-corrected/cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "sha256": "6978f3188bd54b882e6fbe796c2a2ba0ff26e2b6a5ccf9d7407c54010a675256"
+    },
+    "dictionary_setdefault.my": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/samples/dictionary_setdefault.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/aggregate-syntax-corrected/cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "sha256": "71d94c9dd4d91ed9c804475ffed228af7fb735312b0dafa9416b1a2d92204ba5"
+    }
+  }
+}

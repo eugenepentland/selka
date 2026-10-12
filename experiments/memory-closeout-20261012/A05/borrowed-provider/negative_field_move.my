@@ -1,0 +1,9 @@
+record Context:
+    fs: Filesystem
+    env: Environment
+
+func main(fs: Filesystem, env: Environment) -> int:
+    const ctx = Context(fs=fs, env=env)
+    const selected = ctx.fs
+    _ = selected.read_text("note")
+    return len(ctx.env.names())

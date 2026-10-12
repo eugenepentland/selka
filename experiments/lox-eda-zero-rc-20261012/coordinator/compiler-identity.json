@@ -1,0 +1,16 @@
+{
+  "source_commit": "e2893d2707cbe057a09abf94e04c4b12d16b7b8b",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/zig-out/bin/mylang",
+  "sha256": "6e7938a14ad4abc46b76c149ef12551b170f6c7e6f462beec2f81db18d40a83d",
+  "gate_status": "passed",
+  "gate": "compiler-gate-01.json",
+  "registered_build_steps": "135/135",
+  "zig_test_pass_entries": 3065,
+  "zig_shard_skip_entries": 26838,
+  "selected_actions": 45,
+  "reused_actions": 0,
+  "notes": [
+    "Subsequent application/evidence integration does not modify compiler sources.",
+    "Guest suite additionally reports1578passed0failed1unsupported; see raw logs."
+  ]
+}

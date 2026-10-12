@@ -1,0 +1,7 @@
+{
+  "state": "prepared-unapplied",
+  "before_sha256": "1f98dd5f443cb411cb12a5adae0fdc2107342932089d1dc4b90b72de8d7870cc",
+  "proposed_sha256": "f58f19dbd9dc00047025482ff98b299bdcc800beef836d30006b5c2ebb205438",
+  "dependency": "C2 qualification; A02 removes the five corresponding RC runtime anchors; coordinator dispatches Stage4",
+  "preserves": "descriptor-driven list-copy instrumentation and mylang-counters-v1 schema"
+}

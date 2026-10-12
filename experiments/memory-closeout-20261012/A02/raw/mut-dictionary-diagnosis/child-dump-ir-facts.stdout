@@ -1,0 +1,106 @@
+fn main(cap) -> i64
+b0:
+  %2 = dict_new dict[i64, dict[i64, i64]] 1:u64
+  %5 = dict_new dict[i64, i64] 1:u64
+  %8 = dict_find i64 %5, 1:i64
+  %10 = cmp.ge bool %8, 0:i64
+  branch %10, b1, b2
+b1: ; preds b0
+  %12 = dict_set_value dict[i64, i64] %5, %8, 7:i64
+  jump b3
+b2: ; preds b0
+  %14 = dict_insert dict[i64, i64] %5, %8, 1:i64, 7:i64
+  jump b3
+b3: ; preds b1 b2
+  %16 = phi dict[i64, i64] %12, %14
+  %17 = dict_find i64 %2, 0:i64
+  %19 = cmp.ge bool %17, 0:i64
+  branch %19, b4, b5
+b4: ; preds b3
+  %21 = dict_set_value dict[i64, dict[i64, i64]] %2, %17, %16
+  jump b6
+b5: ; preds b3
+  %23 = dict_insert dict[i64, dict[i64, i64]] %2, %17, 0:i64, %16
+  jump b6
+b6: ; preds b4 b5
+  %25 = phi dict[i64, dict[i64, i64]] %21, %23
+  %27 = dict_find i64 %25, 0:i64
+  %29 = cmp.ge bool %27, 0:i64
+  branch %29, b7, b8
+b7: ; preds b6
+  %32 = dict_entry_value dict[i64, i64] %25, %27
+  %34 = dict_entry_value dict[i64, i64] %25, %27
+  jump b14
+b8: ; preds b6
+  unreachable
+b9: ; preds b13
+  %45 = dict_entry_value dict[i64, i64] %36, %40
+  %47 = dict_find i64 %45, 1:i64
+  %49 = cmp.ge bool %47, 0:i64
+  branch %49, b11, b12
+b10: ; preds b13
+  unreachable
+b11: ; preds b9
+  %52 = dict_entry_value i64 %45, %47
+  release %36
+  print param0, %52
+  ret 0:i64
+b12: ; preds b9
+  unreachable
+b13: ; preds b19
+  %36 = dict_set_value dict[i64, dict[i64, i64]] %25, %27, %74
+  %40 = dict_find i64 %36, 0:i64
+  %42 = cmp.ge bool %40, 0:i64
+  branch %42, b9, b10
+b14: ; preds b7
+  %57 = dict_find i64 %34, 1:i64
+  %59 = cmp.ge bool %57, 0:i64
+  branch %59, b15, b16
+b15: ; preds b14
+  %62 = dict_entry_value i64 %34, %57
+  %64 = add.exact i64 %62, 1:i64
+  %66 = dict_find i64 %34, 1:i64
+  %68 = cmp.ge bool %66, 0:i64
+  branch %68, b17, b18
+b16: ; preds b14
+  unreachable
+b17: ; preds b15
+  %77 = dict_copy dict[i64, i64] %34
+  %70 = dict_set_value dict[i64, i64] %77, %66, %64
+  jump b19
+b18: ; preds b15
+  %78 = dict_copy dict[i64, i64] %34
+  %79 = dict_find i64 %78, 1:i64
+  %72 = dict_insert dict[i64, i64] %78, %79, 1:i64, %64
+  jump b19
+b19: ; preds b17 b18
+  %74 = phi dict[i64, i64] %70, %72
+  jump b13
+fn update(dict[i64, i64]) -> dict[i64, i64]
+b0:
+  %2 = dict_find i64 param0, 1:i64
+  %4 = cmp.ge bool %2, 0:i64
+  branch %4, b1, b2
+b1: ; preds b0
+  %7 = dict_entry_value i64 param0, %2
+  %9 = add.exact i64 %7, 1:i64
+  %11 = dict_find i64 param0, 1:i64
+  %13 = cmp.ge bool %11, 0:i64
+  branch %13, b3, b4
+b2: ; preds b0
+  unreachable
+b3: ; preds b1
+  %15 = dict_set_value dict[i64, i64] param0, %11, %9
+  jump b5
+b4: ; preds b1
+  %17 = dict_insert dict[i64, i64] param0, %11, 1:i64, %9
+  jump b5
+b5: ; preds b3 b4
+  %19 = phi dict[i64, i64] %15, %17
+  ret %19
+facts main: %8=[-9223372036854775808,9223372036854775807] %10=[0,1] %17=[-9223372036854775808,9223372036854775807] %19=[0,1] %27=[-9223372036854775808,9223372036854775807] %29=[0,1] %40=[-9223372036854775808,9223372036854775807] %42=[0,1] %47=[-9223372036854775808,9223372036854775807] %49=[0,1] %52=[-9223372036854775808,9223372036854775807] %57=[-9223372036854775808,9223372036854775807] %59=[0,1] %62=[-9223372036854775808,9223372036854775807] %64=[-9223372036854775807,9223372036854775807] %66=[-9223372036854775808,9223372036854775807] %68=[0,1]
+list main %16: settled=true length=%-1
+list main %25: settled=true length=%-1
+list main %74: settled=true length=%-1
+facts update: %2=[-9223372036854775808,9223372036854775807] %4=[0,1] %7=[-9223372036854775808,9223372036854775807] %9=[-9223372036854775807,9223372036854775807] %11=[-9223372036854775808,9223372036854775807] %13=[0,1]
+list update %19: settled=true length=%-1

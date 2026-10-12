@@ -1,0 +1,18 @@
+build-slot: build slot 1, FIFO ticket 2106 after 0s
+guardian/test: 183 test(s) selected
+guardian/test: SLOW  7.56s  a01_parallel_map_test.test.A01 zero RC scheduler million-submit stress has no ThreadSanitizer reports
+guardian/test: SLOW  8.02s  zero_rc_task_test.test.zero RC task captures and results are free from ThreadSanitizer reports
+All 183 tests passed.
+guardian/test: test wall 74.84s; slowest over 50ms:
+guardian/test:   8.02s  zero_rc_task_test.test.zero RC task captures and results are free from ThreadSanitizer reports
+guardian/test:   7.56s  a01_parallel_map_test.test.A01 zero RC scheduler million-submit stress has no ThreadSanitizer reports
+guardian/test:   4.39s  a01_parallel_map_test.test.A01 zero RC scheduler million-submit nested and discarded-result stress
+guardian/test:   4.22s  a02_list_methods_test.test.zero RC A02 list methods move nested wide recursive children and preserve traps
+guardian/test:   3.66s  durable_test.test.zero RC durable native storage preserves fault crash and lease cleanup contracts
+guardian/test:   3.53s  s3_list_methods_test.test.zero RC keyed sorting optional scratch failure preserves managed cycle fallback
+guardian/test:   2.82s  a02_public_constructors_test.test.zero RC A02 public constructors preserve owned keys and generator results
+guardian/test:   2.50s  zero_rc_task_test.test.zero RC source map borrows inputs until joining and owns each result
+guardian/test:   2.34s  a05_scalar_mut_test.test.zero RC A05 scalar mut calls preserve sibling writes and argument order
+guardian/test:   2.26s  a02_scalar_child_test.test.zero RC A02 scalar child writes preserve nested owned fields
+guardian/test: PASS — 183 passed
+guardian/test: RESULT {"passed":183,"failed":0,"skipped":0}

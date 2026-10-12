@@ -70,12 +70,14 @@ pub fn cfgCallerDemandWithScratch(arena: std.mem.Allocator, scratch: std.mem.All
             if (call.op != .call or call.a.index() == index) continue;
             if (demand) |handles| try handles.ensure(@intCast(call.a.index()));
             const callee = &module.functions.items[call.a.index()];
+            if (@import("borrowed_provider.zig").contains(module, callee)) continue;
             const helper = cfg.qualifies(callee);
+            const reader = @import("inline_reader.zig").qualifies(module, callee);
             if (!helper) {
+                // Readers and constructors share one fixed cloning budget.
                 // Each clone adds at most the callee's instructions and a jump.
-                // Do not let many small builders cause unbounded caller growth.
                 if (callee.insts.items.len + 1 > destination.max_caller_instructions - constructor_instructions) continue;
-                const constructs = try destination.qualifies(trials.allocator(), module, callee);
+                const constructs = reader or @import("inline_snapshot.zig").qualifies(module, callee) or try destination.qualifies(trials.allocator(), module, callee);
                 _ = trials.reset(.retain_capacity);
                 if (!constructs) continue;
             }
@@ -86,6 +88,7 @@ pub fn cfgCallerDemandWithScratch(arena: std.mem.Allocator, scratch: std.mem.All
             break;
         }
     }
+    _ = try @import("inline_reader.zig").cleanup(arena, module, caller);
     return count;
 }
 
@@ -143,6 +146,7 @@ pub fn leafCallerDemand(arena: std.mem.Allocator, scratch: std.mem.Allocator, mo
             if (call.op != .call or call.a.index() == index) continue;
             if (demand) |handles| try handles.ensure(@intCast(call.a.index()));
             const callee = &module.functions.items[call.a.index()];
+            if (@import("borrowed_provider.zig").contains(module, callee)) continue;
             const result = leaf(callee) orelse continue;
             if (proof.needsProof(callee)) {
                 if (known == null) known = try facts.analyze(scratch, caller, .{ .fold = false, .mark = false, .params = parameters });
