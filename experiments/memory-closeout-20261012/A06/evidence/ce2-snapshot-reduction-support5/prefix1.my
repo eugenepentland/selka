@@ -1,0 +1,378 @@
+# CE2-A (field effects): per-field interference of memory homes, dead and sunk element
+# stores, and element stores narrowed to the fields that changed. Every case prints what
+# value semantics says it must; the copies and stores the compiler removed must not be
+# observable.
+
+
+record Code:
+    consts: int[]
+    lines: int[]
+    name: str
+    n: int
+    m: int
+
+
+record Frame:
+    closure: int
+    code: Code
+    ops: int[]
+    ip: int
+    base: int
+
+
+enum Slot:
+    empty
+    frame(value: Frame)
+    count(value: int)
+
+
+record Machine:
+    frames: Frame[]
+    count: int
+    stack: int[]
+    top: int
+    log: str[]
+
+
+# ---- per-field interference ---------------------------------------------------------
+
+# Writes only `frame.ip`.
+func next_op(mut frame: Frame) -> int:
+    mut op = frame.ops[frame.ip]
+    frame.ip = frame.ip + 1
+    return op
+
+
+# A view of `frame.code` is live across a call that writes only `frame.ip`.
+func read_const(mut frame: Frame) -> int:
+    const constants = frame.code.consts.copy()
+    return constants[next_op(mut frame)]
+
+
+# Writes `frame.code.n`: the same field as the view the caller keeps.
+func touch_code(mut frame: Frame):
+    frame.code.n = frame.code.n + 100
+
+
+# The old `code` must survive a callee that writes inside it.
+func same_field(mut frame: Frame) -> int:
+    mut old = frame.code.copy()
+    touch_code(mut frame)
+    return old.n * 1000 + frame.code.n
+
+
+# A view held across an in-place update of a disjoint field, then of the same field.
+func held_view(mut frame: Frame) -> int:
+    mut code = frame.code.copy()
+    frame.ip = frame.ip + 5
+    mut first = code.n + frame.ip
+    frame.code = Code(consts=[7], lines=[], name="new", n=50, m=0)
+    return first * 1000 + code.n + frame.code.n
+
+
+# A loop with `break` and `continue` keeps a view of `code` while it updates `ip`.
+func loop_view(mut frame: Frame, limit: int) -> int:
+    mut code = frame.code.copy()
+    mut total = 0
+    while True:
+        if frame.ip >= limit:
+            break
+        mut op = next_op(mut frame)
+        if op % 2 == 0:
+            continue
+        total = total + code.consts[op % len(code.consts)]
+    return total * 100 + frame.ip
+
+
+# Recursion through `mut`: each level reads a view of `code` after the callee's update.
+func recurse(mut frame: Frame, depth: int) -> int:
+    if depth == 0:
+        return frame.ip
+    mut code = frame.code.copy()
+    frame.ip = frame.ip + 1
+    mut inner = recurse(mut frame, depth - 1)
+    return inner + code.m
+
+
+# Counted fields: a list field is replaced while a view of another counted field is live.
+func swap_ops(mut frame: Frame) -> int:
+    mut code = frame.code.copy()
+    frame.ops = [9, 8, 7]
+    return len(code.consts) * 10 + len(frame.ops)
+
+
+# A union payload over four words read where it lies while another field changes.
+func slot_ip(slot: Slot, bump: int) -> int:
+    match slot:
+        case Slot.frame(value=frame):
+            mut inner = frame.copy()
+            inner.ip = inner.ip + bump
+            return inner.ip * 100 + frame.ip
+        case Slot.count(value=n):
+            return n
+        case _:
+            return -1
+
+
+func make_code(tag: str, n: int) -> Code:
+    return Code(consts=[10, 20, 30, 40], lines=[1, 2], name=tag.copy(), n=n, m=n * 2)
+
+
+func make_frame(tag: str, n: int) -> Frame:
+    return Frame(closure=n, code=make_code(tag, n), ops=[1, 2, 3, 0, 1], ip=0, base=n)
+
+
+func fields_section(out: Stream):
+    mut frame = make_frame("a", 3)
+    out.print(read_const(mut frame), read_const(mut frame), frame.ip, frame.code.n)
+    out.print(same_field(mut frame), frame.code.n)
+    out.print(held_view(mut frame), frame.ip, frame.code.name)
+    mut loop = make_frame("b", 4)
+    out.print(loop_view(mut loop, 5), loop.ip)
+    mut deep = make_frame("c", 5)
+    out.print(recurse(mut deep, 4), deep.ip)
+    out.print(swap_ops(mut deep), deep.ops[0], len(deep.code.consts))
+    out.print(slot_ip(Slot.frame(value=make_frame("d", 6)), 3), slot_ip(Slot.count(value=4), 1), slot_ip(Slot.empty, 1))
+
+
+# ---- element stores: a dispatch loop that keeps its frame in a local -----------------
+
+func new_machine(code: int[]) -> Machine:
+    mut frames: Frame[] = []
+    mut i = 0
+    while i < 4:
+        frames.append(Frame(closure=i, code=make_code("m", i), ops=code.copy(), ip=0, base=i))
+        i += 1
+    return Machine(frames=frames, count=1, stack=[], top=0, log=[])
+
+
+func push(mut m: Machine, x: int):
+    m.stack.append(x)
+    m.top = m.top + 1
+
+
+# Reads every frame: an observation of the element the loop stores.
+func trace(m: Machine) -> int:
+    mut total = 0
+    mut i = 0
+    while i < m.count:
+        total = total * 10 + m.frames[i].ip
+        i += 1
+    return total
+
+
+# Reports an error the way the Lox VM does: reads the frames, resets the count, answers False.
+func report_failure(mut m: Machine, why: str) -> bool:
+    m.log.append(why + ":" + str(trace(m)))
+    m.count = 0
+    return False
+
+
+# Answers True after a push, or False after an error that resets the frame count.
+func checked_push(mut m: Machine, x: int) -> bool:
+    if x > 900:
+        return report_failure(mut m, "big")
+    push(mut m, x)
+    return True
+
+
+# Calls: a new frame on top (the count grows), its ip set by the caller's operand.
+func call(mut m: Machine, target: int) -> bool:
+    if m.count == len(m.frames):
+        return report_failure(mut m, "deep")
+    m.frames[m.count] = Frame(closure=target, code=make_code("c", target), ops=m.frames[0].ops.copy(), ip=target, base=m.top)
+    m.count = m.count + 1
+    return True
+
+
+func with_frames(m: Machine, f: func(Machine) -> int) -> int:
+    return f(m)
+
+
+# Op codes: 0 halt, 1 push next, 2 jump, 3 trace, 4 call, 5 return, 6 checked push,
+# 7 grow the frame list, 8 replace the frame list, 9 an indirect read of the frames,
+# 10 an out-of-range read (a trap), 11 rename the frame's code (a counted field), 12 log,
+# 13 a frame count past the list (the store at the end of the step traps).
+func run(mut m: Machine, steps: int) -> int:
+    mut frame = m.frames[m.count - 1].copy()
+    mut n = 0
+    while True:
+        mut op = next_op(mut frame)
+        m.frames[m.count - 1] = frame.copy()
+        mut ok = True
+        n += 1
+        if n > steps:
+            return -1
+        if op == 0:
+            return trace(m)
+        elif op == 1:
+            push(mut m, next_op(mut frame))
+        elif op == 2:
+            const target = next_op(mut frame)
+            frame.ip = target
+            if target == 99:
+                frame.ip = 2
+                continue
+        elif op == 3:
+            m.log.append("t" + str(trace(m)))
+        elif op == 4:
+            const target = next_op(mut frame)
+            m.frames[m.count - 1] = frame.copy()
+            ok = call(mut m, target)
+            if ok:
+                frame = m.frames[m.count - 1].copy()
+        elif op == 5:
+            m.count = m.count - 1
+            if m.count == 0:
+                return 100 + trace(m)
+            frame = m.frames[m.count - 1].copy()
+        elif op == 6:
+            ok = checked_push(mut m, next_op(mut frame))
+        elif op == 7:
+            m.frames.append(frame.copy())
+        elif op == 8:
+            m.frames = [frame.copy(), frame.copy()]
+            m.count = 1
+        elif op == 9:
+            m.log.append("i" + str(with_frames(m, trace)))
+        elif op == 10:
+            m.log.append(str(m.stack[next_op(mut frame)]))
+        elif op == 11:
+            frame.code.name = frame.code.name + "!"
+            frame.code.consts.append(op)
+        elif op == 12:
+            m.log.append(frame.code.name + str(len(frame.code.consts)))
+        elif op == 13:
+            m.count = m.count + 10
+        m.frames[m.count - 1] = frame.copy()
+        if not ok:
+            return -2
+
+
+func show(m: Machine, result: int) -> str:
+    mut text = str(result) + " " + str(m.count) + " " + str(len(m.frames)) + " " + str(m.top)
+    for line in m.log:
+        text = text + " " + line
+    mut i = 0
+    while i < len(m.frames):
+        text = text + " " + str(m.frames[i].ip) + m.frames[i].code.name
+        i += 1
+    return text
+
+
+# Union elements: a payload read, updated and stored back, a case replaced, and a
+# construction stored past the index's negative-index branch.
+func retag(mut slots: Slot[], i: int, f: Frame) -> int:
+    const selected = slots[i].copy()
+    match selected:
+        case Slot.frame(value=inner):
+            mut moved = inner.copy()
+            moved.ip = moved.ip + 1
+            slots[i] = Slot.frame(value=moved)
+        case _:
+            slots[i] = Slot.count(value=i)
+    slots[-1] = Slot.frame(value=f.copy())
+    return len(slots)
+
+
+func slot_text(slot: Slot) -> str:
+    match slot:
+        case Slot.frame(value=frame):
+            return "f" + str(frame.ip) + frame.code.name
+        case Slot.count(value=n):
+            return "c" + str(n)
+        case _:
+            return "e"
+
+
+func stores_section(out: Stream, trap: str):
+    mut programs = [
+        [1, 5, 1, 6, 3, 0],
+        [1, 7, 2, 5, 9, 9, 3, 0],
+        [4, 3, 0, 3, 5],
+        [4, 3, 0, 1, 4, 3, 5],
+        [6, 5, 6, 950, 3, 0],
+        [7, 3, 7, 3, 0],
+        [8, 3, 1, 2, 3, 0],
+        [9, 1, 4, 9, 0],
+        [11, 12, 3, 11, 12, 0],
+        [2, 99, 0],
+        [4, 4, 4, 4, 4, 4, 4, 4, 4, 0],
+    ]
+    for code in programs:
+        mut m = new_machine(code)
+        const result = run(mut m, 40)
+        out.print(show(m, result))
+    mut slots = [Slot.frame(value=make_frame("u", 1)), Slot.empty, Slot.count(value=2)]
+    mut before = slots.copy()
+    mut n = retag(mut slots, 0, make_frame("v", 2))
+    n = n + retag(mut slots, 1, make_frame("w", 3))
+    out.print(n, slot_text(slots[0]), slot_text(slots[1]), slot_text(slots[2]), slot_text(before[0]), slot_text(before[2]))
+    if trap == "x":
+        mut t = new_machine([1, 3, 3, 10, 7, 0])
+        const result = run(mut t, 40)
+        out.print(show(t, result))
+    if trap == "y":
+        mut t = new_machine([1, 3, 13, 0])
+        const result = run(mut t, 40)
+        out.print(show(t, result))
+
+
+# ---- write-backs through updates of other fields ------------------------------------
+
+record Interp:
+    name: str
+    m: Machine
+    returned: int
+    depth: int
+
+
+func take_pop(mut m: Machine) -> int:
+    m.top = m.top - 1
+    return m.stack[m.top]
+
+
+# `it.m` is read, `it.returned` updated, then `it.m` written back: the read takes the field.
+func return_value(mut it: Interp):
+    mut wb = it.m.copy()
+    it.returned = take_pop(mut wb)
+    it.m = wb
+
+
+# A managed field is replaced between the read and the write-back.
+func rename_and_pop(mut it: Interp, name: str):
+    mut wb = it.m.copy()
+    it.name = name.copy()
+    it.returned = take_pop(mut wb)
+    it.m = wb
+
+
+# The whole record is copied between the read and the write-back: the copy keeps the old field.
+func snapshot_between(mut it: Interp) -> int:
+    mut wb = it.m.copy()
+    it.depth = it.depth + 1
+    mut keep = it.copy()
+    it.returned = take_pop(mut wb)
+    it.m = wb
+    return keep.m.top * 100 + keep.depth * 10 + it.m.top
+
+
+func depth_of(it: Interp) -> int:
+    return it.depth * 10 + it.m.top
+
+
+# A call reads the record between the read and the write-back.
+func read_between(mut it: Interp) -> int:
+    mut wb = it.m.copy()
+    it.depth = it.depth + 1
+    mut seen = depth_of(it)
+    it.returned = take_pop(mut wb)
+    it.m = wb
+    return seen
+
+
+func main(out: Stream) -> int:
+    mut it = Interp(name="i", m=Machine(frames=[], count=0, stack=[4, 5, 6, 7, 8, 9], top=6, log=["a"]), returned=0, depth=0)
+    return_value(mut it)
+    out.print(it.returned, it.m.top, it.name)
+    return 0

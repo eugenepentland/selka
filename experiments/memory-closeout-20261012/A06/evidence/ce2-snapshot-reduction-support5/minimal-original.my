@@ -1,0 +1,56 @@
+record Code:
+    consts: int[]
+    lines: int[]
+    name: str
+    n: int
+    m: int
+
+
+record Frame:
+    closure: int
+    code: Code
+    ops: int[]
+    ip: int
+    base: int
+
+
+enum Slot:
+    empty
+    frame(value: Frame)
+    count(value: int)
+
+
+record Machine:
+    frames: Frame[]
+    count: int
+    stack: int[]
+    top: int
+    log: str[]
+
+
+record Interp:
+    name: str
+    m: Machine
+    returned: int
+    depth: int
+
+
+func take_pop(mut m: Machine) -> int:
+    m.top = m.top - 1
+    return m.stack[m.top]
+
+
+# `it.m` is read, `it.returned` updated, then `it.m` written back: the read takes the field.
+func snapshot_between(mut it: Interp) -> int:
+    mut wb = it.m.copy()
+    it.depth = it.depth + 1
+    mut keep = it.copy()
+    it.returned = take_pop(mut wb)
+    it.m = wb
+    return keep.m.top * 100 + keep.depth * 10 + it.m.top
+
+
+func main(out: Stream) -> int:
+    mut it = Interp(name="i", m=Machine(frames=[], count=0, stack=[4, 5, 6, 7, 8, 9], top=6, log=["a"]), returned=0, depth=0)
+    out.print(snapshot_between(mut it), it.returned, it.m.top, it.depth)
+    return 0
