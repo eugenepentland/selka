@@ -1,0 +1,293 @@
+{
+  "cases": [
+    {
+      "cell": "eda/blinky-breakout",
+      "model_sha256": "8a86e635b60cac0c8b859c225db5716a60fab236d078c5413e305cd867687a23",
+      "project_files": 5,
+      "golden_output_files": 6,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/adf5901",
+      "model_sha256": "e91a02cad35325c76cc78b319d6b8a248125b6f6656b83ca6586c226816fe27c",
+      "project_files": 748,
+      "golden_output_files": 6,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/barracuda",
+      "model_sha256": "c4dd3dd5930d202a198b82d46a874c13ed2e7b8023cccd1dab72fe3dc6b1f138",
+      "project_files": 748,
+      "golden_output_files": 34,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/barracuda-base",
+      "model_sha256": "2b322a0e6716f371ce5e273dfc54ba6e091cc38eb8123d1df1f8ce00955a3747",
+      "project_files": 748,
+      "golden_output_files": 32,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/barracuda-via-fence",
+      "model_sha256": "ace2a6ed8d2c736a805fa18c56ab9c42ba07dbb4d3f3705a26006e52caaa559c",
+      "project_files": 748,
+      "golden_output_files": 27,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/black-canyon",
+      "model_sha256": "59e1eabe6ca6dc1924bb2a434d604b607e319c36bb2c897ccfa12bd10c5fbd29",
+      "project_files": 748,
+      "golden_output_files": 21,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/cyclops-analog",
+      "model_sha256": "1d54ad648b69c8ccc6c481bc4eb1d7869d3f96868185b6833a626393c46be794",
+      "project_files": 748,
+      "golden_output_files": 23,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/cyclops-breakout",
+      "model_sha256": "a088ba53f40ae4a8a74e7470e29c4a06fcfb90c753f6ddde2029d1749fefb8ad",
+      "project_files": 748,
+      "golden_output_files": 6,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/cyclops-digital-pcb",
+      "model_sha256": "78eeb1a93a77de0fb1e4e1dd05a72fb18e22d1d2b0eddeb81e192a3d7b5109df",
+      "project_files": 748,
+      "golden_output_files": 6,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/cyclops-interposer",
+      "model_sha256": "0d99ab3b8f833b65f4c0dd084675435e099e93f17a3df68e86f19b30cdef238e",
+      "project_files": 748,
+      "golden_output_files": 12,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/cyclops-kband-breakout",
+      "model_sha256": "d4f93abf68a01863ee7038a929b14c7a0af27720f928fa41b226997108c8e2e9",
+      "project_files": 748,
+      "golden_output_files": 14,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/cyclops-kband-pcb",
+      "model_sha256": "941b5aa72bf40004e4b355aebd75d0c7e3275df09038f91f70bff341c7c10ebb",
+      "project_files": 748,
+      "golden_output_files": 6,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/cyclops-kband",
+      "model_sha256": "474d13338acfc3b758bb99fbc558b71ba87e4526e614c3fd672fa2cdb4b19353",
+      "project_files": 748,
+      "golden_output_files": 18,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/cyclops-xband-sip",
+      "model_sha256": "f26d7b16d37364c79475a606e2a0bb4213fdae3ffddec2fb544c43a8adaa2dd0",
+      "project_files": 748,
+      "golden_output_files": 10,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/stm32n6",
+      "model_sha256": "625b3f1c7f80e69ab7e3e3e38c4db66f7aaec112c7a36169cac9b115a569cf97",
+      "project_files": 748,
+      "golden_output_files": 27,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/labstation",
+      "model_sha256": "e21df5bb1bcecbde43195839196c3882172df7cc30dbed6c9fc64ff9ea60fcc2",
+      "project_files": 748,
+      "golden_output_files": 29,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/rds3",
+      "model_sha256": "535232c04103e230546bf26e7a30c0433d524c03e0d296cfb11b56aabdede9eb",
+      "project_files": 748,
+      "golden_output_files": 73,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/remora-base",
+      "model_sha256": "8b41039657784c3343ffbad78b81ff3ccb851598fe93edfade341a3bb9aaf79b",
+      "project_files": 748,
+      "golden_output_files": 16,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/remora-rf",
+      "model_sha256": "3fcd933fe4bff24169f18c83b51959b04076374c70479ac19b2f85cd3c3bcb96",
+      "project_files": 748,
+      "golden_output_files": 17,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/rf-switch-8way",
+      "model_sha256": "e9289cef43ecffdc5fadd938f810b2c3338c4b1d8839c588b07f2921d15b4267",
+      "project_files": 748,
+      "golden_output_files": 6,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/rf-switch-eval",
+      "model_sha256": "6b22ee2ce41c35628d9afde9ce24cb495fb1c93eb992784cc41fa7332232a113",
+      "project_files": 748,
+      "golden_output_files": 11,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/straps-base",
+      "model_sha256": "62aa1901f838582b5a28adfa2169bf6d0d435e736a7aa5f100767b86757d1002",
+      "project_files": 748,
+      "golden_output_files": 14,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/straps",
+      "model_sha256": "2992166c6b5657dd75fbd9c9bd1a36e3bf0d6a2232b77e49200e7c569fbbe198",
+      "project_files": 748,
+      "golden_output_files": 16,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/Cyclops-Flex",
+      "model_sha256": "3e03e0b0a39e1378c34ca85ea7ed2dab429adf29acbefdee20473e61337073f7",
+      "project_files": 748,
+      "golden_output_files": 6,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/dual-flash",
+      "model_sha256": "a608173f8907e43f8b64ddf70e734c22ad19dd67e062075bc3c25bda23c8471a",
+      "project_files": 748,
+      "golden_output_files": 6,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/rds3-rf-selector",
+      "model_sha256": "f87f0a4e84171bce7d48be7a062a4fa53a3472ae88d50c6f7aa8b8c9ac41f3b9",
+      "project_files": 748,
+      "golden_output_files": 6,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/poe-pd-flyback-tps23757",
+      "model_sha256": "1006371849f62ac8e94622d8575173c1e295f6c91586ce5325065b551d49be3e",
+      "project_files": 748,
+      "golden_output_files": 11,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/w55rp20",
+      "model_sha256": "47334801d27d21099f29e24f2d074d57b41aee5839f5d5917362515834af5f09",
+      "project_files": 748,
+      "golden_output_files": 6,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/lmk05318b-clock",
+      "model_sha256": "2054c3b51b82a6686a8cbbb0db33b2fd0a762693bcf6c5e873d388f76e107316",
+      "project_files": 748,
+      "golden_output_files": 6,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/max860-inverter",
+      "model_sha256": "83d895e6eb430d0ae300aa58ef6633d405bf5967a028d1de4fd8ec5a6d3ad6e4",
+      "project_files": 748,
+      "golden_output_files": 6,
+      "flags": [],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/rds3+flat",
+      "model_sha256": "535232c04103e230546bf26e7a30c0433d524c03e0d296cfb11b56aabdede9eb",
+      "project_files": 748,
+      "golden_output_files": 6,
+      "flags": [
+        "--flat"
+      ],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/black-canyon+flat",
+      "model_sha256": "59e1eabe6ca6dc1924bb2a434d604b607e319c36bb2c897ccfa12bd10c5fbd29",
+      "project_files": 748,
+      "golden_output_files": 6,
+      "flags": [
+        "--flat"
+      ],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/labstation+no-vendor-symbols",
+      "model_sha256": "e21df5bb1bcecbde43195839196c3882172df7cc30dbed6c9fc64ff9ea60fcc2",
+      "project_files": 748,
+      "golden_output_files": 29,
+      "flags": [
+        "--no-vendor-symbols"
+      ],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    },
+    {
+      "cell": "eda/cyclops-analog+no-vendor-symbols",
+      "model_sha256": "1d54ad648b69c8ccc6c481bc4eb1d7869d3f96868185b6833a626393c46be794",
+      "project_files": 748,
+      "golden_output_files": 23,
+      "flags": [
+        "--no-vendor-symbols"
+      ],
+      "all_measurement_identities_match_owner_frozen_manifests": true
+    }
+  ],
+  "coverage": 34,
+  "owner_manifest_paths": [
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/experiments/lox-eda-zero-rc-20261012/eda/golden-manifest.json",
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/experiments/lox-eda-zero-rc-20261012/eda/project-input-manifest.json"
+  ],
+  "owner_manifest_sha256": {
+    "golden-manifest.json": "8f04c5fd7c17596781ba3ec5c9331c309aecf8e1a945251ba069ec3635c02486",
+    "project-input-manifest.json": "0b5035f7c978f3860d6df8e680e4a19a70d5caca8b9d78fd00e8ac1ab43c40e2"
+  }
+}

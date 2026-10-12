@@ -1,0 +1,132 @@
+{
+  "coverage": 34,
+  "arms": {
+    "mylang-original-rc": {
+      "complete_cells": 34,
+      "wall_ratio_vs": {
+        "mylang-original-rc": 1.0,
+        "mylang-migrated-rc": 1.0074760769647848,
+        "mylang-zero-rc": 0.09633469630501071,
+        "zig-fast": 1.2379196884873394,
+        "zig-safe": 1.1277665324583992,
+        "rust": 1.1278397617356009,
+        "go": 0.47937901785982706
+      },
+      "largest_case_median_peak_rss_mib": 52.69921875
+    },
+    "mylang-migrated-rc": {
+      "complete_cells": 34,
+      "wall_ratio_vs": {
+        "mylang-original-rc": 0.9925794000118514,
+        "mylang-migrated-rc": 1.0,
+        "mylang-zero-rc": 0.09561983505875145,
+        "zig-fast": 1.2287335816616214,
+        "zig-safe": 1.119397828141004,
+        "rust": 1.119470514013032,
+        "go": 0.47582173792557775
+      },
+      "largest_case_median_peak_rss_mib": 52.75390625
+    },
+    "mylang-zero-rc": {
+      "complete_cells": 34,
+      "wall_ratio_vs": {
+        "mylang-original-rc": 10.380475969258715,
+        "mylang-migrated-rc": 10.458081206535994,
+        "mylang-zero-rc": 1.0,
+        "zig-fast": 12.850195578215061,
+        "zig-safe": 11.706753389118642,
+        "rust": 11.707513543870878,
+        "go": 4.976182375060779
+      },
+      "largest_case_median_peak_rss_mib": 88.01953125
+    },
+    "zig-fast": {
+      "complete_cells": 34,
+      "wall_ratio_vs": {
+        "mylang-original-rc": 0.8078068466799632,
+        "mylang-migrated-rc": 0.8138460728384228,
+        "mylang-zero-rc": 0.0778198272480226,
+        "zig-fast": 1.0,
+        "zig-safe": 0.9110175263764158,
+        "rust": 0.9110766814879167,
+        "go": 0.38724565278188466
+      },
+      "largest_case_median_peak_rss_mib": 80.25
+    },
+    "zig-safe": {
+      "complete_cells": 34,
+      "wall_ratio_vs": {
+        "mylang-original-rc": 0.8867083489524351,
+        "mylang-migrated-rc": 0.8933374488145209,
+        "mylang-zero-rc": 0.08542077950745029,
+        "zig-fast": 1.0976737231143217,
+        "zig-safe": 1.0,
+        "rust": 1.0000649330114824,
+        "go": 0.4250693774489272
+      },
+      "largest_case_median_peak_rss_mib": 80.125
+    },
+    "rust": {
+      "complete_cells": 34,
+      "wall_ratio_vs": {
+        "mylang-original-rc": 0.8866507760474132,
+        "mylang-migrated-rc": 0.8932794454900298,
+        "mylang-zero-rc": 0.08541523323912963,
+        "zig-fast": 1.0976024524816714,
+        "zig-safe": 0.9999350712045397,
+        "rust": 1.0,
+        "go": 0.4250417782062624
+      },
+      "largest_case_median_peak_rss_mib": 44.046875
+    },
+    "go": {
+      "complete_cells": 34,
+      "wall_ratio_vs": {
+        "mylang-original-rc": 2.086032059693537,
+        "mylang-migrated-rc": 2.1016273959228147,
+        "mylang-zero-rc": 0.20095726495309288,
+        "zig-fast": 2.5823401575104263,
+        "zig-safe": 2.352557142557633,
+        "rust": 2.3527099011775836,
+        "go": 1.0
+      },
+      "largest_case_median_peak_rss_mib": 65.05078125
+    }
+  },
+  "receipts": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-Cyclops-Flex.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-adf5901.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-barracuda-base.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-barracuda-via-fence.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-barracuda.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-black-canyon+flat.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-black-canyon.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-blinky-breakout.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-cyclops-analog+no-vendor-symbols.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-cyclops-analog.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-cyclops-breakout.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-cyclops-digital-pcb.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-cyclops-interposer.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-cyclops-kband-breakout.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-cyclops-kband-pcb.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-cyclops-kband.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-cyclops-xband-sip.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-dual-flash.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-labstation+no-vendor-symbols.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-labstation.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-lmk05318b-clock.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-max860-inverter.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-poe-pd-flyback-tps23757.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-rds3+flat.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-rds3-rf-selector.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-rds3.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-remora-base.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-remora-rf.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-rf-switch-8way.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-rf-switch-eval.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-stm32n6.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-straps-base.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-straps.r0-9.w2.rss3.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/eda-final/eda-w55rp20.r0-9.w2.rss3.json"
+  ]
+}
