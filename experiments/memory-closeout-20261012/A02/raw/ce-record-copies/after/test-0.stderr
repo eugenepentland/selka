@@ -1,0 +1,10 @@
+guardian/test: 10 test(s) selected by filter: "ce_records_test"
+All 10 tests passed.
+guardian/test: test wall 1.05s; slowest over 50ms:
+guardian/test:   0.55s  ce_records_test.test.shared homes, views, in-place updates and in-out calls keep value semantics, debug, release and verify, leak-free
+guardian/test:   0.16s  ce_records_test.test.record loop writeback keeps readonly roots snapshots branch fields and later old reads independent
+guardian/test:   0.10s  ce_records_test.test.the CE-A shapes print what value semantics says, debug and release
+guardian/test:   0.09s  ce_records_test.test.a ret next to a value living in %ret builds its value in a temporary: a field swap reads both halves first
+guardian/test:   0.08s  ce_records_test.test.a call's result record read whole gets its in-out final values copied in after the call
+guardian/test: PASS — 10 passed
+guardian/test: RESULT {"passed":10,"failed":0,"skipped":0}

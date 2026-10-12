@@ -1,0 +1,47 @@
+[
+  {
+    "argv": [
+      "/usr/bin/python3",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/ce-record-copies/matrix.py",
+      "--compiler",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/15ca7baf5ba09b7a6b948baeb06f5d73/mylang",
+      "--case",
+      "sibling",
+      "--output",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/ce-record-copies-after/sibling",
+      "--expected-output",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/ce-record-copies/sibling.expected"
+    ],
+    "status": 0
+  },
+  {
+    "argv": [
+      "/usr/bin/python3",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/ce-record-copies/matrix.py",
+      "--compiler",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/15ca7baf5ba09b7a6b948baeb06f5d73/mylang",
+      "--case",
+      "unchanged",
+      "--output",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/ce-record-copies-after/unchanged",
+      "--expected-output",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/ce-record-copies/unchanged.expected"
+    ],
+    "status": 0
+  },
+  {
+    "argv": [
+      "/usr/bin/python3",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/ce-record-copies/matrix.py",
+      "--compiler",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/15ca7baf5ba09b7a6b948baeb06f5d73/mylang",
+      "--case",
+      "phi",
+      "--output",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/ce-record-copies-after/phi",
+      "--expected-output",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/ce-record-copies/phi.expected"
+    ],
+    "status": 0
+  }
+]

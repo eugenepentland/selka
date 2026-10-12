@@ -1,0 +1,10 @@
+{
+  "original_path": "src/core/a06_nested_write_test.zig",
+  "original_sha256": "b93bbfba19b90f957fa96a41d8393972486a5328147f1906fc781dbe0a49a436",
+  "derived_sources": {
+    "sibling": "eb42a110d99780c2f3b0924574efd8aed589a0ae5cc01f3fd962251f8b28020b",
+    "unchanged": "5db82c763c2909e8184370da4fef98489064bdcb5de4b2296e73c2062dc57bf8",
+    "phi": "1876d511a5f6666949773fc26555ee21bf5781da43578b729c158872de0da104"
+  },
+  "transform": "Extract original Zig multiline source and concatenate unchanged registered fragments."
+}

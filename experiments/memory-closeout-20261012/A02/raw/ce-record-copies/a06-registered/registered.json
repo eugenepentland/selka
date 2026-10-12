@@ -1,0 +1,56 @@
+{
+  "base": "723d2281ae98df97cf1503ad21ad2c9b4336df0b",
+  "source_sha256": {
+    "src/core/own.zig": "e04f3b509f42219c1614dcd60070e32cd483a0a1913b3f832c0279799cae6a38",
+    "src/core/build.zig": "7ddad513c6f6edea9f5e8dd8bfecc910698af6957ad5fe90a2a48cd2e2819b3c",
+    "src/core/emit_homes.zig": "b8f5402a14df5e1de90eedad62540a2d1707c806ebc7e51f9e6e4aab7964010f",
+    "src/core/ce_records_test.zig": "140958715d66dcfb1c35171d32edecd9d62b1967be342c0a3d4a84f2fc91f1ed",
+    "src/core/test_support.zig": "80b49b2d8d0faf2db687c9c811071b6c53b39f02619d4b95ae74230d676cef5b",
+    "src/core/a06_nested_write_test.zig": "b93bbfba19b90f957fa96a41d8393972486a5328147f1906fc781dbe0a49a436"
+  },
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "components": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/install/libexec/mylang/components",
+  "component_boundary": "Support6 independent owned pin supplies components; final default/retirement package qualification is separate",
+  "steps": [
+    {
+      "name": "build",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build",
+        "core-test-binary",
+        "-Dtest-filter=sibling update",
+        "-j4",
+        "--maxrss",
+        "8589934592",
+        "--prefix",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/ce-record-copies-a06/install",
+        "-Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+        "-Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 0.6550711889285594,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "test-0",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/ce-record-copies-a06/install/focus/core-tests",
+        "--guardian-filter=sibling update"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 0.8579211649484932,
+      "stdout": "",
+      "stderr": "guardian/test: 2 test(s) selected by filter: \"sibling update\"\nAll 2 tests passed.\nguardian/test: test wall 0.84s; slowest over 50ms:\nguardian/test:   0.54s  a06_nested_write_test.test.zero RC whole parent snapshot survives sibling update before child writeback\nguardian/test:   0.29s  a06_nested_write_test.test.zero RC snapshot child lifetime survives a sibling update phi\nguardian/test: PASS \u2014 2 passed\nguardian/test: RESULT {\"passed\":2,\"failed\":0,\"skipped\":0}\n"
+    }
+  ],
+  "complete": true,
+  "compiler": {
+    "path": ".zig-cache/o/15ca7baf5ba09b7a6b948baeb06f5d73/mylang",
+    "sha256": "2e0c0386731c6ca4d8309b7b6673bc791609995d237e07a97017f3815c0a682f",
+    "options": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/bffbd05132ab084b881fe6d566ecdcfe/options.zig"
+  },
+  "test_binary_sha256": "dafa658aca0b78bff4cf04e974cb86dc9c1908ddafdd42b9c18281ef5204502e",
+  "pass": true
+}

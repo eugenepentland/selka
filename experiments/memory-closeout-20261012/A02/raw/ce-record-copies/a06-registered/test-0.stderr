@@ -1,0 +1,7 @@
+guardian/test: 2 test(s) selected by filter: "sibling update"
+All 2 tests passed.
+guardian/test: test wall 0.84s; slowest over 50ms:
+guardian/test:   0.54s  a06_nested_write_test.test.zero RC whole parent snapshot survives sibling update before child writeback
+guardian/test:   0.29s  a06_nested_write_test.test.zero RC snapshot child lifetime survives a sibling update phi
+guardian/test: PASS — 2 passed
+guardian/test: RESULT {"passed":2,"failed":0,"skipped":0}

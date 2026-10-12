@@ -742,7 +742,7 @@ const Planner = struct {
         for (self.classes.members.items[outer].items) |w| {
             // The liveness of `w`'s old field bytes: only the uses that read them.
             var old_bytes = try self.emptyLive(blocks);
-            const origin = self.fieldOrigin(w, region);
+            const origin = self.fieldOrigin(w, region, inner);
             for (self.tracked.sites.items[w].items) |site| {
                 if (self.readsRegion(w, site, region)) try self.record(&old_bytes, origin, site);
             }
@@ -773,7 +773,7 @@ const Planner = struct {
 
     /// A sibling update gives unchanged bytes a new SSA name, not a new
     /// lifetime. Follow those versions before weighing an embedded child.
-    fn fieldOrigin(self: *const Planner, start: u32, region: Region) Def {
+    fn fieldOrigin(self: *const Planner, start: u32, region: Region, inner: u32) Def {
         const f = self.fun();
         const m = self.mod();
         var current = start;
@@ -782,7 +782,7 @@ const Planner = struct {
         const entry: Def = .{ .block = 0, .pos = 0, .entry = true };
         for (0..64) |_| {
             const inst = f.inst(self.tracked.refs.items[current]);
-            if (inst.op == .phi) return entry;
+            if (inst.op == .phi) return if (self.fieldRoundTrip(current, region, inner)) self.tracked.defs.items[current] else entry;
             if (inst.op != .record_set) return self.tracked.defs.items[current];
             const old = self.places.dense[f.resolve(inst.a).index()];
             if (old == none or self.findConst(old) != self.findConst(current)) return self.tracked.defs.items[current];
@@ -792,6 +792,40 @@ const Planner = struct {
             current = old;
         }
         return entry;
+    }
+
+    /// A loop can start a new field lifetime at its header when every carried
+    /// value writes this exact child home back into the header's same parent.
+    /// Other joins, sibling updates and snapshots retain the entry fallback.
+    fn fieldRoundTrip(self: *const Planner, current: u32, region: Region, inner: u32) bool {
+        const f = self.fun();
+        const m = self.mod();
+        const ref = self.tracked.refs.items[current];
+        const operands = f.operands(f.inst(ref).data);
+        if (operands.len < 2 or operands.len > 64) return false;
+        var recurrence = false;
+        var initial = false;
+        for (operands) |operand| {
+            const value = f.resolve(operand);
+            const dense = self.places.dense[value.index()];
+            if (dense == none or self.findConst(dense) != self.findConst(current)) return false;
+            const inst = f.inst(value);
+            switch (inst.op) {
+                .param, .record_make => initial = true,
+                .record_set => {
+                    // The verified SSA use of this phi as the old parent proves
+                    // this incoming edge recurs after the header definition.
+                    if (f.resolve(inst.a) != ref) return false;
+                    const field_type = m.compound(inst.ty).record[@intCast(inst.data)];
+                    if (m.fieldOffset(inst.ty, @intCast(inst.data)) != region.offset or m.size(field_type) != region.size) return false;
+                    const stored = self.places.dense[f.resolve(inst.b).index()];
+                    if (stored == none or self.findConst(stored) != inner) return false;
+                    recurrence = true;
+                },
+                else => return false,
+            }
+        }
+        return recurrence and initial;
     }
 
     /// The byte range a view names inside the tracked value it lies in.
