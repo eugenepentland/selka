@@ -1,0 +1,9 @@
+build-slot: build slot 1, FIFO ticket 952 after 0s
+source checked passed
+source ordinary passed
+native release passed
+native debug passed
+native verify passed
+native optimized_debug passed
+native no_facts passed
+native ordinary passed

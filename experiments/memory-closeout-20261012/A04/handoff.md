@@ -264,3 +264,13 @@ Final selection phaseprototype-04 also includes the existing522e66671 verifier
 scratch-arena validation dependency. All compiler build stderr is now empty;
 earlier112-allocation compiler diagnostics are preserved as an omitted-overlay
 reproducer in selections/compiler-leaks.json, distinct from clean guest counters.
+
+The pending tuple migration now qualifies independently in tuples/prototype-02:
+checked and ordinary source checks pass, and all five original public test oracles
+pass in five checked native modes plus ordinary release (30 Boolean calls).
+Compiler70525285 is the exact prototype identified by selections' phase04 source
+manifest, with schema779ea9 and verifier522 dependencies. All compiler/guest stderr
+is empty; checkedRC0/live0/LLVM/symbol audits pass. Original C0/prior/pending/final
+sources and the unchanged public oracles are preserved with hashes and burden:
+10 removed/10 added lines and nine explicit copies from C0. A01's integrated
+complete-unpack behavior permits this source; Support7/final reruns remain due.

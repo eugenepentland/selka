@@ -10,8 +10,7 @@ func split_first(text: str, sep: str) -> tuple[str, str]:
 
 
 func labelled(pair: tuple[int, str]) -> Label:
-    const number, letter = pair
-    return Label(pair=(number, letter.copy()))
+    return Label(pair=pair.copy())
 
 
 func find(pairs: tuple[int, str][], wanted: int) -> tuple[int, str]?:
@@ -24,8 +23,8 @@ func find(pairs: tuple[int, str][], wanted: int) -> tuple[int, str]?:
 func letter_of(found: tuple[int, str]?) -> str:
     if found is None:
         return ""
-    const number, letter = found
-    return letter.copy()
+    const _, letter = found.copy()
+    return letter
 
 
 func pair_sum(pair: tuple[int, int]) -> int:
@@ -40,15 +39,15 @@ func managed_pair() -> tuple[int, int[]]:
 
 
 func first_or[T](pair: tuple[T, int], fallback: T) -> T:
-    const value, count = pair
+    const value, count = pair.copy()
     if count > 0:
-        return value.copy()
+        return value
     return fallback.copy()
 
 
 func swap_pair[T](pair: tuple[T, T]) -> tuple[T, T]:
-    const left, right = pair
-    return right.copy(), left.copy()
+    const left, right = pair.copy()
+    return right, left
 
 
 # A returned tuple destructures by name, `_` skips one, and the swap idiom
@@ -80,7 +79,7 @@ public func test_a_tuple_nests_in_a_list_and_in_a_record_field() -> bool:
     if total != 3:
         return False
     mut wrapped = labelled((4, "d"))
-    const number, letter = wrapped.pair
+    const number, letter = wrapped.pair.copy()
     return number == 4 and letter == "d"
 
 
@@ -94,9 +93,9 @@ public func test_an_option_and_a_result_payload_can_be_a_tuple() -> bool:
     mut ok: Result[tuple[int, str], str] = Ok((5, "e"))
     match ok:
         case Ok(pair):
-            const number, letter = pair
+            const number, letter = pair.copy()
             return number == 5 and letter == "e"
-        case Err(message):
+        case Err(_):
             return False
 
 
@@ -113,8 +112,7 @@ public func test_tuple_equality_and_rendering_follow_the_aggregate_rule() -> boo
     mut nested = (1, (2, "b"))
     if f"{nested}" != "(1, (2, 'b'))":
         return False
-    const number, letter = left
-    mut pairs: tuple[int, str][] = [(number, letter.copy()), (2, "b")]
+    mut pairs: tuple[int, str][] = [left, (2, "b")]
     return f"{pairs}" == "[(1, 'a'), (2, 'b')]"
 
 

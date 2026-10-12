@@ -1,0 +1,66 @@
+{
+  "source_path": "tests/lang/tuples.my",
+  "C0": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "prior": "44ca315ee72739bddd2ecf6f3989fdf7c81b3a15",
+  "sha256": {
+    "C0": "2227a535862dc7f7dd7e41911de7a6b4550cb16bcfb1ea8ebb2574ec0b3206ec",
+    "prior": "efcc10572804390194b812f88efcb5bce5297e82d75a5a06c43a724d4bd5dab4",
+    "pending_migration": "9b19c3b5b7e42b2d98475a0fa703ecc104055991e971d8da764dfe77d6458710",
+    "migrated": "d0b318e19eeb0134913695ed45821959ce71d8f7162cb0d05a05be51dbab00e1"
+  },
+  "public_tests": [
+    "test_a_returned_tuple_destructures_and_the_swap_idiom_works",
+    "test_a_tuple_nests_in_a_list_and_in_a_record_field",
+    "test_an_option_and_a_result_payload_can_be_a_tuple",
+    "test_tuple_equality_and_rendering_follow_the_aggregate_rule",
+    "test_a_generic_function_over_a_tuple_keeps_its_element_type"
+  ],
+  "public_oracles_unchanged": [
+    "if head != \"key\" or rest != \"value\":",
+    "return False",
+    "if a != 2 or b != 1:",
+    "return False",
+    "return first == \"a\"",
+    "if letter == \"\":",
+    "return False",
+    "if total != 3:",
+    "return False",
+    "return number == 4 and letter == \"d\"",
+    "if letter_of(find(pairs, 2)) != \"b\":",
+    "return False",
+    "if letter_of(find(pairs, 9)) != \"\":",
+    "return False",
+    "return number == 5 and letter == \"e\"",
+    "return False",
+    "if left != right:",
+    "return False",
+    "if left == (1, \"b\") or left == (2, \"a\"):",
+    "return False",
+    "if f\"{left}\" != \"(1, 'a')\":",
+    "return False",
+    "if f\"{nested}\" != \"(1, (2, 'b'))\":",
+    "return False",
+    "return f\"{pairs}\" == \"[(1, 'a'), (2, 'b')]\"",
+    "if first_or((7, 1), 0) != 7:",
+    "return False",
+    "if first_or((\"a\", 0), \"b\") != \"b\":",
+    "return False",
+    "if first != 2 or second != 1:",
+    "return False",
+    "return total == 10"
+  ],
+  "from_C0": {
+    "lines_removed": 10,
+    "lines_added": 10,
+    "copy_calls_before": 0,
+    "copy_calls_after": 9
+  },
+  "from_prior": {
+    "lines_removed": 13,
+    "lines_added": 11,
+    "copy_calls_before": 9,
+    "copy_calls_after": 9
+  },
+  "qualification": "pending",
+  "warning_cleanup": "Two unused bindings changed to underscore; no oracle, effect or value assertion changed."
+}

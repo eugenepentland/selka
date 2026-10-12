@@ -1,0 +1,13 @@
+{
+  "compiler_sha256": "70525285968f79d1bd3e78705b189763ea015d4ac9073676eb0eaa1ed6667d5e",
+  "compiler_source_manifest": "../selections/source-manifest-prototype-04.json",
+  "compiler_source_manifest_sha256": "35f6c3c21da8eaf19a4a88ffef65eb6fd02403460e9cf0366bc6b614767dfe80",
+  "compiler_source_base": "07f16c65415819c36c46eb0657530abce734e395",
+  "compiler_feature_commit": "44ca315ee72739bddd2ecf6f3989fdf7c81b3a15",
+  "compiler_validation_dependencies": [
+    "779ea9a62d0bdbe6f62f7fa1cb2fc243cb9ba33f",
+    "522e66671"
+  ],
+  "tuple_source_identities": "source-identities-final.json",
+  "scope": "intermediate worker artifact; final integrated compiler rerun required"
+}
