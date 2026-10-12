@@ -511,12 +511,17 @@ func read_number(mut scanner: Scanner) -> Result[Json, str]:
             return Err(parse_error(scanner, "JSON number is malformed"))
 
 
+# Compare a borrowed byte range before the caller updates its scanner.
+func literal_matches(data: bytes, start: int, word: bytes) -> bool:
+    return data[start:start + len(word)] == word
+
+
 # One of the three bare literals, matched exactly.
 func read_literal(mut scanner: Scanner, word: bytes, value: Json) -> Result[Json, str]:
     mut start = scanner.position
     if start + len(word) > len(scanner.data):
         return Err(parse_error(scanner, "truncated JSON literal"))
-    if scanner.data[start:start + len(word)] != word:
+    if not literal_matches(scanner.data, start, word):
         return Err(parse_error(scanner, "unknown JSON literal"))
     scanner.position = start + len(word)
     return Ok(value.copy())
