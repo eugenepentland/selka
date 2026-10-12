@@ -221,4 +221,6 @@ func parse_list(mut tok: tokenizer_mod.Tokenizer, open_span: ast.Span, depth: in
             break
         mut child = try parse_node(mut tok, token, depth + 1, mut diag)
         children.append(child)
-    return Ok(ast.node_list(open_span, children))
+    # The parser owns these freshly completed children. Transfer them once;
+    # the public node_list constructor keeps its independent-copy contract.
+    return Ok(ast.Node(tag=ast.Tag.list(value=children), span=open_span, literal=None))
