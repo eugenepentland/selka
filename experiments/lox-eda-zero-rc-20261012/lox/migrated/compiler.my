@@ -485,7 +485,7 @@ func number(mut p: Parser):
 
 func string(mut p: Parser):
     mut token = p.previous.copy()
-    mut chars = p.source.borrow(token.start + 1, token.start + token.length - 1).copy()
+    mut chars = p.source[token.start + 1:token.start + token.length - 1].copy()
     mut ref = lox_strings.copy_string(mut p.rt, chars)
     emit_constant(mut p, value.Value.obj(value=ref))
 

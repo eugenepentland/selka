@@ -1,0 +1,15 @@
+{
+  "archive": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-provider/experiments/lox-eda-zero-rc-20261012/eda-sch/source-clean-owned-files.tar.gz",
+  "files": [
+    {
+      "file": "export_kicad_sch.my",
+      "old_sha256": "97971d33c8d9dca97d50e38c267e31d95697f319740e0ffb8d3eeec2663a3188",
+      "sha256": "72a291dcfb0898298a36cf2839aa1388f53caf4c98ae49bd9c3c4ca8de9ed8bc"
+    },
+    {
+      "file": "export_kicad_sch_test.my",
+      "old_sha256": "4bfa3df609f6a941354de948b92afe2f9eb033eab771571c8fc2e1d208140a83",
+      "sha256": "14e6789e7e503127dec74270cacc5b55c35dcb2c2537eb3efba5519b4b49f358"
+    }
+  ]
+}

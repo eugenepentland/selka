@@ -32,11 +32,21 @@ def main():
             result.update({str(f):digest(f) for f in sorted(pathlib.Path(dirname).rglob('*')) if f.is_file()})
         return result
     identities=identities_now()
+    arm_status={name:{'status':'ok'} for name in names}
+    prior_identity=None
+    if spec.get('prior_receipt'):
+        prior_path=pathlib.Path(spec['prior_receipt']);prior=json.loads(prior_path.read_text())
+        assert prior['spec']['cell']==spec['cell'] and prior['spec']['arms']==arms
+        assert prior['identities']==identities, 'inputs changed between chunks'
+        prior_identity={'path':str(prior_path),'sha256':digest(prior_path)}
+        for name,status in prior.get('arm_status',{}).items():
+            if status['status']!='ok':arm_status[name]={**status,'inherited_from_prior_chunk':True}
     doc={'started_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+         'measurement_harness_sha256':digest(__file__),'prior_receipt':prior_identity,
          'host':os.uname()._asdict() if hasattr(os.uname(),'_asdict') else list(os.uname()),
          'loadavg_start':os.getloadavg(),'spec':spec,'spec_sha256':digest(a.spec),'cpu':a.cpu,'identities':identities,
          'guest_timeout_seconds':a.guest_timeout,'warmups':a.warmups,'round_start':a.round_start,'rounds':a.rounds,'wall_samples':[],'rss_samples':[],
-         'arm_status':{name:{'status':'ok'} for name in names}}
+         'arm_status':arm_status}
     checkpoint('header',{k:v for k,v in doc.items() if k not in ['wall_samples','rss_samples']})
     oracle=None
     def execute(argv,name):

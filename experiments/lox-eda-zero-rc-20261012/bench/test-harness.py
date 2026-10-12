@@ -13,6 +13,11 @@ with tempfile.TemporaryDirectory(prefix='lox-eda-harness-') as dirname:
  r=json.loads(receipt.read_text())
  assert {k:v['status'] for k,v in r['arm_status'].items()}=={k:('timeout' if k=='timeout' else 'failed' if k=='failed' else 'output_mismatch' if k=='wrong-output' else 'ok') for k in names}
  assert len(r['wall_samples'])==36 and len(r['rss_samples'])==12
+ spec['prior_receipt']=str(receipt);source.write_text(json.dumps(spec));continued=d/'continued.json'
+ subprocess.run([sys.executable,str(root/'measure.py'),str(source),str(continued),'--cpu',str(min(os.sched_getaffinity(0))),'--guest-timeout','0.2','--warmups','0','--rounds','0','--rss-rounds','0'],check=True,stdout=subprocess.DEVNULL)
+ carry=json.loads(continued.read_text())
+ assert all(carry['arm_status'][name]['inherited_from_prior_chunk'] for name in ['timeout','failed','wrong-output'])
+ assert not any(json.loads(line)['kind']=='arm_failure' for line in continued.with_suffix('.json.progress.jsonl').read_text().splitlines())
  specs=d/'specs';specs.mkdir();receipts=[]
  for group,count in [('lox/tree',13),('lox/vm',13),('eda',34)]:
   for i in range(count):
@@ -27,4 +32,4 @@ with tempfile.TemporaryDirectory(prefix='lox-eda-harness-') as dirname:
  p=pathlib.Path(receipts[-1]);broken=json.loads(p.read_text());broken['identities'][sys.executable]='deliberately-different';p.write_text(json.dumps(broken))
  rejected=subprocess.run(cmd,capture_output=True,text=True)
  assert rejected.returncode!=0 and 'binary changed across cells' in rejected.stderr
- print(json.dumps({'status':'passed','cases':['timeout retained','nonzero exit retained','output mismatch retained','remaining arms continue','60-cell denominator','incomplete aggregate withheld','changed arm identity refused']},indent=2))
+ print(json.dumps({'status':'passed','cases':['timeout retained','nonzero exit retained','output mismatch retained','remaining arms continue','failed arms carried without retry','60-cell denominator','incomplete aggregate withheld','changed arm identity refused']},indent=2))

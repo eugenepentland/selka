@@ -17,15 +17,21 @@
     },
     {
       "id": "correctness",
-      "state": "pending",
+      "state": "lox_qualified_eda_in_progress",
       "owner": "lox_owned,eda_owned",
-      "requirement": "All full-port tests plus 26 Lox performance cells and 34 EDA output goldens; no omitted failures"
+      "requirement": "All full-port tests plus 26 Lox performance cells and 34 EDA output goldens; no omitted failures",
+      "lox_conformance_per_mode": "974/974 in5modes",
+      "eda_original_tests": "310/310",
+      "eda_zero_rc": "export integration pending"
     },
     {
       "id": "runtime_rss",
-      "state": "prepared",
+      "state": "in_progress",
       "owner": "lox_eda_bench",
-      "requirement": "Same-compiler original RC / migrated RC / migrated zeroRC, four reference arms; 2warmups9measured3RSS, bounded guest deadlines"
+      "requirement": "Same-compiler original RC / migrated RC / migrated zeroRC, four reference arms; 2warmups9measured3RSS, bounded guest deadlines",
+      "completed_cells": 2,
+      "total_cells": 60,
+      "evidence": "bench/results/initial-fib"
     },
     {
       "id": "managed_counters",

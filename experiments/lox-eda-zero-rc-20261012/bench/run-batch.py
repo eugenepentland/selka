@@ -13,6 +13,7 @@ p.add_argument('--round-start',type=int,default=0)
 p.add_argument('--warmups',type=int,default=2)
 p.add_argument('--rss-rounds',type=int,default=3)
 p.add_argument('--guest-timeout',type=float,default=120)
+p.add_argument('--prior-receipt',type=pathlib.Path,help='Carry failed arms from an earlier chunk of this cell')
 p.add_argument('specs',nargs='+',type=pathlib.Path)
 a=p.parse_args();a.output.mkdir(parents=True,exist_ok=True)
 for source in a.specs:
@@ -21,6 +22,7 @@ for source in a.specs:
   name,binary=item.split('=',1);assert pathlib.Path(binary).is_file()
   assert name not in spec['arms'],name
   spec['arms'][name]=[str(pathlib.Path(binary).resolve()),*example[1:]]
+ if a.prior_receipt:spec['prior_receipt']=str(a.prior_receipt.resolve())
  prefix=source.stem+f'.r{a.round_start}-{a.round_start+a.rounds}.w{a.warmups}.rss{a.rss_rounds}'
  generated=a.output/(prefix+'.spec.json');result=a.output/(prefix+'.json')
  assert not generated.exists() and not result.exists()
