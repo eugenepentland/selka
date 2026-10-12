@@ -39,10 +39,12 @@ Removing that single redundant tool scan yields154025 metadata / 30 calls / 6 re
 alone accounts130746 / 175816 observations. Raw validation-scope-profile.json and
 validation-scope-candidate.json. These reproduce snapshot work; no gate was run.
 
-Port three actor fixtures from verification_revalidation_test into existing
+Port four actor fixtures from verification_revalidation_test into existing
 coordinator tests **without** its B0-only scoped first-check suppression wrapper:
 - Prime a retained warm request, mutate then restore tool bytes during second
   tool_contract call, assert RETRY before any admission and no success report.
+- Suppress event delivery while preserving sticky dirty state and verify metadata
+  alone rejects the changed tool before admission/reuse.
 - Repeat cold, assert preparation admission rejects and creates no success receipts.
 - Unchanged warm request still returns complete reuse and0hash/enumeration.
 

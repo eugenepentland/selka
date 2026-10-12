@@ -26,7 +26,7 @@ records. Public identity retains its fully detached complete document contract.
 No metadata, watches, negative dependencies, membership, remote-file checks,
 process/borrower/reset bounds or publication authority change.
 
-77 snapshot tests pass. Three bounded coordinator actor fixtures prove deferred
+77 snapshot tests pass. Four bounded coordinator actor fixtures prove deferred
 initial validation still rejects tool mutation/restoration before warm reuse or
 cold execution/success, while clean retained reuse has zero hashes/enumeration.
 Raw snapshot-tests.log and revalidation-tests.log. No full gate was launched.
@@ -52,7 +52,7 @@ baseline/candidate JSON. This is deterministic reconstruction, not a full live g
 
 Source `/home/epentland/.config/mylang/dev-env.sh` in this worktree. Tests:
 `PYTHONDONTWRITEBYTECODE=1 python3 scripts/verification_snapshot_test.py` (exit 0).
-`PYTHONDONTWRITEBYTECODE=1 python3 scripts/verification_revalidation_test.py` (exit 0).
+`PYTHONDONTWRITEBYTECODE=1 python3 scripts/verification_revalidation_test.py` (exit 0; 4 actor tests, including eventless metadata rejection).
 Profiles use `python3 scripts/verification_selection_profile.py --root FROZEN_ROOT
 --inventory FROZEN_ROOT/zig-out/verification/inventory.json`; scope variants add
 `--validation-scopes --zig "$ZIG"`, then `--omit-redundant-tool-check`. All exit 0.

@@ -50,6 +50,20 @@ class DeferredToolValidation(fixtures.VerificationCoordinator):
             self.assertFalse(report['success'])
             self.assertEqual(report['status'], fixtures.coordinator.RETRY)
 
+    def test_deferred_metadata_only_tool_change_is_rejected_without_events(self):
+        with RetainedSession() as retained, retained.activate():
+            self.assertEqual(self.execute(), 0)
+            self.admissions.clear()
+            self.change_during_resolution()
+            self.defer_first_tools_check()
+            watcher_type = fixtures.coordinator.verification_snapshot._Inotify
+            with patch.object(watcher_type, '_drain', lambda watcher: not watcher.dirty):
+                with self.assertRaises(fixtures.coordinator.VerificationError) as caught:
+                    self.execute()
+            self.assertEqual(caught.exception.status, fixtures.coordinator.RETRY)
+            self.assertEqual(self.admissions, [])
+            self.assertFalse(fixtures.coordinator.read_record(self.cache / 'last-run.json')['success'])
+
     def test_deferred_cold_admission_rejects_tool_aba_without_success(self):
         self.change_during_resolution()
         skipped = self.defer_first_tools_check()
