@@ -2,6 +2,7 @@
 
 B0: `c1857310e0bf623545380c8de24515f1b9970021`.
 Process implementation: `32faf6077dfa8693bd91ef3850c3fb103c83be74`.
+Harness/evidence implementation: `264fa127db54521b0382624f33ba0c66ed807809`.
 Owned files are `scripts/verification_process.py`, its test, new
 `scripts/verification_live_lifecycle.py`, and this S02 experiment directory.
 Coordinator-owned source changes are exclusively the exact proposed
@@ -176,3 +177,6 @@ Counts are bounded fixture outcomes, not the native test inventory. Primary coho
 was7 passed/1 harness error; corrected publication was1 passed; finalv2 follow-up
 was3 passed. Process suite was35 passed. No fixture omission, reused observation,
 partial coverage or p95 proxy is presented as a full native gate.
+
+The harness/evidence implementation commit ran its normal whole-tree Guardian
+hook: status0, all88 checks passed. Raw output is [harness-commit-hook.log](harness-commit-hook.log). `git diff --check` passed. Worktree is clean after the evidence handoff commit.
