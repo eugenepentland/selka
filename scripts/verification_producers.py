@@ -100,8 +100,9 @@ def qualified_identity(record: dict, label: str, artifact_files: list[dict],
                        source_files: list[dict], context: dict) -> dict | None:
     """Authorize projection only when exact metadata agrees with watched bytes.
 
-None requires retaining the whole prepared-artifact identity. Do not fall back to
-an unauthenticated per-label identity. Inherited context includes all arbitrary
+For these opted-in producers, None requires the whole prepared-artifact identity.
+Preexisting independently reviewed providers retain their original contracts;
+unknown new narrowing still needs proof. Inherited context includes all arbitrary
 build code, Guardian runner/diagnostic source and pinned Zig tools/library bytes.
 """
     try:

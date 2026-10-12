@@ -15,7 +15,10 @@ watched `build_configuration`, `tools`, `options`, and `action_controls`. The
 helper authenticates exact artifact bytes/permissions, every transitive source or
 embedded input, mode, ABI, interface, and explicit absent external seed. Arbitrary
 build/Guardian code and pinned Zig/library content stay in inherited contexts.
-Compiler/runtime/components without this proof retain the whole-artifact fallback.
+Preexisting explicitly reviewed selected providers retain their original artifact
+byte projections and broad source recipes. This metadata requirement applies to
+the two newly opted-in pure producers; unknown newly claimed narrowing retains
+the whole-artifact fallback until its closure is reviewed.
 
 The implementation version is distinct from its interface protocol. Source bytes
 participate even when an executable happens to remain byte-identical. Missing,
@@ -29,11 +32,14 @@ Coordinator patch requests (shared files; no worker edits):
 1. Accept v1/v2 prepared artifact locations; v1 has no qualified native producers.
 2. Read v2 metadata while the prepared-artifact snapshot is live. Extend
    `action_payload` with the manifest (or an equivalent enclosing provider record).
-   For each nonempty explicit selector, authenticate every provider with the
-   helper against the full source snapshot and `common`. If any identity is
-   `None`, retain `common['artifacts']` unchanged. Otherwise use a mapping of
-   qualified producer identities that also includes the existing artifact-file
-   projection. Empty selectors continue to project to `{}`.
+   For each nonempty explicit selector, authenticate opted-in tooling-units and
+   text-scalar-units with the helper against the full source snapshot and `common`.
+   If an opted-in identity is `None`, retain `common['artifacts']` unchanged.
+   Otherwise use qualified identity alongside its existing artifact-file
+   projection. Existing reviewed providers (memory-budget, component-support,
+   component-builder and components) retain their current selected-artifact
+   projections plus broad source recipes. Unknown new providers require closure
+   review or whole-artifact fallback. Empty selectors continue to project `{}`.
 3. Change action identity domain to v4 to distinguish the new fallback contract.
 4. Add helper to `COORDINATOR_INPUTS` and its `LOADED_CODE_SHA256` to runtime
    implementation identity. Python source edits must not mix old loaded code and
