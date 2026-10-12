@@ -12,5 +12,13 @@
   "review": "A07 inspected runtime guards and approved subject to tests; all scenarios passed",
   "policy_change": false,
   "source_hashes": "safety-source-sha256.json",
-  "existing_failure_reproducers": "overflow-before.json"
+  "existing_failure_reproducers": "overflow-before.json",
+  "commit": "ac4e945c5",
+  "guardian": {
+    "status": "pass",
+    "checks": 88,
+    "invocation": "precommit whole-tree gate"
+  },
+  "compiler_sha256": "1c596217f95fb9b11b0bcc2a4b07a150ab48b0d249731f3ae92129a82989a8a5",
+  "cache_review": "A08: runtime source digest invalidates native artifacts; no schema change needed for helper body changes."
 }
