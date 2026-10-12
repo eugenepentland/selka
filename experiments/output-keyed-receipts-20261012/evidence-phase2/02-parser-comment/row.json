@@ -1,0 +1,116 @@
+{
+ "case": "Comment-only edit to `src/parser.zig`, then `mylang test tests/lang`",
+ "decision": "fail",
+ "expected": "IR keys miss; all program bytes unchanged; 100 % `exec-receipt-hit`; zero `zig cc`; zero trials. Record the time (expected: lowering and emission only)",
+ "finished": "2026-10-12T16:24:10.703+00:00",
+ "id": "02-parser-comment",
+ "manifest": {
+  "compiler": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/bin/mylang",
+  "compiler_sha256": "27385c43a08071a5144529a376b7afdc7f93e575bb048785990124ac7395b134",
+  "environment": {
+   "launcher_sha256_16": {
+    "CODEX_THREAD_ID": null,
+    "PWD": "5ffa26a83103a9ee",
+    "TERM": "7f44899d0925ec2c"
+   },
+   "values": {
+    "HOME": "/home/epentland",
+    "LANG": "en_US.UTF-8",
+    "MYLANG_BUILD_MEM": "8G",
+    "MYLANG_BUILD_SLOTS": "3",
+    "MYLANG_DEV_JOBS": "4",
+    "MYLANG_DEV_MAXRSS": "8589934592",
+    "MYLANG_GATE_SLOTS": "2",
+    "MYLANG_SLOT_DIR": "/home/epentland/.cache/mylang/slots",
+    "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   }
+  },
+  "features": {
+   "build_env": true,
+   "coordinator_path_free": true,
+   "coordinator_v3": true,
+   "exec_receipts": true,
+   "exec_receipts_opt_in": false,
+   "execution_key_report": true,
+   "fact_leak_receipts": true,
+   "mismatch_counter": true,
+   "runner_identity": true,
+   "test_v3_namespaces": true
+  },
+  "harness_sha256": "764c6b321b2eb5015c1814fdda66e92f714ad48040a8d924fd4cb296e36ab179",
+  "options": {
+   "build_env": null,
+   "dry_run": false,
+   "evidence": "experiments/output-keyed-receipts-20261012/evidence-phase2",
+   "heavy": true,
+   "keep_work": false,
+   "lang_entry": null,
+   "manifest_only": null,
+   "old_ref": "f6971a623",
+   "rows": "1:complete,2,3,4,5,7,8:ld-preload,11:own-compilers,12,13",
+   "small_entry": "tests/lang/frontend_numbers.my",
+   "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "work": null
+  },
+  "plan": "docs/audits/output-keyed-shared-receipts-plan-2026-10-12.md",
+  "schema": "output-keyed-matrix-v1",
+  "slot_dir": "/home/epentland/.cache/mylang/slots",
+  "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+  "tree_dirty_sha256": "f3783a492a2fff38e27edbc49eb384d08c02a60dcc02f93866f595ea643a3949",
+  "tree_head": "54e3176820541dc1e2374eab3993c66e093ff78d",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+ },
+ "row": 2,
+ "started": "2026-10-12T16:21:42.772+00:00",
+ "subcases": {
+  "edit": {
+   "checks": [
+    {
+     "check": "baseline warm (precondition): every eligible test reused",
+     "result": "pass"
+    },
+    {
+     "check": "after-edit: no failures",
+     "result": "pass"
+    },
+    {
+     "check": "after-edit: IR keys miss",
+     "result": "pass"
+    },
+    {
+     "check": "after-edit: 100% exec-receipt-hit",
+     "result": "fail"
+    },
+    {
+     "check": "after-edit: zero trials",
+     "result": "fail"
+    },
+    {
+     "check": "after-edit: exec_receipts.hits equals eligible",
+     "result": "fail"
+    },
+    {
+     "check": "after-edit: zero zig cc",
+     "result": "not-judged"
+    },
+    {
+     "check": "after-edit: zero zig cc (no new unit object, no new linked program)",
+     "result": "fail"
+    },
+    {
+     "check": "after-edit wall time recorded",
+     "result": "pass"
+    }
+   ],
+   "decision": "fail",
+   "evidence": "02-parser-comment/edit/result.json",
+   "finished": "2026-10-12T16:24:10.702+00:00",
+   "harness_sha256": "764c6b321b2eb5015c1814fdda66e92f714ad48040a8d924fd4cb296e36ab179",
+   "tree_head": "54e3176820541dc1e2374eab3993c66e093ff78d"
+  }
+ }
+}

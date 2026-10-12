@@ -1,0 +1,4 @@
+{
+ "diagnosis": "Scratch-location run failed 6 integration tests; the same forced, projected gate in the target tree (complete-in-tree) passed with 0 failures, so projection is not the cause; the scratch failures follow the nested work/ location (F8) and were not reproduced in-tree.",
+ "finding": "F8"
+}

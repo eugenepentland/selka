@@ -1,0 +1,968 @@
+{
+ "checks": [
+  {
+   "check": "first v3 gate is a full run",
+   "expected": "0 reused",
+   "note": "",
+   "observed": [],
+   "result": "pass"
+  },
+  {
+   "check": "v2 evidence ignored and untouched",
+   "expected": "seed digest unchanged",
+   "note": "",
+   "observed": {
+    "namespaces": [
+     "verification-v3"
+    ],
+    "seed": null,
+    "v2": null
+   },
+   "result": "pass"
+  },
+  {
+   "check": "verification-v3 namespace written",
+   "expected": "verification-v3",
+   "note": "",
+   "observed": [
+    "verification-v3"
+   ],
+   "result": "pass"
+  },
+  {
+   "check": "second v3 gate: success",
+   "expected": true,
+   "note": "",
+   "observed": {
+    "status": 1,
+    "success": false
+   },
+   "result": "fail"
+  },
+  {
+   "check": "second v3 gate: every cacheable action reused",
+   "expected": "no action outside reused/fresh",
+   "note": "",
+   "observed": {
+    "not_reused": [
+     "affected",
+     "application_cache",
+     "cli",
+     "component-support",
+     "component_builder",
+     "component_native",
+     "core",
+     "coverage_self",
+     "doc-coverage",
+     "doctest",
+     "embedded_migration",
+     "friction",
+     "fuzz_campaign",
+     "golden",
+     "idioms",
+     "idioms_self",
+     "incremental",
+     "interface_oracle",
+     "interfaces",
+     "juice_cache",
+     "juice_pure",
+     "manifest_self",
+     "memory_budget",
+     "my_format",
+     "my_format_self",
+     "noalloc_lint",
+     "parser_hints",
+     "selfhost_numeric",
+     "text_scalar_unit",
+     "tooling_isolation",
+     "tooling_unit",
+     "unit",
+     "verification_cache",
+     "verification_session",
+     "zig-format"
+    ],
+    "states": {
+     "execute": 35,
+     "fresh": 12
+    }
+   },
+   "result": "fail"
+  },
+  {
+   "check": "second v3 gate: always-fresh actions listed",
+   "expected": "policy-fresh groups only",
+   "note": "informational: the plan expects only host-fresh collectors here",
+   "observed": [
+    "component-preparation",
+    "coverage",
+    "environment-discovery",
+    "guardian",
+    "guest",
+    "identity-qualification",
+    "input-discovery",
+    "juice",
+    "juice-runtime",
+    "language",
+    "spec-history",
+    "unclassified"
+   ],
+   "result": "pass"
+  },
+  {
+   "check": "second v3 gate: action keys stable across the repeat",
+   "expected": "0 changed",
+   "note": "",
+   "observed": [],
+   "result": "pass"
+  }
+ ],
+ "compilers_sha256": {},
+ "decision": "fail",
+ "finished": "2026-10-12T17:52:08.016+00:00",
+ "manifest": {
+  "compiler": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/bin/mylang",
+  "compiler_sha256": "27385c43a08071a5144529a376b7afdc7f93e575bb048785990124ac7395b134",
+  "environment": {
+   "launcher_sha256_16": {
+    "CODEX_THREAD_ID": null,
+    "PWD": "5ffa26a83103a9ee",
+    "TERM": "7f44899d0925ec2c"
+   },
+   "values": {
+    "HOME": "/home/epentland",
+    "LANG": "en_US.UTF-8",
+    "MYLANG_BUILD_MEM": "8G",
+    "MYLANG_BUILD_SLOTS": "3",
+    "MYLANG_DEV_JOBS": "4",
+    "MYLANG_DEV_MAXRSS": "8589934592",
+    "MYLANG_GATE_SLOTS": "2",
+    "MYLANG_SLOT_DIR": "/home/epentland/.cache/mylang/slots",
+    "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   }
+  },
+  "features": {
+   "build_env": true,
+   "coordinator_path_free": true,
+   "coordinator_v3": true,
+   "exec_receipts": true,
+   "exec_receipts_opt_in": false,
+   "execution_key_report": true,
+   "fact_leak_receipts": true,
+   "mismatch_counter": true,
+   "runner_identity": true,
+   "test_v3_namespaces": true
+  },
+  "harness_sha256": "ebe228057308a6ebc628814541ddada14dbedcd80052d0f39c79a0e379f4ab43",
+  "options": {
+   "build_env": null,
+   "dry_run": false,
+   "evidence": "experiments/output-keyed-receipts-20261012/evidence-phase2",
+   "heavy": true,
+   "keep_work": false,
+   "lang_entry": null,
+   "manifest_only": null,
+   "old_ref": "f6971a623",
+   "rows": "3,5,7,8:ld-preload,11:own-compilers,12,13",
+   "small_entry": "tests/lang/frontend_numbers.my",
+   "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "work": null
+  },
+  "plan": "docs/audits/output-keyed-shared-receipts-plan-2026-10-12.md",
+  "schema": "output-keyed-matrix-v1",
+  "slot_dir": "/home/epentland/.cache/mylang/slots",
+  "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+  "tree_dirty_sha256": "f3783a492a2fff38e27edbc49eb384d08c02a60dcc02f93866f595ea643a3949",
+  "tree_head": "b6b505d368c433a7a76f29923e97f6af07fc44e5",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+ },
+ "started": "2026-10-12T17:20:58.637+00:00",
+ "steps": {
+  "first-v3": {
+   "argv": [
+    "python3",
+    "-B",
+    "scripts/verify_cache.py",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--profile",
+    "complete",
+    "--shared-cache-dir",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/13-namespace-bump/coordinator/verification"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-tree",
+   "env_set": {
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-tree",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-tree/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-tree/.zig-cache"
+   },
+   "env_unset": [],
+   "excerpt": [
+    {
+     "action_key": "e346ec4f18e4907cf7b1c9d0bbbe97f0a3e681f0ce955e51a25c74abfe162960",
+     "id": "component-preparation",
+     "path_free": true,
+     "reason": "component manifests and installed outputs require validation",
+     "state": "fresh"
+    },
+    {
+     "action_key": "19811eda8ef7f1a532fb0d36aae520166419db3ef98812b433bd72135e4c68c7",
+     "id": "input-discovery",
+     "path_free": true,
+     "reason": "directory membership must be discovered at execution time",
+     "state": "fresh"
+    },
+    {
+     "action_key": "cfc5c162cb7a42bed2d5cfe41606ff2463fefd21486e13f26ae04e7dfe4f7e2f",
+     "id": "environment-discovery",
+     "path_free": true,
+     "reason": "live inherited environment must be discovered at execution time",
+     "state": "fresh"
+    },
+    {
+     "action_key": "b6264003ab43bb658ef5c3147cc430963c0d1a5099702529546790914892108c",
+     "id": "core",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "3d6435dbb0fb76a74c223c81aebe50d2fa9808677433974558897732d3fe3b92",
+     "id": "tooling_unit",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "2574de72ec0e68563cb242fb7d6269b12c2072f4864f4c8b12e8e1f8ed0a0c16",
+     "id": "text_scalar_unit",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "7b6e393d911c0677de9488086509f1de1192caefbd60e788a4e2ef2ed118bdc9",
+     "id": "memory_budget",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "4641ded38092e56d34eacb0e661f6b54c3b80986c57f0dff0ec484e9a4b0a00b",
+     "id": "unit",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "d4ad1b9f5003758dcdedcdc77f1a9871fc71244320b01b5a34cb27f5772168ad",
+     "id": "cli",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "5fe5c27681a4be96d8b2ebfe980b0fe26c23a473f4e5524229a9aa7e8f68250f",
+     "id": "golden",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "274cc46524da6d3646114c761479a49b1f418fee5f9f62ac61e8ce6abe459cdc",
+     "id": "idioms_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "a073eb49f1facb6ec2757dba9cfbd8325580479f4342ac767d4aeec52111d003",
+     "id": "idioms",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "decae0d0ad56f8f48d846613b0acc42940c017275710fc3198f3b9cffc74f8ac",
+     "id": "incremental",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "d2308b2a6a8a1a872b320bb68743dceed3a1ddec0fcc86d848f5800b0ce6dd6e",
+     "id": "interfaces",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "5d076648977784c6cbbad2c986ddadc0f80ed7b232b31fcf27698757d2682720",
+     "id": "interface_oracle",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "dc818d7409b9ea18257d23d48ae03d03a4913a8f486740dd0f58b72db185afee",
+     "id": "parser_hints",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "36c79e96db765ef18ffab4d6a80039e2df9416f636c67219857bd2a3426bec82",
+     "id": "friction",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "e33d4b59e66b4d8c7508a7dafcb1ef5b7f43f2e623e36bd55b744ff986911ac5",
+     "id": "tooling_isolation",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "64680b205c65a111b685b0cf89335cdbb4f0bf11443da79d82ba15f4c91198d1",
+     "id": "application_cache",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "74aca91268572a50dde57e049b7d94fff1893228f770ad26d3fd09c9e546e69d",
+     "id": "component_builder",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "08a178bcbf2502616fd080b85c1a32d8196960ce217a1b47df611712a997d555",
+     "id": "component_native",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "e3b29090c305c7cc817a8479f2e9fa93b8ad579457143d2c421877a4cf624535",
+     "id": "component-support",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "ea959aa131cf8db06b4545a778a12b9a59ea91831032b4f97278b6cc569c2daa",
+     "id": "selfhost_numeric",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "a45cf55110cb40fcd1172cda266b0577486b06cde2255ec3e53ed17cf39ff87e",
+     "id": "spec-history",
+     "path_free": true,
+     "reason": "SPEC replay reads git history and creates repositories",
+     "state": "fresh"
+    },
+    {
+     "action_key": "7618e7b7cc867e3b9d9f13d821a6965c7d26cd64692cd3f5c00a9cd8fcb8c141",
+     "id": "juice_pure",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "7842386935a3c82f93c51ad7f2fab09a6a7cd17d618d42c82abd10c81f19e387",
+     "id": "juice",
+     "path_free": true,
+     "reason": "native performance collectors and host state require fresh execution",
+     "state": "fresh"
+    },
+    {
+     "action_key": "6d154c5a8c19a202bf67711c01b1b44c94ac6c41eb70d2dd71dd3680f117142f",
+     "id": "juice-runtime",
+     "path_free": true,
+     "reason": "runtime collectors observe CPU, scheduler and current host state",
+     "state": "fresh"
+    },
+    {
+     "action_key": "a314ce73c4b36042c17e5b3c84f2513cbe5f9f27fad4acae6f7fb65d540104e8",
+     "id": "identity-qualification",
+     "path_free": true,
+     "reason": "compiler identity qualification produces temporary compiler artifacts",
+     "state": "fresh"
+    },
+    {
+     "action_key": "f5a8ce137200df01b63baa6709baceff646fd8a5d1ee5b20897ac8a7890855d4",
+     "id": "affected",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "1db72d1b1638701e2ba049d79277e491fbebf5880edb85d6db4350d01b0a399c",
+     "id": "coverage_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "1a0b75304a94da681f1ad3b2f919ac6c20d676e19d6d28f1923bff022bab8041",
+     "id": "coverage",
+     "path_free": true,
+     "reason": "fixture membership and negative path lookups outside source recipes require freshness",
+     "state": "fresh"
+    },
+    {
+     "action_key": "8151d2b1b8de667ab82d83646602e71b7bafafaf6db57be92d0189ec185e28fa",
+     "id": "manifest_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "f7bc83808f6472d357cf43b9f1fd1fcbae101be7c6eb3425593c309e9e1b5087",
+     "id": "verification_cache",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "ddc330cd01ac626119ae0f34947ad5f9a7d147c1a9f9c2cff410a637d01be33d",
+     "id": "verification_session",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "db5a6880e78ad369c19e28b5c20dea2b5d3a79884b89231a714caf7e54673a1d",
+     "id": "fuzz_campaign",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "eab21b32c4992173ab08b14e30c4e0406ccffdd022fa98570377939f05382b0a",
+     "id": "juice_cache",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "18627dd4bc9b0b0f72913b8bbe98a69fddaa81bdf7e2c02341f54abd3f7ef183",
+     "id": "doc-coverage",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "1ddb06c2e06db30a611a49196cee991778b4e613f55503410a776e7906328b38",
+     "id": "guest",
+     "path_free": true,
+     "reason": "guest Host and external-effect eligibility remains compiler-authoritative",
+     "state": "fresh"
+    },
+    {
+     "action_key": "31f7c37c2aeb24a47accfdd36a6c60913132591926444a04085e4eceee8b2674",
+     "id": "language",
+     "path_free": true,
+     "reason": "guest Host and external-effect eligibility requires execution-time admission",
+     "state": "fresh"
+    },
+    {
+     "action_key": "51fa02b1d5c3b30faaff25a1bb65d3903cce20ca80e0f72c8732a84fa9876bd6",
+     "id": "doctest",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "a06cca325fecc471c283a1f076cd7254a4b70356f1ae6a907962221c8047975a",
+     "id": "zig-format",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "5edf2628c0626d27f6ac5e01be12c458c0b3643ab5ae088f121bfb4307938e60",
+     "id": "my_format",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "279bca8832784e9aa9d08bf565698d981c771b125764cfb88cc71bf06db4194a",
+     "id": "my_format_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "82bd51511ddee471137997e155abeb339e52a0c58dce665dc966868acf088705",
+     "id": "noalloc_lint",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "b6ac234e49b6d041577610661a64b9dbcb3904547500e0af61cf37f559102348",
+     "id": "embedded_migration",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "dfe14151cf7041bb040ae2c7ee63020affe29e4cd09232af442c4ebdf3fbdaba",
+     "id": "guardian",
+     "path_free": true,
+     "reason": "Guardian source, git scope and mutable policy validation require freshness",
+     "state": "fresh"
+    },
+    {
+     "action_key": "128610c9493433e5577087fa32dc03fb26c4e086f247d40b2d0fa9c8da065801",
+     "id": "unclassified",
+     "path_free": true,
+     "reason": "unknown actions require original complete gate execution",
+     "state": "fresh"
+    }
+   ],
+   "exit": 1,
+   "harness_seconds_including_queue": 944.307,
+   "kind": "command",
+   "queue_seconds": 0,
+   "report_copy": "03-first-v3.last-run.json",
+   "seconds_excluding_queue": 944.307,
+   "started": "2026-10-12T17:21:04.832+00:00",
+   "stderr": "03-first-v3.stderr",
+   "stderr_tail": "es)\n|  +- verification action input-discovery member 0 (reused)\n|  +- verification action environment-discovery member 0 (+1 more reused dependencies)\n|  +- verification action component-preparation member 0 (+1 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n+- verification action my_format member 0 (+7 more reused dependencies)\n+- verification action my_format_self member 0 (+7 more reused dependencies)\n+- verification action noalloc_lint member 0 success 1s\n|  +- compile exe build-env safe native (reused)\n|  +- install (+4 more reused dependencies)\n|  +- verification action input-discovery member 0 (reused)\n|  +- verification action environment-discovery member 0 (+1 more reused dependencies)\n|  +- verification action component-preparation member 0 (+1 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n+- verification action embedded_migration member 0 success 1s\n   +- compile exe build-env safe native (reused)\n   +- install (+4 more reused dependencies)\n   +- verification action input-discovery member 0 (reused)\n   +- verification action environment-discovery member 0 (+1 more reused dependencies)\n   +- verification action component-preparation member 0 (+1 more reused dependencies)\n   +- compile exe mylang debug native (+5 more reused dependencies)\n\n",
+   "stdout": "03-first-v3.stdout",
+   "step": "first-v3"
+  },
+  "reset-work": {
+   "description": "empty the row's private work directory",
+   "kind": "python",
+   "result": {
+    "directory": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/13-namespace-bump/coordinator"
+   },
+   "seconds": 0.0,
+   "started": "2026-10-12T17:20:58.637+00:00",
+   "step": "reset-work"
+  },
+  "second-v3": {
+   "argv": [
+    "python3",
+    "-B",
+    "scripts/verify_cache.py",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--profile",
+    "complete",
+    "--shared-cache-dir",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/13-namespace-bump/coordinator/verification"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-tree",
+   "env_set": {
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-tree",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-tree/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-tree/.zig-cache"
+   },
+   "env_unset": [],
+   "excerpt": [
+    {
+     "action_key": "e346ec4f18e4907cf7b1c9d0bbbe97f0a3e681f0ce955e51a25c74abfe162960",
+     "id": "component-preparation",
+     "path_free": true,
+     "reason": "component manifests and installed outputs require validation",
+     "state": "fresh"
+    },
+    {
+     "action_key": "19811eda8ef7f1a532fb0d36aae520166419db3ef98812b433bd72135e4c68c7",
+     "id": "input-discovery",
+     "path_free": true,
+     "reason": "directory membership must be discovered at execution time",
+     "state": "fresh"
+    },
+    {
+     "action_key": "cfc5c162cb7a42bed2d5cfe41606ff2463fefd21486e13f26ae04e7dfe4f7e2f",
+     "id": "environment-discovery",
+     "path_free": true,
+     "reason": "live inherited environment must be discovered at execution time",
+     "state": "fresh"
+    },
+    {
+     "action_key": "b6264003ab43bb658ef5c3147cc430963c0d1a5099702529546790914892108c",
+     "id": "core",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "3d6435dbb0fb76a74c223c81aebe50d2fa9808677433974558897732d3fe3b92",
+     "id": "tooling_unit",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "2574de72ec0e68563cb242fb7d6269b12c2072f4864f4c8b12e8e1f8ed0a0c16",
+     "id": "text_scalar_unit",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "7b6e393d911c0677de9488086509f1de1192caefbd60e788a4e2ef2ed118bdc9",
+     "id": "memory_budget",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "4641ded38092e56d34eacb0e661f6b54c3b80986c57f0dff0ec484e9a4b0a00b",
+     "id": "unit",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "d4ad1b9f5003758dcdedcdc77f1a9871fc71244320b01b5a34cb27f5772168ad",
+     "id": "cli",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "5fe5c27681a4be96d8b2ebfe980b0fe26c23a473f4e5524229a9aa7e8f68250f",
+     "id": "golden",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "274cc46524da6d3646114c761479a49b1f418fee5f9f62ac61e8ce6abe459cdc",
+     "id": "idioms_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "a073eb49f1facb6ec2757dba9cfbd8325580479f4342ac767d4aeec52111d003",
+     "id": "idioms",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "decae0d0ad56f8f48d846613b0acc42940c017275710fc3198f3b9cffc74f8ac",
+     "id": "incremental",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "d2308b2a6a8a1a872b320bb68743dceed3a1ddec0fcc86d848f5800b0ce6dd6e",
+     "id": "interfaces",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "5d076648977784c6cbbad2c986ddadc0f80ed7b232b31fcf27698757d2682720",
+     "id": "interface_oracle",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "dc818d7409b9ea18257d23d48ae03d03a4913a8f486740dd0f58b72db185afee",
+     "id": "parser_hints",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "36c79e96db765ef18ffab4d6a80039e2df9416f636c67219857bd2a3426bec82",
+     "id": "friction",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "e33d4b59e66b4d8c7508a7dafcb1ef5b7f43f2e623e36bd55b744ff986911ac5",
+     "id": "tooling_isolation",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "64680b205c65a111b685b0cf89335cdbb4f0bf11443da79d82ba15f4c91198d1",
+     "id": "application_cache",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "74aca91268572a50dde57e049b7d94fff1893228f770ad26d3fd09c9e546e69d",
+     "id": "component_builder",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "08a178bcbf2502616fd080b85c1a32d8196960ce217a1b47df611712a997d555",
+     "id": "component_native",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "e3b29090c305c7cc817a8479f2e9fa93b8ad579457143d2c421877a4cf624535",
+     "id": "component-support",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "ea959aa131cf8db06b4545a778a12b9a59ea91831032b4f97278b6cc569c2daa",
+     "id": "selfhost_numeric",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "a45cf55110cb40fcd1172cda266b0577486b06cde2255ec3e53ed17cf39ff87e",
+     "id": "spec-history",
+     "path_free": true,
+     "reason": "SPEC replay reads git history and creates repositories",
+     "state": "fresh"
+    },
+    {
+     "action_key": "7618e7b7cc867e3b9d9f13d821a6965c7d26cd64692cd3f5c00a9cd8fcb8c141",
+     "id": "juice_pure",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "7842386935a3c82f93c51ad7f2fab09a6a7cd17d618d42c82abd10c81f19e387",
+     "id": "juice",
+     "path_free": true,
+     "reason": "native performance collectors and host state require fresh execution",
+     "state": "fresh"
+    },
+    {
+     "action_key": "6d154c5a8c19a202bf67711c01b1b44c94ac6c41eb70d2dd71dd3680f117142f",
+     "id": "juice-runtime",
+     "path_free": true,
+     "reason": "runtime collectors observe CPU, scheduler and current host state",
+     "state": "fresh"
+    },
+    {
+     "action_key": "a314ce73c4b36042c17e5b3c84f2513cbe5f9f27fad4acae6f7fb65d540104e8",
+     "id": "identity-qualification",
+     "path_free": true,
+     "reason": "compiler identity qualification produces temporary compiler artifacts",
+     "state": "fresh"
+    },
+    {
+     "action_key": "f5a8ce137200df01b63baa6709baceff646fd8a5d1ee5b20897ac8a7890855d4",
+     "id": "affected",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "1db72d1b1638701e2ba049d79277e491fbebf5880edb85d6db4350d01b0a399c",
+     "id": "coverage_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "1a0b75304a94da681f1ad3b2f919ac6c20d676e19d6d28f1923bff022bab8041",
+     "id": "coverage",
+     "path_free": true,
+     "reason": "fixture membership and negative path lookups outside source recipes require freshness",
+     "state": "fresh"
+    },
+    {
+     "action_key": "8151d2b1b8de667ab82d83646602e71b7bafafaf6db57be92d0189ec185e28fa",
+     "id": "manifest_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "f7bc83808f6472d357cf43b9f1fd1fcbae101be7c6eb3425593c309e9e1b5087",
+     "id": "verification_cache",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "ddc330cd01ac626119ae0f34947ad5f9a7d147c1a9f9c2cff410a637d01be33d",
+     "id": "verification_session",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "db5a6880e78ad369c19e28b5c20dea2b5d3a79884b89231a714caf7e54673a1d",
+     "id": "fuzz_campaign",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "eab21b32c4992173ab08b14e30c4e0406ccffdd022fa98570377939f05382b0a",
+     "id": "juice_cache",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "18627dd4bc9b0b0f72913b8bbe98a69fddaa81bdf7e2c02341f54abd3f7ef183",
+     "id": "doc-coverage",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "1ddb06c2e06db30a611a49196cee991778b4e613f55503410a776e7906328b38",
+     "id": "guest",
+     "path_free": true,
+     "reason": "guest Host and external-effect eligibility remains compiler-authoritative",
+     "state": "fresh"
+    },
+    {
+     "action_key": "31f7c37c2aeb24a47accfdd36a6c60913132591926444a04085e4eceee8b2674",
+     "id": "language",
+     "path_free": true,
+     "reason": "guest Host and external-effect eligibility requires execution-time admission",
+     "state": "fresh"
+    },
+    {
+     "action_key": "51fa02b1d5c3b30faaff25a1bb65d3903cce20ca80e0f72c8732a84fa9876bd6",
+     "id": "doctest",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "a06cca325fecc471c283a1f076cd7254a4b70356f1ae6a907962221c8047975a",
+     "id": "zig-format",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "5edf2628c0626d27f6ac5e01be12c458c0b3643ab5ae088f121bfb4307938e60",
+     "id": "my_format",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "279bca8832784e9aa9d08bf565698d981c771b125764cfb88cc71bf06db4194a",
+     "id": "my_format_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "82bd51511ddee471137997e155abeb339e52a0c58dce665dc966868acf088705",
+     "id": "noalloc_lint",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "b6ac234e49b6d041577610661a64b9dbcb3904547500e0af61cf37f559102348",
+     "id": "embedded_migration",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "dfe14151cf7041bb040ae2c7ee63020affe29e4cd09232af442c4ebdf3fbdaba",
+     "id": "guardian",
+     "path_free": true,
+     "reason": "Guardian source, git scope and mutable policy validation require freshness",
+     "state": "fresh"
+    },
+    {
+     "action_key": "128610c9493433e5577087fa32dc03fb26c4e086f247d40b2d0fa9c8da065801",
+     "id": "unclassified",
+     "path_free": true,
+     "reason": "unknown actions require original complete gate execution",
+     "state": "fresh"
+    }
+   ],
+   "exit": 1,
+   "harness_seconds_including_queue": 912.617,
+   "kind": "command",
+   "queue_seconds": 0,
+   "report_copy": "04-second-v3.last-run.json",
+   "seconds_excluding_queue": 912.617,
+   "started": "2026-10-12T17:36:49.261+00:00",
+   "stderr": "04-second-v3.stderr",
+   "stderr_tail": "es)\n|  +- verification action input-discovery member 0 (reused)\n|  +- verification action environment-discovery member 0 (+1 more reused dependencies)\n|  +- verification action component-preparation member 0 (+1 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n+- verification action my_format member 0 (+7 more reused dependencies)\n+- verification action my_format_self member 0 (+7 more reused dependencies)\n+- verification action noalloc_lint member 0 success 1s\n|  +- compile exe build-env safe native (reused)\n|  +- install (+4 more reused dependencies)\n|  +- verification action input-discovery member 0 (reused)\n|  +- verification action environment-discovery member 0 (+1 more reused dependencies)\n|  +- verification action component-preparation member 0 (+1 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n+- verification action embedded_migration member 0 success 2s\n   +- compile exe build-env safe native (reused)\n   +- install (+4 more reused dependencies)\n   +- verification action input-discovery member 0 (reused)\n   +- verification action environment-discovery member 0 (+1 more reused dependencies)\n   +- verification action component-preparation member 0 (+1 more reused dependencies)\n   +- compile exe mylang debug native (+5 more reused dependencies)\n\n",
+   "stdout": "04-second-v3.stdout",
+   "step": "second-v3"
+  },
+  "seed-v2": {
+   "description": "copy the target tree's .mylang-cache/verification-v2 into the scratch tree",
+   "kind": "python",
+   "result": {
+    "digest": null,
+    "seeded": false
+   },
+   "seconds": 0.005,
+   "started": "2026-10-12T17:21:04.827+00:00",
+   "step": "seed-v2"
+  },
+  "v2-digest": {
+   "description": "re-hash the seeded v2 evidence",
+   "kind": "python",
+   "result": {
+    "namespaces": [
+     "verification-v3"
+    ],
+    "seed": null,
+    "v2": null
+   },
+   "seconds": 0.0,
+   "started": "2026-10-12T17:52:01.994+00:00",
+   "step": "v2-digest"
+  },
+  "worktree-add-row13-tree": {
+   "description": "git worktree add --detach work/row13-tree <target HEAD>",
+   "kind": "python",
+   "result": {
+    "guardian": "/home/epentland/ai/canopy/guardian-zig",
+    "head": "b6b505d368c433a7a76f29923e97f6af07fc44e5",
+    "ref": "b6b505d368c433a7a76f29923e97f6af07fc44e5",
+    "worktree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-tree"
+   },
+   "seconds": 6.19,
+   "started": "2026-10-12T17:20:58.637+00:00",
+   "step": "worktree-add-row13-tree"
+  },
+  "worktree-remove-row13-tree": {
+   "description": "git worktree remove --force work/row13-tree",
+   "kind": "python",
+   "result": {
+    "git": true,
+    "removed": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-tree"
+   },
+   "seconds": 6.022,
+   "started": "2026-10-12T17:52:01.995+00:00",
+   "step": "worktree-remove-row13-tree"
+  }
+ }
+}

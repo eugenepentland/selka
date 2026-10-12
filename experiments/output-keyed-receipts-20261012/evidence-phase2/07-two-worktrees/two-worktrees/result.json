@@ -1,0 +1,1644 @@
+{
+ "checks": [
+  {
+   "check": "tests-a: no failures",
+   "expected": "exit 0 and 0 failed",
+   "note": "",
+   "observed": {
+    "exit": 0,
+    "failed": 0,
+    "failed_names": []
+   },
+   "result": "pass"
+  },
+  {
+   "check": "tests-b: no failures",
+   "expected": "exit 0 and 0 failed",
+   "note": "",
+   "observed": {
+    "exit": 0,
+    "failed": 0,
+    "failed_names": []
+   },
+   "result": "pass"
+  },
+  {
+   "check": "tests-b (second worktree reuses every eligible receipt): every eligible test reused",
+   "expected": "0 eligible executed",
+   "note": "",
+   "observed": {
+    "by_reason": {
+     "no-success-receipt": 1549,
+     "uncacheable-metadata": 3
+    },
+    "eligible": 1549,
+    "eligible_cached": 0,
+    "eligible_executed": 1549
+   },
+   "result": "fail"
+  },
+  {
+   "check": "worktree B success",
+   "expected": true,
+   "note": "",
+   "observed": false,
+   "result": "fail"
+  },
+  {
+   "check": "all action keys identical across worktrees",
+   "expected": "0 differing (plan: 46 actions)",
+   "note": "",
+   "observed": {
+    "actions": 47,
+    "differing": [
+     "affected",
+     "application_cache",
+     "cli",
+     "component-preparation",
+     "component-support",
+     "component_builder",
+     "component_native",
+     "core",
+     "coverage",
+     "coverage_self",
+     "doc-coverage",
+     "doctest",
+     "embedded_migration",
+     "environment-discovery",
+     "friction",
+     "fuzz_campaign",
+     "golden",
+     "guardian",
+     "guest",
+     "identity-qualification",
+     "idioms",
+     "idioms_self",
+     "incremental",
+     "input-discovery",
+     "interface_oracle",
+     "interfaces",
+     "juice",
+     "juice-runtime",
+     "juice_cache",
+     "juice_pure",
+     "language",
+     "manifest_self",
+     "memory_budget",
+     "my_format",
+     "my_format_self",
+     "noalloc_lint",
+     "parser_hints",
+     "selfhost_numeric",
+     "spec-history",
+     "text_scalar_unit",
+     "tooling_isolation",
+     "tooling_unit",
+     "unclassified",
+     "unit",
+     "verification_cache",
+     "verification_session",
+     "zig-format"
+    ]
+   },
+   "result": "fail"
+  },
+  {
+   "check": "worktree B reuses every group except always-fresh",
+   "expected": "no action outside reused/fresh",
+   "note": "",
+   "observed": [
+    "affected",
+    "application_cache",
+    "cli",
+    "component-support",
+    "component_builder",
+    "component_native",
+    "core",
+    "coverage_self",
+    "doc-coverage",
+    "doctest",
+    "embedded_migration",
+    "friction",
+    "fuzz_campaign",
+    "golden",
+    "idioms",
+    "idioms_self",
+    "incremental",
+    "interface_oracle",
+    "interfaces",
+    "juice_cache",
+    "juice_pure",
+    "manifest_self",
+    "memory_budget",
+    "my_format",
+    "my_format_self",
+    "noalloc_lint",
+    "parser_hints",
+    "selfhost_numeric",
+    "text_scalar_unit",
+    "tooling_isolation",
+    "tooling_unit",
+    "unit",
+    "verification_cache",
+    "verification_session",
+    "zig-format"
+   ],
+   "result": "fail"
+  },
+  {
+   "check": "budget context identical",
+   "expected": true,
+   "note": "",
+   "observed": false,
+   "result": "fail"
+  },
+  {
+   "check": "every action identity path-free",
+   "expected": true,
+   "note": "",
+   "observed": [],
+   "result": "pass"
+  },
+  {
+   "check": "TEST-PATHS-1: test binaries carry no absolute root path",
+   "expected": "0 occurrences",
+   "note": "",
+   "observed": {
+    "zig-out/verification/bin/cli": {
+     "root": 3,
+     "zig_cache": 1
+    },
+    "zig-out/verification/bin/core": {
+     "root": 5,
+     "zig_cache": 1
+    },
+    "zig-out/verification/bin/units": {
+     "root": 3,
+     "zig_cache": 1
+    }
+   },
+   "result": "fail"
+  }
+ ],
+ "compilers_sha256": {
+  "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-a/zig-out/bin/mylang": "6d7c5f3d2c58603442c4c1c13328971b130b5f87707699276f0dc44b09def47d",
+  "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-b/zig-out/bin/mylang": "715411aee5194d6274417dfdd7c8c65abab13e6ad21fc5fc01f006a08234ec23"
+ },
+ "decision": "fail",
+ "finished": "2026-10-12T18:36:15.298+00:00",
+ "manifest": {
+  "compiler": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/bin/mylang",
+  "compiler_sha256": "27385c43a08071a5144529a376b7afdc7f93e575bb048785990124ac7395b134",
+  "environment": {
+   "launcher_sha256_16": {
+    "CODEX_THREAD_ID": null,
+    "PWD": "5ffa26a83103a9ee",
+    "TERM": "7f44899d0925ec2c"
+   },
+   "values": {
+    "HOME": "/home/epentland",
+    "LANG": "en_US.UTF-8",
+    "MYLANG_BUILD_MEM": "8G",
+    "MYLANG_BUILD_SLOTS": "3",
+    "MYLANG_DEV_JOBS": "4",
+    "MYLANG_DEV_MAXRSS": "8589934592",
+    "MYLANG_GATE_SLOTS": "2",
+    "MYLANG_SLOT_DIR": "/home/epentland/.cache/mylang/slots",
+    "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   }
+  },
+  "features": {
+   "build_env": true,
+   "coordinator_path_free": true,
+   "coordinator_v3": true,
+   "exec_receipts": true,
+   "exec_receipts_opt_in": false,
+   "execution_key_report": true,
+   "fact_leak_receipts": true,
+   "mismatch_counter": true,
+   "runner_identity": true,
+   "test_v3_namespaces": true
+  },
+  "harness_sha256": "dff952183b40132d560f36cee915694a32d59ccf7b01048fde24e81b4bffb3c6",
+  "options": {
+   "build_env": null,
+   "dry_run": false,
+   "evidence": "experiments/output-keyed-receipts-20261012/evidence-phase2",
+   "heavy": true,
+   "keep_work": false,
+   "lang_entry": null,
+   "manifest_only": null,
+   "old_ref": "f6971a623",
+   "rows": "3,7,12:complete-in-tree,13:test-receipts",
+   "small_entry": "tests/lang/frontend_numbers.my",
+   "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "work": null
+  },
+  "plan": "docs/audits/output-keyed-shared-receipts-plan-2026-10-12.md",
+  "schema": "output-keyed-matrix-v1",
+  "slot_dir": "/home/epentland/.cache/mylang/slots",
+  "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+  "tree_dirty_sha256": "f3783a492a2fff38e27edbc49eb384d08c02a60dcc02f93866f595ea643a3949",
+  "tree_head": "0073442242f0779e7299048e773f8e6f0ef2b27d",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+ },
+ "started": "2026-10-12T17:56:27.507+00:00",
+ "steps": {
+  "binary-paths": {
+   "description": "grep -a counts of each root path in installed units/core/cli test binaries",
+   "kind": "python",
+   "result": {
+    "counts": {
+     "zig-out/verification/bin/cli": {
+      "root": 3,
+      "zig_cache": 1
+     },
+     "zig-out/verification/bin/core": {
+      "root": 5,
+      "zig_cache": 1
+     },
+     "zig-out/verification/bin/units": {
+      "root": 3,
+      "zig_cache": 1
+     }
+    }
+   },
+   "seconds": 2.301,
+   "started": "2026-10-12T18:36:07.230+00:00",
+   "step": "binary-paths"
+  },
+  "build-a": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "zig",
+    "build"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-a",
+   "env_set": {
+    "CODEX_THREAD_ID": "lane-f-row07-a",
+    "MYLANG_COMPILER_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/07-two-worktrees/shared/compiler",
+    "MYLANG_TEST_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/07-two-worktrees/shared/tests",
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-a",
+    "TERM": "xterm-256color",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-a/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-a/.zig-cache"
+   },
+   "env_unset": [],
+   "exit": 0,
+   "harness_seconds_including_queue": 27.551,
+   "kind": "command",
+   "queue_seconds": 0,
+   "seconds_excluding_queue": 27.551,
+   "started": "2026-10-12T17:56:50.260+00:00",
+   "stderr": "03-build-a.stderr",
+   "stderr_tail": "build-slot: build slot 1, FIFO ticket 2320 after 0s\nguardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)\nguardian: diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9: 75/693 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification \u2014 use --full, or `guardian-check commit`.\nguardian: file-size: 17 finding(s) \u2014 report-only (--verbose for detail)\nguardian: function-length: 1 finding(s) \u2014 report-only (--verbose for detail)\nguardian: line-length: 1331 finding(s) \u2014 report-only (--verbose for detail)\nguardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9, 75 file(s) in scope\n",
+   "stdout": "03-build-a.stdout",
+   "step": "build-a"
+  },
+  "build-b": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "zig",
+    "build"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-b",
+   "env_set": {
+    "CODEX_THREAD_ID": "lane-f-row07-b",
+    "MYLANG_COMPILER_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/07-two-worktrees/shared/compiler",
+    "MYLANG_TEST_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/07-two-worktrees/shared/tests",
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-b",
+    "TERM": "dumb",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-b/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-b/.zig-cache"
+   },
+   "env_unset": [],
+   "exit": 0,
+   "harness_seconds_including_queue": 38.503,
+   "kind": "command",
+   "queue_seconds": 0,
+   "seconds_excluding_queue": 38.503,
+   "started": "2026-10-12T17:57:17.812+00:00",
+   "stderr": "04-build-b.stderr",
+   "stderr_tail": "build-slot: build slot 1, FIFO ticket 2321 after 0s\nguardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)\nguardian: diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9: 75/693 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification \u2014 use --full, or `guardian-check commit`.\nguardian: file-size: 17 finding(s) \u2014 report-only (--verbose for detail)\nguardian: function-length: 1 finding(s) \u2014 report-only (--verbose for detail)\nguardian: line-length: 1331 finding(s) \u2014 report-only (--verbose for detail)\nguardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9, 75 file(s) in scope\n",
+   "stdout": "04-build-b.stdout",
+   "step": "build-b"
+  },
+  "complete-a": {
+   "argv": [
+    "python3",
+    "-B",
+    "scripts/verify_cache.py",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--profile",
+    "complete",
+    "--shared-cache-dir",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/07-two-worktrees/shared/verification"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-a",
+   "env_set": {
+    "CODEX_THREAD_ID": "lane-f-row07-a",
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-a",
+    "TERM": "xterm-256color",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-a/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-a/.zig-cache"
+   },
+   "env_unset": [],
+   "excerpt": [
+    {
+     "action_key": "3b5c2da26a78d1e825f9b304f1a13c9252b4f7afec6ea9b6e05e37dcd947d8be",
+     "id": "component-preparation",
+     "path_free": true,
+     "reason": "component manifests and installed outputs require validation",
+     "state": "fresh"
+    },
+    {
+     "action_key": "fe1140acb5252036660069babec3cadb773feb3f2309a663e0e44f293f7ac9a3",
+     "id": "input-discovery",
+     "path_free": true,
+     "reason": "directory membership must be discovered at execution time",
+     "state": "fresh"
+    },
+    {
+     "action_key": "7f14cdc15cf79757be3f71c048a435dbe47578bea4e4241ca0c71c8e15eb50b9",
+     "id": "environment-discovery",
+     "path_free": true,
+     "reason": "live inherited environment must be discovered at execution time",
+     "state": "fresh"
+    },
+    {
+     "action_key": "b5fd5546ca2b003907c64579ed1d945289c30f9af6e044ba064989e43a5146ea",
+     "id": "core",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "b8c755ebde6ce76e49d3aab7892191fa91dab3190344b73652ac8c2f1de110c8",
+     "id": "tooling_unit",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "cb9750fd65abd1f0f4741a30a7807414be21d0543eac885caca66617d7188704",
+     "id": "text_scalar_unit",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "1411d5421fba458011310f071d126c26668d257ba1d17b91fc400ca962eb19a3",
+     "id": "memory_budget",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "fa2b263edfaedff20da40f6d4333108f925e57e924b1c076183c5f0268ea4c02",
+     "id": "unit",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "3fe28a575961f20cc5dc430333e395144970f1918547b6df24ec9c4ba0a4f46c",
+     "id": "cli",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "4fb2fcfc4ec750df4ce39651bf5682c90324e88663da519307c94a9894234065",
+     "id": "golden",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "15ba0297e8cee7448bf54c97b67bade952f20586d2fb7728d663da62b6e905cd",
+     "id": "idioms_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "906a36b2d0cf621b269dbd2420b3c3cccd7bf78d7a335d4d480d95542848f889",
+     "id": "idioms",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "1d05c065085f70bede1255626a56868f1d195502507b91983995cc728d59f546",
+     "id": "incremental",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "2cff802a154fe9f224111474e607575fd739a3643c8e023d40e3600e5e095f9f",
+     "id": "interfaces",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "268b8802d055cfcaba2a8dc9e7f46d0e69c3abdb035c365a8fc33bdced74ce75",
+     "id": "interface_oracle",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "9eb67cca9e38b769deb5e72e48d7ca3b7dc9e85c637e3a9b9151085553946e84",
+     "id": "parser_hints",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "79550a8f577dd95d8762ae608544ce231de51346f85e0bdbba4af4b453e6ed32",
+     "id": "friction",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "55e5f30b4245bf6a8937b245640ac3b8c9b486d0d1eb704fbea3a7b0895c0adb",
+     "id": "tooling_isolation",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "80377b9aadce2c9cb9d6b369e441f513b7445caa4470586318c3aceefc2b5732",
+     "id": "application_cache",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "34c6fa3b2af639daf58ab45a08738c2fc52ebf894bb6bb96a85b2e59f731aa29",
+     "id": "component_builder",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "89c20f8c4b0d9785471c4928e0fab690979838eb6eec53a987bd50cfb115f7ca",
+     "id": "component_native",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "eabc073cd07d5f25a7bf1e27ec2e0607fc1ec566a75e923ef7716e1d91891e61",
+     "id": "component-support",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "855c7eadb4d648207d50df028bc825464ff89bdaeeb370827c55377b92c92cdd",
+     "id": "selfhost_numeric",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "43a7d1924777f73d316d114702932ed961d863c016f57fc53e0d82b0f33ca259",
+     "id": "spec-history",
+     "path_free": true,
+     "reason": "SPEC replay reads git history and creates repositories",
+     "state": "fresh"
+    },
+    {
+     "action_key": "446f366370561c14f7e4d7bb70b10bb20bca8c9bea0ea49451d6778582b0d1eb",
+     "id": "juice_pure",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "aa8245450d1861a7507f7414b8e8f61e99638a8f058f5ae9ae884cd11ff10620",
+     "id": "juice",
+     "path_free": true,
+     "reason": "native performance collectors and host state require fresh execution",
+     "state": "fresh"
+    },
+    {
+     "action_key": "e429b3cf3bdeb2083b01742a6076666e8e76eabd0b877a187056b5536ad82da0",
+     "id": "juice-runtime",
+     "path_free": true,
+     "reason": "runtime collectors observe CPU, scheduler and current host state",
+     "state": "fresh"
+    },
+    {
+     "action_key": "53a573712381f0644d86f7e3fff75c2736551fbf66465d3987e0aabe3840facf",
+     "id": "identity-qualification",
+     "path_free": true,
+     "reason": "compiler identity qualification produces temporary compiler artifacts",
+     "state": "fresh"
+    },
+    {
+     "action_key": "496f95ff78da8d2f51a6d83c9bfc08738ca9617319aa4ec594534ee3017ca3dd",
+     "id": "affected",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "7ad909d7a3bb727fd9124f5ab3732c19f28ab8c5939ec5c4542e6273b165d5b6",
+     "id": "coverage_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "0d767c4f5d719ca2567bdd311423d7857ee22c7c2711ce612bf256b8f06e8ee5",
+     "id": "coverage",
+     "path_free": true,
+     "reason": "fixture membership and negative path lookups outside source recipes require freshness",
+     "state": "fresh"
+    },
+    {
+     "action_key": "e3ccc51ad51329726df07835c83690866a35a68992f12372ebd98fd2423b2d87",
+     "id": "manifest_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "429307e832ddd257c76456e073288a270603953a6e7b9f7d7d72f9f09a7885a7",
+     "id": "verification_cache",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "c5b2de652ec1a2bc582e476e13c6f6b1c4a38ffec24fd37a41628fdad920d48b",
+     "id": "verification_session",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "3ba4580ef1114234fa603b9ec8661e18ef05f0077178d620a2bcebbeae2e9c85",
+     "id": "fuzz_campaign",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "21d24106c80980fea6ebc954febcec05057663ccdb5ac6aa5ea41236f35a571a",
+     "id": "juice_cache",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "c16942922a20eb56127a70b86007e043b1595be060a932be3f3ffc3d609e04ad",
+     "id": "doc-coverage",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "c4a463bc7e5b76e842dde8344b0571a85b1fe1befc4beba949e2c9c4783a921c",
+     "id": "guest",
+     "path_free": true,
+     "reason": "guest Host and external-effect eligibility remains compiler-authoritative",
+     "state": "fresh"
+    },
+    {
+     "action_key": "b6a0d9e0bd0e3617ed1fbbfca61dbc3dc309f0f92a2ec9afdb486c68028b3916",
+     "id": "language",
+     "path_free": true,
+     "reason": "guest Host and external-effect eligibility requires execution-time admission",
+     "state": "fresh"
+    },
+    {
+     "action_key": "89c3bed0141e6ff449195f0946449ce685f49a9ecb1bd2dac0c82b01c44da74f",
+     "id": "doctest",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "9ae0837a1bc4e8f828be9548d362d0dc14065f4d070bc3f2f3461614c91c2481",
+     "id": "zig-format",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "2682291e44a435b597670f0e71a770ae9af8858d629537fed9f50c1769394ca0",
+     "id": "my_format",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "5d866c7ee214b42efae3d4c611c42aa8d13218d451dbc112c64e8496d96ca99c",
+     "id": "my_format_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "d0700242b2198379445171c16ed5ac1ddacb127ff152c347d8eaec40a39b528a",
+     "id": "noalloc_lint",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "fbf804adb778a3ea742822920d266f7fd028ec4425875d40079e51ce7b5209d1",
+     "id": "embedded_migration",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "1f94b8de9f9b7c43388015b19bf6f202edfb9efd1cea7b495ffabbad7f255e2c",
+     "id": "guardian",
+     "path_free": true,
+     "reason": "Guardian source, git scope and mutable policy validation require freshness",
+     "state": "fresh"
+    },
+    {
+     "action_key": "94737fb41c7926967800b2ec6f7eacbe2819e979a8ba1f2808c514b046d0b8be",
+     "id": "unclassified",
+     "path_free": true,
+     "reason": "unknown actions require original complete gate execution",
+     "state": "fresh"
+    }
+   ],
+   "exit": 1,
+   "harness_seconds_including_queue": 1238.968,
+   "kind": "command",
+   "queue_seconds": 0,
+   "report_copy": "07-complete-a.last-run.json",
+   "seconds_excluding_queue": 1238.968,
+   "started": "2026-10-12T17:59:01.435+00:00",
+   "stderr": "07-complete-a.stderr",
+   "stderr_tail": "es)\n|  +- verification action input-discovery member 0 (reused)\n|  +- verification action environment-discovery member 0 (+1 more reused dependencies)\n|  +- verification action component-preparation member 0 (+1 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n+- verification action my_format member 0 (+7 more reused dependencies)\n+- verification action my_format_self member 0 (+7 more reused dependencies)\n+- verification action noalloc_lint member 0 success 2s\n|  +- compile exe build-env safe native (reused)\n|  +- install (+4 more reused dependencies)\n|  +- verification action input-discovery member 0 (reused)\n|  +- verification action environment-discovery member 0 (+1 more reused dependencies)\n|  +- verification action component-preparation member 0 (+1 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n+- verification action embedded_migration member 0 success 2s\n   +- compile exe build-env safe native (reused)\n   +- install (+4 more reused dependencies)\n   +- verification action input-discovery member 0 (reused)\n   +- verification action environment-discovery member 0 (+1 more reused dependencies)\n   +- verification action component-preparation member 0 (+1 more reused dependencies)\n   +- compile exe mylang debug native (+5 more reused dependencies)\n\n",
+   "stdout": "07-complete-a.stdout",
+   "step": "complete-a"
+  },
+  "complete-b": {
+   "argv": [
+    "python3",
+    "-B",
+    "scripts/verify_cache.py",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--profile",
+    "complete",
+    "--shared-cache-dir",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/07-two-worktrees/shared/verification"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-b",
+   "env_set": {
+    "CODEX_THREAD_ID": "lane-f-row07-b",
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-b",
+    "TERM": "dumb",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-b/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-b/.zig-cache"
+   },
+   "env_unset": [],
+   "excerpt": [
+    {
+     "action_key": "dc2d802d8f3ee79121f298c4423cc45e7aed5e5f5a9190f69c113a02cc6bf768",
+     "id": "component-preparation",
+     "path_free": true,
+     "reason": "component manifests and installed outputs require validation",
+     "state": "fresh"
+    },
+    {
+     "action_key": "f4232041ff10c3f15bf77a77bbbe1a8b2164475bff47799df497da3647be023a",
+     "id": "input-discovery",
+     "path_free": true,
+     "reason": "directory membership must be discovered at execution time",
+     "state": "fresh"
+    },
+    {
+     "action_key": "877ec0a3354178b9140da771350e8dc04b326eb88792ec9a8881086d12093587",
+     "id": "environment-discovery",
+     "path_free": true,
+     "reason": "live inherited environment must be discovered at execution time",
+     "state": "fresh"
+    },
+    {
+     "action_key": "e88b789e36a240448370cf02102c05ccfee914f3f2e02cfb5517dfda8f311e2d",
+     "id": "core",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "0cc0634caa2b33a061d87a9f644d73a087cf0db80adb0e5838209f02e404389e",
+     "id": "tooling_unit",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "1a6f88b47429cf92a47dd6edcedba7cff537718096498a54a662c2f1b14e58f8",
+     "id": "text_scalar_unit",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "7a233ebefa8d481d487a1448ef8606be168227e4bc73f6484a638878e4413fe6",
+     "id": "memory_budget",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "8998b963ffe9f06316188bd011824b47933abcfd679cc80888acfc39682f9b18",
+     "id": "unit",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "4d66a9fba9a251c2d3b06be56a91ffdc89a549e0a1ebb6c8cb119ac720d2f1f0",
+     "id": "cli",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "aee70d048fcb191e4afb828633af666577e2799660042b61e897f855d03fab88",
+     "id": "golden",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "c9fe16ac8833663954fcc6ff86ca2d76922e9b950945e352c7c6d71c39e3cd3d",
+     "id": "idioms_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "b2c6f7029f91c280a1e1e98c5124508af7e58098456a90959d7e8f414b07c2af",
+     "id": "idioms",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "3a159474b8972f2dc32a2f1d0289d31de934f8a521fcaefa2a3804a128db7acb",
+     "id": "incremental",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "5977fefefc5f4b1793042700d397b4f88970c093449f081ef2316e4a0415d1d2",
+     "id": "interfaces",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "72f8299e76a3dcf63a66cca03c005244c8293e699981f20fb4e4301bf6c34cc0",
+     "id": "interface_oracle",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "42f4efededbe0a29de1580a431ddff1a5d7f0bb6dd25d25b9047e97cc488b2fd",
+     "id": "parser_hints",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "319051360e75c8628afe125d47843877d3b30c94aafb95186fa9df1b9a31cad5",
+     "id": "friction",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "f862ee44cb76c2a65d6d38f31fe50698204416a5b80514f9620e5fdb2cd5be0e",
+     "id": "tooling_isolation",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "29038afca61d2b9b9b25a792dbcf699bcde996a66c31344ff002d7ee7c041ff4",
+     "id": "application_cache",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "7fdcd6845c3cc3a955204ac2902e2b79829cf48915e2a79e8befe87a58fdec5a",
+     "id": "component_builder",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "91edd1de82f80df60f5399becaf8dc3aec040cc1feb3dc264da322d98c4bff9b",
+     "id": "component_native",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "89dfefa351221994842949386256e82036be4ebe64abd5bd81d681e8d658a01b",
+     "id": "component-support",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "926f080e822e115c300fffc9dfd105e6a0fb6c0972831c6356fc802990d12aca",
+     "id": "selfhost_numeric",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "9dc4f6d22fcf2b40631d91753e14f5d80d5ec6157ef12f62edef5e18a603d47a",
+     "id": "spec-history",
+     "path_free": true,
+     "reason": "SPEC replay reads git history and creates repositories",
+     "state": "fresh"
+    },
+    {
+     "action_key": "3a96eddb8102723ba45f23e91fa6661b271a8748b08c651d12521189d6ca949b",
+     "id": "juice_pure",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "37c9d5a61bf8989c5d50e120f092257e26309126e7941b10ed1df21e568d9f3a",
+     "id": "juice",
+     "path_free": true,
+     "reason": "native performance collectors and host state require fresh execution",
+     "state": "fresh"
+    },
+    {
+     "action_key": "e567c72e54fe73a4ff52ef680f543ce420af306f77cb096c56babe58a53f8cdc",
+     "id": "juice-runtime",
+     "path_free": true,
+     "reason": "runtime collectors observe CPU, scheduler and current host state",
+     "state": "fresh"
+    },
+    {
+     "action_key": "4b4288007fff049490447d54a18af2479947ae2e24437836d5065fdd9a34eda9",
+     "id": "identity-qualification",
+     "path_free": true,
+     "reason": "compiler identity qualification produces temporary compiler artifacts",
+     "state": "fresh"
+    },
+    {
+     "action_key": "5f54ea79fd4ae6ddd921d0a3645d747fe0350033afcd96eaf4b8b0d7712d4149",
+     "id": "affected",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "d4fb8edb29441b79d40ebcf3eb7feb9f7cf0138b16c156445c97543f2a6eb01b",
+     "id": "coverage_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "97eb253ad022e734202b956f1e4cbdb56837b5e17977f210979f06826b426fcb",
+     "id": "coverage",
+     "path_free": true,
+     "reason": "fixture membership and negative path lookups outside source recipes require freshness",
+     "state": "fresh"
+    },
+    {
+     "action_key": "13c7db2e70895c3b8d3a5bee5325edeec24acefca1c9ca7bb55c1d9af8985047",
+     "id": "manifest_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "196d53f253df09e3ebbcc21f224f0b9dfd5c87ad69711c296d23e066a3d67015",
+     "id": "verification_cache",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "5b0d3b146db0142c9c47055e1cf4f4cfe0765f6bd2e8cceeba3975e24b799475",
+     "id": "verification_session",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "175be2c78cc4713f6ef9299abfcbdf4ee878bdc19fb431e134a83a340286313e",
+     "id": "fuzz_campaign",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "c17a6bd27ce0a18e80c339895be29122f81c5e1d8e487e7f942bbc8f0f568d77",
+     "id": "juice_cache",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "01341f29e79bcb0aaa88d3e208cef9fbb2b51c580db3dcaddd806c30f4e17085",
+     "id": "doc-coverage",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "6fd879bc2be5b6300fed329bfb3e890a9583038b847af5f23220b675a475fd62",
+     "id": "guest",
+     "path_free": true,
+     "reason": "guest Host and external-effect eligibility remains compiler-authoritative",
+     "state": "fresh"
+    },
+    {
+     "action_key": "e5c60c9baaecb69d9c78ca136db4b20a8c50a7296391956a97456c6e4023ad74",
+     "id": "language",
+     "path_free": true,
+     "reason": "guest Host and external-effect eligibility requires execution-time admission",
+     "state": "fresh"
+    },
+    {
+     "action_key": "71479bed917d1a8b200047307b50dfa50c6775a54e025036127b3b5076edea4a",
+     "id": "doctest",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "c4b70a41dfe288edf7efc2b3931f2fe63bbd3c2e8e0b58b7209f1b78515fcc21",
+     "id": "zig-format",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "a59393a1147d86de1504941a338725ffdaa6bf29b22cf3b99e1084f3b35541fa",
+     "id": "my_format",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "91ac24f94948f9c4c55fa4bd64852a8ebdd05d4f62071b29a947a2f426688434",
+     "id": "my_format_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "06611c03e3d87930a4ddfa094d5022a1c4aed49374c6c10408b5a7b9766c76a5",
+     "id": "noalloc_lint",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "91a759c3eda577bbced2e71a44dab092a7d23e58502cd32a490c577e99274ccf",
+     "id": "embedded_migration",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "a22d9e8eefeef45ac1c473f0c46e0b93a9ac7403796dd2771fce875be4e88579",
+     "id": "guardian",
+     "path_free": true,
+     "reason": "Guardian source, git scope and mutable policy validation require freshness",
+     "state": "fresh"
+    },
+    {
+     "action_key": "5f1e01a048031999a693682e9109c3f369d34bcb586aa8d679b1eb0bc6078430",
+     "id": "unclassified",
+     "path_free": true,
+     "reason": "unknown actions require original complete gate execution",
+     "state": "fresh"
+    }
+   ],
+   "exit": 1,
+   "harness_seconds_including_queue": 986.63,
+   "kind": "command",
+   "queue_seconds": 0,
+   "report_copy": "08-complete-b.last-run.json",
+   "seconds_excluding_queue": 986.63,
+   "started": "2026-10-12T18:19:40.475+00:00",
+   "stderr": "08-complete-b.stderr",
+   "stderr_tail": "es)\n|  +- verification action input-discovery member 0 (reused)\n|  +- verification action environment-discovery member 0 (+1 more reused dependencies)\n|  +- verification action component-preparation member 0 (+1 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n+- verification action my_format member 0 (+7 more reused dependencies)\n+- verification action my_format_self member 0 (+7 more reused dependencies)\n+- verification action noalloc_lint member 0 success 1s\n|  +- compile exe build-env safe native (reused)\n|  +- install (+4 more reused dependencies)\n|  +- verification action input-discovery member 0 (reused)\n|  +- verification action environment-discovery member 0 (+1 more reused dependencies)\n|  +- verification action component-preparation member 0 (+1 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n+- verification action embedded_migration member 0 success 2s\n   +- compile exe build-env safe native (reused)\n   +- install (+4 more reused dependencies)\n   +- verification action input-discovery member 0 (reused)\n   +- verification action environment-discovery member 0 (+1 more reused dependencies)\n   +- verification action component-preparation member 0 (+1 more reused dependencies)\n   +- compile exe mylang debug native (+5 more reused dependencies)\n\n",
+   "stdout": "08-complete-b.stdout",
+   "step": "complete-b"
+  },
+  "keep-diagnostics": {
+   "description": "copy each tree's coordinator diagnostics (per-action dependency summaries)",
+   "kind": "python",
+   "result": {
+    "row07-a": 47,
+    "row07-b": 47
+   },
+   "seconds": 0.028,
+   "started": "2026-10-12T18:36:09.531+00:00",
+   "step": "keep-diagnostics"
+  },
+  "reset-work": {
+   "description": "empty the row's private work directory",
+   "kind": "python",
+   "result": {
+    "directory": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/07-two-worktrees/shared"
+   },
+   "seconds": 1.883,
+   "started": "2026-10-12T17:56:27.508+00:00",
+   "step": "reset-work"
+  },
+  "tests-a": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-a/zig-out/bin/mylang",
+    "test",
+    "tests/lang",
+    "--json"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-a",
+   "env_set": {
+    "CODEX_THREAD_ID": "lane-f-row07-a",
+    "MYLANG_COMPILER_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/07-two-worktrees/shared/compiler",
+    "MYLANG_TEST_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/07-two-worktrees/shared/tests",
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-a",
+    "TERM": "xterm-256color",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-a/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-a/.zig-cache"
+   },
+   "env_unset": [
+    "MYL_CORE_LEAKCHECK"
+   ],
+   "exit": 0,
+   "harness_seconds_including_queue": 32.469,
+   "kind": "command",
+   "queue_seconds": 0,
+   "seconds_excluding_queue": 32.469,
+   "started": "2026-10-12T17:57:56.542+00:00",
+   "stderr": "05-tests-a.stderr",
+   "stderr_tail": "build-slot: build slot 1, FIFO ticket 2322 after 0s\n",
+   "stdout": "05-tests-a.stdout",
+   "step": "tests-a",
+   "summary": {
+    "available": true,
+    "by_reason": {
+     "no-success-receipt": 1549,
+     "uncacheable-metadata": 3
+    },
+    "by_status": {
+     "passed": 1552
+    },
+    "eligible": 1549,
+    "eligible_cached": 0,
+    "eligible_executed": 1549,
+    "exec_hits": 0,
+    "exec_receipts": {
+     "hits": 0,
+     "saves": 1552
+    },
+    "executed_names": [
+     "aggregate_refs::test_a_copy_returned_from_a_large_array_parameter_leaves_the_argument_alone",
+     "aggregate_refs::test_a_field_write_inside_a_callee_leaves_the_callers_value_alone",
+     "aggregate_refs::test_a_large_array_parameter_is_read_where_it_lives_across_many_calls",
+     "aggregate_refs::test_a_large_array_parameter_survives_deep_recursion_and_a_relay",
+     "aggregate_refs::test_a_match_payload_bound_from_a_record_local_keeps_the_local_intact",
+     "aggregate_refs::test_a_record_read_from_a_list_argument_keeps_its_value_across_a_write",
+     "aggregate_refs::test_a_record_returned_from_a_generic_body_keeps_its_value",
+     "aggregate_refs::test_a_returned_record_passed_straight_into_another_call",
+     "aggregate_refs::test_a_returned_record_stored_into_a_local_carries_its_fields",
+     "aggregate_refs::test_a_returned_union_payload_reaches_the_caller_unchanged",
+     "aggregate_refs::test_a_returning_path_still_returns_its_record_next_to_a_trapping_one",
+     "aggregate_refs::test_a_written_record_parameter_leaves_the_callers_value_alone",
+     "application_cache::test_memory_provider_cannot_claim_durability",
+     "application_cache::test_record_rejects_noncanonical_and_nonstring_payloads",
+     "application_cache::test_record_round_trip_and_corruption",
+     "application_cache::test_sha256_block_boundary_oracles",
+     "application_cache::test_sha256_known_vectors_and_padding",
+     "argument_evaluation_order::test_a_field_argument_keeps_its_value_across_a_later_mut_call",
+     "argument_evaluation_order::test_a_mut_parameter_field_argument_keeps_its_value",
+     "argument_evaluation_order::test_a_nested_record_argument_keeps_its_value_across_a_later_mut_call",
+     "array_negative_index::test_a_destructuring_assignment_evaluates_the_whole_value_first",
+     "array_negative_index::test_a_destructuring_assignment_swaps_array_elements",
+     "array_negative_index::test_a_destructuring_assignment_writes_list_dictionary_and_field_targets",
+     "array_negative_index::test_a_field_of_a_negative_element_is_written",
+     "array_negative_index::test_a_generic_body_counts_from_the_end_of_its_length",
+     "array_negative_index::test_a_loop_over_an_array_the_body_never_writes_sees_every_element",
+     "array_negative_index::test_a_loop_sees_array_writes_from_the_end",
+     "array_negative_index::test_a_negative_index_reads_from_the_end",
+     "array_negative_index::test_a_negative_index_writes_from_the_end",
+     "array_negative_index::test_a_record_field_array_is_independent_of_an_earlier_copy",
+     "array_negative_index::test_a_record_field_array_takes_a_negative_index",
+     "array_negative_index::test_an_array_inside_a_list_slot_takes_a_negative_index",
+     "array_negative_index::test_an_enum_table_is_still_indexed_by_its_key",
+     "array_negative_index::test_an_enumerate_position_the_body_assigns_counts_from_the_end",
+     "array_negative_index::test_augmented_assignment_to_a_field_of_an_element_keeps_its_operator",
+     "array_negative_index::test_nested_negative_indices_reach_one_cell",
+     "array_negative_index::test_range_and_modular_indices_read_every_element",
+     "array_negative_index::test_replace_counts_a_negative_index_from_the_end",
+     "array_negative_index::test_traced_elements_written_from_the_end_survive_collection",
+     "array_negative_index::test_traced_list_slots_swap_while_collections_run",
+     "array_places::test_a_field_of_one_element_is_written_in_place",
+     "array_places::test_a_field_write_through_a_mut_array_of_records_reaches_the_caller",
+     "array_places::test_a_for_loop_walks_every_element_in_order",
+     "array_places::test_a_loop_of_element_writes_fills_every_slot",
+     "array_places::test_a_loop_over_traced_elements_survives_collection",
+     "array_places::test_a_loop_reads_later_writes_to_the_array_place",
+     "array_places::test_a_mut_array_parameter_passed_on_writes_the_first_callers_array",
+     "array_places::test_a_mut_array_parameter_writes_the_callers_array",
+     "array_places::test_a_nested_field_path_below_an_element_is_written",
+     "array_places::test_a_read_only_argument_of_the_same_array_is_a_snapshot",
+     "array_places::test_an_array_field_of_a_record_is_copied_for_each_name",
+     "array_places::test_an_array_field_of_a_record_is_written_and_a_copy_is_not",
+     "array_places::test_an_array_inside_a_list_slot_is_written_where_the_list_holds_it",
+     "array_places::test_an_array_of_arrays_writes_one_cell_and_copies_one_row",
+     "array_places::test_an_array_parameter_written_after_a_local_copy_leaves_the_caller_alone",
+     "array_places::test_an_element_write_changes_one_element_and_leaves_an_earlier_copy",
+     "array_places::test_an_enum_table_entry_is_written_by_its_key",
+     "array_places::test_augmented_element_writes_combine_with_the_old_element",
+     "array_places::test_enumerate_and_a_comprehension_walk_an_array",
+     "array_places::test_managed_values_a_callee_stores_stay_rooted_in_the_caller",
+     "array_places::test_the_value_is_computed_before_the_array_is_read",
+     "array_places::test_traced_elements_written_one_at_a_time_survive_collection",
+     "array_writes::test_a_byte_array_staged_one_element_at_a_time_holds_every_byte",
+     "array_writes::test_a_copy_taken_before_the_write_keeps_the_old_value",
+     "array_writes::test_a_loop_of_element_writes_leaves_an_earlier_copy_alone",
+     "array_writes::test_a_nested_array_replaces_one_row_and_keeps_the_others",
+     "array_writes::test_a_row_copied_from_the_same_nested_array_lands_intact",
+     "array_writes::test_a_traced_element_type_survives_an_element_write",
+     "array_writes::test_an_array_parameter_the_callee_writes_leaves_the_callers_value_alone",
+     "array_writes::test_an_array_pulled_out_of_a_record_is_written_without_touching_the_record",
+     "array_writes::test_an_element_written_back_into_its_own_array_reads_back_changed",
+     "array_writes::test_an_enum_keyed_table_replaces_the_entry_its_key_names",
+     "borrowed_roots::test_a_chain_of_borrows_survives_through_dead_owners",
+     "borrowed_roots::test_a_dictionary_value_survives_until_it_is_replaced",
+     "borrowed_roots::test_a_field_read_survives_while_the_instance_holds_it",
+     "borrowed_roots::test_a_loop_variable_survives_allocations_while_its_list_does",
+     "borrowed_roots::test_an_element_a_callee_removes_keeps_its_own_root",
+     "borrowed_roots::test_an_element_overwritten_in_its_list_keeps_its_own_root",
+     "borrowed_roots::test_an_element_removed_from_its_list_keeps_its_own_root",
+     "bounded_loop_ranges::test_conditional_replacements_break_and_continue_keep_carried_values",
+     "bounded_loop_ranges::test_float_domains_keep_ordered_exact_dyadic_arithmetic",
+     "bounded_loop_ranges::test_modular_replacements_keep_seed_and_loop_boundaries",
+     "bounded_loop_ranges::test_negative_truncating_replacements_keep_their_sign",
+     "builtin_context::test_builtin_list_and_result_resolve_without_imports_or_explicit_declarations",
+     "builtin_context::test_empty_lists_and_ok_err_inherit_binding_return_and_argument_contexts",
+     "builtin_context::test_generic_list_result_and_contextual_constructors_keep_symbolic_type_parameters",
+     "builtin_context::test_ok_unit_values_preserve_fallible_result_handling",
+     "builtin_context::test_record_fields_and_nested_list_elements_propagate_empty_list_context",
+     "byte_buffer::test_a_buffer_storeback_preserves_an_earlier_snapshot",
+     "byte_buffer::test_append_float_matches_the_printed_spelling",
+     "byte_buffer::test_append_methods_write_in_place_and_refuse_without_writing",
+     "byte_buffer::test_buffers_are_traced_through_record_fields_lists_and_generics",
+     "byte_buffer::test_byte_buffer_builds_from_an_integer_list",
+     "byte_buffer::test_byte_kinds_share_reads_and_compare_by_content",
+     "byte_buffer::test_growth_past_the_segment_threshold_keeps_every_octet",
+     "byte_buffer::test_growth_preserves_identity_content_and_earlier_snapshots",
+     "byte_buffer_from_list::test_a_buffer_built_from_a_record_field_leaves_the_field_alone",
+     "byte_buffer_from_list::test_a_buffer_grown_in_a_callee_is_independent_of_its_list",
+     "byte_buffer_from_list::test_a_buffer_stored_in_a_record_is_a_value_of_its_own",
+     "byte_buffer_from_list::test_a_rebuilt_buffer_in_a_loop_starts_from_the_list_every_time",
+     "byte_buffer_from_list::test_a_renamed_buffer_is_still_a_value_of_its_own",
+     "byte_buffer_from_list::test_a_returned_buffer_owns_its_octets",
+     "byte_buffer_from_list::test_a_snapshot_taken_before_a_write_keeps_its_octets",
+     "byte_buffer_from_list::test_two_buffers_built_from_one_list_are_independent",
+     "byte_buffer_from_list::test_writing_a_buffer_built_from_a_list_leaves_the_list_alone",
+     "byte_buffer_from_list::test_writing_the_list_after_the_conversion_leaves_the_buffer_alone",
+     "byte_iteration_reductions::test_byte_iteration_keeps_immutable_snapshot_storage",
+     "byte_iteration_reductions::test_byte_iteration_lengths_views_and_unbounded_masks",
+     "byte_range_fusion::test_immediate_byte_ranges_use_the_numeric_range_parser",
+     "byte_range_fusion::test_omitted_negative_and_clamped_bounds_keep_slice_semantics",
+     "byte_ranges_llvm::test_native_byte_range_boundaries_and_scalar_counts",
+     "byte_views::test_a_view_reads_its_range_with_every_byte_string_operation",
+     "byte_views::test_byte_strings_parse_numbers_without_decoding",
+     "byte_views::test_scalar_count_counts_scalars_and_rejects_malformed_utf8",
+     "byte_views::test_view_endpoints_clamp_like_a_slice",
+     "byte_views::test_views_nest_and_slices_copy_their_range",
+     "byte_views::test_views_retain_their_source_across_collection",
+     "callback_slots::test_an_allocating_unannotated_function_still_fills_an_unbounded_slot",
+     "callback_slots::test_an_unannotated_function_fills_a_generic_sort_by_key_slot",
+     "callback_slots::test_an_unannotated_function_fills_a_user_generic_callback_slot",
+     "callbacks::test_callbacks_infer_function_values_and_invoke_passed_exact_signatures",
+     "callbacks::test_callbacks_invoke_passed_exact_signatures_through_a_parameter",
+     "callbacks::test_callbacks_retain_values_through_records_arrays_and_ordinary_generic_forwarding",
+     "callbacks::test_callbacks_return_from_a_chooser_and_invoke",
+     "callbacks::test_expression_lambdas_read_module_constants",
+     "callbacks::test_expression_lambdas_use_an_expected_callback_signature_and_invoke_correctly",
+     "callbacks::test_generic_callback_parameters_use_the_same_directional_relation",
+     "callbacks::test_stored_and_returned_callbacks_retain_the_destination_effect_contract",
+     "capability_fields::test_a_field_and_a_local_alias_of_it_reach_the_same_filesystem",
+     "capability_fields::test_clock_and_entropy_fields_still_pass_to_their_module_functions",
+     "capability_fields::test_environment_methods_work_on_a_field_path",
+     "capability_fields::test_filesystem_methods_work_on_a_field_path",
+     "capability_fields::test_network_host_works_on_a_field_path",
+     "capability_fields::test_open_scopes_and_narrowing_work_on_a_field_path",
+     "checked_arithmetic::test_literal_neighbors_keep_exact_signed_64_bit_results",
+     "checked_arithmetic::test_narrow_widths_reach_their_extremes",
+     "checked_arithmetic::test_signed_64_bit_add_sub_mul_reach_both_extremes",
+     "checked_arithmetic::test_the_program_passes_every_group",
+     "checked_arithmetic::test_unsigned_64_bit_add_sub_mul_reach_both_extremes",
+     "checked_arithmetic::test_wrapping_and_saturating_keep_their_own_results",
+     "closed_record_inout::test_closed_carrier_preserves_snapshots_detached_aliases_and_record_rebinding",
+     "collection_read_callbacks::test_dictionary_read_captures_a_managed_result_before_replacement",
+     "collection_read_callbacks::test_dictionary_read_captures_a_record_field_before_key_mutation",
+     "collection_read_callbacks::test_dictionary_read_captures_before_key_mutation",
+     "collection_read_callbacks::test_dictionary_read_copies_a_pinned_receiver",
+     "collection_read_callbacks::test_negative_index_uses_the_captured_receiver_length",
+     "collection_read_callbacks::test_nested_call_preserves_the_outer_pin_for_a_later_snapshot",
+     "collection_read_callbacks::test_nested_read_keeps_the_row_selected_before_replacement",
+     "collection_read_callbacks::test_pinned_named_snapshot_takes_the_slow_copy_path",
+     "collection_read_callbacks::test_read_capture_copies_an_already_pinned_parameter",
+     "collection_read_callbacks::test_read_receiver_is_captured_before_a_mutating_index",
+     "compiler::test_branches_and_loops_execute_both_outcomes_wit_1",
+     "compiler::test_branches_and_loops_execute_both_outcomes_wit_2",
+     "compiler::test_branches_and_loops_execute_both_outcomes_wit_3",
+     "compiler::test_branches_and_loops_execute_both_outcomes_wit_4",
+     "compiler::test_branches_and_loops_execute_both_outcomes_wit_5",
+     "compiler::test_branches_and_loops_execute_both_outcomes_wit_6",
+     "compiler::test_branches_and_loops_execute_both_outcomes_wit_7",
+     "compiler::test_forward_mutual_recursive_and_nested_calls_pr_1",
+     "compiler::test_forward_mutual_recursive_and_nested_calls_pr_2",
+     "compiler::test_forward_mutual_recursive_and_nested_calls_pr_3",
+     "compiler::test_forward_mutual_recursive_and_nested_calls_pr_4",
+     "compiler::test_forward_mutual_recursive_and_nested_calls_pr_5",
+     "compiler::test_locals_mutation_annotations_and_lexical_scop_1",
+     "compiler::test_locals_mutation_annotations_and_lexical_scop_2",
+     "compiler::test_locals_mutation_annotations_and_lexical_scop_3",
+     "compiler::test_locals_mutation_annotations_and_lexical_scop_4",
+     "compiler___precedence_grouping_left_associativity_and_o::test_precedence_grouping_left_associativity_and_o_1",
+     "compiler___precedence_grouping_left_associativity_and_o_2::test_precedence_grouping_left_associativity_and_o_2",
+     "compiler___precedence_grouping_left_associativity_and_o_3::test_precedence_grouping_left_associativity_and_o_3",
+     "compiler___precedence_grouping_left_associativity_and_o_4::test_precedence_grouping_left_associativity_and_o_4",
+     "compiler___precedence_grouping_left_associativity_and_o_5::test_precedence_grouping_left_associativity_and_o_5",
+     "compiler___signed_division_and_remainder_implement_trun::test_signed_division_and_remainder_implement_trun_1",
+     "compiler___signed_division_and_remainder_implement_trun_2::test_signed_division_and_remainder_implement_trun_2",
+     "compiler___signed_division_and_remainder_implement_trun_3::test_signed_division_and_remainder_implement_trun_3",
+     "compiler___signed_division_and_remainder_implement_trun_4::test_signed_division_and_remainder_implement_trun_4",
+     "compiler___signed_division_and_remainder_implement_trun_5::test_signed_division_and_remainder_implement_trun_5",
+     "compiler___signed_division_and_remainder_implement_trun_6::test_signed_division_and_remainder_implement_trun_6",
+     "compiler___signed_division_and_remainder_implement_trun_7::test_signed_division_and_remainder_implement_trun_7",
+     "compiler___signed_division_and_remainder_implement_trun_8::test_signed_division_and_remainder_implement_trun_8",
+     "conditional_expression::test_a_conditional_expression_forwards_its_condition_to_a_helper",
+     "conditional_expression::test_a_conditional_nests_in_its_else_arm",
+     "conditional_expression::test_a_conditional_return_takes_its_arm_type_from_the_return_type",
+     "conditional_expression::test_a_conditional_selects_between_record_values",
+     "conditional_expression::test_a_conditional_selects_by_an_expected_option_type",
+     "conditional_expression::test_a_conditional_takes_its_arm_type_from_the_expected_type",
+     "conditional_expression::test_a_conditional_value_fills_an_fstring_hole",
+     "conditional_expression::test_a_conditional_value_passes_as_a_call_argument",
+     "conditional_expression::test_only_the_chosen_arm_is_evaluated",
+     "conditional_expression::test_the_else_arm_runs_when_the_condition_is_false",
+     "const_lengths___const_length_function_parameters_specialize::test_const_length_function_parameters_specialize",
+     "const_lengths___one_helper_serves_distinct_nominal_element_t::test_one_helper_serves_distinct_nominal_element_t",
+     "constant_divisors::test_i16_divisor_0",
+     "constant_divisors::test_i16_divisor_1",
+     "constant_divisors::test_i16_divisor_2",
+     "constant_divisors::test_i16_divisor_3",
+     "constant_divisors::test_i16_divisor_4",
+     "constant_divisors::test_i16_divisor_5",
+     "constant_divisors::test_i16_divisor_6",
+     "constant_divisors::test_i16_divisor_7"
+    ],
+    "failed": 0,
+    "failed_names": [],
+    "ir_hits": 0,
+    "total": 1552
+   }
+  },
+  "tests-b": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-b/zig-out/bin/mylang",
+    "test",
+    "tests/lang",
+    "--json"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-b",
+   "env_set": {
+    "CODEX_THREAD_ID": "lane-f-row07-b",
+    "MYLANG_COMPILER_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/07-two-worktrees/shared/compiler",
+    "MYLANG_TEST_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/07-two-worktrees/shared/tests",
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-b",
+    "TERM": "dumb",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-b/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-b/.zig-cache"
+   },
+   "env_unset": [
+    "MYL_CORE_LEAKCHECK"
+   ],
+   "exit": 0,
+   "harness_seconds_including_queue": 32.031,
+   "kind": "command",
+   "queue_seconds": 0,
+   "seconds_excluding_queue": 32.031,
+   "started": "2026-10-12T17:58:29.303+00:00",
+   "stderr": "06-tests-b.stderr",
+   "stderr_tail": "build-slot: build slot 1, FIFO ticket 2323 after 0s\n",
+   "stdout": "06-tests-b.stdout",
+   "step": "tests-b",
+   "summary": {
+    "available": true,
+    "by_reason": {
+     "no-success-receipt": 1549,
+     "uncacheable-metadata": 3
+    },
+    "by_status": {
+     "passed": 1552
+    },
+    "eligible": 1549,
+    "eligible_cached": 0,
+    "eligible_executed": 1549,
+    "exec_hits": 0,
+    "exec_receipts": {
+     "hits": 0,
+     "saves": 1552
+    },
+    "executed_names": [
+     "aggregate_refs::test_a_copy_returned_from_a_large_array_parameter_leaves_the_argument_alone",
+     "aggregate_refs::test_a_field_write_inside_a_callee_leaves_the_callers_value_alone",
+     "aggregate_refs::test_a_large_array_parameter_is_read_where_it_lives_across_many_calls",
+     "aggregate_refs::test_a_large_array_parameter_survives_deep_recursion_and_a_relay",
+     "aggregate_refs::test_a_match_payload_bound_from_a_record_local_keeps_the_local_intact",
+     "aggregate_refs::test_a_record_read_from_a_list_argument_keeps_its_value_across_a_write",
+     "aggregate_refs::test_a_record_returned_from_a_generic_body_keeps_its_value",
+     "aggregate_refs::test_a_returned_record_passed_straight_into_another_call",
+     "aggregate_refs::test_a_returned_record_stored_into_a_local_carries_its_fields",
+     "aggregate_refs::test_a_returned_union_payload_reaches_the_caller_unchanged",
+     "aggregate_refs::test_a_returning_path_still_returns_its_record_next_to_a_trapping_one",
+     "aggregate_refs::test_a_written_record_parameter_leaves_the_callers_value_alone",
+     "application_cache::test_memory_provider_cannot_claim_durability",
+     "application_cache::test_record_rejects_noncanonical_and_nonstring_payloads",
+     "application_cache::test_record_round_trip_and_corruption",
+     "application_cache::test_sha256_block_boundary_oracles",
+     "application_cache::test_sha256_known_vectors_and_padding",
+     "argument_evaluation_order::test_a_field_argument_keeps_its_value_across_a_later_mut_call",
+     "argument_evaluation_order::test_a_mut_parameter_field_argument_keeps_its_value",
+     "argument_evaluation_order::test_a_nested_record_argument_keeps_its_value_across_a_later_mut_call",
+     "array_negative_index::test_a_destructuring_assignment_evaluates_the_whole_value_first",
+     "array_negative_index::test_a_destructuring_assignment_swaps_array_elements",
+     "array_negative_index::test_a_destructuring_assignment_writes_list_dictionary_and_field_targets",
+     "array_negative_index::test_a_field_of_a_negative_element_is_written",
+     "array_negative_index::test_a_generic_body_counts_from_the_end_of_its_length",
+     "array_negative_index::test_a_loop_over_an_array_the_body_never_writes_sees_every_element",
+     "array_negative_index::test_a_loop_sees_array_writes_from_the_end",
+     "array_negative_index::test_a_negative_index_reads_from_the_end",
+     "array_negative_index::test_a_negative_index_writes_from_the_end",
+     "array_negative_index::test_a_record_field_array_is_independent_of_an_earlier_copy",
+     "array_negative_index::test_a_record_field_array_takes_a_negative_index",
+     "array_negative_index::test_an_array_inside_a_list_slot_takes_a_negative_index",
+     "array_negative_index::test_an_enum_table_is_still_indexed_by_its_key",
+     "array_negative_index::test_an_enumerate_position_the_body_assigns_counts_from_the_end",
+     "array_negative_index::test_augmented_assignment_to_a_field_of_an_element_keeps_its_operator",
+     "array_negative_index::test_nested_negative_indices_reach_one_cell",
+     "array_negative_index::test_range_and_modular_indices_read_every_element",
+     "array_negative_index::test_replace_counts_a_negative_index_from_the_end",
+     "array_negative_index::test_traced_elements_written_from_the_end_survive_collection",
+     "array_negative_index::test_traced_list_slots_swap_while_collections_run",
+     "array_places::test_a_field_of_one_element_is_written_in_place",
+     "array_places::test_a_field_write_through_a_mut_array_of_records_reaches_the_caller",
+     "array_places::test_a_for_loop_walks_every_element_in_order",
+     "array_places::test_a_loop_of_element_writes_fills_every_slot",
+     "array_places::test_a_loop_over_traced_elements_survives_collection",
+     "array_places::test_a_loop_reads_later_writes_to_the_array_place",
+     "array_places::test_a_mut_array_parameter_passed_on_writes_the_first_callers_array",
+     "array_places::test_a_mut_array_parameter_writes_the_callers_array",
+     "array_places::test_a_nested_field_path_below_an_element_is_written",
+     "array_places::test_a_read_only_argument_of_the_same_array_is_a_snapshot",
+     "array_places::test_an_array_field_of_a_record_is_copied_for_each_name",
+     "array_places::test_an_array_field_of_a_record_is_written_and_a_copy_is_not",
+     "array_places::test_an_array_inside_a_list_slot_is_written_where_the_list_holds_it",
+     "array_places::test_an_array_of_arrays_writes_one_cell_and_copies_one_row",
+     "array_places::test_an_array_parameter_written_after_a_local_copy_leaves_the_caller_alone",
+     "array_places::test_an_element_write_changes_one_element_and_leaves_an_earlier_copy",
+     "array_places::test_an_enum_table_entry_is_written_by_its_key",
+     "array_places::test_augmented_element_writes_combine_with_the_old_element",
+     "array_places::test_enumerate_and_a_comprehension_walk_an_array",
+     "array_places::test_managed_values_a_callee_stores_stay_rooted_in_the_caller",
+     "array_places::test_the_value_is_computed_before_the_array_is_read",
+     "array_places::test_traced_elements_written_one_at_a_time_survive_collection",
+     "array_writes::test_a_byte_array_staged_one_element_at_a_time_holds_every_byte",
+     "array_writes::test_a_copy_taken_before_the_write_keeps_the_old_value",
+     "array_writes::test_a_loop_of_element_writes_leaves_an_earlier_copy_alone",
+     "array_writes::test_a_nested_array_replaces_one_row_and_keeps_the_others",
+     "array_writes::test_a_row_copied_from_the_same_nested_array_lands_intact",
+     "array_writes::test_a_traced_element_type_survives_an_element_write",
+     "array_writes::test_an_array_parameter_the_callee_writes_leaves_the_callers_value_alone",
+     "array_writes::test_an_array_pulled_out_of_a_record_is_written_without_touching_the_record",
+     "array_writes::test_an_element_written_back_into_its_own_array_reads_back_changed",
+     "array_writes::test_an_enum_keyed_table_replaces_the_entry_its_key_names",
+     "borrowed_roots::test_a_chain_of_borrows_survives_through_dead_owners",
+     "borrowed_roots::test_a_dictionary_value_survives_until_it_is_replaced",
+     "borrowed_roots::test_a_field_read_survives_while_the_instance_holds_it",
+     "borrowed_roots::test_a_loop_variable_survives_allocations_while_its_list_does",
+     "borrowed_roots::test_an_element_a_callee_removes_keeps_its_own_root",
+     "borrowed_roots::test_an_element_overwritten_in_its_list_keeps_its_own_root",
+     "borrowed_roots::test_an_element_removed_from_its_list_keeps_its_own_root",
+     "bounded_loop_ranges::test_conditional_replacements_break_and_continue_keep_carried_values",
+     "bounded_loop_ranges::test_float_domains_keep_ordered_exact_dyadic_arithmetic",
+     "bounded_loop_ranges::test_modular_replacements_keep_seed_and_loop_boundaries",
+     "bounded_loop_ranges::test_negative_truncating_replacements_keep_their_sign",
+     "builtin_context::test_builtin_list_and_result_resolve_without_imports_or_explicit_declarations",
+     "builtin_context::test_empty_lists_and_ok_err_inherit_binding_return_and_argument_contexts",
+     "builtin_context::test_generic_list_result_and_contextual_constructors_keep_symbolic_type_parameters",
+     "builtin_context::test_ok_unit_values_preserve_fallible_result_handling",
+     "builtin_context::test_record_fields_and_nested_list_elements_propagate_empty_list_context",
+     "byte_buffer::test_a_buffer_storeback_preserves_an_earlier_snapshot",
+     "byte_buffer::test_append_float_matches_the_printed_spelling",
+     "byte_buffer::test_append_methods_write_in_place_and_refuse_without_writing",
+     "byte_buffer::test_buffers_are_traced_through_record_fields_lists_and_generics",
+     "byte_buffer::test_byte_buffer_builds_from_an_integer_list",
+     "byte_buffer::test_byte_kinds_share_reads_and_compare_by_content",
+     "byte_buffer::test_growth_past_the_segment_threshold_keeps_every_octet",
+     "byte_buffer::test_growth_preserves_identity_content_and_earlier_snapshots",
+     "byte_buffer_from_list::test_a_buffer_built_from_a_record_field_leaves_the_field_alone",
+     "byte_buffer_from_list::test_a_buffer_grown_in_a_callee_is_independent_of_its_list",
+     "byte_buffer_from_list::test_a_buffer_stored_in_a_record_is_a_value_of_its_own",
+     "byte_buffer_from_list::test_a_rebuilt_buffer_in_a_loop_starts_from_the_list_every_time",
+     "byte_buffer_from_list::test_a_renamed_buffer_is_still_a_value_of_its_own",
+     "byte_buffer_from_list::test_a_returned_buffer_owns_its_octets",
+     "byte_buffer_from_list::test_a_snapshot_taken_before_a_write_keeps_its_octets",
+     "byte_buffer_from_list::test_two_buffers_built_from_one_list_are_independent",
+     "byte_buffer_from_list::test_writing_a_buffer_built_from_a_list_leaves_the_list_alone",
+     "byte_buffer_from_list::test_writing_the_list_after_the_conversion_leaves_the_buffer_alone",
+     "byte_iteration_reductions::test_byte_iteration_keeps_immutable_snapshot_storage",
+     "byte_iteration_reductions::test_byte_iteration_lengths_views_and_unbounded_masks",
+     "byte_range_fusion::test_immediate_byte_ranges_use_the_numeric_range_parser",
+     "byte_range_fusion::test_omitted_negative_and_clamped_bounds_keep_slice_semantics",
+     "byte_ranges_llvm::test_native_byte_range_boundaries_and_scalar_counts",
+     "byte_views::test_a_view_reads_its_range_with_every_byte_string_operation",
+     "byte_views::test_byte_strings_parse_numbers_without_decoding",
+     "byte_views::test_scalar_count_counts_scalars_and_rejects_malformed_utf8",
+     "byte_views::test_view_endpoints_clamp_like_a_slice",
+     "byte_views::test_views_nest_and_slices_copy_their_range",
+     "byte_views::test_views_retain_their_source_across_collection",
+     "callback_slots::test_an_allocating_unannotated_function_still_fills_an_unbounded_slot",
+     "callback_slots::test_an_unannotated_function_fills_a_generic_sort_by_key_slot",
+     "callback_slots::test_an_unannotated_function_fills_a_user_generic_callback_slot",
+     "callbacks::test_callbacks_infer_function_values_and_invoke_passed_exact_signatures",
+     "callbacks::test_callbacks_invoke_passed_exact_signatures_through_a_parameter",
+     "callbacks::test_callbacks_retain_values_through_records_arrays_and_ordinary_generic_forwarding",
+     "callbacks::test_callbacks_return_from_a_chooser_and_invoke",
+     "callbacks::test_expression_lambdas_read_module_constants",
+     "callbacks::test_expression_lambdas_use_an_expected_callback_signature_and_invoke_correctly",
+     "callbacks::test_generic_callback_parameters_use_the_same_directional_relation",
+     "callbacks::test_stored_and_returned_callbacks_retain_the_destination_effect_contract",
+     "capability_fields::test_a_field_and_a_local_alias_of_it_reach_the_same_filesystem",
+     "capability_fields::test_clock_and_entropy_fields_still_pass_to_their_module_functions",
+     "capability_fields::test_environment_methods_work_on_a_field_path",
+     "capability_fields::test_filesystem_methods_work_on_a_field_path",
+     "capability_fields::test_network_host_works_on_a_field_path",
+     "capability_fields::test_open_scopes_and_narrowing_work_on_a_field_path",
+     "checked_arithmetic::test_literal_neighbors_keep_exact_signed_64_bit_results",
+     "checked_arithmetic::test_narrow_widths_reach_their_extremes",
+     "checked_arithmetic::test_signed_64_bit_add_sub_mul_reach_both_extremes",
+     "checked_arithmetic::test_the_program_passes_every_group",
+     "checked_arithmetic::test_unsigned_64_bit_add_sub_mul_reach_both_extremes",
+     "checked_arithmetic::test_wrapping_and_saturating_keep_their_own_results",
+     "closed_record_inout::test_closed_carrier_preserves_snapshots_detached_aliases_and_record_rebinding",
+     "collection_read_callbacks::test_dictionary_read_captures_a_managed_result_before_replacement",
+     "collection_read_callbacks::test_dictionary_read_captures_a_record_field_before_key_mutation",
+     "collection_read_callbacks::test_dictionary_read_captures_before_key_mutation",
+     "collection_read_callbacks::test_dictionary_read_copies_a_pinned_receiver",
+     "collection_read_callbacks::test_negative_index_uses_the_captured_receiver_length",
+     "collection_read_callbacks::test_nested_call_preserves_the_outer_pin_for_a_later_snapshot",
+     "collection_read_callbacks::test_nested_read_keeps_the_row_selected_before_replacement",
+     "collection_read_callbacks::test_pinned_named_snapshot_takes_the_slow_copy_path",
+     "collection_read_callbacks::test_read_capture_copies_an_already_pinned_parameter",
+     "collection_read_callbacks::test_read_receiver_is_captured_before_a_mutating_index",
+     "compiler::test_branches_and_loops_execute_both_outcomes_wit_1",
+     "compiler::test_branches_and_loops_execute_both_outcomes_wit_2",
+     "compiler::test_branches_and_loops_execute_both_outcomes_wit_3",
+     "compiler::test_branches_and_loops_execute_both_outcomes_wit_4",
+     "compiler::test_branches_and_loops_execute_both_outcomes_wit_5",
+     "compiler::test_branches_and_loops_execute_both_outcomes_wit_6",
+     "compiler::test_branches_and_loops_execute_both_outcomes_wit_7",
+     "compiler::test_forward_mutual_recursive_and_nested_calls_pr_1",
+     "compiler::test_forward_mutual_recursive_and_nested_calls_pr_2",
+     "compiler::test_forward_mutual_recursive_and_nested_calls_pr_3",
+     "compiler::test_forward_mutual_recursive_and_nested_calls_pr_4",
+     "compiler::test_forward_mutual_recursive_and_nested_calls_pr_5",
+     "compiler::test_locals_mutation_annotations_and_lexical_scop_1",
+     "compiler::test_locals_mutation_annotations_and_lexical_scop_2",
+     "compiler::test_locals_mutation_annotations_and_lexical_scop_3",
+     "compiler::test_locals_mutation_annotations_and_lexical_scop_4",
+     "compiler___precedence_grouping_left_associativity_and_o::test_precedence_grouping_left_associativity_and_o_1",
+     "compiler___precedence_grouping_left_associativity_and_o_2::test_precedence_grouping_left_associativity_and_o_2",
+     "compiler___precedence_grouping_left_associativity_and_o_3::test_precedence_grouping_left_associativity_and_o_3",
+     "compiler___precedence_grouping_left_associativity_and_o_4::test_precedence_grouping_left_associativity_and_o_4",
+     "compiler___precedence_grouping_left_associativity_and_o_5::test_precedence_grouping_left_associativity_and_o_5",
+     "compiler___signed_division_and_remainder_implement_trun::test_signed_division_and_remainder_implement_trun_1",
+     "compiler___signed_division_and_remainder_implement_trun_2::test_signed_division_and_remainder_implement_trun_2",
+     "compiler___signed_division_and_remainder_implement_trun_3::test_signed_division_and_remainder_implement_trun_3",
+     "compiler___signed_division_and_remainder_implement_trun_4::test_signed_division_and_remainder_implement_trun_4",
+     "compiler___signed_division_and_remainder_implement_trun_5::test_signed_division_and_remainder_implement_trun_5",
+     "compiler___signed_division_and_remainder_implement_trun_6::test_signed_division_and_remainder_implement_trun_6",
+     "compiler___signed_division_and_remainder_implement_trun_7::test_signed_division_and_remainder_implement_trun_7",
+     "compiler___signed_division_and_remainder_implement_trun_8::test_signed_division_and_remainder_implement_trun_8",
+     "conditional_expression::test_a_conditional_expression_forwards_its_condition_to_a_helper",
+     "conditional_expression::test_a_conditional_nests_in_its_else_arm",
+     "conditional_expression::test_a_conditional_return_takes_its_arm_type_from_the_return_type",
+     "conditional_expression::test_a_conditional_selects_between_record_values",
+     "conditional_expression::test_a_conditional_selects_by_an_expected_option_type",
+     "conditional_expression::test_a_conditional_takes_its_arm_type_from_the_expected_type",
+     "conditional_expression::test_a_conditional_value_fills_an_fstring_hole",
+     "conditional_expression::test_a_conditional_value_passes_as_a_call_argument",
+     "conditional_expression::test_only_the_chosen_arm_is_evaluated",
+     "conditional_expression::test_the_else_arm_runs_when_the_condition_is_false",
+     "const_lengths___const_length_function_parameters_specialize::test_const_length_function_parameters_specialize",
+     "const_lengths___one_helper_serves_distinct_nominal_element_t::test_one_helper_serves_distinct_nominal_element_t",
+     "constant_divisors::test_i16_divisor_0",
+     "constant_divisors::test_i16_divisor_1",
+     "constant_divisors::test_i16_divisor_2",
+     "constant_divisors::test_i16_divisor_3",
+     "constant_divisors::test_i16_divisor_4",
+     "constant_divisors::test_i16_divisor_5",
+     "constant_divisors::test_i16_divisor_6",
+     "constant_divisors::test_i16_divisor_7"
+    ],
+    "failed": 0,
+    "failed_names": [],
+    "ir_hits": 0,
+    "total": 1552
+   }
+  },
+  "worktree-add-row07-a": {
+   "description": "git worktree add --detach work/row07-a <target HEAD>",
+   "kind": "python",
+   "result": {
+    "guardian": "/home/epentland/ai/canopy/guardian-zig",
+    "head": "0073442242f0779e7299048e773f8e6f0ef2b27d",
+    "ref": "0073442242f0779e7299048e773f8e6f0ef2b27d",
+    "worktree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-a"
+   },
+   "seconds": 12.465,
+   "started": "2026-10-12T17:56:29.390+00:00",
+   "step": "worktree-add-row07-a"
+  },
+  "worktree-add-row07-b": {
+   "description": "git worktree add --detach work/row07-b <target HEAD>",
+   "kind": "python",
+   "result": {
+    "guardian": "/home/epentland/ai/canopy/guardian-zig",
+    "head": "0073442242f0779e7299048e773f8e6f0ef2b27d",
+    "ref": "0073442242f0779e7299048e773f8e6f0ef2b27d",
+    "worktree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-b"
+   },
+   "seconds": 8.404,
+   "started": "2026-10-12T17:56:41.855+00:00",
+   "step": "worktree-add-row07-b"
+  },
+  "worktree-remove-row07-a": {
+   "description": "git worktree remove --force work/row07-a",
+   "kind": "python",
+   "result": {
+    "git": true,
+    "removed": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-a"
+   },
+   "seconds": 4.197,
+   "started": "2026-10-12T18:36:09.558+00:00",
+   "step": "worktree-remove-row07-a"
+  },
+  "worktree-remove-row07-b": {
+   "description": "git worktree remove --force work/row07-b",
+   "kind": "python",
+   "result": {
+    "git": true,
+    "removed": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row07-b"
+   },
+   "seconds": 1.541,
+   "started": "2026-10-12T18:36:13.756+00:00",
+   "step": "worktree-remove-row07-b"
+  }
+ }
+}

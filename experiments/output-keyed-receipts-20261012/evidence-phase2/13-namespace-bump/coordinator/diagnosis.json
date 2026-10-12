@@ -1,0 +1,4 @@
+{
+ "diagnosis": "Both v3 gates in the scratch worktree failed on the path-sensitive integration test (F8), so no receipts were published and the second gate re-executed 35 actions; the namespace checks pass (verification-v3 written, no v2 read).",
+ "finding": "F8"
+}

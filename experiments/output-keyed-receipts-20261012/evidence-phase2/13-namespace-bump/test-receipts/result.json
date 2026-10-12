@@ -1,0 +1,521 @@
+{
+ "checks": [
+  {
+   "check": "old-2 (old compiler warm, precondition): every eligible test reused",
+   "expected": "0 eligible executed",
+   "note": "",
+   "observed": {
+    "by_reason": {
+     "whole-report-hit": 3
+    },
+    "eligible": 3,
+    "eligible_cached": 3,
+    "eligible_executed": 0
+   },
+   "result": "pass"
+  },
+  {
+   "check": "new-1 (v2 receipts not misread): no failures",
+   "expected": "exit 0 and 0 failed",
+   "note": "",
+   "observed": {
+    "exit": 0,
+    "failed": 0,
+    "failed_names": []
+   },
+   "result": "pass"
+  },
+  {
+   "check": "new-1 (v2 receipts ignored): no eligible test reused",
+   "expected": "0 eligible cached",
+   "note": "",
+   "observed": {
+    "by_reason": {
+     "no-success-receipt": 3
+    },
+    "eligible": 3,
+    "eligible_cached": 0
+   },
+   "result": "pass"
+  },
+  {
+   "check": "new-2 (second v3 run hits): every eligible test reused",
+   "expected": "0 eligible executed",
+   "note": "",
+   "observed": {
+    "by_reason": {
+     "whole-report-hit": 3
+    },
+    "eligible": 3,
+    "eligible_cached": 3,
+    "eligible_executed": 0
+   },
+   "result": "pass"
+  },
+  {
+   "check": "old-3 (v2 receipts untouched): every eligible test reused",
+   "expected": "0 eligible executed",
+   "note": "",
+   "observed": {
+    "by_reason": {
+     "whole-report-hit": 3
+    },
+    "eligible": 3,
+    "eligible_cached": 3,
+    "eligible_executed": 0
+   },
+   "result": "pass"
+  },
+  {
+   "check": "v3 receipt namespaces exist beside the v2 ones",
+   "expected": "tests/receipts-v3 and tests/receipts-v2",
+   "note": "",
+   "observed": [
+    ".retention.lock",
+    "frontend",
+    "programs-v1",
+    "semantic",
+    "test-keys",
+    "tests",
+    "tests/manifests-v2",
+    "tests/manifests-v3",
+    "tests/receipts-v2",
+    "tests/receipts-v3"
+   ],
+   "result": "pass"
+  }
+ ],
+ "compilers_sha256": {
+  "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-old/zig-out/bin/mylang": "6f4dcd5f69790c1989364e7771dd21aa32ec806692ed7786270e46e98ae4511a",
+  "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/bin/mylang": "27385c43a08071a5144529a376b7afdc7f93e575bb048785990124ac7395b134"
+ },
+ "decision": "pass",
+ "finished": "2026-10-12T18:50:36.697+00:00",
+ "manifest": {
+  "compiler": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/bin/mylang",
+  "compiler_sha256": "27385c43a08071a5144529a376b7afdc7f93e575bb048785990124ac7395b134",
+  "environment": {
+   "launcher_sha256_16": {
+    "CODEX_THREAD_ID": null,
+    "PWD": "5ffa26a83103a9ee",
+    "TERM": "7f44899d0925ec2c"
+   },
+   "values": {
+    "HOME": "/home/epentland",
+    "LANG": "en_US.UTF-8",
+    "MYLANG_BUILD_MEM": "8G",
+    "MYLANG_BUILD_SLOTS": "3",
+    "MYLANG_DEV_JOBS": "4",
+    "MYLANG_DEV_MAXRSS": "8589934592",
+    "MYLANG_GATE_SLOTS": "2",
+    "MYLANG_SLOT_DIR": "/home/epentland/.cache/mylang/slots",
+    "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   }
+  },
+  "features": {
+   "build_env": true,
+   "coordinator_path_free": true,
+   "coordinator_v3": true,
+   "exec_receipts": true,
+   "exec_receipts_opt_in": false,
+   "execution_key_report": true,
+   "fact_leak_receipts": true,
+   "mismatch_counter": true,
+   "runner_identity": true,
+   "test_v3_namespaces": true
+  },
+  "harness_sha256": "dff952183b40132d560f36cee915694a32d59ccf7b01048fde24e81b4bffb3c6",
+  "options": {
+   "build_env": null,
+   "dry_run": false,
+   "evidence": "experiments/output-keyed-receipts-20261012/evidence-phase2",
+   "heavy": true,
+   "keep_work": false,
+   "lang_entry": null,
+   "manifest_only": null,
+   "old_ref": "f6971a623",
+   "rows": "3,7,12:complete-in-tree,13:test-receipts",
+   "small_entry": "tests/lang/frontend_numbers.my",
+   "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "work": null
+  },
+  "plan": "docs/audits/output-keyed-shared-receipts-plan-2026-10-12.md",
+  "schema": "output-keyed-matrix-v1",
+  "slot_dir": "/home/epentland/.cache/mylang/slots",
+  "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+  "tree_dirty_sha256": "f3783a492a2fff38e27edbc49eb384d08c02a60dcc02f93866f595ea643a3949",
+  "tree_head": "0073442242f0779e7299048e773f8e6f0ef2b27d",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+ },
+ "started": "2026-10-12T18:49:28.430+00:00",
+ "steps": {
+  "build-old": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "zig",
+    "build"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-old",
+   "env_set": {
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-old",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-old/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-old/.zig-cache"
+   },
+   "env_unset": [],
+   "exit": 0,
+   "harness_seconds_including_queue": 32.416,
+   "kind": "command",
+   "queue_seconds": 0,
+   "seconds_excluding_queue": 32.416,
+   "started": "2026-10-12T18:49:39.152+00:00",
+   "stderr": "03-build-old.stderr",
+   "stderr_tail": "build-slot: build slot 1, FIFO ticket 2370 after 0s\nguardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)\nguardian: diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9: 9/687 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification \u2014 use --full, or `guardian-check commit`.\nguardian: file-size: 17 finding(s) \u2014 report-only (--verbose for detail)\nguardian: line-length: 89 finding(s) \u2014 report-only (--verbose for detail)\nguardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9, 9 file(s) in scope\n",
+   "stdout": "03-build-old.stdout",
+   "step": "build-old"
+  },
+  "namespaces": {
+   "description": "list namespace directories in the shared cache dir",
+   "kind": "python",
+   "result": {
+    "entries": [
+     ".retention.lock",
+     "frontend",
+     "programs-v1",
+     "semantic",
+     "test-keys",
+     "tests",
+     "tests/manifests-v2",
+     "tests/manifests-v3",
+     "tests/receipts-v2",
+     "tests/receipts-v3"
+    ]
+   },
+   "seconds": 0.0,
+   "started": "2026-10-12T18:50:35.396+00:00",
+   "step": "namespaces"
+  },
+  "new-1": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/bin/mylang",
+    "test",
+    "tests/lang/frontend_numbers.my",
+    "--json",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/13-namespace-bump/test-receipts/cache"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "env_set": {
+    "MYLANG_COMPILER_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/13-namespace-bump/test-receipts/shared-compiler",
+    "MYLANG_TEST_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/13-namespace-bump/test-receipts/shared-tests",
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   },
+   "env_unset": [
+    "MYL_CORE_LEAKCHECK"
+   ],
+   "exit": 0,
+   "harness_seconds_including_queue": 5.513,
+   "kind": "command",
+   "queue_seconds": 5,
+   "seconds_excluding_queue": 0.513,
+   "started": "2026-10-12T18:50:19.043+00:00",
+   "stderr": "06-new-1.stderr",
+   "stderr_tail": "build-slot: FIFO ticket 2374, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)\nbuild-slot: build slot 1, FIFO ticket 2374 after 5s\n",
+   "stdout": "06-new-1.stdout",
+   "step": "new-1",
+   "summary": {
+    "available": true,
+    "by_reason": {
+     "no-success-receipt": 3
+    },
+    "by_status": {
+     "passed": 3
+    },
+    "eligible": 3,
+    "eligible_cached": 0,
+    "eligible_executed": 3,
+    "exec_hits": 0,
+    "exec_receipts": {
+     "hits": 0,
+     "saves": 3
+    },
+    "executed_names": [
+     "frontend_numbers::test_frontend_generic_parsing",
+     "frontend_numbers::test_frontend_numeric_conversion",
+     "frontend_numbers::test_frontend_text_parsing"
+    ],
+    "failed": 0,
+    "failed_names": [],
+    "ir_hits": 0,
+    "total": 3
+   }
+  },
+  "new-2": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/bin/mylang",
+    "test",
+    "tests/lang/frontend_numbers.my",
+    "--json",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/13-namespace-bump/test-receipts/cache"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "env_set": {
+    "MYLANG_COMPILER_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/13-namespace-bump/test-receipts/shared-compiler",
+    "MYLANG_TEST_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/13-namespace-bump/test-receipts/shared-tests",
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   },
+   "env_unset": [
+    "MYL_CORE_LEAKCHECK"
+   ],
+   "exit": 0,
+   "harness_seconds_including_queue": 5.367,
+   "kind": "command",
+   "queue_seconds": 5,
+   "seconds_excluding_queue": 0.367,
+   "started": "2026-10-12T18:50:24.558+00:00",
+   "stderr": "07-new-2.stderr",
+   "stderr_tail": "build-slot: FIFO ticket 2375, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)\nbuild-slot: build slot 1, FIFO ticket 2375 after 5s\n",
+   "stdout": "07-new-2.stdout",
+   "step": "new-2",
+   "summary": {
+    "available": true,
+    "by_reason": {
+     "whole-report-hit": 3
+    },
+    "by_status": {
+     "cached": 3
+    },
+    "eligible": 3,
+    "eligible_cached": 3,
+    "eligible_executed": 0,
+    "exec_hits": 0,
+    "exec_receipts": {
+     "hits": 0,
+     "saves": 0
+    },
+    "executed_names": [],
+    "failed": 0,
+    "failed_names": [],
+    "ir_hits": 3,
+    "total": 3
+   }
+  },
+  "old-1": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-old/zig-out/bin/mylang",
+    "test",
+    "tests/lang/frontend_numbers.my",
+    "--json",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/13-namespace-bump/test-receipts/cache"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "env_set": {
+    "MYLANG_COMPILER_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/13-namespace-bump/test-receipts/shared-compiler",
+    "MYLANG_TEST_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/13-namespace-bump/test-receipts/shared-tests",
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   },
+   "env_unset": [
+    "MYL_CORE_LEAKCHECK"
+   ],
+   "exit": 0,
+   "harness_seconds_including_queue": 1.365,
+   "kind": "command",
+   "queue_seconds": 0,
+   "seconds_excluding_queue": 1.365,
+   "started": "2026-10-12T18:50:11.782+00:00",
+   "stderr": "04-old-1.stderr",
+   "stderr_tail": "build-slot: build slot 1, FIFO ticket 2372 after 0s\n",
+   "stdout": "04-old-1.stdout",
+   "step": "old-1",
+   "summary": {
+    "available": true,
+    "by_reason": {
+     "no-success-receipt": 3
+    },
+    "by_status": {
+     "passed": 3
+    },
+    "eligible": 3,
+    "eligible_cached": 0,
+    "eligible_executed": 3,
+    "exec_hits": 0,
+    "exec_receipts": null,
+    "executed_names": [
+     "frontend_numbers::test_frontend_generic_parsing",
+     "frontend_numbers::test_frontend_numeric_conversion",
+     "frontend_numbers::test_frontend_text_parsing"
+    ],
+    "failed": 0,
+    "failed_names": [],
+    "ir_hits": 0,
+    "total": 3
+   }
+  },
+  "old-2": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-old/zig-out/bin/mylang",
+    "test",
+    "tests/lang/frontend_numbers.my",
+    "--json",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/13-namespace-bump/test-receipts/cache"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "env_set": {
+    "MYLANG_COMPILER_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/13-namespace-bump/test-receipts/shared-compiler",
+    "MYLANG_TEST_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/13-namespace-bump/test-receipts/shared-tests",
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   },
+   "env_unset": [
+    "MYL_CORE_LEAKCHECK"
+   ],
+   "exit": 0,
+   "harness_seconds_including_queue": 5.128,
+   "kind": "command",
+   "queue_seconds": 5,
+   "seconds_excluding_queue": 0.128,
+   "started": "2026-10-12T18:50:13.147+00:00",
+   "stderr": "05-old-2.stderr",
+   "stderr_tail": "build-slot: FIFO ticket 2373, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)\nbuild-slot: build slot 1, FIFO ticket 2373 after 5s\n",
+   "stdout": "05-old-2.stdout",
+   "step": "old-2",
+   "summary": {
+    "available": true,
+    "by_reason": {
+     "whole-report-hit": 3
+    },
+    "by_status": {
+     "cached": 3
+    },
+    "eligible": 3,
+    "eligible_cached": 3,
+    "eligible_executed": 0,
+    "exec_hits": 0,
+    "exec_receipts": null,
+    "executed_names": [],
+    "failed": 0,
+    "failed_names": [],
+    "ir_hits": 3,
+    "total": 3
+   }
+  },
+  "old-3": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-old/zig-out/bin/mylang",
+    "test",
+    "tests/lang/frontend_numbers.my",
+    "--json",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/13-namespace-bump/test-receipts/cache"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "env_set": {
+    "MYLANG_COMPILER_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/13-namespace-bump/test-receipts/shared-compiler",
+    "MYLANG_TEST_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/13-namespace-bump/test-receipts/shared-tests",
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   },
+   "env_unset": [
+    "MYL_CORE_LEAKCHECK"
+   ],
+   "exit": 0,
+   "harness_seconds_including_queue": 5.469,
+   "kind": "command",
+   "queue_seconds": 5,
+   "seconds_excluding_queue": 0.469,
+   "started": "2026-10-12T18:50:29.926+00:00",
+   "stderr": "08-old-3.stderr",
+   "stderr_tail": "build-slot: FIFO ticket 2376, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)\nbuild-slot: build slot 1, FIFO ticket 2376 after 5s\n",
+   "stdout": "08-old-3.stdout",
+   "step": "old-3",
+   "summary": {
+    "available": true,
+    "by_reason": {
+     "whole-report-hit": 3
+    },
+    "by_status": {
+     "cached": 3
+    },
+    "eligible": 3,
+    "eligible_cached": 3,
+    "eligible_executed": 0,
+    "exec_hits": 0,
+    "exec_receipts": null,
+    "executed_names": [],
+    "failed": 0,
+    "failed_names": [],
+    "ir_hits": 3,
+    "total": 3
+   }
+  },
+  "old-ref": {
+   "description": "select the pre-bump commit (--old-ref)",
+   "kind": "python",
+   "result": {
+    "old_ref": "f6971a623"
+   },
+   "seconds": 0.0,
+   "started": "2026-10-12T18:49:28.439+00:00",
+   "step": "old-ref"
+  },
+  "reset-work": {
+   "description": "empty the row's private work directory",
+   "kind": "python",
+   "result": {
+    "directory": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/13-namespace-bump/test-receipts"
+   },
+   "seconds": 0.009,
+   "started": "2026-10-12T18:49:28.430+00:00",
+   "step": "reset-work"
+  },
+  "worktree-add-row13-old": {
+   "description": "git worktree add --detach work/row13-old <target HEAD>",
+   "kind": "python",
+   "result": {
+    "guardian": "/home/epentland/ai/canopy/guardian-zig",
+    "head": "f6971a623c2319912cd32ed5785182bb6682272e",
+    "ref": "f6971a623",
+    "worktree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-old"
+   },
+   "seconds": 10.713,
+   "started": "2026-10-12T18:49:28.439+00:00",
+   "step": "worktree-add-row13-old"
+  },
+  "worktree-remove-row13-old": {
+   "description": "git worktree remove --force work/row13-old",
+   "kind": "python",
+   "result": {
+    "git": true,
+    "removed": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row13-old"
+   },
+   "seconds": 1.301,
+   "started": "2026-10-12T18:50:35.396+00:00",
+   "step": "worktree-remove-row13-old"
+  }
+ }
+}
