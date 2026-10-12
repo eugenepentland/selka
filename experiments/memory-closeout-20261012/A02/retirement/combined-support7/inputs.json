@@ -1,0 +1,31 @@
+{
+  "status": "Draft scratch runtime only; production retirement remains gated on C2 qualification",
+  "base_commit": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "patches": [
+    {
+      "path": "A02-runtime.patch",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/retirement/integration-c749ad5a9/runtime-retirement.patch",
+      "sha256": "0e41a276536b3599d6ad01f5029487a524d93eee68636de825eea4540b972a65"
+    },
+    {
+      "path": "A05-runtime.patch",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/retirement-C3-c749ad5a9/runtime-retirement.patch",
+      "sha256": "6274f607aed08ed84c421b8d9ecf5a476a05f6711679a458f04e4be4fe2c02ba"
+    },
+    {
+      "path": "A04-text.patch",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/retirement-core-text/core-text-C3.patch",
+      "sha256": "4b9fceb18773409792f9333fcf326ddf7f2c77bd92581acb4ba9204205452efc"
+    },
+    {
+      "path": "A04-values.patch",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/retirement-core-values/core-values-C3.patch",
+      "sha256": "929e7666646991b0cbf0bc429167eb199b451dd4dca0eecd3164c6ebf7ed50d5"
+    },
+    {
+      "path": "A01-runtime.patch",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/memory-closeout-20261012/A01/retirement/integration-44947/owned-runtime.patch",
+      "sha256": "743faca9ed394c0b384d56c843a88c19a89e2942ad843494db58a4279e8d61ad"
+    }
+  ]
+}

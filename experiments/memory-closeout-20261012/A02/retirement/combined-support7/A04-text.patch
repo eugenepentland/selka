@@ -1,0 +1,43 @@
+--- a/src/core/runtime/core_text.c
++++ b/src/core/runtime/core_text.c
+@@ -1,4 +1,4 @@
+-/* S2 text ABI: shared str/bytes leaf blocks; header flags and cache are §3.1. */
++/* S2 text ABI: owned str/bytes leaf blocks; header flags and cache are §3.1. */
+ enum { MYL_TEXT_ASCII = 1u << 8, MYL_TEXT_HASHED = 2u << 8,
+        MYL_TEXT_SCALARS = 4u << 8, MYL_TEXT_CURSOR = 8u << 8, MYL_TEXT_TAIL = 16u << 8 };
+ 
+@@ -307,11 +307,7 @@
+ 
+ static inline myl_block *core_text_append_bytes(myl_block *a, const unsigned char *bytes, int64_t count, bool ascii) {
+     int64_t len = a->len + count;
+-#ifdef MYL_ZERO_RC
+     if (a->kind & MYL_STATIC_STORAGE) a = myl_core_owned_octets_copy(a);
+-#else
+-    if (!count_is_unique(a)) myl_core_s2_unsupported(-1);
+-#endif
+     if ((a->kind & (MYL_TEXT_CURSOR | MYL_TEXT_TAIL)) == MYL_TEXT_CURSOR) a->cap = a->len;
+     a->kind &= ~(MYL_TEXT_CURSOR | MYL_TEXT_TAIL);
+     if (len > a->cap) {
+@@ -592,13 +588,9 @@
+ }
+ 
+ myl_block *myl_core_text_encode(myl_block *text) {
+-#ifdef MYL_ZERO_RC
+     myl_block *copy = myl_core_owned_octets_copy(text);
+     copy->kind = (copy->kind & ~MYL_KIND_MASK) | MYL_KIND_BYTES;
+     return copy;
+-#else
+-    retain_block(text); return text;
+-#endif
+ }
+ int64_t myl_core_bytes_find(myl_block *text, myl_block *needle) { return core_text_find_bytes(text, needle, 0); }
+ 
+@@ -685,7 +677,7 @@
+ }
+ 
+ /* S3 helpers port native_text_methods.c/native_search.c/native_trim.c/native_repr.c
+- * into independent one-count blocks. Inputs borrow, outputs own a fresh block. */
++ * into independent owned blocks. Inputs borrow, outputs own a fresh block. */
+ static uint32_t core_unicode_next(const unsigned char *data, size_t *at) {
+     uint32_t point = data[(*at)++];
+     if (point < 0x80) return point;
