@@ -12,10 +12,13 @@ import sys
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
+sys.path.insert(0, str(ROOT / "experiments/memory-closeout-20261012/A04"))
+import ownership_commands as ownership
 sys.path.insert(0, str(ROOT / 'scripts'))
 from build_admission import admission
 
 parser = argparse.ArgumentParser(description=__doc__)
+ownership.add_option(parser)
 parser.add_argument('--compiler', type=Path, required=True)
 parser.add_argument('--zig', type=Path, required=True)
 parser.add_argument('--phase', required=True)
@@ -40,7 +43,7 @@ for name in ('MYLANG_COUNTERS', 'MYLANG_OPTIONS', 'MYLANG_CORE_SANITIZE'):
 source = ROOT / 'tests/lang/a04_numeric_format_ownership.my'
 report = {'compiler': str(args.compiler), 'compiler_sha256': digest(args.compiler), 'source_commit': args.source_commit,
           'prototype_diff': subprocess.check_output(['git', 'diff', '--', 'src'], cwd=ROOT, text=True) if args.prototype_diff else '',
-          'fixture_sha256': digest(source), 'harness_sha256': digest(Path(__file__)), 'lanes': {}, 'replay': {},
+          'fixture_sha256': digest(source), 'default_ownership': args.default_ownership, 'ownership_support_sha256': ownership.digest(), 'harness_sha256': digest(Path(__file__)), 'lanes': {}, 'replay': {},
           'limitations': 'Correctness and ABI qualification only; no RSS or exclusive runtime claim.'}
 failures = 0
 
@@ -52,7 +55,7 @@ def save():
 def lane(name, flags, mode):
     global failures
     try:
-        row = dict(q.lane(args, env, name, source, flags, mode, 0, answer=''), status='passed')
+        row = dict(ownership.lane(q, args, env, name, source, flags, mode, 0, answer=''), status='passed')
     except (AssertionError, subprocess.SubprocessError, OSError) as error:
         row = dict(status='failed', error=str(error))
         failures += 1
@@ -69,15 +72,16 @@ def lane(name, flags, mode):
 
 with admission('build'):
     for mode, flags in q.common.MODES.items():
-        lane('zero', ['--experimental-zero-rc', *flags], mode)
+        lane('zero', [*ownership.flags(args), *flags], mode)
 with admission('build'):
-    lane('ordinary', ['--release'], 'release')
+    if not args.default_ownership:
+        lane('ordinary', ['--release'], 'release')
     for mode, flags in [('release', ['--release']), ('debug', ['--unoptimized'])]:
         raw = args.output / 'zero' / mode
         replay = []
         for attempt in range(2):
             cmd = [str(args.compiler), 'build', str(raw / 'main.my'), '--zig', str(args.zig), '--cache-dir', str(args.output / 'cache'),
-                   '--experimental-zero-rc', *flags, '--counters', '-o', str(raw / 'program'), '--report']
+                   *ownership.flags(args), *flags, '--counters', '-o', str(raw / 'program'), '--report']
             ran = subprocess.run(cmd, env=env, cwd=ROOT, capture_output=True, text=True, timeout=120)
             lines = [json.loads(line) for line in ran.stderr.splitlines() if line.startswith('{')]
             row = {'command': cmd, 'status': ran.returncode, 'stdout': ran.stdout, 'stderr': ran.stderr,
@@ -91,6 +95,7 @@ with admission('build'):
         report['replay'][mode] = {'status': 'passed' if good else 'failed', 'builds': replay}
         save()
 if args.baseline:
+    assert not args.default_ownership, 'historical controls require a separate opt-in qualification phase'
     candidate = args.compiler
     args.compiler = args.baseline.resolve()
     report['baseline'] = {'compiler': str(args.compiler), 'sha256': digest(args.compiler), 'source_commit': 'fbfcaa7a923186a8e773c3760f81c10aa345a432'}

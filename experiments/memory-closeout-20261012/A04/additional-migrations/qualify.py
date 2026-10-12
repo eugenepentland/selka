@@ -13,6 +13,8 @@ import sys
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
+sys.path.insert(0, str(ROOT / "experiments/memory-closeout-20261012/A04"))
+import ownership_commands as ownership
 sys.path.insert(0, str(ROOT / 'scripts'))
 from build_admission import admission
 
@@ -50,7 +52,7 @@ def digest(path):
 def guest_tests(args, env, source, mode, flags, directory, expected_names):
     directory.mkdir(parents=True, exist_ok=True)
     command = [args.compiler, 'test', source, '--zig', args.zig, '--cache-dir', args.output / 'cache',
-               '--experimental-zero-rc', *flags, '--force', '--json', '--jobs', '1']
+               *ownership.flags(args), *flags, '--force', '--json', '--jobs', '1']
     traps = TRAPS.get(source.stem, {})
     row = q.call(command, env, directory, 'test', expected=int(bool(traps)))
     assert row['stderr'] == '', row
@@ -76,7 +78,7 @@ def benchmark_row(args, env, source, mode, flags, directory):
     llvm = directory / 'program.ll'
     binary = directory / 'program'
     build = q.call([args.compiler, 'build', source, '--zig', args.zig, '--cache-dir', args.output / 'cache',
-                    '--experimental-zero-rc', *flags, '--counters', '--emit-llvm', llvm,
+                    *ownership.flags(args), *flags, '--counters', '--emit-llvm', llvm,
                     '--link', ROOT / 'benchmarks/runtime/ports/native_clock.c', '-o', binary], env, directory, 'build')
     q.prior.clean_ir(llvm)
     symbols = subprocess.check_output(['nm', str(binary)], text=True)
@@ -106,6 +108,7 @@ def benchmark_row(args, env, source, mode, flags, directory):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    ownership.add_option(parser)
     parser.add_argument('--compiler', type=Path, required=True)
     parser.add_argument('--zig', type=Path, required=True)
     parser.add_argument('--source-commit', required=True)
@@ -126,7 +129,7 @@ def main():
     oracles = json.loads((HERE / 'native-oracles.json').read_text())
     identity = {'compiler': str(args.compiler), 'compiler_sha256': digest(args.compiler), 'source_commit': args.source_commit,
                 'sources': {row['source']: digest(ROOT / row['source']) for row in originals},
-                'harness_sha256': digest(Path(__file__)), 'oracle_sha256': digest(HERE / 'native-oracles.json'), 'modes': args.modes, 'selected_cases': args.cases}
+                'default_ownership': args.default_ownership, 'ownership_support_sha256': ownership.digest(), 'harness_sha256': digest(Path(__file__)), 'oracle_sha256': digest(HERE / 'native-oracles.json'), 'modes': args.modes, 'selected_cases': args.cases}
     if report_file.exists():
         assert args.resume, 'choose a new phase or --resume'
         report = json.loads(report_file.read_text())
@@ -161,7 +164,7 @@ def main():
                         elif source.stem.startswith('row_'):
                             row = benchmark_row(args, env, source, mode, flags, directory)
                         else:
-                            row = dict(q.lane(args, env, source.stem, source, ['--experimental-zero-rc', *flags], mode, 0,
+                            row = dict(ownership.lane(q, args, env, source.stem, source, [*ownership.flags(args), *flags], mode, 0,
                                               answer=oracles[source.stem]['stdout']), status='passed')
                     except (AssertionError, OSError, subprocess.SubprocessError) as error:
                         row = {'status': 'failed', 'error': str(error), 'source_sha256': digest(source)}

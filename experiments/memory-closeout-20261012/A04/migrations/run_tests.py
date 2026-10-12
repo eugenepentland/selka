@@ -11,10 +11,13 @@ import sys
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
+sys.path.insert(0, str(ROOT / "experiments/memory-closeout-20261012/A04"))
+import ownership_commands as ownership
 sys.path.insert(0, str(ROOT / "scripts"))
 from build_admission import admission
 
 parser = argparse.ArgumentParser(description=__doc__)
+ownership.add_option(parser)
 parser.add_argument("--compiler", type=Path, required=True)
 parser.add_argument("--survey", type=Path, required=True)
 parser.add_argument("--phase", required=True)
@@ -23,13 +26,16 @@ args = parser.parse_args()
 report = HERE / (args.phase + ".json")
 digest = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
 survey = json.loads(args.survey.read_text())
+assert survey["compiler_sha256"] == digest(args.compiler), "survey/compiler identity differs"
+assert survey.get("default_ownership", False) == args.default_ownership, "survey ownership mode differs"
 result = {"compiler": str(args.compiler), "compiler_sha256": digest(args.compiler), "survey": str(args.survey),
-          "rows": [], "admission": "at most two source files per shared build lease; each has ordinary and zero-RC guest-test execution"}
+          "default_ownership": args.default_ownership, "ownership_support_sha256": ownership.digest(), "rows": [], "admission": "at most two source files per shared build lease; each has ordinary and zero-RC guest-test execution"}
 if report.exists():
     assert args.resume, "choose a new phase or --resume"
     previous = json.loads(report.read_text())
     assert 'summary' not in previous, 'completed evidence is immutable; choose a new phase'
     assert all(previous[key] == result[key] for key in ('compiler', 'compiler_sha256', 'survey')), "resume identity changed"
+    assert previous.get("default_ownership", False) == args.default_ownership, "ownership mode changed"
     result = previous
 recorded_sources = {row['source']: row for row in result['rows']}
 ready = []
@@ -50,11 +56,12 @@ for row in survey["rows"]:
     else:
         ready.append((row, names))
 env = dict(os.environ, MYL_CORE_LEAKCHECK="1")
+execution_modes = [("default", [])] if args.default_ownership else [("ordinary", []), ("zero_rc", ownership.flags(args))]
 for first in range(0, len(ready), 2):
     with admission("build"):
         for row, names in ready[first:first + 2]:
             recorded = {"source": row["source"], "source_sha256": row["source_sha256"], "public_tests": names, "modes": {}}
-            for mode, flags in (("ordinary", []), ("zero_rc", ["--experimental-zero-rc"])):
+            for mode, flags in execution_modes:
                 command = [str(args.compiler), "test", str(ROOT / row["source"]), "--release", "--verify-facts", "--force", "--json", "--jobs", "1", *flags]
                 ran = subprocess.run(command, cwd=ROOT, env=env, capture_output=True, text=True, timeout=600)
                 counts = json.loads(ran.stdout) if ran.stdout.startswith('{') else {}
@@ -69,8 +76,9 @@ for first in range(0, len(ready), 2):
 result["summary"] = {"assigned_files": len(survey["rows"]), "source_blocked": sum(row.get("status") == "source blocked" for row in result["rows"]),
                      "executed_files": len(total_ready), "executed_tests_per_mode": sum(len(names) for _, names in total_ready),
                      "failed_commands": sum(run["status"] != 0 for row in result["rows"] for run in row.get("modes", {}).values())}
+result['summary']['failed_qualifications'] = sum(not run.get('qualified', False) for row in result['rows'] for run in row.get('modes', {}).values())
 result['summary']['execution_totals'] = {}
-for mode in ('ordinary', 'zero_rc'):
+for mode, _ in execution_modes:
     totals = dict(passed=0, failed=0, unsupported=0)
     for row in result['rows']:
         if mode not in row.get('modes', {}):
@@ -81,4 +89,4 @@ for mode in ('ordinary', 'zero_rc'):
     result['summary']['execution_totals'][mode] = totals
 report.write_text(json.dumps(result, indent=2) + "\n")
 print(result["summary"], flush=True)
-raise SystemExit(int(any(total['failed'] or total['unsupported'] for total in result['summary']['execution_totals'].values()) or bool(result['summary']['source_blocked'])))
+raise SystemExit(int(any(total['failed'] or total['unsupported'] for total in result['summary']['execution_totals'].values()) or bool(result['summary']['source_blocked']) or bool(result['summary']['failed_qualifications'])))

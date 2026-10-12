@@ -1,0 +1,48 @@
+{
+  "status": "prepared only; not applied or qualified",
+  "base_commit": "8dde8a160",
+  "requires": [
+    "C2 promotion qualified",
+    "selected count-free runtime/header/helpers integrated",
+    "A07 IR release/destruction enum coordination"
+  ],
+  "files": {
+    "src/core/runtime/core_text.c": {
+      "before_sha256": "d684a834ce0ad0a16eb96939deced5e723268acbd5ae2f77d56bc23c37b610f2",
+      "proposed_sha256": "f23364c807e520c7f47edd7375f022122f4fb0b15bec4a303c672477d74c1dc1"
+    },
+    "src/core/runtime/core_values.c": {
+      "before_sha256": "f14e1aa4dcddbf644925f7d49ffa9310e977c624046565c8a53d1e63ec16f996",
+      "proposed_sha256": "cd48bd48fc5f8e63ee45ba7e5bc6b2178f966b7939c91f0330d4dfc8ae7bde6e"
+    },
+    "src/core/build_values.zig": {
+      "before_sha256": "b838ab418005ee3c04a812bdffa402366c8c396d20253630c46a41d34c36189c",
+      "proposed_sha256": "0404f6b6359fdeb587c81debb8296cfafb962cd8ee6544d67d8a06c64953c1ff"
+    },
+    "src/core/fuse_slice_key.zig": {
+      "before_sha256": "db7332213c30e527c344e6b4d7183658c4e907bff5b94e2654600e300e653c3c",
+      "proposed_sha256": "b74fb0f27bdda05f22056419c0c7eed801d99ef300e547baf058132d4972284b"
+    },
+    "src/core/runtime/core_number_text.zig": {
+      "before_sha256": "4604f15557b3b51da16c0de65cc769f2654265fda44ec0cd17a56843eb269933",
+      "proposed_sha256": "47d4ceca7ec9508b387cc38ef2b083138d7cc7ccc032db4ce9fe9fefae3897b8"
+    }
+  },
+  "required_evidence": [
+    "40-lane public export suite and3negative",
+    "repetition and affine rejection suite",
+    "renderer including float payloads",
+    "numeric selected-object ABI and cache invalidation",
+    "slice originals and readonly fusion",
+    "all19 and additional14 migrations",
+    "final complete verification/Guardian on actual retirement candidate"
+  ],
+  "preserve": [
+    "native allocation and capacity growth",
+    "static-storage copying before mutation",
+    "independent bytes/text encode result",
+    "direct destruction of float-render temporary",
+    "independent managed list repetition children",
+    "task synchronization; no task files modified"
+  ]
+}

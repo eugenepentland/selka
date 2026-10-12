@@ -156,3 +156,21 @@ python3 -B experiments/memory-closeout-20261012/A04/qualify.py \
 All five guest modes are selected by default: release, unoptimized debug, release with verified facts, optimized debug and release without facts. Each admitted run checks expected exit status, managed leaks, emitted/runtime RC counters, LLVM and native symbols. Negative view cases check exact diagnostic identifiers. Build wall observations are not controlled compile-time measurements; A09 owns runtime/RSS measurement.
 
 For a baseline without production A04 changes, `--baseline` keeps all eight release fixtures and runs the new public ownership supplement in all five modes (12 lanes). The integrated candidate uses the full 40-lane matrix. Baseline selection was approved by the coordinator; it does not remove any public export from coverage.
+
+## Normal-command qualification adapters
+
+The current A04 harnesses accept `--default-ownership` for C2/C3 reruns. In that
+mode commands contain no experimental selector and every counted native lane
+still requires clean LLVM/symbols, zero runtime RC and no managed exit bytes.
+Ordinary RC control lanes are omitted rather than mislabeled after promotion.
+Historical reports and imported historical helper sources remain unchanged.
+`default-command-audit-check.json` proves the added audit accepts a retained
+checked binary and rejects a retained actual RC binary; it is a harness check,
+not evidence of default promotion. All nine argument parsers were checked.
+Guest test reports now fail qualification on a mismatched test-name set or any
+unsupported test even if the command returns zero. Survey and execution compiler
+and ownership selection must match. Final candidate runs remain required.
+
+`retirement/inventory.json` and `proposed-retirement.patch` are a draft for the
+A04-owned legacy paths, with exact source hashes and required reruns. They are
+not applied and do not count as implementation or milestone 3 completion.

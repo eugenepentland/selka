@@ -12,10 +12,13 @@ import sys
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
+sys.path.insert(0, str(ROOT / "experiments/memory-closeout-20261012/A04"))
+import ownership_commands as ownership
 sys.path.insert(0, str(ROOT / 'scripts'))
 from build_admission import admission
 
 parser = argparse.ArgumentParser(description=__doc__)
+ownership.add_option(parser)
 parser.add_argument('--compiler', type=Path, required=True)
 parser.add_argument('--zig', type=Path, required=True)
 parser.add_argument('--phase', required=True)
@@ -38,7 +41,7 @@ for name in ('MYLANG_COUNTERS', 'MYLANG_OPTIONS', 'MYLANG_CORE_SANITIZE'):
 report = {'compiler': str(args.compiler), 'compiler_sha256': digest(args.compiler),
           'source_commit': args.source_commit,
           'fixture_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
-          'harness_sha256': digest(Path(__file__)), 'cases': {}, 'negative_cases': {},
+          'default_ownership': args.default_ownership, 'ownership_support_sha256': ownership.digest(), 'harness_sha256': digest(Path(__file__)), 'cases': {}, 'negative_cases': {},
           'scope': 'lists only; text/byte helper contracts pending' if args.lists_only else 'full repetition contract',
           'limitations': 'Managed counters are not RSS. Build times include no admitted queue wait but are not controlled performance samples.'}
 failures = 0
@@ -50,7 +53,7 @@ for name, source in sources:
     with admission('build'):
         for mode, flags in q.common.MODES.items():
             try:
-                row = dict(q.lane(args, env, name, source, ['--experimental-zero-rc', *flags], mode, 0, answer=''), status='passed')
+                row = dict(ownership.lane(q, args, env, name, source, [*ownership.flags(args), *flags], mode, 0, answer=''), status='passed')
             except (AssertionError, subprocess.SubprocessError, OSError) as error:
                 row = dict(status='failed', error=str(error), source_sha256=digest(source))
                 failures += 1
@@ -68,7 +71,7 @@ if not args.lists_only:
         for name, command, diagnostic in [('unsupported_place', 'check', 'E_TYPE'), ('affine_resource', 'check', 'E_LIST_ELEMENT'),
                                            ('overflow_signed', 'run', 'R_MEMORY_BUDGET'), ('overflow_unsigned', 'run', 'R_MEMORY_BUDGET')]:
             source = HERE / (name + '.my')
-            cmd = [str(args.compiler), command, str(source), '--experimental-zero-rc']
+            cmd = [str(args.compiler), command, str(source), *ownership.flags(args)]
             if command == 'run':
                 cmd += ['--release', '--max-memory', '8M']
             ran = subprocess.run(cmd, cwd=ROOT, env=env, capture_output=True, text=True, timeout=60)

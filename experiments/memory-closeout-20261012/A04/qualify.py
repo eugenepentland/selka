@@ -18,6 +18,8 @@ import sys
 sys.dont_write_bytecode = True
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
+sys.path.insert(0, str(ROOT / "experiments/memory-closeout-20261012/A04"))
+import ownership_commands as ownership
 sys.path.insert(0, str(ROOT / "scripts"))
 from build_admission import admission
 MODULES = ("json", "strings", "path", "base64", "hex", "byte_builder")
@@ -86,13 +88,14 @@ def capture(args):
     for name in ("MYLANG_COUNTERS", "MYLANG_OPTIONS", "MYLANG_CORE_SANITIZE"):
         env.pop(name, None)
     result = {"schema": "memory-closeout-a04-results-v1", "compiler": {"path": str(args.compiler), "sha256": digest(args.compiler), "source_commit": args.source_commit},
-              "harness_sha256": digest(Path(__file__)), "inventory": inventory(), "cases": {},
+              "default_ownership": args.default_ownership, "ownership_support_sha256": ownership.digest(), "harness_sha256": digest(Path(__file__)), "inventory": inventory(), "cases": {},
               "limitations": ["Managed counters omit native metadata/provider buffers/allocator overhead; no RSS or timing claims.",
                               "Count-free LLVM and symbol checks supplement execution counters; package bootstrap is owned by A10."]}
     if args.resume and result_path.exists():
         previous = json.loads(result_path.read_text())
         assert "summary" not in previous, "completed evidence is immutable; choose a new phase"
         assert previous["compiler"] == result["compiler"], "compiler identity changed"
+        assert previous.get("default_ownership", False) == args.default_ownership, "ownership mode changed"
         assert previous["inventory"] == result["inventory"], "export inventory changed"
         result = previous
         result.setdefault("resume_harness_sha256", []).append(digest(Path(__file__)))
@@ -121,7 +124,7 @@ def capture(args):
         with admission("build"):
             for mode, flags in pending.items():
                 try:
-                    lanes[mode] = dict(q.lane(args, env, name, source, ["--experimental-zero-rc", *flags], mode, expected), status="passed")
+                    lanes[mode] = dict(ownership.lane(q, args, env, name, source, [*ownership.flags(args), *flags], mode, expected), status="passed")
                 except (AssertionError, subprocess.SubprocessError, OSError) as error:
                     failures += 1
                     lanes[mode] = {"status": "failed", "error": str(error), "source_sha256": digest(source)}
@@ -138,7 +141,7 @@ def capture(args):
         for name, diagnostic in (("view_invalidated", "E_ZERO_RC_VIEW_INVALIDATED"), ("byte_view_invalidated", "E_ZERO_RC_VIEW_INVALIDATED"),
                                  ("view_escape", "E_ZERO_RC_VIEW_SIGNATURE")):
             source = HERE / "samples" / (name + ".my")
-            command = [str(args.compiler), "check", str(source), "--experimental-zero-rc"]
+            command = [str(args.compiler), "check", str(source), *ownership.flags(args)]
             ran = subprocess.run(command, cwd=ROOT, env=env, capture_output=True, text=True, timeout=120)
             passed = ran.returncode == 1 and diagnostic in ran.stderr
             result["negative_cases"][name] = {"command": command, "status": "passed" if passed else "failed", "exit_code": ran.returncode,
@@ -153,6 +156,7 @@ def capture(args):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    ownership.add_option(parser)
     parser.add_argument("--inventory", action="store_true")
     parser.add_argument("--resume", action="store_true", help="resume an interrupted phase only when compiler, exports and completed sources match")
     parser.add_argument("--baseline", action="store_true", help="all exports in release and new ownership supplement across five modes; final qualification remains the full matrix")

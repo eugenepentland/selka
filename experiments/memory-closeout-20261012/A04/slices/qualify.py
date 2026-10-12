@@ -12,10 +12,13 @@ import sys
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
+sys.path.insert(0, str(ROOT / "experiments/memory-closeout-20261012/A04"))
+import ownership_commands as ownership
 sys.path.insert(0, str(ROOT / 'scripts'))
 from build_admission import admission
 
 parser = argparse.ArgumentParser(description=__doc__)
+ownership.add_option(parser)
 parser.add_argument('--compiler', type=Path, required=True)
 parser.add_argument('--phase', required=True)
 parser.add_argument('--source-commit', required=True)
@@ -34,7 +37,7 @@ spec.loader.exec_module(q)
 oracles = json.loads((HERE / 'oracles.json').read_text())
 report = {'compiler': str(args.compiler), 'compiler_sha256': digest(args.compiler), 'source_commit': args.source_commit,
           'prototype_diff': subprocess.check_output(['git', 'diff', '--', 'src'], cwd=ROOT, text=True) if args.prototype_diff else '',
-          'harness_sha256': digest(Path(__file__)), 'cases': {},
+          'default_ownership': args.default_ownership, 'ownership_support_sha256': ownership.digest(), 'harness_sha256': digest(Path(__file__)), 'cases': {},
           'limitations': 'Correctness, managed counters and structural audits; no timing/RSS or allocation-saving claim.'}
 env = dict(os.environ, MYL_CORE_LEAKCHECK='1', ZIG=str(args.zig), MYLANG_ZIG=str(args.zig))
 for name in ('MYLANG_COUNTERS', 'MYLANG_OPTIONS', 'MYLANG_CORE_SANITIZE'):
@@ -43,13 +46,13 @@ sources = [('regressions', ROOT / 'tests/lang/a04_slice_snapshots.my', ''),
            ('s1_reads', ROOT / 'test/core/s1_reads.my', oracles['s1_reads']['stdout']),
            ('s1_views', ROOT / 'test/core/s1_views.my', oracles['s1_views']['stdout'])]
 for name, source, answer in sources:
-    lanes = [(mode, ['--experimental-zero-rc', *flags]) for mode, flags in q.common.MODES.items()]
-    if name != 'regressions':
+    lanes = [(mode, [*ownership.flags(args), *flags]) for mode, flags in q.common.MODES.items()]
+    if name != 'regressions' and not args.default_ownership:
         lanes.append(('ordinary', ['--release']))
     with admission('build'):
         for mode, flags in lanes:
             try:
-                row = dict(q.lane(args, env, name, source, flags, mode, 0, answer=answer), status='passed')
+                row = dict(ownership.lane(q, args, env, name, source, flags, mode, 0, answer=answer), status='passed')
             except Exception as error:
                 row = {'status': 'failed', 'error': str(error), 'source_sha256': digest(source)}
             report['cases'][name + '/' + mode] = row
