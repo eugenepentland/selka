@@ -1,0 +1,15 @@
+# spec-case: NEW-CORE-ZERO-RC-RESOURCES-1
+import filesystem
+
+enum Store:
+    live(fs: Filesystem)
+    empty
+
+func main() -> int:
+    const store = Store.live(fs=filesystem.memory())
+    match store:
+        case Store.live(fs=fs):
+            assert not fs.exists("note")
+        case Store.empty:
+            return 1
+    return 0

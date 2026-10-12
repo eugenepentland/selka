@@ -18,7 +18,7 @@ scripts/build-slot.sh build python3 -B experiments/memory-closeout-20261012/A05/
 ```
 
 The three positives execute and require expected results, zero RC events, no
-managed exit-live bytes, and clean LLVM/symbol audits. The six negatives use
+managed exit-live bytes, and clean LLVM/symbol audits. The six negatives above use
 source checking; their rejection never counts as guest execution. The harness
 records exact arguments, input/compiler hashes, diagnostics and raw artifact
 paths. All three positives must pass before aggregate support is claimed. Run the
@@ -46,3 +46,23 @@ after default promotion/retirement. These scripts never select compatibility RC.
 `negative/dictionary_get_view.my` is a separate ambiguous-origin view reproducer,
 not part of the aggregate support claim. Its source-check and native-build
 outcomes are recorded separately pending A07's explicit refusal fix.
+
+Additional source-only boundaries guard the deliberate exclusion of owning provider
+fields inside lists/dictionaries, variant payloads and recursive boxes. Run these
+four cases in a separate bounded batch and fresh output directory:
+
+```bash
+scripts/build-slot.sh build python3 -B experiments/memory-closeout-20261012/A05/qualify.py \
+  --compiler "$COMPILER" --compiler-revision "$REVISION" --zig "$ZIG" \
+  --output "$BOUNDARY_OUTPUT" --modes release \
+  --cases provider_list_negative provider_dictionary_negative \
+  provider_variant_negative provider_recursive_negative
+```
+
+The list and dictionary hold ordinary records with provider fields, so these
+probes check that accepting record roots does not implicitly accept collections
+of such roots. Lists and dictionaries already reject `E_LIST_CAPABILITY` in the
+ordinary frontend; recursive provider ownership remains the existing
+`E_RECURSIVE_RECORD` type boundary. The variant admits ordinary mode, and must
+refuse under checked ownership. The labelled ordinary-mode source baseline is
+`evidence/provider-boundary-source-baseline.json`.

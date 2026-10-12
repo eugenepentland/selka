@@ -4,6 +4,30 @@ Base is `fbfcaa7a923186a8e773c3760f81c10aa345a432`; worker branch is
 `codex/memory-closeout-20261012-A05`. No peer merges, pushes, default promotion,
 legacy-RC deletion or Guardian feedback edits were performed.
 
+## Current status before Support6
+
+All 95 functions and 25 type/resource declarations have at least one labelled
+intermediate counted fixture reference. This is not common-C1 qualification.
+Support5 source `a1f19edf255c8c0886731d8d7cce450d5f657720` passes the four affected
+storage/scoped-capability/setdefault cases in all five modes (20/20), with RC0,
+managed exit-live0 and clean LLVM/symbol audits. The earlier scalar-copy,
+dictionary-snapshot, network acquisition, returned-file and callable-authority
+blockers described below are resolved in labelled interim evidence.
+
+Remaining work is aggregate-field provider qualification and the new explicit
+managed-get copy/view checks on Support6, followed by the frozen common C1 suite
+and affected ordinary-command C2/C3 reruns. General noncopy managed-get lowering
+remains a separate compiler boundary; `boundaries/dictionary_get_readonly.my`
+keeps an exact check/build probe. Same-root simultaneous mutable child loans are
+an intentional source refusal with an explicit-copy migration, not a compiler bug.
+
+Commit `172629acf` carries the latest 20-run evidence. Commit `443478167` is the
+isolated C2 documentation draft (26 executed examples and six expected refusals);
+`d4d6c50f2` and `6a0516d8e` add the standard-library draft (23 executed examples).
+These documentation commits must be held for default promotion. Runtime retirement patches remain prepared
+and unapplied. Support5's legacy-built libexec is not owned-package qualification.
+No release milestone is complete from A05 evidence alone.
+
 ## Scope and inventory
 
 Owned remaining 13 standard modules and their corresponding fixtures, runtime
@@ -85,7 +109,7 @@ No historical reports are overwritten. Initial per-case admission runs were
 canceled only while queued and resumed in bounded batches; canceled missing cases
 are not counted as source failures. Final C1/mode qualification remains pending.
 
-## Reported correctness issues and current disposition
+## Defects reported earlier in the run (historical snapshots)
 
 - A07: `list(values.keys())` and `list(values.items())` compile through a borrowed
   frontend field extraction and refuse. `samples/containers.my` is the reproducer;
@@ -321,3 +345,39 @@ one labelled intermediate counted fixture reference. `export-status.json` keeps
 final common-C1 qualification pending. Aggregate-field providers and managed
 get-default copies/views remain separate compiler work; installed Support5
 `libexec` remains legacy bootstrap-built and is not owned-package qualification.
+
+The coordinator reserved `docs/sets.md`, `docs/value-semantics.md` and
+`docs/records-and-unions.md` for an isolated C2 ownership migration. The revised
+pages remove current RC/COW claims and teach explicit independent copies, moves,
+ordinary borrows and direct destruction. All executable fences pass actual
+Support5 `doctest --experimental-zero-rc`: 26 run and six expected refusals, with
+no skips or failures. `doc-migrations.json` pins original/proposed document and
+executable-fence identities plus raw command reports. These documentation changes
+must be promoted with C2, not mistaken for a changed default in this branch.
+
+The existing simultaneous mutable-child example is an intentional conservative
+whole-owner boundary, confirmed by the coordinator and A07. Its original source
+is preserved as `negative/disjoint_mut_fields.my` and an expected refusal in the
+page. The positive migration adds six explicit child copies and six ordered
+writebacks while retaining the exact output. The callee only sees the independent
+child arguments, never their enclosing record/list/dictionary; the manifest records
+that justification and source burden. No disjoint-field inference or hidden copy
+was added to the compiler.
+
+The additional standard-library C2 draft executes all 23 runnable fences on the
+same Support5 compiler. Four explicit copies preserve independent borrowed
+returns/persistent payloads. Network acquisition has a lexical scope, and dynamic
+decimal encoding uses a named temporary. The final prose describes A01's actual
+parallel contract: one read-only callback argument, independently owned result,
+non-Unit elements, mandatory joins, and explicit acknowledgement of Result lists.
+Only scheduling wrappers have a bounded count; output and temporary chunk result
+slots still scale with input length. `standard-library-doc-migration.json` retains
+the initial failure, fixed passing receipts and exact source/fence hashes. These
+changes remain held for C2 alongside the other three documentation pages.
+
+Four additional aggregate-provider boundary probes preserve unsupported list,
+dictionary, variant and recursive-box shapes. Their ordinary source baseline is
+labelled separately from checked-ownership qualification. Lists/dictionaries and
+recursive providers already refuse in the frontend; the variant admits ordinary
+mode and must refuse checked ownership. General noncopy managed-get use has a
+separate source/check-build probe under `boundaries/`, without an execution claim.

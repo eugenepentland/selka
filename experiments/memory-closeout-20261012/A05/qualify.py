@@ -24,6 +24,10 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 MODES = {'release':['--release'], 'debug':['--unoptimized'], 'verified':['--release','--verify-facts'], 'optimized-debug':['--optimize-debug'], 'no-facts':['--release','--no-facts']}
 NEGATIVE_CASES = {
+    'provider_list_negative':('provider_list.my',('E_LIST_CAPABILITY',)),
+    'provider_dictionary_negative':('provider_dictionary.my',('E_LIST_CAPABILITY',)),
+    'provider_variant_negative':('provider_variant.my',('E_ZERO_RC_UNSUPPORTED',)),
+    'provider_recursive_negative':('provider_recursive.my',('E_RECURSIVE_RECORD',)),
     'dictionary_get_view_negative':('dictionary_get_view.my',('E_ZERO_RC_VIEW_ESCAPE',)),
     'capability_array_negative':('capability_array.my',('E_ZERO_RC_UNSUPPORTED',)),
     'provider_root_move_negative':('provider_root_move.my',('E_SINGLE_OWNER_OVERLAP','E_ZERO_RC_RESOURCE_ESCAPE')),
