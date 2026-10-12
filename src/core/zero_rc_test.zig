@@ -1419,6 +1419,71 @@ const json_lookup_output =
     "[{\"nested\":\"value-7\"}] {\"nested\":[\"value-9\"]}\n" ++
     "{\"target\":\"changed\"} [\"changed\"]\n";
 
+// spec: NEW-CORE-ZERO-RC-AFFINE-RESOURCES-1
+test "zero RC affine resource parameters and local matches transfer owners" {
+    try executes(std.testing.allocator,
+        \\import filesystem
+        \\resource File: filesystem
+        \\result Open:
+        \\    ok: File,
+        \\    err: int
+        \\record Owned:
+        \\    file: File
+        \\    code: int
+        \\func forward(file: File) -> File effects(filesystem):
+        \\    return file
+        \\func fields(value: Owned) -> int effects(filesystem):
+        \\    _ = value
+        \\    return 7
+        \\func handle(result: Open) -> int effects(filesystem):
+        \\    match result:
+        \\        case Open.ok(file):
+        \\            return fields(Owned(file=forward(file), code=7))
+        \\        case Open.err(code):
+        \\            return code
+        \\func open(fs: Filesystem) -> Open:
+        \\    const request = FixedArray[u8, 6]([114u8, 58u8, 100u8, 97u8, 116u8, 97u8])
+        \\    return acquire_resource[Open](fs, request)
+        \\func main(out: Stream) -> int:
+        \\    const original = filesystem.memory()
+        \\    mut fs = original
+        \\    with fs.open("data", "w") as file:
+        \\        _ = file.write("abc")
+        \\    out.print(handle(open(fs)))
+        \\    fs = filesystem.memory()
+        \\    out.print(fs.exists("data"))
+        \\    return 0
+    , "7\nFalse\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-AFFINE-RESOURCES-1
+test "zero RC dependent resource returns reject local and ambiguous providers" {
+    try refuses(std.testing.allocator,
+        \\import filesystem
+        \\resource File: filesystem
+        \\result Open:
+        \\    ok: File,
+        \\    err: int
+        \\func escape(unused: Filesystem) -> Open:
+        \\    _ = unused.exists("unused")
+        \\    const local = filesystem.memory()
+        \\    return acquire_resource[Open](local, FixedArray[u8, 0]([]))
+        \\func main() -> int:
+        \\    return 0
+    , "E_ZERO_RC_RESOURCE_ESCAPE");
+    try refuses(std.testing.allocator,
+        \\resource File: filesystem
+        \\result Open:
+        \\    ok: File,
+        \\    err: int
+        \\func ambiguous(first: Filesystem, second: Filesystem) -> Open:
+        \\    _ = second.exists("unused")
+        \\    return acquire_resource[Open](first, FixedArray[u8, 0]([]))
+        \\func main() -> int:
+        \\    return 0
+    , "E_ZERO_RC_RESOURCE_ORIGIN");
+}
+
 // spec-case: NEW-CORE-ZERO-RC-1
 test "zero RC scalar text conversions and characters have fresh receiver origins" {
     try executes(std.testing.allocator,
@@ -1431,4 +1496,133 @@ test "zero RC scalar text conversions and characters have fresh receiver origins
         \\    out.print(total, letters[1])
         \\    return 0
     , "6 b\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-AFFINE-RESOURCES-1
+test "zero RC affine resource cleanup covers completion propagation and loop exits" {
+    try executes(std.testing.allocator,
+        \\import filesystem
+        \\
+        \\resource File: filesystem
+        \\result Open:
+        \\    ok: File,
+        \\    err: int
+        \\record Failure:
+        \\    resource: File
+        \\    code: int
+        \\result Finish:
+        \\    ok: bool,
+        \\    err: Failure
+        \\func request() -> FixedArray[u8, 6]:
+        \\    return FixedArray[u8, 6]([114u8, 58u8, 100u8, 97u8, 116u8, 97u8])
+        \\func open(fs: Filesystem) -> Open:
+        \\    return acquire_resource[Open](fs, request())
+        \\func finish(file: File) -> Finish:
+        \\    return complete_resource[Finish](file)
+        \\func attempt(fs: Filesystem) -> int:
+        \\    match open(fs):
+        \\        case Open.ok(file):
+        \\            match finish(file):
+        \\                case Finish.ok(done):
+        \\                    if done:
+        \\                        return 7
+        \\                    return 0
+        \\                case Finish.err(failure):
+        \\                    const code = failure.code
+        \\                    return code
+        \\        case Open.err(code):
+        \\            return code
+        \\func partial(fs: Filesystem) -> Result[int, int]:
+        \\    const first = try open(fs)
+        \\    const second = try acquire_resource[Open](fs, FixedArray[u8, 3]([114u8, 58u8, 120u8]))
+        \\    _ = first
+        \\    _ = second
+        \\    return Ok(1)
+        \\func main(out: Stream) -> int:
+        \\    mut fs = filesystem.memory()
+        \\    with fs.open("data", "w") as file:
+        \\        _ = file.write("abc")
+        \\    out.print(attempt(fs))
+        \\    with fs.read_only() as readonly:
+        \\        out.print(attempt(readonly))
+        \\        _ = open(readonly)
+        \\    match partial(fs):
+        \\        case Ok(code):
+        \\            out.print(code)
+        \\        case Err(code):
+        \\            out.print(code)
+        \\    for i in range(20):
+        \\        _ = open(fs)
+        \\        if i < 3:
+        \\            continue
+        \\        break
+        \\    _ = open(fs)
+        \\    fs = filesystem.memory()
+        \\    out.print(fs.exists("data"))
+        \\    return 0
+    , "7\n2\n3\nFalse\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-AFFINE-RESOURCES-1
+test "zero RC affine resources reject provider replacement" {
+    try refuses(std.testing.allocator,
+        \\import filesystem
+        \\resource File: filesystem
+        \\result Open:
+        \\    ok: File,
+        \\    err: int
+        \\func open(fs: Filesystem) -> Open:
+        \\    return acquire_resource[Open](fs, FixedArray[u8, 0]([]))
+        \\func main() -> int:
+        \\    mut fs = filesystem.memory()
+        \\    const live = open(fs)
+        \\    fs = filesystem.memory()
+        \\    _ = live
+        \\    return 0
+    , "E_ZERO_RC_RESOURCE_ESCAPE");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-AFFINE-RESOURCES-1
+test "zero RC affine resources reject scoped provider escape" {
+    try refuses(std.testing.allocator,
+        \\import filesystem
+        \\resource File: filesystem
+        \\result Open:
+        \\    ok: File,
+        \\    err: int
+        \\func open(fs: Filesystem) -> Open:
+        \\    return acquire_resource[Open](fs, FixedArray[u8, 0]([]))
+        \\func main() -> int:
+        \\    const fs = filesystem.memory()
+        \\    mut saved: Open = Err(0)
+        \\    _ = saved
+        \\    with fs.read_only() as readonly:
+        \\        saved = open(readonly)
+        \\    _ = saved
+        \\    return 0
+    , "E_ZERO_RC_RESOURCE_ESCAPE");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-AFFINE-RESOURCES-1
+test "zero RC affine resources reject record sibling invalidation" {
+    try refuses(std.testing.allocator,
+        \\import filesystem
+        \\resource File: filesystem
+        \\result Open:
+        \\    ok: File,
+        \\    err: int
+        \\func open(fs: Filesystem) -> Open:
+        \\    return acquire_resource[Open](fs, FixedArray[u8, 0]([]))
+        \\record Owned:
+        \\    child: Open
+        \\    code: int
+        \\func replace(mut fs: Filesystem) -> int:
+        \\    fs = filesystem.memory()
+        \\    return 1
+        \\func main() -> int:
+        \\    mut fs = filesystem.memory()
+        \\    const carrier = Owned(child=open(fs), code=replace(mut fs))
+        \\    _ = carrier
+        \\    return 0
+    , "E_SINGLE_OWNER_OVERLAP");
 }

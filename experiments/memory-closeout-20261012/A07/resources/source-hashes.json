@@ -1,0 +1,8 @@
+{
+  "src/core/single_owner.zig": "c983a12b4ec92a1c74142d9480a0ce1ce5c77eb277fe1906b0f89277fed404e1",
+  "src/core/single_owner_resource.zig": "9979322058380145a15db44fadd5d0ff0bed7630ad9a92d80d8d156810f2c774",
+  "src/core/build.zig": "570ad23e0e0beaf8b14471102d3faa205a920d94b26db2b2d5415064f1a873e1",
+  "src/core/build_cap.zig": "c1243d773ba17d6182a288a8e9318b89178c85915848e2dd94f10c1851fe2f34",
+  "src/core/zero_rc_test.zig": "ff967821c0d08407934deca29f88727b5183797d61a50e807bb86cdea9073e79",
+  "experiments/memory-closeout-20261012/A07/resources/lifecycle.my": "3ee51fe54417747ff3c0d8fdabee048e89c4fc45ebae9aba9b226045de55f877"
+}

@@ -5,7 +5,7 @@ const typed = @import("mylang").typed;
 /// Allocation and located source refusals from effect lowering.
 pub const Error = error{ OutOfMemory, Unsupported };
 /// A live lexical file scope and the loop depth at which it was opened.
-pub const Scope = struct { owner: ir.Ref, depth: usize, provider: ir.Ref = .none };
+pub const Scope = struct { owner: ir.Ref, depth: usize, provider: ir.Ref = .none, pin: ?u32 = null };
 
 const file_access_symbol = "myl_core_file_access";
 const stream_write_symbol = "myl_core_stream_write";
@@ -299,6 +299,10 @@ pub fn scopeProvider(nodes: []const typed.Node, source: typed.NodeId) ?typed.Nod
 
 /// Close and drop a scoped handle while its provider is still a borrowed argument.
 pub fn closeScope(comptime Context: type, c: Context, scope: Scope, span: u32) Error!void {
+    if (scope.pin) |slot| {
+        _ = try c.effectCall("myl_core_provider_keepalive", &.{.capability}, .void, &.{try c.read(slot, c.current.?)}, span);
+        return;
+    }
     if (c.module().zero_rc) {
         const ty = c.typeOfRef(scope.owner);
         const symbol = if (ty == .resource) "myl_core_owned_file_scope_end" else "myl_core_owned_cap_scope_end";

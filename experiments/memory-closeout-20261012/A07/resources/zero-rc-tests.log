@@ -1,0 +1,23 @@
+build-slot: build slot 1, FIFO ticket 268 after 0s
+9860b781455ba0fff0277654eea23ec3a893cb3614551f277cbf67d7850f6cf7
+d7c7a2468458d4cddf08970071fd85e6b6c3ff126b450eb15d8f1628fe38d91f
+test-core
++- verification action core member 0 w
+guardian/test: 80 test(s) selected by filter: "zero RC"
+guardian/test: SLOW  6.02s  zero_rc_task_test.test.zero RC task captures and results are free from ThreadSanitizer reports
+guardian/test: SLOW  7.93s  shared_counts_test.test.zero RC runtime ABI has no count member and forbids legacy helpers
+guardian/test: test wall 35.82s; slowest over 50ms:
+guardian/test:   7.93s  shared_counts_test.test.zero RC runtime ABI has no count member and forbids legacy helpers
+guardian/test:   6.02s  zero_rc_task_test.test.zero RC task captures and results are free from ThreadSanitizer reports
+guardian/test:   2.70s  zero_rc_task_test.test.zero RC source map borrows inputs until joining and owns each result
+guardian/test:   2.47s  zero_rc_test.test.zero RC Result main destroys text errors and borrowed argv in five modes
+guardian/test:   1.55s  zero_rc_task_test.test.zero RC task groups join and destroy discarded results on implicit exit
+guardian/test:   1.37s  zero_rc_task_test.test.zero RC task groups move captures and results across joins at 1 2 8 threads
+guardian/test:   0.82s  count_test.test.zero RC whole program includes startup arguments and nested text cleanup
+guardian/test:   0.72s  count_test.test.zero RC views repeated borrowing performs no managed allocations or RC
+guardian/test:   0.53s  zero_rc_test.test.zero RC JSON lookup copies only selected values and preserves independent results
+guardian/test:   0.53s  count_test.test.zero RC fresh match transfers boxed payloads across allocation and return
+guardian/test: PASS — 80 passed
+guardian/test: RESULT {"passed":80,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A07/zig-out/libexec/mylang/components ./.tmp/memory-closeout/A07/zig-cache/o/c0af23b926afc027646b98d04010ead0/test "--guardian-filter=zero RC" --cache-dir=./.tmp/memory-closeout/A07/zig-cache --seed=0x4118b741 --listen=-
+

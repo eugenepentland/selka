@@ -5,6 +5,7 @@ const std = @import("std");
 const language = @import("mylang");
 const typed = language.typed;
 const ir = @import("ir.zig");
+const resources = @import("single_owner_resource.zig");
 const Span = language.source.Span;
 const none = std.math.maxInt(usize);
 const zero_unsupported = "E_ZERO_RC_UNSUPPORTED";
@@ -14,6 +15,9 @@ const view_signature = "E_ZERO_RC_VIEW_SIGNATURE";
 const view_escape = "E_ZERO_RC_VIEW_ESCAPE";
 const view_unsupported = "E_ZERO_RC_VIEW_UNSUPPORTED";
 const overlap_error = "E_SINGLE_OWNER_OVERLAP";
+const resource_escape = "E_ZERO_RC_RESOURCE_ESCAPE";
+const resource_origin = "E_ZERO_RC_RESOURCE_ORIGIN";
+const resource_mode = "generic resource ownership requires checked zero-RC mode";
 
 /// Match may consume a freshly produced union, never a local or a projection.
 /// Shared by checking and lowering so the source rule does not depend on SSA use counts.
@@ -83,7 +87,7 @@ pub fn checkMode(a: std.mem.Allocator, program: typed.Program, failure: *Failure
         for (program.records, 0..) |record, index| {
             if (linear[index] or record.shape.builtin == .borrowed_view) continue;
             const owns = if (record.isCollection()) (record.collection.kind == .list or (zero_rc and (record.collection.kind == .string or record.collection.kind == .bytes or record.collection.kind == .dictionary))) else owns: {
-                if (zero_rc and record.collection.box) break :owns true;
+                if (zero_rc and (record.collection.box or record.shape.resource != null)) break :owns true;
                 for (record.fields) |field| if ((zero_rc and field.boxed) or isOwned(linear, field.ty, zero_rc)) break :owns true;
                 if (record.shape.array) |array| if (isOwned(linear, array.element, zero_rc)) break :owns true;
                 if (record.shape.variants) |variants| for (variants.cases) |case| {
@@ -116,11 +120,13 @@ pub fn checkMode(a: std.mem.Allocator, program: typed.Program, failure: *Failure
             if (index < function.signature.parameter_count and c.view(local.ty) and local.mutable) return c.reject(local.declaration, view_signature, "view parameters are read-only");
             if (index < function.signature.parameter_count) c.state[index] = .{
                 .available = true,
-                .borrowed = isOwned(linear, local.ty, zero_rc) or typed.isBorrowedView(program.records, local.ty),
+                .borrowed = (isOwned(linear, local.ty, zero_rc) or typed.isBorrowedView(program.records, local.ty)) and !(zero_rc and resources.affine(program, local.ty)),
+                .dependency = if (zero_rc and resources.affine(program, local.ty)) index else none,
                 .writable = local.mutable,
             };
         }
         try c.supported(function.signature.return_type, function.declaration, 0);
+        if (zero_rc and resources.affine(program, function.signature.return_type)) _ = try c.resourceParameter(function, function.declaration);
         if (typed.isBorrowedView(program.records, function.signature.return_type)) {
             _ = try c.returnSource(function, function.declaration);
             if (function.signature.declared_mutates.len != 0) return c.reject(function.declaration, view_signature, "a function returning a view cannot also take mut parameters in this prototype");
@@ -153,6 +159,7 @@ const State = struct {
     root: usize = none,
     view_definition: ?typed.NodeId = null,
     transferable: bool = false,
+    dependency: usize = none,
 };
 const Access = enum { read, move, mutate, update };
 const Loan = struct { root: usize, write: bool };
@@ -276,6 +283,7 @@ const Checker = struct {
         }
         if (c.view(local.ty) and access != .read) return c.reject(span, view_escape, "views are read-only; use .copy() for independent owned storage");
         const write = access != .read;
+        if (c.zero_rc) try c.resourceAccess(slot, root, write, span);
         for (c.loans.items) |loan| if (loan.root == root and (loan.write or write)) {
             return c.reject(span, overlap_error, "a value cannot be moved or mutated while another argument or iteration borrows it");
         };
@@ -377,6 +385,7 @@ const Checker = struct {
                     .writable = local.origin != .iteration and c.state[source].writable,
                     .root = source,
                     .transferable = c.wholeOwner(store.value),
+                    .dependency = c.state[source].dependency,
                 };
                 return;
             }
@@ -391,7 +400,9 @@ const Checker = struct {
             try c.expression(store.value, .move);
         }
         const parameter = slot < c.function.signature.parameter_count;
-        c.state[slot] = .{ .available = true, .borrowed = parameter, .writable = local.mutable };
+        const affine = c.zero_rc and resources.affine(c.program, local.ty);
+        const dependency = if (affine) try c.resourceOrigin(store.value) else null;
+        c.state[slot] = .{ .available = true, .borrowed = parameter and !affine, .writable = local.mutable, .dependency = dependency orelse none };
     }
 
     fn expression(c: *Checker, id: typed.NodeId, access: Access) Error!void {
@@ -440,7 +451,7 @@ const Checker = struct {
                 try c.expression(index.index, .read);
             },
             .array => |items| for (items) |item| try c.expression(item, .move),
-            .record => |fields| for (fields) |field| try c.expression(field.value, .move),
+            .record => |fields| try c.recordFields(fields),
             .update => |update| {
                 try c.expression(update.base, if (access == .update) .mutate else .move);
                 for (update.fields) |field| try c.expression(field.value, if (access == .update and c.sameFieldWriteback(update.base, field)) .update else .move);
@@ -480,10 +491,32 @@ const Checker = struct {
                 try c.expression(write.stream, .read);
                 try c.expression(write.text, .read);
             },
-            .stand_in, .external_read, .environment_get, .environment_names, .dir_resource, .host_resource, .restrict_resource, .environment_only, .file_access, .file_method => try c.resourceExpression(node),
-            .propagate => |value| try c.expression(value.value, .move),
+            .stand_in,
+            .external_read,
+            .environment_get,
+            .environment_names,
+            .dir_resource,
+            .host_resource,
+            .restrict_resource,
+            .environment_only,
+            .file_access,
+            .file_method,
+            .acquire_resource,
+            .complete_resource,
+            .resource_io,
+            => try c.resourceExpression(node),
+            .propagate => |value| try c.propagateResource(value.value, node.span),
             .variant => |variant| if (variant.value) |value| try c.expression(value, .move),
-            else => return c.reject(node.span, unsupported, "this expression is outside the single-owner prototype"),
+        }
+    }
+
+    fn recordFields(c: *Checker, fields: []const typed.FieldInit) Error!void {
+        const saved = c.loans.items.len;
+        defer c.loans.shrinkRetainingCapacity(saved);
+        for (fields) |field| {
+            try c.expression(field.value, .move);
+            if (c.zero_rc) if (try c.resourceOrigin(field.value)) |anchor|
+                try c.loans.append(c.a, .{ .root = anchor, .write = false });
         }
     }
 
@@ -505,7 +538,74 @@ const Checker = struct {
                 try c.checkLocal(@backingInt(file.owner), .read, node.span);
                 if (file.argument) |argument| try c.expression(argument, .read);
             },
+            .acquire_resource => |acquire| {
+                if (!c.zero_rc) return c.reject(node.span, unsupported, resource_mode);
+                try c.arguments(&.{ acquire.capability, acquire.request }, &.{}, &.{});
+                _ = c.origin(acquire.capability) orelse return c.reject(node.span, resource_origin, "bind the provider to a named local before acquiring a resource");
+            },
+            .complete_resource => |owner| {
+                if (!c.zero_rc) return c.reject(node.span, unsupported, resource_mode);
+                try c.expression(owner, .move);
+            },
+            .resource_io => |io| {
+                if (!c.zero_rc) return c.reject(node.span, unsupported, resource_mode);
+                try c.checkLocal(@backingInt(io.owner), .read, node.span);
+                if (io.value) |input| try c.expression(input, .read);
+            },
             else => unreachable,
+        }
+    }
+
+    fn propagateResource(c: *Checker, value: typed.NodeId, span: Span) Error!void {
+        try c.expression(value, .move);
+        if (!c.zero_rc) return;
+        const shape = typed.resultShape(c.program.nodes[@backingInt(value)].ty, c.program.records) orelse return;
+        if (resources.affine(c.program, shape.error_type)) try c.resourceReturn(value, span);
+    }
+
+    fn resourceReturn(c: *Checker, value: typed.NodeId, span: Span) Error!void {
+        const anchor = try c.resourceParameter(c.function, span);
+        if (try c.resourceOrigin(value)) |actual| if (actual != anchor)
+            return c.reject(span, resource_escape, "a returned resource must depend on this function's single provider or resource input");
+    }
+
+    fn resourceParameter(c: *Checker, function: typed.Function, span: Span) Error!usize {
+        return resources.parameter(c.program, function) orelse return c.reject(span, resource_origin, "a resource result requires exactly one provider or resource input");
+    }
+
+    fn resourceOrigin(c: *Checker, id: typed.NodeId) Error!?usize {
+        const node = c.program.nodes[@backingInt(id)];
+        if (resources.provider(node.ty)) return c.origin(id);
+        if (!resources.affine(c.program, node.ty)) return null;
+        return switch (node.data) {
+            .local => |slot| if (c.state[@backingInt(slot)].dependency == none) null else c.state[@backingInt(slot)].dependency,
+            .field => |field| c.resourceOrigin(field.base),
+            .block_value => |block| c.resourceOrigin(block.value),
+            .wrap, .unwrap, .cast, .complete_resource => |value| c.resourceOrigin(value),
+            .propagate => |value| c.resourceOrigin(value.value),
+            .variant => |variant| if (variant.value) |value| c.resourceOrigin(value) else null,
+            .acquire_resource => |acquire| c.origin(acquire.capability) orelse return c.reject(node.span, resource_origin, "a resource requires a named provider"),
+            .call => |call| c.resourceOrigin(call.arguments[try c.resourceParameter(c.program.functions[@backingInt(call.function)], node.span)]),
+            .record => |fields| result: {
+                var anchor: ?usize = null;
+                for (fields) |field| if (try c.resourceOrigin(field.value)) |next| {
+                    if (anchor != null and anchor != next) return c.reject(node.span, resource_origin, "one resource carrier cannot combine different provider origins");
+                    anchor = next;
+                };
+                break :result anchor;
+            },
+            else => c.reject(node.span, resource_origin, "this resource origin is outside the local checked contract"),
+        };
+    }
+
+    fn resourceAccess(c: *Checker, slot: usize, root: usize, write: bool, span: Span) Error!void {
+        const dependency = c.state[slot].dependency;
+        if (dependency != none and resources.provider(c.function.scope.locals[dependency].ty) and !c.state[dependency].available)
+            return c.reject(span, resource_escape, "the resource's provider is no longer available");
+        if (!write or !resources.provider(c.function.scope.locals[root].ty)) return;
+        for (c.state, c.function.scope.locals, 0..) |state, local, other| {
+            if (state.available and c.state[c.rootOf(other)].available and state.dependency == root and resources.affine(c.program, local.ty))
+                return c.reject(span, resource_escape, "a provider cannot move or change while a dependent resource is live");
         }
     }
 
@@ -570,7 +670,9 @@ const Checker = struct {
             const index = if (order.len == 0) position else order[position];
             const write = std.mem.indexOfScalar(u16, mutates, @intCast(index)) != null;
             const arg = args[index];
-            try c.expression(arg, if (write) .mutate else .read);
+            const affine = c.zero_rc and resources.affine(c.program, c.program.nodes[@backingInt(arg)].ty);
+            try c.expression(arg, if (write) .mutate else if (affine) .move else .read);
+            if (affine) if (try c.resourceOrigin(arg)) |provider| try c.loans.append(c.a, .{ .root = provider, .write = false });
             if (c.tracked(c.program.nodes[@backingInt(arg)].ty)) {
                 if (c.origin(arg)) |root| try c.loans.append(c.a, .{ .root = root, .write = write });
             }
@@ -583,7 +685,8 @@ const Checker = struct {
             out.available = left.available and right.available;
             // Only compiler-created loans have roots. A differing root cannot
             // describe one definite borrowed value after this join.
-            if (left.root != right.root or left.borrowed != right.borrowed or left.view_definition != right.view_definition or left.transferable != right.transferable) out.available = false;
+            const same_ownership = left.root == right.root and left.borrowed == right.borrowed and left.transferable == right.transferable;
+            if (!same_ownership or left.view_definition != right.view_definition or left.dependency != right.dependency) out.available = false;
         }
     }
 
@@ -616,8 +719,9 @@ const Checker = struct {
     }
 
     fn matchArms(c: *Checker, value: typed.NodeId, arms: []const typed.MatchArm) Error!bool {
-        const owned = c.zero_rc and matchOwnsTemporary(c.program.nodes, value);
+        const owned = c.zero_rc and (matchOwnsTemporary(c.program.nodes, value) or resources.affine(c.program, c.program.nodes[@backingInt(value)].ty));
         try c.expression(value, if (owned) .move else .read);
+        const dependency = if (c.zero_rc) try c.resourceOrigin(value) else null;
         const before = try c.a.dupe(State, c.state);
         const saved = c.loans.items.len;
         defer c.loans.shrinkRetainingCapacity(saved);
@@ -626,17 +730,21 @@ const Checker = struct {
         var joined: ?[]State = null;
         for (arms) |arm| {
             @memcpy(c.state, before);
-            if (arm.slot) |slot| c.state[@backingInt(slot)] = .{ .available = true, .borrowed = !owned, .root = if (owned) none else source orelse none };
+            if (arm.slot) |slot| c.state[@backingInt(slot)] = .{ .available = true, .borrowed = !owned, .root = if (owned) none else source orelse none, .dependency = dependency orelse none };
             const body = if (owned and arm.unpack != null) unpacked: {
                 // This is the whole hidden payload, split before source statements.
                 // Each binding is now its own owner; the original is unavailable.
                 if (arm.slot) |slot| c.state[@backingInt(slot)].available = false;
                 for (arm.unpack.?.fields) |field| if (field) |slot| {
-                    c.state[@backingInt(slot)] = .{ .available = true };
+                    c.state[@backingInt(slot)] = .{ .available = true, .dependency = dependency orelse none };
                 };
                 break :unpacked arm.unpack.?.body;
             } else arm.body;
             if (!try c.checkStatement(body)) continue;
+            if (arm.slot) |slot| c.state[@backingInt(slot)].available = false;
+            if (arm.unpack) |unpack| for (unpack.fields) |field| if (field) |slot| {
+                c.state[@backingInt(slot)].available = false;
+            };
             if (joined) |previous| c.merge(previous, c.state);
             if (joined == null) joined = try c.a.alloc(State, c.state.len);
             @memcpy(joined.?, c.state);
@@ -653,13 +761,16 @@ const Checker = struct {
             },
             .initialize => |store| try c.checkStore(store, true, statement.span),
             .assign => |store| try c.checkStore(store, false, statement.span),
-            .discard => |value| try c.expression(value, .read),
+            .discard => |value| try c.expression(value, if (c.zero_rc and resources.affine(c.program, c.program.nodes[@backingInt(value)].ty)) .move else .read),
             .ret => |value| {
                 if (c.view(c.function.signature.return_type)) {
                     try c.expression(value, .read);
                     const source = try c.returnSource(c.function, statement.span);
                     if (c.origin(value) != source) return c.reject(statement.span, view_escape, "the returned view must borrow from this function's single view parameter");
-                } else try c.expression(value, .move);
+                } else {
+                    try c.expression(value, .move);
+                    if (c.zero_rc and resources.affine(c.program, c.function.signature.return_type)) try c.resourceReturn(value, statement.span);
+                }
                 return false;
             },
             .assertion => |assertion| {
@@ -700,6 +811,10 @@ const Checker = struct {
                 const slot = @backingInt(scope.slot);
                 c.state[slot] = .{ .available = true, .borrowed = true };
                 const falls = try c.checkStatement(scope.body);
+                for (c.state, 0..) |*state, other| if (state.available and state.dependency == slot) {
+                    if (other < slot) return c.reject(statement.span, resource_escape, "a resource cannot escape its provider scope");
+                    state.available = false;
+                };
                 c.state[slot].available = false;
                 return falls;
             },

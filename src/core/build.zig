@@ -204,9 +204,12 @@ pub fn coverageSource(allocator: std.mem.Allocator, program: typed.Program, sour
 /// The `ir.Signature.owned` bits of a function whose parameters (`unit` ones included)
 /// are `all` and whose `mut` parameters sit at `mutated`: a `mut` parameter is passed
 /// by value and returned, so the call hands it over (bits count passed parameters only).
-fn ownedParameters(all: []const ir.Type, mutated: []const u16) u64 {
+fn ownedParameters(all: []const ir.Type, function: typed.Function, program: typed.Program, zero_rc: bool) u64 {
     var bits: u64 = 0;
-    for (mutated) |position| {
+    for (all, function.scope.locals[0..all.len], 0..) |_, local_info, position| {
+        const mutated = std.mem.indexOfScalar(u16, function.signature.declared_mutates, @intCast(position)) != null;
+        const affine = zero_rc and @import("single_owner_resource.zig").affine(program, local_info.ty);
+        if (!mutated and !affine) continue;
         var passed: u6 = 0;
         for (all[0..position]) |param| passed += @intFromBool(param != .void);
         if (position < all.len and all[position] != .void) bits |= @as(u64, 1) << passed;
@@ -255,7 +258,8 @@ const ModuleBuilder = struct {
         if (linkage == .extern_c and function.signature.declared_mutates.len != 0) return self.refuse("mut parameter of an extern function", span);
         const ret = try self.returnType(function, declared, all, span);
         const index: u32 = @intCast(self.module.functions.items.len);
-        try self.module.functions.append(self.allocator, .{ .name = function.name, .signature = .{ .params = params, .ret = ret, .linkage = linkage, .owned = ownedParameters(all, function.signature.declared_mutates) }, .span = span });
+        const owned = ownedParameters(all, function, self.input.program, self.module.zero_rc);
+        try self.module.functions.append(self.allocator, .{ .name = function.name, .signature = .{ .params = params, .ret = ret, .linkage = linkage, .owned = owned }, .span = span });
         try self.discovery.ids.put(self.allocator, @backingInt(id), index);
         try self.discovery.pending.append(self.allocator, id);
         return index;
@@ -760,10 +764,26 @@ const FnBuilder = struct {
         var place: ?Place = null;
         const value = try self.expressionPlace(store.value, &place);
         const block = self.current orelse return;
+        try self.providerStore(store, place, value, assign, span);
         try self.write(self.local(store.slot), block, value);
         try self.assigned(self.local(store.slot));
         if (assign) try build_capture.invalidate(@TypeOf(self), self, .{ .root = self.local(store.slot), .steps = &.{} }, span);
         try self.noteAlias(store.slot, place);
+    }
+
+    fn providerStore(self: *FnBuilder, store: typed.Store, place: ?Place, value: ir.Ref, assign: bool, span: u32) Error!void {
+        if (!self.module().zero_rc or self.typeOfRef(value) != .capability) return;
+        const slot = self.local(store.slot);
+        const info = self.checked.scope.locals[slot];
+        if (std.mem.startsWith(u8, info.name, "<")) return;
+        if (assign) _ = try self.effectCall("myl_core_provider_keepalive", &.{.capability}, .void, &.{try self.read(slot, self.current.?)}, span);
+        // Source moves invalidate the old binding. Its lexical pin must read
+        // null on this path, not borrow an already-transferred SSA owner.
+        if (place) |source| if (source.steps.len == 0 and source.root != slot) {
+            const empty = try self.detached(.{ .op = .undef, .ty = .capability });
+            try self.write(source.root, self.current.?, empty);
+        };
+        if (!assign) try self.ssa.resources.append(self.allocator(), .{ .owner = .none, .depth = self.loops.items.len, .pin = slot });
     }
 
     /// Lower a checked statement and preserve lexical cleanup on every exit.
@@ -773,7 +793,16 @@ const FnBuilder = struct {
         const span: u32 = @intCast(s.span.start);
         switch (s.data) {
             .block => |items| {
+                const first_resource = self.ssa.resources.items.len;
+                defer self.ssa.resources.shrinkRetainingCapacity(first_resource);
                 for (items) |item| try self.statement(item);
+                if (self.current != null) {
+                    var index = self.ssa.resources.items.len;
+                    while (index > first_resource) {
+                        index -= 1;
+                        try build_cap.closeScope(@TypeOf(self), self, self.ssa.resources.items[index], span);
+                    }
+                }
             },
             .initialize, .assign => |store| try self.storeStatement(store, span, s.data == .assign),
             .range_loop => |range| {
@@ -972,7 +1001,7 @@ const FnBuilder = struct {
     }
 
     fn matchStatement(self: *FnBuilder, value_node: typed.NodeId, arms: []const typed.MatchArm, span: u32) Error!void {
-        const owned = self.module().zero_rc and @import("single_owner.zig").matchOwnsTemporary(self.mb.input.program.nodes, value_node);
+        const owned = self.module().zero_rc and (@import("single_owner.zig").matchOwnsTemporary(self.mb.input.program.nodes, value_node) or @import("single_owner_resource.zig").affine(self.mb.input.program, self.nodeOf(value_node).ty));
         var value_place: ?Place = null;
         const value = try self.expressionPlace(value_node, &value_place);
         if (self.current == null) return;
@@ -2513,6 +2542,7 @@ fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Funct
         const param = try b.detached(.{ .op = .param, .ty = ty, .data = passed });
         passed += 1;
         try b.write(@intCast(i), entry, param);
+        if (mb.module.zero_rc and ty == .capability) try b.ssa.resources.append(mb.allocator, .{ .owner = .none, .depth = 0, .pin = @intCast(i) });
     }
     try b.statement(checked.scope.body);
     if (b.current != null) {
