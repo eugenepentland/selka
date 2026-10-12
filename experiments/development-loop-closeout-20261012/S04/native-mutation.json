@@ -1,0 +1,40 @@
+{
+  "command": [
+    "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S04/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "build",
+    "test-tooling-units",
+    "-Dtest-filter=a fix round",
+    "--summary",
+    "all"
+  ],
+  "environment": {
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S04/.zig-cache-S04",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S04/.mylang-cache/S04-tmp"
+  },
+  "mode": "Debug",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "results": [
+    {
+      "phase": "baseline",
+      "status": 0,
+      "operational_elapsed_seconds": 4.059930138057098,
+      "source_sha256": "23ee34ae7cc148a252a737cba4c461741a33148a5d4058c115faab358279fc90"
+    },
+    {
+      "phase": "semantic-mutation",
+      "status": 1,
+      "operational_elapsed_seconds": 7.014584923861548,
+      "source_sha256": "548ff1c1d98884c7d90adaec6e722b353d20eea7e5f6bc34471fac27b79a9e64"
+    },
+    {
+      "phase": "revert",
+      "status": 0,
+      "operational_elapsed_seconds": 6.80416832305491,
+      "source_sha256": "23ee34ae7cc148a252a737cba4c461741a33148a5d4058c115faab358279fc90"
+    }
+  ],
+  "isolated_latency_qualification": false
+}

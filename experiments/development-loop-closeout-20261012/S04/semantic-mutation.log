@@ -1,0 +1,27 @@
+build-slot: FIFO ticket 3549, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 3549 after 5s
+test-tooling-units
++- run test tooling-unit-tests 1 pass, 1 fail (2 total)
+guardian/test: test wall 0.18s; slowest over 50ms:
+guardian/test:   0.18s  fix_plan_test.test.a fix round applies duplicates once, defers collisions and withholds self-overlapping fixes
+guardian/test: FAIL — 1 failed of 2
+guardian/test: RESULT {"passed":1,"failed":1,"skipped":0}
+error: 'fix_plan_test.test.a fix round applies duplicates once, defers collisions and withholds self-overlapping fixes' failed:
+       guardian/test: 2 test(s) selected by filter: "a fix round" — 1 match by name, 1 unnamed test block(s) run regardless
+       expected 2, found 0
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:111:17: 0x12650b9 in expectEqualInner__anon_42406 (std.zig)
+                       return error.TestExpectedEqual;
+                       ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x1265562 in expectEqual (tooling_root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-dl-closeout-20261012-S04/src/fix_plan_test.zig:26:5: 0x12655ed in test.a fix round applies duplicates once, defers collisions and withholds self-overlapping fixes (tooling_root_test.zig)
+           try t.expectEqual(@as(usize, 2), chosen.chosen.len);
+           ^
+failed command: cd . && ./.zig-cache-S04/o/b5e7de6e1ea652fb2d79a9b822c213c8/tooling-unit-tests "--guardian-filter=a fix round" --cache-dir=./.zig-cache-S04 --seed=0xbbd2d690 --listen=-
+
+Build Summary: 1/3 steps succeeded (1 failed); 1/2 tests passed (1 failed)
+test-tooling-units transitive failure
++- run test tooling-unit-tests 1 pass, 1 fail (2 total)
+   +- compile test tooling-unit-tests debug native success 1s MaxRSS:155M
+

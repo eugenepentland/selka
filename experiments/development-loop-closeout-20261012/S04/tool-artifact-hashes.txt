@@ -1,0 +1,2 @@
+29900e9418e5585c48a5fab2fe4fdcaceafefd8ec467445184c55fbcf3b005ac  .zig-cache-S04/o/454f7b509922319895added2987002af/tooling-unit-tests
+1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f  /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig

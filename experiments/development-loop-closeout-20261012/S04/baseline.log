@@ -1,0 +1,14 @@
+build-slot: build slot 2, FIFO ticket 3548 after 0s
+test-tooling-units
++- run test tooling-unit-tests w
+guardian/test: 2 test(s) selected by filter: "a fix round" — 1 match by name, 1 unnamed test block(s) run regardless
+guardian/test: test wall 0.00s
+guardian/test: PASS — 2 passed
+guardian/test: RESULT {"passed":2,"failed":0,"skipped":0}
+failed command: cd . && ./.zig-cache-S04/o/e61f71cae8bda45dbf21df41ec73d150/tooling-unit-tests "--guardian-filter=a fix round" --cache-dir=./.zig-cache-S04 --seed=0x23e2cf59 --listen=-
+
+Build Summary: 3/3 steps succeeded; 2/2 tests passed
+test-tooling-units success
++- run test tooling-unit-tests 2 pass (2 total) 10ms MaxRSS:4M
+   +- compile test tooling-unit-tests debug native success 1s MaxRSS:156M
+
