@@ -152,6 +152,47 @@ the whole-artifact fallback. Other reviewed artifact selectors retain their
 existing conservative source contracts. An unchanged wire schema alone never
 authorizes replacement producer reuse.
 
+## Integration gate
+
+`--integration` is the request to run once per integrated commit. It runs the
+complete profile and then two checks that ordinary requests skip:
+
+- **One forced fact/leak run (D1).** Ordinary requests reuse the receipts of the
+  language suites' `--release --verify-facts` members under `MYL_CORE_LEAKCHECK=1`,
+  because both checks are keyed on the program they ran. The integration
+  request reruns every such member it finds in the `language` inventory with
+  `--force` under one gate admission, in a private cache directory that it
+  removes afterwards, so the ordinary receipts stay valid. A failing test, or
+  any test that reports `cached`, fails the request with status 1.
+- **No shared-store mismatches (D3).** It counts the lines of every
+  `mismatches.log` in the native shared stores the request's environment selects
+  (`MYLANG_COMPILER_SHARED_CACHE`, `MYLANG_TEST_SHARED_CACHE`, or their per-user
+  defaults once `default_sharing` is on) before and after the request. A log that
+  grew, or one that is not empty, fails the request with status 5, distinct from
+  a failing test: two producers wrote different bytes under one key.
+
+```bash
+python3 scripts/verify_cache.py --zig "$ZIG" --integration
+```
+
+The outcome is in `last-run.json` under `integration` and in
+`integration-last-run.json` beside it. `--integration` takes neither another
+profile nor a timing window.
+
+## Measured on 12 October
+
+On the merged output-keyed tree (`7313c483e`), a comment edit in `src/parser.zig`
+followed by `mylang test tests/lang` took a median 14.15 s over five edits
+(7.75 to 16.17 s, exclusive timing windows), answering 1,544 of 1,549 eligible
+tests from execution receipts; it took 78 s with nothing reused on 5 October.
+The five that still run call `function_digest`, which binds the compiler
+identity. An unchanged complete verification then took 532 s because every
+request ran the original complete gate (`coverage.unknown_actions` names the
+unregistered `build-env` compile step), not the 34 to 37 s it took before. The
+qualification and its findings are in
+`experiments/output-keyed-receipts-20261012/` and the
+[plan's outcome](../audits/output-keyed-shared-receipts-plan-2026-10-12.md#outcome-12-october).
+
 ## Prepared artifact inventory (`artifacts.json`)
 
 `zig build verification-prepare` installs every prepared native artifact under
@@ -232,6 +273,13 @@ records `"version": 3` and every action key starts from the domain
 `selka-verification-action-v6`. Schema-2 receipts in `verification-v2` are never
 opened, and a schema-2 record found under a v3 key is a miss, so the first
 request after the change reruns every action once. Report schema remains 1.
+`last-run.json` shows, per action, whether its key is path-free and which
+variables entered it:
+
+```bash
+python3 scripts/verify_cache.py --zig "$ZIG"
+jq '.actions[] | {id, path_free, environment_variables}' .mylang-cache/verification-v3/last-run.json
+```
 
 An action key is path- and environment-free by construction:
 

@@ -83,7 +83,9 @@ the existing record is preserved, nothing is published, and one line
 `mismatch <kind> <key> existing=<digest> attempted=<digest>` is appended to the
 namespace's `mismatches.log`. Builds count program mismatches as
 `shared_mismatches` in their cache report. Native test receipts follow the same
-rule with kind `receipt`.
+rule with kind `receipt`. The integration gate (`verify_cache.py --integration`)
+fails with status 5 while any log of a store it used is non-empty
+([integration gate](development-loop.md#integration-gate)).
 Retention does not implement the developer evidence store's conflict poisoning
 or pins. These are disposable caches for trusted local producers, with no
 application-journal or power-loss durability guarantee.
