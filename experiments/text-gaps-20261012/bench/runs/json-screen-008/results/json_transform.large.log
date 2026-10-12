@@ -1,0 +1,3 @@
+build-slot: FIFO ticket 478, position 1; draining active work (build1.lock); waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 478 after 20s
+text-gaps/json-screen-008/json_transform/large {'checked-baseline': True, 'checked-candidate': True, 'rust': True}
