@@ -5,7 +5,7 @@
     "experiments/lox-eda-improvements-20261012/check-error-paths.py": "224084b978b2c8a15cf03f15f363dec9bfc6558d0fb5d3b4c7a6f97a06ffbafd",
     "experiments/lox-eda-improvements-20261012/compile_measure.py": "a5fc53d6cf92d96ca58b7f1d2daef0e8b1e9a6a4c3826e75c66724599af20f31",
     "experiments/lox-eda-improvements-20261012/count.py": "b6bee547985c2e7661621d90a3b036b2176776a5d0f7893f6cb47f5dcaa2e981",
-    "experiments/lox-eda-improvements-20261012/matrix.py": "7eff4b188a7ac753e4c93df6a078732915beb46cce2c5b976fe5d2f57096bfec",
+    "experiments/lox-eda-improvements-20261012/matrix.py": "81b2474047e41aa35147a884ee3e0e91dcfbd6ffabad2f161a5ea9e6e98b6ddd",
     "experiments/lox-eda-improvements-20261012/measure.py": "ebead08898b4eba7885e41451378be14e8d53dc5cf213d66d4230f33130e8c7d",
     "experiments/lox-eda-improvements-20261012/measure_cell.py": "53cee8419a09cb46049c11c6f58cf468a5281e6e31573021f11afd3a0d036f33",
     "experiments/lox-eda-improvements-20261012/prepare.py": "0ddf249728b0ad3b62198ed82251fb9615245856e639adf3e176c9fa0cce4de1",
@@ -28,6 +28,7 @@
       "experiments/lox-eda-improvements-20261012/test_timeout.py"
     ],
     "log": "experiments/lox-eda-improvements-20261012/timeout-tests.log",
-    "log_sha256": "96f8cded2e624cf906f2614937706c562e2848a8edd9c3050d7ac35f7c1a71b0"
+    "log_sha256": "96f8cded2e624cf906f2614937706c562e2848a8edd9c3050d7ac35f7c1a71b0",
+    "reuse_note": "Eight passing deadline tests retained; measure.py and test_timeout.py identities unchanged."
   }
 }

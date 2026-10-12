@@ -42,10 +42,10 @@ def main():
                MYLANG_COMPONENT_DIR=str(Path(common['installation']) / 'libexec/mylang/components'))
     verified = HERE / 'qualification' / app / 'checked-tests.stdout'
     rows = {}
-    def run(label, command, expected=None, minimum=None):
+    def run(label, command, expected=None, minimum=None, cwd=ROOT):
         with (dest / (label + '.stdout')).open('w') as out, (dest / (label + '.stderr')).open('w') as err:
             result = subprocess.run([str(ROOT / 'scripts/build-slot.sh'), 'build', *command],
-                                    cwd=ROOT, env=env, stdout=out, stderr=err)
+                                    cwd=cwd, env=env, stdout=out, stderr=err)
         row = {'command': command, 'returncode': result.returncode}
         if result.returncode == 0 and (expected is not None or minimum is not None):
             row['result'] = json.loads((dest / (label + '.stdout')).read_text())
@@ -86,7 +86,7 @@ def main():
                 run(mode + '-build', [compiler, 'build', str(Path(source['root']) / 'main.my'),
                     '--experimental-zero-rc', *flags, '--cache-dir', str(work / mode / 'build'), '-o', str(binary)])
             run(mode + '-vm-regressions', [sys.executable, '-B', str(HERE / 'P1/verify.py'), str(binary),
-                previous['path'], str(work / (mode + '-vm-cases')), '--correctness-only'])
+                previous['path'], str(work / (mode + '-vm-cases')), '--correctness-only'], cwd=work)
     for path, identity in providers.items():
         assert sha(path) == identity
     validate_build(manifest_path)
