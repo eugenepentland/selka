@@ -1,0 +1,18 @@
+{
+  "status": "prepared only; apply after coordinator C2 approval with A05/A07 runtime and coordinator counter patches",
+  "base_commit": "3c5d19c74b5e323306d76bcc0fed18f90290d1af",
+  "files": [
+    {
+      "path": "src/core/runtime/core_rt.c",
+      "before_sha256": "83449a8fdd78d5f4c23147b709b848929ae1e6ae4c3e0dcdfe6f806a70adc361",
+      "after_sha256": "70aa3232adfa6b673fbc6a75d09cf810c1789351e80b5f779485d9616e9e6684"
+    },
+    {
+      "path": "src/core/runtime/core_bytes.c",
+      "before_sha256": "3e776dd1d693c638d661086b1c375988e59a124bb132cc132c02bb531af05d96",
+      "after_sha256": "e9dea0f02d73aa7601d1a278ac40b9d467df99f67f68f3fa8f5221feeddcf363"
+    }
+  ],
+  "feature_commit": "996501f02673c78b863ac5d0387a21b3c2a5b8ce",
+  "validation": "textual git apply --check only; refreshed native combination not executed"
+}

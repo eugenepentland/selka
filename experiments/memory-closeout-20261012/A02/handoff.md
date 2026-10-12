@@ -183,3 +183,9 @@ uses explicitly recorded Support5 staged components, which remain a legacy
 interim packaging boundary. Ownership is still opt-in and active RC remains.
 The coordinator must integrate the feature and run the frozen candidate's full
 verification and subsequent default/retirement qualification.
+
+The tested feature was committed as `996501f02673c78b863ac5d0387a21b3c2a5b8ce` on the authorized validation
+branch. Its admitted precommit Guardian gate passed all 88 checks; the exact
+log is `raw/nested-extension/feature-commit.log`. Complete native/copy counters
+and the unapplied retirement refresh follow as separate evidence-only files,
+without changing tested production inputs.
