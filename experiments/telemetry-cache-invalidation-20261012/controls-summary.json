@@ -1,0 +1,1137 @@
+{
+  "schema": 1,
+  "rows": [
+    {
+      "label": "new-a",
+      "status": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/control-cache",
+        "--json"
+      ],
+      "report": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "controls::test_constant",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "no-success-receipt",
+              "key": "ccc57e8071140626db93e54a466cab3d3cbd98af4713951a27d704db930b624c",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "canonical-facts",
+              "work": {
+                "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my#81d020ffb6b38cc2efe7066d8b8fb5696f3c78914a8deaeaff87b725605c638d",
+                "producer": {
+                  "facts": {
+                    "fresh": 2,
+                    "reused": 0,
+                    "fallback": 2,
+                    "decoded": 0
+                  },
+                  "lowering": {
+                    "fresh": 2,
+                    "reused": 0,
+                    "materialized": 0
+                  }
+                },
+                "graph": {
+                  "nodes_read": 0,
+                  "nodes_unchanged": 0,
+                  "changed_nodes": 2,
+                  "candidate_tests": 0,
+                  "shards_read": 0,
+                  "shards_written": 3
+                },
+                "planner": {
+                  "index_nodes": 8,
+                  "index_edges": 0,
+                  "affected_nodes": 2,
+                  "closure_nodes": 4,
+                  "closure_edges": 0,
+                  "reused_tests": 0,
+                  "planned_tests": 2
+                },
+                "storage": {
+                  "packed_bytes_read": 0,
+                  "decoded_bytes": 0,
+                  "blocks_decoded": 0,
+                  "payload_bytes_returned": 0,
+                  "block_cache_hits": 0,
+                  "publication": {
+                    "filename_lookups": 2,
+                    "refreshes": 3,
+                    "packs_prepared": 1,
+                    "pack_bytes_prepared": 2717,
+                    "save_bytes_prepared": 1756,
+                    "sequence_locks": 12
+                  }
+                },
+                "nanoseconds": {
+                  "lowering": 478440,
+                  "facts": 155629,
+                  "graph": 64922,
+                  "planner": 101605905,
+                  "keys": 15872,
+                  "publication": 1017565,
+                  "total": 103437357
+                },
+                "transport": {
+                  "request_bytes": 228,
+                  "reply_bytes": 160,
+                  "startups": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "controls::test_second",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "no-success-receipt",
+              "key": "372396a50f7df7484e1f5a6e0a28d478facf21c6a302dd81cf439b1e1d4b18d4",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          }
+        ],
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "unsupported": 0,
+        "sources": [
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my"
+        ]
+      }
+    },
+    {
+      "label": "new-b",
+      "status": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/control-cache",
+        "--json"
+      ],
+      "report": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "controls::test_constant",
+            "status": "cached",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "reuse",
+              "reason": "whole-report-hit",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "checked-file-manifest",
+              "key": "ccc57e8071140626db93e54a466cab3d3cbd98af4713951a27d704db930b624c"
+            }
+          },
+          {
+            "name": "controls::test_second",
+            "status": "cached",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "reuse",
+              "reason": "whole-report-hit",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "checked-file-manifest",
+              "key": "372396a50f7df7484e1f5a6e0a28d478facf21c6a302dd81cf439b1e1d4b18d4"
+            }
+          }
+        ],
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 2,
+        "unsupported": 0,
+        "sources": [
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my"
+        ]
+      }
+    },
+    {
+      "label": "new-absent",
+      "status": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/control-cache",
+        "--json"
+      ],
+      "report": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "controls::test_constant",
+            "status": "cached",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "reuse",
+              "reason": "whole-report-hit",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "checked-file-manifest",
+              "key": "ccc57e8071140626db93e54a466cab3d3cbd98af4713951a27d704db930b624c"
+            }
+          },
+          {
+            "name": "controls::test_second",
+            "status": "cached",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "reuse",
+              "reason": "whole-report-hit",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "checked-file-manifest",
+              "key": "372396a50f7df7484e1f5a6e0a28d478facf21c6a302dd81cf439b1e1d4b18d4"
+            }
+          }
+        ],
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 2,
+        "unsupported": 0,
+        "sources": [
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my"
+        ]
+      }
+    },
+    {
+      "label": "semantic-a",
+      "status": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/control-cache",
+        "--json"
+      ],
+      "report": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "controls::test_constant",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "no-success-receipt",
+              "key": "9d5f29db466b07b53144fc7ef7d10de90945185c1a0182643c37f8b0a0731763",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "canonical-facts",
+              "work": {
+                "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my#81d020ffb6b38cc2efe7066d8b8fb5696f3c78914a8deaeaff87b725605c638d",
+                "producer": {
+                  "facts": {
+                    "fresh": 0,
+                    "reused": 2,
+                    "fallback": 0,
+                    "decoded": 2
+                  },
+                  "lowering": {
+                    "fresh": 0,
+                    "reused": 2,
+                    "materialized": 0
+                  }
+                },
+                "graph": {
+                  "nodes_read": 0,
+                  "nodes_unchanged": 0,
+                  "changed_nodes": 2,
+                  "candidate_tests": 0,
+                  "shards_read": 0,
+                  "shards_written": 1
+                },
+                "planner": {
+                  "index_nodes": 8,
+                  "index_edges": 0,
+                  "affected_nodes": 2,
+                  "closure_nodes": 4,
+                  "closure_edges": 0,
+                  "reused_tests": 0,
+                  "planned_tests": 2
+                },
+                "storage": {
+                  "packed_bytes_read": 1684,
+                  "decoded_bytes": 2876,
+                  "blocks_decoded": 1,
+                  "payload_bytes_returned": 710,
+                  "block_cache_hits": 5,
+                  "publication": {
+                    "filename_lookups": 3,
+                    "refreshes": 1,
+                    "packs_prepared": 1,
+                    "pack_bytes_prepared": 816,
+                    "save_bytes_prepared": 298,
+                    "sequence_locks": 4
+                  }
+                },
+                "nanoseconds": {
+                  "lowering": 522077,
+                  "facts": 72148,
+                  "graph": 51579,
+                  "planner": 100656400,
+                  "keys": 18535,
+                  "publication": 701666,
+                  "total": 102106430
+                },
+                "transport": {
+                  "request_bytes": 228,
+                  "reply_bytes": 160,
+                  "startups": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "controls::test_second",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "no-success-receipt",
+              "key": "d9d06210da3710b75ec531774f80703f3309253bb18c2d714bd777ec51560661",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          }
+        ],
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "unsupported": 0,
+        "sources": [
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my"
+        ]
+      }
+    },
+    {
+      "label": "semantic-b",
+      "status": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/control-cache",
+        "--json"
+      ],
+      "report": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "controls::test_constant",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "no-success-receipt",
+              "key": "9b2710266056b168656c7ee7c513659b2538ef8d65eb5c270b378c677e07d72d",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "canonical-facts",
+              "work": {
+                "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my#81d020ffb6b38cc2efe7066d8b8fb5696f3c78914a8deaeaff87b725605c638d",
+                "producer": {
+                  "facts": {
+                    "fresh": 0,
+                    "reused": 2,
+                    "fallback": 0,
+                    "decoded": 2
+                  },
+                  "lowering": {
+                    "fresh": 0,
+                    "reused": 2,
+                    "materialized": 0
+                  }
+                },
+                "graph": {
+                  "nodes_read": 0,
+                  "nodes_unchanged": 0,
+                  "changed_nodes": 2,
+                  "candidate_tests": 0,
+                  "shards_read": 0,
+                  "shards_written": 1
+                },
+                "planner": {
+                  "index_nodes": 8,
+                  "index_edges": 0,
+                  "affected_nodes": 2,
+                  "closure_nodes": 4,
+                  "closure_edges": 0,
+                  "reused_tests": 0,
+                  "planned_tests": 2
+                },
+                "storage": {
+                  "packed_bytes_read": 1684,
+                  "decoded_bytes": 2876,
+                  "blocks_decoded": 1,
+                  "payload_bytes_returned": 710,
+                  "block_cache_hits": 5,
+                  "publication": {
+                    "filename_lookups": 4,
+                    "refreshes": 1,
+                    "packs_prepared": 1,
+                    "pack_bytes_prepared": 815,
+                    "save_bytes_prepared": 298,
+                    "sequence_locks": 4
+                  }
+                },
+                "nanoseconds": {
+                  "lowering": 533235,
+                  "facts": 71483,
+                  "graph": 46483,
+                  "planner": 101068783,
+                  "keys": 16783,
+                  "publication": 809922,
+                  "total": 102622090
+                },
+                "transport": {
+                  "request_bytes": 228,
+                  "reply_bytes": 160,
+                  "startups": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "controls::test_second",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "no-success-receipt",
+              "key": "1e45e881c2a675db5a1159a3d15f0c722cc2b62472967f678c3fd95b55dfb592",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          }
+        ],
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "unsupported": 0,
+        "sources": [
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my"
+        ]
+      }
+    },
+    {
+      "label": "semantic-restored",
+      "status": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/control-cache",
+        "--json"
+      ],
+      "report": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "controls::test_constant",
+            "status": "cached",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "reuse",
+              "reason": "whole-receipt-hit",
+              "key": "ccc57e8071140626db93e54a466cab3d3cbd98af4713951a27d704db930b624c",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "canonical-facts",
+              "work": {
+                "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my#81d020ffb6b38cc2efe7066d8b8fb5696f3c78914a8deaeaff87b725605c638d",
+                "producer": {
+                  "facts": {
+                    "fresh": 0,
+                    "reused": 2,
+                    "fallback": 0,
+                    "decoded": 2
+                  },
+                  "lowering": {
+                    "fresh": 0,
+                    "reused": 2,
+                    "materialized": 0
+                  }
+                },
+                "graph": {
+                  "nodes_read": 2,
+                  "nodes_unchanged": 2,
+                  "changed_nodes": 0,
+                  "candidate_tests": 2,
+                  "shards_read": 3,
+                  "shards_written": 0
+                },
+                "planner": {
+                  "index_nodes": 14,
+                  "index_edges": 0,
+                  "affected_nodes": 0,
+                  "closure_nodes": 0,
+                  "closure_edges": 0,
+                  "reused_tests": 2,
+                  "planned_tests": 0
+                },
+                "storage": {
+                  "packed_bytes_read": 1684,
+                  "decoded_bytes": 2876,
+                  "blocks_decoded": 1,
+                  "payload_bytes_returned": 1332,
+                  "block_cache_hits": 10,
+                  "publication": {
+                    "filename_lookups": 5,
+                    "refreshes": 1,
+                    "packs_prepared": 1,
+                    "pack_bytes_prepared": 508,
+                    "save_bytes_prepared": 160,
+                    "sequence_locks": 3
+                  }
+                },
+                "nanoseconds": {
+                  "lowering": 611806,
+                  "facts": 76644,
+                  "graph": 162586,
+                  "planner": 101312271,
+                  "keys": 1595,
+                  "publication": 732465,
+                  "total": 102986007
+                },
+                "transport": {
+                  "request_bytes": 268,
+                  "reply_bytes": 160,
+                  "startups": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "controls::test_second",
+            "status": "cached",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "reuse",
+              "reason": "whole-receipt-hit",
+              "key": "372396a50f7df7484e1f5a6e0a28d478facf21c6a302dd81cf439b1e1d4b18d4",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          }
+        ],
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 2,
+        "unsupported": 0,
+        "sources": [
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my"
+        ]
+      }
+    },
+    {
+      "label": "forced",
+      "status": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/control-cache",
+        "--json",
+        "--force"
+      ],
+      "report": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "controls::test_constant",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "ccc57e8071140626db93e54a466cab3d3cbd98af4713951a27d704db930b624c",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "canonical-facts",
+              "work": {
+                "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my#81d020ffb6b38cc2efe7066d8b8fb5696f3c78914a8deaeaff87b725605c638d",
+                "producer": {
+                  "facts": {
+                    "fresh": 0,
+                    "reused": 2,
+                    "fallback": 0,
+                    "decoded": 2
+                  },
+                  "lowering": {
+                    "fresh": 0,
+                    "reused": 2,
+                    "materialized": 0
+                  }
+                },
+                "graph": {
+                  "nodes_read": 2,
+                  "nodes_unchanged": 2,
+                  "changed_nodes": 0,
+                  "candidate_tests": 2,
+                  "shards_read": 3,
+                  "shards_written": 0
+                },
+                "planner": {
+                  "index_nodes": 14,
+                  "index_edges": 0,
+                  "affected_nodes": 0,
+                  "closure_nodes": 0,
+                  "closure_edges": 0,
+                  "reused_tests": 2,
+                  "planned_tests": 0
+                },
+                "storage": {
+                  "packed_bytes_read": 1951,
+                  "decoded_bytes": 3148,
+                  "blocks_decoded": 2,
+                  "payload_bytes_returned": 1332,
+                  "block_cache_hits": 9,
+                  "publication": {
+                    "filename_lookups": 6,
+                    "refreshes": 1,
+                    "packs_prepared": 1,
+                    "pack_bytes_prepared": 508,
+                    "save_bytes_prepared": 160,
+                    "sequence_locks": 3
+                  }
+                },
+                "nanoseconds": {
+                  "lowering": 589379,
+                  "facts": 71248,
+                  "graph": 186988,
+                  "planner": 101632405,
+                  "keys": 1807,
+                  "publication": 617252,
+                  "total": 103174168
+                },
+                "transport": {
+                  "request_bytes": 268,
+                  "reply_bytes": 160,
+                  "startups": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "controls::test_second",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "372396a50f7df7484e1f5a6e0a28d478facf21c6a302dd81cf439b1e1d4b18d4",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          }
+        ],
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "unsupported": 0,
+        "sources": [
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my"
+        ]
+      }
+    },
+    {
+      "label": "facts",
+      "status": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/control-cache",
+        "--json",
+        "--release",
+        "--verify-facts"
+      ],
+      "report": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "controls::test_constant",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "verify-facts",
+              "key": "aca13af27c3998068050f774dcf288508a19a89811b1f83839f43de0a78a7007",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "canonical-facts",
+              "work": {
+                "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my#81d020ffb6b38cc2efe7066d8b8fb5696f3c78914a8deaeaff87b725605c638d",
+                "producer": {
+                  "facts": {
+                    "fresh": 0,
+                    "reused": 2,
+                    "fallback": 0,
+                    "decoded": 2
+                  },
+                  "lowering": {
+                    "fresh": 0,
+                    "reused": 2,
+                    "materialized": 0
+                  }
+                },
+                "graph": {
+                  "nodes_read": 0,
+                  "nodes_unchanged": 0,
+                  "changed_nodes": 2,
+                  "candidate_tests": 0,
+                  "shards_read": 0,
+                  "shards_written": 1
+                },
+                "planner": {
+                  "index_nodes": 8,
+                  "index_edges": 0,
+                  "affected_nodes": 2,
+                  "closure_nodes": 4,
+                  "closure_edges": 0,
+                  "reused_tests": 0,
+                  "planned_tests": 2
+                },
+                "storage": {
+                  "packed_bytes_read": 1684,
+                  "decoded_bytes": 2876,
+                  "blocks_decoded": 1,
+                  "payload_bytes_returned": 710,
+                  "block_cache_hits": 5,
+                  "publication": {
+                    "filename_lookups": 7,
+                    "refreshes": 1,
+                    "packs_prepared": 1,
+                    "pack_bytes_prepared": 816,
+                    "save_bytes_prepared": 298,
+                    "sequence_locks": 4
+                  }
+                },
+                "nanoseconds": {
+                  "lowering": 571216,
+                  "facts": 69836,
+                  "graph": 45974,
+                  "planner": 100552362,
+                  "keys": 16914,
+                  "publication": 683990,
+                  "total": 102014813
+                },
+                "transport": {
+                  "request_bytes": 228,
+                  "reply_bytes": 160,
+                  "startups": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "controls::test_second",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "verify-facts",
+              "key": "ede7d94d8439530fc4c2d89ccf3a70627964dcc82e8da289930cd9e00678299b",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          }
+        ],
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "unsupported": 0,
+        "sources": [
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my"
+        ]
+      }
+    },
+    {
+      "label": "leaks",
+      "status": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/control-cache",
+        "--json"
+      ],
+      "report": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "controls::test_constant",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "leak-check",
+              "key": "e45088efc358eaa9019c29557c5cd811e90d6513d5a898f71df8945bce87964d",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "canonical-facts",
+              "work": {
+                "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my#81d020ffb6b38cc2efe7066d8b8fb5696f3c78914a8deaeaff87b725605c638d",
+                "producer": {
+                  "facts": {
+                    "fresh": 0,
+                    "reused": 2,
+                    "fallback": 0,
+                    "decoded": 2
+                  },
+                  "lowering": {
+                    "fresh": 0,
+                    "reused": 2,
+                    "materialized": 0
+                  }
+                },
+                "graph": {
+                  "nodes_read": 0,
+                  "nodes_unchanged": 0,
+                  "changed_nodes": 2,
+                  "candidate_tests": 0,
+                  "shards_read": 0,
+                  "shards_written": 1
+                },
+                "planner": {
+                  "index_nodes": 8,
+                  "index_edges": 0,
+                  "affected_nodes": 2,
+                  "closure_nodes": 4,
+                  "closure_edges": 0,
+                  "reused_tests": 0,
+                  "planned_tests": 2
+                },
+                "storage": {
+                  "packed_bytes_read": 1684,
+                  "decoded_bytes": 2876,
+                  "blocks_decoded": 1,
+                  "payload_bytes_returned": 710,
+                  "block_cache_hits": 5,
+                  "publication": {
+                    "filename_lookups": 8,
+                    "refreshes": 1,
+                    "packs_prepared": 1,
+                    "pack_bytes_prepared": 814,
+                    "save_bytes_prepared": 298,
+                    "sequence_locks": 4
+                  }
+                },
+                "nanoseconds": {
+                  "lowering": 1067833,
+                  "facts": 146371,
+                  "graph": 83593,
+                  "planner": 7502046,
+                  "keys": 26833,
+                  "publication": 1170731,
+                  "total": 10109722
+                },
+                "transport": {
+                  "request_bytes": 228,
+                  "reply_bytes": 160,
+                  "startups": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "controls::test_second",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "leak-check",
+              "key": "a964f92b76a1c01021b15af6280ce825e30256ffbe364e064acc21e5f5c84857",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          }
+        ],
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "unsupported": 0,
+        "sources": [
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my"
+        ]
+      }
+    },
+    {
+      "label": "source-failure",
+      "status": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/control-cache",
+        "--json"
+      ],
+      "report": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "controls::test_constant",
+            "status": "failed",
+            "reason": "expected true, got false",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "no-success-receipt",
+              "key": "56eb1c382a479949c56368518f0278c9f905ec6d0e7b709ed8facbc1a33645ad",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "canonical-facts",
+              "work": {
+                "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my#81d020ffb6b38cc2efe7066d8b8fb5696f3c78914a8deaeaff87b725605c638d",
+                "producer": {
+                  "facts": {
+                    "fresh": 1,
+                    "reused": 1,
+                    "fallback": 1,
+                    "decoded": 1
+                  },
+                  "lowering": {
+                    "fresh": 1,
+                    "reused": 1,
+                    "materialized": 0
+                  }
+                },
+                "graph": {
+                  "nodes_read": 2,
+                  "nodes_unchanged": 1,
+                  "changed_nodes": 1,
+                  "candidate_tests": 1,
+                  "shards_read": 3,
+                  "shards_written": 2
+                },
+                "planner": {
+                  "index_nodes": 16,
+                  "index_edges": 0,
+                  "affected_nodes": 1,
+                  "closure_nodes": 2,
+                  "closure_edges": 0,
+                  "reused_tests": 1,
+                  "planned_tests": 1
+                },
+                "storage": {
+                  "packed_bytes_read": 1951,
+                  "decoded_bytes": 3148,
+                  "blocks_decoded": 2,
+                  "payload_bytes_returned": 777,
+                  "block_cache_hits": 5,
+                  "publication": {
+                    "filename_lookups": 9,
+                    "refreshes": 1,
+                    "packs_prepared": 1,
+                    "pack_bytes_prepared": 1871,
+                    "save_bytes_prepared": 1090,
+                    "sequence_locks": 8
+                  }
+                },
+                "nanoseconds": {
+                  "lowering": 825492,
+                  "facts": 128890,
+                  "graph": 200550,
+                  "planner": 107667247,
+                  "keys": 12473,
+                  "publication": 993595,
+                  "total": 109913018
+                },
+                "transport": {
+                  "request_bytes": 272,
+                  "reply_bytes": 160,
+                  "startups": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "controls::test_second",
+            "status": "cached",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "reuse",
+              "reason": "receipt-hit",
+              "key": "372396a50f7df7484e1f5a6e0a28d478facf21c6a302dd81cf439b1e1d4b18d4",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          }
+        ],
+        "passed": 0,
+        "failed": 1,
+        "skipped": 0,
+        "cached": 1,
+        "unsupported": 0,
+        "sources": [
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my"
+        ]
+      }
+    },
+    {
+      "label": "source-restored",
+      "status": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/control-cache",
+        "--json"
+      ],
+      "report": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "controls::test_constant",
+            "status": "cached",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "reuse",
+              "reason": "whole-receipt-hit",
+              "key": "ccc57e8071140626db93e54a466cab3d3cbd98af4713951a27d704db930b624c",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "canonical-facts",
+              "work": {
+                "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my#81d020ffb6b38cc2efe7066d8b8fb5696f3c78914a8deaeaff87b725605c638d",
+                "producer": {
+                  "facts": {
+                    "fresh": 0,
+                    "reused": 2,
+                    "fallback": 0,
+                    "decoded": 2
+                  },
+                  "lowering": {
+                    "fresh": 0,
+                    "reused": 2,
+                    "materialized": 0
+                  }
+                },
+                "graph": {
+                  "nodes_read": 2,
+                  "nodes_unchanged": 1,
+                  "changed_nodes": 1,
+                  "candidate_tests": 1,
+                  "shards_read": 3,
+                  "shards_written": 0
+                },
+                "planner": {
+                  "index_nodes": 16,
+                  "index_edges": 0,
+                  "affected_nodes": 1,
+                  "closure_nodes": 2,
+                  "closure_edges": 0,
+                  "reused_tests": 1,
+                  "planned_tests": 1
+                },
+                "storage": {
+                  "packed_bytes_read": 2874,
+                  "decoded_bytes": 4638,
+                  "blocks_decoded": 2,
+                  "payload_bytes_returned": 1332,
+                  "block_cache_hits": 9,
+                  "publication": {
+                    "filename_lookups": 10,
+                    "refreshes": 1,
+                    "packs_prepared": 1,
+                    "pack_bytes_prepared": 508,
+                    "save_bytes_prepared": 160,
+                    "sequence_locks": 3
+                  }
+                },
+                "nanoseconds": {
+                  "lowering": 688711,
+                  "facts": 67118,
+                  "graph": 317757,
+                  "planner": 100980648,
+                  "keys": 11498,
+                  "publication": 630248,
+                  "total": 102771339
+                },
+                "transport": {
+                  "request_bytes": 272,
+                  "reply_bytes": 160,
+                  "startups": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "controls::test_second",
+            "status": "cached",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "reuse",
+              "reason": "whole-receipt-hit",
+              "key": "372396a50f7df7484e1f5a6e0a28d478facf21c6a302dd81cf439b1e1d4b18d4",
+              "component": "ddee76958be66c288abdf44198381674ce73ed97ff379731c7f2ed192a33eae7",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          }
+        ],
+        "passed": 0,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 2,
+        "unsupported": 0,
+        "sources": [
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/controls.my"
+        ]
+      }
+    }
+  ],
+  "status": "passed"
+}

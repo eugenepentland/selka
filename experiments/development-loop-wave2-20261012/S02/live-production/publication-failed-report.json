@@ -1,0 +1,122 @@
+{
+  "actions": [
+    {
+      "action_key": "d381a5a5eb283248ab36aa4e90b5e80bfe79e46fab3156bb0525943922453564",
+      "id": "lifecycle",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "explicit rerun or filtered request",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "explicit rerun or filtered request",
+      "state": "fresh"
+    }
+  ],
+  "admissions": [
+    {
+      "admission_scope": "command",
+      "admission_wait_seconds": 5.329582720063627,
+      "admitted": true,
+      "cancelled": false,
+      "elapsed_seconds": 5.5038159370888025,
+      "execution_limits": {
+        "terminate_grace_seconds": 0.5,
+        "timeout_seconds": null
+      },
+      "incomplete": false,
+      "kind": "gate",
+      "log_errors": [],
+      "logs": [
+        {
+          "bytes_seen": 35,
+          "capture_available": true,
+          "capture_complete": true,
+          "observed_steps": {
+            "additive": false,
+            "aggregate_peak_rss_bytes": null,
+            "cpu_seconds": null,
+            "malformed": false,
+            "observations": [],
+            "status": "unknown",
+            "truncated": false
+          },
+          "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/.tmp/verification-live-bq0bnq6u/fixture/.mylang-cache/verification-v1/last-logs/gate/stdout.log",
+          "truncated": false
+        },
+        {
+          "bytes_seen": 170,
+          "capture_available": true,
+          "capture_complete": true,
+          "observed_steps": {
+            "additive": false,
+            "aggregate_peak_rss_bytes": null,
+            "cpu_seconds": null,
+            "malformed": false,
+            "observations": [],
+            "status": "unknown",
+            "truncated": false
+          },
+          "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/.tmp/verification-live-bq0bnq6u/fixture/.mylang-cache/verification-v1/last-logs/gate/stderr.log",
+          "truncated": false
+        }
+      ],
+      "observed_held_seconds": 0.1742332170251757,
+      "status": 0,
+      "timed_out": false,
+      "validation_seconds": 0.0020034019835293293,
+      "worker_seconds": 0.17218024609610438
+    }
+  ],
+  "elapsed_seconds": 6.828350140945986,
+  "error": "",
+  "stability_diagnostics": {
+    "reasons": [
+      {
+        "facet": "authority",
+        "name": "None",
+        "reason": "snapshot watcher closed",
+        "role": "configuration"
+      },
+      {
+        "facet": "authority",
+        "name": "None",
+        "reason": "snapshot watcher closed",
+        "role": "coordinator"
+      },
+      {
+        "facet": "authority",
+        "name": "None",
+        "reason": "snapshot watcher closed",
+        "role": "preparation_sources"
+      },
+      {
+        "facet": "authority",
+        "name": "None",
+        "reason": "snapshot watcher closed",
+        "role": "prepared_artifacts"
+      },
+      {
+        "facet": "authority",
+        "name": "None",
+        "reason": "snapshot watcher closed",
+        "role": "action_inputs"
+      }
+    ],
+    "status": "observed",
+    "truncated": false,
+    "unknown": true,
+    "version": 1
+  },
+  "stage": "publication",
+  "status": 130,
+  "success": false,
+  "timings": {
+    "action_input_snapshot_seconds": 0.0002902641426771879,
+    "final_validation_seconds": 0.0058318548835814,
+    "prepare_lookup_outside_admission_seconds": 1.2714750899467617,
+    "source_snapshot_seconds": 0.0009752139449119568
+  },
+  "version": 1
+}

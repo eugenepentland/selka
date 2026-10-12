@@ -1,0 +1,44 @@
+{
+  "source": "fe7637e82f58430573d99473e5389a4369bbba7e",
+  "compiler_sha256": "cc827c4e79243f299dc92327fa86049669307d1f0edfa816a5b641dc443176b0",
+  "inventory_equal_to_previous": true,
+  "groups": 46,
+  "members": {
+    "required_actions": 106,
+    "registered_actions": 106,
+    "unknown_actions": []
+  },
+  "action_keys_equal_across_three_requests": true,
+  "budget_context_equal": true,
+  "inputs_stable": true,
+  "full_coverage": true,
+  "native_telemetry": {
+    "members": 31,
+    "executed": 2886,
+    "complete": true
+  },
+  "python_telemetry": {
+    "members": 16,
+    "executed": 371,
+    "complete": true
+  },
+  "warm_guest_summaries": {
+    "warm-01": {
+      "fresh": 1796,
+      "cached": 3616,
+      "failed": 0,
+      "skipped": 0
+    },
+    "warm-02": {
+      "fresh": 1796,
+      "cached": 3616,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "limitations": [
+    "two unchanged observations; not p95 qualification",
+    "historical timing comparison is not randomized paired measurement",
+    "overall roadmap and self-hosting qualification remain open"
+  ]
+}

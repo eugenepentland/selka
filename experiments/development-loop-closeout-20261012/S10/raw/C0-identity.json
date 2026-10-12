@@ -1,0 +1,42 @@
+{
+  "C0": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "tree_sha256": "be7ec3053c0530cfb6d033135b6bf9199e9e9d78f4a07760fe197da35329d1f0",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "zig_version": "0.17.0-dev.1683+5ceec001b",
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "cache_environment": {
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-cache",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.tmp-s10",
+    "MYLANG_CORE_RUNTIME_CACHE": null,
+    "MYLANG_COMPILER_SHARED_CACHE": null
+  },
+  "cache_state": "fresh private local/project/verification; shared global/runtime not reset",
+  "abi_source": "C0 tree owns runtime/driver/ABI contract; exact tree archived",
+  "baseline_modes": [
+    "Debug",
+    "ReleaseFast"
+  ]
+}

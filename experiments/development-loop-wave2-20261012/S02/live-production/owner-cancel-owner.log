@@ -1,0 +1,11 @@
+build-slot: FIFO ticket 493, position 7; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 493, position 3; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 2, FIFO ticket 493 after 90s
+build-slot: FIFO ticket 502, position 9; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 502, position 3; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 502 after 95s
+verification: execute lifecycle (no valid receipt)
+verification: profile complete; 1 pending, 1 selected, 0 deferred
+build-slot: FIFO ticket 130, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 130 after 5s
+verification: cancelled; no new success receipts

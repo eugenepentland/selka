@@ -1,0 +1,4 @@
+build-slot: FIFO ticket 598, position 10; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 598, position 4; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 598 after 110s
+{"repetitions": 2, "median_ns": 5700862125.5, "empirical_p95_ns": 5706307562, "first_feedback_empirical_p95_ns": 61175666, "targets": {"feedback_5s": true, "completion_empirical_p95_15s": true}, "all_completed": true, "scope": "guest project edit; does not measure Zig compiler-source rebuilding or whole gate", "qualification": "empirical cohort only; no stable tail inference or broader compiler-edit claim"}

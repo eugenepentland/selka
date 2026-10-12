@@ -1,0 +1,12 @@
+test_cache_never_authorizes_a_closed_or_dirty_request_snapshot (__main__.CallerAuthentication.test_cache_never_authorizes_a_closed_or_dirty_request_snapshot) ... ok
+test_current_source_proof_is_cached_without_warm_file_reads (__main__.CallerAuthentication.test_current_source_proof_is_cached_without_warm_file_reads) ... ok
+test_fake_root_attaches_actual_provider_authority_until_request_exit (__main__.CallerAuthentication.test_fake_root_attaches_actual_provider_authority_until_request_exit) ... ok
+test_mismatched_watched_bytes_fail_even_when_current_code_would_match (__main__.CallerAuthentication.test_mismatched_watched_bytes_fail_even_when_current_code_would_match) ... ok
+test_missing_metadata_cannot_use_an_earlier_content_proof (__main__.CallerAuthentication.test_missing_metadata_cannot_use_an_earlier_content_proof) ... ok
+test_proof_cache_compares_code_object_by_identity (__main__.CallerAuthentication.test_proof_cache_compares_code_object_by_identity) ... ok
+test_stale_helper_before_watch_is_rejected_even_with_fresh_source_capture (__main__.CallerAuthentication.test_stale_helper_before_watch_is_rejected_even_with_fresh_source_capture) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.053s
+
+OK

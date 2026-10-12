@@ -1,0 +1,50 @@
+{
+  "schema": "s03-private-cold-output-cleanup-v1",
+  "paths": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/all-units-00-C0",
+      "logical_bytes": 570813113,
+      "allocated_bytes": 531918848,
+      "authority": "completed cold/failed experiment outputs only; no pins/leases; hashes/raw commands committed"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/all-units-00-B0",
+      "logical_bytes": 622345827,
+      "allocated_bytes": 577224704,
+      "authority": "completed cold/failed experiment outputs only; no pins/leases; hashes/raw commands committed"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/all-units-01-C0",
+      "logical_bytes": 570788537,
+      "allocated_bytes": 531947520,
+      "authority": "completed cold/failed experiment outputs only; no pins/leases; hashes/raw commands committed"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/all-units-01-B0",
+      "logical_bytes": 622337635,
+      "allocated_bytes": 577187840,
+      "authority": "completed cold/failed experiment outputs only; no pins/leases; hashes/raw commands committed"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/rejected-build-00-C0",
+      "logical_bytes": 55863231,
+      "allocated_bytes": 57507840,
+      "authority": "completed cold/failed experiment outputs only; no pins/leases; hashes/raw commands committed"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/build-00-C0",
+      "logical_bytes": 210990641,
+      "allocated_bytes": 197013504,
+      "authority": "completed cold/failed experiment outputs only; no pins/leases; hashes/raw commands committed"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/build-00-B0",
+      "logical_bytes": 82638246,
+      "allocated_bytes": 84242432,
+      "authority": "completed cold/failed experiment outputs only; no pins/leases; hashes/raw commands committed"
+    }
+  ],
+  "logical_bytes_removed": 2735777230,
+  "allocated_bytes_removed": 2557042688,
+  "preserved": "all source snapshots, shared global caches, warm/qualification outputs, active golden caches/artifacts, frozen baseline/repaired compilers and components"
+}

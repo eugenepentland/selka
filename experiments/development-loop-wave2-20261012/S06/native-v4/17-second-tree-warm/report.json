@@ -1,0 +1,442 @@
+{
+  "action_budgets": {
+    "actions": [
+      {
+        "action_elapsed_seconds": null,
+        "id": "text_scalar_unit",
+        "members": [
+          {
+            "label": "verification action text_scalar_unit member 0",
+            "maximum_seconds": null,
+            "median_seconds": null,
+            "minimum_seconds": null,
+            "provenance": [],
+            "recommendation": {
+              "expected_seconds": null,
+              "hard_deadline_seconds": null,
+              "regression_seconds": null
+            },
+            "regression_evaluation": {
+              "enforced": false,
+              "samples_exceeding": null,
+              "scope": "named member elapsed observations",
+              "status": "not_configured",
+              "threshold_seconds": null
+            },
+            "sample_count": 0,
+            "status": "unknown"
+          }
+        ],
+        "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+        "targets": {
+          "expected_seconds": null,
+          "hard_deadline_seconds": null,
+          "regression_seconds": null
+        }
+      },
+      {
+        "action_elapsed_seconds": null,
+        "id": "tooling_unit",
+        "members": [
+          {
+            "label": "verification action tooling_unit member 0",
+            "maximum_seconds": null,
+            "median_seconds": null,
+            "minimum_seconds": null,
+            "provenance": [],
+            "recommendation": {
+              "expected_seconds": null,
+              "hard_deadline_seconds": null,
+              "regression_seconds": null
+            },
+            "regression_evaluation": {
+              "enforced": false,
+              "samples_exceeding": null,
+              "scope": "named member elapsed observations",
+              "status": "not_configured",
+              "threshold_seconds": null
+            },
+            "sample_count": 0,
+            "status": "unknown"
+          }
+        ],
+        "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+        "targets": {
+          "expected_seconds": null,
+          "hard_deadline_seconds": null,
+          "regression_seconds": null
+        }
+      },
+      {
+        "action_elapsed_seconds": null,
+        "id": "fixtures",
+        "members": [
+          {
+            "label": "verification action fixtures member 0",
+            "maximum_seconds": null,
+            "median_seconds": null,
+            "minimum_seconds": null,
+            "provenance": [],
+            "recommendation": {
+              "expected_seconds": null,
+              "hard_deadline_seconds": null,
+              "regression_seconds": null
+            },
+            "regression_evaluation": {
+              "enforced": false,
+              "samples_exceeding": null,
+              "scope": "named member elapsed observations",
+              "status": "not_configured",
+              "threshold_seconds": null
+            },
+            "sample_count": 0,
+            "status": "unknown"
+          }
+        ],
+        "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+        "targets": {
+          "expected_seconds": null,
+          "hard_deadline_seconds": null,
+          "regression_seconds": null
+        }
+      },
+      {
+        "action_elapsed_seconds": null,
+        "id": "format",
+        "members": [
+          {
+            "label": "verification action format member 0",
+            "maximum_seconds": null,
+            "median_seconds": null,
+            "minimum_seconds": null,
+            "provenance": [],
+            "recommendation": {
+              "expected_seconds": null,
+              "hard_deadline_seconds": null,
+              "regression_seconds": null
+            },
+            "regression_evaluation": {
+              "enforced": false,
+              "samples_exceeding": null,
+              "scope": "named member elapsed observations",
+              "status": "not_configured",
+              "threshold_seconds": null
+            },
+            "sample_count": 0,
+            "status": "unknown"
+          }
+        ],
+        "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+        "targets": {
+          "expected_seconds": null,
+          "hard_deadline_seconds": null,
+          "regression_seconds": null
+        }
+      }
+    ],
+    "context": "2233cc2cfe10ce74fbd1817f51312a967b6d5dd21222cbc82edb5f99971692d9",
+    "enforced": false,
+    "minimum_samples": 5,
+    "notes": [
+      "shared-host operational observations; no isolated latency qualification",
+      "no percentile or hard deadline calibration",
+      "recommendations require review; legacy actions remain report-only"
+    ],
+    "rejections": [],
+    "sample_limit": 64,
+    "version": 1
+  },
+  "action_coverage": {
+    "actions": [
+      {
+        "id": "text_scalar_unit",
+        "state": "reused"
+      },
+      {
+        "id": "tooling_unit",
+        "state": "reused"
+      },
+      {
+        "id": "fixtures",
+        "state": "reused"
+      },
+      {
+        "id": "format",
+        "state": "reused"
+      }
+    ],
+    "authority": "advisory-only",
+    "counts": {
+      "executed": 0,
+      "failed": 0,
+      "outstanding": 0,
+      "partial": 0,
+      "reused": 4,
+      "unknown": 0
+    },
+    "selected": 4,
+    "unknown": false,
+    "version": 1
+  },
+  "action_metadata": [
+    {
+      "id": "text_scalar_unit",
+      "identity_scope": "group-local-v1",
+      "steps": [
+        {
+          "kind": "run",
+          "label": "verification action text_scalar_unit member 0",
+          "original_label": "run test scalar-live-tests"
+        }
+      ]
+    },
+    {
+      "id": "tooling_unit",
+      "identity_scope": "group-local-v1",
+      "steps": [
+        {
+          "kind": "run",
+          "label": "verification action tooling_unit member 0",
+          "original_label": "run test tooling-live-tests"
+        }
+      ]
+    },
+    {
+      "id": "fixtures",
+      "identity_scope": "group-local-v1",
+      "steps": [
+        {
+          "kind": "run",
+          "label": "verification action fixtures member 0",
+          "original_label": "run python3"
+        }
+      ]
+    },
+    {
+      "id": "format",
+      "identity_scope": "group-local-v1",
+      "steps": [
+        {
+          "kind": "fmt",
+          "label": "verification action format member 0",
+          "original_label": "zig fmt --check"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "action_key": "65682bf8eb42752029b5f33797284c5740c94ab491d98efba3e7868ad9aa4063",
+      "id": "text_scalar_unit",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "valid prior success",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "valid prior success",
+      "state": "reused",
+      "test_telemetry": [
+        {
+          "additive": false,
+          "aggregate_peak_rss_bytes": null,
+          "executed": null,
+          "execution_timing_coverage": "unknown",
+          "reason": "supported test telemetry unavailable",
+          "reused": null,
+          "selected": null,
+          "skipped": null,
+          "status": "unknown",
+          "tests": [],
+          "timed": null,
+          "timing_coverage": "unknown",
+          "truncated": false,
+          "version": 1
+        }
+      ]
+    },
+    {
+      "action_key": "25f10204c98a9b2453171436cc6151c37e3179ac640bb092fa3691068b5bad78",
+      "id": "tooling_unit",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "valid prior success",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "valid prior success",
+      "state": "reused",
+      "test_telemetry": [
+        {
+          "additive": false,
+          "aggregate_peak_rss_bytes": null,
+          "executed": null,
+          "execution_timing_coverage": "unknown",
+          "reason": "supported test telemetry unavailable",
+          "reused": null,
+          "selected": null,
+          "skipped": null,
+          "status": "unknown",
+          "tests": [],
+          "timed": null,
+          "timing_coverage": "unknown",
+          "truncated": false,
+          "version": 1
+        }
+      ]
+    },
+    {
+      "action_key": "c2b65c283a6a164c31621e8f337a3c31775b350db93768b0b62f49047aba5d59",
+      "id": "fixtures",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "valid prior success",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "valid prior success",
+      "state": "reused",
+      "test_telemetry": [
+        {
+          "additive": false,
+          "aggregate_peak_rss_bytes": null,
+          "executed": null,
+          "execution_timing_coverage": "unknown",
+          "reason": "supported test telemetry unavailable",
+          "reused": null,
+          "selected": null,
+          "skipped": null,
+          "status": "unknown",
+          "tests": [],
+          "timed": null,
+          "timing_coverage": "unknown",
+          "truncated": false,
+          "version": 1
+        }
+      ]
+    },
+    {
+      "action_key": "8966e96ea647b661b482f618c729c52365d364746761956367f15a2b0bfe5689",
+      "id": "format",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "valid prior success",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "valid prior success",
+      "state": "reused",
+      "test_telemetry": [
+        {
+          "additive": false,
+          "aggregate_peak_rss_bytes": null,
+          "executed": null,
+          "execution_timing_coverage": "unknown",
+          "reason": "supported test telemetry unavailable",
+          "reused": null,
+          "selected": null,
+          "skipped": null,
+          "status": "unknown",
+          "tests": [],
+          "timed": null,
+          "timing_coverage": "unknown",
+          "truncated": false,
+          "version": 1
+        }
+      ]
+    }
+  ],
+  "admissions": [],
+  "budget_context": "2233cc2cfe10ce74fbd1817f51312a967b6d5dd21222cbc82edb5f99971692d9",
+  "build_admitted_seconds": 0.0,
+  "elapsed_seconds": 0.9583538719452918,
+  "evidence_store": {
+    "root": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v4/success-store",
+    "shared": true
+  },
+  "gate_admitted_seconds": 0.0,
+  "inputs_stable": true,
+  "loop_budget": {
+    "enforced": false,
+    "exceeded": false,
+    "observed_seconds": 0.9583538719452918,
+    "scope": "coordinator elapsed excluding admission queues",
+    "warn_after_seconds": null
+  },
+  "measurement_notes": [
+    "Zig summary steps can overlap and must not be summed",
+    "per-group execution duration is unavailable for the shared gate",
+    "common identity changes name digest facets, not individual tool/environment members"
+  ],
+  "profile_coverage": {
+    "complete_qualification": false,
+    "complete_verification": true,
+    "counts": {
+      "executed": 0,
+      "outstanding": 0,
+      "required": 4,
+      "reused": 4
+    },
+    "filtered_inventory": false,
+    "heuristic": false,
+    "inputs_stable": true,
+    "outstanding": [],
+    "profile": "complete",
+    "qualification_outstanding": [],
+    "required": [
+      "text_scalar_unit",
+      "tooling_unit",
+      "fixtures",
+      "format"
+    ],
+    "status": "complete",
+    "version": "verification-profile-v1"
+  },
+  "profile_plan": {
+    "affected_actions": [],
+    "cost_scope": "report-only action cost; unknown costs use heuristic member count then inventory order",
+    "deferred": [],
+    "heuristic": false,
+    "pending": [],
+    "profile": "complete",
+    "required": [
+      "text_scalar_unit",
+      "tooling_unit",
+      "fixtures",
+      "format"
+    ],
+    "selected": [],
+    "version": "verification-profile-v1"
+  },
+  "scoped_policy": {
+    "enforced": false,
+    "mode": "report_only",
+    "status": "not_configured",
+    "version": 1
+  },
+  "selected_success": true,
+  "snapshot_statistics": {
+    "bytes_hashed": 0,
+    "digest_reuses": 0,
+    "directories_enumerated": 0,
+    "files_hashed": 0,
+    "metadata_observations": 111430,
+    "snapshot_reuses": 6,
+    "validation_calls": 25
+  },
+  "stability_diagnostics": null,
+  "status": 0,
+  "success": true,
+  "timings": {
+    "action_input_snapshot_seconds": 9.862496517598629e-05,
+    "final_validation_seconds": 0.03626096108928323,
+    "prepare_lookup_outside_admission_seconds": 0.8841842499095947,
+    "publication_seconds": 0.03631019382737577,
+    "source_snapshot_seconds": 0.0001264568418264389
+  },
+  "version": 1
+}

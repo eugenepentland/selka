@@ -1,0 +1,13 @@
+build-slot: timing slot 1, FIFO ticket 24 after 0s
+
+ Performance counter stats for 'true':
+
+            141165      cpu_atom/instructions/u                                               
+     <not counted>      cpu_core/instructions/u                                                 (0.00%)
+
+       0.001389167 seconds time elapsed
+
+       0.000000000 seconds user
+       0.001162000 seconds sys
+
+

@@ -1,0 +1,20 @@
+check
++- run test s03-replayed-tests w
+guardian/test: 15 test(s) selected by filter: "every shared vector answers the pinned grammar's value", "the grammar keeps the rounding horizon, the signed bound and the exponent bound", "every shared vector answers the same through the UTF-8 octet entry points" (+5 more) — 8 match by name, 7 unnamed test block(s) run regardless
+guardian/test: test wall 0.11s; slowest over 50ms:
+guardian/test:   0.09s  format_spec_test.test.float format specifications render every CPython oracle row exactly
+guardian/test: PASS — 15 passed
+guardian/test: RESULT {"passed":15,"failed":0,"skipped":0}
+failed command: cd /home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/C0/. && ./../C0-cache/o/668e19190e3f3c781b017ae6e5092c87/s03-replayed-tests "--guardian-filter=every shared vector answers the pinned grammar's value" "--guardian-filter=the grammar keeps the rounding horizon, the signed bound and the exponent bound" "--guardian-filter=every shared vector answers the same through the UTF-8 octet entry points" "--guardian-filter=float format specifications render every CPython oracle row exactly" "--guardian-filter=integer and text format specifications render every CPython oracle row exactly" "--guardian-filter=round to n digits rounds the exact binary value with ties away from zero" "--guardian-filter=a specification the value family cannot take is rejected with CPython's reason" "--guardian-filter=a packed specification survives the runtime word unchanged" --cache-dir=./../C0-cache --seed=0x76b96a60 --listen=-
+
+Build Summary: 8/8 steps succeeded; 15/15 tests passed
+check success
++- run test s03-replayed-tests 15 pass (15 total) 130ms MaxRSS:5M
+   +- compile test s03-replayed-tests debug native success 499ms MaxRSS:184M
+      +- options cached
+      +- run exe build-identity (build_identity) success 42ms
+         +- compile exe build-identity debug native cached 8ms MaxRSS:41M
+prepare success
++- install s03-replayed-tests success
+   +- compile test s03-replayed-tests debug native (+2 more reused dependencies)
+

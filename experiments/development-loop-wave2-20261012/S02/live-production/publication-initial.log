@@ -1,0 +1,8 @@
+verification: execute lifecycle (no valid receipt)
+verification: profile complete; 1 pending, 1 selected, 0 deferred
+build-slot: FIFO ticket 142, position 2; earlier gate tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 142, position 1; waiting for measurement or memory-accounting settle delay; waiting (60s so far)
+build-slot: FIFO ticket 142, position 1; waiting for measurement or memory-accounting settle delay; waiting (120s so far)
+build-slot: gate slot 1, FIFO ticket 142 after 140s
+bounded lifecycle action completed
+verification: PASS; 0 reused, 1 selected; build admitted 0.000s, gate admitted 0.152s

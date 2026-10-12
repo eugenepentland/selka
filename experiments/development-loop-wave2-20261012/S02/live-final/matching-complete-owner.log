@@ -1,0 +1,13 @@
+build-slot: FIFO ticket 410, position 13; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 410, position 7; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 410, position 6; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 410, position 2; earlier build tickets must run first; waiting (180s so far)
+build-slot: build slot 2, FIFO ticket 410 after 235s
+build-slot: FIFO ticket 426, position 16; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 426, position 14; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 426, position 14; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 426, position 14; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 426, position 14; earlier build tickets must run first; waiting (241s so far)
+Terminated                 sleep "$poll"
+verification: cancelled; no new success receipts
+{"id":"owner","status":143,"ok":false,"restart_required":false,"snapshot_work":{"files_hashed":767,"bytes_hashed":263252892,"digest_reuses":10,"directories_enumerated":85,"metadata_observations":12623,"validation_calls":14,"snapshot_reuses":0},"error":"request cancelled; session stopped"}

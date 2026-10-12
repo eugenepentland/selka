@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "status": 0,
+  "source": "c1857310e0bf623545380c8de24515f1b9970021",
+  "command": [
+    "scripts/build-slot.sh",
+    "timing",
+    "timeout",
+    "15s",
+    "/usr/bin/perf",
+    "stat",
+    "-e",
+    "instructions:u",
+    "--",
+    "true"
+  ],
+  "scope": "hardware counter availability only; no ratio claim",
+  "slot_dir": "/home/epentland/.cache/mylang/slots",
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "paranoid": "1",
+  "raw_sha256": "ab1d12712aa2fdc8c04f8721057e7b16f7cc8224f29d56b5e983e3986e60f856"
+}

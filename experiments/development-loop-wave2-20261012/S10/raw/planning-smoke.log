@@ -1,0 +1,15 @@
+build-slot: FIFO ticket 461, position 19; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 461, position 19; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 461, position 18; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 461, position 15; earlier build tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 461, position 7; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 461, position 2; earlier build tickets must run first; waiting (301s so far)
+build-slot: build slot 2, FIFO ticket 461 after 316s
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S04/scripts/verification_planning_timing.py", line 119, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S04/scripts/verification_planning_timing.py", line 103, in main
+    assert inventory == expected
+           ^^^^^^^^^^^^^^^^^^^^^
+AssertionError

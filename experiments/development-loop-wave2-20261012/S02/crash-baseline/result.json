@@ -1,0 +1,21 @@
+{
+  "parent_status": -9,
+  "survived": {
+    "worker": true,
+    "detached": true,
+    "inner": true,
+    "launcher": true
+  },
+  "pids": {
+    "worker": 2826929,
+    "detached": 2826930,
+    "inner": 2826928,
+    "launcher": 2826926
+  },
+  "births": {
+    "worker": 182366552,
+    "detached": 182366555,
+    "inner": 182366552,
+    "launcher": 182366549
+  }
+}

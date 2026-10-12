@@ -1,0 +1,24 @@
+build-slot: build slot 3, FIFO ticket 665 after 0s
+	Command being timed: "python3 experiments/development-loop-wave2-20261012/S09/native-seed-adoption/check_seed_rejection.py --builder /home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/S09-qualified-component-builder --root /home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/S09-native-component-fixture --zig /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --receipt /home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/S09-native-component-cache/seeds/478fafe1514081b9d0069708251fc32f6f5590e03b9de0528e211133e96bae8d/receipt.json --output /home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/experiments/development-loop-wave2-20261012/S09/native-seed-adoption/negative-controls.json"
+	User time (seconds): 1.52
+	System time (seconds): 0.50
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:02.04
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 38416
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 24004
+	Voluntary context switches: 60
+	Involuntary context switches: 134
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 408
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

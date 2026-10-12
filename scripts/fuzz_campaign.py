@@ -8,10 +8,11 @@ The installed compiler and source-build install graph do not invoke this script.
 from __future__ import annotations
 
 import argparse
+import math
 from contextlib import ExitStack
 import hashlib
 import json
-import marshal
+import verification_code_identity as code_identity
 import os
 from pathlib import Path
 import re
@@ -28,7 +29,8 @@ from verification_snapshot import Snapshot, SnapshotError
 import verify_cache as verification
 
 ROOT = Path(__file__).resolve().parents[1]
-LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
+_LOADED_CODE_OBJECT = sys._getframe().f_code
+LOADED_CODE_SHA256 = code_identity.loaded_code_sha256(_LOADED_CODE_OBJECT)
 DIFFERENTIAL = {
     "incremental": ("tests/incremental_diff.py", "tests/fixtures/incremental", "incremental-v1", "main.my"),
     "module-projects": ("tests/incremental_diff.py", "tests/fixtures/module_projects", "incremental-v1", "main.my"),
@@ -181,8 +183,10 @@ def require_stable(snapshots) -> bool:
 def contract(common: Snapshot, target: Snapshot, host, environment: dict, spec: dict, args) -> dict:
     return {"policy": "independent-seed-shards-v1", "kind": args.kind, "name": spec["name"],
             "master_seed": args.seed, "settings": spec["settings"],
+            "execution_limits": verification.ProcessLimits(getattr(args, "action_timeout", None)).execution_identity(),
             "inputs": target.identity, "tools": common.identity, "host": host.identity,
             "environment": verification.key(environment),
+            "loaded_code_format": [code_identity.FORMAT_VERSION, code_identity.LOADED_CODE_SHA256],
             "implementation": [LOADED_CODE_SHA256, identity.LOADED_CODE_SHA256,
                                evidence.LOADED_CODE_SHA256, verification.LOADED_CODE_SHA256,
                                verification_snapshot.LOADED_CODE_SHA256]}
@@ -314,6 +318,13 @@ def execute_action(store, campaign: str, bound: dict, spec: dict, operation: str
         state["actions"].append({"target": spec["name"], "operation": operation, "value": value,
                                  "state": "reused", "key": action_key})
         return True
+    maximum = getattr(args, "max_actions", None)
+    executed = sum(row["state"] == "executed" for row in state["actions"])
+    if maximum is not None and executed >= maximum:
+        state["work_budget"]["exhausted"] = True
+        state["actions"].append({"target": spec["name"], "operation": operation, "value": value,
+                                 "state": "skipped", "key": action_key, "reason": "admitted action work ceiling"})
+        return False
     # A missing blob can make an old receipt miss. A failed worker may repair
     # the blob, but must never thereby resurrect that older success.
     store.invalidate_success(action_key)
@@ -352,8 +363,10 @@ def execute_action(store, campaign: str, bound: dict, spec: dict, operation: str
         action_snapshots = [*snapshots, staged]
         require_stable(action_snapshots)
         print(f"fuzz: execute {spec['name']} {operation} {value}", flush=True)
+        limits = {} if getattr(args, "action_timeout", None) is None else {
+            "limits": verification.ProcessLimits(args.action_timeout)}
         status, _held = verification.run_admitted(ROOT, "gate", command, environment,
-            lambda: require_stable(action_snapshots), timings=state["admissions"])
+            lambda: require_stable(action_snapshots), timings=state["admissions"], **limits)
         require_stable(action_snapshots)
         result = bounded_json(area / "result.json") if (area / "result.json").exists() else {}
         complete = status == 0 and result.get("success") is True and result.get("complete") is True
@@ -409,6 +422,9 @@ def run_target(store, spec: dict, common, host, environment, args, state, snapsh
             store.discard_corpus(campaign)
             corpus = []
         spec["known_corpus"] = set(corpus)
+        state["required_actions"][spec["name"]] = [
+            {"operation": "replay", "value": digest} for digest in corpus] + [
+            {"operation": "explore", "value": ordinal} for ordinal in range(args.shards)]
         if args.force:
             for ordinal in range(args.shards):
                 store.invalidate_success(identity.action(bound, "explore", ordinal))
@@ -434,6 +450,11 @@ def save_report(args, state) -> None:
                        "reused_replays": sum(a["operation"] == "replay" and a["state"] == "reused" for a in state["actions"]),
                        "explored": sum(a.get("explored", 0) for a in state["actions"]),
                        "replayed": sum(a.get("replayed", 0) for a in state["actions"])}
+    satisfied = {(row["target"], row["operation"], row["value"]) for row in state["actions"]
+                 if row["state"] == "reused" or row.get("success") is True}
+    state["outstanding"] = [{"target": name, **action} for name, actions in state["required_actions"].items()
+                            for action in actions if (name, action["operation"], action["value"]) not in satisfied]
+    state["unvisited_targets"] = [name for name in state["targets"] if name not in state["required_actions"]]
     verification.atomic_record(args.report, state)
 
 
@@ -456,7 +477,9 @@ def execute(args) -> int:
     state = {"version": 1, "kind": args.kind, "policy": "independent-seed-shards-v1",
              "requested_shards": args.shards * len(specs), "complete": False, "success": False,
              "actions": [], "admissions": [], "freshness_reasons": identity.unsupported(environment),
-             "corpus_recovery": []}
+             "corpus_recovery": [], "targets": [spec["name"] for spec in specs], "required_actions": {},
+             "work_budget": {"max_actions": args.max_actions, "action_timeout_seconds": args.action_timeout,
+                             "scope": "admitted missing actions; qualified reuse consumes no work", "exhausted": False}}
     if args.kind == "coverage" and not args.hermetic:
         state["freshness_reasons"].append("external coverage target has no complete input contract (--hermetic)")
     save_report(args, state)
@@ -470,20 +493,22 @@ def execute(args) -> int:
             session = verification_snapshot.DigestSession()
             common = stack.enter_context(Snapshot(ROOT, identity.COMMON_INPUTS + recipes, files + provider_files,
                                                   digest_session=session))
+            snapshots = [common]
+            verification.authenticate_code_identity(ROOT, common, snapshots, stack, session)
             host = verification.HostContext()
             if identity.tools(environment, binaries, zig) != (recipes, files):
                 raise evidence.InputsChanged("tool resolution changed during input capture")
             if args.kind == "differential" and identity.components(args.components) != (provider_files, provider_binaries):
                 raise evidence.InputsChanged("component resolution changed during input capture")
             targets_snapshots = [stack.enter_context(Snapshot(ROOT, spec["inputs"], digest_session=session)) for spec in specs]
-            snapshots = [common, host, *targets_snapshots]
+            snapshots.extend([host, *targets_snapshots])
             success = all(run_target(store, spec, common, host, environment, args, state, snapshot, snapshots)
                           for spec, snapshot in zip(specs, targets_snapshots))
             require_stable(snapshots)
             state.update(complete=success, success=success, inputs_stable=True)
             state["snapshot_statistics"] = verification.snapshot_statistics(snapshots)
             state["evidence_store"] = {"shared": shared is not None, "root": str(store.success.root)}
-        return 0 if success else 1
+        return 0 if success else 3 if state["work_budget"]["exhausted"] else 1
     except BaseException as error:
         state["error"] = str(error) or type(error).__name__
         raise
@@ -504,6 +529,8 @@ def options(argv):
         part.add_argument("--shared-cache-dir", type=Path, help="Explicit local shared immutable evidence; runs and corpus catalogs stay private")
         part.add_argument("--report", type=Path)
         part.add_argument("--force", action="store_true")
+        part.add_argument("--max-actions", type=int, help="Cap admitted missing actions; exhaustion is partial (exit 3)")
+        part.add_argument("--action-timeout", type=float, help="Explicit admitted action deadline in seconds, excluding queue time")
         part.add_argument("--discard-corrupt-corpus", action="store_true", help="Explicitly discard an unreadable retained corpus catalog; recover available inputs from valid receipts")
         part.add_argument("--input", action="append", default=[], help="Additional complete runtime dependency recipe")
         if kind == "differential":
@@ -523,6 +550,9 @@ def options(argv):
             part.add_argument("--timeout", type=int, default=10)
             part.add_argument("--coverage-schema", default="libfuzzer-inline8-log-v1")
     args = parser.parse_args(argv)
+    if (args.max_actions is not None and not 1 <= args.max_actions <= 1048576
+            or args.action_timeout is not None and (not math.isfinite(args.action_timeout) or args.action_timeout <= 0)):
+        parser.error("max-actions must be 1..1048576; action-timeout must be positive finite seconds")
     if not 0 <= args.seed < 1 << 64 or not 1 <= args.shards <= 1024:
         parser.error("seed must be u64; shards must be 1..1024")
     if args.kind == "differential":

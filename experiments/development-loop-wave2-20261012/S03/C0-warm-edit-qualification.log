@@ -1,0 +1,24 @@
+build-slot: FIFO ticket 472, position 7; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 472, position 5; earlier build tickets must run first; waiting (61s so far)
+build-slot: FIFO ticket 472, position 1; waiting for measurement or memory-accounting settle delay; waiting (121s so far)
+build-slot: build slot 2, FIFO ticket 472 after 131s
+check
++- run test s03-replayed-tests w
+guardian/test: 15 test(s) selected by filter: "every shared vector answers the pinned grammar's value", "the grammar keeps the rounding horizon, the signed bound and the exponent bound", "every shared vector answers the same through the UTF-8 octet entry points" (+5 more) — 8 match by name, 7 unnamed test block(s) run regardless
+guardian/test: test wall 0.16s; slowest over 50ms:
+guardian/test:   0.12s  format_spec_test.test.float format specifications render every CPython oracle row exactly
+guardian/test: PASS — 15 passed
+guardian/test: RESULT {"passed":15,"failed":0,"skipped":0}
+failed command: cd .tmp/s03-paired/C0/. && ./../C0-cache/o/80154853804f179e45b2bfec9210e043/s03-replayed-tests "--guardian-filter=every shared vector answers the pinned grammar's value" "--guardian-filter=the grammar keeps the rounding horizon, the signed bound and the exponent bound" "--guardian-filter=every shared vector answers the same through the UTF-8 octet entry points" "--guardian-filter=float format specifications render every CPython oracle row exactly" "--guardian-filter=integer and text format specifications render every CPython oracle row exactly" "--guardian-filter=round to n digits rounds the exact binary value with ties away from zero" "--guardian-filter=a specification the value family cannot take is rejected with CPython's reason" "--guardian-filter=a packed specification survives the runtime word unchanged" --cache-dir=./../C0-cache --seed=0xd6918230 --listen=-
+
+Build Summary: 8/8 steps succeeded; 15/15 tests passed
+check success
++- run test s03-replayed-tests 15 pass (15 total) 246ms MaxRSS:5M
+   +- compile test s03-replayed-tests debug native cached 23ms MaxRSS:41M
+      +- options cached
+      +- run exe build-identity (build_identity) cached
+         +- compile exe build-identity debug native cached 11ms MaxRSS:41M
+prepare success
++- install s03-replayed-tests cached
+   +- compile test s03-replayed-tests debug native (+2 more reused dependencies)
+

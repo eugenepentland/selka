@@ -1,0 +1,181 @@
+{
+  "version": 2,
+  "required_targets": [
+    "test",
+    "fmt-check"
+  ],
+  "groups": [
+    {
+      "id": "text_scalar_unit",
+      "target": "verification-text_scalar_unit",
+      "label": "run test scalar-live-tests",
+      "inputs": [
+        "src/text_scalar_root_test.zig",
+        "src/number_text_test.zig",
+        "src/number_text.zig",
+        "src/format_spec_test.zig",
+        "src/format_spec.zig",
+        "src/number_grammar.txt",
+        "src/format_spec_cases.tsv"
+      ],
+      "artifacts": [
+        "text-scalar-units"
+      ],
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "tooling_unit",
+      "target": "verification-tooling_unit",
+      "label": "run test tooling-live-tests",
+      "inputs": [
+        "src/tooling_root_test.zig",
+        "src/doc_coverage_test.zig",
+        "src/doc_coverage.zig",
+        "src/input_probe_test.zig",
+        "src/input_probe.zig",
+        "src/fix_plan_test.zig",
+        "src/fix_plan.zig",
+        "src/timings_test.zig",
+        "src/timings.zig",
+        "src/invalidation_test.zig",
+        "src/invalidation.zig"
+      ],
+      "artifacts": [
+        "tooling-units"
+      ],
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "fixtures",
+      "target": "verification-fixtures",
+      "label": "run python3",
+      "inputs": [
+        "scripts/membership_cases.py",
+        "test/membership/"
+      ],
+      "artifacts": [],
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "format",
+      "target": "verification-format",
+      "label": "zig fmt --check",
+      "inputs": [
+        "src/*.zig",
+        "build.zig",
+        "build_verification.zig",
+        "build_test_inputs.zig",
+        "support.zig"
+      ],
+      "artifacts": [],
+      "cacheable": true,
+      "reason": "exact source formatting inputs"
+    }
+  ],
+  "input_lists": [
+    {
+      "name": "text_scalar_unit",
+      "inputs": [
+        "src/text_scalar_root_test.zig",
+        "src/number_text_test.zig",
+        "src/number_text.zig",
+        "src/format_spec_test.zig",
+        "src/format_spec.zig",
+        "src/number_grammar.txt",
+        "src/format_spec_cases.tsv"
+      ]
+    },
+    {
+      "name": "tooling_unit",
+      "inputs": [
+        "src/tooling_root_test.zig",
+        "src/doc_coverage_test.zig",
+        "src/doc_coverage.zig",
+        "src/input_probe_test.zig",
+        "src/input_probe.zig",
+        "src/fix_plan_test.zig",
+        "src/fix_plan.zig",
+        "src/timings_test.zig",
+        "src/timings.zig",
+        "src/invalidation_test.zig",
+        "src/invalidation.zig"
+      ]
+    },
+    {
+      "name": "fixtures",
+      "inputs": [
+        "scripts/membership_cases.py",
+        "test/membership/"
+      ]
+    },
+    {
+      "name": "format",
+      "inputs": [
+        "src/*.zig",
+        "build.zig",
+        "build_verification.zig",
+        "build_test_inputs.zig",
+        "support.zig"
+      ]
+    }
+  ],
+  "configuration": {
+    "filtered": false,
+    "rerun": false,
+    "optimize": "debug"
+  },
+  "coverage": {
+    "required_actions": 4,
+    "registered_actions": 4,
+    "unknown_actions": []
+  },
+  "action_metadata": [
+    {
+      "id": "text_scalar_unit",
+      "steps": [
+        {
+          "label": "verification action text_scalar_unit member 0",
+          "original_label": "run test scalar-live-tests",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "tooling_unit",
+      "steps": [
+        {
+          "label": "verification action tooling_unit member 0",
+          "original_label": "run test tooling-live-tests",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "fixtures",
+      "steps": [
+        {
+          "label": "verification action fixtures member 0",
+          "original_label": "run python3",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "format",
+      "steps": [
+        {
+          "label": "verification action format member 0",
+          "original_label": "zig fmt --check",
+          "kind": "fmt"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    }
+  ]
+}

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-import marshal
+import verification_code_identity as code_identity
 import os
 from pathlib import Path
 import shutil
@@ -12,7 +12,8 @@ import subprocess
 import time
 import sys
 
-LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
+_LOADED_CODE_OBJECT = sys._getframe().f_code
+LOADED_CODE_SHA256 = code_identity.loaded_code_sha256(_LOADED_CODE_OBJECT)
 
 
 class JuiceError(Exception):

@@ -1,0 +1,252 @@
+{
+  "schema": "s03-paired-boundary-summary-v2",
+  "warm_estimator": "median; empirical nearest-rank p95 (38th of40), not population/stable p95",
+  "cold_estimator": "paired descriptive median/range; no cold p95 claim",
+  "scope": "isolated test-artifact recipe; excludes admission/full verification coordinator",
+  "warm_edits": {
+    "variants": {
+      "C0": {
+        "executions": 40,
+        "distinct_artifacts": 40,
+        "named_selected_each": 8,
+        "wrappers_each": 7,
+        "metrics": {
+          "wall_s": {
+            "median": 1.040729176485911,
+            "range": [
+              0.5026403691153973,
+              7.131600206019357
+            ],
+            "empirical_p95": 2.643920286092907
+          },
+          "first_useful_feedback_s": {
+            "median": 0.5439495575847104,
+            "range": [
+              0.5012159440666437,
+              2.643920286092907
+            ],
+            "empirical_p95": 1.1091872500255704
+          },
+          "max_process_rss_kib": {
+            "median": 180470.0,
+            "range": [
+              178720,
+              200544
+            ],
+            "empirical_p95": 181428
+          },
+          "sampled_command_rss_kib": {
+            "median": 4572.0,
+            "range": [
+              4280,
+              40380
+            ],
+            "empirical_p95": 40356
+          },
+          "artifact_bytes": {
+            "median": 21028237.0,
+            "range": [
+              21028237,
+              21028237
+            ],
+            "empirical_p95": 21028237
+          }
+        }
+      },
+      "B0": {
+        "executions": 40,
+        "distinct_artifacts": 40,
+        "named_selected_each": 8,
+        "wrappers_each": 1,
+        "metrics": {
+          "wall_s": {
+            "median": 1.210494081955403,
+            "range": [
+              0.45976193086244166,
+              5.617543698986992
+            ],
+            "empirical_p95": 2.0898089248221368
+          },
+          "first_useful_feedback_s": {
+            "median": 0.5236202905653045,
+            "range": [
+              0.4388356499839574,
+              1.145601195981726
+            ],
+            "empirical_p95": 1.001768295885995
+          },
+          "max_process_rss_kib": {
+            "median": 158436.0,
+            "range": [
+              157380,
+              160696
+            ],
+            "empirical_p95": 159876
+          },
+          "sampled_command_rss_kib": {
+            "median": 4118.0,
+            "range": [
+              4100,
+              40336
+            ],
+            "empirical_p95": 40272
+          },
+          "artifact_bytes": {
+            "median": 21109922.0,
+            "range": [
+              21109922,
+              21114018
+            ],
+            "empirical_p95": 21114018
+          }
+        }
+      }
+    },
+    "paired_wall_ratio_B0_C0": {
+      "median": 0.9773349122094113,
+      "range": [
+        0.24587661835081195,
+        2.8809651052023715
+      ]
+    }
+  },
+  "cold_pairs": [
+    {
+      "cohort": "all-units",
+      "pair": 0,
+      "phase": "full_compile",
+      "variants": {
+        "C0": {
+          "wall_s": {
+            "median": 65.79372917907313,
+            "range": [
+              65.79372917907313,
+              65.79372917907313
+            ]
+          },
+          "max_process_rss_kib": {
+            "median": 1078656,
+            "range": [
+              1078656,
+              1078656
+            ]
+          },
+          "sampled_command_rss_kib": {
+            "median": 1080024,
+            "range": [
+              1080024,
+              1080024
+            ]
+          },
+          "artifact_bytes": {
+            "median": 222170722,
+            "range": [
+              222170722,
+              222170722
+            ]
+          }
+        },
+        "B0": {
+          "wall_s": {
+            "median": 64.79288231604733,
+            "range": [
+              64.79288231604733,
+              64.79288231604733
+            ]
+          },
+          "max_process_rss_kib": {
+            "median": 1122468,
+            "range": [
+              1122468,
+              1122468
+            ]
+          },
+          "sampled_command_rss_kib": {
+            "median": 1123968,
+            "range": [
+              1123968,
+              1123968
+            ]
+          },
+          "artifact_bytes": {
+            "median": 247904346,
+            "range": [
+              247904346,
+              247904346
+            ]
+          }
+        }
+      },
+      "wall_ratio_B0_C0": 0.9847881116405218
+    },
+    {
+      "cohort": "all-units",
+      "pair": 1,
+      "phase": "full_compile",
+      "variants": {
+        "C0": {
+          "wall_s": {
+            "median": 64.83824504585937,
+            "range": [
+              64.83824504585937,
+              64.83824504585937
+            ]
+          },
+          "max_process_rss_kib": {
+            "median": 1040404,
+            "range": [
+              1040404,
+              1040404
+            ]
+          },
+          "sampled_command_rss_kib": {
+            "median": 1040148,
+            "range": [
+              1040148,
+              1040148
+            ]
+          },
+          "artifact_bytes": {
+            "median": 222158434,
+            "range": [
+              222158434,
+              222158434
+            ]
+          }
+        },
+        "B0": {
+          "wall_s": {
+            "median": 64.45117768691853,
+            "range": [
+              64.45117768691853,
+              64.45117768691853
+            ]
+          },
+          "max_process_rss_kib": {
+            "median": 1074528,
+            "range": [
+              1074528,
+              1074528
+            ]
+          },
+          "sampled_command_rss_kib": {
+            "median": 1075632,
+            "range": [
+              1075632,
+              1075632
+            ]
+          },
+          "artifact_bytes": {
+            "median": 247900250,
+            "range": [
+              247900250,
+              247900250
+            ]
+          }
+        }
+      },
+      "wall_ratio_B0_C0": 0.9940302616354426
+    }
+  ],
+  "incomplete_cold_records": []
+}

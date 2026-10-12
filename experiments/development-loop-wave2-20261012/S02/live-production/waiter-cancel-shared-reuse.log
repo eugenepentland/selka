@@ -1,0 +1,5 @@
+verification: reused lifecycle (valid prior success)
+verification: profile complete; 0 pending, 0 selected, 0 deferred
+verification: PASS; 1 reused, 0 selected; build admitted 0.000s, gate admitted 0.000s
+{"id":"shared-reuse","status":0,"ok":true,"restart_required":false,"snapshot_work":{"files_hashed":778,"bytes_hashed":263265518,"digest_reuses":10,"directories_enumerated":85,"metadata_observations":12122,"validation_calls":24,"snapshot_reuses":0}}
+{"id":"stop","status":0,"ok":true,"restart_required":false,"snapshot_work":{"files_hashed":0,"bytes_hashed":0,"digest_reuses":0,"directories_enumerated":0,"metadata_observations":0,"validation_calls":0,"snapshot_reuses":0}}

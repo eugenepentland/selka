@@ -1,0 +1,1 @@
+verification: FAIL: cannot snapshot declared inputs: [Errno 2] No such file or directory: '/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/.tmp/verification-live-g70d4eu7/waiter-cancel/build.zig.zon'

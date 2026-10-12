@@ -17,7 +17,7 @@ import hashlib
 import importlib
 import importlib.machinery
 import json
-import marshal
+import verification_code_identity as code_identity
 import os
 from pathlib import Path
 import sys
@@ -27,7 +27,7 @@ import verification_snapshot
 from verification_snapshot import RetainedSession, Snapshot, SnapshotError
 
 _LOADED_CODE_OBJECT = sys._getframe().f_code
-LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
+LOADED_CODE_SHA256 = code_identity.loaded_code_sha256(_LOADED_CODE_OBJECT)
 _LOADED_FILENAME = sys._getframe().f_code.co_filename
 ROOT = Path(__file__).resolve().parents[1]
 MAX_LINE = 65536
@@ -38,6 +38,8 @@ COMMANDS = {"verify": "verify_cache", "fuzz": "fuzz_campaign", "perf": "juice_ca
 DISPATCH_MODULES = frozenset((*COMMANDS.values(), "fuzz_campaign_identity",
                             "fuzz_campaign_store", "verification_artifacts",
                             "verification_process", "verification_report", "verification_budgets",
+                            "verification_producers", "verification_telemetry", "verification_policy", "verification_profiles",
+                            "verification_measurement", "build_admission", "verification_qualification",
                             "juice_evidence", "juice_provider", "juice_worker", "juice_tool"))
 
 
@@ -179,6 +181,7 @@ class RuntimeGuard:
         try:
             self.providers.update((self.root / row['path']).resolve()
                                   for row in self.snapshot.identity['files'])
+            self._compiled(code_identity, code_identity._LOADED_CODE_OBJECT, code_identity.__file__)
             self._compiled(verification_snapshot, verification_snapshot._LOADED_CODE_OBJECT,
                            verification_snapshot.__file__)
             self._compiled(sys.modules[__name__], _LOADED_CODE_OBJECT, _LOADED_FILENAME)
@@ -205,15 +208,19 @@ class RuntimeGuard:
     def _compiled(module, expected, filename):
         source = Path(module.__file__).read_bytes()
         code = compile(source, filename, 'exec', dont_inherit=True, optimize=sys.flags.optimize)
-        if code != expected:
+        if code_identity.loaded_code_sha256(code) != code_identity.loaded_code_sha256(expected):
             raise RestartRequired("loaded bootstrap source does not match guarded bytes")
 
     def check(self):
         try:
             if not self.snapshot.unchanged():
-                raise RestartRequired("startup runtime changed; restart required")
+                reasons = self.snapshot.stability_diagnostics("session_runtime")
+                raise RestartRequired("startup runtime changed; restart required: " +
+                                      json.dumps(reasons, ensure_ascii=True, separators=(',', ':'))[:768])
             if self.library_snapshot is not None and not self.library_snapshot.unchanged():
-                raise RestartRequired("loaded libraries changed; restart required")
+                reasons = self.library_snapshot.stability_diagnostics("session_libraries")
+                raise RestartRequired("loaded libraries changed; restart required: " +
+                                      json.dumps(reasons, ensure_ascii=True, separators=(',', ':'))[:768])
         except SnapshotError as error:
             raise RestartRequired("startup watcher lost; restart required: " + str(error)) from error
         if self._runtime_sealed and self._mapped_libraries() - self._libraries:

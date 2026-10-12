@@ -1,0 +1,22 @@
+diff --git a/src/config_core_tool_platform.zig b/src/config_core_tool_platform.zig
+index 414892e25..728dbb5a6 100644
+--- a/src/config_core_tool_platform.zig
++++ b/src/config_core_tool_platform.zig
+@@ -5,6 +5,8 @@
+ // Backtrace load receipts prove these cache bytes select captured libgcc;
+ // libpthread also covers the bundled-target C debug path. Unknown content bypasses
+ // reuse; this is not a generic ELF or ld.so.cache dependency parser.
++// Loader-cache refresh qualified by debug/release pthread, backtrace and libm
++// probes in experiments/memory-closeout-20261012/coordinator/native-platform/.
+ pub const runtime_files = [_]struct { path: []const u8, resolved: []const u8, sha256: []const u8 }{
+     .{
+         .path = "/lib64/ld-linux-x86-64.so.2",
+@@ -34,7 +36,7 @@ pub const runtime_files = [_]struct { path: []const u8, resolved: []const u8, sh
+     .{
+         .path = "/etc/ld.so.cache",
+         .resolved = "/etc/ld.so.cache",
+-        .sha256 = "fe063c1bee92cacf27776b62c04e35a2c71e7ed111ec3eaa542ba339410fcde3",
++        .sha256 = "d519185506fec90f5efbdc206f606f4c259891e83c4e98e48b9fa4694b64fbe6",
+     },
+ };
+ pub const preload_path = "/etc/ld.so.preload";

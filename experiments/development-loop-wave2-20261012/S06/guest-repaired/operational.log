@@ -1,0 +1,23 @@
+build-slot: FIFO ticket 612, position 12; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 612, position 5; earlier build tickets must run first; waiting (61s so far)
+build-slot: build slot 2, FIFO ticket 612 after 116s
+{"label": "01-cold", "status": 0, "counts": {"passed": 3, "cached": 0, "failed": 0, "skipped": 0, "unsupported": 0}}
+{"label": "02-warm", "status": 0, "counts": {"passed": 3, "cached": 0, "failed": 0, "skipped": 0, "unsupported": 0}}
+{"label": "03-helper-failure", "status": 1, "counts": {"passed": 2, "cached": 0, "failed": 1, "skipped": 0, "unsupported": 0}}
+{"label": "04-helper-failure-repeat", "status": 1, "counts": {"passed": 2, "cached": 0, "failed": 1, "skipped": 0, "unsupported": 0}}
+{"label": "05-helper-revert", "status": 0, "counts": {"passed": 3, "cached": 0, "failed": 0, "skipped": 0, "unsupported": 0}}
+{"label": "06-embedded-fixture-failure", "status": 1, "counts": {"passed": 2, "cached": 0, "failed": 1, "skipped": 0, "unsupported": 0}}
+{"label": "07-embedded-fixture-failure-repeat", "status": 1, "counts": {"passed": 2, "cached": 0, "failed": 1, "skipped": 0, "unsupported": 0}}
+{"label": "08-embedded-fixture-revert", "status": 0, "counts": {"passed": 3, "cached": 0, "failed": 0, "skipped": 0, "unsupported": 0}}
+{"label": "09-provider-failure", "status": 1, "counts": {"passed": 2, "cached": 0, "failed": 1, "skipped": 0, "unsupported": 0}}
+{"label": "10-provider-failure-repeat", "status": 1, "counts": {"passed": 2, "cached": 0, "failed": 1, "skipped": 0, "unsupported": 0}}
+{"label": "11-provider-revert", "status": 0, "counts": {"passed": 3, "cached": 0, "failed": 0, "skipped": 0, "unsupported": 0}}
+{"label": "12-negative-cases-revert", "status": 0, "counts": {"passed": 3, "cached": 0, "failed": 0, "skipped": 0, "unsupported": 0}}
+{"label": "13-source-add", "status": 0, "counts": {"passed": 4, "cached": 0, "failed": 0, "skipped": 0, "unsupported": 0}}
+{"label": "14-source-rename", "status": 0, "counts": {"passed": 4, "cached": 0, "failed": 0, "skipped": 0, "unsupported": 0}}
+{"label": "15-source-delete", "status": 0, "counts": {"passed": 3, "cached": 0, "failed": 0, "skipped": 0, "unsupported": 0}}
+{"label": "16-force", "status": 0, "counts": {"passed": 3, "cached": 0, "failed": 0, "skipped": 0, "unsupported": 0}}
+{"label": "17-no-cache", "status": 0, "counts": {"passed": 3, "cached": 0, "failed": 0, "skipped": 0, "unsupported": 0}}
+{"label": "18-facts-leaks", "status": 0, "counts": {"passed": 3, "cached": 0, "failed": 0, "skipped": 0, "unsupported": 0}}
+{"label": "19-compatible-second-tree", "status": 0, "counts": {"passed": 3, "cached": 0, "failed": 0, "skipped": 0, "unsupported": 0}}
+{"label": "20-second-tree-warm", "status": 0, "counts": {"passed": 3, "cached": 0, "failed": 0, "skipped": 0, "unsupported": 0}}

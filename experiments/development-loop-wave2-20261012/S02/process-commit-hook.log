@@ -1,0 +1,16 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10004 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/dl-wave2-20261012-S02 32faf6077] Cancel owned verification lineages when their parent crashes
+ 9 files changed, 173 insertions(+), 4 deletions(-)
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/coordinator-parent-death.patch
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/crash-baseline/caller.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/crash-baseline/reproducer.py
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/crash-baseline/result.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/crash-fixed-direct.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/process-tests-final.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/process-tests.log

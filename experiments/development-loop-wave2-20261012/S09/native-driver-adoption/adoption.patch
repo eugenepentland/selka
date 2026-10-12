@@ -1,0 +1,107 @@
+diff --git a/src/core/a01_native_driver_test.zig b/src/core/a01_native_driver_test.zig
+new file mode 100644
+index 000000000..0c5e68cca
+--- /dev/null
++++ b/src/core/a01_native_driver_test.zig
+@@ -0,0 +1,66 @@
++//! Private native unit files live through linking and are removed with staging.
++const std = @import("std");
++const driver = @import("driver.zig");
++const io = std.testing.io;
++const tool_source =
++    \\#!/bin/sh
++    \\out=''
++    \\compile=0
++    \\for argument in "$@"; do
++    \\  if [ "$argument" = '-c' ]; then compile=1; fi
++    \\done
++    \\while [ "$#" -gt 0 ]; do
++    \\  case "$1" in
++    \\    -o) shift; out=$1 ;;
++    \\    *.o) if [ "$compile" = 0 ]; then test -f "$1" || exit 9; fi ;;
++    \\  esac
++    \\  shift
++    \\done
++    \\if [ "$compile" = 1 ]; then printf object > "$out"; exit 0; fi
++    \\if [ -f "$CASE_ROOT/fail" ]; then exit 7; fi
++    \\printf linked > "$out"
++;
++
++fn clean(directory: std.Io.Dir) !void {
++    var cache = try directory.openDir(io, "cache", .{ .iterate = true });
++    defer cache.close(io);
++    var entries = cache.iterate();
++    while (try entries.next(io)) |entry| try std.testing.expect(!std.mem.startsWith(u8, entry.name, "native-link-"));
++}
++
++// spec-case: NEW-CORE-DRIVER-1
++test "A01 uncached native multiunit objects survive link and clean after success and failure" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    const root = try temporary.dir.realPathFileAlloc(io, ".", a);
++    try temporary.dir.writeFile(io, .{ .sub_path = "zig", .data = tool_source });
++    try temporary.dir.setFilePermissions(io, "zig", .executable_file, .{});
++    var environment = try std.testing.environ.createMap(a);
++    defer environment.deinit();
++    try environment.put("CASE_ROOT", root);
++    const request: driver.Request = .{
++        .zig = try std.fs.path.join(a, &.{ root, "zig" }),
++        .work = try std.fs.path.join(a, &.{ root, "cache" }),
++        .output = try std.fs.path.join(a, &.{ root, "output" }),
++        .links = &.{},
++        .units = &.{
++            .{ .name = "entry", .source_path = "entry.my", .kind = .entry, .llvm = "entry text", .dependencies = .{} },
++            .{ .name = "module", .source_path = "module.my", .kind = .module, .llvm = "module text", .dependencies = .{} },
++        },
++    };
++    var log: std.ArrayList(u8) = .empty;
++    for (0..2) |_| {
++        const outcome = try driver.link(a, io, &environment, request, &log);
++        try std.testing.expect(!outcome.tool.cacheable);
++        try std.testing.expectEqual(@as(u32, 2), outcome.counts.compiled);
++        try std.testing.expectEqual(@as(u32, 0), outcome.counts.reused);
++        try std.testing.expectEqualStrings("linked", try temporary.dir.readFileAlloc(io, "output", a, .limited(64)));
++        try clean(temporary.dir);
++    }
++    try temporary.dir.writeFile(io, .{ .sub_path = "fail", .data = "" });
++    try std.testing.expectError(error.ToolFailed, driver.link(a, io, &environment, request, &log));
++    try clean(temporary.dir);
++}
+diff --git a/src/core/driver.zig b/src/core/driver.zig
+index 01f4dc8d5..892278115 100644
+--- a/src/core/driver.zig
++++ b/src/core/driver.zig
+@@ -662,8 +662,9 @@ fn unitObjects(native: Native, places: Places, settings: unit_cache.Settings, re
+         try pending.append(a, .{ .unit = unit, .key = key, .object = object, .slot = objects.items.len - 1, .served = served });
+         try jobs.append(a, .{ .argv = try compileArguments(native, request.mode.level(), object, source), .weight = unit.llvm.len });
+     }
+-    // Partials of a failed build are removed; published ones already moved away.
+-    defer for (pending.items) |item| removeFile(native.io, item.object);
++    // Cached partials are removed after publication or failure. Uncached
++    // objects remain in staging until the caller links and removes that tree.
++    defer discardCachedPartials(native, places.cacheable, pending.items);
+     try unit_cache.compileAll(native.resources(), jobs.items, unit_cache.width(native.environment, jobs.items.len));
+     native.counts.processes += @intCast(jobs.items.len);
+     for (jobs.items) |job| try native.log.appendSlice(a, job.log.items);
+@@ -680,6 +681,11 @@ fn unitObjects(native: Native, places: Places, settings: unit_cache.Settings, re
+     }
+ }
+
++fn discardCachedPartials(native: Native, cacheable: bool, pending: []const Pending) void {
++    if (!cacheable) return;
++    for (pending) |item| removeFile(native.io, item.object);
++}
++
+ /// `--verify-cache`: a served object must equal a fresh compile of its text.
+ fn verifyServed(native: Native, item: Pending, served: unit_cache.Found) Error!void {
+     const fresh = try unit_cache.found(native.arena, native.io, item.object);
+diff --git a/src/core/root_test.zig b/src/core/root_test.zig
+--- a/src/core/root_test.zig
++++ b/src/core/root_test.zig
+@@ -5,2 +5,3 @@
+     _ = @import("zero_rc_test.zig");
++    _ = @import("a01_native_driver_test.zig");
+     _ = @import("owned_payload_test.zig");

@@ -1,0 +1,17 @@
+.build-slot: timing slot 1, FIFO ticket 1 after 0s
+.build-slot: timing slot 1, FIFO ticket 1 after 0s
+.verification: FAIL: measurement admission holder exited before completion
+...build-slot: timing slot 1, FIFO ticket 1 after 0s
+build-slot: timing slot 1, FIFO ticket 2 after 0s
+.build-slot: timing slot 1, FIFO ticket 1 after 0s
+build-slot: timing slot 1, FIFO ticket 2 after 0s
+.build-slot: timing slot 1, FIFO ticket 1 after 0s
+measured
+build-slot: timing slot 1, FIFO ticket 2 after 0s
+.build-slot: timing slot 1, FIFO ticket 1 after 0s
+.build-slot: timing slot 1, FIFO ticket 1 after 0s
+.
+----------------------------------------------------------------------
+Ran 11 tests in 1.936s
+
+OK

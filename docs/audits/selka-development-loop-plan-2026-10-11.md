@@ -8,6 +8,32 @@ and later waves remain open. Latest integration base: local `main` at
 `9225adeb06cca3ab19a0f4437ec2065fbea34e2e` (runtime ownership updates).
 Original plan baseline: `e935448025873afc0740b345acf77b7e4f09dda3`.
 
+Execution update, 12 October: the ten-session closeout integrates from
+`fbfcaa7a923186a8e773c3760f81c10aa345a432`; see its
+[ownership and acceptance ledger](../../experiments/development-loop-closeout-20261012/status.md).
+It adds supported Python per-test telemetry, bounded stability diagnostics,
+process lineage cleanup, report-only scoped budgets, the independent text-scalar
+root, authenticated pure-root producers, partial feedback profiles and reused
+golden source preparation. These are scoped deliveries, not DL1–DL8 completion.
+Complete native/guest per-test timing, calibrated action enforcement, the full
+ordinary-edit matrix, long qualification coverage and self-hosting acceptance
+remain open.
+Guest discovery indexing and cross-snapshot stat memoization were rejected;
+archived experiments do not change the production runner or validation authority.
+
+The [second ten-session wave](../../experiments/development-loop-wave2-20261012/REPORT.md)
+adds native runner-protocol telemetry, canonical loaded-code identities with
+source authentication, real cancellation/publication cases, and authenticated
+bounded long-qualification dispatch. The inventory now contains 46 groups and
+106 required actions. Independent validation retains mutation guards while
+reducing selected-record copying and one redundant tool scan. A named guest
+helper-edit cohort completed 40 fresh edits with observed first-check p95 82 ms
+and two-test completion p95 6.11 seconds on its frozen repaired compiler.
+Those observations qualify that workload only. Final complete verification and
+seed/host qualification are recorded separately in the report, alongside cold
+artifact/RSS costs, unsupported measurements and unmet requirements.
+No uncalibrated hard policy or self-hosting completion claim follows.
+
 Make ordinary compiler edits cheap to build and verify, keep expensive checks
 bounded and visible, and carry those improvements into the self-hosted compiler.
 Start with measurement and test dependencies while the other branch completes

@@ -1,0 +1,5 @@
+build-slot: build slot 3, FIFO ticket 3561 after 0s
+1/3 test_runner_discover.test.S06 declaration index preserves first declaration and last module semantics...OK
+2/3 test_runner_discover.test.S06 declaration index releases partial allocations and propagates exhaustion...OK
+3/3 test_runner_discover.test.S06 indexed discovery preserves selected visibility shapes and sorted function identities...OK
+All 3 tests passed.

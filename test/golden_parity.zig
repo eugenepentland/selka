@@ -14,7 +14,8 @@
 //! How each entry maps
 //! -------------------
 //! * `case[0]` containing a newline is source text.  The harness writes it to a
-//!   scratch `case.my`, prepares a working directory holding the `qbe_files`
+//!   run-local scratch `case.my` once for each exact source payload, prepares
+//!   a fresh working directory holding the `qbe_files`
 //!   fixtures (`greeting.txt`, `lines.txt`), and spawns
 //!   `run case.my --print-result --zig=… --cache-dir=…`, appending every
 //!   string option flattened out of `case[1:]`.  (`qbe_files` records the
@@ -147,6 +148,24 @@ const Tools = struct {
 const Paths = struct {
     repo_root: []const u8,
     cache_path: []const u8,
+    sources: *PreparedSources,
+};
+
+/// Source payloads prepared once within this run; mutable working trees remain
+/// per case. Keys own exact source bytes, and values own their scratch paths.
+const PreparedSources = struct {
+    paths: std.StringHashMap([:0]u8),
+    bytes_written: usize = 0,
+
+    /// Release retained source bytes and paths before removing the scratch tree.
+    fn deinit(self: *PreparedSources) void {
+        var iterator = self.paths.iterator();
+        while (iterator.next()) |entry| {
+            self.paths.allocator.free(entry.key_ptr.*);
+            self.paths.allocator.free(entry.value_ptr.*);
+        }
+        self.paths.deinit();
+    }
 };
 
 /// Shared state for one harness run.  `temp` owns every scratch directory and
@@ -178,10 +197,13 @@ test "checked-in golden corpora replay natively with explicit skip counts" {
     const tools = try resolveTools(testing.allocator);
     defer freeTools(testing.allocator, tools);
 
+    var sources = PreparedSources{ .paths = std.StringHashMap([:0]u8).init(testing.allocator) };
+    defer sources.deinit();
+
     var context = Context{
         .allocator = testing.allocator,
         .temp = &temp,
-        .paths = .{ .repo_root = repo_root, .cache_path = cache_path },
+        .paths = .{ .repo_root = repo_root, .cache_path = cache_path, .sources = &sources },
         .tools = tools,
         .report = &report,
         .failures = &failures,
@@ -189,6 +211,7 @@ test "checked-in golden corpora replay natively with explicit skip counts" {
     };
 
     try checkAllGoldens(&context);
+    std.debug.print("golden preparation: executions {d}, source writes {d}, source bytes {d}, fresh work directories {d}\n", .{ context.counter, sources.paths.count(), sources.bytes_written, context.counter });
     reportSummary(report);
     reportFailures(&failures);
 
@@ -347,7 +370,6 @@ fn runRecordedCase(context: *Context, corpus: []const u8, key: []const u8, sourc
     const index = context.counter;
     context.counter += 1;
     const source_path = try writeSource(context, index, source);
-    defer context.allocator.free(source_path);
     const work_path = try prepareWorkDir(context, index);
     defer context.allocator.free(work_path);
 
@@ -377,25 +399,85 @@ fn runRecordedCase(context: *Context, corpus: []const u8, key: []const u8, sourc
     }
 }
 
-/// Create `src-<index>/case.my` under the run root and return its absolute path.
-fn writeSource(context: *Context, index: usize, source: []const u8) ![:0]u8 {
+/// Reuse an identical prepared source path; every case still invokes the live
+/// compiler with its own options and fresh mutable working directory.
+fn writeSource(context: *Context, index: usize, source: []const u8) ![:0]const u8 {
+    return prepareSource(context.allocator, context.temp, context.paths.sources, index, source);
+}
+
+/// Prepare exact source bytes once per run, without retaining test verdicts or
+/// changing the source basename. Returned paths are borrowed from `sources`.
+fn prepareSource(allocator: std.mem.Allocator, temp: *testing.TmpDir, sources: *PreparedSources, index: usize, source: []const u8) ![:0]const u8 {
+    if (sources.paths.get(source)) |path| return path;
     var name_buffer: [32]u8 = undefined;
     const name = try std.fmt.bufPrint(&name_buffer, "src-{d}", .{index});
-    var dir = try context.temp.dir.createDirPathOpen(testing.io, name, .{});
+    var dir = try temp.dir.createDirPathOpen(testing.io, name, .{});
     defer dir.close(testing.io);
     try dir.writeFile(testing.io, .{ .sub_path = "case.my", .data = source });
-    return dir.realPathFileAlloc(testing.io, "case.my", context.allocator);
+    const path = try dir.realPathFileAlloc(testing.io, "case.my", allocator);
+    errdefer allocator.free(path);
+    const key = try allocator.dupe(u8, source);
+    errdefer allocator.free(key);
+    try sources.paths.put(key, path);
+    sources.bytes_written += source.len;
+    return path;
 }
 
 /// Create `work-<index>` holding the `qbe_files` fixtures and return its path.
 fn prepareWorkDir(context: *Context, index: usize) ![:0]u8 {
+    return freshWorkDir(context.allocator, context.temp, index);
+}
+
+/// Materialise a new mutable fixture tree, even when source preparation is reused.
+fn freshWorkDir(allocator: std.mem.Allocator, temp: *testing.TmpDir, index: usize) ![:0]u8 {
     var name_buffer: [32]u8 = undefined;
     const name = try std.fmt.bufPrint(&name_buffer, "work-{d}", .{index});
-    var dir = try context.temp.dir.createDirPathOpen(testing.io, name, .{});
+    var dir = try temp.dir.createDirPathOpen(testing.io, name, .{});
     defer dir.close(testing.io);
     try dir.writeFile(testing.io, .{ .sub_path = "greeting.txt", .data = greeting_text });
     try dir.writeFile(testing.io, .{ .sub_path = "lines.txt", .data = lines_text });
-    return dir.realPathFileAlloc(testing.io, ".", context.allocator);
+    return dir.realPathFileAlloc(testing.io, ".", allocator);
+}
+
+test "golden preparation shares exact source bytes while preserving changed payloads" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    var sources = PreparedSources{ .paths = std.StringHashMap([:0]u8).init(testing.allocator) };
+    defer sources.deinit();
+    const first = try prepareSource(testing.allocator, &temp, &sources, 0, "first");
+    const repeated = try prepareSource(testing.allocator, &temp, &sources, 1, "first");
+    const changed = try prepareSource(testing.allocator, &temp, &sources, 2, "other");
+    const stored = try std.Io.Dir.cwd().readFileAlloc(testing.io, changed, testing.allocator, .limited(100));
+    defer testing.allocator.free(stored);
+    try testing.expectEqualStrings(first, repeated);
+    try testing.expect(!std.mem.eql(u8, first, changed));
+    try testing.expectEqualStrings("case.my", std.fs.path.basename(first));
+    try testing.expectEqualStrings("other", stored);
+    try testing.expectEqual(@as(usize, 2), sources.paths.count());
+    try testing.expectEqual(@as(usize, 10), sources.bytes_written);
+}
+
+test "golden preparation keeps mutable fixture trees isolated" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const first = try freshWorkDir(testing.allocator, &temp, 0);
+    defer testing.allocator.free(first);
+    var first_dir = try std.Io.Dir.cwd().openDir(testing.io, first, .{});
+    defer first_dir.close(testing.io);
+    try first_dir.writeFile(testing.io, .{ .sub_path = "greeting.txt", .data = "mutated" });
+    try first_dir.writeFile(testing.io, .{ .sub_path = "new.txt", .data = "case output" });
+    const next = try freshWorkDir(testing.allocator, &temp, 1);
+    defer testing.allocator.free(next);
+    var next_dir = try std.Io.Dir.cwd().openDir(testing.io, next, .{});
+    defer next_dir.close(testing.io);
+    const greeting = try next_dir.readFileAlloc(testing.io, "greeting.txt", testing.allocator, .limited(100));
+    defer testing.allocator.free(greeting);
+    const lines = try next_dir.readFileAlloc(testing.io, "lines.txt", testing.allocator, .limited(100));
+    defer testing.allocator.free(lines);
+    try testing.expect(!std.mem.eql(u8, first, next));
+    try testing.expectEqualStrings(greeting_text, greeting);
+    try testing.expectEqualStrings(lines_text, lines);
+    try testing.expectError(error.FileNotFound, next_dir.access(testing.io, "new.txt", .{}));
 }
 
 /// Spawn the compiler under test for one case and capture its process result.

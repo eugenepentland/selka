@@ -1,0 +1,15 @@
+{
+  "id": 2,
+  "status": 0,
+  "ok": true,
+  "restart_required": false,
+  "snapshot_work": {
+    "files_hashed": 41,
+    "bytes_hashed": 628164111,
+    "digest_reuses": 21,
+    "directories_enumerated": 8,
+    "metadata_observations": 269279,
+    "validation_calls": 64,
+    "snapshot_reuses": 3
+  }
+}

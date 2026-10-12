@@ -1,0 +1,322 @@
+[
+  {
+    "request": 1,
+    "fresh_groups": [
+      "component-preparation",
+      "input-discovery",
+      "environment-discovery",
+      "spec-history",
+      "juice",
+      "juice-runtime",
+      "identity-qualification",
+      "coverage",
+      "guest",
+      "language",
+      "guardian"
+    ],
+    "gate_admitted_seconds": 65.86157334013842,
+    "coordinator_elapsed_seconds": 73.3100300040096,
+    "timings": {
+      "action_input_snapshot_seconds": 0.015792100224643946,
+      "final_validation_seconds": 0.14305228600278497,
+      "prepare_lookup_outside_admission_seconds": 6.425379771972075,
+      "publication_seconds": 0.13237252505496144,
+      "source_snapshot_seconds": 0.015156602021306753
+    },
+    "members": [
+      {
+        "node": "verification action guardian member 0",
+        "elapsed_seconds": 1.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action guardian member 1",
+        "elapsed_seconds": 0.005,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action guardian member 2",
+        "elapsed_seconds": 1.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action language member 0",
+        "elapsed_seconds": 11.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action component-preparation member 0",
+        "elapsed_seconds": 0.532,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action language member 1",
+        "elapsed_seconds": 10.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action language member 2",
+        "elapsed_seconds": 12.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action language member 3",
+        "elapsed_seconds": 1.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action language member 4",
+        "elapsed_seconds": 0.921,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action language member 5",
+        "elapsed_seconds": 1.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action language member 6",
+        "elapsed_seconds": 1.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action language member 7",
+        "elapsed_seconds": 1.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action language member 8",
+        "elapsed_seconds": 5.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action guest member 0",
+        "elapsed_seconds": 0.559,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action coverage member 0",
+        "elapsed_seconds": 0.37,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action input-discovery member 0",
+        "elapsed_seconds": 2.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action environment-discovery member 0",
+        "elapsed_seconds": 0.003,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action identity-qualification member 0",
+        "elapsed_seconds": 5.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action juice-runtime member 0",
+        "elapsed_seconds": 0.658,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action juice member 0",
+        "elapsed_seconds": 1.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action juice member 1",
+        "elapsed_seconds": 3.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action spec-history member 0",
+        "elapsed_seconds": 3.0,
+        "peak_rss": null,
+        "state": "success"
+      }
+    ],
+    "timing_qualified": false
+  },
+  {
+    "request": 2,
+    "fresh_groups": [
+      "component-preparation",
+      "input-discovery",
+      "environment-discovery",
+      "spec-history",
+      "juice",
+      "juice-runtime",
+      "identity-qualification",
+      "coverage",
+      "guest",
+      "language",
+      "guardian"
+    ],
+    "gate_admitted_seconds": 91.6176256001927,
+    "coordinator_elapsed_seconds": 101.17507639387622,
+    "timings": {
+      "action_input_snapshot_seconds": 0.021300134947523475,
+      "final_validation_seconds": 0.11654529394581914,
+      "prepare_lookup_outside_admission_seconds": 8.651791041018441,
+      "publication_seconds": 0.10534295812249184,
+      "source_snapshot_seconds": 0.014003946213051677
+    },
+    "members": [
+      {
+        "node": "verification action guardian member 0",
+        "elapsed_seconds": 2.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action guardian member 1",
+        "elapsed_seconds": 0.006,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action guardian member 2",
+        "elapsed_seconds": 2.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action language member 0",
+        "elapsed_seconds": 12.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action component-preparation member 0",
+        "elapsed_seconds": 0.6960000000000001,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action language member 1",
+        "elapsed_seconds": 10.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action language member 2",
+        "elapsed_seconds": 23.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action language member 3",
+        "elapsed_seconds": 1.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action language member 4",
+        "elapsed_seconds": 1.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action language member 5",
+        "elapsed_seconds": 1.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action language member 6",
+        "elapsed_seconds": 2.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action language member 7",
+        "elapsed_seconds": 1.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action language member 8",
+        "elapsed_seconds": 4.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action guest member 0",
+        "elapsed_seconds": 0.91,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action coverage member 0",
+        "elapsed_seconds": 0.625,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action input-discovery member 0",
+        "elapsed_seconds": 2.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action environment-discovery member 0",
+        "elapsed_seconds": 0.007,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action identity-qualification member 0",
+        "elapsed_seconds": 10.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action juice-runtime member 0",
+        "elapsed_seconds": 0.715,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action juice member 0",
+        "elapsed_seconds": 6.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action juice member 1",
+        "elapsed_seconds": 10.0,
+        "peak_rss": null,
+        "state": "success"
+      },
+      {
+        "node": "verification action spec-history member 0",
+        "elapsed_seconds": 4.0,
+        "peak_rss": null,
+        "state": "success"
+      }
+    ],
+    "timing_qualified": false
+  }
+]

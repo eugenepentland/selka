@@ -1,0 +1,910 @@
+{
+  "binary": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S06/.tmp/S06/discovery-profile-final",
+  "sha256": "d1cc599a0de7b362c243d9caedb2f73dedacb9d031406d78516bd08776c84f00",
+  "samples": [
+    {
+      "index": 0,
+      "status": 0,
+      "elapsed_ns": 726509264,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 233167,
+          "new_ns": 257049,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 7502348,
+          "new_ns": 8868527,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 248990102,
+          "new_ns": 150244033,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 141568450,
+          "new_ns": 131908369
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "status": 0,
+      "elapsed_ns": 436377927,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 251210,
+          "new_ns": 274493,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 7775257,
+          "new_ns": 6195619,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 144334563,
+          "new_ns": 76481576,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 81221393,
+          "new_ns": 91978783
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "status": 0,
+      "elapsed_ns": 448447500,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 148595,
+          "new_ns": 159305,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 4478457,
+          "new_ns": 4529516,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 147652323,
+          "new_ns": 84461464,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 89342089,
+          "new_ns": 90997543
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "status": 0,
+      "elapsed_ns": 452970226,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 211782,
+          "new_ns": 254428,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 7346713,
+          "new_ns": 5000363,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 146055684,
+          "new_ns": 85533696,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 91070055,
+          "new_ns": 90225800
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "status": 0,
+      "elapsed_ns": 480490937,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 142927,
+          "new_ns": 162997,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 4414054,
+          "new_ns": 4473652,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 144757767,
+          "new_ns": 84137508,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 108836493,
+          "new_ns": 109079480
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "status": 0,
+      "elapsed_ns": 463204717,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 216323,
+          "new_ns": 257000,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 4255726,
+          "new_ns": 4334024,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 151211306,
+          "new_ns": 87705211,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 93684665,
+          "new_ns": 95185650
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "status": 0,
+      "elapsed_ns": 614224753,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 239486,
+          "new_ns": 284149,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 7882440,
+          "new_ns": 8396848,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 190296934,
+          "new_ns": 104166386,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 117740959,
+          "new_ns": 150588892
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "status": 0,
+      "elapsed_ns": 803062475,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 220623,
+          "new_ns": 257021,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 9146495,
+          "new_ns": 8477548,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 281667579,
+          "new_ns": 155032724,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 150663554,
+          "new_ns": 155843182
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "status": 0,
+      "elapsed_ns": 720973461,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 271842,
+          "new_ns": 335448,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 9336871,
+          "new_ns": 10029683,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 261936470,
+          "new_ns": 140195491,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 116267317,
+          "new_ns": 137131845
+        }
+      ]
+    },
+    {
+      "index": 9,
+      "status": 0,
+      "elapsed_ns": 724206278,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 235269,
+          "new_ns": 251370,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 7586154,
+          "new_ns": 8761373,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 261354580,
+          "new_ns": 148564440,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 142850241,
+          "new_ns": 119503178
+        }
+      ]
+    },
+    {
+      "index": 10,
+      "status": 0,
+      "elapsed_ns": 442586959,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 165928,
+          "new_ns": 177619,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 4946635,
+          "new_ns": 5104273,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 138032487,
+          "new_ns": 84404059,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 90697103,
+          "new_ns": 90386792
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "status": 0,
+      "elapsed_ns": 459629725,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 231592,
+          "new_ns": 270182,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 4584314,
+          "new_ns": 4818111,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 146655858,
+          "new_ns": 90301104,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 91202442,
+          "new_ns": 92434029
+        }
+      ]
+    },
+    {
+      "index": 12,
+      "status": 0,
+      "elapsed_ns": 445795302,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 149471,
+          "new_ns": 167916,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 4536039,
+          "new_ns": 4689335,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 145458509,
+          "new_ns": 84581559,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 88977251,
+          "new_ns": 91993413
+        }
+      ]
+    },
+    {
+      "index": 13,
+      "status": 0,
+      "elapsed_ns": 497406680,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 241242,
+          "new_ns": 272316,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 5225967,
+          "new_ns": 4824816,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 173524042,
+          "new_ns": 103643780,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 79092519,
+          "new_ns": 102177637
+        }
+      ]
+    },
+    {
+      "index": 14,
+      "status": 0,
+      "elapsed_ns": 525936216,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 164848,
+          "new_ns": 189853,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 5325136,
+          "new_ns": 5578672,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 165235175,
+          "new_ns": 94710378,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 106648813,
+          "new_ns": 118399655
+        }
+      ]
+    },
+    {
+      "index": 15,
+      "status": 0,
+      "elapsed_ns": 814895887,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 285315,
+          "new_ns": 321680,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 11874305,
+          "new_ns": 9882239,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 280864506,
+          "new_ns": 157251700,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 155594905,
+          "new_ns": 146449150
+        }
+      ]
+    },
+    {
+      "index": 16,
+      "status": 0,
+      "elapsed_ns": 758053823,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 231560,
+          "new_ns": 278016,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 9533007,
+          "new_ns": 9783532,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 271428930,
+          "new_ns": 124941368,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 141638631,
+          "new_ns": 160455727
+        }
+      ]
+    },
+    {
+      "index": 17,
+      "status": 0,
+      "elapsed_ns": 731770093,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 258726,
+          "new_ns": 288733,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 9612461,
+          "new_ns": 9924886,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 281834404,
+          "new_ns": 123099536,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 114677816,
+          "new_ns": 150763387
+        }
+      ]
+    },
+    {
+      "index": 18,
+      "status": 0,
+      "elapsed_ns": 618090676,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 238378,
+          "new_ns": 286245,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 10106234,
+          "new_ns": 10528411,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 251162586,
+          "new_ns": 110945951,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 98439853,
+          "new_ns": 95285867
+        }
+      ]
+    },
+    {
+      "index": 19,
+      "status": 0,
+      "elapsed_ns": 483169566,
+      "checks_pass": true,
+      "rows": [
+        {
+          "modules": 1,
+          "declarations_per_module": 8,
+          "tests": 8,
+          "old_ns": 254883,
+          "new_ns": 291843,
+          "old_module_comparisons": 8,
+          "old_declaration_comparisons": 36,
+          "new_hash_lookups": 16
+        },
+        {
+          "modules": 32,
+          "declarations_per_module": 32,
+          "tests": 1024,
+          "old_ns": 8353556,
+          "new_ns": 6712662,
+          "old_module_comparisons": 32768,
+          "old_declaration_comparisons": 16896,
+          "new_hash_lookups": 2048
+        },
+        {
+          "modules": 128,
+          "declarations_per_module": 128,
+          "tests": 16384,
+          "old_ns": 149725312,
+          "new_ns": 89490859,
+          "old_module_comparisons": 2097152,
+          "old_declaration_comparisons": 1056768,
+          "new_hash_lookups": 32768
+        },
+        {
+          "shared_roots": 128,
+          "selected_per_root": 16,
+          "program_functions": 2048,
+          "old_ns": 93758525,
+          "new_ns": 103911360
+        }
+      ]
+    }
+  ],
+  "median_ns": 511671448.0,
+  "empirical_p95_ns": 803062475,
+  "qualification": "20 operational fixture repeats; empirical p95 only, no stable p95 or whole guest-loop claim",
+  "complete": true
+}

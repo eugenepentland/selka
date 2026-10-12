@@ -1,0 +1,12 @@
+build-slot: FIFO ticket 434, position 22; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 434, position 17; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 434, position 12; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 434, position 6; earlier build tickets must run first; waiting (180s so far)
+build-slot: build slot 2, FIFO ticket 434 after 241s
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/experiments/development-loop-wave2-20261012/S10/edit_latency.py", line 128, in <module>
+    main()
+    ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/experiments/development-loop-wave2-20261012/S10/edit_latency.py", line 106, in main
+    raise RuntimeError('real compiler/test verdict or exact fresh inventory disagrees')
+RuntimeError: real compiler/test verdict or exact fresh inventory disagrees

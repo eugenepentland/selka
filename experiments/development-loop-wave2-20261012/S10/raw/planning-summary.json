@@ -1,0 +1,32 @@
+{
+  "scope": "actual warm payload/key/report planning with reviewed namespace comparison",
+  "complete": true,
+  "pairs": 40,
+  "rows": 80,
+  "groups": [
+    46
+  ],
+  "setup_seconds": 30.788419611,
+  "whole_seconds": 220.761153299,
+  "sources": {
+    "baseline": "9793bdd98348db8a9a61e5a6c0db3e61c1047fc3f1a353b7ce8c55070cc50ca5",
+    "candidate": "553427e97aafc3e77c8fa507d4328f4746428acba5dfde7e2fbd5712320ea0ef",
+    "snapshot": "6633c64381dffa9a686dc488a27a89a0dc3c49b7f9851c90813e319e234341b6",
+    "harness": "af3eb2afcf76b246575d8dab68645f8b433dec16f387534d7c96ba750648842e"
+  },
+  "raw_sha256": "24bec9af35db529573bef6e1c28745e15007786bf6c3125d8555f0e8158882ba",
+  "baseline": {
+    "median_seconds": 2.077760191,
+    "empirical_p95_seconds": 4.8759422,
+    "min_seconds": 2.011329594,
+    "max_seconds": 5.168106645
+  },
+  "candidate": {
+    "median_seconds": 1.869006348,
+    "empirical_p95_seconds": 4.175622414,
+    "min_seconds": 1.78446379,
+    "max_seconds": 4.340086399
+  },
+  "candidate_baseline_median_ratio": 0.8995293855834589,
+  "candidate_baseline_p95_ratio": 0.8563724184425321
+}

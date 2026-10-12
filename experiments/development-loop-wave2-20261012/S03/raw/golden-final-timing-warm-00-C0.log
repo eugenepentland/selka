@@ -1,0 +1,8 @@
+guardian/test: 1 test(s) selected
+golden parity: checked 222 (source 167, fixtures 55), skipped 382 (docs 27, unmatched fixtures 345, data-only 1, retired or old internals 9), mismatches 0
+guardian/test: SLOW  26.24s  golden_parity.test.checked-in golden corpora replay natively with explicit skip counts
+All 1 tests passed.
+guardian/test: test wall 26.24s; slowest over 50ms:
+guardian/test:   26.24s  golden_parity.test.checked-in golden corpora replay natively with explicit skip counts
+guardian/test: PASS — 1 passed
+guardian/test: RESULT {"passed":1,"failed":0,"skipped":0}

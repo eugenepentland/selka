@@ -30,6 +30,7 @@ ROOT = Path(__file__).resolve().parents[1]
 INPUTS = ROOT / "build_test_inputs.zig"
 # Cached Zig test roots and the list in build_test_inputs.zig that covers each.
 ROOTS = {
+    "src/text_scalar_root_test.zig": "text_scalar_unit",
     "src/tooling_root_test.zig": "tooling_unit",
     "src/memory_budget.zig": "memory_budget",
     "src/root_test.zig": "unit",
@@ -160,7 +161,7 @@ def gaps() -> list[str]:
         if entries is None:
             problems.append("build_test_inputs.zig declares no `{}` list for {}".format(list_name, root))
             continue
-        if list_name == "tooling_unit":
+        if list_name in ("tooling_unit", "text_scalar_unit"):
             problems.extend(source_gaps(root, entries))
         for path in reachable(root):
             for number, named in named_paths(test_text(path)):

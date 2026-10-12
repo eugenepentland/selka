@@ -1,0 +1,13 @@
+{
+  "complete": true,
+  "cases": 20,
+  "source_commit": "5e6180689b5b837aa60bd5a43f60b0981c58b638",
+  "compiler_sha256": "abc4663ecc3356557a8238185005f79486343fe2ecde9258b82a266458781040",
+  "source_manifest_sha256": "bbc53c527196258277f45d180cb68525601dfb8b5cc3f1fe43ce195ea77d97d5",
+  "all_verdict_and_inventory_expectations_passed": true,
+  "guest_native_receipt_reuse": "unavailable: actual execute/uncacheable-toolchain decisions",
+  "per_test_timing": "unknown",
+  "bootstrap_scope": "main compiler with previously qualified copied companions; current complete seed provisioning not qualified",
+  "native_platform_pins": "unchanged; unproved current host denied receipt reuse",
+  "compiler_zig_adapter_pre_post_hashes_equal": true
+}

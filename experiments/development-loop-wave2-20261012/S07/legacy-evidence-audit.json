@@ -1,0 +1,165 @@
+{
+  "reason": "two operational warm requests; shared gate clocks cannot establish individual admitted-action duration; no independent validation or isolated measurement context",
+  "report_sha256": {
+    "experiments/development-loop-closeout-20261012/S10/raw/C1-retained/report-1.json": "ffb0539d7628c284db9294007f469184f1eeb0a3e8a5394ed8fc39caddc30083",
+    "experiments/development-loop-closeout-20261012/S10/raw/C1-retained/report-2.json": "8725eb19088737dd352bdec719e6a55bdb80c0b3293fa18b37f471b7e9e45eee"
+  },
+  "samples": [
+    {
+      "action": "component-preparation",
+      "count": 2,
+      "maximum_seconds": 0.6960000000000001,
+      "member": "verification action component-preparation member 0",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "input-discovery",
+      "count": 2,
+      "maximum_seconds": 2.0,
+      "member": "verification action input-discovery member 0",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "environment-discovery",
+      "count": 2,
+      "maximum_seconds": 0.007,
+      "member": "verification action environment-discovery member 0",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "spec-history",
+      "count": 2,
+      "maximum_seconds": 4.0,
+      "member": "verification action spec-history member 0",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "juice",
+      "count": 2,
+      "maximum_seconds": 6.0,
+      "member": "verification action juice member 0",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "juice",
+      "count": 2,
+      "maximum_seconds": 10.0,
+      "member": "verification action juice member 1",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "juice-runtime",
+      "count": 2,
+      "maximum_seconds": 0.715,
+      "member": "verification action juice-runtime member 0",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "identity-qualification",
+      "count": 2,
+      "maximum_seconds": 10.0,
+      "member": "verification action identity-qualification member 0",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "coverage",
+      "count": 2,
+      "maximum_seconds": 0.625,
+      "member": "verification action coverage member 0",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "guest",
+      "count": 2,
+      "maximum_seconds": 0.91,
+      "member": "verification action guest member 0",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "language",
+      "count": 2,
+      "maximum_seconds": 12.0,
+      "member": "verification action language member 0",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "language",
+      "count": 2,
+      "maximum_seconds": 10.0,
+      "member": "verification action language member 1",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "language",
+      "count": 2,
+      "maximum_seconds": 23.0,
+      "member": "verification action language member 2",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "language",
+      "count": 2,
+      "maximum_seconds": 1.0,
+      "member": "verification action language member 3",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "language",
+      "count": 2,
+      "maximum_seconds": 1.0,
+      "member": "verification action language member 4",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "language",
+      "count": 2,
+      "maximum_seconds": 1.0,
+      "member": "verification action language member 5",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "language",
+      "count": 2,
+      "maximum_seconds": 2.0,
+      "member": "verification action language member 6",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "language",
+      "count": 2,
+      "maximum_seconds": 1.0,
+      "member": "verification action language member 7",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "language",
+      "count": 2,
+      "maximum_seconds": 5.0,
+      "member": "verification action language member 8",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "guardian",
+      "count": 2,
+      "maximum_seconds": 2.0,
+      "member": "verification action guardian member 0",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "guardian",
+      "count": 2,
+      "maximum_seconds": 0.006,
+      "member": "verification action guardian member 1",
+      "status": "insufficient_samples"
+    },
+    {
+      "action": "guardian",
+      "count": 2,
+      "maximum_seconds": 2.0,
+      "member": "verification action guardian member 2",
+      "status": "insufficient_samples"
+    }
+  ],
+  "source": "frozen prior closeout C1, not wave2 final compatibility evidence",
+  "verdict": "not_qualified_for_hard_limits"
+}

@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "scripts/verify_cache.py",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--force"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10",
+  "status": 0,
+  "elapsed_seconds_including_queue": 1196.4741200960707
+}

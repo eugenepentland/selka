@@ -1,0 +1,631 @@
+{
+  "schema": 1,
+  "compiler_sha256": "cc827c4e79243f299dc92327fa86049669307d1f0edfa816a5b641dc443176b0",
+  "rows": [
+    {
+      "label": "prepare-0-old-guest-debug",
+      "suite": "guest",
+      "mode": "debug",
+      "variant": "old",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/guest",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/guest-debug",
+        "--json",
+        "--jobs",
+        "4"
+      ],
+      "status": 0,
+      "elapsed_seconds": 0.8692831499502063,
+      "counts": {
+        "passed": 42,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 42
+      }
+    },
+    {
+      "label": "prepare-0-old-lang-debug",
+      "suite": "lang",
+      "mode": "debug",
+      "variant": "old",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/lang",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/lang-debug",
+        "--json",
+        "--jobs",
+        "4"
+      ],
+      "status": 0,
+      "elapsed_seconds": 21.53387967008166,
+      "counts": {
+        "passed": 1552,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 1549,
+        "uncacheable-metadata": 3
+      }
+    },
+    {
+      "label": "prepare-0-old-lang-unoptimized",
+      "suite": "lang",
+      "mode": "unoptimized",
+      "variant": "old",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/lang",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/lang-unoptimized",
+        "--json",
+        "--jobs",
+        "4",
+        "--unoptimized"
+      ],
+      "status": 0,
+      "elapsed_seconds": 21.192475313786417,
+      "counts": {
+        "passed": 1552,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 1549,
+        "uncacheable-metadata": 3
+      }
+    },
+    {
+      "label": "prepare-0-old-lang-release",
+      "suite": "lang",
+      "mode": "release",
+      "variant": "old",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/lang",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/lang-release",
+        "--json",
+        "--jobs",
+        "4",
+        "--release",
+        "--verify-facts"
+      ],
+      "status": 0,
+      "elapsed_seconds": 23.15327690402046,
+      "counts": {
+        "passed": 1552,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 1552
+      }
+    },
+    {
+      "label": "prepare-0-old-value_semantics-debug",
+      "suite": "value_semantics",
+      "mode": "debug",
+      "variant": "old",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/value_semantics",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/value_semantics-debug",
+        "--json",
+        "--jobs",
+        "4"
+      ],
+      "status": 0,
+      "elapsed_seconds": 1.932742522098124,
+      "counts": {
+        "passed": 140,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 140
+      }
+    },
+    {
+      "label": "prepare-0-old-value_semantics-unoptimized",
+      "suite": "value_semantics",
+      "mode": "unoptimized",
+      "variant": "old",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/value_semantics",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/value_semantics-unoptimized",
+        "--json",
+        "--jobs",
+        "4",
+        "--unoptimized"
+      ],
+      "status": 0,
+      "elapsed_seconds": 1.8179511509370059,
+      "counts": {
+        "passed": 140,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 140
+      }
+    },
+    {
+      "label": "prepare-0-old-value_semantics-release",
+      "suite": "value_semantics",
+      "mode": "release",
+      "variant": "old",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/value_semantics",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/value_semantics-release",
+        "--json",
+        "--jobs",
+        "4",
+        "--release",
+        "--verify-facts"
+      ],
+      "status": 0,
+      "elapsed_seconds": 1.854668197920546,
+      "counts": {
+        "passed": 140,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 140
+      }
+    },
+    {
+      "label": "prepare-0-old-ported-debug",
+      "suite": "ported",
+      "mode": "debug",
+      "variant": "old",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/ported",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/ported-debug",
+        "--json",
+        "--jobs",
+        "4"
+      ],
+      "status": 0,
+      "elapsed_seconds": 2.04845481691882,
+      "counts": {
+        "passed": 98,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 98
+      }
+    },
+    {
+      "label": "prepare-0-old-ported-unoptimized",
+      "suite": "ported",
+      "mode": "unoptimized",
+      "variant": "old",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/ported",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/ported-unoptimized",
+        "--json",
+        "--jobs",
+        "4",
+        "--unoptimized"
+      ],
+      "status": 0,
+      "elapsed_seconds": 1.928098418051377,
+      "counts": {
+        "passed": 98,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 98
+      }
+    },
+    {
+      "label": "prepare-0-old-ported-release",
+      "suite": "ported",
+      "mode": "release",
+      "variant": "old",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/ported",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/ported-release",
+        "--json",
+        "--jobs",
+        "4",
+        "--release",
+        "--verify-facts"
+      ],
+      "status": 0,
+      "elapsed_seconds": 2.4771621329709888,
+      "counts": {
+        "passed": 98,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 98
+      }
+    },
+    {
+      "label": "prepare-0-new-guest-debug",
+      "suite": "guest",
+      "mode": "debug",
+      "variant": "new",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/guest",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/guest-debug",
+        "--json",
+        "--jobs",
+        "4"
+      ],
+      "status": 0,
+      "elapsed_seconds": 0.8627433849032968,
+      "counts": {
+        "passed": 42,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 42
+      }
+    },
+    {
+      "label": "prepare-0-new-lang-debug",
+      "suite": "lang",
+      "mode": "debug",
+      "variant": "new",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/lang",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/lang-debug",
+        "--json",
+        "--jobs",
+        "4"
+      ],
+      "status": 0,
+      "elapsed_seconds": 21.033701792825013,
+      "counts": {
+        "passed": 1552,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 1549,
+        "uncacheable-metadata": 3
+      }
+    },
+    {
+      "label": "prepare-0-new-lang-unoptimized",
+      "suite": "lang",
+      "mode": "unoptimized",
+      "variant": "new",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/lang",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/lang-unoptimized",
+        "--json",
+        "--jobs",
+        "4",
+        "--unoptimized"
+      ],
+      "status": 0,
+      "elapsed_seconds": 26.70042931800708,
+      "counts": {
+        "passed": 1552,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 1549,
+        "uncacheable-metadata": 3
+      }
+    },
+    {
+      "label": "prepare-0-new-lang-release",
+      "suite": "lang",
+      "mode": "release",
+      "variant": "new",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/lang",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/lang-release",
+        "--json",
+        "--jobs",
+        "4",
+        "--release",
+        "--verify-facts"
+      ],
+      "status": 0,
+      "elapsed_seconds": 37.50801170314662,
+      "counts": {
+        "passed": 1552,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 1552
+      }
+    },
+    {
+      "label": "prepare-0-new-value_semantics-debug",
+      "suite": "value_semantics",
+      "mode": "debug",
+      "variant": "new",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/value_semantics",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/value_semantics-debug",
+        "--json",
+        "--jobs",
+        "4"
+      ],
+      "status": 0,
+      "elapsed_seconds": 1.8815390369854867,
+      "counts": {
+        "passed": 140,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 140
+      }
+    },
+    {
+      "label": "prepare-0-new-value_semantics-unoptimized",
+      "suite": "value_semantics",
+      "mode": "unoptimized",
+      "variant": "new",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/value_semantics",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/value_semantics-unoptimized",
+        "--json",
+        "--jobs",
+        "4",
+        "--unoptimized"
+      ],
+      "status": 0,
+      "elapsed_seconds": 1.849293002160266,
+      "counts": {
+        "passed": 140,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 140
+      }
+    },
+    {
+      "label": "prepare-0-new-value_semantics-release",
+      "suite": "value_semantics",
+      "mode": "release",
+      "variant": "new",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/value_semantics",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/value_semantics-release",
+        "--json",
+        "--jobs",
+        "4",
+        "--release",
+        "--verify-facts"
+      ],
+      "status": 0,
+      "elapsed_seconds": 2.0671366220340133,
+      "counts": {
+        "passed": 140,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 140
+      }
+    },
+    {
+      "label": "prepare-0-new-ported-debug",
+      "suite": "ported",
+      "mode": "debug",
+      "variant": "new",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/ported",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/ported-debug",
+        "--json",
+        "--jobs",
+        "4"
+      ],
+      "status": 0,
+      "elapsed_seconds": 2.0894040749408305,
+      "counts": {
+        "passed": 98,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 98
+      }
+    },
+    {
+      "label": "prepare-0-new-ported-unoptimized",
+      "suite": "ported",
+      "mode": "unoptimized",
+      "variant": "new",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/ported",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/ported-unoptimized",
+        "--json",
+        "--jobs",
+        "4",
+        "--unoptimized"
+      ],
+      "status": 0,
+      "elapsed_seconds": 1.9586048470810056,
+      "counts": {
+        "passed": 98,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 98
+      }
+    },
+    {
+      "label": "prepare-0-new-ported-release",
+      "suite": "ported",
+      "mode": "release",
+      "variant": "new",
+      "cohort": 0,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+        "test",
+        "tests/ported",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/telemetry-cache-probe/suite-caches/ported-release",
+        "--json",
+        "--jobs",
+        "4",
+        "--release",
+        "--verify-facts"
+      ],
+      "status": 0,
+      "elapsed_seconds": 2.3693286611232907,
+      "counts": {
+        "passed": 98,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 98
+      }
+    }
+  ],
+  "scope": "sequential suite invocations; not complete gate latency",
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ]
+}

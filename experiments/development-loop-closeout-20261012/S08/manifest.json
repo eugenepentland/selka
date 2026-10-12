@@ -1,0 +1,70 @@
+{
+  "C0": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "commands": [
+    {
+      "argv": "TMPDIR=\"$PWD/.tmp/s08-tmp\" python3 scripts/verification_snapshot_test.py -v",
+      "exit_status": 0,
+      "output": "snapshot-tests.log",
+      "test_count": 74
+    },
+    {
+      "argv": "git show fbfcaa7a923186a8e773c3760f81c10aa345a432:scripts/verification_snapshot.py > .tmp/s08-baseline/verification_snapshot.py",
+      "exit_status": 0
+    },
+    {
+      "argv": "TMPDIR=\"$PWD/.tmp/s08-tmp\" python3 scripts/verification_snapshot_profile.py --module .tmp/s08-baseline/verification_snapshot.py",
+      "exit_status": 0,
+      "output": "baseline-counters.json"
+    },
+    {
+      "argv": "TMPDIR=\"$PWD/.tmp/s08-tmp\" python3 scripts/verification_snapshot_profile.py",
+      "exit_status": 0,
+      "output": "candidate-counters.json"
+    },
+    {
+      "argv": "TMPDIR=\"$PWD/.tmp/s08-tmp\" python3 experiments/development-loop-closeout-20261012/S08/rejected-memo.py",
+      "exit_status": 0,
+      "output": "rejected-memo.json"
+    },
+    {
+      "argv": "git diff --check",
+      "exit_status": 0
+    }
+  ],
+  "cpu_affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "native_artifacts": null,
+  "python_executable": "/usr/bin/python3",
+  "python_sha256": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+  "python_version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+  "rss": "unqualified",
+  "source_sha256": {
+    "experiments/development-loop-closeout-20261012/S08/rejected-memo.py": "02aab093037521dbc9e64d5eba28e8fba992cd6fe64f46298ebe574bb2d7c859",
+    "scripts/verification_snapshot.py": "88064a99ca69ec7b08362bf78fc38281f0a97b623b8ba717399b17f376643731",
+    "scripts/verification_snapshot_profile.py": "ea27e1bd90a19e3a50cf0665d813328dbdd77762d69bc8efbeec715e37c8f92b",
+    "scripts/verification_snapshot_test.py": "115e796e5b55d1e8bb61f8809cc07f3c8fbffdec309cd0c4d485034e7035ac5a"
+  },
+  "timing": "unqualified; no isolated timing window or p95 estimate",
+  "zig_pinned_version": "0.17.0-dev.1683+5ceec001b",
+  "zig_required": false
+}

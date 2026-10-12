@@ -1,0 +1,14 @@
+build-slot: FIFO ticket 645, position 4; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 3, FIFO ticket 645 after 35s
+Build Summary: 10/10 steps succeeded
+verification-prepare success
++- install generated to artifacts.json success
+|  +- run python3 (artifacts.json) success 219ms
+|     +- compile test scalar-live-tests debug native success 443ms MaxRSS:162M
+|     +- compile test tooling-live-tests debug native success 466ms MaxRSS:167M
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.tmp/frozen-final-release/bin/mylang to mylang success
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index.json to test-index.json success
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 to test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 success
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan.json to cache-plan.json success
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 to cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 success
+

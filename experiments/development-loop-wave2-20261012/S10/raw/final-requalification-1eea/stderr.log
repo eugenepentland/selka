@@ -1,0 +1,796 @@
+build-slot: FIFO ticket 38, position 1; draining active work (build1.lock); waiting (0s so far)
+build-slot: FIFO ticket 38, position 1; draining active work (build1.lock); waiting (60s so far)
+build-slot: timing slot 1, FIFO ticket 38 after 85s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs fbfcaa7a923186a8e773c3760f81c10aa345a432: 7/683 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 124 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs fbfcaa7a923186a8e773c3760f81c10aa345a432, 7 file(s) in scope
+guardian: diff-scoped vs fbfcaa7a923186a8e773c3760f81c10aa345a432: 7/683 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 124 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs fbfcaa7a923186a8e773c3760f81c10aa345a432, 7 file(s) in scope
+verification-verification_cache
++- verification action verification_cache member 1 w
+test_aba_restores_bytes_and_mtime_before_first_validation (verification_snapshot_test.InputSnapshot.test_aba_restores_bytes_and_mtime_before_first_validation) ... ok
+test_chmod_changes_live_snapshot_and_new_content_identity_includes_ownership (verification_snapshot_test.InputSnapshot.test_chmod_changes_live_snapshot_and_new_content_identity_includes_ownership) ... ok
+test_content_edit_permanently_invalidates_live_snapshot (verification_snapshot_test.InputSnapshot.test_content_edit_permanently_invalidates_live_snapshot) ... ok
+test_dangling_membership_alias_watches_missing_target_creation_aba (verification_snapshot_test.InputSnapshot.test_dangling_membership_alias_watches_missing_target_creation_aba) ... ok
+test_directory_inventory_addition_is_detected (verification_snapshot_test.InputSnapshot.test_directory_inventory_addition_is_detected) ... ok
+test_directory_inventory_deletion_is_detected (verification_snapshot_test.InputSnapshot.test_directory_inventory_deletion_is_detected) ... ok
+test_empty_tool_sentinel_glob_rejects_unmatched_visible_addition (verification_snapshot_test.InputSnapshot.test_empty_tool_sentinel_glob_rejects_unmatched_visible_addition) ... ok
+test_explicit_file_deletion_fails_validation_and_new_snapshot (verification_snapshot_test.InputSnapshot.test_explicit_file_deletion_fails_validation_and_new_snapshot) ... ok
+test_extra_tool_file_outside_root_is_part_of_live_snapshot (verification_snapshot_test.InputSnapshot.test_extra_tool_file_outside_root_is_part_of_live_snapshot) ... ok
+test_identity_is_json_safe_stable_and_content_sensitive (verification_snapshot_test.InputSnapshot.test_identity_is_json_safe_stable_and_content_sensitive) ... ok
+test_inclusive_scope_binds_hidden_and_python_cache_inputs (verification_snapshot_test.InputSnapshot.test_inclusive_scope_binds_hidden_and_python_cache_inputs) ... ok
+test_inclusive_scope_rejects_untracked_directory_symlinks (verification_snapshot_test.InputSnapshot.test_inclusive_scope_rejects_untracked_directory_symlinks) ... ok
+test_large_file_hash_is_correct_and_reads_bounded_chunks (verification_snapshot_test.InputSnapshot.test_large_file_hash_is_correct_and_reads_bounded_chunks) ... ok
+test_membership_alias_retarget_aba_is_latched (verification_snapshot_test.InputSnapshot.test_membership_alias_retarget_aba_is_latched) ... ok
+test_membership_dangling_child_alias_target_creation_aba_is_latched (verification_snapshot_test.InputSnapshot.test_membership_dangling_child_alias_target_creation_aba_is_latched) ... ok
+test_membership_direct_content_aba_is_latched (verification_snapshot_test.InputSnapshot.test_membership_direct_content_aba_is_latched) ... ok
+test_membership_direct_hidden_and_python_cache_addition_aba (verification_snapshot_test.InputSnapshot.test_membership_direct_hidden_and_python_cache_addition_aba) ... ok
+test_membership_directory_alias_target_is_not_recursively_watched (verification_snapshot_test.InputSnapshot.test_membership_directory_alias_target_is_not_recursively_watched) ... ok
+test_membership_explicit_provider_still_hashes_and_guards_content (verification_snapshot_test.InputSnapshot.test_membership_explicit_provider_still_hashes_and_guards_content) ... ok
+test_membership_external_candidate_target_content_aba_is_latched (verification_snapshot_test.InputSnapshot.test_membership_external_candidate_target_content_aba_is_latched) ... ok
+test_membership_external_candidate_target_file_directory_aba_is_latched (verification_snapshot_test.InputSnapshot.test_membership_external_candidate_target_file_directory_aba_is_latched) ... ok
+test_membership_external_candidate_target_metadata_changes_new_identity (verification_snapshot_test.InputSnapshot.test_membership_external_candidate_target_metadata_changes_new_identity) ... ok
+test_membership_file_instead_of_directory_and_blocked_parent_are_watched (verification_snapshot_test.InputSnapshot.test_membership_file_instead_of_directory_and_blocked_parent_are_watched) ... ok
+test_membership_initial_listing_aba_is_rejected (verification_snapshot_test.InputSnapshot.test_membership_initial_listing_aba_is_rejected) ... ok
+test_membership_inventory_bounds_reject_excess (verification_snapshot_test.InputSnapshot.test_membership_inventory_bounds_reject_excess) ... ok
+test_membership_is_direct_inclusive_and_does_not_hash_or_follow_children (verification_snapshot_test.InputSnapshot.test_membership_is_direct_inclusive_and_does_not_hash_or_follow_children) ... ok
+test_membership_new_snapshot_binds_direct_file_metadata (verification_snapshot_test.InputSnapshot.test_membership_new_snapshot_binds_direct_file_metadata) ... ok
+test_membership_optional_argument_preserves_default_identity (verification_snapshot_test.InputSnapshot.test_membership_optional_argument_preserves_default_identity) ... ok
+test_missing_membership_alias_creation_aba_is_latched (verification_snapshot_test.InputSnapshot.test_missing_membership_alias_creation_aba_is_latched) ... ok
+test_missing_membership_intermediate_directory_creation_aba (verification_snapshot_test.InputSnapshot.test_missing_membership_intermediate_directory_creation_aba) ... ok
+test_missing_membership_unrelated_parent_entry_is_ignored (verification_snapshot_test.InputSnapshot.test_missing_membership_unrelated_parent_entry_is_ignored) ... ok
+test_missing_required_file_fails_closed (verification_snapshot_test.InputSnapshot.test_missing_required_file_fails_closed) ... ok
+test_mutation_of_already_hashed_input_during_construction_is_rejected (verification_snapshot_test.InputSnapshot.test_mutation_of_already_hashed_input_during_construction_is_rejected) ... ok
+test_queue_overflow_fails_closed_and_remains_failed_after_read_recovers (verification_snapshot_test.InputSnapshot.test_queue_overflow_fails_closed_and_remains_failed_after_read_recovers) ... ok
+test_recursive_inventory_addition_under_new_directory_is_detected (verification_snapshot_test.InputSnapshot.test_recursive_inventory_addition_under_new_directory_is_detected) ... ok
+test_rename_invalidates_membership_even_with_identical_file_bytes (verification_snapshot_test.InputSnapshot.test_rename_invalidates_membership_even_with_identical_file_bytes) ... ok
+test_same_size_edit_with_restored_mtime_is_detected (verification_snapshot_test.InputSnapshot.test_same_size_edit_with_restored_mtime_is_detected) ... ok
+test_selected_files_matches_detached_projection_without_observations (verification_snapshot_test.InputSnapshot.test_selected_files_matches_detached_projection_without_observations) ... ok
+test_selected_files_path_only_predicate_empty_and_alias_projection (verification_snapshot_test.InputSnapshot.test_selected_files_path_only_predicate_empty_and_alias_projection) ... ok
+test_selected_files_preserves_borrowed_authority_and_rejects_closed_context (verification_snapshot_test.InputSnapshot.test_selected_files_preserves_borrowed_authority_and_rejects_closed_context) ... ok
+test_session_bound_eviction_only_costs_reads (verification_snapshot_test.InputSnapshot.test_session_bound_eviction_only_costs_reads) ... ok
+test_session_closed_owner_requires_content_read (verification_snapshot_test.InputSnapshot.test_session_closed_owner_requires_content_read) ... ok
+test_session_inherited_by_a_new_process_requires_content_read (verification_snapshot_test.InputSnapshot.test_session_inherited_by_a_new_process_requires_content_read) ... ok
+test_session_reads_overlapping_bytes_once_without_changing_identity (verification_snapshot_test.InputSnapshot.test_session_reads_overlapping_bytes_once_without_changing_identity) ... ok
+test_session_receiver_keeps_own_watch_after_owner_closes (verification_snapshot_test.InputSnapshot.test_session_receiver_keeps_own_watch_after_owner_closes) ... ok
+test_session_restored_bytes_and_mtime_reject_old_watch (verification_snapshot_test.InputSnapshot.test_session_restored_bytes_and_mtime_reject_old_watch) ... ok
+test_session_same_size_restored_mtime_cannot_reuse_old_digest (verification_snapshot_test.InputSnapshot.test_session_same_size_restored_mtime_cannot_reuse_old_digest) ... ok
+test_session_shares_alias_bytes_but_keeps_alias_identity (verification_snapshot_test.InputSnapshot.test_session_shares_alias_bytes_but_keeps_alias_identity) ... ok
+test_session_watch_failure_cannot_supply_a_hash (verification_snapshot_test.InputSnapshot.test_session_watch_failure_cannot_supply_a_hash) ... ok
+test_statistics_are_detached_and_not_semantic_inputs (verification_snapshot_test.InputSnapshot.test_statistics_are_detached_and_not_semantic_inputs) ... ok
+test_symlink_retargeting_same_bytes_is_detected (verification_snapshot_test.InputSnapshot.test_symlink_retargeting_same_bytes_is_detected) ... ok
+test_symlink_target_atomic_replacement_with_same_bytes_is_detected (verification_snapshot_test.InputSnapshot.test_symlink_target_atomic_replacement_with_same_bytes_is_detected) ... ok
+test_symlink_target_content_change_is_detected (verification_snapshot_test.InputSnapshot.test_symlink_target_content_change_is_detected) ... ok
+test_unrelated_sibling_writes_do_not_invalidate_explicit_file (verification_snapshot_test.InputSnapshot.test_unrelated_sibling_writes_do_not_invalidate_explicit_file) ... ok
+test_bounds_evict_idle_and_allow_transient_busy_or_oversized (verification_snapshot_test.RetainedSnapshots.test_bounds_evict_idle_and_allow_transient_busy_or_oversized) ... ok
+test_busy_transient_release_and_reset_do_not_retain_it (verification_snapshot_test.RetainedSnapshots.test_busy_transient_release_and_reset_do_not_retain_it) ... ok
+test_declaration_slots_and_long_payloads_are_bounded (verification_snapshot_test.RetainedSnapshots.test_declaration_slots_and_long_payloads_are_bounded) ... ok
+test_edit_invalidates_only_affected_scope (verification_snapshot_test.RetainedSnapshots.test_edit_invalidates_only_affected_scope) ... ok
+test_fork_rejects_inherited_borrower_and_reconstructs_session (verification_snapshot_test.RetainedSnapshots.test_fork_rejects_inherited_borrower_and_reconstructs_session) ... ok
+test_lost_closed_and_overflow_watchers_are_fresh (verification_snapshot_test.RetainedSnapshots.test_lost_closed_and_overflow_watchers_are_fresh) ... ok
+test_membership_rename_alias_and_aba_rescan (verification_snapshot_test.RetainedSnapshots.test_membership_rename_alias_and_aba_rescan) ... ok
+test_nested_dirty_borrowers_never_rebase_or_close_each_other (verification_snapshot_test.RetainedSnapshots.test_nested_dirty_borrowers_never_rebase_or_close_each_other) ... ok
+test_reset_and_close_invalidate_active_transient_borrowers (verification_snapshot_test.RetainedSnapshots.test_reset_and_close_invalidate_active_transient_borrowers) ... ok
+test_reset_close_and_nested_activation (verification_snapshot_test.RetainedSnapshots.test_reset_close_and_nested_activation) ... ok
+test_warm_request_keeps_watcher_identity_and_reports_only_new_work (verification_snapshot_test.RetainedSnapshots.test_warm_request_keeps_watcher_identity_and_reports_only_new_work) ... ok
+test_alias_retarget_between_resolution_and_hashing_rejects (verification_snapshot_test.SnapshotValidationWork.test_alias_retarget_between_resolution_and_hashing_rejects) ... ok
+test_borrower_diagnostics_survive_context_cleanup (verification_snapshot_test.SnapshotValidationWork.test_borrower_diagnostics_survive_context_cleanup) ... ok
+test_construction_resolves_each_inventory_file_once (verification_snapshot_test.SnapshotValidationWork.test_construction_resolves_each_inventory_file_once) ... ok
+test_diagnostic_bounds_and_detachment_do_not_read_or_clear_dirty (verification_snapshot_test.SnapshotValidationWork.test_diagnostic_bounds_and_detachment_do_not_read_or_clear_dirty) ... ok
+test_diagnostics_unknown_after_reset_and_fork (verification_snapshot_test.SnapshotValidationWork.test_diagnostics_unknown_after_reset_and_fork) ... ok
+test_dirty_short_circuit_avoids_metadata_and_never_rebases (verification_snapshot_test.SnapshotValidationWork.test_dirty_short_circuit_avoids_metadata_and_never_rebases) ... ok
+test_metadata_checks_remain_fresh_without_watch_events (verification_snapshot_test.SnapshotValidationWork.test_metadata_checks_remain_fresh_without_watch_events) ... ok
+test_missing_path_and_metadata_fallback_diagnostics (verification_snapshot_test.SnapshotValidationWork.test_missing_path_and_metadata_fallback_diagnostics) ... ok
+test_overflow_diagnostic_remains_unknown_after_read_recovers (verification_snapshot_test.SnapshotValidationWork.test_overflow_diagnostic_remains_unknown_after_read_recovers) ... ok
+test_path_membership_and_alias_reasons_name_observed_inputs (verification_snapshot_test.SnapshotValidationWork.test_path_membership_and_alias_reasons_name_observed_inputs) ... ok
+test_profile_fixture_preserves_warm_identity_and_rejects_all_aba_consumers (verification_snapshot_test.SnapshotValidationWork.test_profile_fixture_preserves_warm_identity_and_rejects_all_aba_consumers) ... ok
+test_unattributed_dirty_authority_is_unknown (verification_snapshot_test.SnapshotValidationWork.test_unattributed_dirty_authority_is_unknown) ... ok
+
+----------------------------------------------------------------------
+Ran 77 tests in 0.472s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/verification_telemetry.py --action-id verification_cache --member 1 --output-directory-env MYLANG_TEST_TELEMETRY_DIR verification_snapshot_test
+
+verification-verification_cache
++- verification action verification_cache member 2 w
+test_blocked_raw_console_does_not_hang_interpreter_exit (verification_process_test.WatchdogTests.test_blocked_raw_console_does_not_hang_interpreter_exit) ... ok
+test_cancellation_does_not_kill_another_session (verification_process_test.WatchdogTests.test_cancellation_does_not_kill_another_session) ... ok
+test_cancellation_during_supervisor_startup_does_not_start_work (verification_process_test.WatchdogTests.test_cancellation_during_supervisor_startup_does_not_start_work) ... ok
+test_cancellation_interrupts_background_cleanup_drain (verification_process_test.WatchdogTests.test_cancellation_interrupts_background_cleanup_drain) ... ok
+test_cpu_loop_and_blocked_child (verification_process_test.WatchdogTests.test_cpu_loop_and_blocked_child) ... ok
+test_delayed_tee_keeps_request_destination_after_fd_restore (verification_process_test.WatchdogTests.test_delayed_tee_keeps_request_destination_after_fd_restore) ... ok
+test_detached_forking_descendants_are_frozen_before_cleanup (verification_process_test.WatchdogTests.test_detached_forking_descendants_are_frozen_before_cleanup) ... ok
+test_existing_inaccessible_log_is_not_available (verification_process_test.WatchdogTests.test_existing_inaccessible_log_is_not_available) ... ok
+test_full_tee_queue_stops_after_responsive_writer (verification_process_test.WatchdogTests.test_full_tee_queue_stops_after_responsive_writer) ... ok
+test_group_keeps_no_inherited_admission_fd (verification_process_test.WatchdogTests.test_group_keeps_no_inherited_admission_fd) ... ok
+test_hard_parent_crash_reaps_detached_action_lineage (verification_process_test.WatchdogTests.test_hard_parent_crash_reaps_detached_action_lineage) ... ok
+test_inherited_helper_later_child_survives_cancellation (verification_process_test.WatchdogTests.test_inherited_helper_later_child_survives_cancellation) ... ok
+test_interrupt_cleans_and_propagates (verification_process_test.WatchdogTests.test_interrupt_cleans_and_propagates) ... ok
+test_invalid_controls_and_identity (verification_process_test.WatchdogTests.test_invalid_controls_and_identity) ... ok
+test_leader_exits_before_term_ignoring_grandchild (verification_process_test.WatchdogTests.test_leader_exits_before_term_ignoring_grandchild) ... ok
+test_log_open_failure_is_diagnostic (verification_process_test.WatchdogTests.test_log_open_failure_is_diagnostic) ... ok
+test_logs_are_bounded_and_preserve_both_streams (verification_process_test.WatchdogTests.test_logs_are_bounded_and_preserve_both_streams) ... ok
+test_parent_identity_mismatch_refuses_work_after_arming (verification_process_test.WatchdogTests.test_parent_identity_mismatch_refuses_work_after_arming) ... ok
+test_pid_identity_mismatch_never_signals (verification_process_test.WatchdogTests.test_pid_identity_mismatch_never_signals) ... ok
+test_preexisting_detached_admission_helper_survives (verification_process_test.WatchdogTests.test_preexisting_detached_admission_helper_survives) ... ok
+test_sigint_cancels_detached_lineage_and_releases_claim_fd (verification_process_test.WatchdogTests.test_sigint_cancels_detached_lineage_and_releases_claim_fd) ... ok
+test_slow_log_drain_does_not_change_success (verification_process_test.WatchdogTests.test_slow_log_drain_does_not_change_success) ... ok
+test_stuck_console_tee_does_not_block (verification_process_test.WatchdogTests.test_stuck_console_tee_does_not_block) ... ok
+test_success_and_failure (verification_process_test.WatchdogTests.test_success_and_failure) ... ok
+test_supervisor_allows_background_cleanup (verification_process_test.WatchdogTests.test_supervisor_allows_background_cleanup) ... ok
+test_supervisor_kills_detached_sessions_and_reaps (verification_process_test.WatchdogTests.test_supervisor_kills_detached_sessions_and_reaps) ... ok
+test_supervisor_leader_exit_is_incomplete (verification_process_test.WatchdogTests.test_supervisor_leader_exit_is_incomplete) ... ok
+test_supervisor_preserves_failed_worker_status (verification_process_test.WatchdogTests.test_supervisor_preserves_failed_worker_status) ... ok
+test_supervisor_preserves_inherited_descriptors (verification_process_test.WatchdogTests.test_supervisor_preserves_inherited_descriptors) ... ok
+test_supervisor_preserves_signal_exit_status (verification_process_test.WatchdogTests.test_supervisor_preserves_signal_exit_status) ... ok
+test_supervisor_reaps_zombie_only_success (verification_process_test.WatchdogTests.test_supervisor_reaps_zombie_only_success) ... ok
+test_thread_owned_detached_child (verification_process_test.WatchdogTests.test_thread_owned_detached_child) ... ok
+test_timeout_counts_background_cleanup_drain (verification_process_test.WatchdogTests.test_timeout_counts_background_cleanup_drain) ... ok
+test_timeout_during_publication_never_returns_complete (verification_process_test.WatchdogTests.test_timeout_during_publication_never_returns_complete) ... ok
+test_unsupervised_escaped_writer_is_bounded_diagnostic (verification_process_test.WatchdogTests.test_unsupervised_escaped_writer_is_bounded_diagnostic) ... ok
+
+----------------------------------------------------------------------
+Ran 35 tests in 18.930s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/verification_telemetry.py --action-id verification_cache --member 2 --output-directory-env MYLANG_TEST_TELEMETRY_DIR verification_process_test
+
+.............................................
+----------------------------------------------------------------------
+Ran 45 tests in 2.706s
+
+OK
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.233s
+
+OK
+verification-verification_cache
++- verification action verification_cache member 0 w
+test_cache_never_authorizes_a_closed_or_dirty_request_snapshot (verify_cache_test.CallerAuthentication.test_cache_never_authorizes_a_closed_or_dirty_request_snapshot) ... ok
+test_current_source_proof_is_cached_without_warm_file_reads (verify_cache_test.CallerAuthentication.test_current_source_proof_is_cached_without_warm_file_reads) ... ok
+test_fake_root_attaches_actual_provider_authority_until_request_exit (verify_cache_test.CallerAuthentication.test_fake_root_attaches_actual_provider_authority_until_request_exit) ... ok
+test_mismatched_watched_bytes_fail_even_when_current_code_would_match (verify_cache_test.CallerAuthentication.test_mismatched_watched_bytes_fail_even_when_current_code_would_match) ... ok
+test_missing_metadata_cannot_use_an_earlier_content_proof (verify_cache_test.CallerAuthentication.test_missing_metadata_cannot_use_an_earlier_content_proof) ... ok
+test_proof_cache_compares_code_object_by_identity (verify_cache_test.CallerAuthentication.test_proof_cache_compares_code_object_by_identity) ... ok
+test_stale_helper_before_watch_is_rejected_even_with_fresh_source_capture (verify_cache_test.CallerAuthentication.test_stale_helper_before_watch_is_rejected_even_with_fresh_source_capture) ... ok
+test_added_fixture_invalidates_its_action_and_preserves_unrelated_action (verify_cache_test.VerificationCoordinator.test_added_fixture_invalidates_its_action_and_preserves_unrelated_action) ... ok
+test_admission_and_snapshot_phases_are_reported_without_warm_admission (verify_cache_test.VerificationCoordinator.test_admission_and_snapshot_phases_are_reported_without_warm_admission) ... ok
+test_admission_settle_survives_worker_success_and_timeout (verify_cache_test.VerificationCoordinator.test_admission_settle_survives_worker_success_and_timeout) ... build-slot: gate slot 1, FIFO ticket 1 after 0s
+build-slot: gate slot 1, FIFO ticket 1 after 0s
+ok
+test_advisory_budget_failure_preserves_success_and_reuse (verify_cache_test.VerificationCoordinator.test_advisory_budget_failure_preserves_success_and_reuse) ... ok
+test_advisory_policy_changes_reuse_and_missing_test_telemetry_is_explicit (verify_cache_test.VerificationCoordinator.test_advisory_policy_changes_reuse_and_missing_test_telemetry_is_explicit) ... ok
+test_always_fresh_action_runs_on_warm_request_without_reusing_its_success (verify_cache_test.VerificationCoordinator.test_always_fresh_action_runs_on_warm_request_without_reusing_its_success) ... ok
+test_artifact_change_executes_only_dependent_and_conservative_cohorts (verify_cache_test.VerificationCoordinator.test_artifact_change_executes_only_dependent_and_conservative_cohorts) ... ok
+test_cancelled_worker_status_is_preserved_without_success_publication (verify_cache_test.VerificationCoordinator.test_cancelled_worker_status_is_preserved_without_success_publication) ... ok
+test_changed_host_contract_invalidates_eligible_groups (verify_cache_test.VerificationCoordinator.test_changed_host_contract_invalidates_eligible_groups) ... ok
+test_changed_options_environment_and_tool_each_invalidate (verify_cache_test.VerificationCoordinator.test_changed_options_environment_and_tool_each_invalidate) ... ok
+test_changed_recipe_invalidates_only_its_group (verify_cache_test.VerificationCoordinator.test_changed_recipe_invalidates_only_its_group) ... ok
+test_cold_then_warm_reuses_actions_without_any_admission (verify_cache_test.VerificationCoordinator.test_cold_then_warm_reuses_actions_without_any_admission) ... ok
+test_component_change_invalidates_selected_provider_but_preserves_pure_cohort (verify_cache_test.VerificationCoordinator.test_component_change_invalidates_selected_provider_but_preserves_pure_cohort) ... ok
+test_configuration_controls_remain_identity_inputs (verify_cache_test.VerificationCoordinator.test_configuration_controls_remain_identity_inputs) ... ok
+test_consumer_qualification_is_explicit_and_complete (verify_cache_test.VerificationCoordinator.test_consumer_qualification_is_explicit_and_complete) ... ok
+test_corrupt_diagnostics_and_advisory_budget_do_not_invalidate_success (verify_cache_test.VerificationCoordinator.test_corrupt_diagnostics_and_advisory_budget_do_not_invalidate_success) ... ok
+test_corrupt_inventory_regenerates_before_accepting_prior_action_receipts (verify_cache_test.VerificationCoordinator.test_corrupt_inventory_regenerates_before_accepting_prior_action_receipts) ... ok
+test_coverage_verdict_changes_when_a_negative_fixture_lookup_becomes_present (verify_cache_test.VerificationCoordinator.test_coverage_verdict_changes_when_a_negative_fixture_lookup_becomes_present) ... ok
+test_declaration_export_mismatch_and_symlink_keep_full_configuration (verify_cache_test.VerificationCoordinator.test_declaration_export_mismatch_and_symlink_keep_full_configuration) ... ok
+test_declarative_parser_requires_complete_known_data_syntax (verify_cache_test.VerificationCoordinator.test_declarative_parser_requires_complete_known_data_syntax) ... ok
+test_deferred_metadata_only_tool_change_is_rejected_without_events (verify_cache_test.VerificationCoordinator.test_deferred_metadata_only_tool_change_is_rejected_without_events) ... ok
+test_embedded_documentation_is_required_preparation_input_and_change_rebuilds (verify_cache_test.VerificationCoordinator.test_embedded_documentation_is_required_preparation_input_and_change_rebuilds) ... ok
+test_execution_deadline_change_invalidates_success_and_is_explained (verify_cache_test.VerificationCoordinator.test_execution_deadline_change_invalidates_success_and_is_explained) ... ok
+test_failed_explicit_rerun_removes_older_success_and_next_request_executes (verify_cache_test.VerificationCoordinator.test_failed_explicit_rerun_removes_older_success_and_next_request_executes) ... ok
+test_failed_gate_preserves_failure_and_stability_diagnostics (verify_cache_test.VerificationCoordinator.test_failed_gate_preserves_failure_and_stability_diagnostics) ... ok
+test_failed_log_open_does_not_report_previous_execution_timings (verify_cache_test.VerificationCoordinator.test_failed_log_open_does_not_report_previous_execution_timings) ... build-slot: gate slot 1, FIFO ticket 1 after 0s
+ok
+test_failed_worker_does_not_publish_success_and_next_request_retries (verify_cache_test.VerificationCoordinator.test_failed_worker_does_not_publish_success_and_next_request_retries) ... ok
+test_filtered_inventory_never_reuses_or_publishes_complete_action_success (verify_cache_test.VerificationCoordinator.test_filtered_inventory_never_reuses_or_publishes_complete_action_success) ... ok
+test_fixed_default_seed_and_explicit_seed_produce_distinct_action_receipts (verify_cache_test.VerificationCoordinator.test_fixed_default_seed_and_explicit_seed_produce_distinct_action_receipts) ... ok
+test_fixture_invalidation_names_changed_dependency (verify_cache_test.VerificationCoordinator.test_fixture_invalidation_names_changed_dependency) ... ok
+test_fixture_membership_coverage_cannot_be_declared_cacheable (verify_cache_test.VerificationCoordinator.test_fixture_membership_coverage_cannot_be_declared_cacheable) ... ok
+test_force_and_test_rerun_execute_warm_actions (verify_cache_test.VerificationCoordinator.test_force_and_test_rerun_execute_warm_actions) ... ok
+test_interruption_after_action_receipt_write_removes_attempted_success (verify_cache_test.VerificationCoordinator.test_interruption_after_action_receipt_write_removes_attempted_success) ... ok
+test_invalid_deadlines_fail_before_admission (verify_cache_test.VerificationCoordinator.test_invalid_deadlines_fail_before_admission) ... ok
+test_invalid_or_incomplete_inventory_is_rejected (verify_cache_test.VerificationCoordinator.test_invalid_or_incomplete_inventory_is_rejected) ... ok
+test_invalid_profile_controls_fail_before_preparation (verify_cache_test.VerificationCoordinator.test_invalid_profile_controls_fail_before_preparation) ... ok
+test_long_profile_cannot_certify_missing_qualification (verify_cache_test.VerificationCoordinator.test_long_profile_cannot_certify_missing_qualification) ... ok
+test_long_qualification_exception_revokes_new_successes (verify_cache_test.VerificationCoordinator.test_long_qualification_exception_revokes_new_successes) ... ok
+test_long_qualification_mutation_revokes_new_local_and_shared_gate_successes (verify_cache_test.VerificationCoordinator.test_long_qualification_mutation_revokes_new_local_and_shared_gate_successes) ... ok
+test_malformed_action_receipt_is_a_miss (verify_cache_test.VerificationCoordinator.test_malformed_action_receipt_is_a_miss) ... ok
+test_measurement_expiry_during_publication_revokes_local_and_shared_receipts (verify_cache_test.VerificationCoordinator.test_measurement_expiry_during_publication_revokes_local_and_shared_receipts) ... build-slot: timing slot 1, FIFO ticket 1 after 0s
+ok
+test_measurement_expiry_during_reporting_revokes_new_publications (verify_cache_test.VerificationCoordinator.test_measurement_expiry_during_reporting_revokes_new_publications) ... build-slot: timing slot 1, FIFO ticket 1 after 0s
+ok
+test_member_change_invalidates_only_its_group (verify_cache_test.VerificationCoordinator.test_member_change_invalidates_only_its_group) ... ok
+test_metadata_rejects_duplicate_missing_or_changed_member_coverage (verify_cache_test.VerificationCoordinator.test_metadata_rejects_duplicate_missing_or_changed_member_coverage) ... ok
+test_mutation_after_worker_success_prevents_receipt_publication (verify_cache_test.VerificationCoordinator.test_mutation_after_worker_success_prevents_receipt_publication) ... ok
+test_mutation_during_publication_rolls_back_all_new_success_receipts (verify_cache_test.VerificationCoordinator.test_mutation_during_publication_rolls_back_all_new_success_receipts) ... ok
+test_narrowed_cohorts_keep_aba_guard_on_unselected_artifacts (verify_cache_test.VerificationCoordinator.test_narrowed_cohorts_keep_aba_guard_on_unselected_artifacts) ... ok
+test_narrowed_cohorts_still_invalidate_for_configuration_change (verify_cache_test.VerificationCoordinator.test_narrowed_cohorts_still_invalidate_for_configuration_change) ... ok
+test_new_earlier_path_directory_cannot_shadow_normalized_worker_tool (verify_cache_test.VerificationCoordinator.test_new_earlier_path_directory_cannot_shadow_normalized_worker_tool) ... ok
+test_normalized_admitted_shell_cannot_run_startup_hooks_or_exported_functions (verify_cache_test.VerificationCoordinator.test_normalized_admitted_shell_cannot_run_startup_hooks_or_exported_functions) ... build-slot: gate slot 1, FIFO ticket 1 after 0s
+ok
+test_normalized_environment_isolates_git_config_templates_and_command_overrides (verify_cache_test.VerificationCoordinator.test_normalized_environment_isolates_git_config_templates_and_command_overrides) ... ok
+test_normalized_python_ignores_stale_timestamp_bytecode_after_same_size_restored_mtime_edit (verify_cache_test.VerificationCoordinator.test_normalized_python_ignores_stale_timestamp_bytecode_after_same_size_restored_mtime_edit) ... ok
+test_preparation_timeout_writes_incomplete_report (verify_cache_test.VerificationCoordinator.test_preparation_timeout_writes_incomplete_report) ... ok
+test_private_slot_handshake_revalidates_after_queue_and_never_launches_changed_worker (verify_cache_test.VerificationCoordinator.test_private_slot_handshake_revalidates_after_queue_and_never_launches_changed_worker) ... build-slot: gate slot 1, FIFO ticket 1 after 0s
+ok
+test_producer_fixture_closures_are_declared_verification_inputs (verify_cache_test.VerificationCoordinator.test_producer_fixture_closures_are_declared_verification_inputs) ... ok
+test_publication_exception_replaces_prior_success_report (verify_cache_test.VerificationCoordinator.test_publication_exception_replaces_prior_success_report) ... ok
+test_publish_checked_removes_written_receipt_when_snapshot_validation_raises (verify_cache_test.VerificationCoordinator.test_publish_checked_removes_written_receipt_when_snapshot_validation_raises) ... ok
+test_qualified_producer_metadata_narrows_only_with_current_source_and_mode (verify_cache_test.VerificationCoordinator.test_qualified_producer_metadata_narrows_only_with_current_source_and_mode) ... ok
+test_queued_mutation_blocks_worker_and_publishes_no_success (verify_cache_test.VerificationCoordinator.test_queued_mutation_blocks_worker_and_publishes_no_success) ... ok
+test_quick_then_complete_preserves_receipts_and_reports_exact_remaining_work (verify_cache_test.VerificationCoordinator.test_quick_then_complete_preserves_receipts_and_reports_exact_remaining_work) ... ok
+test_real_admitted_timeout_never_publishes_and_next_request_recovers (verify_cache_test.VerificationCoordinator.test_real_admitted_timeout_never_publishes_and_next_request_recovers) ... ok
+test_renamed_fixture_invalidates_only_its_group (verify_cache_test.VerificationCoordinator.test_renamed_fixture_invalidates_only_its_group) ... ok
+test_report_storage_failure_preserves_timeout_and_success (verify_cache_test.VerificationCoordinator.test_report_storage_failure_preserves_timeout_and_success) ... ok
+test_retained_session_does_not_publish_for_edit_after_admission (verify_cache_test.VerificationCoordinator.test_retained_session_does_not_publish_for_edit_after_admission) ... ok
+test_retained_session_edit_and_forced_failure_still_require_work (verify_cache_test.VerificationCoordinator.test_retained_session_edit_and_forced_failure_still_require_work) ... ok
+test_retained_session_warm_request_avoids_hashing_discovery_and_admission (verify_cache_test.VerificationCoordinator.test_retained_session_warm_request_avoids_hashing_discovery_and_admission) ... ok
+test_shared_changed_tool_path_does_not_reuse_exact_receipt (verify_cache_test.VerificationCoordinator.test_shared_changed_tool_path_does_not_reuse_exact_receipt) ... ok
+test_shared_forced_failure_removes_prior_success (verify_cache_test.VerificationCoordinator.test_shared_forced_failure_removes_prior_success) ... ok
+test_shared_lease_prevents_collection_across_admission (verify_cache_test.VerificationCoordinator.test_shared_lease_prevents_collection_across_admission) ... ok
+test_shared_rejected_publication_is_not_success (verify_cache_test.VerificationCoordinator.test_shared_rejected_publication_is_not_success) ... ok
+test_shared_root_workflow_lock_spans_admission_and_publication (verify_cache_test.VerificationCoordinator.test_shared_root_workflow_lock_spans_admission_and_publication) ... ok
+test_shared_success_reuses_after_private_action_receipts_removed (verify_cache_test.VerificationCoordinator.test_shared_success_reuses_after_private_action_receipts_removed) ... ok
+test_tool_aba_during_cold_resolution_rejects_before_native_work (verify_cache_test.VerificationCoordinator.test_tool_aba_during_cold_resolution_rejects_before_native_work) ... ok
+test_tool_aba_during_warm_resolution_rejects_before_execution_or_reuse (verify_cache_test.VerificationCoordinator.test_tool_aba_during_warm_resolution_rejects_before_execution_or_reuse) ... ok
+test_unfamiliar_declaration_syntax_keeps_broad_configuration (verify_cache_test.VerificationCoordinator.test_unfamiliar_declaration_syntax_keeps_broad_configuration) ... ok
+test_unknown_action_fallback_cannot_be_declared_cacheable (verify_cache_test.VerificationCoordinator.test_unknown_action_fallback_cannot_be_declared_cacheable) ... ok
+test_unknown_action_is_covered_by_always_fresh_fallback (verify_cache_test.VerificationCoordinator.test_unknown_action_is_covered_by_always_fresh_fallback) ... ok
+test_unknown_artifact_selector_fails_closed_before_gate_execution (verify_cache_test.VerificationCoordinator.test_unknown_artifact_selector_fails_closed_before_gate_execution) ... ok
+test_unrelated_group_addition_removal_preserves_existing_successes (verify_cache_test.VerificationCoordinator.test_unrelated_group_addition_removal_preserves_existing_successes) ... ok
+test_untracked_environment_override_executes_and_does_not_publish (verify_cache_test.VerificationCoordinator.test_untracked_environment_override_executes_and_does_not_publish) ... ok
+test_zig_command_rerun_replaces_conflicting_options_and_preserves_one_seed (verify_cache_test.VerificationCoordinator.test_zig_command_rerun_replaces_conflicting_options_and_preserves_one_seed) ... ok
+
+----------------------------------------------------------------------
+Ran 88 tests in 49.156s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/verification_telemetry.py --action-id verification_cache --member 0 --output-directory-env MYLANG_TEST_TELEMETRY_DIR verify_cache_test
+
+verification-verification_cache
++- verification action verification_cache member 11 w
+test_cached_or_incomplete_work_cannot_satisfy_units (development_loop_workloads_test.CompletedWork.test_cached_or_incomplete_work_cannot_satisfy_units) ... ok
+test_exact_fresh_work_passes (development_loop_workloads_test.CompletedWork.test_exact_fresh_work_passes) ... ok
+test_wrong_or_duplicate_test_inventory_is_rejected (development_loop_workloads_test.CompletedWork.test_wrong_or_duplicate_test_inventory_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.000s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/verification_telemetry.py --action-id verification_cache --member 11 --output-directory-env MYLANG_TEST_TELEMETRY_DIR development_loop_workloads_test
+
+verification-verification_cache
++- verification action verification_cache member 9 w
+test_broad_edit_keeps_larger_visible_pending_inventory (verification_profiles_test.Profiles.test_broad_edit_keeps_larger_visible_pending_inventory) ... ok
+test_complete_cold_and_warm_account_for_same_current_inventory (verification_profiles_test.Profiles.test_complete_cold_and_warm_account_for_same_current_inventory) ... ok
+test_edited_session_and_one_shot_use_same_receipt_decisions (verification_profiles_test.Profiles.test_edited_session_and_one_shot_use_same_receipt_decisions) ... ok
+test_exported_C0_inventory_is_used_without_a_parallel_test_list (verification_profiles_test.Profiles.test_exported_C0_inventory_is_used_without_a_parallel_test_list) ... ok
+test_filtered_inventory_never_completes_gate (verification_profiles_test.Profiles.test_filtered_inventory_never_completes_gate) ... ok
+test_insufficient_qualification_and_invalid_costs_are_rejected (verification_profiles_test.Profiles.test_insufficient_qualification_and_invalid_costs_are_rejected) ... ok
+test_long_requires_gate_and_qualified_additional_work (verification_profiles_test.Profiles.test_long_requires_gate_and_qualified_additional_work) ... ok
+test_lost_input_authority_revokes_reused_coverage (verification_profiles_test.Profiles.test_lost_input_authority_revokes_reused_coverage) ... ok
+test_missing_duplicate_unknown_and_corrupt_decisions_are_rejected (verification_profiles_test.Profiles.test_missing_duplicate_unknown_and_corrupt_decisions_are_rejected) ... ok
+test_quick_cannot_issue_complete_verification_even_when_all_reused (verification_profiles_test.Profiles.test_quick_cannot_issue_complete_verification_even_when_all_reused) ... ok
+test_quick_prioritizes_relevant_inexpensive_work_and_names_deferred (verification_profiles_test.Profiles.test_quick_prioritizes_relevant_inexpensive_work_and_names_deferred) ... ok
+test_shared_gate_failure_does_not_certify_selected_actions (verification_profiles_test.Profiles.test_shared_gate_failure_does_not_certify_selected_actions) ... ok
+test_skipped_or_explicit_failed_work_cannot_complete_a_successful_command (verification_profiles_test.Profiles.test_skipped_or_explicit_failed_work_cannot_complete_a_successful_command) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.003s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/verification_telemetry.py --action-id verification_cache --member 9 --output-directory-env MYLANG_TEST_TELEMETRY_DIR verification_profiles_test
+
+verification-verification_cache
++- verification action verification_cache member 8 w
+test_advisory_controls_do_not_change_execution_identity (verification_policy_test.PolicyTests.test_advisory_controls_do_not_change_execution_identity) ... ok
+test_ambiguous_or_malformed_policies_rejected (verification_policy_test.PolicyTests.test_ambiguous_or_malformed_policies_rejected) ... ok
+test_calibration_deduplicates_runs_and_rejects_conflicts (verification_policy_test.PolicyTests.test_calibration_deduplicates_runs_and_rejects_conflicts) ... ok
+test_calibration_failure_flags_and_operational_quality (verification_policy_test.PolicyTests.test_calibration_failure_flags_and_operational_quality) ... ok
+test_calibration_metrics_and_evidence_gaps_remain_unknown (verification_policy_test.PolicyTests.test_calibration_metrics_and_evidence_gaps_remain_unknown) ... ok
+test_calibration_requires_provenance_and_independent_holdout (verification_policy_test.PolicyTests.test_calibration_requires_provenance_and_independent_holdout) ... ok
+test_calibration_retains_bounded_distinct_history_and_holdout (verification_policy_test.PolicyTests.test_calibration_retains_bounded_distinct_history_and_holdout) ... ok
+test_calibration_separates_every_compatibility_dimension (verification_policy_test.PolicyTests.test_calibration_separates_every_compatibility_dimension) ... ok
+test_enforcement_and_versions_rejected_even_with_evidence (verification_policy_test.PolicyTests.test_enforcement_and_versions_rejected_even_with_evidence) ... ok
+test_incomplete_cancelled_reused_observations_are_not_samples (verification_policy_test.PolicyTests.test_incomplete_cancelled_reused_observations_are_not_samples) ... ok
+test_legacy_exception_needs_review_and_no_relabeling (verification_policy_test.PolicyTests.test_legacy_exception_needs_review_and_no_relabeling) ... ok
+test_process_rss_cannot_establish_aggregate_ceiling (verification_policy_test.PolicyTests.test_process_rss_cannot_establish_aggregate_ceiling) ... ok
+test_report_adapter_consumes_supported_test_rows_only (verification_policy_test.PolicyTests.test_report_adapter_consumes_supported_test_rows_only) ... ok
+test_report_adapter_evaluates_policy_and_missing_scopes (verification_policy_test.PolicyTests.test_report_adapter_evaluates_policy_and_missing_scopes) ... ok
+test_report_adapter_rejects_unknown_actions_and_unavailable_files (verification_policy_test.PolicyTests.test_report_adapter_rejects_unknown_actions_and_unavailable_files) ... ok
+test_scope_and_clock_are_exact_and_nonadditive (verification_policy_test.PolicyTests.test_scope_and_clock_are_exact_and_nonadditive) ... ok
+test_v2_adapter_does_not_relabel_protocol_interval (verification_policy_test.PolicyTests.test_v2_adapter_does_not_relabel_protocol_interval) ... ok
+test_v2_clock_is_explicit_and_preserves_v1_default (verification_policy_test.PolicyTests.test_v2_clock_is_explicit_and_preserves_v1_default) ... ok
+test_work_units_are_declared_and_not_interchangeable (verification_policy_test.PolicyTests.test_work_units_are_declared_and_not_interchangeable) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 0.019s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/verification_telemetry.py --action-id verification_cache --member 8 --output-directory-env MYLANG_TEST_TELEMETRY_DIR verification_policy_test
+
+verification-verification_cache
++- verification action verification_cache member 10 w
+test_actual_handle_authenticates_exact_context_and_declared_inventory (verification_qualification_test.Qualification.test_actual_handle_authenticates_exact_context_and_declared_inventory) ... ok
+test_arbitrary_commands_and_invalid_limits_are_rejected_before_execution (verification_qualification_test.Qualification.test_arbitrary_commands_and_invalid_limits_are_rejected_before_execution) ... ok
+test_compiler_work_checks_actual_counts_not_equal_fingerprints (verification_qualification_test.Qualification.test_compiler_work_checks_actual_counts_not_equal_fingerprints) ... ok
+test_evidence_mutation_and_closed_handle_reject_stale_success (verification_qualification_test.Qualification.test_evidence_mutation_and_closed_handle_reject_stale_success) ... ok
+test_full_gate_remains_required_despite_authenticated_scaling (verification_qualification_test.Qualification.test_full_gate_remains_required_despite_authenticated_scaling) ... ok
+test_output_changed_after_parse_before_guard_cannot_authorize (verification_qualification_test.Qualification.test_output_changed_after_parse_before_guard_cannot_authorize) ... ok
+test_partial_execution_cannot_authorize_and_unsupported_work_is_named (verification_qualification_test.Qualification.test_partial_execution_cannot_authorize_and_unsupported_work_is_named) ... ok
+test_scaling_missing_wrong_or_zero_work_is_rejected (verification_qualification_test.Qualification.test_scaling_missing_wrong_or_zero_work_is_rejected) ... ok
+test_serialized_success_booleans_cannot_supply_authority (verification_qualification_test.Qualification.test_serialized_success_booleans_cannot_supply_authority) ... ok
+test_source_aba_revokes_authority (verification_qualification_test.Qualification.test_source_aba_revokes_authority) ... ok
+test_work_cap_does_not_hide_required_obligations (verification_qualification_test.Qualification.test_work_cap_does_not_hide_required_obligations) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.263s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/verification_telemetry.py --action-id verification_cache --member 10 --output-directory-env MYLANG_TEST_TELEMETRY_DIR verification_qualification_test
+
+verification-verification_cache
++- verification action verification_cache member 7 w
+test_actual_pinned_zig_lowercase_optimize_tags_qualify (verification_producers_test.ProducerTests.test_actual_pinned_zig_lowercase_optimize_tags_qualify) ... ok
+test_artifact_replacement_never_authorizes_old_metadata (verification_producers_test.ProducerTests.test_artifact_replacement_never_authorizes_old_metadata) ... ok
+test_complete_closure_qualifies (verification_producers_test.ProducerTests.test_complete_closure_qualifies) ... ok
+test_equivalent_second_worktree_producer_identity (verification_producers_test.ProducerTests.test_equivalent_second_worktree_producer_identity) ... ok
+test_independent_compiler_edit_preserves_identity (verification_producers_test.ProducerTests.test_independent_compiler_edit_preserves_identity) ... ok
+test_missing_metadata_unknown_provider_and_legacy_inventory_stay_broad (verification_producers_test.ProducerTests.test_missing_metadata_unknown_provider_and_legacy_inventory_stay_broad) ... ok
+test_missing_source_duplicate_source_and_symlink_are_not_proof (verification_producers_test.ProducerTests.test_missing_source_duplicate_source_and_symlink_are_not_proof) ... ok
+test_mode_seed_abi_schema_and_tool_changes (verification_producers_test.ProducerTests.test_mode_seed_abi_schema_and_tool_changes) ... ok
+test_mutation_during_metadata_capture_rejected (verification_producers_test.ProducerTests.test_mutation_during_metadata_capture_rejected) ... ok
+test_new_import_and_dynamic_import_decline_narrowing (verification_producers_test.ProducerTests.test_new_import_and_dynamic_import_decline_narrowing) ... ok
+test_publication_mutation_cannot_publish_success_from_manifest_alone (verification_producers_test.ProducerTests.test_publication_mutation_cannot_publish_success_from_manifest_alone) ... ok
+test_source_and_artifact_aba_during_lookup_revoke_live_authority (verification_producers_test.ProducerTests.test_source_and_artifact_aba_during_lookup_revoke_live_authority) ... ok
+test_text_scalar_embedded_oracle_identity_and_new_dependency_fallback (verification_producers_test.ProducerTests.test_text_scalar_embedded_oracle_identity_and_new_dependency_fallback) ... ok
+test_transitive_semantic_change_requires_rebuild_and_revert_restores_identity (verification_producers_test.ProducerTests.test_transitive_semantic_change_requires_rebuild_and_revert_restores_identity) ... ok
+test_writer_atomic_v2_inventory_and_invalid_labels (verification_producers_test.ProducerTests.test_writer_atomic_v2_inventory_and_invalid_labels) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.589s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/verification_telemetry.py --action-id verification_cache --member 7 --output-directory-env MYLANG_TEST_TELEMETRY_DIR verification_producers_test
+
+verification-verification_cache
++- verification action verification_cache member 6 w
+test_cli_failure_and_unwritable_telemetry_preserve_exit_status (verification_telemetry_test.TelemetryTests.test_cli_failure_and_unwritable_telemetry_preserve_exit_status) ... ok
+test_diagnostics_are_bounded_detached_and_do_not_clear_dirty_authority (verification_telemetry_test.TelemetryTests.test_diagnostics_are_bounded_detached_and_do_not_clear_dirty_authority) ... ok
+test_enabling_collector_preserves_verdict_output_and_suite_selection (verification_telemetry_test.TelemetryTests.test_enabling_collector_preserves_verdict_output_and_suite_selection) ... ok
+test_every_inventory_action_and_nested_phases_remain_visible (verification_telemetry_test.TelemetryTests.test_every_inventory_action_and_nested_phases_remain_visible) ... ok
+test_failfast_is_partial_and_reuse_is_not_fresh_timing (verification_telemetry_test.TelemetryTests.test_failfast_is_partial_and_reuse_is_not_fresh_timing) ... ok
+test_invalid_documents_never_claim_coverage (verification_telemetry_test.TelemetryTests.test_invalid_documents_never_claim_coverage) ... ok
+test_optional_request_directory_environment_produces_supported_document (verification_telemetry_test.TelemetryTests.test_optional_request_directory_environment_produces_supported_document) ... ok
+test_process_measurement_scope_and_malformed_observations (verification_telemetry_test.TelemetryTests.test_process_measurement_scope_and_malformed_observations) ... ok
+test_real_runner_captures_fast_failed_skipped_and_subtests (verification_telemetry_test.TelemetryTests.test_real_runner_captures_fast_failed_skipped_and_subtests) ... ok
+test_strict_bounded_io_and_partial_records (verification_telemetry_test.TelemetryTests.test_strict_bounded_io_and_partial_records) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 1.175s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/verification_telemetry.py --action-id verification_cache --member 6 --output-directory-env MYLANG_TEST_TELEMETRY_DIR verification_telemetry_test
+
+verification-verification_cache
++- verification action verification_cache member 3 w
+test_archived_slow_test_rows (verification_report_test.Reports.test_archived_slow_test_rows) ... ok
+test_bounded_records_and_changes (verification_report_test.Reports.test_bounded_records_and_changes) ... ok
+test_deterministic_and_immutable (verification_report_test.Reports.test_deterministic_and_immutable) ... ok
+test_group_artifact_changes (verification_report_test.Reports.test_group_artifact_changes) ... ok
+test_io_corrupt_and_atomic (verification_report_test.Reports.test_io_corrupt_and_atomic) ... ok
+test_log_bounds_and_missing (verification_report_test.Reports.test_log_bounds_and_missing) ... ok
+test_nested_log_timings_are_not_added (verification_report_test.Reports.test_nested_log_timings_are_not_added) ... ok
+test_precise_changes (verification_report_test.Reports.test_precise_changes) ... ok
+test_real_nested_host_limits_are_json_sequences (verification_report_test.Reports.test_real_nested_host_limits_are_json_sequences) ... ok
+test_registered_action_labels_preserve_counts_and_reject_malformed_rows (verification_report_test.Reports.test_registered_action_labels_preserve_counts_and_reject_malformed_rows) ... ok
+test_test_verdicts_durations_and_exclusions (verification_report_test.Reports.test_test_verdicts_durations_and_exclusions) ... ok
+test_unknown_is_not_false_cause (verification_report_test.Reports.test_unknown_is_not_false_cause) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 0.063s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/verification_telemetry.py --action-id verification_cache --member 3 --output-directory-env MYLANG_TEST_TELEMETRY_DIR verification_report_test
+
+verification-verification_cache
++- verification action verification_cache member 12 w
+test_all_nested_proxies_preserve_parent_gate_sidecars (verification_native_telemetry_test.NativeTelemetryTests.test_all_nested_proxies_preserve_parent_gate_sidecars) ... ok
+test_byte_exact_transport_and_runner_status_with_unknown_protocol (verification_native_telemetry_test.NativeTelemetryTests.test_byte_exact_transport_and_runner_status_with_unknown_protocol) ... ok
+test_cancellation_reaps_noncooperating_runner (verification_native_telemetry_test.NativeTelemetryTests.test_cancellation_reaps_noncooperating_runner) ... ok
+test_finite_fragmented_and_malformed_stream_handling (verification_native_telemetry_test.NativeTelemetryTests.test_finite_fragmented_and_malformed_stream_handling) ... ok
+test_full_selected_outcomes_and_explicit_protocol_scope (verification_native_telemetry_test.NativeTelemetryTests.test_full_selected_outcomes_and_explicit_protocol_scope) ... ok
+test_inherited_progress_and_other_descriptors_reach_original_runner (verification_native_telemetry_test.NativeTelemetryTests.test_inherited_progress_and_other_descriptors_reach_original_runner) ... ok
+test_leak_and_logged_error_preserve_failure (verification_native_telemetry_test.NativeTelemetryTests.test_leak_and_logged_error_preserve_failure) ... ok
+test_unsupported_version_metadata_and_result_never_complete (verification_native_telemetry_test.NativeTelemetryTests.test_unsupported_version_metadata_and_result_never_complete) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 3.657s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/verification_telemetry.py --action-id verification_cache --member 12 --output-directory-env MYLANG_TEST_TELEMETRY_DIR verification_native_telemetry_test
+
+verification-verification_cache
++- verification action verification_cache member 13 w
+test_exact_states_counts_property_data_and_unknown_clocks (verification_guest_telemetry_test.GuestTelemetryTests.test_exact_states_counts_property_data_and_unknown_clocks) ... ok
+test_incomplete_duplicate_and_fake_text_records_stay_unknown (verification_guest_telemetry_test.GuestTelemetryTests.test_incomplete_duplicate_and_fake_text_records_stay_unknown) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.001s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/verification_telemetry.py --action-id verification_cache --member 13 --output-directory-env MYLANG_TEST_TELEMETRY_DIR verification_guest_telemetry_test
+
+verification-verification_cache
++- verification action verification_cache member 4 w
+test_ambiguous_labels_and_duplicate_rows_rejected (verification_budgets_test.BudgetTests.test_ambiguous_labels_and_duplicate_rows_rejected) ... ok
+test_capture_and_parser_integrity_are_required (verification_budgets_test.BudgetTests.test_capture_and_parser_integrity_are_required) ... ok
+test_cohorts_do_not_mix_environment_or_action_contract (verification_budgets_test.BudgetTests.test_cohorts_do_not_mix_environment_or_action_contract) ... ok
+test_duplicate_report_does_not_inflate_samples (verification_budgets_test.BudgetTests.test_duplicate_report_does_not_inflate_samples) ... ok
+test_embedded_evaluation_round_trip_is_not_another_execution (verification_budgets_test.BudgetTests.test_embedded_evaluation_round_trip_is_not_another_execution) ... ok
+test_failed_reused_cancelled_incomplete_and_cached_rejected (verification_budgets_test.BudgetTests.test_failed_reused_cancelled_incomplete_and_cached_rejected) ... ok
+test_history_is_bounded_and_keeps_provenance (verification_budgets_test.BudgetTests.test_history_is_bounded_and_keeps_provenance) ... ok
+test_missing_identity_is_explicit_unknown (verification_budgets_test.BudgetTests.test_missing_identity_is_explicit_unknown) ... ok
+test_overlapping_members_are_never_added (verification_budgets_test.BudgetTests.test_overlapping_members_are_never_added) ... ok
+test_regression_threshold_is_advisory_with_small_samples (verification_budgets_test.BudgetTests.test_regression_threshold_is_advisory_with_small_samples) ... ok
+test_report_only_candidates_separate_targets_and_limits (verification_budgets_test.BudgetTests.test_report_only_candidates_separate_targets_and_limits) ... ok
+test_saved_provenance_cannot_duplicate_one_member_run (verification_budgets_test.BudgetTests.test_saved_provenance_cannot_duplicate_one_member_run) ... ok
+test_strict_input_and_limits (verification_budgets_test.BudgetTests.test_strict_input_and_limits) ... ok
+test_threshold_reassessment_preserves_samples (verification_budgets_test.BudgetTests.test_threshold_reassessment_preserves_samples) ... ok
+test_tiny_samples_have_no_recommendation_or_percentiles (verification_budgets_test.BudgetTests.test_tiny_samples_have_no_recommendation_or_percentiles) ... ok
+test_unstable_inputs_and_changed_member_meaning_rejected (verification_budgets_test.BudgetTests.test_unstable_inputs_and_changed_member_meaning_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.013s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/verification_telemetry.py --action-id verification_cache --member 4 --output-directory-env MYLANG_TEST_TELEMETRY_DIR verification_budgets_test
+
+verification-coverage
++- verification action coverage member 0 w
+inputs coverage: every repository path the cached test roots name is declared
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/test_inputs_coverage.py
+
+verification-verification_cache
++- verification action verification_cache member 15 w
+test_actual_module_cli_import_source_loader_and_pyc_routes_agree (verification_code_identity_test.LoadedCodeIdentity.test_actual_module_cli_import_source_loader_and_pyc_routes_agree) ... ok
+test_bootstrap_stale_and_detached_loaded_helper_code_are_distinct (verification_code_identity_test.LoadedCodeIdentity.test_bootstrap_stale_and_detached_loaded_helper_code_are_distinct) ... ok
+test_bounds_refuse_without_returning_a_weaker_digest (verification_code_identity_test.LoadedCodeIdentity.test_bounds_refuse_without_returning_a_weaker_digest) ... ok
+test_constant_types_and_sequence_frames_do_not_collide (verification_code_identity_test.LoadedCodeIdentity.test_constant_types_and_sequence_frames_do_not_collide) ... ok
+test_every_code_attribute_is_bound (verification_code_identity_test.LoadedCodeIdentity.test_every_code_attribute_is_bound) ... ok
+test_frozenset_order_hash_seeds_and_helper_identity_are_stable (verification_code_identity_test.LoadedCodeIdentity.test_frozenset_order_hash_seeds_and_helper_identity_are_stable) ... ok
+test_helper_binds_its_actual_loaded_root (verification_code_identity_test.LoadedCodeIdentity.test_helper_binds_its_actual_loaded_root) ... ok
+test_helper_implementation_changes_are_explicitly_bound (verification_code_identity_test.LoadedCodeIdentity.test_helper_implementation_changes_are_explicitly_bound) ... ok
+test_large_integer_text_and_sorted_constants_respect_byte_bound (verification_code_identity_test.LoadedCodeIdentity.test_large_integer_text_and_sorted_constants_respect_byte_bound) ... ok
+test_limit_configuration_rejects_bool_zero_negative_and_unbounded_values (verification_code_identity_test.LoadedCodeIdentity.test_limit_configuration_rejects_bool_zero_negative_and_unbounded_values) ... ok
+test_nested_frozenset_and_slice_constants_are_deterministic (verification_code_identity_test.LoadedCodeIdentity.test_nested_frozenset_and_slice_constants_are_deterministic) ... ok
+test_nested_function_semantics_and_defaults_invalidate (verification_code_identity_test.LoadedCodeIdentity.test_nested_function_semantics_and_defaults_invalidate) ... ok
+test_pyc_source_only_and_import_order_routes_agree_for_same_loaded_code (verification_code_identity_test.LoadedCodeIdentity.test_pyc_source_only_and_import_order_routes_agree_for_same_loaded_code) ... ok
+test_python_compatibility_and_optimization_domain_changes_invalidate (verification_code_identity_test.LoadedCodeIdentity.test_python_compatibility_and_optimization_domain_changes_invalidate) ... ok
+test_reference_aliases_change_marshal_but_not_canonical_identity (verification_code_identity_test.LoadedCodeIdentity.test_reference_aliases_change_marshal_but_not_canonical_identity) ... ok
+test_signed_zero_complex_components_and_nan_payload_bits_are_bound (verification_code_identity_test.LoadedCodeIdentity.test_signed_zero_complex_components_and_nan_payload_bits_are_bound) ... ok
+test_source_after_import_does_not_replace_actual_loaded_identity (verification_code_identity_test.LoadedCodeIdentity.test_source_after_import_does_not_replace_actual_loaded_identity) ... ok
+test_source_authentication_distinguishes_typed_equal_constant_values (verification_code_identity_test.LoadedCodeIdentity.test_source_authentication_distinguishes_typed_equal_constant_values) ... ok
+test_source_authentication_does_not_read_files_or_hash_later_source (verification_code_identity_test.LoadedCodeIdentity.test_source_authentication_does_not_read_files_or_hash_later_source) ... ok
+test_source_authentication_matches_actual_immutable_loaded_helper (verification_code_identity_test.LoadedCodeIdentity.test_source_authentication_matches_actual_immutable_loaded_helper) ... ok
+test_source_authentication_unknown_syntax_and_bytes_fail_closed (verification_code_identity_test.LoadedCodeIdentity.test_source_authentication_unknown_syntax_and_bytes_fail_closed) ... ok
+test_stale_timestamp_pyc_cannot_equal_new_source_identity (verification_code_identity_test.LoadedCodeIdentity.test_stale_timestamp_pyc_cannot_equal_new_source_identity) ... ok
+test_unknown_code_attribute_refuses_identity (verification_code_identity_test.LoadedCodeIdentity.test_unknown_code_attribute_refuses_identity) ... ok
+test_unknown_mutable_and_subclass_constants_fail_closed (verification_code_identity_test.LoadedCodeIdentity.test_unknown_mutable_and_subclass_constants_fail_closed) ... ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 0.878s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/verification_telemetry.py --action-id verification_cache --member 15 --output-directory-env MYLANG_TEST_TELEMETRY_DIR verification_code_identity_test
+
+verification-verification_session
++- verification action verification_session member 0 w
+...............
+----------------------------------------------------------------------
+Ran 15 tests in 1.711s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/cache_session_test.py
+
+verification-verification_cache
++- verification action verification_cache member 14 w
+test_ambient_markers_do_not_authorize_bypass (verification_measurement_test.MeasurementWindow.test_ambient_markers_do_not_authorize_bypass) ... ok
+test_deadline_bounds_python_work_and_releases_holder (verification_measurement_test.MeasurementWindow.test_deadline_bounds_python_work_and_releases_holder) ... build-slot: timing slot 1, FIFO ticket 1 after 0s
+ok
+test_deadline_cannot_be_swallowed_by_advisory_io_error_handler (verification_measurement_test.MeasurementWindow.test_deadline_cannot_be_swallowed_by_advisory_io_error_handler) ... build-slot: timing slot 1, FIFO ticket 1 after 0s
+ok
+test_holder_loss_after_report_overwrites_success_and_revokes_receipts (verification_measurement_test.MeasurementWindow.test_holder_loss_after_report_overwrites_success_and_revokes_receipts) ... verification: FAIL: measurement admission holder exited before completion
+ok
+test_holder_release_failure_revokes_success (verification_measurement_test.MeasurementWindow.test_holder_release_failure_revokes_success) ... ok
+test_invalid_bounds_and_existing_alarm_rejected_before_admission (verification_measurement_test.MeasurementWindow.test_invalid_bounds_and_existing_alarm_rejected_before_admission) ... ok
+test_late_deadline_revokes_published_evidence_but_success_keeps_it (verification_measurement_test.MeasurementWindow.test_late_deadline_revokes_published_evidence_but_success_keeps_it) ... build-slot: timing slot 1, FIFO ticket 1 after 0s
+build-slot: timing slot 1, FIFO ticket 2 after 0s
+ok
+test_lost_holder_and_forked_capability_fail_closed (verification_measurement_test.MeasurementWindow.test_lost_holder_and_forked_capability_fail_closed) ... build-slot: timing slot 1, FIFO ticket 1 after 0s
+build-slot: timing slot 1, FIFO ticket 2 after 0s
+ok
+test_owned_commands_execute_without_nested_admission_and_expiry_cleans_up (verification_measurement_test.MeasurementWindow.test_owned_commands_execute_without_nested_admission_and_expiry_cleans_up) ... build-slot: timing slot 1, FIFO ticket 1 after 0s
+measured
+build-slot: timing slot 1, FIFO ticket 2 after 0s
+ok
+test_queue_wait_is_outside_deadline (verification_measurement_test.MeasurementWindow.test_queue_wait_is_outside_deadline) ... build-slot: timing slot 1, FIFO ticket 1 after 0s
+ok
+test_real_holder_blocks_peers_and_restores_process_state (verification_measurement_test.MeasurementWindow.test_real_holder_blocks_peers_and_restores_process_state) ... build-slot: timing slot 1, FIFO ticket 1 after 0s
+ok
+test_revocation_failure_still_attempts_every_publication (verification_measurement_test.MeasurementWindow.test_revocation_failure_still_attempts_every_publication) ... build-slot: timing slot 1, FIFO ticket 1 after 0s
+ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 2.966s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/verification_telemetry.py --action-id verification_cache --member 14 --output-directory-env MYLANG_TEST_TELEMETRY_DIR verification_measurement_test
+
+verification-juice
++- verification action juice member 1 w
+......................
+----------------------------------------------------------------------
+Ran 22 tests in 3.577s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/test_juice_native.py ./zig-out/bin/mylang
+
+verification-juice
++- verification action juice member 0 w
+juice: quick (perf, 2 samples)
+juice: quick (perf, 2 samples)
+.juice: quick (perf, 2 samples)
+..juice: quick (perf, 2 samples)
+juice: quick (perf, 2 samples)
+.juice: quick (perf, 2 samples)
+.juice: quick (perf, 2 samples)
+juice: quick (perf, 2 samples)
+..juice: quick (perf, 2 samples)
+.juice: quick (perf, 2 samples)
+.
+----------------------------------------------------------------------
+Ran 9 tests in 0.697s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/test_juice.py --native
+
+verification-verification_cache
++- verification action verification_cache member 5 w
+test_build_and_gate_queues_are_independent (build_slot_test.Admission.test_build_and_gate_queues_are_independent) ... ok
+test_cancelled_drain_resumes_work_without_stopping_active_job (build_slot_test.Admission.test_cancelled_drain_resumes_work_without_stopping_active_job) ... ok
+test_default_build_uses_all_allowed_cpus (build_slot_test.Admission.test_default_build_uses_all_allowed_cpus) ... ok
+test_detachment_handshake_has_a_finite_failure_boundary (build_slot_test.Admission.test_detachment_handshake_has_a_finite_failure_boundary) ... ok
+test_exit_status_cpu_mask_and_lock_lifetime (build_slot_test.Admission.test_exit_status_cpu_mask_and_lock_lifetime) ... ok
+test_failed_detachment_does_not_start_worker (build_slot_test.Admission.test_failed_detachment_does_not_start_worker) ... ok
+test_killed_measurement_releases_admission (build_slot_test.Admission.test_killed_measurement_releases_admission) ... ok
+test_measurements_are_fifo_and_never_overlap (build_slot_test.Admission.test_measurements_are_fifo_and_never_overlap) ... ok
+test_memory_blocked_head_is_not_overtaken (build_slot_test.Admission.test_memory_blocked_head_is_not_overtaken) ... ok
+test_multiple_slots_retain_parallelism_and_cap (build_slot_test.Admission.test_multiple_slots_retain_parallelism_and_cap) ... ok
+test_nested_wrapper_rejected_without_waiting (build_slot_test.Admission.test_nested_wrapper_rejected_without_waiting) ... ok
+test_parent_death_cancels_phase_holder_even_before_admission (build_slot_test.Admission.test_parent_death_cancels_phase_holder_even_before_admission) ... ok
+test_phase_admission_releases_on_exception_and_rejects_upgrade (build_slot_test.Admission.test_phase_admission_releases_on_exception_and_rejects_upgrade) ... build-slot: build slot 1, FIFO ticket 1 after 0s
+build-slot: timing slot 1, FIFO ticket 1 after 0s
+ok
+test_queued_timing_has_priority_even_when_it_polls_slowly (build_slot_test.Admission.test_queued_timing_has_priority_even_when_it_polls_slowly) ... ok
+test_reused_pid_old_boot_and_partial_tickets_are_reaped (build_slot_test.Admission.test_reused_pid_old_boot_and_partial_tickets_are_reaped) ... ok
+test_settle_delay_does_not_keep_queue_locked (build_slot_test.Admission.test_settle_delay_does_not_keep_queue_locked) ... ok
+test_settle_helper_closes_worker_descriptors_and_output_pipes (build_slot_test.Admission.test_settle_helper_closes_worker_descriptors_and_output_pipes) ... ok
+test_sigkill_and_unreaped_zombie_do_not_block_successor (build_slot_test.Admission.test_sigkill_and_unreaped_zombie_do_not_block_successor) ... ok
+test_sigterm_cleans_up_waiting_ticket (build_slot_test.Admission.test_sigterm_cleans_up_waiting_ticket) ... ok
+test_slow_polling_head_cannot_be_overtaken (build_slot_test.Admission.test_slow_polling_head_cannot_be_overtaken) ... ok
+test_timing_blocks_legacy_admission_lock_users (build_slot_test.Admission.test_timing_blocks_legacy_admission_lock_users) ... ok
+test_timing_drains_both_kinds_and_resumes_queued_work (build_slot_test.Admission.test_timing_drains_both_kinds_and_resumes_queued_work) ... ok
+test_timing_drains_slots_above_its_configured_count (build_slot_test.Admission.test_timing_drains_slots_above_its_configured_count) ... ok
+test_timing_retains_reserved_cpus (build_slot_test.Admission.test_timing_retains_reserved_cpus) ... ok
+test_worker_cancellation_preserves_detached_admission_delay (build_slot_test.Admission.test_worker_cancellation_preserves_detached_admission_delay) ... ok
+
+----------------------------------------------------------------------
+Ran 25 tests in 44.646s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/verification_telemetry.py --action-id verification_cache --member 5 --output-directory-env MYLANG_TEST_TELEMETRY_DIR build_slot_test
+
+Build Summary: 63/63 steps succeeded
+verification-guardian success
++- verification action guardian member 0 success 1s
+|  +- guardian-selfcheck success
+|     +- verification action guardian member 1 success 70ms
++- verification action guardian member 1 (reused)
++- verification action guardian member 2 success 1s
+   +- guardian-selfcheck (+1 more reused dependencies)
+verification-language success
++- verification action language member 0 success 9s
+|  +- compile exe mylang debug native cached 10ms MaxRSS:41M
+|  |  +- run exe build-identity (build_identity) cached
+|  |  |  +- compile exe build-identity debug native cached 8ms MaxRSS:40M
+|  |  +- WriteFile cached
+|  |  +- compile obj juice_bytes_hash fast native cached 5ms MaxRSS:42M
+|  |  +- compile obj juice_bytes_hash fast native (reused)
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 8ms MaxRSS:40M
+|  +- install success
+|     +- install mylang cached
+|     |  +- compile exe mylang debug native (+5 more reused dependencies)
+|     |  +- verification action guardian member 0 (+1 more reused dependencies)
+|     +- install generated to selka-components cached
+|     |  +- compile exe selka-components safe native cached 7ms MaxRSS:42M
+|     +- verification action component-preparation member 0 success 2s
+|     |  +- compile exe selka-components safe native (reused)
+|     +- verification action guardian member 0 (+1 more reused dependencies)
++- verification action language member 1 success 7s
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- install (+4 more reused dependencies)
++- verification action language member 2 success 11s
+|  +- install (+4 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action language member 3 success 1s
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- install (+4 more reused dependencies)
++- verification action language member 4 success 848ms
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- install (+4 more reused dependencies)
++- verification action language member 5 success 873ms
+|  +- install (+4 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action language member 6 success 1s
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- install (+4 more reused dependencies)
++- verification action language member 7 success 1s
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- install (+4 more reused dependencies)
++- verification action language member 8 success 2s
+   +- install (+4 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-guest success
++- verification action guest member 0 success 598ms
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- install (+4 more reused dependencies)
+verification-verification_session success
++- verification action verification_session member 0 success 2s
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 success 2s
+   +- verification action environment-discovery member 0 success 4ms
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-verification_cache success
++- verification action verification_cache member 0 success 49s
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action verification_cache member 1 success 841ms
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action verification_cache member 2 success 19s
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action verification_cache member 3 success 319ms
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action verification_cache member 4 success 279ms
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action verification_cache member 5 success 45s
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action verification_cache member 6 success 1s
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action verification_cache member 7 success 991ms
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action verification_cache member 8 success 285ms
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action verification_cache member 9 success 260ms
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action verification_cache member 10 success 758ms
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action verification_cache member 11 success 247ms
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action verification_cache member 12 success 4s
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action verification_cache member 13 success 247ms
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action verification_cache member 14 success 3s
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action verification_cache member 15 success 1s
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (reused)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-coverage success
++- verification action coverage member 0 success 282ms
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (reused)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-identity-qualification success
++- verification action identity-qualification member 0 success 7s
+   +- install (+4 more reused dependencies)
+   +- verification action environment-discovery member 0 (reused)
+verification-juice-runtime success
++- verification action juice-runtime member 0 success 619ms
+   +- install (+4 more reused dependencies)
+verification-juice success
++- verification action juice member 0 success 966ms
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action juice member 1 success 3s
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (reused)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-spec-history success
++- verification action spec-history member 0 success 2s
+   +- install (+4 more reused dependencies)
+verification-environment-discovery success
++- verification action environment-discovery member 0 (reused)
+verification-input-discovery success
++- verification action input-discovery member 0 (reused)
+verification-component-preparation success
++- verification action component-preparation member 0 (+1 more reused dependencies)
+

@@ -44,7 +44,6 @@ test {
     _ = @import("python_comprehension_test.zig");
     _ = @import("collections_fidelity_test.zig");
     _ = @import("python_expressions_test.zig");
-    _ = @import("format_spec_test.zig");
     _ = @import("python_surface_test.zig");
     _ = @import("unit_test.zig");
     _ = @import("declarations_test.zig");
@@ -192,11 +191,6 @@ test {
 }
 test {
     _ = @import("dotted_modules_test.zig");
-}
-
-test {
-    _ = @import("number_text.zig");
-    _ = @import("number_text_test.zig");
 }
 
 test {

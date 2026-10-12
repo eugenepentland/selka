@@ -1,0 +1,10 @@
+Build Summary: 8/8 steps succeeded
+prepare success
++- install s03-replayed-tests success
+|  +- compile test s03-replayed-tests debug native success 2s MaxRSS:479M
+|     +- options success
+|     +- run exe build-identity (build_identity) success 161ms
+|        +- compile exe build-identity debug native success 317ms MaxRSS:151M
++- install s03-replayed-scalar success
+   +- compile test s03-replayed-scalar debug native success 392ms MaxRSS:163M
+

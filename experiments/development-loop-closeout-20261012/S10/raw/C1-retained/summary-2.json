@@ -1,0 +1,28 @@
+{
+  "success": true,
+  "status": 0,
+  "inputs_stable": true,
+  "elapsed_seconds": 101.17507639387622,
+  "build_admitted_seconds": 0.0,
+  "gate_admitted_seconds": 91.6176256001927,
+  "snapshot_statistics": {
+    "bytes_hashed": 0,
+    "digest_reuses": 0,
+    "directories_enumerated": 0,
+    "files_hashed": 0,
+    "metadata_observations": 175816,
+    "snapshot_reuses": 6,
+    "validation_calls": 31
+  },
+  "timings": {
+    "action_input_snapshot_seconds": 0.021300134947523475,
+    "final_validation_seconds": 0.11654529394581914,
+    "prepare_lookup_outside_admission_seconds": 8.651791041018441,
+    "publication_seconds": 0.10534295812249184,
+    "source_snapshot_seconds": 0.014003946213051677
+  },
+  "queue_seconds": 0.5115788800176233,
+  "selected_groups": 11,
+  "reused_groups": 35,
+  "native_selected_counts": {}
+}

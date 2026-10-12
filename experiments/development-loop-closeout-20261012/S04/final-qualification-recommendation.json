@@ -1,0 +1,26 @@
+{
+  "explicit_qualification_recommendation": "accept reviewed excluded-list configuration fingerprint after coordinator records regression results",
+  "recommended_sha256": "686631858644a1ce4535ac1f981f3338421ff46e3f0f3ca10d7e5de43c14b655",
+  "configuration_file_count": 212,
+  "prior_review_source_hashes_unchanged": true,
+  "exported_current_lists_agree": true,
+  "declared_dynamic_fixture_sources": true,
+  "declaration_test_self_input": true,
+  "inventory_sha256": "48fb1a4ac5d0b3e6d162f4e9b587ba4e4d8adb0e7ef56377f2ad8c61328f7fdf",
+  "required_groups": 46,
+  "coverage": {
+    "required_actions": 101,
+    "registered_actions": 101,
+    "unknown_actions": []
+  },
+  "configuration_pin_written_by_s04": false,
+  "coordinator_reported_regressions": {
+    "coordinator": 74,
+    "process": 33,
+    "session": 15,
+    "source_fixture_coverage": "pass",
+    "native_prepare_steps": "41/41",
+    "final_export_steps": "3/3"
+  },
+  "complete_gate_and_final_edit_matrix": "S10 still required"
+}

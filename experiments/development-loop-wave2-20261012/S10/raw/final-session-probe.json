@@ -1,0 +1,38 @@
+{
+  "source": "9d1b51f310477e4ceccffd8ad41ecf6fc2156e13",
+  "scope": "real guarded retained verify--help/stop only, no gate/receipt claim",
+  "status": 0,
+  "lineage_complete": true,
+  "responses": [
+    {
+      "id": "help",
+      "status": 0,
+      "ok": true,
+      "restart_required": false,
+      "snapshot_work": {
+        "files_hashed": 0,
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "metadata_observations": 0,
+        "validation_calls": 0,
+        "snapshot_reuses": 0
+      }
+    },
+    {
+      "id": "stop",
+      "status": 0,
+      "ok": true,
+      "restart_required": false,
+      "snapshot_work": {
+        "files_hashed": 0,
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "metadata_observations": 0,
+        "validation_calls": 0,
+        "snapshot_reuses": 0
+      }
+    }
+  ]
+}

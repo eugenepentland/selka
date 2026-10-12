@@ -1,0 +1,24 @@
+test_advisory_controls_do_not_change_execution_identity (verification_policy_test.PolicyTests.test_advisory_controls_do_not_change_execution_identity) ... ok
+test_ambiguous_or_malformed_policies_rejected (verification_policy_test.PolicyTests.test_ambiguous_or_malformed_policies_rejected) ... ok
+test_calibration_deduplicates_runs_and_rejects_conflicts (verification_policy_test.PolicyTests.test_calibration_deduplicates_runs_and_rejects_conflicts) ... ok
+test_calibration_failure_flags_and_operational_quality (verification_policy_test.PolicyTests.test_calibration_failure_flags_and_operational_quality) ... ok
+test_calibration_metrics_and_evidence_gaps_remain_unknown (verification_policy_test.PolicyTests.test_calibration_metrics_and_evidence_gaps_remain_unknown) ... ok
+test_calibration_requires_provenance_and_independent_holdout (verification_policy_test.PolicyTests.test_calibration_requires_provenance_and_independent_holdout) ... ok
+test_calibration_retains_bounded_distinct_history_and_holdout (verification_policy_test.PolicyTests.test_calibration_retains_bounded_distinct_history_and_holdout) ... ok
+test_calibration_separates_every_compatibility_dimension (verification_policy_test.PolicyTests.test_calibration_separates_every_compatibility_dimension) ... ok
+test_enforcement_and_versions_rejected_even_with_evidence (verification_policy_test.PolicyTests.test_enforcement_and_versions_rejected_even_with_evidence) ... ok
+test_incomplete_cancelled_reused_observations_are_not_samples (verification_policy_test.PolicyTests.test_incomplete_cancelled_reused_observations_are_not_samples) ... ok
+test_legacy_exception_needs_review_and_no_relabeling (verification_policy_test.PolicyTests.test_legacy_exception_needs_review_and_no_relabeling) ... ok
+test_process_rss_cannot_establish_aggregate_ceiling (verification_policy_test.PolicyTests.test_process_rss_cannot_establish_aggregate_ceiling) ... ok
+test_report_adapter_consumes_supported_test_rows_only (verification_policy_test.PolicyTests.test_report_adapter_consumes_supported_test_rows_only) ... ok
+test_report_adapter_evaluates_policy_and_missing_scopes (verification_policy_test.PolicyTests.test_report_adapter_evaluates_policy_and_missing_scopes) ... ok
+test_report_adapter_rejects_unknown_actions_and_unavailable_files (verification_policy_test.PolicyTests.test_report_adapter_rejects_unknown_actions_and_unavailable_files) ... ok
+test_scope_and_clock_are_exact_and_nonadditive (verification_policy_test.PolicyTests.test_scope_and_clock_are_exact_and_nonadditive) ... ok
+test_v2_adapter_does_not_relabel_protocol_interval (verification_policy_test.PolicyTests.test_v2_adapter_does_not_relabel_protocol_interval) ... ok
+test_v2_clock_is_explicit_and_preserves_v1_default (verification_policy_test.PolicyTests.test_v2_clock_is_explicit_and_preserves_v1_default) ... ok
+test_work_units_are_declared_and_not_interchangeable (verification_policy_test.PolicyTests.test_work_units_are_declared_and_not_interchangeable) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 0.018s
+
+OK

@@ -1,0 +1,143 @@
+build-slot: FIFO ticket 693, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 693 after 5s
+d3a1e456091c068c57590200c93339c81f7dd7b51c916359d7fd0fba1cbbf37a
+f3478f0f0ae39b5a6e7f977e1037f73f8ca069c5da570d91ff22b578710b60eb
+test-core
++- verification action core member 0 w
+guardian/test: 4 test(s) selected by filter: "approvedRuntime", "runtime generation refresh", "A01 uncached" (+1 more)
+guardian/test: test wall 1.67s; slowest over 50ms:
+guardian/test:   1.45s  tool_identity.test.approvedRuntime refuses substitution of each runtime input and unknown preload
+guardian/test:   0.11s  driver_native_cache_test.test.linkNative refuses unproved tool native reuse and cleans private caches after ToolFailed
+guardian/test:   0.11s  a01_native_driver_test.test.A01 uncached native multiunit objects survive link and clean after success and failure
+guardian/test: PASS — 4 passed
+guardian/test: RESULT {"passed":4,"failed":0,"skipped":0}
+failed command: python3 scripts/verification_native_telemetry.py --action-id core --member 0 --root-id src/core/root_test.zig -- sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components ./.zig-cache/o/364d9ba7fbe9f62c098ac6866b346957/test --guardian-filter=approvedRuntime "--guardian-filter=runtime generation refresh" "--guardian-filter=A01 uncached" "--guardian-filter=linkNative refuses unproved" --cache-dir=./.zig-cache --seed=0x6164be12 --listen=-
+
+Build Summary: 12/12 steps succeeded; 4/4 tests passed
+test-core success
++- verification action core member 0 4 pass (4 total) 1s MaxRSS:18M
+   +- compile test debug native success 1s MaxRSS:252M
+   |  +- WriteFile cached
+   |  +- compile obj juice_bytes_hash fast native cached 6ms MaxRSS:41M
+   |  +- compile obj juice_bytes_hash fast native (reused)
+   |  +- run exe build-identity (build_identity) success 44ms
+   |  |  +- compile exe build-identity debug native cached 7ms MaxRSS:41M
+   |  +- options success
+   |  |  +- compile exe mylang debug native success 3s MaxRSS:560M
+   |  |     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+   |  |     +- WriteFile (reused)
+   |  |     +- compile obj juice_bytes_hash fast native (reused)
+   |  |     +- compile obj juice_bytes_hash fast native (reused)
+   |  |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:42M
+   |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
+   +- verification action component-preparation member 0 success 533ms
+      +- compile exe selka-components safe native cached 6ms MaxRSS:41M
+
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs fbfcaa7a923186a8e773c3760f81c10aa345a432: 7/683 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 124 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs fbfcaa7a923186a8e773c3760f81c10aa345a432, 7 file(s) in scope
+d3a1e456091c068c57590200c93339c81f7dd7b51c916359d7fd0fba1cbbf37a
+f3478f0f0ae39b5a6e7f977e1037f73f8ca069c5da570d91ff22b578710b60eb
+fmt-check
++- verification action my_format_self member 0 w
+......
+----------------------------------------------------------------------
+Ran 6 tests in 0.389s
+
+OK
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/test_my_format.py --compiler ./zig-out/bin/mylang
+
+fmt-check
++- verification action my_format member 0 failure
+test/fixtures/long-qualification/cases.my:7:1: formatting differs
+.my format: 841 checked, 204 deliberate exclusions, 1 failures; experiments/ is historical and outside the live roots
+error: process exited with code 1 (expected exited with code 0)
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/check_my_format.py --compiler ./zig-out/bin/mylang
+
+Build Summary: 45/47 steps succeeded (1 failed)
+fmt-check transitive failure
++- verification action zig-format member 0 success
++- verification action my_format member 0 failure
+|  +- install success
+|  |  +- install mylang success
+|  |  |  +- compile exe mylang debug native cached 5ms MaxRSS:41M
+|  |  |  |  +- run exe build-identity (build_identity) cached
+|  |  |  |  |  +- compile exe build-identity debug native cached 4ms MaxRSS:41M
+|  |  |  |  +- WriteFile cached
+|  |  |  |  +- compile obj juice_bytes_hash fast native cached 6ms MaxRSS:42M
+|  |  |  |  +- compile obj juice_bytes_hash fast native (reused)
+|  |  |  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 5ms MaxRSS:42M
+|  |  |  +- verification action guardian member 1 success 1s
+|  |  |     +- guardian-selfcheck success
+|  |  |        +- verification action guardian member 2 success 5ms
+|  |  +- install generated to selka-components cached
+|  |  |  +- compile exe selka-components safe native cached 5ms MaxRSS:42M
+|  |  +- verification action component-preparation member 0 success 517ms
+|  |  |  +- compile exe selka-components safe native (reused)
+|  |  +- verification action guardian member 1 (+1 more reused dependencies)
+|  +- verification action input-discovery member 0 success 2s
+|  +- verification action environment-discovery member 0 success 4ms
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action my_format_self member 0 success 465ms
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (reused)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-prepare success
++- install (+4 more reused dependencies)
++- install generated to bin/mylang success
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- install generated to bin/units success
+|  +- compile test debug native success 2s MaxRSS:468M
+|     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|     +- options success
+|        +- compile exe mylang debug native (+5 more reused dependencies)
++- install generated to bin/tooling-units success
+|  +- compile test tooling-unit-tests debug native cached 7ms MaxRSS:41M
++- install generated to bin/text-scalar-units success
+|  +- compile test text-scalar-unit-tests debug native cached 4ms MaxRSS:41M
++- install generated to bin/cli success
+|  +- compile test debug native success 645ms MaxRSS:179M
+|     +- options success
+|        +- compile exe mylang debug native (+5 more reused dependencies)
+|        +- compile exe selka-components safe native (reused)
++- install generated to bin/core success
+|  +- compile test debug native success 4s MaxRSS:558M
+|     +- WriteFile (reused)
+|     +- compile obj juice_bytes_hash fast native (reused)
+|     +- compile obj juice_bytes_hash fast native (reused)
+|     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|     +- options cached
+|     |  +- compile exe mylang debug native (+5 more reused dependencies)
+|     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
++- install generated to bin/golden success
+|  +- compile test debug native success 539ms MaxRSS:156M
+|     +- options (+2 more reused dependencies)
++- install generated to bin/memory-budget success
+|  +- compile test debug native success 274ms MaxRSS:154M
++- install generated to bin/component-support success
+|  +- compile test debug native success 313ms MaxRSS:161M
++- install generated to bin/component-builder success
+|  +- compile exe selka-components safe native (reused)
++- install generated to artifacts.json success
+   +- run python3 (artifacts.json) success 565ms
+      +- compile exe mylang debug native (+5 more reused dependencies)
+      +- compile test debug native (+2 more reused dependencies)
+      +- compile test tooling-unit-tests debug native (reused)
+      +- compile test text-scalar-unit-tests debug native (reused)
+      +- compile test debug native (+1 more reused dependencies)
+      +- compile test debug native (+6 more reused dependencies)
+      +- compile test debug native (+1 more reused dependencies)
+      +- compile test debug native (reused)
+      +- compile test debug native (reused)
+      +- compile exe selka-components safe native (reused)
+verification-plan success
++- install generated to inventory.json cached
+   +- WriteFile verification-inventory.json cached
+

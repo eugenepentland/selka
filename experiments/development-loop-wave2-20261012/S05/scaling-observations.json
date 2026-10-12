@@ -1,0 +1,46 @@
+{
+  "scope": "real native duplicate-scaling algorithm work; no wall-clock ratios",
+  "compiler_sha256": "75935fabfbde64f8045d0aaba92122b304d344bee06839699b7b21563dcae9b1",
+  "cases": 6,
+  "compiler_invocations": 9,
+  "observations": [
+    {
+      "family": "header-index",
+      "size": 128,
+      "work": 100037,
+      "raw": "duplicate header index: 128 functions, work=100037, one distant pair, deterministic; two-run elapsed=0.097s"
+    },
+    {
+      "family": "header-index",
+      "size": 512,
+      "work": 435502,
+      "raw": "duplicate header index: 512 functions, work=435502, one distant pair, deterministic; two-run elapsed=0.099s"
+    },
+    {
+      "family": "header-index",
+      "size": 1024,
+      "work": 963411,
+      "raw": "duplicate header index: 1024 functions, work=963411, one distant pair, deterministic; two-run elapsed=0.161s"
+    },
+    {
+      "family": "banded-distance",
+      "size": 50,
+      "work": 287153,
+      "raw": "duplicate banded distance: 50 repeated statements, work=287153, literal drift retained"
+    },
+    {
+      "family": "banded-distance",
+      "size": 100,
+      "work": 1060299,
+      "raw": "duplicate banded distance: 100 repeated statements, work=1060299, literal drift retained"
+    },
+    {
+      "family": "banded-distance",
+      "size": 200,
+      "work": 4070419,
+      "raw": "duplicate banded distance: 200 repeated statements, work=4070419, literal drift retained"
+    }
+  ],
+  "long_request_authority": "rejected: helper source changed while later work was queued; observations do not certify the final long request",
+  "script_sha256": "30b490f0dbe79b64be8262b6a81a6fa31bab8cc2dd8d4d90f4bc169cffc3f8f0"
+}

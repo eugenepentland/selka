@@ -1,0 +1,21 @@
+{
+  "source": "S10 independent real2-test command",
+  "owner_commit": "40afe4e7",
+  "S03_golden_runtime": "not attempted after independently reproduced common native-link blocker",
+  "loader_cache_actual_sha256": "d519185506fec90f5efbdc206f606f4c259891e83c4e98e48b9fa4694b64fbe6",
+  "loader_cache_reviewed_sha256": "fe063c1bee92cacf27776b62c04e35a2c71e7ed111ec3eaa542ba339410fcde3",
+  "evidence": [
+    {
+      "path": "native-link-blocker/manifest.json",
+      "sha256": "b8c079afd091258e0573f76d1dccc47d8a0677f24afd585f7538e1347d1eaf74"
+    },
+    {
+      "path": "native-link-blocker/sample-00-test.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "native-link-blocker/sample-00-test.stdout",
+      "sha256": "a873bef824a0cfa84a1c187159fa701884dbb8ce553bdc3359d87115e2494d37"
+    }
+  ]
+}

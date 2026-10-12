@@ -1,0 +1,6 @@
+live lifecycle: matching_complete
+live lifecycle: matching_complete passed
+live lifecycle: crash_after_admission
+live lifecycle: crash_after_admission passed
+live lifecycle: crash_before_admission
+live lifecycle: crash_before_admission passed

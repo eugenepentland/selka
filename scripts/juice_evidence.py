@@ -8,7 +8,7 @@ through admission, measurement and publication. No threshold belongs to this API
 from dataclasses import dataclass
 import hashlib
 import json
-import marshal
+import verification_code_identity as code_identity
 import math
 import os
 from pathlib import Path
@@ -21,16 +21,18 @@ import tempfile
 from types import MappingProxyType
 from typing import Callable, Mapping
 
-from fuzz_campaign_store import Store, InputsChanged
+from fuzz_campaign_store import Store, InputsChanged, BLOB_MAX_BYTES
 from juice_tool import collectors as collector_module, common as common_module
 from juice_tool.collectors import parse_grind
 from juice_tool.common import JuiceError
 
-LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
+_LOADED_CODE_OBJECT = sys._getframe().f_code
+LOADED_CODE_SHA256 = code_identity.loaded_code_sha256(_LOADED_CODE_OBJECT)
 PARSER_CODE_SHA256 = hashlib.sha256((collector_module.LOADED_CODE_SHA256 + ':'
                                      + common_module.LOADED_CODE_SHA256).encode()).hexdigest()
 RECORD_MAX_BYTES = 16 * 1024 * 1024
 FILE_MAX_BYTES = 64 * 1024 * 1024
+EXECUTABLE_MAX_BYTES = 256 * 1024 * 1024
 TOTAL_MAX_BYTES = 1024 * 1024 * 1024
 MAX_FILES = 1000
 _SHA = re.compile(r'[0-9a-f]{64}')
@@ -215,9 +217,11 @@ def _summary(cell, samples):
 def _document(record, files, artifacts, expected, read):
     """Validate native capture certificates and reconcile retained raw counters."""
     original_read = read
+    executable_only = set(artifacts.values()) - set(files.values())
     def read(digest):
         data = original_read(digest)
-        _require(type(data) is bytes and len(data) <= FILE_MAX_BYTES
+        maximum = EXECUTABLE_MAX_BYTES if digest in executable_only else FILE_MAX_BYTES
+        _require(type(data) is bytes and len(data) <= maximum
                  and hashlib.sha256(data).hexdigest() == digest, 'missing or corrupt artifact')
         return data
     _require(record.get('version') == 'juice-v1' and record.get('identity_scheme') == 'mylang-juice-native-v1'
@@ -460,17 +464,19 @@ def _validate_record(record_path, build_artifacts, expected):
     # Equal digests can occur at multiple filenames. Verify every original path
     # before grouping by digest; one intact duplicate must not hide a corrupt file.
     for name, digest in files.items():
-        value = _bounded_read(path.parent / name)
+        value = _bounded_read(path.parent / name, FILE_MAX_BYTES)
         _require(value is not None and hashlib.sha256(value).hexdigest() == digest,
                  'missing or corrupt raw file')
         del value
     for kind, digest in artifacts.items():
-        value = _bounded_read(build_artifacts[kind])
+        value = _bounded_read(build_artifacts[kind], EXECUTABLE_MAX_BYTES)
         _require(value is not None and hashlib.sha256(value).hexdigest() == digest,
                  'missing or corrupt executable')
         del value
+    executable_only = set(artifacts.values()) - set(files.values())
     def read(digest):
-        return _bounded_read(paths[digest])
+        maximum = EXECUTABLE_MAX_BYTES if digest in executable_only else FILE_MAX_BYTES
+        return _bounded_read(paths[digest], maximum)
     return _evidence(data, files, artifacts, expected, read)
 
 
@@ -488,6 +494,15 @@ def validate_record(record_path, build_artifacts, expected):
         return _validate_record(record_path, build_artifacts, expected)
     except (KeyError, TypeError, ValueError, OverflowError, RecursionError) as error:
         raise EvidenceError('invalid native evidence: ' + str(error)) from error
+
+
+def reusable_artifacts(evidence):
+    """Whether validated executables fit the unchanged shared-store blob ceiling.
+
+    Larger fresh compiler captures remain readable; their executable evidence
+    cannot be published into the existing smaller bounded reuse store.
+    """
+    return all(len(evidence.read_artifact(kind)) <= BLOB_MAX_BYTES for kind in evidence.build_artifacts)
 
 
 class EvidenceStore:
@@ -529,6 +544,10 @@ class EvidenceStore:
         if not validate():
             raise InputsChanged('inputs changed before validating measurement')
         evidence = validate_record(record_path, build_artifacts, expected)
+        if not reusable_artifacts(evidence):
+            if not validate():
+                raise InputsChanged('inputs changed while checking fresh-only executable bounds')
+            return False
         with self._lock(key, 'juice-publication-v1'):
             existing = self.lookup(key, expected)
             if existing is not None:

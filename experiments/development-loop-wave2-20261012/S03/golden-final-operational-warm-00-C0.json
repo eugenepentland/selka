@@ -1,0 +1,87 @@
+{
+  "schema": "s03-repaired-golden-measurement-v1",
+  "mode": "operational",
+  "label": "C0",
+  "sample": 0,
+  "tier": "warm",
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+    "sha256": "cc827c4e79243f299dc92327fa86049669307d1f0edfa816a5b641dc443176b0",
+    "source": "9d1b51f310477e4ceccffd8ad41ecf6fc2156e13",
+    "scope": "same final Debug compiler; final qualified fixed-seed components; exact final prefix manifest"
+  },
+  "compiler_manifest_sha256": "f11fb105af095c1c919ea41ad8db77e0eb328b8425f3f6892ba6f4dfb01ff467",
+  "compiler_component_scope": "Current native preparation qualified exact seed1665d740 and installed both component artifact chains; full compiler-port acceptance remains separate",
+  "artifact_sha256": "12aeb17b4e7641fa1e5c30077e9dd7cafef1958614e9869da6f235606f8307b3",
+  "artifact_bytes": 20218061,
+  "checked_cases": 222,
+  "actual_compiler_executions": 222,
+  "fresh_mutable_work_dirs": 222,
+  "mismatches": 0,
+  "source_writes": 222,
+  "source_bytes": 90182,
+  "warmth": "shared Zig global warm, per-variant runtime retained, program/cache/source preparation fresh each process",
+  "cpu_affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "harness_sha256": "6b0a5e5b3e8cb43cc67e34087c855c273cad7b72b17a6fb0ae301f2dae38a154",
+  "measurement_helper_sha256": "63faa186915fd7304910cb33eea1495e4706ebd6af1f84600f03f819dbd5722f",
+  "scope": "controlled fixture comparison; not old-vs-new compiler speed or seed/bootstrap acceptance",
+  "row": {
+    "name": "golden-final-operational-warm-00-C0",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-C0-final/install/bin/s03-replayed-tests"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/C0",
+    "status": 0,
+    "wall_s": 30.62016667611897,
+    "first_useful_feedback_s": 30.62016667611897,
+    "feedback_scope": "observed supported whole-root PASS; individual-test feedback unknown; polling10ms",
+    "user_s": 26.58,
+    "system_s": 13.04,
+    "max_process_rss_kib": 162408,
+    "sampled_command_rss_kib": 8420,
+    "rss_scope": "GNU time maximum process RSS including waited children; sampled command excludes descendants",
+    "selected": [
+      1
+    ],
+    "verdicts": [
+      {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      }
+    ],
+    "log_sha256": "d9e8e3d2276a4072ef0b7967ef259f0e1cb41e3e89073f6c03459c5906b583fa",
+    "env_cache_tiers": {
+      "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-final-warm-C0/local",
+      "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+      "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/work",
+      "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-final-warm-C0/runtime"
+    },
+    "cache_bytes_after": {
+      "ZIG_LOCAL_CACHE_DIR": 0,
+      "ZIG_GLOBAL_CACHE_DIR": null,
+      "MYLANG_CORE_RUNTIME_CACHE": 3418724
+    }
+  }
+}

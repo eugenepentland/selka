@@ -1,0 +1,25 @@
+build-slot: FIFO ticket 138, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 138 after 10s
+verification-text_scalar_unit
++- verification action text_scalar_unit member 0 9 pass, 1 fail (10 total)
+guardian/test: test wall 0.14s; slowest over 50ms:
+guardian/test:   0.08s  number_text_test.test.S06 live added failing case
+guardian/test: FAIL — 1 failed of 10
+guardian/test: RESULT {"passed":9,"failed":1,"skipped":0}
+error: 'number_text_test.test.S06 live added failing case' failed:
+       guardian/test: 10 test(s) selected
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x12a9b69 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v4/tree-a/src/number_text_test.zig:150:5: 0x12dab19 in test.S06 live added failing case (text_scalar_root_test.zig)
+           try std.testing.expect(false);
+           ^
+failed command: ./.zig-cache/o/6b775b1feba385be839ef98229aa969b/scalar-live-tests --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 9/10 tests passed (1 failed)
+verification-format success
++- verification action format member 0 success
+verification-text_scalar_unit transitive failure
++- verification action text_scalar_unit member 0 9 pass, 1 fail (10 total)
+   +- compile test scalar-live-tests debug native cached 6ms MaxRSS:38M
+

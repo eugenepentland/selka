@@ -1,0 +1,50 @@
+_CODE_HELPER_SOURCE_PROOF = None
+
+
+def authenticate_code_identity(root, watched, snapshots, stack, digest_session=None):
+    """Authenticate the loaded helper under a retained, actual-provider watch."""
+    global _CODE_HELPER_SOURCE_PROOF
+    actual = Path(code_identity.__file__).absolute()
+
+    def matching(snapshot):
+        predicate = lambda name: os.path.abspath(root / name) == str(actual)
+        selected = getattr(snapshot, "selected_files", None)
+        rows = selected(predicate) if selected is not None else [
+            row for row in snapshot.identity["files"] if predicate(row["path"])]
+        if len(rows) > 1:
+            raise code_identity.CodeIdentityError("ambiguous watched helper source")
+        return rows[0] if rows else None
+
+    record = matching(watched)
+    if record is None:
+        watched = stack.enter_context(Snapshot(root, [], [actual], digest_session=digest_session))
+        watched.verification_role = "code_identity_helper"
+        snapshots.append(watched)
+        record = matching(watched)
+    if record is None:
+        raise code_identity.CodeIdentityError("actual helper provider is not watched")
+    source_sha, size = record.get("sha256"), record.get("size")
+    if (type(source_sha) is not str or len(source_sha) != 64
+            or any(character not in "0123456789abcdef" for character in source_sha)
+            or type(size) is not int or not 0 <= size <= code_identity._MAX_AUTH_SOURCE_BYTES):
+        raise code_identity.CodeIdentityError("missing or unsupported watched helper source metadata")
+    expected = code_identity._LOADED_CODE_OBJECT
+    proof = _CODE_HELPER_SOURCE_PROOF
+    # CodeType equality/hash can erase distinctions. This cache binds the same
+    # immutable object by identity and exact watched content, never metadata.
+    if (proof is not None and proof[0] is expected and proof[1] == source_sha
+            and proof[2] == code_identity.LOADED_CODE_SHA256):
+        return
+    if not watched.unchanged():
+        raise SnapshotError("helper source changed before bootstrap authentication")
+    with actual.open("rb") as stream:
+        source = stream.read(code_identity._MAX_AUTH_SOURCE_BYTES + 1)
+    if len(source) != size or hashlib.sha256(source).hexdigest() != source_sha:
+        raise SnapshotError("helper source changed during bootstrap authentication")
+    code_identity.authenticate_code_source(source, expected)
+    actual_code_sha = code_identity.loaded_code_sha256(expected)
+    if actual_code_sha != code_identity.LOADED_CODE_SHA256:
+        raise code_identity.CodeIdentityError("loaded helper identity is detached")
+    if not watched.unchanged():
+        raise SnapshotError("helper source changed after bootstrap authentication")
+    _CODE_HELPER_SOURCE_PROOF = (expected, source_sha, actual_code_sha)

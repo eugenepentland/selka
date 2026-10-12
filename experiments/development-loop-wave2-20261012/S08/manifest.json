@@ -1,0 +1,22 @@
+{
+  "base": "c1857310e0bf623545380c8de24515f1b9970021",
+  "files": {
+    "experiments/development-loop-wave2-20261012/S08/auth-commit.log": "771ff2538a1db2898a55dfd522882f5fd99c46d441cfe85883b832b6731616a5",
+    "experiments/development-loop-wave2-20261012/S08/caller-auth-tests.log": "8f02361ac2f0ca369617d6cec1b1008ace3e26f118b830a55e061a378df27152",
+    "experiments/development-loop-wave2-20261012/S08/caller_auth_function.py.txt": "7f03a0848ba7d4a3b481cd3d1a7e7dfd38953b6fd12271081e2cf88d40e89235",
+    "experiments/development-loop-wave2-20261012/S08/caller_auth_regression.py": "092d0ad88d3d11f90562bbaa2c4e47fa2c3971aec0f00e7f6b442ae38e783e3d",
+    "experiments/development-loop-wave2-20261012/S08/handoff.md": "3b93434199b9d878f60c3dcd937700f81358250b5c5bc4aef9a2126b47629744",
+    "experiments/development-loop-wave2-20261012/S08/helper-commit.log": "407185c21f9404a72ab098008eda3566df89f00a730a6432cabb8ea421ad845d",
+    "experiments/development-loop-wave2-20261012/S08/helper-tests.log": "df507a935327e68382333ca9eb334a64462015cffd979486e3fe71484441e3ad",
+    "experiments/development-loop-wave2-20261012/S08/startup-identity.json": "2ed8f978d2df8cbc0f08a1e87de695d36b03337dd337e3e1367f26cb2848f5fe",
+    "experiments/development-loop-wave2-20261012/S08/startup_identity_probe.py": "d3e11dcc865933c372391f5394c4339753a7980355dfb9e2b4cf9ea6ef989bfc",
+    "scripts/verification_code_identity.py": "ae1638f954627df1e532be1ef0f24fb9106bc78b7777c0cd5bde8f9cc9aba155",
+    "scripts/verification_code_identity_test.py": "cf56eb1d4fe223be0e90e76228a6a3ec6abfbbb824a8c691a44a460bdd344bc3"
+  },
+  "python": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+  "python_executable": "/usr/bin/python3",
+  "source_commits": [
+    "b44a9241f210a3f33671d985eec9862cb1c28193",
+    "f2976df51180b1177558fffd30c89643a67cdc9f"
+  ]
+}

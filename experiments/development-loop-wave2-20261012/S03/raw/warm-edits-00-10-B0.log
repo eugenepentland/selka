@@ -1,0 +1,17 @@
+check
++- run test s03-replayed-tests w
+guardian/test: 9 test(s) selected by filter: "every shared vector answers the pinned grammar's value", "the grammar keeps the rounding horizon, the signed bound and the exponent bound", "every shared vector answers the same through the UTF-8 octet entry points" (+5 more) — 8 match by name, 1 unnamed test block(s) run regardless
+guardian/test: test wall 0.07s; slowest over 50ms:
+guardian/test:   0.05s  format_spec_test.test.float format specifications render every CPython oracle row exactly
+guardian/test: PASS — 9 passed
+guardian/test: RESULT {"passed":9,"failed":0,"skipped":0}
+failed command: cd /home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/B0/. && ./../B0-cache/o/e3ad5a9b2b4fe4cf324e6398c63eff33/s03-replayed-tests "--guardian-filter=every shared vector answers the pinned grammar's value" "--guardian-filter=the grammar keeps the rounding horizon, the signed bound and the exponent bound" "--guardian-filter=every shared vector answers the same through the UTF-8 octet entry points" "--guardian-filter=float format specifications render every CPython oracle row exactly" "--guardian-filter=integer and text format specifications render every CPython oracle row exactly" "--guardian-filter=round to n digits rounds the exact binary value with ties away from zero" "--guardian-filter=a specification the value family cannot take is rejected with CPython's reason" "--guardian-filter=a packed specification survives the runtime word unchanged" --cache-dir=./../B0-cache --seed=0xfa3e5c0a --listen=-
+
+Build Summary: 5/5 steps succeeded; 9/9 tests passed
+check success
++- run test s03-replayed-tests 9 pass (9 total) 89ms MaxRSS:5M
+   +- compile test s03-replayed-tests debug native success 826ms MaxRSS:163M
+prepare success
++- install s03-replayed-tests success
+   +- compile test s03-replayed-tests debug native (reused)
+

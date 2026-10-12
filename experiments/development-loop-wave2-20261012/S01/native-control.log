@@ -1,0 +1,11 @@
+build-slot: FIFO ticket 418, position 15; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 418, position 11; earlier build tickets must run first; waiting (61s so far)
+build-slot: FIFO ticket 418, position 10; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 418, position 7; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 418, position 7; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 418, position 7; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 418, position 7; earlier build tickets must run first; waiting (362s so far)
+build-slot: FIFO ticket 418, position 7; earlier build tickets must run first; waiting (422s so far)
+build-slot: FIFO ticket 418, position 2; earlier build tickets must run first; waiting (482s so far)
+build-slot: build slot 1, FIFO ticket 418 after 497s
+{"equal_wire": true, "equal_status": true, "selected": 2, "timed": 1, "skipped": 1, "elapsed_scope": "runner-protocol-interval"}

@@ -1,0 +1,9 @@
+{
+  "normalized_variable_count_root": 57,
+  "normalized_variable_count_s10": 57,
+  "different_names": [
+    "CODEX_THREAD_ID"
+  ],
+  "same_names_count": 56,
+  "finding": "Different CODEX_THREAD_ID is an authenticated inherited environment input; conservative cross-launcher misses are expected. Selected capture environment fields did not establish full normalized environment equality. No environment field omitted or modified; compatible warm captures must retain the original root launcher."
+}

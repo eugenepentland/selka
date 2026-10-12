@@ -1,0 +1,18 @@
+{
+  "C0": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "origin_main_published_snapshot": "f4859c935dfec6d9b0f721745264e79278671516",
+  "bootstrap": "dff9304b9cd7bc72e66f9feb20f1b05281d67333",
+  "capacity": 11,
+  "worktrees": {
+    "S01": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S01",
+    "S02": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S02",
+    "S03": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S03",
+    "S04": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S04",
+    "S05": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S05",
+    "S06": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S06",
+    "S07": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S07",
+    "S08": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S08",
+    "S09": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S09",
+    "S10": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10"
+  }
+}

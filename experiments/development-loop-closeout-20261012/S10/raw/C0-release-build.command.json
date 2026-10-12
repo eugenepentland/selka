@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "scripts/build-slot.sh",
+    "build",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "build",
+    "-Doptimize=ReleaseFast",
+    "--prefix",
+    "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.tmp-s10/frozen-release"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10",
+  "status": 0,
+  "elapsed_seconds_including_queue": 423.2605354450643
+}

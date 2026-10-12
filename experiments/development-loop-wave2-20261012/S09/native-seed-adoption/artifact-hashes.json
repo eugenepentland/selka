@@ -1,0 +1,20 @@
+{
+  "README.md": "8ef16da1bfd2186e0c1c12139f9d440821781b6f884895e8bb641c8e057b15a4",
+  "archive-metadata.json": "bdec4a75f866c31c0b2e556175c5f5c5737cc559e153377d7bcb89992c004bef",
+  "candidate-pin.json": "bdc0e0d9d2a748952f9382be2ad5038b6593d2b4bbfb4fd79c4183749b4e1a2f",
+  "candidate-pin.patch": "5ae5705caadf8dfec32e1f491bf74952b493f27413dfe713f65a59e0bfe1ab13",
+  "check_seed_rejection.py": "e3988349bff11da753be41717f538e2ca43530e53a88f8214f728c7c81f3d43d",
+  "component-provisioning.log": "1de878b9a135f4ad6e1e4b184a04005f24bf9d006dd5b6c565cec0ea63c02a9a",
+  "negative-controls.json": "b1054e9dd1aab726d054be5ce2c5767f7dc6a4b9c398e005d8d88d7256474de3",
+  "negative-controls.log": "5e79c4910549de8a22ef487839badb870f4dea7ee976bdd95893380b1b19e2ea",
+  "provenance.json": "f133782fc29dbe600877f6121c8211e7aa1382c05fe5daba932d96cec0cf544c",
+  "qualification-results.json": "8591c59c0d0723c178591b01e97807ea7a7dc364efd91563bcb0b2c2dc6c38d9",
+  "qualified-component-receipts.json": "bbf345fff0f040f51bcf1460f7041251518d538e22751ec1727b3f27cb88da84",
+  "qualified-seed-receipt.json": "a90db9c9ed04c2b35d1528b1ca15e74b24aace08b015dedecbe43dfc822ac00c",
+  "real-component-qualification.log": "28f53e735f5350d131249d0a83efadca83b14a3a04736bdaa85aa55eeb986a6a",
+  "seed-native-regressions-current-admission.log": "0cb0c7272daf2eb44dfdc07e1fb488b555b0afd4bc5506a2b188f714c46161fe",
+  "seed-native-regressions.log": "ac04e4c83d3ad28d78ad11168cb2234329ae47d02944038bf2c02dc4df626349",
+  "seed-source-commit.log": "db5370547becf34a0ac0a7dbab1ff5dfefa80c56964ef4d260eec21b3d6dbef9",
+  "seed-source.patch": "bba0e6551bc56242373431abd7dc0cef381b5178f87122cb520078aa1b1b4218",
+  "uncached-reproducibility.log": "fdbdf4143fffb048aa8bb2662b50af13e72b5ba7ea8094fe01a467eae806743a"
+}

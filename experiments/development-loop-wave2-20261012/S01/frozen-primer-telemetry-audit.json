@@ -1,0 +1,658 @@
+{
+  "candidate": "9d1b51f310477e4ceccffd8ad41ecf6fc2156e13",
+  "report_sha256": "812cf7095386e10e6942eb25bca0f5bb84d378682ec5eb57cab8bcf9d745cbe9",
+  "status": 0,
+  "success": true,
+  "inputs_stable": true,
+  "groups": 46,
+  "members": 106,
+  "telemetry_slots": 106,
+  "action_coverage": {
+    "actions": [
+      {
+        "id": "component-preparation",
+        "state": "executed"
+      },
+      {
+        "id": "input-discovery",
+        "state": "executed"
+      },
+      {
+        "id": "environment-discovery",
+        "state": "executed"
+      },
+      {
+        "id": "core",
+        "state": "executed"
+      },
+      {
+        "id": "tooling_unit",
+        "state": "executed"
+      },
+      {
+        "id": "text_scalar_unit",
+        "state": "executed"
+      },
+      {
+        "id": "memory_budget",
+        "state": "executed"
+      },
+      {
+        "id": "unit",
+        "state": "executed"
+      },
+      {
+        "id": "cli",
+        "state": "executed"
+      },
+      {
+        "id": "golden",
+        "state": "executed"
+      },
+      {
+        "id": "idioms_self",
+        "state": "executed"
+      },
+      {
+        "id": "idioms",
+        "state": "executed"
+      },
+      {
+        "id": "incremental",
+        "state": "executed"
+      },
+      {
+        "id": "interfaces",
+        "state": "executed"
+      },
+      {
+        "id": "interface_oracle",
+        "state": "executed"
+      },
+      {
+        "id": "parser_hints",
+        "state": "executed"
+      },
+      {
+        "id": "friction",
+        "state": "executed"
+      },
+      {
+        "id": "tooling_isolation",
+        "state": "executed"
+      },
+      {
+        "id": "application_cache",
+        "state": "executed"
+      },
+      {
+        "id": "component_builder",
+        "state": "executed"
+      },
+      {
+        "id": "component_native",
+        "state": "executed"
+      },
+      {
+        "id": "component-support",
+        "state": "executed"
+      },
+      {
+        "id": "selfhost_numeric",
+        "state": "executed"
+      },
+      {
+        "id": "spec-history",
+        "state": "executed"
+      },
+      {
+        "id": "juice_pure",
+        "state": "executed"
+      },
+      {
+        "id": "juice",
+        "state": "executed"
+      },
+      {
+        "id": "juice-runtime",
+        "state": "executed"
+      },
+      {
+        "id": "identity-qualification",
+        "state": "executed"
+      },
+      {
+        "id": "affected",
+        "state": "executed"
+      },
+      {
+        "id": "coverage_self",
+        "state": "executed"
+      },
+      {
+        "id": "coverage",
+        "state": "executed"
+      },
+      {
+        "id": "manifest_self",
+        "state": "executed"
+      },
+      {
+        "id": "verification_cache",
+        "state": "executed"
+      },
+      {
+        "id": "verification_session",
+        "state": "executed"
+      },
+      {
+        "id": "fuzz_campaign",
+        "state": "executed"
+      },
+      {
+        "id": "juice_cache",
+        "state": "executed"
+      },
+      {
+        "id": "doc-coverage",
+        "state": "executed"
+      },
+      {
+        "id": "guest",
+        "state": "executed"
+      },
+      {
+        "id": "language",
+        "state": "executed"
+      },
+      {
+        "id": "doctest",
+        "state": "executed"
+      },
+      {
+        "id": "zig-format",
+        "state": "executed"
+      },
+      {
+        "id": "my_format",
+        "state": "executed"
+      },
+      {
+        "id": "my_format_self",
+        "state": "executed"
+      },
+      {
+        "id": "noalloc_lint",
+        "state": "executed"
+      },
+      {
+        "id": "embedded_migration",
+        "state": "executed"
+      },
+      {
+        "id": "guardian",
+        "state": "executed"
+      }
+    ],
+    "authority": "advisory-only",
+    "counts": {
+      "executed": 46,
+      "failed": 0,
+      "outstanding": 0,
+      "partial": 0,
+      "reused": 0,
+      "unknown": 0
+    },
+    "selected": 46,
+    "unknown": false,
+    "version": 1
+  },
+  "supported_members": 46,
+  "native_members": 30,
+  "python_members": 16,
+  "unknown_members": 60,
+  "unsupported_absent_members": 59,
+  "corrupted_members": 1,
+  "known_executed": 3121,
+  "known_timed": 3121,
+  "python_executed": 369,
+  "native_groups": [
+    {
+      "id": "cli",
+      "observed_members": 6,
+      "executed": 270,
+      "unique": 270,
+      "named": 267,
+      "timed": 270
+    },
+    {
+      "id": "component-support",
+      "observed_members": 1,
+      "executed": 10,
+      "unique": 10,
+      "named": 10,
+      "timed": 10
+    },
+    {
+      "id": "core",
+      "observed_members": 8,
+      "executed": 1026,
+      "unique": 1026,
+      "named": 1026,
+      "timed": 1026
+    },
+    {
+      "id": "golden",
+      "observed_members": 1,
+      "executed": 4,
+      "unique": 4,
+      "named": 4,
+      "timed": 4
+    },
+    {
+      "id": "memory_budget",
+      "observed_members": 1,
+      "executed": 7,
+      "unique": 7,
+      "named": 7,
+      "timed": 7
+    },
+    {
+      "id": "text_scalar_unit",
+      "observed_members": 1,
+      "executed": 9,
+      "unique": 9,
+      "named": 8,
+      "timed": 9
+    },
+    {
+      "id": "tooling_unit",
+      "observed_members": 1,
+      "executed": 28,
+      "unique": 28,
+      "named": 27,
+      "timed": 28
+    },
+    {
+      "id": "unit",
+      "observed_members": 11,
+      "executed": 1398,
+      "unique": 1398,
+      "named": 1398,
+      "timed": 1398
+    }
+  ],
+  "unknown": [
+    {
+      "action_id": "component-preparation",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "input-discovery",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "environment-discovery",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "unit",
+      "member": 0,
+      "reason": "malformed or incompatible test telemetry"
+    },
+    {
+      "action_id": "idioms_self",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "idioms",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "incremental",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "incremental",
+      "member": 1,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "interfaces",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "interfaces",
+      "member": 1,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "interface_oracle",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "parser_hints",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "parser_hints",
+      "member": 1,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "friction",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "tooling_isolation",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "application_cache",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "component_builder",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "component_native",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "selfhost_numeric",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "spec-history",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "juice_pure",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "juice",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "juice",
+      "member": 1,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "juice-runtime",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "identity-qualification",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "affected",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "affected",
+      "member": 1,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "coverage_self",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "coverage",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "manifest_self",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "verification_session",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "fuzz_campaign",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "fuzz_campaign",
+      "member": 1,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "fuzz_campaign",
+      "member": 2,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "fuzz_campaign",
+      "member": 3,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "fuzz_campaign",
+      "member": 4,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "juice_cache",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "juice_cache",
+      "member": 1,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "juice_cache",
+      "member": 2,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "juice_cache",
+      "member": 3,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "doc-coverage",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "guest",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "language",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "language",
+      "member": 1,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "language",
+      "member": 2,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "language",
+      "member": 3,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "language",
+      "member": 4,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "language",
+      "member": 5,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "language",
+      "member": 6,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "language",
+      "member": 7,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "language",
+      "member": 8,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "doctest",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "zig-format",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "my_format",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "my_format_self",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "noalloc_lint",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "embedded_migration",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "guardian",
+      "member": 0,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "guardian",
+      "member": 1,
+      "reason": "supported test telemetry unavailable"
+    },
+    {
+      "action_id": "guardian",
+      "member": 2,
+      "reason": "supported test telemetry unavailable"
+    }
+  ],
+  "log_capture": [
+    {
+      "kind": "build",
+      "log_errors": [],
+      "logs": [
+        {
+          "truncated": false,
+          "capture_complete": true,
+          "capture_available": true,
+          "bytes_seen": 0
+        },
+        {
+          "truncated": false,
+          "capture_complete": true,
+          "capture_available": true,
+          "bytes_seen": 159
+        }
+      ]
+    },
+    {
+      "kind": "build",
+      "log_errors": [],
+      "logs": [
+        {
+          "truncated": false,
+          "capture_complete": true,
+          "capture_available": true,
+          "bytes_seen": 130
+        },
+        {
+          "truncated": false,
+          "capture_complete": true,
+          "capture_available": true,
+          "bytes_seen": 4207
+        }
+      ]
+    },
+    {
+      "kind": "gate",
+      "log_errors": [
+        "live tee backlog dropped; file capture retained",
+        "live tee backlog dropped; file capture retained",
+        "live tee backlog dropped; file capture retained",
+        "live tee backlog dropped; file capture retained",
+        "live tee backlog dropped; file capture retained",
+        "live tee backlog dropped; file capture retained",
+        "live tee backlog dropped; file capture retained",
+        "live tee backlog dropped; file capture retained"
+      ],
+      "logs": [
+        {
+          "truncated": false,
+          "capture_complete": true,
+          "capture_available": true,
+          "bytes_seen": 424565
+        },
+        {
+          "truncated": false,
+          "capture_complete": true,
+          "capture_available": true,
+          "bytes_seen": 257893
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Native protocol intervals include reporting/transport; pure bodies unknown",
+    "Guest timing unknown; unsupported standalone drivers unknown",
+    "Unit/member0 timings lost to nested fixture namespace collision; assertions passed134 independently",
+    "No RSS/latency/p95 comparison qualified by this audit"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "candidate": "9d1b51f310477e4ceccffd8ad41ecf6fc2156e13",
+  "phase": "live primer after authentic unit0 completion; final report still pending",
+  "artifact_name": "unit.member.0.json",
+  "artifact_mtime_ns": 1791776775145376078,
+  "observed_record": {
+    "action_id": "unit",
+    "body_duration_ns": null,
+    "complete": false,
+    "elapsed_scope": "runner-protocol-interval",
+    "malformed": true,
+    "member_id": "unit/member/0",
+    "producer": "zig-test-protocol-v1",
+    "selected": 0,
+    "selection_scope": "actual-client-dispatch",
+    "tests": [],
+    "version": 1
+  },
+  "native_verdict_from_gate_log": {
+    "selected_execution": 134,
+    "shard": "0/12",
+    "compiled_root_inventory": 1532,
+    "passed": 134,
+    "failed": 0
+  },
+  "scope": "timing sidecar corruption only; gate assertions independently passed; final report must use final attached record"
+}

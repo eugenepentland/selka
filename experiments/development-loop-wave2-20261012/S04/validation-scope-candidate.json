@@ -1,0 +1,110 @@
+{
+  "schema": 1,
+  "scope": "warm six-snapshot lifecycle reconstruction; no gate executed",
+  "root": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration",
+  "roles": [
+    {
+      "role": "tools",
+      "files": 20348,
+      "observed_paths": 21791,
+      "missing_paths": 0,
+      "work": {
+        "files_hashed": 0,
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "metadata_observations": 108955,
+        "validation_calls": 5,
+        "snapshot_reuses": 1
+      }
+    },
+    {
+      "role": "configuration",
+      "files": 213,
+      "observed_paths": 242,
+      "missing_paths": 0,
+      "work": {
+        "files_hashed": 0,
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "metadata_observations": 1210,
+        "validation_calls": 5,
+        "snapshot_reuses": 1
+      }
+    },
+    {
+      "role": "build_configuration",
+      "files": 224,
+      "observed_paths": 254,
+      "missing_paths": 0,
+      "work": {
+        "files_hashed": 0,
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "metadata_observations": 1270,
+        "validation_calls": 5,
+        "snapshot_reuses": 1
+      }
+    },
+    {
+      "role": "preparation_sources",
+      "files": 3397,
+      "observed_paths": 3534,
+      "missing_paths": 0,
+      "work": {
+        "files_hashed": 0,
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "metadata_observations": 17670,
+        "validation_calls": 5,
+        "snapshot_reuses": 1
+      }
+    },
+    {
+      "role": "prepared_artifacts",
+      "files": 16,
+      "observed_paths": 40,
+      "missing_paths": 0,
+      "work": {
+        "files_hashed": 0,
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "metadata_observations": 200,
+        "validation_calls": 5,
+        "snapshot_reuses": 1
+      }
+    },
+    {
+      "role": "action_inputs",
+      "files": 4639,
+      "observed_paths": 4944,
+      "missing_paths": 0,
+      "work": {
+        "files_hashed": 0,
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "metadata_observations": 24720,
+        "validation_calls": 5,
+        "snapshot_reuses": 1
+      }
+    }
+  ],
+  "warm_work": {
+    "files_hashed": 0,
+    "bytes_hashed": 0,
+    "digest_reuses": 0,
+    "directories_enumerated": 0,
+    "metadata_observations": 154025,
+    "validation_calls": 30,
+    "snapshot_reuses": 6
+  },
+  "initial_tool_check": false,
+  "historical_metadata_observations": 175816,
+  "historical_validation_calls": 31,
+  "timing": "not measured; deterministic counts only"
+}

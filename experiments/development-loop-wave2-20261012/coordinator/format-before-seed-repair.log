@@ -1,0 +1,51 @@
+build-slot: FIFO ticket 609, position 12; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 609, position 4; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 2, FIFO ticket 609 after 100s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs fbfcaa7a923186a8e773c3760f81c10aa345a432: 5/683 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 89 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs fbfcaa7a923186a8e773c3760f81c10aa345a432, 5 file(s) in scope
+error: failed to open object /home/epentland/.cache/mylang/components/artifacts/df596fe7fe7b551e2b5ae91bef35111896962b1d8eb826f486e275c80c576ad6.build/cache/native-link-cec923230750707d68cfd659e9bbc8d1/4292805a27bc2ec4837a2b5df9b60cdd2bd59c198054ac95594ef020a66ef11b.o: FileNotFound
+components: command failed (exit 2): /home/epentland/.cache/mylang/components/seeds/99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc/source/zig-out/focus/mylang
+fmt-check
++- verification action my_format member 0
+   +- install
+      +- verification action component-preparation member 0 failure
+error: process exited with code 1
+failed command: cd . && ./.zig-cache/o/2ecd722ce01240aa65d48334d1933c23/selka-components --root /home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/. --zig /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --install-dir /home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components
+
+Build Summary: 15/20 steps succeeded (1 failed)
+fmt-check transitive failure
++- verification action zig-format member 0 success
++- verification action my_format member 0 transitive failure
+|  +- install transitive failure
+|  |  +- install mylang success
+|  |  |  +- compile exe mylang debug native cached 6ms MaxRSS:41M
+|  |  |  |  +- run exe build-identity (build_identity) cached
+|  |  |  |  |  +- compile exe build-identity debug native cached 7ms MaxRSS:41M
+|  |  |  |  +- WriteFile cached
+|  |  |  |  +- compile obj juice_bytes_hash fast native cached 7ms MaxRSS:40M
+|  |  |  |  +- compile obj juice_bytes_hash fast native (reused)
+|  |  |  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 6ms MaxRSS:40M
+|  |  |  +- verification action guardian member 1 success 1s
+|  |  |     +- guardian-selfcheck success
+|  |  |        +- verification action guardian member 2 success 6ms
+|  |  +- install generated to selka-components success
+|  |  |  +- compile exe selka-components safe native cached 6ms MaxRSS:42M
+|  |  +- verification action component-preparation member 0 failure
+|  |  |  +- compile exe selka-components safe native (reused)
+|  |  +- verification action guardian member 1 (+1 more reused dependencies)
+|  +- verification action input-discovery member 0 success 2s
+|  +- verification action environment-discovery member 0 success 4ms
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action my_format_self member 0 transitive failure
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (reused)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+

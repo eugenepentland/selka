@@ -1,0 +1,40 @@
+{
+  "activation": "not applied; coordinator review pending",
+  "archive_bytes": 1404928000,
+  "cache_handoff": {
+    "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/S09-native-component-cache",
+    "seed_record": "seeds/478fafe1514081b9d0069708251fc32f6f5590e03b9de0528e211133e96bae8d/receipt.json",
+    "state": "all S09 jobs finished; exclusive coordinator use",
+    "supported_selection": "MYLANG_COMPONENT_CACHE, keep exact path; no Zig cache copying"
+  },
+  "candidate_pin": {
+    "archive_sha256": "2632c3ddd2992a989a08e1a070288901c58391eade2e330af5fb14f291d063d5",
+    "commit": "1665d74029c406dd5b90807186a752ebac6bcbb8",
+    "format": 1,
+    "qualification": "Local receipt binds complete source/runtime/library identity, Zig executable digest and built compiler digest; it is verified before every use.",
+    "recipe": {
+      "optimize": "ReleaseFast",
+      "step": "affected-compiler",
+      "target": "native"
+    },
+    "zig": "0.17.0-dev.1683+5ceec001b"
+  },
+  "candidate_seed_commit": "1665d74029c406dd5b90807186a752ebac6bcbb8",
+  "fresh_clone_source_availability": {
+    "existing_archive_override": "--seed-source / -Dcomponent-seed-source, digest must match candidate pin",
+    "local_ref": "codex/dl-wave2-S09-native-seed-20261012",
+    "required": "retain exact seed commit as reviewed integration merge parent, then eventual published full clone can git-archive it; shallow/source distributions need verified exact archive",
+    "state": "local only"
+  },
+  "historical_seed_commit": "0689d3407c17df34915aeb2a92e309af3a04921c",
+  "mode_or_abi_or_tool_trust_changes": false,
+  "owner_fix_commit": "6327267249fdfbedab4093a5787033a5485a442d",
+  "pin_patch_sha256": "5ae5705caadf8dfec32e1f491bf74952b493f27413dfe713f65a59e0bfe1ab13",
+  "qualification": "passed bounded native-seed/component qualification; not full selfhosting or performance acceptance",
+  "source_files_changed": [
+    "src/core/a01_native_driver_test.zig",
+    "src/core/driver.zig",
+    "src/core/root_test.zig"
+  ],
+  "source_patch_sha256": "bba0e6551bc56242373431abd7dc0cef381b5178f87122cb520078aa1b1b4218"
+}

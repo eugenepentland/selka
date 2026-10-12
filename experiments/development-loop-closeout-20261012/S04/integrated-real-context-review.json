@@ -1,0 +1,13 @@
+{
+  "actual_integrated_helper_version": 2,
+  "actual_native_scalar_artifact": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.zig-cache/o/c97f8a3001b35f1c023916ea815df301/text-scalar-unit-tests",
+  "actual_tool_closure_digest": "0587ea24b9ec68190f57f79f35089831f81bbf82fae13712209f7220339ba6ad",
+  "actual_build_configuration_digest_including_list_and_coordinator": "7d30dee15db34f5560ff8c56209d920d091b87417700cdd0f01b36170e6a6936",
+  "environment_digest": "38bd1e8f7c682bf8c7c17791e4945ec42e024286aa7321464ca07467e55acfa2",
+  "source_artifact_digest": "4c66a67516b55d07f8fad9382e1606a6f85c6c61e68529c61c138811943c2040",
+  "qualified_action_payload_digest": "e64cb47d5c8b7377fe6ea9e82a819fbda619e469beed83f1e438ad1e234d229f",
+  "mode": "debug",
+  "missing_metadata_fallback": true,
+  "all_live_snapshots_stable": true,
+  "production_receipt_created": false
+}

@@ -1,0 +1,109 @@
+--- a/scripts/verify_cache.py
++++ b/scripts/verify_cache.py
+@@ -36,6 +36,7 @@
+ import verification_report
+ import verification_budgets
+ import verification_profiles
++import verification_qualification
+ import verification_process
+ import verification_producers
+ import verification_telemetry
+@@ -57,7 +58,7 @@
+                  "../guardian-zig/build.zig.zon", "../guardian-zig/src/"]
+ PREPARE_INPUTS = ["src/", "test/", "tests/", "selfhost/",
+                   "docs/", "README.md", "SPEC.md", "benchmarks/runtime/ports/native_clock.c"]
+-COORDINATOR_INPUTS = ["scripts/verify_cache.py", "scripts/verification_profiles.py", "scripts/verification_snapshot.py",
++COORDINATOR_INPUTS = ["scripts/verification_qualification.py", "scripts/verify_cache.py", "scripts/verification_profiles.py", "scripts/verification_snapshot.py",
+                       "scripts/verification_process.py",
+                       "scripts/cache_session.py",
+                       "scripts/verification_artifacts.py", "scripts/verification_producers.py",
+@@ -766,9 +767,14 @@
+ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool = False,
+             shared_cache_dir: Path | None = None, *, build_timeout: float | None = None,
+             gate_timeout: float | None = None, warn_after: float | None = None,
+-            budget_policy: Path | None = None, profile: str = "complete", quick_actions: int = 3) -> int:
++            budget_policy: Path | None = None, profile: str = "complete", quick_actions: int = 3,
++            qualification_targets=None, qualification_max_actions=4,
++            qualification_timeout=300, qualification_fuzz_steps=8) -> int:
+     if profile not in verification_profiles.PROFILES or type(quick_actions) is not int or not 1 <= quick_actions <= 1024:
+         raise ValueError("invalid verification profile or quick action bound")
++    qualification_controls = {"targets": list(verification_qualification.OBLIGATIONS if qualification_targets is None else qualification_targets),
++        "max_actions": qualification_max_actions, "action_timeout": qualification_timeout, "fuzz_steps": qualification_fuzz_steps}
++    verification_qualification.validate_options(**qualification_controls)
+     build_limits, gate_limits = ProcessLimits(build_timeout), ProcessLimits(gate_timeout)
+     if warn_after is not None:
+         ProcessLimits(warn_after)  # Same positive, finite validation; advisory only.
+@@ -814,7 +820,7 @@
+                                      fuzz_campaign_store.LOADED_CODE_SHA256,
+                                      verification_process.LOADED_CODE_SHA256,
+                                      verification_producers.LOADED_CODE_SHA256,
+-                                     verification_profiles.LOADED_CODE_SHA256]}
++                                     verification_profiles.LOADED_CODE_SHA256, verification_qualification.LOADED_CODE_SHA256]}
+         try:
+             plan, artifacts, build_seconds = prepare(root, cache, zig, options, env, common, snapshots, stack,
+                                                     admissions, phases, session, build_limits)
+@@ -952,6 +958,16 @@
+         if stable:
+             for path, summary in summaries.values():
+                 verification_report.write_summary(path, summary)
++        qualification_run = None
++        qualification_context = {"common": common, "action_keys": keys, "qualification": qualification_controls}
++        if profile == "long-qualification" and status == 0 and stable and not plan.get("configuration", {}).get("filtered"):
++            compiler = root / "zig-out/bin/mylang"
++            qualification_run = stack.enter_context(verification_qualification.qualify(
++                root, cache / "long-qualification", compiler, zig, qualification_context, snapshots, **qualification_controls))
++            snapshots.extend(qualification_run.additional_snapshots)
++            stable = check_all(snapshots)
++            if not stable:
++                status = RETRY
+         elapsed = time.monotonic() - started
+         observed_work = max(0.0, elapsed - sum(event["admission_wait_seconds"] for event in admissions))
+         budget_report = {"scope": "coordinator elapsed excluding admission queues",
+@@ -972,9 +988,11 @@
+                 "executed" if executed and status == 0 else "partial" if executed else "outstanding"})
+         profile_coverage = verification_profiles.coverage(plan, results, profile_plan["selected"], profile,
+             status=status, inputs_stable=stable,
+-            qualification_required=["fuzz", "wall-clock-performance"] if profile == "long-qualification" else [])
++            qualification_required=verification_qualification.OBLIGATIONS if profile == "long-qualification" else [],
++            qualification_run=qualification_run if stable else None, qualification_context=qualification_context)
+         report_status = status if status != 0 else 0 if profile_coverage["status"] == "complete" else 3
+         report = {"version": VERSION, "success": report_status == 0, "status": report_status,
++                  "long_qualification": None if qualification_run is None else qualification_run.report(),
+                   "selected_success": status == 0, "profile_plan": profile_plan, "profile_coverage": profile_coverage,
+                   "actions": results, "inputs_stable": stable,
+                   "stability_diagnostics": stability_diagnostics(snapshots) if not stable or status == RETRY else None,
+@@ -1051,6 +1069,10 @@
+     parser.add_argument("--zig", default=os.environ.get("MYLANG_ZIG") or os.environ.get("ZIG") or "zig")
+     parser.add_argument("--profile", choices=verification_profiles.PROFILES, default="complete")
+     parser.add_argument("--quick-actions", type=int, default=3, help="Maximum quick-profile pending actions; heuristic and partial")
++    parser.add_argument("--qualification-target", action="append", choices=verification_qualification.OBLIGATIONS)
++    parser.add_argument("--qualification-max-actions", type=int, default=4)
++    parser.add_argument("--qualification-timeout", type=float, default=300)
++    parser.add_argument("--qualification-fuzz-steps", type=int, default=8)
+     parser.add_argument("--force", action="store_true", help="Ignore prior successes for the requested profile")
+     parser.add_argument("--shared-cache-dir", type=Path, help="Explicit local shared success evidence; inventory and runs stay private")
+     parser.add_argument("--build-timeout-seconds", type=float, help="Optional deadline per admitted preparation command; excludes queue time")
+@@ -1078,7 +1100,11 @@
+             return execute(ROOT, cache, Path(resolved).absolute(), parse_options(args.options), args.force, args.shared_cache_dir,
+                            build_timeout=args.build_timeout_seconds, gate_timeout=args.gate_timeout_seconds,
+                            warn_after=args.warn_after_seconds, budget_policy=args.budget_policy,
+-                           profile=args.profile, quick_actions=args.quick_actions)
++                           profile=args.profile, quick_actions=args.quick_actions,
++                           qualification_targets=args.qualification_target,
++                           qualification_max_actions=args.qualification_max_actions,
++                           qualification_timeout=args.qualification_timeout,
++                           qualification_fuzz_steps=args.qualification_fuzz_steps)
+     except (VerificationError, SnapshotError, OSError, ValueError,
+             fuzz_campaign_store.FormatError, fuzz_campaign_store.DeterminismError) as error:
+         print("verification: FAIL: " + str(error), file=sys.stderr)
+--- a/scripts/cache_session.py
++++ b/scripts/cache_session.py
+@@ -38,7 +38,7 @@
+ DISPATCH_MODULES = frozenset((*COMMANDS.values(), "fuzz_campaign_identity",
+                             "fuzz_campaign_store", "verification_artifacts",
+                             "verification_process", "verification_report", "verification_budgets",
+-                            "verification_producers", "verification_telemetry", "verification_policy", "verification_profiles",
++                            "verification_producers", "verification_telemetry", "verification_policy", "verification_profiles", "verification_qualification",
+                             "juice_evidence", "juice_provider", "juice_worker", "juice_tool"))
+ 
+ 

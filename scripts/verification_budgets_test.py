@@ -55,7 +55,7 @@ class BudgetTests(unittest.TestCase):
     def test_embedded_evaluation_round_trip_is_not_another_execution(self):
         sample = report()
         embedded = dict(sample, action_budgets=calibrate([sample], INVENTORY))
-        reevaluated = dict(sample, action_budgets={'policy': 'changed'})
+        reevaluated = dict(sample, action_budgets={'policy': 'changed'}, scoped_policy={'targets': 'changed'})
         result = calibrate([sample, embedded, reevaluated], INVENTORY)
         self.assertEqual(member(result)['sample_count'], 1)
 

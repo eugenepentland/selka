@@ -1,0 +1,8 @@
+{
+  "archive": "C1-tools.json.gz",
+  "decompressed_sha256": "2356f544e2c429342b96fbc4a3725b143f28502acd53f886b55ddae3ef49ffa6",
+  "records": 20348,
+  "decompressed_bytes": 4966357,
+  "source_revision": "a9a3208a4f3edbf17170cfc18d57f5f999af49c3",
+  "stable": true
+}

@@ -1,0 +1,29 @@
+[
+  {
+    "request": {
+      "id": "retained-0",
+      "command": "verify",
+      "args": [
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ]
+    },
+    "response": {
+      "id": "retained-0",
+      "status": 143,
+      "ok": false,
+      "restart_required": false,
+      "snapshot_work": {
+        "files_hashed": 28816,
+        "bytes_hashed": 2302580216,
+        "digest_reuses": 0,
+        "directories_enumerated": 2283,
+        "metadata_observations": 1021223,
+        "validation_calls": 41,
+        "snapshot_reuses": 0
+      },
+      "error": "request cancelled; session stopped"
+    },
+    "elapsed_seconds_including_queue": 335.4275910751894
+  }
+]

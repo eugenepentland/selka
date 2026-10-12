@@ -1,0 +1,14 @@
+build-slot: build slot 2, FIFO ticket 3552 after 0s
+test-tooling-units
++- run test tooling-unit-tests w
+guardian/test: 28 test(s) selected
+guardian/test: test wall 0.02s
+guardian/test: PASS — 28 passed
+guardian/test: RESULT {"passed":28,"failed":0,"skipped":0}
+failed command: cd . && ./.zig-cache-S04/o/454f7b509922319895added2987002af/tooling-unit-tests --cache-dir=./.zig-cache-S04 --seed=0xde2099c0 --listen=-
+
+Build Summary: 3/3 steps succeeded; 28/28 tests passed
+test-tooling-units success
++- run test tooling-unit-tests 28 pass (28 total) 40ms MaxRSS:6M
+   +- compile test tooling-unit-tests debug native success 613ms MaxRSS:166M
+

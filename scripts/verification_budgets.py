@@ -114,7 +114,7 @@ def collect_report(report, inventory):
     try:
         # The embedded evaluation is derived from these same observations. Its
         # presence or later target-only reevaluation must not create a new run.
-        source_report = ({key: value for key, value in report.items() if key != 'action_budgets'}
+        source_report = ({key: value for key, value in report.items() if key not in ('action_budgets', 'scoped_policy')}
                          if isinstance(report, dict) else report)
         report_digest = hashlib.sha256(_json(source_report)).hexdigest()
     except (ValueError, TypeError, OverflowError, RecursionError):
@@ -358,6 +358,89 @@ def read_json(path):
     value = json.loads(raw, object_pairs_hook=pairs, parse_constant=lambda _: (_ for _ in ()).throw(ValueError('nonfinite JSON')))
     _json(value)
     return value
+
+
+def _test_policy_observations(report):
+    """Consume S01's validated per-member supported-runner records when available."""
+    from verification_policy import CLOCKS, PROTOCOL_CLOCK
+    observations = []
+    actions = report.get('actions', [])
+    if not isinstance(actions, list) or len(actions) > MAX_ACTIONS:
+        raise ValueError('policy action observation bound')
+    for action in actions:
+        if not isinstance(action, dict) or action.get('state') not in ('execute', 'fresh'):
+            continue
+        telemetry = action.get('test_telemetry', [])
+        if not isinstance(telemetry, list) or len(telemetry) > MAX_MEMBERS:
+            raise ValueError('policy test telemetry bound')
+        for record in telemetry:
+            if (not isinstance(record, dict) or record.get('status') != 'observed'
+                or record.get('complete') is not True or record.get('truncated') is not False
+                or record.get('action_id') != action.get('id')
+                or not isinstance(record.get('member_id'), str)):
+                continue
+            tests = record.get('tests')
+            if (not isinstance(tests, list) or len(tests) > MAX_MEMBERS
+                or type(record.get('selected')) is not int or len(tests) != record['selected']):
+                continue
+            names = [row.get('test_id') for row in tests if isinstance(row, dict)]
+            if (len(names) != len(tests) or not all(isinstance(name, str) and name for name in names)
+                or len(set(names)) != len(names)):
+                continue
+            for row in tests:
+                ns = row.get('elapsed_ns')
+                if row.get('state') != 'passed' or type(ns) is not int or ns < 0:
+                    continue
+                elapsed_scope = row.get('elapsed_scope', 'test-execution')
+                if elapsed_scope not in ('test-execution', 'runner-protocol-interval'):
+                    continue
+                clock = (PROTOCOL_CLOCK if elapsed_scope == 'runner-protocol-interval'
+                         else CLOCKS['individual_test'])
+                observations.append(dict(action_id=record['action_id'], member_id=record['member_id'],
+                    test_id=row['test_id'], scope='individual_test',
+                    clock=clock, elapsed_seconds=ns / 1e9,
+                    fresh=True, complete=True, successful=True))
+                if len(observations) > MAX_MEMBERS:
+                    raise ValueError('policy test observation bound')
+    return observations
+
+
+def evaluate_scoped_policy(path, report, inventory):
+    """Read an optional policy and report exact available scopes without enforcement.
+
+    The coordinator supplies supported telemetry in scoped_budget_observations.
+    Shared gate elapsed time cannot be assigned to individual action/test scopes.
+    Parsing or incomplete telemetry is an advisory unavailable result; it never
+    masks verification status, alters execution identity, or certifies headroom.
+    """
+    if path is None:
+        return {'version': 1, 'status': 'not_configured', 'mode': 'report_only', 'enforced': False}
+    try:
+        # Import locally: policy shares this module's bounded strict JSON reader.
+        from verification_policy import evaluate, validate_policy
+        document = validate_policy(read_json(path))
+        members, _ = _mapping(inventory)
+        if any(entry['action_id'] not in members for entry in document['entries']):
+            raise ValueError('policy action is absent from current inventory')
+        if not isinstance(report, dict):
+            raise ValueError('policy report shape')
+        observations = report.get('scoped_budget_observations', [])
+        if not isinstance(observations, list):
+            raise ValueError('scoped policy observation shape')
+        observations = list(observations)
+        observations.extend(_test_policy_observations(report))
+        if report.get('success') is not True or report.get('inputs_stable') is not True:
+            observations = []
+        result = evaluate(document, observations)
+        result['status'] = 'evaluated'
+        result['observation_contract'] = 'explicit fresh complete successful clock scopes only'
+        result['notes'] = ['shared gate wall time is not an individual action duration',
+                           'headroom and enforcement remain unqualified',
+                           'advisory policy does not authorize reuse or success publication']
+        return result
+    except (OSError, ValueError, TypeError, KeyError, OverflowError, RecursionError) as error:
+        return {'version': 1, 'status': 'unavailable', 'mode': 'report_only',
+                'enforced': False, 'reason': str(error)[:512]}
 
 
 def main(argv=None):

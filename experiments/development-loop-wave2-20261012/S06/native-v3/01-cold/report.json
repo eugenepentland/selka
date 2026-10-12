@@ -1,0 +1,71 @@
+{
+  "actions": [],
+  "admissions": [
+    {
+      "admission_wait_seconds": 211.6344291770365,
+      "admitted": true,
+      "cancelled": false,
+      "elapsed_seconds": 213.10490917018615,
+      "execution_limits": {
+        "terminate_grace_seconds": 0.5,
+        "timeout_seconds": null
+      },
+      "incomplete": false,
+      "kind": "build",
+      "log_errors": [],
+      "logs": [
+        {
+          "bytes_seen": 0,
+          "capture_available": true,
+          "capture_complete": true,
+          "observed_steps": {
+            "additive": false,
+            "aggregate_peak_rss_bytes": null,
+            "cpu_seconds": null,
+            "malformed": false,
+            "observations": [],
+            "status": "unknown",
+            "truncated": false
+          },
+          "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v3/tree-a/.mylang-cache/verification-v1/last-logs/inventory/stdout.log",
+          "truncated": false
+        },
+        {
+          "bytes_seen": 1209,
+          "capture_available": true,
+          "capture_complete": true,
+          "observed_steps": {
+            "additive": false,
+            "aggregate_peak_rss_bytes": null,
+            "cpu_seconds": null,
+            "malformed": false,
+            "observations": [],
+            "status": "unknown",
+            "truncated": false
+          },
+          "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v3/tree-a/.mylang-cache/verification-v1/last-logs/inventory/stderr.log",
+          "truncated": false
+        }
+      ],
+      "observed_held_seconds": 1.4704799931496382,
+      "status": 1,
+      "timed_out": false,
+      "validation_seconds": 0.08614538097754121,
+      "worker_seconds": 1.3841950001660734
+    }
+  ],
+  "elapsed_seconds": 218.31296414183453,
+  "error": "inventory preparation failed or its inputs changed (exit 1)",
+  "stability_diagnostics": {
+    "reasons": [],
+    "status": "unknown",
+    "truncated": false,
+    "unknown": true,
+    "version": 1
+  },
+  "stage": "preparation",
+  "status": 2,
+  "success": false,
+  "timings": {},
+  "version": 1
+}

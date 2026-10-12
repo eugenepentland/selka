@@ -1,0 +1,12 @@
+test_authenticated_locks_record_provenance (__main__.TimingBridgeTests.test_authenticated_locks_record_provenance) ... ok
+test_changed_affinity_fails (__main__.TimingBridgeTests.test_changed_affinity_fails) ... ok
+test_forged_markers_with_unlocked_files_fail (__main__.TimingBridgeTests.test_forged_markers_with_unlocked_files_fail) ... ok
+test_gate_admission_cannot_measure (__main__.TimingBridgeTests.test_gate_admission_cannot_measure) ... ok
+test_missing_descriptor_fails (__main__.TimingBridgeTests.test_missing_descriptor_fails) ... ok
+test_replaced_live_lock_path_fails (__main__.TimingBridgeTests.test_replaced_live_lock_path_fails) ... ok
+test_unqualified_directory_fails (__main__.TimingBridgeTests.test_unqualified_directory_fails) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.005s
+
+OK

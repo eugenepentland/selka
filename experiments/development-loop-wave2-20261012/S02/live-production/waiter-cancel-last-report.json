@@ -1,0 +1,199 @@
+{
+  "action_budgets": {
+    "actions": [
+      {
+        "action_elapsed_seconds": null,
+        "id": "lifecycle",
+        "members": [
+          {
+            "label": "verification action lifecycle member 0",
+            "maximum_seconds": null,
+            "median_seconds": null,
+            "minimum_seconds": null,
+            "provenance": [],
+            "recommendation": {
+              "expected_seconds": null,
+              "hard_deadline_seconds": null,
+              "regression_seconds": null
+            },
+            "regression_evaluation": {
+              "enforced": false,
+              "samples_exceeding": null,
+              "scope": "named member elapsed observations",
+              "status": "not_configured",
+              "threshold_seconds": null
+            },
+            "sample_count": 0,
+            "status": "unknown"
+          }
+        ],
+        "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+        "targets": {
+          "expected_seconds": null,
+          "hard_deadline_seconds": null,
+          "regression_seconds": null
+        }
+      }
+    ],
+    "context": "830f76b28061325a6cdcdc3e805b32693142b4c658188aabcd2b4f7bb8de5f28",
+    "enforced": false,
+    "minimum_samples": 5,
+    "notes": [
+      "shared-host operational observations; no isolated latency qualification",
+      "no percentile or hard deadline calibration",
+      "recommendations require review; legacy actions remain report-only"
+    ],
+    "rejections": [],
+    "sample_limit": 64,
+    "version": 1
+  },
+  "action_coverage": {
+    "actions": [
+      {
+        "id": "lifecycle",
+        "state": "reused"
+      }
+    ],
+    "authority": "advisory-only",
+    "counts": {
+      "executed": 0,
+      "failed": 0,
+      "outstanding": 0,
+      "partial": 0,
+      "reused": 1,
+      "unknown": 0
+    },
+    "selected": 1,
+    "unknown": false,
+    "version": 1
+  },
+  "action_metadata": [
+    {
+      "id": "lifecycle",
+      "identity_scope": "group-local-v1",
+      "steps": [
+        {
+          "kind": "run",
+          "label": "verification action lifecycle member 0",
+          "original_label": "bounded lifecycle"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "action_key": "a08be477dcd329cf470768f3abc1bd53b7e750a883f9c321e3d085b536c481f6",
+      "id": "lifecycle",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "valid prior success",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "valid prior success",
+      "state": "reused",
+      "test_telemetry": [
+        {
+          "additive": false,
+          "aggregate_peak_rss_bytes": null,
+          "executed": null,
+          "execution_timing_coverage": "unknown",
+          "reason": "supported test telemetry unavailable",
+          "reused": null,
+          "selected": null,
+          "skipped": null,
+          "status": "unknown",
+          "tests": [],
+          "timed": null,
+          "timing_coverage": "unknown",
+          "truncated": false,
+          "version": 1
+        }
+      ]
+    }
+  ],
+  "admissions": [],
+  "budget_context": "830f76b28061325a6cdcdc3e805b32693142b4c658188aabcd2b4f7bb8de5f28",
+  "build_admitted_seconds": 0.0,
+  "elapsed_seconds": 1.2465760160703212,
+  "evidence_store": {
+    "root": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/.tmp/verification-live-bq0bnq6u/fixture/.shared",
+    "shared": true
+  },
+  "gate_admitted_seconds": 0.0,
+  "inputs_stable": true,
+  "loop_budget": {
+    "enforced": false,
+    "exceeded": false,
+    "observed_seconds": 1.2465760160703212,
+    "scope": "coordinator elapsed excluding admission queues",
+    "warn_after_seconds": null
+  },
+  "measurement_notes": [
+    "Zig summary steps can overlap and must not be summed",
+    "per-group execution duration is unavailable for the shared gate",
+    "common identity changes name digest facets, not individual tool/environment members"
+  ],
+  "profile_coverage": {
+    "complete_qualification": false,
+    "complete_verification": true,
+    "counts": {
+      "executed": 0,
+      "outstanding": 0,
+      "required": 1,
+      "reused": 1
+    },
+    "filtered_inventory": false,
+    "heuristic": false,
+    "inputs_stable": true,
+    "outstanding": [],
+    "profile": "complete",
+    "qualification_outstanding": [],
+    "required": [
+      "lifecycle"
+    ],
+    "status": "complete",
+    "version": "verification-profile-v1"
+  },
+  "profile_plan": {
+    "affected_actions": [],
+    "cost_scope": "report-only action cost; unknown costs use heuristic member count then inventory order",
+    "deferred": [],
+    "heuristic": false,
+    "pending": [],
+    "profile": "complete",
+    "required": [
+      "lifecycle"
+    ],
+    "selected": [],
+    "version": "verification-profile-v1"
+  },
+  "scoped_policy": {
+    "enforced": false,
+    "mode": "report_only",
+    "status": "not_configured",
+    "version": 1
+  },
+  "selected_success": true,
+  "snapshot_statistics": {
+    "bytes_hashed": 263265518,
+    "digest_reuses": 10,
+    "directories_enumerated": 85,
+    "files_hashed": 778,
+    "metadata_observations": 12122,
+    "snapshot_reuses": 0,
+    "validation_calls": 24
+  },
+  "stability_diagnostics": null,
+  "status": 0,
+  "success": true,
+  "timings": {
+    "action_input_snapshot_seconds": 0.0008321609348058701,
+    "final_validation_seconds": 0.004245874006301165,
+    "prepare_lookup_outside_admission_seconds": 1.2378244588617235,
+    "publication_seconds": 0.0038140479009598494,
+    "source_snapshot_seconds": 0.003048500046133995
+  },
+  "version": 1
+}

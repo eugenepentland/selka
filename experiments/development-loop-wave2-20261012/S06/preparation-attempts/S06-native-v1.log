@@ -1,0 +1,38 @@
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/experiments/development-loop-wave2-20261012/S06/live_native_matrix.py", line 200, in main
+    row('01-cold', execute=GROUPS)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/experiments/development-loop-wave2-20261012/S06/live_native_matrix.py", line 197, in row
+    response = session.request(request_args)
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/experiments/development-loop-wave2-20261012/S06/live_native_matrix.py", line 99, in request
+    raise RuntimeError('real cache-session stopped; inspect session stderr')
+RuntimeError: real cache-session stopped; inspect session stderr
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/experiments/development-loop-wave2-20261012/S06/live_native_matrix.py", line 108, in close
+    self.request(command='stop')
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/experiments/development-loop-wave2-20261012/S06/live_native_matrix.py", line 94, in request
+    self.process.stdin.flush()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+BrokenPipeError: [Errno 32] Broken pipe
+
+During handling of the above exception, another exception occurred:
+
+BrokenPipeError: [Errno 32] Broken pipe
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/experiments/development-loop-wave2-20261012/S06/live_native_matrix.py", line 254, in <module>
+    main()
+    ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/experiments/development-loop-wave2-20261012/S06/live_native_matrix.py", line 234, in main
+    session.close()
+    ~~~~~~~~~~~~~^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/experiments/development-loop-wave2-20261012/S06/live_native_matrix.py", line 115, in close
+    self.process.stdin.close()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+BrokenPipeError: [Errno 32] Broken pipe

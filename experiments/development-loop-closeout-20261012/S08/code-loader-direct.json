@@ -1,0 +1,12 @@
+{
+  "mode": "direct",
+  "hashes": [
+    "880d6633fc4dc3aaa78631fea034aad7a7f7199f964edee7f6a5828f27b58726",
+    "d5dbc83ba16e8ae0c188ec460b1354cdb1377ffb4286af4e482edc48c0cdeaf2",
+    "8bfcd3aea42469948c91fc50da05cb6e74053e1092caaf9119e39b373ba6436a",
+    "be9a7d08f6758834c159ac953e0304cba9ceb321bcf875708634f536f43262a9"
+  ],
+  "same_process_repeat_stable": true,
+  "same_module_object": true,
+  "snapshot_filename": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/scripts/verification_snapshot.py"
+}

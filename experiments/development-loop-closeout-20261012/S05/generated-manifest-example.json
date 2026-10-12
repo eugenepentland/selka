@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "name": "development-loop-compiler-driver",
+  "adapter": "native",
+  "sources": [
+    "cases.my",
+    "oracle.py"
+  ],
+  "environment": {
+    "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "MYLANG_COMPONENT_DIR": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.tmp-s10/frozen-release/libexec/mylang/components"
+  },
+  "build": {
+    "compiler": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.tmp-s10/frozen-release/bin/mylang",
+    "command": [
+      "cp",
+      "{compiler}",
+      "{binary}"
+    ],
+    "tools": [
+      "cp",
+      "python3"
+    ],
+    "dependencies": [
+      "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.tmp-s10/frozen-release/bin/mylang",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib",
+      "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.tmp-s10/frozen-release/libexec/mylang/components"
+    ],
+    "timeout_seconds": 30
+  },
+  "workloads": [
+    {
+      "name": "compiler-check",
+      "family": "compiler-check",
+      "unit": "checked fixture",
+      "units": 1,
+      "args": [
+        "check",
+        "{root}/cases.my",
+        "--no-cache"
+      ],
+      "expected_stdout": "",
+      "timeout_seconds": 30
+    },
+    {
+      "name": "forced-test-driver",
+      "family": "guest-test-driver",
+      "unit": "fresh passing guest test",
+      "units": 2,
+      "args": [
+        "test",
+        "{root}/cases.my",
+        "--force",
+        "--json",
+        "--cache-dir",
+        "{work}/guest-cache"
+      ],
+      "stdout_regex": "(?:.|\\n)*(\"passed\":2,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0)(?:.|\\n)*",
+      "expected_stdout": "\"passed\":2,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0",
+      "check": [
+        "python3",
+        "{root}/oracle.py",
+        "{stdout}"
+      ],
+      "timeout_seconds": 120
+    }
+  ]
+}

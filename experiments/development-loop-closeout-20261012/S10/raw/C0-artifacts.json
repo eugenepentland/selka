@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "artifacts": {
+    "mylang": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-debug-cache/o/d352aaf4e8f448ac11328cb1b9b05767/mylang",
+    "units": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-debug-cache/o/4710ab805a877ced54992b8a8c32cd45/test",
+    "tooling-units": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-debug-cache/o/454f7b509922319895added2987002af/tooling-unit-tests",
+    "cli": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-debug-cache/o/81accfd8f387cade06c8b468528ada80/test",
+    "core": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-debug-cache/o/1ebf4ab083b4d997c8be4352d1880215/test",
+    "golden": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-debug-cache/o/1faab5dea6ab5a2f13b3a8d285062406/test",
+    "memory-budget": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-debug-cache/o/84f0f8e3a4ce27b559e415112ce09cee/test",
+    "component-support": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-debug-cache/o/a02d279d693720dfeedd4fa28ea5266a/test",
+    "component-builder": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-debug-cache/o/2ecd722ce01240aa65d48334d1933c23/selka-components"
+  }
+}

@@ -60,6 +60,16 @@ class SyntheticRepo(unittest.TestCase):
 
 
 class Mapping(SyntheticRepo):
+    def test_scalar_source_and_embedded_oracles_select_the_independent_root(self) -> None:
+        for path in ('src/text_scalar_root_test.zig', 'src/number_text.zig',
+                     'src/number_text_test.zig', 'src/number_grammar.txt',
+                     'src/format_spec.zig', 'src/format_spec_test.zig', 'src/format_spec_cases.tsv'):
+            sel = self.select({path: ['changed']})
+            self.assertEqual(sorted(sel.steps), ['test-text-scalar-units'])
+            self.assertFalse(sel.unit)
+            builds, _ = at.plan(sel, 'zig')
+            self.assertTrue(any('test-text-scalar-units' in command.argv for command in builds))
+
     def test_independent_tooling_source_routes_to_its_executable(self) -> None:
         sel = self.select({"src/tool_test.zig": ["// spec: TOOL-1"]})
         self.assertEqual(sel.unit, {})

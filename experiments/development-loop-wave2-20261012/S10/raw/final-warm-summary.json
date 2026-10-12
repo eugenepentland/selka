@@ -1,0 +1,133 @@
+{
+  "source": "1eea987411a1ac5b42941b2ad26a25052a002460",
+  "keys_equal_all_modes": true,
+  "budget_context": "614adfea7fcc1f1b94188276351b2eb578c8cf48e32802af96a47d203bf29388",
+  "rows": [
+    {
+      "mode": "one-shot",
+      "index": 0,
+      "window": {
+        "admission_wait_seconds": 30.14212942821905,
+        "coordinator_lock_wait_seconds": 4.1460152715444565e-06,
+        "deadline_seconds": 1800.0,
+        "elapsed_seconds": 56.495513134868816,
+        "kind": "exclusive-coordinator-request",
+        "scope": "request start through final report assembly; report write, final output and session startup excluded",
+        "slot_directory": "/home/epentland/.cache/mylang/slots",
+        "version": 1
+      },
+      "outer_seconds": 86.908901057,
+      "reused": 35,
+      "snapshot_statistics": {
+        "bytes_hashed": 2328979767,
+        "digest_reuses": 0,
+        "directories_enumerated": 2290,
+        "files_hashed": 28859,
+        "metadata_observations": 738564,
+        "snapshot_reuses": 0,
+        "validation_calls": 54
+      }
+    },
+    {
+      "mode": "one-shot",
+      "index": 1,
+      "window": {
+        "admission_wait_seconds": 0.06235654489137232,
+        "coordinator_lock_wait_seconds": 4.20701690018177e-06,
+        "deadline_seconds": 1800.0,
+        "elapsed_seconds": 52.93604850699194,
+        "kind": "exclusive-coordinator-request",
+        "scope": "request start through final report assembly; report write, final output and session startup excluded",
+        "slot_directory": "/home/epentland/.cache/mylang/slots",
+        "version": 1
+      },
+      "outer_seconds": 53.272757405,
+      "reused": 35,
+      "snapshot_statistics": {
+        "bytes_hashed": 2328979767,
+        "digest_reuses": 0,
+        "directories_enumerated": 2290,
+        "files_hashed": 28859,
+        "metadata_observations": 594173,
+        "snapshot_reuses": 0,
+        "validation_calls": 32
+      }
+    },
+    {
+      "mode": "one-shot",
+      "index": 2,
+      "window": {
+        "admission_wait_seconds": 5.0905814450234175,
+        "coordinator_lock_wait_seconds": 4.234025254845619e-06,
+        "deadline_seconds": 1800.0,
+        "elapsed_seconds": 50.490209290990606,
+        "kind": "exclusive-coordinator-request",
+        "scope": "request start through final report assembly; report write, final output and session startup excluded",
+        "slot_directory": "/home/epentland/.cache/mylang/slots",
+        "version": 1
+      },
+      "outer_seconds": 55.844294128,
+      "reused": 35,
+      "snapshot_statistics": {
+        "bytes_hashed": 2328979767,
+        "digest_reuses": 0,
+        "directories_enumerated": 2290,
+        "files_hashed": 28859,
+        "metadata_observations": 594173,
+        "snapshot_reuses": 0,
+        "validation_calls": 32
+      }
+    },
+    {
+      "mode": "retained",
+      "index": 0,
+      "window": {
+        "admission_wait_seconds": 5.085859558079392,
+        "coordinator_lock_wait_seconds": 6.118090823292732e-06,
+        "deadline_seconds": 1800.0,
+        "elapsed_seconds": 51.72710712393746,
+        "kind": "exclusive-coordinator-request",
+        "scope": "request start through final report assembly; report write, final output and session startup excluded",
+        "slot_directory": "/home/epentland/.cache/mylang/slots",
+        "version": 1
+      },
+      "outer_seconds": 57.252148808,
+      "reused": 35,
+      "snapshot_statistics": {
+        "bytes_hashed": 2328979767,
+        "digest_reuses": 0,
+        "directories_enumerated": 2290,
+        "files_hashed": 28859,
+        "metadata_observations": 594173,
+        "snapshot_reuses": 0,
+        "validation_calls": 32
+      }
+    },
+    {
+      "mode": "retained",
+      "index": 1,
+      "window": {
+        "admission_wait_seconds": 0.0825033460278064,
+        "coordinator_lock_wait_seconds": 2.888031303882599e-06,
+        "deadline_seconds": 1800.0,
+        "elapsed_seconds": 47.7198758139275,
+        "kind": "exclusive-coordinator-request",
+        "scope": "request start through final report assembly; report write, final output and session startup excluded",
+        "slot_directory": "/home/epentland/.cache/mylang/slots",
+        "version": 1
+      },
+      "outer_seconds": 47.830955193,
+      "reused": 35,
+      "snapshot_statistics": {
+        "bytes_hashed": 0,
+        "digest_reuses": 0,
+        "directories_enumerated": 0,
+        "files_hashed": 0,
+        "metadata_observations": 154145,
+        "snapshot_reuses": 6,
+        "validation_calls": 30
+      }
+    }
+  ],
+  "qualification": "Small-n per-mode observations only; no population p95. All observed request windows exceed 15 seconds."
+}

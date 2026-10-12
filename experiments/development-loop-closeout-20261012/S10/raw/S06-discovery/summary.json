@@ -1,0 +1,68 @@
+{
+  "repetitions": 20,
+  "rows": [
+    {
+      "row": 0,
+      "shape": {
+        "modules": 1,
+        "declarations_per_module": 8,
+        "tests": 8,
+        "old_module_comparisons": 8,
+        "old_declaration_comparisons": 36,
+        "new_hash_lookups": 16
+      },
+      "old_median_ns": 232379.5,
+      "new_median_ns": 263615.5,
+      "median_ratio": 1.1344180532275867,
+      "old_empirical_p95_ns": 271842,
+      "new_empirical_p95_ns": 321680
+    },
+    {
+      "row": 1,
+      "shape": {
+        "modules": 32,
+        "declarations_per_module": 32,
+        "tests": 1024,
+        "old_module_comparisons": 32768,
+        "old_declaration_comparisons": 16896,
+        "new_hash_lookups": 2048
+      },
+      "old_median_ns": 7544251.0,
+      "new_median_ns": 6454140.5,
+      "median_ratio": 0.8555044761898829,
+      "old_empirical_p95_ns": 10106234,
+      "new_empirical_p95_ns": 10029683
+    },
+    {
+      "row": 2,
+      "shape": {
+        "modules": 128,
+        "declarations_per_module": 128,
+        "tests": 16384,
+        "old_module_comparisons": 2097152,
+        "old_declaration_comparisons": 1056768,
+        "new_hash_lookups": 32768
+      },
+      "old_median_ns": 169379608.5,
+      "new_median_ns": 99177079.0,
+      "median_ratio": 0.5855313982497485,
+      "old_empirical_p95_ns": 281667579,
+      "new_empirical_p95_ns": 155032724
+    },
+    {
+      "row": 3,
+      "shape": {
+        "shared_roots": 128,
+        "selected_per_root": 16,
+        "program_functions": 2048
+      },
+      "old_median_ns": 102544333.0,
+      "new_median_ns": 106495420.0,
+      "median_ratio": 1.0385305251339438,
+      "old_empirical_p95_ns": 150663554,
+      "new_empirical_p95_ns": 155843182
+    }
+  ],
+  "complete": true,
+  "scope": "isolated standalone paired discovery; fixed old/new order; empirical p95 not stable tail or guest-loop claim"
+}

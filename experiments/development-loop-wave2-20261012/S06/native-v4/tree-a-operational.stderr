@@ -1,0 +1,409 @@
+build-slot: FIFO ticket 535, position 21; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 535, position 17; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 535, position 16; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 535, position 8; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 535, position 4; earlier build tickets must run first; waiting (241s so far)
+build-slot: build slot 1, FIFO ticket 535 after 301s
+Build Summary: 10/10 steps succeeded
+verification-prepare success
++- install generated to artifacts.json success
+|  +- run python3 (artifacts.json) success 214ms
+|     +- compile test scalar-live-tests debug native success 369ms MaxRSS:162M
+|     +- compile test tooling-live-tests debug native cached 9ms MaxRSS:41M
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.tmp/frozen-final-release/bin/mylang to mylang cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index.json to test-index.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 to test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan.json to cache-plan.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 to cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 cached
+
+verification: execute text_scalar_unit (no valid receipt)
+verification: reused tooling_unit (valid prior success)
+verification: reused fixtures (valid prior success)
+verification: execute format (no valid receipt)
+verification: profile complete; 2 pending, 2 selected, 0 deferred
+build-slot: FIFO ticket 138, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 138 after 10s
+verification-text_scalar_unit
++- verification action text_scalar_unit member 0 9 pass, 1 fail (10 total)
+guardian/test: test wall 0.14s; slowest over 50ms:
+guardian/test:   0.08s  number_text_test.test.S06 live added failing case
+guardian/test: FAIL — 1 failed of 10
+guardian/test: RESULT {"passed":9,"failed":1,"skipped":0}
+error: 'number_text_test.test.S06 live added failing case' failed:
+       guardian/test: 10 test(s) selected
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x12a9b69 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v4/tree-a/src/number_text_test.zig:150:5: 0x12dab19 in test.S06 live added failing case (text_scalar_root_test.zig)
+           try std.testing.expect(false);
+           ^
+failed command: ./.zig-cache/o/6b775b1feba385be839ef98229aa969b/scalar-live-tests --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 9/10 tests passed (1 failed)
+verification-format success
++- verification action format member 0 success
+verification-text_scalar_unit transitive failure
++- verification action text_scalar_unit member 0 9 pass, 1 fail (10 total)
+   +- compile test scalar-live-tests debug native cached 6ms MaxRSS:38M
+
+verification: FAIL; 2 reused, 2 selected; build admitted 1.563s, gate admitted 0.254s
+build-slot: FIFO ticket 550, position 13; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 550, position 5; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 550 after 96s
+Build Summary: 10/10 steps succeeded
+verification-prepare success
++- install generated to artifacts.json success
+|  +- run python3 (artifacts.json) success 180ms
+|     +- compile test scalar-live-tests debug native success 337ms MaxRSS:160M
+|     +- compile test tooling-live-tests debug native cached 5ms MaxRSS:40M
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.tmp/frozen-final-release/bin/mylang to mylang cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index.json to test-index.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 to test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan.json to cache-plan.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 to cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 cached
+
+verification: execute text_scalar_unit (no valid receipt)
+verification: reused tooling_unit (valid prior success)
+verification: reused fixtures (valid prior success)
+verification: reused format (valid prior success)
+verification: profile complete; 1 pending, 1 selected, 0 deferred
+build-slot: FIFO ticket 139, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 139 after 5s
+verification-text_scalar_unit
++- verification action text_scalar_unit member 0 w
+guardian/test: 9 test(s) selected
+guardian/test: test wall 0.05s
+guardian/test: PASS — 9 passed
+guardian/test: RESULT {"passed":9,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/791e772f27345c8417d1a9ee83cc2b0e/scalar-live-tests --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+Build Summary: 3/3 steps succeeded; 9/9 tests passed
+verification-text_scalar_unit success
++- verification action text_scalar_unit member 0 9 pass (9 total) 66ms MaxRSS:5M
+   +- compile test scalar-live-tests debug native cached 6ms MaxRSS:41M
+
+verification: PASS; 3 reused, 1 selected; build admitted 0.618s, gate admitted 0.166s
+build-slot: FIFO ticket 565, position 15; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 565, position 13; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 565, position 13; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 565, position 9; earlier build tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 565, position 3; earlier build tickets must run first; waiting (240s so far)
+build-slot: FIFO ticket 565, position 3; earlier build tickets must run first; waiting (301s so far)
+build-slot: build slot 1, FIFO ticket 565 after 321s
+Build Summary: 10/10 steps succeeded
+verification-prepare success
++- install generated to artifacts.json success
+|  +- run python3 (artifacts.json) success 188ms
+|     +- compile test scalar-live-tests debug native success 341ms MaxRSS:162M
+|     +- compile test tooling-live-tests debug native cached 6ms MaxRSS:41M
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.tmp/frozen-final-release/bin/mylang to mylang cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index.json to test-index.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 to test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan.json to cache-plan.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 to cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 cached
+
+verification: execute text_scalar_unit (no valid receipt)
+verification: reused tooling_unit (valid prior success)
+verification: reused fixtures (valid prior success)
+verification: execute format (no valid receipt)
+verification: profile complete; 2 pending, 2 selected, 0 deferred
+build-slot: FIFO ticket 149, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 149 after 10s
+verification-text_scalar_unit
++- verification action text_scalar_unit member 0 6 pass, 3 fail (9 total)
+guardian/test: test wall 0.14s; slowest over 50ms:
+guardian/test:   0.08s  number_text_test.test.every shared vector answers the pinned grammar's value
+guardian/test: FAIL — 3 failed of 9
+guardian/test: RESULT {"passed":6,"failed":3,"skipped":0}
+error: 'number_text_test.test.every shared vector answers the pinned grammar's value' failed:
+       guardian/test: 9 test(s) selected
+       expected 42, found null
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:191:21: 0x12db05b in expectEqualInner__anon_69073 (std.zig)
+                           return error.TestExpectedEqual;
+                           ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x12e83f8 in expectEqual (text_scalar_root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v4/tree-a/src/number_text_test.zig:36:5: 0x12e842e in checkInteger (text_scalar_root_test.zig)
+           return std.testing.expectEqual(@as(?i64, expected), actual);
+           ^
+       /home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v4/tree-a/src/number_text_test.zig:29:5: 0x12e86bb in check (text_scalar_root_test.zig)
+           return checkInteger(vector);
+           ^
+       /home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v4/tree-a/src/number_text_test.zig:98:23: 0x12e8869 in test.every shared vector answers the pinned grammar's value (text_scalar_root_test.zig)
+           for (rows) |line| try check(line, &buffer);
+                             ^
+error: 'number_text_test.test.the grammar keeps the rounding horizon, the signed bound and the exponent bound' failed:
+       expected -9223372036854775808, found null
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:191:21: 0x12db05b in expectEqualInner__anon_69073 (std.zig)
+                           return error.TestExpectedEqual;
+                           ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x12e6d99 in expectEqual (text_scalar_root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v4/tree-a/src/number_text_test.zig:108:5: 0x12e6df2 in test.the grammar keeps the rounding horizon, the signed bound and the exponent bound (text_scalar_root_test.zig)
+           try std.testing.expectEqual(@as(?i64, std.math.minInt(i64)), number.integer(&.{ '-', '9', '2', '2', '3', '3', '7', '2', '0', '3', '6', '8', '5', '4', '7', '7', '5', '8', '0', '8' }));
+           ^
+error: 'number_text_test.test.every shared vector answers the same through the UTF-8 octet entry points' failed:
+       expected null, found 42
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:196:21: 0x12db096 in expectEqualInner__anon_69073 (std.zig)
+                           return error.TestExpectedEqual;
+                           ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x12db538 in expectEqual (text_scalar_root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v4/tree-a/src/number_text_test.zig:122:13: 0x12db591 in test.every shared vector answers the same through the UTF-8 octet entry points (text_scalar_root_test.zig)
+                   try std.testing.expectEqual(number.integer(vector.points), number.integerBytes(encoded));
+                   ^
+failed command: ./.zig-cache/o/713a465d45584804e0fa4ea66dbb7844/scalar-live-tests --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+Build Summary: 3/5 steps succeeded (1 failed); 6/9 tests passed (3 failed)
+verification-format success
++- verification action format member 0 success
+verification-text_scalar_unit transitive failure
++- verification action text_scalar_unit member 0 6 pass, 3 fail (9 total)
+   +- compile test scalar-live-tests debug native cached 6ms MaxRSS:38M
+
+verification: FAIL; 2 reused, 2 selected; build admitted 1.063s, gate admitted 0.346s
+build-slot: FIFO ticket 585, position 19; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 585, position 11; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 585, position 4; earlier build tickets must run first; waiting (121s so far)
+build-slot: build slot 2, FIFO ticket 585 after 146s
+Build Summary: 10/10 steps succeeded
+verification-prepare success
++- install generated to artifacts.json success
+|  +- run python3 (artifacts.json) success 188ms
+|     +- compile test scalar-live-tests debug native success 345ms MaxRSS:161M
+|     +- compile test tooling-live-tests debug native cached 6ms MaxRSS:41M
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.tmp/frozen-final-release/bin/mylang to mylang cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index.json to test-index.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 to test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan.json to cache-plan.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 to cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 cached
+
+verification: execute text_scalar_unit (no valid receipt)
+verification: reused tooling_unit (valid prior success)
+verification: reused fixtures (valid prior success)
+verification: reused format (valid prior success)
+verification: profile complete; 1 pending, 1 selected, 0 deferred
+build-slot: FIFO ticket 151, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 151 after 5s
+verification-text_scalar_unit
++- verification action text_scalar_unit member 0 w
+guardian/test: 9 test(s) selected
+guardian/test: test wall 0.05s
+guardian/test: PASS — 9 passed
+guardian/test: RESULT {"passed":9,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/791e772f27345c8417d1a9ee83cc2b0e/scalar-live-tests --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+Build Summary: 3/3 steps succeeded; 9/9 tests passed
+verification-text_scalar_unit success
++- verification action text_scalar_unit member 0 9 pass (9 total) 64ms MaxRSS:5M
+   +- compile test scalar-live-tests debug native cached 5ms MaxRSS:41M
+
+verification: PASS; 3 reused, 1 selected; build admitted 0.639s, gate admitted 0.156s
+build-slot: FIFO ticket 595, position 10; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 595, position 2; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 595 after 85s
+Build Summary: 10/10 steps succeeded
+verification-prepare success
++- install generated to artifacts.json cached
+|  +- run python3 (artifacts.json) cached
+|     +- compile test scalar-live-tests debug native cached 6ms MaxRSS:40M
+|     +- compile test tooling-live-tests debug native cached 6ms MaxRSS:40M
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.tmp/frozen-final-release/bin/mylang to mylang cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index.json to test-index.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 to test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan.json to cache-plan.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 to cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 cached
+
+verification: reused text_scalar_unit (valid prior success)
+verification: reused tooling_unit (valid prior success)
+verification: execute fixtures (no valid receipt)
+verification: reused format (valid prior success)
+verification: profile complete; 1 pending, 1 selected, 0 deferred
+build-slot: FIFO ticket 156, position 2; earlier gate tickets must run first; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 156 after 20s
+test_a (membership_cases.Membership.test_a) ... ok
+test_added (membership_cases.Membership.test_added) ... ok
+test_stable (membership_cases.Membership.test_stable) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.000s
+
+OK
+Build Summary: 2/2 steps succeeded
+verification-fixtures success
++- verification action fixtures member 0 success 180ms
+
+verification: PASS; 3 reused, 1 selected; build admitted 0.091s, gate admitted 0.271s
+build-slot: FIFO ticket 607, position 11; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 607, position 6; earlier build tickets must run first; waiting (61s so far)
+build-slot: build slot 2, FIFO ticket 607 after 101s
+Build Summary: 10/10 steps succeeded
+verification-prepare success
++- install generated to artifacts.json cached
+|  +- run python3 (artifacts.json) cached
+|     +- compile test scalar-live-tests debug native cached 6ms MaxRSS:37M
+|     +- compile test tooling-live-tests debug native cached 8ms MaxRSS:38M
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.tmp/frozen-final-release/bin/mylang to mylang cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index.json to test-index.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 to test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan.json to cache-plan.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 to cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 cached
+
+verification: reused text_scalar_unit (valid prior success)
+verification: reused tooling_unit (valid prior success)
+verification: execute fixtures (no valid receipt)
+verification: reused format (valid prior success)
+verification: profile complete; 1 pending, 1 selected, 0 deferred
+build-slot: FIFO ticket 161, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 161 after 10s
+test_a (membership_cases.Membership.test_a) ... ok
+test_renamed (membership_cases.Membership.test_renamed) ... ok
+test_stable (membership_cases.Membership.test_stable) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.006s
+
+OK
+Build Summary: 2/2 steps succeeded
+verification-fixtures success
++- verification action fixtures member 0 success 201ms
+
+verification: PASS; 3 reused, 1 selected; build admitted 0.109s, gate admitted 0.302s
+build-slot: FIFO ticket 615, position 7; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 615, position 2; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 3, FIFO ticket 615 after 70s
+Build Summary: 10/10 steps succeeded
+verification-prepare success
++- install generated to artifacts.json cached
+|  +- run python3 (artifacts.json) cached
+|     +- compile test scalar-live-tests debug native cached 7ms MaxRSS:39M
+|     +- compile test tooling-live-tests debug native cached 7ms MaxRSS:39M
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.tmp/frozen-final-release/bin/mylang to mylang cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index.json to test-index.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 to test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan.json to cache-plan.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 to cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 cached
+
+verification: reused text_scalar_unit (valid prior success)
+verification: reused tooling_unit (valid prior success)
+verification: reused fixtures (valid prior success)
+verification: reused format (valid prior success)
+verification: profile complete; 0 pending, 0 selected, 0 deferred
+verification: PASS; 4 reused, 0 selected; build admitted 0.118s, gate admitted 0.000s
+build-slot: FIFO ticket 622, position 7; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 622, position 5; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 622, position 5; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 622, position 5; earlier build tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 622, position 5; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 622, position 5; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 622, position 5; earlier build tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 622, position 1; waiting for measurement or memory-accounting settle delay; waiting (421s so far)
+build-slot: build slot 1, FIFO ticket 622 after 426s
+Build Summary: 10/10 steps succeeded
+verification-prepare success
++- install generated to artifacts.json cached
+|  +- run python3 (artifacts.json) cached
+|     +- compile test scalar-live-tests debug native cached 5ms MaxRSS:41M
+|     +- compile test tooling-live-tests debug native cached 6ms MaxRSS:41M
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.tmp/frozen-final-release/bin/mylang to mylang cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index.json to test-index.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 to test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan.json to cache-plan.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 to cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 cached
+
+verification: reused text_scalar_unit (valid prior success)
+verification: reused tooling_unit (valid prior success)
+verification: execute fixtures (no valid receipt)
+verification: reused format (valid prior success)
+verification: profile complete; 1 pending, 1 selected, 0 deferred
+build-slot: FIFO ticket 169, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 169 after 5s
+test_a (membership_cases.Membership.test_a) ... FAIL
+test_stable (membership_cases.Membership.test_stable) ... ok
+
+======================================================================
+FAIL: test_a (membership_cases.Membership.test_a)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v4/tree-a/scripts/membership_cases.py", line 14, in test
+    self.assertEqual(path.read_text().strip(), '1', str(path))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '0' != '1'
+- 0
++ 1
+ : /home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v4/tree-a/test/membership/a.txt
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.001s
+
+FAILED (failures=1)
+verification-fixtures
++- verification action fixtures member 0 failure
+error: process exited with code 1
+failed command: cd scripts && python3 ./verification_telemetry.py --action-id fixtures --member 0 --output-directory-env MYLANG_TEST_TELEMETRY_DIR membership_cases
+
+Build Summary: 0/2 steps succeeded (1 failed)
+verification-fixtures transitive failure
++- verification action fixtures member 0 failure
+
+verification: FAIL; 3 reused, 1 selected; build admitted 0.101s, gate admitted 0.271s
+verification: reused text_scalar_unit (valid prior success)
+verification: reused tooling_unit (valid prior success)
+verification: execute fixtures (no valid receipt)
+verification: reused format (valid prior success)
+verification: profile complete; 1 pending, 1 selected, 0 deferred
+build-slot: FIFO ticket 170, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 170 after 5s
+test_a (membership_cases.Membership.test_a) ... FAIL
+test_stable (membership_cases.Membership.test_stable) ... ok
+
+======================================================================
+FAIL: test_a (membership_cases.Membership.test_a)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v4/tree-a/scripts/membership_cases.py", line 14, in test
+    self.assertEqual(path.read_text().strip(), '1', str(path))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '0' != '1'
+- 0
++ 1
+ : /home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v4/tree-a/test/membership/a.txt
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.000s
+
+FAILED (failures=1)
+verification-fixtures
++- verification action fixtures member 0 failure
+error: process exited with code 1
+failed command: cd scripts && python3 ./verification_telemetry.py --action-id fixtures --member 0 --output-directory-env MYLANG_TEST_TELEMETRY_DIR membership_cases
+
+Build Summary: 0/2 steps succeeded (1 failed)
+verification-fixtures transitive failure
++- verification action fixtures member 0 failure
+
+verification: FAIL; 3 reused, 1 selected; build admitted 0.000s, gate admitted 0.275s
+build-slot: FIFO ticket 633, position 10; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 633, position 3; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 633 after 80s
+Build Summary: 10/10 steps succeeded
+verification-prepare success
++- install generated to artifacts.json cached
+|  +- run python3 (artifacts.json) cached
+|     +- compile test scalar-live-tests debug native cached 6ms MaxRSS:39M
+|     +- compile test tooling-live-tests debug native cached 5ms MaxRSS:38M
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.tmp/frozen-final-release/bin/mylang to mylang cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index.json to test-index.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 to test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan.json to cache-plan.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 to cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 cached
+
+verification: reused text_scalar_unit (valid prior success)
+verification: reused tooling_unit (valid prior success)
+verification: reused fixtures (valid prior success)
+verification: reused format (valid prior success)
+verification: profile complete; 0 pending, 0 selected, 0 deferred
+verification: PASS; 4 reused, 0 selected; build admitted 0.082s, gate admitted 0.000s

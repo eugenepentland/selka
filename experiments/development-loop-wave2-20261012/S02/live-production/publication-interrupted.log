@@ -1,0 +1,6 @@
+verification: fresh lifecycle (explicit rerun or filtered request)
+verification: profile complete; 1 pending, 1 selected, 0 deferred
+build-slot: FIFO ticket 143, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 143 after 5s
+bounded lifecycle action completed
+verification: cancelled; no new success receipts

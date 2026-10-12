@@ -1,0 +1,96 @@
+{
+  "version": 2,
+  "artifacts": {
+    "tooling-units": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S04/.zig-cache-S04/o/454f7b509922319895added2987002af/tooling-unit-tests"
+  },
+  "producers": {
+    "tooling-units": {
+      "version": 1,
+      "domain": "selka-qualified-native-producer-v1",
+      "label": "tooling-units",
+      "implementation": {
+        "sha256": "29900e9418e5585c48a5fab2fe4fdcaceafefd8ec467445184c55fbcf3b005ac",
+        "size": 21692045,
+        "mode": 509
+      },
+      "sources": [
+        {
+          "path": "src/doc_coverage.zig",
+          "sha256": "60153de2b943e0421ec11d63d982f0dd48121dc8b1977b0fd0e4efa01888da75",
+          "size": 10028,
+          "mode": 436
+        },
+        {
+          "path": "src/doc_coverage_test.zig",
+          "sha256": "2df177dd31a42462c9834b3e5772f7947cf68b09fa337c285ee8e13e6dd0261b",
+          "size": 5300,
+          "mode": 436
+        },
+        {
+          "path": "src/fix_plan.zig",
+          "sha256": "23ee34ae7cc148a252a737cba4c461741a33148a5d4058c115faab358279fc90",
+          "size": 3071,
+          "mode": 436
+        },
+        {
+          "path": "src/fix_plan_test.zig",
+          "sha256": "a6e13dc63453f2b4a5d74b0cd4dbf924be2fabb6b89a98f19462d6eba226cf9d",
+          "size": 1721,
+          "mode": 436
+        },
+        {
+          "path": "src/input_probe.zig",
+          "sha256": "90bdce743c3d9ef336c29a03cd74e79f4b53f4a44bd78a7581904c15e1af3748",
+          "size": 2891,
+          "mode": 436
+        },
+        {
+          "path": "src/input_probe_test.zig",
+          "sha256": "a55a6146c852269789fa94db44fb19ac9eee765256407eba63d6aa49135ea9d0",
+          "size": 2028,
+          "mode": 436
+        },
+        {
+          "path": "src/invalidation.zig",
+          "sha256": "a6a861558a68e9763d03d12d4881c199b38681bd0fd01c5ad1c96c6e8d64e374",
+          "size": 45340,
+          "mode": 436
+        },
+        {
+          "path": "src/invalidation_test.zig",
+          "sha256": "e08cfb28dac98044de959e280171919c44b070d01274c83985c94d9dc50c4725",
+          "size": 24645,
+          "mode": 436
+        },
+        {
+          "path": "src/timings.zig",
+          "sha256": "54d43db5fbfdfbdc9e11b5e4ef9c12c96003ff41cf49565df55ed8afa3160186",
+          "size": 4850,
+          "mode": 436
+        },
+        {
+          "path": "src/timings_test.zig",
+          "sha256": "119605ecd291cbf88744c9f0899d2f7f45bae99270fb81c3a70b343e00db3448",
+          "size": 822,
+          "mode": 436
+        },
+        {
+          "path": "src/tooling_root_test.zig",
+          "sha256": "918b4307673d2646ff7116680bc5d59f42bf11c45588dc27ec6395d7fe1689df",
+          "size": 292,
+          "mode": 436
+        }
+      ],
+      "interface": "guardian-zig-test-runner-v1",
+      "abi": "zig-native-test-executable-v1",
+      "mode": "Debug",
+      "seed": null,
+      "context": [
+        "build_configuration",
+        "tools",
+        "options",
+        "action_controls"
+      ]
+    }
+  }
+}

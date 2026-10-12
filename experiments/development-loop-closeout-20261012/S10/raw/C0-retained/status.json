@@ -1,0 +1,9 @@
+{
+  "status": "incomplete-startup",
+  "reason": "all45selected from loaded implementation mismatch; supported SIGTERM cancelled own dispatch while most gate work remained",
+  "cancellation_status": 143,
+  "complete": false,
+  "warm_qualification": false,
+  "source_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "stale_report": "report-0-stale-prior.json is prior completed force gate, not cancelled request evidence"
+}

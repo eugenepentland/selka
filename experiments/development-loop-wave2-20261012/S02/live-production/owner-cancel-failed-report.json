@@ -1,0 +1,179 @@
+{
+  "actions": [
+    {
+      "action_key": "d381a5a5eb283248ab36aa4e90b5e80bfe79e46fab3156bb0525943922453564",
+      "id": "lifecycle",
+      "invalidation": {
+        "changes": [
+          {
+            "kind": "common_changed",
+            "name": "implementation"
+          }
+        ],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency identity changed",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    }
+  ],
+  "admissions": [
+    {
+      "admission_scope": "command",
+      "admission_wait_seconds": 91.08262579096481,
+      "admitted": true,
+      "cancelled": false,
+      "elapsed_seconds": 91.43095229100436,
+      "execution_limits": {
+        "terminate_grace_seconds": 0.5,
+        "timeout_seconds": null
+      },
+      "incomplete": false,
+      "kind": "build",
+      "log_errors": [],
+      "logs": [
+        {
+          "bytes_seen": 0,
+          "capture_available": true,
+          "capture_complete": true,
+          "observed_steps": {
+            "additive": false,
+            "aggregate_peak_rss_bytes": null,
+            "cpu_seconds": null,
+            "malformed": false,
+            "observations": [],
+            "status": "unknown",
+            "truncated": false
+          },
+          "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/.tmp/verification-live-bq0bnq6u/fixture/.mylang-cache/verification-v1/last-logs/inventory/stdout.log",
+          "truncated": false
+        },
+        {
+          "bytes_seen": 251,
+          "capture_available": true,
+          "capture_complete": true,
+          "observed_steps": {
+            "additive": false,
+            "aggregate_peak_rss_bytes": null,
+            "cpu_seconds": null,
+            "malformed": false,
+            "observations": [],
+            "status": "unknown",
+            "truncated": false
+          },
+          "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/.tmp/verification-live-bq0bnq6u/fixture/.mylang-cache/verification-v1/last-logs/inventory/stderr.log",
+          "truncated": false
+        }
+      ],
+      "observed_held_seconds": 0.3483265000395477,
+      "status": 0,
+      "timed_out": false,
+      "validation_seconds": 0.006044352892786264,
+      "worker_seconds": 0.34209813200868666
+    },
+    {
+      "admission_scope": "command",
+      "admission_wait_seconds": 95.69016120792367,
+      "admitted": true,
+      "cancelled": false,
+      "elapsed_seconds": 95.84861936490051,
+      "execution_limits": {
+        "terminate_grace_seconds": 0.5,
+        "timeout_seconds": null
+      },
+      "incomplete": false,
+      "kind": "build",
+      "log_errors": [],
+      "logs": [
+        {
+          "bytes_seen": 0,
+          "capture_available": true,
+          "capture_complete": true,
+          "observed_steps": {
+            "additive": false,
+            "aggregate_peak_rss_bytes": null,
+            "cpu_seconds": null,
+            "malformed": false,
+            "observations": [],
+            "status": "unknown",
+            "truncated": false
+          },
+          "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/.tmp/verification-live-bq0bnq6u/fixture/.mylang-cache/verification-v1/last-logs/preparation/stdout.log",
+          "truncated": false
+        },
+        {
+          "bytes_seen": 251,
+          "capture_available": true,
+          "capture_complete": true,
+          "observed_steps": {
+            "additive": false,
+            "aggregate_peak_rss_bytes": null,
+            "cpu_seconds": null,
+            "malformed": false,
+            "observations": [],
+            "status": "unknown",
+            "truncated": false
+          },
+          "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/.tmp/verification-live-bq0bnq6u/fixture/.mylang-cache/verification-v1/last-logs/preparation/stderr.log",
+          "truncated": false
+        }
+      ],
+      "observed_held_seconds": 0.15845815697684884,
+      "status": 0,
+      "timed_out": false,
+      "validation_seconds": 0.0029125120490789413,
+      "worker_seconds": 0.15549132088199258
+    }
+  ],
+  "elapsed_seconds": 194.432572404854,
+  "error": "",
+  "stability_diagnostics": {
+    "reasons": [
+      {
+        "facet": "authority",
+        "name": "None",
+        "reason": "snapshot watcher closed",
+        "role": "configuration"
+      },
+      {
+        "facet": "authority",
+        "name": "None",
+        "reason": "snapshot watcher closed",
+        "role": "coordinator"
+      },
+      {
+        "facet": "authority",
+        "name": "None",
+        "reason": "snapshot watcher closed",
+        "role": "preparation_sources"
+      },
+      {
+        "facet": "authority",
+        "name": "None",
+        "reason": "snapshot watcher closed",
+        "role": "prepared_artifacts"
+      },
+      {
+        "facet": "authority",
+        "name": "None",
+        "reason": "snapshot watcher closed",
+        "role": "action_inputs"
+      }
+    ],
+    "status": "observed",
+    "truncated": false,
+    "unknown": true,
+    "version": 1
+  },
+  "stage": "execution",
+  "status": 130,
+  "success": false,
+  "timings": {
+    "action_input_snapshot_seconds": 0.000872436910867691,
+    "prepare_lookup_outside_admission_seconds": 1.3469980750232935,
+    "source_snapshot_seconds": 0.002529350109398365
+  },
+  "version": 1
+}

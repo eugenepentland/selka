@@ -1,0 +1,27 @@
+{
+  "cache_conditions": "one disposable fixture; retain prepared artifacts/inventory; reset only its action receipts/shared store with no active borrowers",
+  "cases": {
+    "publication_interrupt": {
+      "gates": 3,
+      "interrupted_status": 143,
+      "retry_status": 0,
+      "rollback": true,
+      "status": "passed"
+    }
+  },
+  "harness_sha256": "3e8155792f5cc68e556448375bf7202bb7d385dc0059255d003a3886060948ca",
+  "model": "serialized contenders; no shared in-flight subscriber ownership",
+  "native_full_inventory": "not qualified",
+  "production_sources": {
+    "build-slot.sh": "9d20bcc3a62576c7c04c5686eb8865121b41a1f1d7824af6f3c626fbfbb5ebee",
+    "cache_session.py": "5202bda9228217a63d0e118676f78c3f2068f5810cbe55e2ba1b967626fa0aab",
+    "fuzz_campaign_store.py": "0d9f2d007b321cccca10708c79f856be8f2a59ae528135183a402d9e6c6a6255",
+    "verification_process.py": "4ab76c9978ff2c6b6d37b64eedd76a34b7c7f4b792aaffa72b68eb87ccb096d0",
+    "verify_cache.py": "2e91a3b5a7d361200678e12dca3dc15f877d0c9a9775cdf389c9cbf320fabe69"
+  },
+  "python_executable_sha256": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+  "source_commit": "2c91a73c42430aacb650b957b221da1df8aeadca",
+  "source_dirty_status": " M scripts/build_admission.py\n M scripts/cache_session.py\n M scripts/fuzz_campaign.py\n M scripts/fuzz_campaign_identity.py\n M scripts/fuzz_campaign_store.py\n M scripts/juice_cache.py\n M scripts/juice_cache_test.py\n M scripts/juice_evidence.py\n M scripts/juice_provider.py\n M scripts/juice_tool/collectors.py\n M scripts/juice_tool/common.py\n M scripts/juice_worker.py\n M scripts/verification_process.py\n M scripts/verification_producers.py\n M scripts/verification_profiles.py\n M scripts/verification_qualification.py\n M scripts/verification_snapshot.py\n M scripts/verify_cache.py\n M scripts/verify_cache_test.py\n?? scripts/verification_measurement.py\n?? scripts/verification_measurement_test.py\n",
+  "success": true,
+  "version": 1
+}

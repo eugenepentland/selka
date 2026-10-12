@@ -1,0 +1,10 @@
+{
+  "src/number_grammar.txt": {
+    "rows": 115,
+    "bytes": 5732
+  },
+  "src/format_spec_cases.tsv": {
+    "rows": 7754,
+    "bytes": 306771
+  }
+}

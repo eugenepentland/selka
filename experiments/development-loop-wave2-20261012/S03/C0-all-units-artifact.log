@@ -1,0 +1,15 @@
+build-slot: FIFO ticket 431, position 19; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 431, position 19; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 431, position 18; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 431, position 13; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 431, position 9; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 431, position 2; earlier build tickets must run first; waiting (301s so far)
+build-slot: build slot 2, FIFO ticket 431 after 316s
+Build Summary: 6/6 steps succeeded
+prepare success
++- install s03-replayed-tests success
+   +- compile test s03-replayed-tests debug native success 5s MaxRSS:493M
+      +- options success
+      +- run exe build-identity (build_identity) success 788ms
+         +- compile exe build-identity debug native success 670ms MaxRSS:151M
+

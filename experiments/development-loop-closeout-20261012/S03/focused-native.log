@@ -1,0 +1,11 @@
+build-slot: build slot 1, FIFO ticket 3542 after 0s
+1/9 text_scalar_root_test.test_0...OK
+2/9 number_text_test.test.every shared vector answers the pinned grammar's value...OK
+3/9 number_text_test.test.the grammar keeps the rounding horizon, the signed bound and the exponent bound...OK
+4/9 number_text_test.test.every shared vector answers the same through the UTF-8 octet entry points...OK
+5/9 format_spec_test.test.float format specifications render every CPython oracle row exactly...OK
+6/9 format_spec_test.test.integer and text format specifications render every CPython oracle row exactly...OK
+7/9 format_spec_test.test.round to n digits rounds the exact binary value with ties away from zero...OK
+8/9 format_spec_test.test.a specification the value family cannot take is rejected with CPython's reason...OK
+9/9 format_spec_test.test.a packed specification survives the runtime word unchanged...OK
+All 9 tests passed.

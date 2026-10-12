@@ -1,0 +1,83 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10004 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/dl-wave2-20261012-S02 264fa127d] Qualify live serialized verification cancellation and crash recovery
+ 75 files changed, 7398 insertions(+)
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/handoff.md
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-final.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-final/matching-complete-owner.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-initial.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production-final-diff.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/crash-admitted-failed-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/crash-admitted-last-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/crash-admitted-owner.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/crash-admitted-waiter.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/crash-before-admission-failed-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/crash-before-admission-last-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/crash-before-admission-owner.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/crash-before-admission-retry.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/frozen-script-manifest.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/harness-at-run.py
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/matching-complete-last-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/matching-complete-owner.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/matching-complete-waiter.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/owner-cancel-failed-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/owner-cancel-last-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/owner-cancel-owner.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/owner-cancel-waiter.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/publication-failed-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/publication-initial.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/publication-interrupted.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/publication-last-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/results.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/shared-only-last-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/shared-only-owner.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/shared-only-shared-only.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/timeout-retry-failed-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/timeout-retry-last-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/timeout-retry-retry.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/timeout-retry-timeout.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/waiter-cancel-last-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/waiter-cancel-owner.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/waiter-cancel-shared-reuse.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-production/waiter-cancel-waiter.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-publication-final-cache_session.py.captured
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-publication-final-final-diff.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-publication-final-verify_cache.py.captured
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-publication-final.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-publication-final/frozen-script-manifest.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-publication-final/publication-failed-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-publication-final/publication-initial.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-publication-final/publication-interrupted.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-publication-final/publication-last-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-publication-final/publication-retry.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-publication-final/results.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-qualified.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-qualified/waiter-cancel-owner.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-v2-followup.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-v2-followup/crash-admitted-failed-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-v2-followup/crash-admitted-last-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-v2-followup/crash-admitted-owner.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-v2-followup/crash-admitted-waiter.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-v2-followup/crash-before-admission-failed-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-v2-followup/crash-before-admission-last-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-v2-followup/crash-before-admission-owner.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-v2-followup/crash-before-admission-retry.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-v2-followup/frozen-script-manifest.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-v2-followup/matching-complete-last-report.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-v2-followup/matching-complete-owner.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-v2-followup/matching-complete-waiter.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-v2-followup/results.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-v2.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-v2/build.zig.zon-owner.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live-v2/results.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live/results.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/live/waiter-cancel-owner.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/process-commit-hook.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/process-final-function-audit.json
+ create mode 100644 experiments/development-loop-wave2-20261012/S02/store-final-function-audit.json
+ create mode 100644 scripts/verification_live_lifecycle.py

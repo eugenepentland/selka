@@ -1,0 +1,16 @@
+build-slot: FIFO ticket 441, position 21; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 441, position 17; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 441, position 11; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 441, position 4; earlier build tickets must run first; waiting (181s so far)
+build-slot: build slot 1, FIFO ticket 441 after 211s
+build.zig:35:42: error: expected type 'Build.LazyPath', found '*const [3:0]u8'
+    const fmt = b.addFmt(.{ .paths = &.{ "src", "build.zig", "build_verification.zig", "build_test_inputs.zig", "support.zig" }, .check = true });
+                                         ^~~~~
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Build.zig:2440:22: note: union declared here
+pub const LazyPath = union(enum) {
+                     ^~~~~
+referenced by:
+    runPackageScript [inlined]: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Build.zig:2392:50
+    main: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/compiler/configurer.zig:134:29
+    4 reference(s) hidden; use '-freference-trace=6' to see all references
+verification: FAIL: inventory preparation failed or its inputs changed (exit 1)

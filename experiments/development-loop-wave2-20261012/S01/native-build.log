@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 394, position 19; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 394, position 14; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 394, position 8; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 394, position 3; earlier build tickets must run first; waiting (181s so far)
+build-slot: build slot 1, FIFO ticket 394 after 216s

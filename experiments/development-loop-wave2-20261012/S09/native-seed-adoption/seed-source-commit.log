@@ -1,0 +1,10 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 15 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 20 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 8320 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 2 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/dl-wave2-S09-native-seed-20261012 1665d7402] Backport approved uncached native object lifetime repair to independent seed
+ 3 files changed, 75 insertions(+), 2 deletions(-)
+ create mode 100644 src/core/a01_native_driver_test.zig

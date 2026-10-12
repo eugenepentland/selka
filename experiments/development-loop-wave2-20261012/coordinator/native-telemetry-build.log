@@ -1,0 +1,41 @@
+build-slot: FIFO ticket 443, position 21; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 443, position 16; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 443, position 10; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 443, position 3; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 443, position 1; waiting for measurement or memory-accounting settle delay; waiting (241s so far)
+build-slot: FIFO ticket 443, position 1; waiting for measurement or memory-accounting settle delay; waiting (301s so far)
+build-slot: FIFO ticket 443, position 1; waiting for measurement or memory-accounting settle delay; waiting (362s so far)
+build-slot: FIFO ticket 443, position 1; waiting for measurement or memory-accounting settle delay; waiting (422s so far)
+build-slot: build slot 1, FIFO ticket 443 after 447s
+verification-tooling_unit
++- verification action tooling_unit member 0 w
+guardian/test: 28 test(s) selected
+guardian/test: test wall 0.03s
+guardian/test: PASS — 28 passed
+guardian/test: RESULT {"passed":28,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id tooling_unit --member 0 --root-id src/tooling_root_test.zig -- ./.zig-cache/o/454f7b509922319895added2987002af/tooling-unit-tests --cache-dir=./.zig-cache --seed=0x5020d49b --listen=-
+
+verification-text_scalar_unit
++- verification action text_scalar_unit member 0 w
+guardian/test: 9 test(s) selected
+guardian/test: test wall 0.12s; slowest over 50ms:
+guardian/test:   0.09s  format_spec_test.test.float format specifications render every CPython oracle row exactly
+guardian/test: PASS — 9 passed
+guardian/test: RESULT {"passed":9,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id text_scalar_unit --member 0 --root-id src/text_scalar_root_test.zig -- ./.zig-cache/o/c97f8a3001b35f1c023916ea815df301/text-scalar-unit-tests --cache-dir=./.zig-cache --seed=0x5020d49b --listen=-
+
+Build Summary: 11/11 steps succeeded; 37/37 tests passed
+verification-text_scalar_unit success
++- verification action text_scalar_unit member 0 9 pass (9 total) 246ms MaxRSS:18M
+   +- compile test text-scalar-unit-tests debug native success 982ms MaxRSS:162M
+   +- verification action input-discovery member 0 success 11s
+   +- verification action environment-discovery member 0 success 9ms
+verification-tooling_unit success
++- verification action tooling_unit member 0 28 pass (28 total) 163ms MaxRSS:18M
+   +- compile test tooling-unit-tests debug native success 916ms MaxRSS:166M
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (reused)
+verification-plan success
++- install generated to inventory.json success
+   +- WriteFile verification-inventory.json success
+

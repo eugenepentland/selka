@@ -1,0 +1,14 @@
+build-slot: FIFO ticket 619, position 6; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 619, position 2; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 619, position 2; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 619, position 2; earlier build tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 619, position 2; earlier build tickets must run first; waiting (240s so far)
+build-slot: FIFO ticket 619, position 2; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 619, position 2; earlier build tickets must run first; waiting (361s so far)
+build-slot: build slot 1, FIFO ticket 619 after 411s
+Build Summary: 4/4 steps succeeded
+prepare success
++- install s03-replayed-tests success
+   +- compile test s03-replayed-tests debug native success 304ms MaxRSS:162M
+      +- options success
+

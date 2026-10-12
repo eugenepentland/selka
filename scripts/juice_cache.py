@@ -10,7 +10,8 @@ import argparse
 from contextlib import ExitStack
 import hashlib
 import json
-import marshal
+import math
+import verification_code_identity as code_identity
 import os
 from pathlib import Path
 import re
@@ -29,8 +30,9 @@ from verification_snapshot import Snapshot, SnapshotError
 import verify_cache as verification
 
 ROOT = Path(__file__).resolve().parents[1]
-LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
-IMPLEMENTATION_INPUTS = ["scripts/juice_cache.py", "scripts/juice_evidence.py",
+_LOADED_CODE_OBJECT = sys._getframe().f_code
+LOADED_CODE_SHA256 = code_identity.loaded_code_sha256(_LOADED_CODE_OBJECT)
+IMPLEMENTATION_INPUTS = [*verification.COORDINATOR_INPUTS, "scripts/juice_cache.py", "scripts/juice_evidence.py",
     "scripts/juice_worker.py", "scripts/juice_provider.py",
     "scripts/fuzz_campaign_identity.py", "scripts/fuzz_campaign_store.py",
     "scripts/verification_snapshot.py", "scripts/cache_session.py", "scripts/verify_cache.py", "scripts/build-slot.sh",
@@ -229,11 +231,13 @@ def artifact_paths(record: dict, native: dict) -> dict[str, Path]:
             for kind in record["build"]["artifacts"]}
 
 
-def action_key(spec, native, common, target, host, env) -> str:
-    return verification.key({"domain": "juice-measurement-v1", "workload": spec,
+def action_key(spec, native, common, target, host, env, *, execution_limits=None) -> str:
+    return verification.key({"domain": "juice-measurement-v2", "workload": spec,
         "plan": native, "common": common.identity, "dependencies": target.identity,
         "host": host.identity, "environment": verification.key(env),
-        "implementation": [LOADED_CODE_SHA256, identity.LOADED_CODE_SHA256,
+        "execution_limits": execution_limits,
+        "loaded_code_format": [code_identity.FORMAT_VERSION, code_identity.LOADED_CODE_SHA256],
+            "implementation": [LOADED_CODE_SHA256, identity.LOADED_CODE_SHA256,
                            verification.LOADED_CODE_SHA256, verification_snapshot.LOADED_CODE_SHA256,
                            fuzz_campaign_store.LOADED_CODE_SHA256,
                            juice_evidence.LOADED_CODE_SHA256, juice_evidence.PARSER_CODE_SHA256,
@@ -267,6 +271,12 @@ def run_target(store, spec, native, args, env, bound, snapshots, bound_snapshots
                            artifacts={kind: str(value) for kind, value in artifacts.items()})
                 print("juice-cache: reuse " + spec["id"] + " (" + spec["reuse"] + " evidence)", flush=True)
                 return True
+        maximum = getattr(args, "max_actions", None)
+        executed = sum(action["state"] == "executed" for action in state["actions"])
+        if maximum is not None and executed >= maximum:
+            state["work_budget"]["exhausted"] = True
+            row.update(state="skipped", reason="admitted action work ceiling")
+            return False
         # A failing fresh capture must not revive a prior receipt by repairing a blob.
         store.discard(bound)
         argv = command(args, spec, "record", cpu=native["measurement"]["collector"]["cpu"])
@@ -275,8 +285,10 @@ def run_target(store, spec, native, args, env, bound, snapshots, bound_snapshots
         row.update(state="executed", record=str(path), fresh=True)
         print("juice-cache: capture " + spec["id"], flush=True)
         worker = [sys.executable, str(ROOT / "scripts/juice_worker.py"), *argv]
+        limits = {} if getattr(args, "action_timeout", None) is None else {
+            "limits": verification.ProcessLimits(args.action_timeout)}
         status, _held = verification.run_admitted(ROOT, "gate", worker, env,
-            lambda: require_stable(snapshots), timings=state["admissions"])
+            lambda: require_stable(snapshots), timings=state["admissions"], **limits)
         require_stable(snapshots)
         if status:
             row["status"] = status
@@ -296,6 +308,8 @@ def run_target(store, spec, native, args, env, bound, snapshots, bound_snapshots
             fresh_reasons.append("runtime provider resolution is unsupported or not fully guarded before capture")
         row.update(success=True, record_sha256=retained.record_digest,
                    artifacts={kind: str(path) for kind, path in artifacts.items()})
+        if not juice_evidence.reusable_artifacts(retained):
+            fresh_reasons.append("executable exceeds reusable evidence blob ceiling; fresh capture only")
         if not fresh_reasons:
             row["qualified"] = store.publish(bound, path, artifacts, want, lambda: require_stable(snapshots))
             if not row["qualified"]:
@@ -308,6 +322,8 @@ def save_report(args, state):
     state["counts"] = {"executed": sum(row["state"] == "executed" for row in state["actions"]),
                        "reused": sum(row["state"] == "reused" for row in state["actions"]),
                        "admissions": len(state["admissions"])}
+    completed = {row["id"] for row in state["actions"] if row.get("success") is True}
+    state["outstanding"] = [name for name in state["targets"] if name not in completed]
     verification.atomic_record(args.report, state)
 
 
@@ -343,7 +359,10 @@ def execute(args) -> int:
     args.report = (args.report or args.cache_dir / "last-run.json").absolute()
     args.suite = args.suite.absolute()
     state = {"version": "juice-run-v1", "complete": False, "success": False,
-             "actions": [], "admissions": [], "counts": {"executed": 0, "reused": 0, "admissions": 0}}
+             "actions": [], "admissions": [], "counts": {"executed": 0, "reused": 0, "admissions": 0},
+             "targets": [], "work_budget": {"max_actions": args.max_actions,
+                 "action_timeout_seconds": args.action_timeout, "scope": "admitted missing actions; qualified reuse consumes no work",
+                 "exhausted": False}}
     initialized = False
     published = False
     try:
@@ -354,6 +373,7 @@ def execute(args) -> int:
             session = verification_snapshot.DigestSession()
             declaration = stack.enter_context(Snapshot(ROOT, [], [args.suite], digest_session=session))
             specs = suite(args.suite, args.target)
+            state["targets"] = [spec["id"] for spec in specs]
             preliminary = [plan(args, spec, env) for spec in specs]
             binaries = [args.compiler]
             tools = provider_tools(env)
@@ -371,6 +391,8 @@ def execute(args) -> int:
             recipes.append("/etc/*.so.preload")
             common = stack.enter_context(Snapshot(ROOT, IMPLEMENTATION_INPUTS + recipes, files,
                                                   digest_session=session))
+            snapshots = [declaration, common]
+            verification.authenticate_code_identity(ROOT, common, snapshots, stack, session)
             host = verification.HostContext()
             targets = []
             scopes = []
@@ -384,7 +406,7 @@ def execute(args) -> int:
                                                             directory_membership=search or [], digest_session=session)))
                 if tools is not None and juice_provider.search_scopes(juice_provider.environment(native), env, tools) != search:
                     raise fuzz_campaign_store.InputsChanged("runtime provider search paths changed during planning")
-            snapshots = [declaration, common, host, *targets]
+            snapshots.extend([host, *targets])
             protect_outputs(args, snapshots)
             (args.cache_dir / "runs").mkdir(parents=True, exist_ok=True)
             save_report(args, state)
@@ -395,7 +417,8 @@ def execute(args) -> int:
             require_stable(snapshots)
             success = True
             for spec, native, target, search in zip(specs, native_plans, targets, scopes):
-                bound = action_key(spec, native, common, target, host, env)
+                bound = action_key(spec, native, common, target, host, env,
+                    execution_limits=verification.ProcessLimits(args.action_timeout).execution_identity())
                 if not run_target(store, spec, native, args, env, bound, snapshots, [common, target], state, tools, search, stack):
                     success = False
                     break
@@ -407,7 +430,7 @@ def execute(args) -> int:
             save_report(args, state)
             require_stable(snapshots)
             published = True
-        return 0 if success else 1
+        return 0 if success else 3 if state["work_budget"]["exhausted"] else 1
     except BaseException as error:
         state.update(complete=False, success=False)
         state["error"] = str(error) or type(error).__name__
@@ -461,6 +484,7 @@ def compare(args) -> int:
         runtime = stack.enter_context(Snapshot(ROOT, IMPLEMENTATION_INPUTS + recipes, declarations + tools,
                                                digest_session=session))
         inputs = [runtime]
+        verification.authenticate_code_identity(ROOT, runtime, inputs, stack, session)
         before, after = comparison_rows(args.baseline), comparison_rows(args.candidate)
         if before.keys() != after.keys():
             raise ValueError("comparison reports select different workloads")
@@ -557,6 +581,8 @@ def options(argv):
     capture.add_argument("--report", type=Path)
     capture.add_argument("--target", action="append", default=[])
     capture.add_argument("--fresh", action="store_true")
+    capture.add_argument("--max-actions", type=int, help="Cap admitted missing captures; exhaustion is partial (exit 3)")
+    capture.add_argument("--action-timeout", type=float, help="Explicit admitted action deadline in seconds, excluding queue time")
     capture.add_argument("--build-compiler")
     capture.add_argument("--collector", choices=("perf", "cachegrind", "callgrind"), default="perf")
     capture.add_argument("--profile", choices=("work", "runtime"), default="work")
@@ -577,6 +603,9 @@ def options(argv):
     for part in (capture, decision):
         part.add_argument("--compiler", type=Path, default=ROOT / "zig-out/bin/mylang")
     args = parser.parse_args(argv)
+    if args.command == "capture" and (args.max_actions is not None and not 1 <= args.max_actions <= 256
+            or args.action_timeout is not None and (not math.isfinite(args.action_timeout) or args.action_timeout <= 0)):
+        parser.error("max-actions must be 1..256; action-timeout must be positive finite seconds")
     if args.command == "capture" and (not 2 <= args.repeats <= 30 or args.cpu is not None and not 0 <= args.cpu <= 1023):
         parser.error("repeats must be 2..30 and CPU must be 0..1023")
     return args

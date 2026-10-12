@@ -203,7 +203,7 @@ This covers the registered `test` and `fmt-check` inventory, including Guardian,
 compiler tests, guest tests, documentation, and developer scripts. It owns
 build/gate admission itself: run it directly. Successful unchanged actions can
 be reused on subsequent requests. `--force` before `--zig` requests fresh action
-execution. The report is `.mylang-cache/verification-v1/last-run.json`; success
+execution. The report is `.mylang-cache/verification-v2/last-run.json`; success
 requires the command to exit zero and the report to record `success: true`.
 
 ## Everyday development

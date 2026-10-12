@@ -1,0 +1,89 @@
+build-slot: FIFO ticket 631, position 12; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 631, position 8; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 631, position 1; waiting for measurement or memory-accounting settle delay; waiting (120s so far)
+build-slot: build slot 2, FIFO ticket 631 after 125s
+passed tests::test_diamond_reaches_once
+passed tests::test_discovery_duplicates_cycle_and_root
+passed tests::test_empty
+passed tests::test_empty_protocol_golden
+passed tests::test_malformed_requests_rejected
+passed tests::test_self_recursion_and_disconnected
+6 passed, 0 cached, 0 failed, 0 skipped
+passed tests::test_diamond_reaches_once
+passed tests::test_discovery_duplicates_cycle_and_root
+passed tests::test_empty
+passed tests::test_empty_protocol_golden
+passed tests::test_malformed_requests_rejected
+passed tests::test_self_recursion_and_disconnected
+6 passed, 0 cached, 0 failed, 0 skipped
+19 malformed frames, reply overflow, missing file, output failure, 100 random oracle graphs: passed
+1000 nodes/100 tests/10000 edges: request=44472 reply=412068 bytes; min=0.005019s median=0.006101s max=0.006363s
+bounded reply-overflow rejection: 0.086221s
+19 malformed frames, reply overflow, missing file, output failure, 100 random oracle graphs: passed
+1000 nodes/100 tests/10000 edges: request=44472 reply=412068 bytes; min=0.011451s median=0.015379s max=0.016409s
+bounded reply-overflow rejection: 0.190207s
+passed tests::test_all_roots_excluded_duplicates_and_cycles
+passed tests::test_bad_ids_and_digests_rejected
+passed tests::test_diamond_and_disconnected
+passed tests::test_digest_order_and_distinct_equal_digest_multiplicity
+passed tests::test_empty_and_empty_roots
+passed tests::test_empty_protocol_golden
+passed tests::test_incremental_cycle_sharing_and_repeated_roots
+passed tests::test_incremental_cycle_splitting_removes_dependencies
+passed tests::test_incremental_malformed_reverse_index_is_refused
+passed tests::test_incremental_retained_groups_cannot_merge_unreachable_nodes
+passed tests::test_incremental_retained_groups_cannot_split_recursive_nodes
+passed tests::test_incremental_retained_indexes_reuse_without_closure_work
+passed tests::test_incremental_single_root_chain_has_linear_closure_work
+passed tests::test_malformed_and_unsupported_contract_rejected
+14 passed, 0 cached, 0 failed, 0 skipped
+passed tests::test_all_roots_excluded_duplicates_and_cycles
+passed tests::test_bad_ids_and_digests_rejected
+passed tests::test_diamond_and_disconnected
+passed tests::test_digest_order_and_distinct_equal_digest_multiplicity
+passed tests::test_empty_and_empty_roots
+passed tests::test_empty_protocol_golden
+passed tests::test_incremental_cycle_sharing_and_repeated_roots
+passed tests::test_incremental_cycle_splitting_removes_dependencies
+passed tests::test_incremental_malformed_reverse_index_is_refused
+passed tests::test_incremental_retained_groups_cannot_merge_unreachable_nodes
+passed tests::test_incremental_retained_groups_cannot_split_recursive_nodes
+passed tests::test_incremental_retained_indexes_reuse_without_closure_work
+passed tests::test_incremental_single_root_chain_has_linear_closure_work
+passed tests::test_malformed_and_unsupported_contract_rejected
+14 passed, 0 cached, 0 failed, 0 skipped
+incremental v2: 408 independent cold/retained/warm batches, 3 coherent invalid SCC partitions, creation/splitting, 13 malformed frames: passed
+100000-node single-root chain: closure_nodes=200000 closure_edges=99999 time=0.076005s
+100000-node retained chain: index_nodes=700000 index_edges=599994 closure_work=0 time=0.060644s
+21 malformed frames, missing file, output failure, 102 independent oracle graphs: passed
+bounded work rejection: 0.036966s
+1000 nodes/100 batches/10000 edges: request=76884 reply=400068 bytes; min=0.018085s median=0.024774s max=0.026460s
+incremental v2: 408 independent cold/retained/warm batches, 3 coherent invalid SCC partitions, creation/splitting, 13 malformed frames: passed
+100000-node single-root chain: closure_nodes=200000 closure_edges=99999 time=0.103377s
+100000-node retained chain: index_nodes=700000 index_edges=599994 closure_work=0 time=0.088194s
+21 malformed frames, missing file, output failure, 102 independent oracle graphs: passed
+bounded work rejection: 0.126393s
+1000 nodes/100 batches/10000 edges: request=76884 reply=400068 bytes; min=0.026811s median=0.029175s max=0.039662s
+	Command being timed: "python3 .tmp/S09-native-component-fixture/selfhost/test_component_native.py --builder /home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/S09-qualified-component-builder --zig /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --component-dir /home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/S09-native-component-install"
+	User time (seconds): 45.21
+	System time (seconds): 7.25
+	Percent of CPU this job got: 114%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:45.94
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 287032
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 199
+	Minor (reclaiming a frame) page faults: 2225231
+	Voluntary context switches: 36634
+	Involuntary context switches: 2288
+	Swaps: 0
+	File system inputs: 108528
+	File system outputs: 831560
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

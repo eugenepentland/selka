@@ -1,0 +1,8 @@
+build-slot: FIFO ticket 641, position 8; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 641, position 3; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 2, FIFO ticket 641 after 80s
+Build Summary: 3/3 steps succeeded
+verification-plan success
++- install generated to inventory.json success
+   +- WriteFile verification-inventory.json success
+

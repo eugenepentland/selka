@@ -1,0 +1,1026 @@
+{
+  "groups": [
+    {
+      "id": "component-preparation",
+      "target": "verification-component-preparation",
+      "cacheable": false,
+      "reason": "component manifests and installed outputs require validation"
+    },
+    {
+      "id": "input-discovery",
+      "target": "verification-input-discovery",
+      "cacheable": false,
+      "reason": "directory membership must be discovered at execution time"
+    },
+    {
+      "id": "environment-discovery",
+      "target": "verification-environment-discovery",
+      "cacheable": false,
+      "reason": "live inherited environment must be discovered at execution time"
+    },
+    {
+      "id": "core",
+      "target": "verification-core",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "tooling_unit",
+      "target": "verification-tooling_unit",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "memory_budget",
+      "target": "verification-memory_budget",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "unit",
+      "target": "verification-unit",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "cli",
+      "target": "verification-cli",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "golden",
+      "target": "verification-golden",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "idioms_self",
+      "target": "verification-idioms_self",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "idioms",
+      "target": "verification-idioms",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "incremental",
+      "target": "verification-incremental",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "interfaces",
+      "target": "verification-interfaces",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "interface_oracle",
+      "target": "verification-interface_oracle",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "parser_hints",
+      "target": "verification-parser_hints",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "friction",
+      "target": "verification-friction",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "tooling_isolation",
+      "target": "verification-tooling_isolation",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "application_cache",
+      "target": "verification-application_cache",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "component_builder",
+      "target": "verification-component_builder",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "component_native",
+      "target": "verification-component_native",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "component-support",
+      "target": "verification-component-support",
+      "cacheable": true,
+      "reason": "exact native support executable and declared inputs"
+    },
+    {
+      "id": "selfhost_numeric",
+      "target": "verification-selfhost_numeric",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "spec-history",
+      "target": "verification-spec-history",
+      "cacheable": false,
+      "reason": "SPEC replay reads git history and creates repositories"
+    },
+    {
+      "id": "juice_pure",
+      "target": "verification-juice_pure",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "juice",
+      "target": "verification-juice",
+      "cacheable": false,
+      "reason": "native performance collectors and host state require fresh execution"
+    },
+    {
+      "id": "juice-runtime",
+      "target": "verification-juice-runtime",
+      "cacheable": false,
+      "reason": "runtime collectors observe CPU, scheduler and current host state"
+    },
+    {
+      "id": "identity-qualification",
+      "target": "verification-identity-qualification",
+      "cacheable": false,
+      "reason": "compiler identity qualification produces temporary compiler artifacts"
+    },
+    {
+      "id": "affected",
+      "target": "verification-affected",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "coverage_self",
+      "target": "verification-coverage_self",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "coverage",
+      "target": "verification-coverage",
+      "cacheable": false,
+      "reason": "fixture membership and negative path lookups outside source recipes require freshness"
+    },
+    {
+      "id": "manifest_self",
+      "target": "verification-manifest_self",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "verification_cache",
+      "target": "verification-verification_cache",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "verification_session",
+      "target": "verification-verification_session",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "fuzz_campaign",
+      "target": "verification-fuzz_campaign",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "juice_cache",
+      "target": "verification-juice_cache",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "doc-coverage",
+      "target": "verification-doc-coverage",
+      "cacheable": true,
+      "reason": "complete document and feature-contract scope"
+    },
+    {
+      "id": "guest",
+      "target": "verification-guest",
+      "cacheable": false,
+      "reason": "guest Host and external-effect eligibility remains compiler-authoritative"
+    },
+    {
+      "id": "language",
+      "target": "verification-language",
+      "cacheable": false,
+      "reason": "guest Host and external-effect eligibility requires execution-time admission"
+    },
+    {
+      "id": "doctest",
+      "target": "verification-doctest",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "zig-format",
+      "target": "verification-zig-format",
+      "cacheable": true,
+      "reason": "exact formatter and complete source-format scope"
+    },
+    {
+      "id": "my_format",
+      "target": "verification-my_format",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "my_format_self",
+      "target": "verification-my_format_self",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "noalloc_lint",
+      "target": "verification-noalloc_lint",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "embedded_migration",
+      "target": "verification-embedded_migration",
+      "cacheable": true,
+      "reason": "complete declared whole-action inputs"
+    },
+    {
+      "id": "guardian",
+      "target": "verification-guardian",
+      "cacheable": false,
+      "reason": "Guardian source, git scope and mutable policy validation require freshness"
+    }
+  ],
+  "coverage": {
+    "required_actions": 95,
+    "registered_actions": 95,
+    "unknown_actions": []
+  },
+  "action_metadata": [
+    {
+      "id": "component-preparation",
+      "steps": [
+        {
+          "label": "verification action component-preparation member 0",
+          "original_label": "run exe selka-components",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "input-discovery",
+      "steps": [
+        {
+          "label": "verification action input-discovery member 0",
+          "original_label": "hash declared test inputs",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "environment-discovery",
+      "steps": [
+        {
+          "label": "verification action environment-discovery member 0",
+          "original_label": "record the test environment",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "core",
+      "steps": [
+        {
+          "label": "verification action core member 0",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action core member 1",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action core member 2",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action core member 3",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action core member 4",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action core member 5",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action core member 6",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action core member 7",
+          "original_label": "run test",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "tooling_unit",
+      "steps": [
+        {
+          "label": "verification action tooling_unit member 0",
+          "original_label": "run test tooling-unit-tests",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "memory_budget",
+      "steps": [
+        {
+          "label": "verification action memory_budget member 0",
+          "original_label": "run test",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "unit",
+      "steps": [
+        {
+          "label": "verification action unit member 1",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action unit member 2",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action unit member 3",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action unit member 4",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action unit member 5",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action unit member 6",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action unit member 7",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action unit member 8",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action unit member 9",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action unit member 10",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action unit member 11",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action unit member 12",
+          "original_label": "run test",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "cli",
+      "steps": [
+        {
+          "label": "verification action cli member 1",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action cli member 2",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action cli member 3",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action cli member 4",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action cli member 5",
+          "original_label": "run test",
+          "kind": "run"
+        },
+        {
+          "label": "verification action cli member 6",
+          "original_label": "run test",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "golden",
+      "steps": [
+        {
+          "label": "verification action golden member 0",
+          "original_label": "run test",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "idioms_self",
+      "steps": [
+        {
+          "label": "verification action idioms_self member 0",
+          "original_label": "python3 tests/idiom_probes.py --self-test",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "idioms",
+      "steps": [
+        {
+          "label": "verification action idioms member 0",
+          "original_label": "python3 tests/idiom_probes.py --compiler",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "incremental",
+      "steps": [
+        {
+          "label": "verification action incremental member 0",
+          "original_label": "python3 tests/incremental_diff.py",
+          "kind": "run"
+        },
+        {
+          "label": "verification action incremental member 1",
+          "original_label": "python3 tests/incremental_diff.py --project tests/fixtures/module_projects",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "interfaces",
+      "steps": [
+        {
+          "label": "verification action interfaces member 0",
+          "original_label": "python3 tests/interface_diff.py",
+          "kind": "run"
+        },
+        {
+          "label": "verification action interfaces member 1",
+          "original_label": "python3 tests/interface_diff.py --project tests/fixtures/interfaces_generic",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "interface_oracle",
+      "steps": [
+        {
+          "label": "verification action interface_oracle member 0",
+          "original_label": "python3 tests/interface_oracle.py",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "parser_hints",
+      "steps": [
+        {
+          "label": "verification action parser_hints member 0",
+          "original_label": "python3 tests/parser_hints.py",
+          "kind": "run"
+        },
+        {
+          "label": "verification action parser_hints member 1",
+          "original_label": "python3 tests/parser_hints.py --compiler",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "friction",
+      "steps": [
+        {
+          "label": "verification action friction member 0",
+          "original_label": "python3 tests/test_friction_harvest.py",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "tooling_isolation",
+      "steps": [
+        {
+          "label": "verification action tooling_isolation member 0",
+          "original_label": "python3 tests/tooling_cache_isolation.py --compiler",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "application_cache",
+      "steps": [
+        {
+          "label": "verification action application_cache member 0",
+          "original_label": "python3 tests/application_cache.py --smoke --compiler",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "component_builder",
+      "steps": [
+        {
+          "label": "verification action component_builder member 0",
+          "original_label": "python3 selfhost/test_components.py",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "component_native",
+      "steps": [
+        {
+          "label": "verification action component_native member 0",
+          "original_label": "pure Selka and native component qualification",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "component-support",
+      "steps": [
+        {
+          "label": "verification action component-support member 0",
+          "original_label": "run test",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "selfhost_numeric",
+      "steps": [
+        {
+          "label": "verification action selfhost_numeric member 0",
+          "original_label": "python3 selfhost/tests/run_lexer_diff.py --compiler",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "spec-history",
+      "steps": [
+        {
+          "label": "verification action spec-history member 0",
+          "original_label": "run python3",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "juice_pure",
+      "steps": [
+        {
+          "label": "verification action juice_pure member 0",
+          "original_label": "Juice synthetic contracts and reports",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "juice",
+      "steps": [
+        {
+          "label": "verification action juice member 0",
+          "original_label": "Juice native runner integration",
+          "kind": "run"
+        },
+        {
+          "label": "verification action juice member 1",
+          "original_label": "python3 tests/test_juice_native.py",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "juice-runtime",
+      "steps": [
+        {
+          "label": "verification action juice-runtime member 0",
+          "original_label": "run python3",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "identity-qualification",
+      "steps": [
+        {
+          "label": "verification action identity-qualification member 0",
+          "original_label": "run python3",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "affected",
+      "steps": [
+        {
+          "label": "verification action affected member 0",
+          "original_label": "python3 tests/test_affected_tests.py",
+          "kind": "run"
+        },
+        {
+          "label": "verification action affected member 1",
+          "original_label": "python3 tests/test_focused_test.py",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "coverage_self",
+      "steps": [
+        {
+          "label": "verification action coverage_self member 0",
+          "original_label": "python3 tests/test_inputs_coverage.py --self-test",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "coverage",
+      "steps": [
+        {
+          "label": "verification action coverage member 0",
+          "original_label": "python3 tests/test_inputs_coverage.py",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "manifest_self",
+      "steps": [
+        {
+          "label": "verification action manifest_self member 0",
+          "original_label": "python3 tests/input_manifest.py --self-test",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "verification_cache",
+      "steps": [
+        {
+          "label": "verification action verification_cache member 0",
+          "original_label": "python3 scripts/verify_cache_test.py",
+          "kind": "run"
+        },
+        {
+          "label": "verification action verification_cache member 1",
+          "original_label": "python3 scripts/verification_snapshot_test.py",
+          "kind": "run"
+        },
+        {
+          "label": "verification action verification_cache member 2",
+          "original_label": "python3 scripts/verification_process_test.py",
+          "kind": "run"
+        },
+        {
+          "label": "verification action verification_cache member 3",
+          "original_label": "python3 scripts/verification_report_test.py",
+          "kind": "run"
+        },
+        {
+          "label": "verification action verification_cache member 4",
+          "original_label": "python3 scripts/verification_budgets_test.py",
+          "kind": "run"
+        },
+        {
+          "label": "verification action verification_cache member 5",
+          "original_label": "python3 scripts/build_slot_test.py",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "verification_session",
+      "steps": [
+        {
+          "label": "verification action verification_session member 0",
+          "original_label": "python3 scripts/cache_session_test.py",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "fuzz_campaign",
+      "steps": [
+        {
+          "label": "verification action fuzz_campaign member 0",
+          "original_label": "python3 scripts/fuzz_campaign_store_test.py",
+          "kind": "run"
+        },
+        {
+          "label": "verification action fuzz_campaign member 1",
+          "original_label": "python3 scripts/fuzz_campaign_test.py",
+          "kind": "run"
+        },
+        {
+          "label": "verification action fuzz_campaign member 2",
+          "original_label": "python3 scripts/fuzz_coverage_test.py",
+          "kind": "run"
+        },
+        {
+          "label": "verification action fuzz_campaign member 3",
+          "original_label": "python3 tests/test_differential_corpus.py",
+          "kind": "run"
+        },
+        {
+          "label": "verification action fuzz_campaign member 4",
+          "original_label": "python3 scripts/cache_retention_test.py",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "juice_cache",
+      "steps": [
+        {
+          "label": "verification action juice_cache member 0",
+          "original_label": "python3 scripts/juice_cache_test.py",
+          "kind": "run"
+        },
+        {
+          "label": "verification action juice_cache member 1",
+          "original_label": "python3 tests/test_juice_evidence.py",
+          "kind": "run"
+        },
+        {
+          "label": "verification action juice_cache member 2",
+          "original_label": "python3 scripts/juice_provider_test.py",
+          "kind": "run"
+        },
+        {
+          "label": "verification action juice_cache member 3",
+          "original_label": "python3 scripts/juice_worker_test.py",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "doc-coverage",
+      "steps": [
+        {
+          "label": "verification action doc-coverage member 0",
+          "original_label": "run exe mylang",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "guest",
+      "steps": [
+        {
+          "label": "verification action guest member 0",
+          "original_label": "run exe mylang",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "language",
+      "steps": [
+        {
+          "label": "verification action language member 0",
+          "original_label": "mylang test tests/lang",
+          "kind": "run"
+        },
+        {
+          "label": "verification action language member 1",
+          "original_label": "mylang test tests/lang --unoptimized",
+          "kind": "run"
+        },
+        {
+          "label": "verification action language member 2",
+          "original_label": "mylang test tests/lang --release --verify-facts (leak check)",
+          "kind": "run"
+        },
+        {
+          "label": "verification action language member 3",
+          "original_label": "mylang test tests/value_semantics",
+          "kind": "run"
+        },
+        {
+          "label": "verification action language member 4",
+          "original_label": "mylang test tests/value_semantics --unoptimized",
+          "kind": "run"
+        },
+        {
+          "label": "verification action language member 5",
+          "original_label": "mylang test tests/value_semantics --release --verify-facts (leak check)",
+          "kind": "run"
+        },
+        {
+          "label": "verification action language member 6",
+          "original_label": "mylang test tests/ported",
+          "kind": "run"
+        },
+        {
+          "label": "verification action language member 7",
+          "original_label": "mylang test tests/ported --unoptimized",
+          "kind": "run"
+        },
+        {
+          "label": "verification action language member 8",
+          "original_label": "mylang test tests/ported --release --verify-facts (leak check)",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "doctest",
+      "steps": [
+        {
+          "label": "verification action doctest member 0",
+          "original_label": "mylang doctest .",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "zig-format",
+      "steps": [
+        {
+          "label": "verification action zig-format member 0",
+          "original_label": "zig fmt --check",
+          "kind": "fmt"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "my_format",
+      "steps": [
+        {
+          "label": "verification action my_format member 0",
+          "original_label": "check live .my corpus formatting",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "my_format_self",
+      "steps": [
+        {
+          "label": "verification action my_format_self member 0",
+          "original_label": "verify .my formatting gate",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "noalloc_lint",
+      "steps": [
+        {
+          "label": "verification action noalloc_lint member 0",
+          "original_label": "lint live noalloc contracts",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "embedded_migration",
+      "steps": [
+        {
+          "label": "verification action embedded_migration member 0",
+          "original_label": "verify embedded migration staging",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    },
+    {
+      "id": "guardian",
+      "steps": [
+        {
+          "label": "verification action guardian member 0",
+          "original_label": "run ../guardian-zig/zig-out/bin/guardian-check",
+          "kind": "run"
+        },
+        {
+          "label": "verification action guardian member 1",
+          "original_label": "run ../guardian-zig/zig-out/bin/guardian-check",
+          "kind": "run"
+        },
+        {
+          "label": "verification action guardian member 2",
+          "original_label": "run ../guardian-zig/zig-out/bin/guardian-check",
+          "kind": "run"
+        }
+      ],
+      "identity_scope": "group-local-v1"
+    }
+  ]
+}

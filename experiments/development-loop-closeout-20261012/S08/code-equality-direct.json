@@ -1,0 +1,150 @@
+{
+  "fuzz_campaign_store": {
+    "equal_fresh": true,
+    "filename": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/scripts/fuzz_campaign_store.py",
+    "fresh_hashes": {
+      "5": "ecf40c2070144b1b92089618c15440a1fdbd1a94a93f4e2a8e8f207df485bd70"
+    },
+    "loaded_hash": "8bfcd3aea42469948c91fc50da05cb6e74053e1092caaf9119e39b373ba6436a",
+    "marshal_version_compatibility": {
+      "0": {
+        "sha256": "7a70e5bf4bb0f73d24b909953c48d981b57c62290f6ae01d86c45c06d9251b4b",
+        "supported": true
+      },
+      "1": {
+        "sha256": "7a70e5bf4bb0f73d24b909953c48d981b57c62290f6ae01d86c45c06d9251b4b",
+        "supported": true
+      },
+      "2": {
+        "sha256": "7a70e5bf4bb0f73d24b909953c48d981b57c62290f6ae01d86c45c06d9251b4b",
+        "supported": true
+      },
+      "3": {
+        "sha256": "ce57a1f356cca2ec1b1fe7c299b39769a7177c8f01caa271b0624928dcfeb337",
+        "supported": true
+      },
+      "4": {
+        "sha256": "331c23ded6e164b2e58872b108fcf0d0b973851e44ca378f3196e59d198d72ab",
+        "supported": true
+      },
+      "5": {
+        "sha256": "331c23ded6e164b2e58872b108fcf0d0b973851e44ca378f3196e59d198d72ab",
+        "supported": true
+      }
+    },
+    "post_hashes": {
+      "5": "331c23ded6e164b2e58872b108fcf0d0b973851e44ca378f3196e59d198d72ab"
+    }
+  },
+  "verification_process": {
+    "equal_fresh": true,
+    "filename": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/scripts/verification_process.py",
+    "fresh_hashes": {
+      "5": "aebad7d31f3dec204d0eced20c1670d8c58714b0f0cb1b9f716da041f080e938"
+    },
+    "loaded_hash": "be9a7d08f6758834c159ac953e0304cba9ceb321bcf875708634f536f43262a9",
+    "marshal_version_compatibility": {
+      "0": {
+        "sha256": "9101ce34e022e3a1a20ac190b17f8616570e3e95cb8ef8ecae682f6c41e9d9e8",
+        "supported": true
+      },
+      "1": {
+        "sha256": "9101ce34e022e3a1a20ac190b17f8616570e3e95cb8ef8ecae682f6c41e9d9e8",
+        "supported": true
+      },
+      "2": {
+        "sha256": "5f56ed5b5ba6a07a49571db3818b73cb733e0ff4148560f0c7836d2d2f993066",
+        "supported": true
+      },
+      "3": {
+        "sha256": "f2797b900d248b147906e8625cbb0d45a14d63417d5f384d3cd0cefea9640aab",
+        "supported": true
+      },
+      "4": {
+        "sha256": "be9a7d08f6758834c159ac953e0304cba9ceb321bcf875708634f536f43262a9",
+        "supported": true
+      },
+      "5": {
+        "sha256": "be9a7d08f6758834c159ac953e0304cba9ceb321bcf875708634f536f43262a9",
+        "supported": true
+      }
+    },
+    "post_hashes": {
+      "5": "be9a7d08f6758834c159ac953e0304cba9ceb321bcf875708634f536f43262a9"
+    }
+  },
+  "verification_snapshot": {
+    "equal_fresh": true,
+    "filename": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/scripts/verification_snapshot.py",
+    "fresh_hashes": {
+      "5": "c7412f3940d1cc482338bf450c1ca0ef867cdc30e40eae1d25e54a7c05aff85b"
+    },
+    "loaded_hash": "d5dbc83ba16e8ae0c188ec460b1354cdb1377ffb4286af4e482edc48c0cdeaf2",
+    "marshal_version_compatibility": {
+      "0": {
+        "error": "unmarshallable object",
+        "supported": false
+      },
+      "1": {
+        "error": "unmarshallable object",
+        "supported": false
+      },
+      "2": {
+        "error": "unmarshallable object",
+        "supported": false
+      },
+      "3": {
+        "error": "unmarshallable object",
+        "supported": false
+      },
+      "4": {
+        "error": "unmarshallable object",
+        "supported": false
+      },
+      "5": {
+        "sha256": "97f2d74f7a8003ba0add5cbcbece75e9651577ab93c78bd8bf160665eb9e6611",
+        "supported": true
+      }
+    },
+    "post_hashes": {
+      "5": "97f2d74f7a8003ba0add5cbcbece75e9651577ab93c78bd8bf160665eb9e6611"
+    }
+  },
+  "verify_cache": {
+    "equal_fresh": true,
+    "filename": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/scripts/verify_cache.py",
+    "fresh_hashes": {
+      "5": "2fd1651dd2ab84a3379a12d2bcc835cfbc007d236e5878ed3b9ba827293d1305"
+    },
+    "loaded_hash": "880d6633fc4dc3aaa78631fea034aad7a7f7199f964edee7f6a5828f27b58726",
+    "marshal_version_compatibility": {
+      "0": {
+        "error": "unmarshallable object",
+        "supported": false
+      },
+      "1": {
+        "error": "unmarshallable object",
+        "supported": false
+      },
+      "2": {
+        "error": "unmarshallable object",
+        "supported": false
+      },
+      "3": {
+        "error": "unmarshallable object",
+        "supported": false
+      },
+      "4": {
+        "error": "unmarshallable object",
+        "supported": false
+      },
+      "5": {
+        "sha256": "880d6633fc4dc3aaa78631fea034aad7a7f7199f964edee7f6a5828f27b58726",
+        "supported": true
+      }
+    },
+    "post_hashes": {
+      "5": "880d6633fc4dc3aaa78631fea034aad7a7f7199f964edee7f6a5828f27b58726"
+    }
+  }
+}

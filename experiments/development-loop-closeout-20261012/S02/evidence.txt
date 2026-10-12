@@ -1,0 +1,32 @@
+C0 fbfcaa7a923186a8e773c3760f81c10aa345a432
+Mode: Python developer tooling only, Linux; no Zig compilation, native full gate, timing admission, CPU pinning, or cache clearing.
+Environment: TMPDIR=$PWD/.tmp ZIG_LOCAL_CACHE_DIR=$PWD/.zig-cache ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache
+Python 3.14.4
+Pinned Zig .zigversion: 0.17.0-dev.1683+5ceec001b
+Pinned tool SHA256 /home/epentland/.local/bin/zig: 1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f
+Final source SHA256:
+8dd8dd4d04482f58a94d03f147362dbace897c7f5f76715a72ac7c721451479d scripts/verification_process.py
+fb61e2f75625b8e6cc60c66dc333b45a3c52a5b9d1779e7fd9e24080c73f029e scripts/verification_budgets.py
+570afb3c75904ad69a6ddcd3e240dbf7cd3156d603e257a664c63e6c3531e312 scripts/verification_policy.py
+
+Commands and statuses (all process/unit suite executions admitted under normal build slots):
+scripts/build-slot.sh build python3 -m unittest discover -s scripts -p verification_process_test.py
+  status 0; 32 tests; process-tests.log; prior to startup-mask additional test.
+scripts/build-slot.sh build python3 -m unittest discover -s scripts -p 'verification_*test.py'
+  status 1; 131 tests; focused-tests.log; new helper marker observed before write completed.
+scripts/build-slot.sh build python3 -m unittest discover -s scripts -p 'verification_*test.py'
+  status 1; 132 tests; focused-tests-final.log; existing admission-helper marker observed before write completed.
+scripts/build-slot.sh build python3 -m unittest discover -s scripts -p 'verification_*test.py'
+  status 0; 132 tests; focused-tests-qualified.log; atomic marker fixes, lifecycle source changed during suite, not final-source qualification.
+scripts/build-slot.sh build python3 -m unittest discover -s scripts -p 'verification_*test.py'
+  status 0; 133 tests; focused-tests-release.log; final lifecycle source, before the added work-unit policy validation.
+scripts/build-slot.sh build python3 -m unittest discover -s scripts -p verification_policy_test.py
+  status 0; 11 tests; policy-tests-final.log; final policy source and work-unit validation.
+git diff --check
+  status 0.
+
+Selected/executed/reused/partial: final broad suite 133 selected, 133 executed, 0 reused, 0 partial. Final changed-policy check 11 selected/executed, 0 reused, 0 partial. These counts are focused developer unittest coverage, not a full verification inventory or complete gate.
+Operational durations printed by unittest are not isolated performance comparisons and are not deadline/headroom calibration.
+Cold/warm/edit latency, aggregate RSS, per-process RSS, artifacts, final native gate and p95 acceptance: unavailable/unqualified here; S10 owns integrated qualification.
+Python executable SHA256 /usr/bin/python3.14: 52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41
+Implementation commit hook: status 0; normal Guardian all . --gate; 88 checks passed. Report-only findings remain reported in implementation-commit.log; FEEDBACK.md unchanged.

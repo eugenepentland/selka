@@ -1,0 +1,31 @@
+{
+  "actual_writer_inventory_version": 2,
+  "actual_writer_manifest_sha256": "e0e0618e51e8d99aff15b0477863f19f451528d8ff7242a73023ba5ab8034a43",
+  "actual_tool_closure_digest": "0587ea24b9ec68190f57f79f35089831f81bbf82fae13712209f7220339ba6ad",
+  "actual_build_context_digest": "5552e8a50f5d606972c896141febe3d0b0177cccc03ae160ff36a5b35b9a3605",
+  "actions": [
+    {
+      "action_id": "tooling_unit",
+      "producer": "tooling-units",
+      "source_count": 11,
+      "action_payload_sha256": "a83be181416e69b2ba4da290403c40271af2d8fe7dd55267dcaa01ab94411236",
+      "artifact": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.zig-cache/o/454f7b509922319895added2987002af/tooling-unit-tests",
+      "artifact_sha256": "1880445ac053cd84575b3aa4b8bd983cc646b11978cb26a969cfa1ac693cdd50",
+      "missing_metadata_fallback": true
+    },
+    {
+      "action_id": "text_scalar_unit",
+      "producer": "text-scalar-units",
+      "source_count": 7,
+      "action_payload_sha256": "4cfa9543ffbe5eb95fe25867ddaf3c42b8048b5cc72e917989ba6cba1258f4e1",
+      "artifact": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.zig-cache/o/c97f8a3001b35f1c023916ea815df301/text-scalar-unit-tests",
+      "artifact_sha256": "9d7d2ba52b1f2c8633fabdbaa98b8f2dc0624697984f382a3e2d0d97e2f9f83a",
+      "missing_metadata_fallback": true
+    }
+  ],
+  "all_live_snapshots_stable": true,
+  "declared_dynamic_fixture_sources": true,
+  "declaration_test_self_input": true,
+  "exported_current_lists_agree": false,
+  "production_receipt_created": false
+}

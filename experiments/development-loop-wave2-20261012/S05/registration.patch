@@ -1,0 +1,46 @@
+--- a/build.zig
++++ b/build.zig
+@@ -943,7 +943,7 @@
+     coverage_step.dependOn(&coverage_run.step);
+     test_step.dependOn(coverage_step);
+     const verification_tests = b.step("test-verification-cache", "Verify action receipt admission and immutable input snapshots");
+-    for ([_][]const u8{ "scripts/verify_cache_test.py", "scripts/verification_snapshot_test.py", "scripts/verification_process_test.py", "scripts/verification_report_test.py", "scripts/verification_budgets_test.py", "scripts/build_slot_test.py", "scripts/verification_telemetry_test.py", "scripts/verification_producers_test.py", "scripts/verification_policy_test.py", "scripts/verification_profiles_test.py", "scripts/development_loop_workloads_test.py" }, 0..) |script, member| {
++    for ([_][]const u8{ "scripts/verify_cache_test.py", "scripts/verification_snapshot_test.py", "scripts/verification_process_test.py", "scripts/verification_report_test.py", "scripts/verification_budgets_test.py", "scripts/build_slot_test.py", "scripts/verification_telemetry_test.py", "scripts/verification_producers_test.py", "scripts/verification_policy_test.py", "scripts/verification_profiles_test.py", "scripts/verification_qualification_test.py", "scripts/development_loop_workloads_test.py" }, 0..) |script, member| {
+         const verification_run = driver(b, b.fmt("python3 {s}", .{script}), rss.script, "verification_cache");
+         const module = std.fs.path.stem(script);
+         verification_run.addArgs(&.{ "python3", "scripts/verification_telemetry.py", "--action-id", "verification_cache", "--member", b.fmt("{d}", .{member}), "--output-directory-env", "MYLANG_TEST_TELEMETRY_DIR", module });
+--- a/build_test_inputs.zig
++++ b/build_test_inputs.zig
+@@ -193,6 +193,8 @@
+     "src/timings_test.zig",
+     "src/tooling_root_test.zig",
+     "scripts/verification_profiles_test.py",
++    "scripts/verification_qualification_test.py",
++    "test/fixtures/long-qualification/",
+     "scripts/development_loop_workloads_test.py",
+     "experiments/development-loop-closeout-20261012/S05/C0-inventory.json",
+     "experiments/development-loop-closeout-20261012/S05/workloads/oracle.py",
+@@ -200,6 +202,7 @@
+     "scripts/fuzz_campaign_store.py",
+     "scripts/verify_cache.py",
+     "scripts/verification_profiles.py",
++    "scripts/verification_qualification.py",
+     "scripts/verification_producers.py",
+     "scripts/verification_telemetry.py",
+     "scripts/verification_snapshot.py",
+@@ -241,6 +244,7 @@
+     "scripts/fuzz_coverage_test.py",
+     "scripts/verify_cache.py",
+     "scripts/verification_profiles.py",
++    "scripts/verification_qualification.py",
+     "scripts/verification_producers.py",
+     "scripts/verification_telemetry.py",
+     "scripts/verification_snapshot.py",
+@@ -275,6 +279,7 @@
+     "scripts/fuzz_campaign_store.py",
+     "scripts/verify_cache.py",
+     "scripts/verification_profiles.py",
++    "scripts/verification_qualification.py",
+     "scripts/verification_producers.py",
+     "scripts/verification_telemetry.py",
+     "scripts/verification_snapshot.py",

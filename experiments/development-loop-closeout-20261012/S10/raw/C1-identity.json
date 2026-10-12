@@ -1,0 +1,40 @@
+{
+  "source_revision": "a9a3208a4f3edbf17170cfc18d57f5f999af49c3",
+  "tree_sha256": "1349173230e2a6b75018eef5c1f84b36dc324cb975d1893c1ed3603ccd171dd6",
+  "root": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration",
+  "mode": "Debug complete developer gate",
+  "cache_environment": {
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.zig-cache",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.tmp"
+  },
+  "command": [
+    "/usr/bin/python3",
+    "scripts/cache_session.py"
+  ],
+  "requests": [
+    {
+      "command": "verify",
+      "args": [
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--force"
+      ]
+    },
+    {
+      "command": "verify",
+      "args": [
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ]
+    },
+    {
+      "command": "verify",
+      "args": [
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+      ]
+    }
+  ],
+  "qualification": "exact source frozen; reports/response statuses pending; existing private preparation reused only after validation"
+}

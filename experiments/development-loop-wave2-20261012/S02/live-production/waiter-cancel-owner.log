@@ -1,0 +1,11 @@
+verification: execute lifecycle (no valid receipt)
+verification: profile complete; 1 pending, 1 selected, 0 deferred
+build-slot: FIFO ticket 116, position 3; earlier gate tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 116, position 2; earlier gate tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 116, position 1; waiting for measurement or memory-accounting settle delay; waiting (120s so far)
+build-slot: FIFO ticket 116, position 1; waiting for measurement or memory-accounting settle delay; waiting (180s so far)
+build-slot: gate slot 1, FIFO ticket 116 after 240s
+bounded lifecycle action completed
+verification: PASS; 0 reused, 1 selected; build admitted 0.000s, gate admitted 0.807s
+{"id":"owner","status":0,"ok":true,"restart_required":false,"snapshot_work":{"files_hashed":778,"bytes_hashed":263265518,"digest_reuses":10,"directories_enumerated":85,"metadata_observations":16154,"validation_calls":48,"snapshot_reuses":0}}
+{"id":"stop","status":0,"ok":true,"restart_required":false,"snapshot_work":{"files_hashed":0,"bytes_hashed":0,"digest_reuses":0,"directories_enumerated":0,"metadata_observations":0,"validation_calls":0,"snapshot_reuses":0}}

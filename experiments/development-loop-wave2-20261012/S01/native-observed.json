@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "status": "observed",
+  "process": {
+    "status": "unknown",
+    "scope": null,
+    "user_cpu_seconds": null,
+    "system_cpu_seconds": null,
+    "peak_rss_bytes": null,
+    "rss_scope": null,
+    "aggregate_peak_rss_bytes": null
+  },
+  "producer": "zig-test-protocol-v1",
+  "action_id": "native-fixture",
+  "member_id": "native-fixture/member/0",
+  "selected": 2,
+  "selection_scope": "actual-client-dispatch",
+  "executed": 1,
+  "reused": 0,
+  "skipped": 1,
+  "timed": 1,
+  "tests": [
+    {
+      "test_id": "native-fixture.zig::native-fixture.test.telemetry fast assertion",
+      "state": "passed",
+      "elapsed_ns": 9592,
+      "elapsed_scope": "runner-protocol-interval"
+    },
+    {
+      "test_id": "native-fixture.zig::native-fixture.test.telemetry skipped assertion",
+      "state": "skipped",
+      "elapsed_ns": null,
+      "elapsed_scope": "runner-protocol-interval"
+    }
+  ],
+  "complete": true,
+  "timing_coverage": "partial",
+  "execution_timing_coverage": "complete",
+  "truncated": false,
+  "additive": false,
+  "aggregate_peak_rss_bytes": null
+}

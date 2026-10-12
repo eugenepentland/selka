@@ -253,3 +253,97 @@ def write_summary(path, summary):
                 os.unlink(temporary)
             except OSError:
                 pass
+
+
+def test_timings(path=None, *, action_id=None, member=None):
+    """Consume supported producer telemetry, never infer tests from summary rows."""
+    import verification_telemetry
+    if path is None:
+        return verification_telemetry.unknown_tests()
+    return verification_telemetry.read_tests(path, action_id=action_id, member=member)
+
+
+def action_coverage(inventory, results):
+    """Represent every required inventory action; telemetry does not grant success.
+
+Caller rows already carry executed/reused/failed/partial states. An absent row is
+outstanding, and unexpected or duplicate result identities are visibly unknown.
+"""
+    selected = []
+    observed = {}
+    unknown = False
+    for row in results:
+        identity = row.get('id') if isinstance(row, dict) else None
+        if not isinstance(identity, str) or identity in observed:
+            unknown = True
+            continue
+        observed[identity] = row
+    for action in inventory:
+        identity = action.get('id') if isinstance(action, dict) else None
+        if not isinstance(identity, str) or identity in selected:
+            raise ValueError('inventory action identity')
+        selected.append(identity)
+    unknown = unknown or bool(observed.keys() - set(selected))
+    rows = []
+    for identity in selected:
+        row = observed.get(identity, {})
+        state = row.get('state', 'outstanding')
+        if state not in ('executed', 'reused', 'failed', 'partial', 'outstanding'):
+            state = 'unknown'
+            unknown = True
+        rows.append(dict(id=identity, state=state))
+    return dict(version=1, actions=rows, selected=len(rows),
+                counts={state: sum(row['state'] == state for row in rows)
+                        for state in ('executed', 'reused', 'failed', 'partial', 'outstanding', 'unknown')},
+                unknown=unknown, authority='advisory-only')
+
+
+def phase_spans(spans):
+    """Retain explicit monotonic phase boundaries without summing nested time."""
+    rows = []
+    malformed = truncated = False
+    for index, span in enumerate(spans):
+        if index >= MAX_OBSERVATIONS:
+            truncated = True
+            break
+        try:
+            name, start, end = span['phase'], span['start_ns'], span['end_ns']
+            if (not isinstance(name, str) or not name or len(name) > 512
+                    or type(start) is not int or type(end) is not int or start < 0 or end < start):
+                malformed = True
+                continue
+            rows.append(dict(phase=name, start_ns=start, end_ns=end, elapsed_ns=end - start))
+        except (KeyError, TypeError):
+            malformed = True
+    return dict(version=1, status='observed' if rows else 'unknown', spans=rows,
+                malformed=malformed, truncated=truncated, clock='monotonic', additive=False)
+
+
+def process_observations(observation=None):
+    """Report measured process CPU and lifetime RSS without inventing aggregate RSS."""
+    unknown = dict(status='unknown', scope=None, user_cpu_seconds=None,
+                   system_cpu_seconds=None, peak_rss_bytes=None, rss_scope=None,
+                   aggregate_peak_rss_bytes=None)
+    try:
+        if observation['scope'] != 'runner-process' or observation['rss_scope'] != 'process-lifetime-high-water':
+            return unknown
+        cpu = [observation[name] for name in ('user_cpu_seconds', 'system_cpu_seconds')]
+        if any(type(value) not in (int, float) or not math.isfinite(value) or value < 0 for value in cpu):
+            return unknown
+        rss = observation['peak_rss_bytes']
+        if rss is not None and (type(rss) is not int or rss < 0):
+            return unknown
+        return dict(status='observed', scope='runner-process', user_cpu_seconds=cpu[0],
+                    system_cpu_seconds=cpu[1], peak_rss_bytes=rss,
+                    rss_scope='process-lifetime-high-water', aggregate_peak_rss_bytes=None)
+    except (KeyError, TypeError, OverflowError):
+        return unknown
+
+
+def guest_test_timings(path=None, *, action_id, member):
+    """Read supported guest verdict inventory with explicitly unknown test clocks."""
+    import verification_guest_telemetry
+    if path is None:
+        import verification_telemetry
+        return verification_telemetry.unknown_tests('supported guest JSON log unavailable')
+    return verification_guest_telemetry.read_guest_tests(path, action_id=action_id, member=member)

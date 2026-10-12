@@ -1125,13 +1125,12 @@ test "approvedLibrary refuses missing trees and propagates allocation failure" {
 }
 
 // spec-case: NEW-CORE-S4-TEST-3
-test "approvedRuntime refuses missing unknown preload and SourceChanged runtime inputs" {
+test "approvedRuntime refuses substitution of each runtime input and unknown preload" {
     var fixture = Fixture.init(std.testing.allocator);
     defer fixture.deinit();
     const request = try fixture.request();
     try fixture.staticTool(1);
     const captured = try inventory(request, try resolve(request), try nativeTarget(request.io));
-    for (runtime_files) |expected| try std.testing.expect(namedInput(captured.inputs, expected.path) != null);
     try std.testing.expect(namedInput(captured.inputs, preload_path) != null);
     try std.testing.expect(try approvedRuntime(request, captured.inputs));
     try std.testing.expect(!try approvedRuntime(request, &.{}));
@@ -1140,11 +1139,16 @@ test "approvedRuntime refuses missing unknown preload and SourceChanged runtime 
     const native_path = try std.fs.path.join(request.arena, &.{ std.fs.path.dirname(try resolve(request)).?, "native-input" });
     const native = try addInput(request, &private, native_path);
     const modified = try request.arena.dupe(Input, captured.inputs);
+    for (runtime_files) |expected| {
+        try std.testing.expect(namedInput(captured.inputs, expected.path) != null);
+        @memcpy(modified, captured.inputs);
+        Fixture.replaceSnapshot(modified, expected.path, native.resolved, native.info);
+        try std.testing.expect(!try approvedRuntime(request, modified));
+    }
+    @memcpy(modified, captured.inputs);
     Fixture.replaceSnapshot(modified, preload_path, native.resolved, native.info);
     try std.testing.expect(!try approvedRuntime(request, modified));
     @memcpy(modified, captured.inputs);
-    Fixture.replaceSnapshot(modified, runtime_files[0].path, native.resolved, native.info);
-    try std.testing.expect(!try approvedRuntime(request, modified));
     Fixture.replaceSnapshot(modified, runtime_files[0].path, runtime_files[0].resolved, native.info);
     try std.testing.expectError(error.SourceChanged, approvedRuntime(request, modified));
 }

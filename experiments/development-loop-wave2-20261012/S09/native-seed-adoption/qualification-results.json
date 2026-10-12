@@ -1,0 +1,54 @@
+{
+  "activation": "proposal only; production pin unchanged by S09",
+  "full_bootstrap": "not qualified",
+  "native_regression_tests": 2,
+  "negative_controls": 5,
+  "operational_costs": {
+    "negative-controls": {
+      "execution_wall_time": "0:02.04",
+      "maximum_child_process_rss_kib": 38416,
+      "queue_seconds": 0,
+      "scope": "ordinary shared-host observation; not isolated latency or aggregate concurrent RSS"
+    },
+    "real-component-qualification": {
+      "execution_wall_time": "0:45.94",
+      "maximum_child_process_rss_kib": 287032,
+      "queue_seconds": 125,
+      "scope": "ordinary shared-host observation; not isolated latency or aggregate concurrent RSS"
+    },
+    "seed-native-regressions-current-admission": {
+      "execution_wall_time": "0:00.70",
+      "maximum_child_process_rss_kib": 41232,
+      "queue_seconds": 86,
+      "scope": "ordinary shared-host observation; not isolated latency or aggregate concurrent RSS"
+    },
+    "uncached-reproducibility": {
+      "execution_wall_time": "0:12.05",
+      "maximum_child_process_rss_kib": 283944,
+      "queue_seconds": 30,
+      "scope": "ordinary shared-host observation; not isolated latency or aggregate concurrent RSS"
+    }
+  },
+  "protocol_oracles": {
+    "cache-plan_installed": "passed",
+    "cache-plan_release": "passed",
+    "test-index_installed": "passed",
+    "test-index_release": "passed"
+  },
+  "pure_tests": {
+    "cache-plan": {
+      "debug_facts_leaks": 14,
+      "release_facts_leaks": 14
+    },
+    "test-index": {
+      "debug_facts_leaks": 6,
+      "release_facts_leaks": 6
+    }
+  },
+  "schema": "native-seed-repair-qualification-v1",
+  "seed_commit": "1665d74029c406dd5b90807186a752ebac6bcbb8",
+  "seed_sha256": "bd55fd21824ef40ed557e902d3f6b63d15185a3eeb625e443dc87a64f45c2b8d",
+  "source_files_authenticated": 621,
+  "strict_performance": "not qualified",
+  "uncached_reproducibility": "both component artifact byte hashes identical"
+}

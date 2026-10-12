@@ -1,0 +1,317 @@
+{
+  "schema": 1,
+  "module_sha256": "6633c64381dffa9a686dc488a27a89a0dc3c49b7f9851c90813e319e234341b6",
+  "inventory_sha256": "48fb1a4ac5d0b3e6d162f4e9b587ba4e4d8adb0e7ef56377f2ad8c61328f7fdf",
+  "root": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration",
+  "union_file_records": 4639,
+  "groups": [
+    {
+      "group": "component-preparation",
+      "selected_records": 15,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 15
+    },
+    {
+      "group": "input-discovery",
+      "selected_records": 0,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 0
+    },
+    {
+      "group": "environment-discovery",
+      "selected_records": 0,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 0
+    },
+    {
+      "group": "core",
+      "selected_records": 2791,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 2791
+    },
+    {
+      "group": "tooling_unit",
+      "selected_records": 11,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 11
+    },
+    {
+      "group": "text_scalar_unit",
+      "selected_records": 7,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 7
+    },
+    {
+      "group": "memory_budget",
+      "selected_records": 1,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 1
+    },
+    {
+      "group": "unit",
+      "selected_records": 822,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 822
+    },
+    {
+      "group": "cli",
+      "selected_records": 934,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 934
+    },
+    {
+      "group": "golden",
+      "selected_records": 932,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 932
+    },
+    {
+      "group": "idioms_self",
+      "selected_records": 1,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 1
+    },
+    {
+      "group": "idioms",
+      "selected_records": 72,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 72
+    },
+    {
+      "group": "incremental",
+      "selected_records": 13,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 13
+    },
+    {
+      "group": "interfaces",
+      "selected_records": 11,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 11
+    },
+    {
+      "group": "interface_oracle",
+      "selected_records": 359,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 359
+    },
+    {
+      "group": "parser_hints",
+      "selected_records": 140,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 140
+    },
+    {
+      "group": "friction",
+      "selected_records": 5,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 5
+    },
+    {
+      "group": "tooling_isolation",
+      "selected_records": 1,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 1
+    },
+    {
+      "group": "application_cache",
+      "selected_records": 739,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 739
+    },
+    {
+      "group": "component_builder",
+      "selected_records": 6,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 6
+    },
+    {
+      "group": "component_native",
+      "selected_records": 18,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 18
+    },
+    {
+      "group": "component-support",
+      "selected_records": 6,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 6
+    },
+    {
+      "group": "selfhost_numeric",
+      "selected_records": 67,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 67
+    },
+    {
+      "group": "spec-history",
+      "selected_records": 0,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 0
+    },
+    {
+      "group": "juice_pure",
+      "selected_records": 9,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 9
+    },
+    {
+      "group": "juice",
+      "selected_records": 16,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 16
+    },
+    {
+      "group": "juice-runtime",
+      "selected_records": 12,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 12
+    },
+    {
+      "group": "identity-qualification",
+      "selected_records": 0,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 0
+    },
+    {
+      "group": "affected",
+      "selected_records": 4,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 4
+    },
+    {
+      "group": "coverage_self",
+      "selected_records": 1,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 1
+    },
+    {
+      "group": "coverage",
+      "selected_records": 690,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 690
+    },
+    {
+      "group": "manifest_self",
+      "selected_records": 1,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 1
+    },
+    {
+      "group": "verification_cache",
+      "selected_records": 48,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 48
+    },
+    {
+      "group": "verification_session",
+      "selected_records": 112,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 112
+    },
+    {
+      "group": "fuzz_campaign",
+      "selected_records": 26,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 26
+    },
+    {
+      "group": "juice_cache",
+      "selected_records": 29,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 29
+    },
+    {
+      "group": "doc-coverage",
+      "selected_records": 2468,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 2468
+    },
+    {
+      "group": "guest",
+      "selected_records": 0,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 0
+    },
+    {
+      "group": "language",
+      "selected_records": 0,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 0
+    },
+    {
+      "group": "doctest",
+      "selected_records": 860,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 860
+    },
+    {
+      "group": "zig-format",
+      "selected_records": 696,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 696
+    },
+    {
+      "group": "my_format",
+      "selected_records": 1046,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 1046
+    },
+    {
+      "group": "my_format_self",
+      "selected_records": 2,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 2
+    },
+    {
+      "group": "noalloc_lint",
+      "selected_records": 1047,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 1047
+    },
+    {
+      "group": "embedded_migration",
+      "selected_records": 3,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 3
+    },
+    {
+      "group": "guardian",
+      "selected_records": 0,
+      "baseline_records_copied": 4639,
+      "candidate_records_copied": 0
+    }
+  ],
+  "baseline_records_copied": 213394,
+  "candidate_records_copied": 14021,
+  "copies_avoided": 199373,
+  "warm_acquisition": {
+    "files_hashed": 0,
+    "bytes_hashed": 0,
+    "digest_reuses": 0,
+    "directories_enumerated": 0,
+    "metadata_observations": 4944,
+    "validation_calls": 1,
+    "snapshot_reuses": 1
+  },
+  "selection_snapshot_work": {
+    "files_hashed": 0,
+    "bytes_hashed": 0,
+    "digest_reuses": 0,
+    "directories_enumerated": 0,
+    "metadata_observations": 0,
+    "validation_calls": 0,
+    "snapshot_reuses": 0
+  },
+  "six_explicit_validations_work": {
+    "files_hashed": 0,
+    "bytes_hashed": 0,
+    "digest_reuses": 0,
+    "directories_enumerated": 0,
+    "metadata_observations": 29664,
+    "validation_calls": 6,
+    "snapshot_reuses": 0
+  },
+  "all_projections_byte_identical": true,
+  "timing": "not measured; deterministic work only"
+}

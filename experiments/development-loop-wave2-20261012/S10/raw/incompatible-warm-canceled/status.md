@@ -1,0 +1,1 @@
+Canceled through supported owned-lineage cleanup (status 130) after first request selected all 46 groups. No warm sample accepted. Selected capture environment and argv match requalification, but full common identity mismatch cause is unproven. Shared timing queue was 275 seconds. No later request launched.

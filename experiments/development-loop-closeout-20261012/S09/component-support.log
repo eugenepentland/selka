@@ -1,0 +1,18 @@
+build-slot: FIFO ticket 3569, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 3569 after 31s
+test-component-support
++- verification action component-support member 0 w
+guardian/test: 10 test(s) selected
+guardian/test: test wall 0.38s; slowest over 50ms:
+guardian/test:   0.35s  component_support_test.test.streaming checksum hashes eight MiB with fixed storage
+guardian/test: PASS — 10 passed
+guardian/test: RESULT {"passed":10,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/a02d279d693720dfeedd4fa28ea5266a/test --cache-dir=./.zig-cache --seed=0x25484578 --listen=-
+
+Build Summary: 6/6 steps succeeded; 10/10 tests passed
+test-component-support success
++- verification action component-support member 0 10 pass (10 total) 392ms MaxRSS:5M
+   +- compile test debug native success 460ms MaxRSS:162M
+component-builder success
++- install generated to selka-components success
+   +- compile exe selka-components safe native success 18s MaxRSS:546M

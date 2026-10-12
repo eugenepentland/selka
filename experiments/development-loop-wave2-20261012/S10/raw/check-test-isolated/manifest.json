@@ -1,0 +1,1413 @@
+{
+  "version": 1,
+  "source": "c1857310e0bf623545380c8de24515f1b9970021",
+  "compiler_source": "a9a3208a4f3edbf17170cfc18d57f5f999af49c3",
+  "harness_sha256": "6688f100802f183025f611646f1a04fe7a49825cb287e669d60e4f862ab971ca",
+  "compiler": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+  "compiler_sha256": "e018f4dc02cba5020dcdb9c74a8bdd4354d11b49d2dfaacf5030b0aa82f176f3",
+  "compiler_mode": "Debug",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "slot_directory": "/home/epentland/.cache/mylang/slots",
+  "declared_build_slots": "3",
+  "admission_kind": "timing",
+  "workload": "test-only-edit",
+  "cache_tier": "first project/runtime cold; Zig global explicitly shared warm; subsequent unique warm edits",
+  "clock": "source edit + validation + real check + output checks/report write",
+  "scope": "guest project edit; does not measure Zig compiler-source rebuilding or whole gate",
+  "first_feedback_scope": "completed type/semantic check; visibly partial before two tests",
+  "selected_test_names": [],
+  "check_only": true,
+  "rows": [
+    {
+      "index": 0,
+      "cache_tier": "cold-project-runtime",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "ca56dc9eb4cd17669cd25f618645ae0e759f2ef5fda06a2ad8069482760b6731"
+      },
+      "edit_validation_ns": 517736,
+      "first_feedback_ns": 104054365,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 103312451,
+        "child_accounted_user_cpu_seconds": 0.063946,
+        "child_accounted_system_cpu_seconds": 0.024484,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 104518921
+    },
+    {
+      "index": 1,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "82319671fefd3f4b3f556bf68b8448560cf39c7fe2f759ef96a95e6993521704"
+      },
+      "edit_validation_ns": 494312,
+      "first_feedback_ns": 81767934,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 81093052,
+        "child_accounted_user_cpu_seconds": 0.05724799999999999,
+        "child_accounted_system_cpu_seconds": 0.019076000000000003,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 82138164
+    },
+    {
+      "index": 2,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "3d386ebc736a59080091e458d4a3475578b90b5b965e60b2317c65a442454f36"
+      },
+      "edit_validation_ns": 490733,
+      "first_feedback_ns": 81862615,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 81135573,
+        "child_accounted_user_cpu_seconds": 0.04001299999999999,
+        "child_accounted_system_cpu_seconds": 0.018164999999999994,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 82326247
+    },
+    {
+      "index": 3,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "7ee0851b4909b071dbc67bf1e4d9ab100f7cc42dce262d6817467db85e589c28"
+      },
+      "edit_validation_ns": 640585,
+      "first_feedback_ns": 102015023,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 101134630,
+        "child_accounted_user_cpu_seconds": 0.06639300000000001,
+        "child_accounted_system_cpu_seconds": 0.023398000000000002,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 102490721
+    },
+    {
+      "index": 4,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "a82fa53b09ba3bcef63a20b084f259f3bbacd81f344b002f1265a77582295351"
+      },
+      "edit_validation_ns": 696046,
+      "first_feedback_ns": 107992451,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 107042418,
+        "child_accounted_user_cpu_seconds": 0.07075400000000001,
+        "child_accounted_system_cpu_seconds": 0.018032999999999993,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 108520224
+    },
+    {
+      "index": 5,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "9f93b6bcac936a6781a5b4f2e33bf6bd9f52d5e716e85a3eaef291f5f44ec22d"
+      },
+      "edit_validation_ns": 712722,
+      "first_feedback_ns": 102658876,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 101744166,
+        "child_accounted_user_cpu_seconds": 0.06480799999999998,
+        "child_accounted_system_cpu_seconds": 0.022773,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 106036921
+    },
+    {
+      "index": 6,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "191d6b6fa04fd2c7f868934722351db8602b058ead606b8d514682f8be2a7920"
+      },
+      "edit_validation_ns": 59730741,
+      "first_feedback_ns": 161068393,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 101177536,
+        "child_accounted_user_cpu_seconds": 0.05658200000000002,
+        "child_accounted_system_cpu_seconds": 0.020811999999999997,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 161381502
+    },
+    {
+      "index": 7,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "f71abcfc95b10af82a4944c4a363cb5f892201e410a37eef67600682a60532d5"
+      },
+      "edit_validation_ns": 415522,
+      "first_feedback_ns": 103541863,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 102940919,
+        "child_accounted_user_cpu_seconds": 0.06283099999999997,
+        "child_accounted_system_cpu_seconds": 0.021448999999999996,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 104155348
+    },
+    {
+      "index": 8,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "e21cf3be3510dbf3942c427096d80fcb360596a198ec3a55285cef5a07664036"
+      },
+      "edit_validation_ns": 652662,
+      "first_feedback_ns": 104603108,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 103113300,
+        "child_accounted_user_cpu_seconds": 0.07242599999999999,
+        "child_accounted_system_cpu_seconds": 0.013984999999999997,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 105212142
+    },
+    {
+      "index": 9,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "b68c6d817a57c4948a2f0f98570192057d24fb78cbb05a6c1f3ce5d6a13dd359"
+      },
+      "edit_validation_ns": 622645,
+      "first_feedback_ns": 104456991,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 103621648,
+        "child_accounted_user_cpu_seconds": 0.06725599999999998,
+        "child_accounted_system_cpu_seconds": 0.021439000000000014,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 104970690
+    },
+    {
+      "index": 10,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "301d98febc126ed7653b85381bd48dfc95229d70be44cac1f6561bff6ddc893b"
+      },
+      "edit_validation_ns": 660440,
+      "first_feedback_ns": 102813457,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 101929527,
+        "child_accounted_user_cpu_seconds": 0.069303,
+        "child_accounted_system_cpu_seconds": 0.021882999999999986,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 103379821
+    },
+    {
+      "index": 11,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "ac125cf2ef20ce31c775866d6e40639969a580518057dc58393fce3d78800a7e"
+      },
+      "edit_validation_ns": 662784,
+      "first_feedback_ns": 103383156,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 102475067,
+        "child_accounted_user_cpu_seconds": 0.06865399999999999,
+        "child_accounted_system_cpu_seconds": 0.021711000000000008,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 103985601
+    },
+    {
+      "index": 12,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "5859b122950a39854af08fc18aa3ccad1289bbb15fe9b6d3facf96abea389ef2"
+      },
+      "edit_validation_ns": 726883,
+      "first_feedback_ns": 122828564,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 121900166,
+        "child_accounted_user_cpu_seconds": 0.07010700000000003,
+        "child_accounted_system_cpu_seconds": 0.021629999999999983,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 123435846
+    },
+    {
+      "index": 13,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "89bfe5d0b570bfbc12ef9b7d3874f2cc80f44293e0d80d7b46ea2f2f1228472b"
+      },
+      "edit_validation_ns": 628547,
+      "first_feedback_ns": 82208876,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 81432452,
+        "child_accounted_user_cpu_seconds": 0.05584199999999995,
+        "child_accounted_system_cpu_seconds": 0.016408000000000034,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 82562697
+    },
+    {
+      "index": 14,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "caa858a4d620dd75e8acfa4bb9d5ca88df5d16036dd29c3c1493577c4b8575e6"
+      },
+      "edit_validation_ns": 352434,
+      "first_feedback_ns": 102111495,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 101557018,
+        "child_accounted_user_cpu_seconds": 0.05382500000000001,
+        "child_accounted_system_cpu_seconds": 0.022828999999999988,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 102715621
+    },
+    {
+      "index": 15,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "432ff98c2494117c37db40ceec6d676f93291ce572207970d7f83d4fa3271907"
+      },
+      "edit_validation_ns": 640497,
+      "first_feedback_ns": 103235745,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 102378405,
+        "child_accounted_user_cpu_seconds": 0.07357500000000006,
+        "child_accounted_system_cpu_seconds": 0.017382999999999982,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 103838957
+    },
+    {
+      "index": 16,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "287c4cf7520c8a06938c761a6ff8288b45049ce1974d45d149d180e18430be0b"
+      },
+      "edit_validation_ns": 649179,
+      "first_feedback_ns": 102778655,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 101945052,
+        "child_accounted_user_cpu_seconds": 0.07108500000000006,
+        "child_accounted_system_cpu_seconds": 0.01684000000000002,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 103398679
+    },
+    {
+      "index": 17,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "418abc7756b5757fcf4fd09dc255d5dd2c80ecba36421fc610bb8a882518e5e6"
+      },
+      "edit_validation_ns": 635219,
+      "first_feedback_ns": 85791085,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 84951454,
+        "child_accounted_user_cpu_seconds": 0.05482799999999988,
+        "child_accounted_system_cpu_seconds": 0.01866699999999999,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 86502362
+    },
+    {
+      "index": 18,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "5a60ef672e02b4be52b3f36153031ffc00164282de7cba4805d58ec369715173"
+      },
+      "edit_validation_ns": 839834,
+      "first_feedback_ns": 104237863,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 103177411,
+        "child_accounted_user_cpu_seconds": 0.0695380000000001,
+        "child_accounted_system_cpu_seconds": 0.025436999999999987,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 105142903
+    },
+    {
+      "index": 19,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "7deeaa64d2fdde5131220b3a67ccf3d695f58caf87d84fa6139054d9faa839b1"
+      },
+      "edit_validation_ns": 735016,
+      "first_feedback_ns": 106872982,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 105918231,
+        "child_accounted_user_cpu_seconds": 0.0757239999999999,
+        "child_accounted_system_cpu_seconds": 0.016091999999999995,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 107526093
+    },
+    {
+      "index": 20,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "edbca38f34683fd7199a5bf1372ae7b40bf74798de7a66b2c46164c4d766463f"
+      },
+      "edit_validation_ns": 639841,
+      "first_feedback_ns": 83748531,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 82909810,
+        "child_accounted_user_cpu_seconds": 0.05832499999999996,
+        "child_accounted_system_cpu_seconds": 0.013748000000000038,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 84304453
+    },
+    {
+      "index": 21,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "5b52950065a07a6cc90a267839991ec6b8c3b227b32e08160dcfadd6662f7be7"
+      },
+      "edit_validation_ns": 539815,
+      "first_feedback_ns": 83308407,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 82532347,
+        "child_accounted_user_cpu_seconds": 0.04677800000000021,
+        "child_accounted_system_cpu_seconds": 0.014943999999999957,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 83980339
+    },
+    {
+      "index": 22,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "1eb1d3067fb923d59d685b3ecf1b0fd9abf6631db01f79cabba9f8faefea56d5"
+      },
+      "edit_validation_ns": 677234,
+      "first_feedback_ns": 105463439,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 104568029,
+        "child_accounted_user_cpu_seconds": 0.061601999999999935,
+        "child_accounted_system_cpu_seconds": 0.02681,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 106128288
+    },
+    {
+      "index": 23,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "aa8f8320fc2d8f725f58ec2ae88181f9ae3aeca99738fdec13837665a482643b"
+      },
+      "edit_validation_ns": 673504,
+      "first_feedback_ns": 102080854,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 101180584,
+        "child_accounted_user_cpu_seconds": 0.07262499999999994,
+        "child_accounted_system_cpu_seconds": 0.017747999999999986,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 102766341
+    },
+    {
+      "index": 24,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "f7b6875f3ac3f9f8b3408976e2b9456f3165376ca7e552568893c4933b406bc8"
+      },
+      "edit_validation_ns": 658926,
+      "first_feedback_ns": 130354566,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 129462014,
+        "child_accounted_user_cpu_seconds": 0.07040800000000003,
+        "child_accounted_system_cpu_seconds": 0.022903000000000062,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 131088427
+    },
+    {
+      "index": 25,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "d9e68f9d4ba0ee7322c26953d7b338bc737f2dc5ac4d2a15a124994056e0dbc5"
+      },
+      "edit_validation_ns": 823783,
+      "first_feedback_ns": 288257155,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 287178585,
+        "child_accounted_user_cpu_seconds": 0.07248299999999985,
+        "child_accounted_system_cpu_seconds": 0.028880999999999935,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 288998112
+    },
+    {
+      "index": 26,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "4b72b5b317518efd22ef23fcbdebc4d7be8bdf9653ac33f42975f6b3f04826e4"
+      },
+      "edit_validation_ns": 688309,
+      "first_feedback_ns": 145967398,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 145030864,
+        "child_accounted_user_cpu_seconds": 0.07705399999999996,
+        "child_accounted_system_cpu_seconds": 0.01787800000000006,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 146737610
+    },
+    {
+      "index": 27,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "144e47578a236d2d9631f99b354e6989639ad3ab081abd4471934f32e141877d"
+      },
+      "edit_validation_ns": 673749,
+      "first_feedback_ns": 128539283,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 127636569,
+        "child_accounted_user_cpu_seconds": 0.07071000000000005,
+        "child_accounted_system_cpu_seconds": 0.02304600000000001,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 129318453
+    },
+    {
+      "index": 28,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "58a76fe24d6631afd48437a15a0a9a5747a76359d958c3b82d8063355c41c5f6"
+      },
+      "edit_validation_ns": 677943,
+      "first_feedback_ns": 102511329,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 101649988,
+        "child_accounted_user_cpu_seconds": 0.07136200000000015,
+        "child_accounted_system_cpu_seconds": 0.017716999999999983,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 103309815
+    },
+    {
+      "index": 29,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "8be22c8d609e8c1b85ed69e2f338182a72517a50047b9f196a8d43c413e3f35f"
+      },
+      "edit_validation_ns": 430327,
+      "first_feedback_ns": 102452492,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 101793075,
+        "child_accounted_user_cpu_seconds": 0.06923799999999991,
+        "child_accounted_system_cpu_seconds": 0.015132999999999952,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 103311904
+    },
+    {
+      "index": 30,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "d411c48c4061a41fab6aae50ecc488ec74c93e911800da25b81b6157048111e1"
+      },
+      "edit_validation_ns": 700769,
+      "first_feedback_ns": 105064003,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 104127433,
+        "child_accounted_user_cpu_seconds": 0.08065999999999995,
+        "child_accounted_system_cpu_seconds": 0.016840999999999995,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 105877727
+    },
+    {
+      "index": 31,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "3aecc8408df942e87c22af9a06da6cba59e05e0f88ec5253dc40c867dfeec679"
+      },
+      "edit_validation_ns": 720652,
+      "first_feedback_ns": 104203344,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 103254108,
+        "child_accounted_user_cpu_seconds": 0.070859,
+        "child_accounted_system_cpu_seconds": 0.020513000000000003,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 105195878
+    },
+    {
+      "index": 32,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "4d1f8076979673ed4e1b35ab02b02c2c001734f59a4b40cc823604b8acc5cceb"
+      },
+      "edit_validation_ns": 689198,
+      "first_feedback_ns": 103412553,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 102505396,
+        "child_accounted_user_cpu_seconds": 0.07312600000000025,
+        "child_accounted_system_cpu_seconds": 0.021797999999999984,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 104561081
+    },
+    {
+      "index": 33,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "20a1f17d86baceac0c7251c424cc557980534aa8b0db0a12d11331b994dd0f55"
+      },
+      "edit_validation_ns": 662195,
+      "first_feedback_ns": 102733505,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 101851790,
+        "child_accounted_user_cpu_seconds": 0.07018999999999975,
+        "child_accounted_system_cpu_seconds": 0.02132500000000004,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 103497571
+    },
+    {
+      "index": 34,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "65faeb77b01848edf9af8d24cfccf74bfdf1bbea96efe4cdaf072432a01a0ff1"
+      },
+      "edit_validation_ns": 624499,
+      "first_feedback_ns": 102711426,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 101867483,
+        "child_accounted_user_cpu_seconds": 0.06799400000000011,
+        "child_accounted_system_cpu_seconds": 0.017722000000000016,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 103463067
+    },
+    {
+      "index": 35,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "f5f045385481fec1ed51f91a159fa3855cd4313d07bddcb8b54fdfe27ae49511"
+      },
+      "edit_validation_ns": 617783,
+      "first_feedback_ns": 82075102,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 81241433,
+        "child_accounted_user_cpu_seconds": 0.05016199999999982,
+        "child_accounted_system_cpu_seconds": 0.01514799999999994,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 82873752
+    },
+    {
+      "index": 36,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "fd7cfefd436f327c4ea6c55ab70f0dd86e09cc5393d3c94bcf22ed65b5260d9b"
+      },
+      "edit_validation_ns": 658946,
+      "first_feedback_ns": 109421615,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 106168474,
+        "child_accounted_user_cpu_seconds": 0.06964300000000012,
+        "child_accounted_system_cpu_seconds": 0.019384000000000068,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 110435463
+    },
+    {
+      "index": 37,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "6bf97adfe4d617d14b549a62e29863abe96d6d812c47eb93c9163ea0222162c7"
+      },
+      "edit_validation_ns": 667307,
+      "first_feedback_ns": 102555190,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 101648187,
+        "child_accounted_user_cpu_seconds": 0.07363700000000017,
+        "child_accounted_system_cpu_seconds": 0.01856000000000002,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 103398006
+    },
+    {
+      "index": 38,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "e1a0efab0bb5d186155c7fe31dccde7e69a07f9f2615a691cc14e672d3914572"
+      },
+      "edit_validation_ns": 663707,
+      "first_feedback_ns": 104038800,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 103151634,
+        "child_accounted_user_cpu_seconds": 0.07023399999999969,
+        "child_accounted_system_cpu_seconds": 0.020685999999999982,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 105108711
+    },
+    {
+      "index": 39,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "a020ce5986eb117785e9e1b15ac4c293eca1c1c54ba5229524cc63989f65dd41"
+      },
+      "edit_validation_ns": 677557,
+      "first_feedback_ns": 106378874,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 105469772,
+        "child_accounted_user_cpu_seconds": 0.07299900000000026,
+        "child_accounted_system_cpu_seconds": 0.019652000000000003,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 107532302
+    },
+    {
+      "index": 40,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "389282e04db5ae591a2e710a9fbfa3435cde0f0666077287ff774ac3b3c10e25"
+      },
+      "edit_validation_ns": 663990,
+      "first_feedback_ns": 102893316,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-test-isolated/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 102007739,
+        "child_accounted_user_cpu_seconds": 0.05890099999999965,
+        "child_accounted_system_cpu_seconds": 0.023560999999999943,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23310336,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "isolated",
+      "loop_elapsed_ns": 104058859
+    }
+  ],
+  "run_id": "b755144ccb029c57b4e03871bc5af67fdf15cc123fc29a5f687ac83da98c6b0c",
+  "measurement_context": "3312d3ac80d2c79e4b4baa5e0729569c188d513165f240354c5181bae2f10ed7",
+  "summary": {
+    "repetitions": 40,
+    "median_ns": 104107103.5,
+    "empirical_p95_ns": 146737610,
+    "first_feedback_empirical_p95_ns": 145967398,
+    "targets": {
+      "feedback_5s": true,
+      "completion_empirical_p95_15s": null
+    },
+    "all_completed": true,
+    "scope": "guest project edit; does not measure Zig compiler-source rebuilding or whole gate",
+    "qualification": "empirical cohort only; no stable tail inference or broader compiler-edit claim"
+  }
+}

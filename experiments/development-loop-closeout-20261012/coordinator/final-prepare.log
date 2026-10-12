@@ -1,0 +1,77 @@
+build-slot: FIFO ticket 143, position 6; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 143 after 45s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs fbfcaa7a923186a8e773c3760f81c10aa345a432: 2/682 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs fbfcaa7a923186a8e773c3760f81c10aa345a432, 2 file(s) in scope
+7019a9c463bbfc658c4913e02391312b5e244666283555013db280aa0f484ea8
+82e80dacd67f8e8bb2ccaff6513a1c0da16528c164a77391eafbd424112774f0
+Build Summary: 41/41 steps succeeded
+verification-prepare success
++- install success
+|  +- install mylang success
+|  |  +- compile exe mylang debug native success 6s MaxRSS:595M
+|  |  |  +- run exe build-identity (build_identity) success 48ms
+|  |  |  |  +- compile exe build-identity debug native success 501ms MaxRSS:148M
+|  |  |  +- WriteFile success
+|  |  |  +- compile obj juice_bytes_hash fast native success 109ms MaxRSS:112M
+|  |  |  +- compile obj juice_bytes_hash fast native (reused)
+|  |  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 success 1s MaxRSS:154M
+|  |  +- verification action guardian member 1 success 2s
+|  |     +- guardian-selfcheck success
+|  |        +- verification action guardian member 2 success 13ms
+|  +- install generated to selka-components success
+|  |  +- compile exe selka-components safe native success 23s MaxRSS:555M
+|  +- verification action component-preparation member 0 success 18s
+|  |  +- compile exe selka-components safe native (reused)
+|  +- verification action guardian member 1 (+1 more reused dependencies)
++- install generated to bin/mylang success
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- install generated to bin/units success
+|  +- compile test debug native success 4s MaxRSS:466M
+|     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|     +- options success
+|        +- compile exe mylang debug native (+5 more reused dependencies)
++- install generated to bin/tooling-units success
+|  +- compile test tooling-unit-tests debug native success 881ms MaxRSS:162M
++- install generated to bin/text-scalar-units success
+|  +- compile test text-scalar-unit-tests debug native cached 7ms MaxRSS:41M
++- install generated to bin/cli success
+|  +- compile test debug native success 1s MaxRSS:180M
+|     +- options success
+|        +- compile exe mylang debug native (+5 more reused dependencies)
+|        +- compile exe selka-components safe native (reused)
++- install generated to bin/core success
+|  +- compile test debug native success 7s MaxRSS:577M
+|     +- WriteFile (reused)
+|     +- compile obj juice_bytes_hash fast native (reused)
+|     +- compile obj juice_bytes_hash fast native (reused)
+|     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|     +- options success
+|     |  +- compile exe mylang debug native (+5 more reused dependencies)
+|     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
++- install generated to bin/golden success
+|  +- compile test debug native success 575ms MaxRSS:156M
+|     +- options (+2 more reused dependencies)
++- install generated to bin/memory-budget success
+|  +- compile test debug native success 778ms MaxRSS:150M
++- install generated to bin/component-support success
+|  +- compile test debug native success 781ms MaxRSS:162M
++- install generated to bin/component-builder success
+|  +- compile exe selka-components safe native (reused)
++- install generated to artifacts.json success
+   +- run python3 (artifacts.json) success 164ms
+      +- compile exe mylang debug native (+5 more reused dependencies)
+      +- compile test debug native (+2 more reused dependencies)
+      +- compile test tooling-unit-tests debug native (reused)
+      +- compile test text-scalar-unit-tests debug native (reused)
+      +- compile test debug native (+1 more reused dependencies)
+      +- compile test debug native (+6 more reused dependencies)
+      +- compile test debug native (+1 more reused dependencies)
+      +- compile test debug native (reused)
+      +- compile test debug native (reused)
+      +- compile exe selka-components safe native (reused)
+verification-plan success
++- install generated to inventory.json success
+   +- WriteFile verification-inventory.json success
+

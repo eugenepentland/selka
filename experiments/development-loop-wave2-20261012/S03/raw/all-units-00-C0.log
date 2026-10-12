@@ -1,0 +1,8 @@
+Build Summary: 6/6 steps succeeded
+prepare success
++- install s03-replayed-tests success
+   +- compile test s03-replayed-tests debug native success 2s MaxRSS:490M
+      +- options success
+      +- run exe build-identity (build_identity) success 30ms
+         +- compile exe build-identity debug native success 292ms MaxRSS:150M
+

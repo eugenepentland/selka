@@ -15,7 +15,7 @@ from contextlib import ExitStack
 import fcntl
 import hashlib
 import json
-import marshal
+import verification_code_identity as code_identity
 import os
 from pathlib import Path
 import platform
@@ -35,16 +35,25 @@ import verification_snapshot
 import fuzz_campaign_store
 import verification_report
 import verification_budgets
+import verification_profiles
+import verification_qualification
 import verification_process
+import verification_producers
+import verification_telemetry
+import verification_measurement
 from verification_process import BoundedProcessLogs, ProcessLimits, terminate_owned, wait_owned
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = 1
+VERSION = 2
+REPORT_VERSION = 1
 INVENTORY_VERSION = 2
 # Explicit review of the complete CONFIG_INPUTS-only closure, without the
 # declarative list file. None keeps every action conservatively broad. Never
 # auto-update this qualification after consumer changes.
-DECLARATIVE_CONFIG_SHA256 = "7cefed8043b05279aa8960b33ea742e728f91dfc294d08c6e48d7b4a0a8fd6fc"
+# Qualified by coordinator + delegated consumer review; only the developer
+# telemetry channel changed across the previously qualified 212-file closure.
+# Evidence: experiments/telemetry-cache-invalidation-20261012/REPORT.md
+DECLARATIVE_CONFIG_SHA256 = "6e21ce1c64e0d3e82e2ce1fee75053579b67221706d4aeb46f128691049801c6"
 RETRY = 75
 COMPONENT_SOURCE_OPTIONS = {"-Dcomponent-owned-compiler-pin", "-Dcomponent-seed-source"}
 MAX_RECORD = 32 * 1024 * 1024
@@ -53,10 +62,13 @@ CONFIG_INPUTS = ["./*.zig", "build.zig.zon", ".zigversion", "guardian.toml",
                  "../guardian-zig/build.zig.zon", "../guardian-zig/src/"]
 PREPARE_INPUTS = ["src/", "test/", "tests/", "selfhost/",
                   "docs/", "README.md", "SPEC.md", "benchmarks/runtime/ports/native_clock.c"]
-COORDINATOR_INPUTS = ["scripts/verify_cache.py", "scripts/verification_snapshot.py",
+COORDINATOR_INPUTS = ["scripts/verification_qualification.py", "scripts/verification_code_identity.py", "scripts/verify_cache.py", "scripts/verification_profiles.py", "scripts/verification_snapshot.py",
                       "scripts/verification_process.py",
                       "scripts/cache_session.py",
-                      "scripts/verification_artifacts.py", "scripts/fuzz_campaign_store.py", "scripts/build-slot.sh"]
+                      "scripts/verification_artifacts.py", "scripts/verification_producers.py",
+                      "scripts/verification_telemetry.py", "scripts/build_admission.py",
+                      "scripts/verification_measurement.py",
+                      "scripts/fuzz_campaign_store.py", "scripts/build-slot.sh"]
 # These are the host tools used by the registered test adapters and admission.
 # An adapter needing another external provider must declare it here or stay fresh.
 HOST_TOOLS = ("python3", "sh", "bash", "env", "grep", "sort", "mktemp", "rm",
@@ -310,6 +322,14 @@ def normalized_environment(root: Path) -> dict[str, str]:
     env = dict(os.environ)
     # Deliberately normalize these in the worker too, rather than omit live inputs.
     env.pop("_", None)
+    # Diagnostic placement must not enter native test receipt settings. Scrub
+    # legacy callers too; only the private per-request channel is forwarded.
+    env.pop("MYLANG_TEST_TELEMETRY_DIR", None)
+    env.pop("SELKA_VERIFICATION_TELEMETRY_DIR", None)
+    # The process-local measurement capability controls admission. Transport
+    # markers are installed only on admitted children, never trusted as proof.
+    for marker in ("MYLANG_ADMISSION_DIR", "MYLANG_ADMISSION_KIND"):
+        env.pop(marker, None)
     env["SHLVL"] = "0"
     env["PWD"] = str(root)
     env["PYTHONNOUSERSITE"] = "1"
@@ -358,9 +378,21 @@ class HostContext:
 
     def __init__(self):
         self.identity = host_contract()
+        self.changed_facets = []
+        self.verification_role = "host"
 
     def unchanged(self):
-        return host_contract() == self.identity
+        current = host_contract()
+        self.changed_facets = sorted(set(self.changed_facets) | {
+            name for name in self.identity.keys() | current.keys()
+            if self.identity.get(name) != current.get(name)})
+        return not self.changed_facets
+
+    def stability_diagnostics(self, role="host"):
+        return {"version": 1, "status": "observed" if self.changed_facets else "unknown",
+                "reasons": [{"role": role, "facet": "host", "name": name,
+                             "reason": "host contract changed"} for name in self.changed_facets[:64]],
+                "unknown": not bool(self.changed_facets), "truncated": len(self.changed_facets) > 64}
 
 
 def shared_libraries(paths: list[Path], env: dict[str, str]) -> list[Path]:
@@ -411,6 +443,11 @@ def tool_contract(zig: Path, env: dict[str, str]) -> tuple[list[str], list[Path]
 
 def admitted_child(fd: int) -> int:
     """Handshake after FIFO admission; execute only after the parent revalidates."""
+    expected_pid = int(os.environ.get("MYLANG_ADMISSION_PARENT_PID", os.getppid()))
+    expected_start = int(os.environ.get("MYLANG_ADMISSION_PARENT_START",
+                                       verification_process._process_starttime(expected_pid) or 0))
+    if not verification_process.arm_parent_death(expected_pid, expected_start):
+        return 130
     with socket.socket(fileno=fd) as channel:
         channel.sendall(b"admitted\n")
         chunks = []
@@ -427,12 +464,19 @@ def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], un
                  timings: list[dict] | None = None, *, limits: ProcessLimits | None = None,
                  log_dir: Path | None = None) -> tuple[int, float]:
     """Hold the normal slot only for selected work, checking again after queueing."""
+    measurement = verification_measurement.current()
+    if measurement is not None:
+        env = verification_measurement.worker_environment(env)
     parent, child = socket.socketpair()
     # build-slot reserves descriptors 7/8/9. Keep this handshake out of its range.
     fd = fcntl.fcntl(child.fileno(), fcntl.F_DUPFD_CLOEXEC, 32)
     child.close()
     command = [str(root / "scripts/build-slot.sh"), kind, sys.executable,
                str(Path(__file__).resolve()), "--admitted", str(fd)]
+    if measurement is not None:
+        # Our timing holder already drained all cooperating jobs. Keep the same
+        # supervised command protocol, source revalidation and cleanup.
+        command = command[2:]
     limits = limits or ProcessLimits()
     logs = None
     if log_dir is not None:
@@ -444,7 +488,9 @@ def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], un
             pass  # Diagnostic storage never authorizes or prevents verification.
     submitted_at = time.monotonic()
     try:
-        process = subprocess.Popen(command, cwd=root, env=env, pass_fds=(fd,), start_new_session=True,
+        wrapper_environment = dict(env, MYLANG_ADMISSION_PARENT_PID=str(os.getpid()),
+                                   MYLANG_ADMISSION_PARENT_START=str(verification_process._process_starttime(os.getpid())))
+        process = subprocess.Popen(command, cwd=root, env=wrapper_environment, pass_fds=(fd,), start_new_session=True,
                                    stdout=subprocess.PIPE if logs else None,
                                    stderr=subprocess.PIPE if logs else None)
     except BaseException:
@@ -485,6 +531,7 @@ def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], un
         held = 0.0 if admitted_at is None else ended_at - admitted_at
         if timings is not None:
             timings.append({"kind": kind, "status": status, "admitted": admitted_at is not None,
+                            "admission_scope": "request-timing-window" if measurement else "command",
                             "admission_wait_seconds": (admitted_at or ended_at) - submitted_at,
                             "validation_seconds": validation_seconds,
                             "worker_seconds": 0.0 if worker_at is None else ended_at - worker_at,
@@ -516,7 +563,7 @@ def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], un
 
 def artifact_paths(root: Path) -> list[Path]:
     record = read_record(root / "zig-out/verification/artifacts.json")
-    if not record or record.get("version") != 1 or not isinstance(record.get("artifacts"), dict):
+    if not record or type(record.get("version")) is not int or record["version"] not in (1, 2) or not isinstance(record.get("artifacts"), dict):
         raise VerificationError("missing or malformed prepared artifact inventory")
     artifacts = record["artifacts"]
     if not {"mylang", "units", "cli", "core"} <= artifacts.keys():
@@ -575,17 +622,33 @@ def matches_recipe(path: str, recipe: str, root: Path) -> bool:
 
 
 def action_payload(group: dict, snapshot: Snapshot, common: dict, root: Path,
-                   providers: dict[str, list[dict]] | None = None, membership: dict | None = None) -> dict:
-    files = [item for item in snapshot.identity["files"]
-             if any(matches_recipe(item["path"], recipe, root) for recipe in group["inputs"])]
+                   providers: dict[str, list[dict]] | None = None, membership: dict | None = None,
+                   producer_manifest: dict | None = None) -> dict:
+    files = snapshot.selected_files(lambda path: any(
+        matches_recipe(path, recipe, root) for recipe in group["inputs"]))
     selected = group.get("artifacts")
     if selected is not None:
         if providers is None or any(name not in providers for name in selected):
             raise VerificationError("action names an unavailable artifact provider: " + group["id"])
-        common = dict(common, artifacts={name: providers[name] for name in selected})
+        legacy = {"mylang", "units", "cli", "core", "golden", "memory-budget",
+                  "component-support", "component-builder", "components"}
+        identities = {}
+        for name in selected:
+            if name in verification_producers.CLOSURES:
+                producer = verification_producers.qualified_identity(
+                    producer_manifest or {}, name, providers[name], files, common)
+                if producer is None:
+                    break
+                identities[name] = {"producer": producer, "artifacts": providers[name]}
+            elif name in legacy:
+                identities[name] = providers[name]
+            else:
+                break  # New narrowing needs an explicit closure review.
+        else:
+            common = dict(common, artifacts=identities)
     if membership is not None:
         common = {name: value for name, value in common.items() if name != "inventory"}
-    return {"domain": "selka-verification-action-v3", "contract": group, "common": common,
+    return {"domain": "selka-verification-action-v5", "contract": group, "common": common,
             "files": files, "membership": membership}
 
 
@@ -595,7 +658,38 @@ def action_identity(group: dict, snapshot: Snapshot, common: dict, root: Path,
 
 
 def check_all(snapshots: list[Snapshot]) -> bool:
+    verification_measurement.current()  # An expired window cannot certify publication.
     return all(snapshot.unchanged() for snapshot in snapshots)
+
+
+def snapshot_role(snapshot, role):
+    """Attach an advisory name without changing snapshot authority or identity."""
+    snapshot.verification_role = role
+    return snapshot
+
+
+def stability_diagnostics(snapshots) -> dict:
+    """Read already observed rejection causes without revalidating or clearing them."""
+    reasons, unknown, truncated = [], False, False
+    for snapshot in snapshots:
+        try:
+            value = snapshot.stability_diagnostics(getattr(snapshot, "verification_role", "inputs"))
+            entries = value.get("reasons", [])
+            if not isinstance(entries, list):
+                raise ValueError("invalid stability diagnostics")
+            for entry in entries:
+                if len(reasons) < 64:
+                    reasons.append({name: str(entry.get(name, "unknown"))[:512]
+                                    for name in ("role", "facet", "name", "reason")})
+                else:
+                    truncated = True
+            # Clean snapshots need not invent a reason for a different snapshot's failure.
+            unknown |= bool(value.get("unknown")) and bool(entries)
+            truncated |= bool(value.get("truncated"))
+        except Exception:
+            unknown = True
+    return {"version": 1, "status": "observed" if reasons else "unknown", "reasons": reasons,
+            "unknown": unknown or not bool(reasons), "truncated": truncated}
 
 
 def snapshot_statistics(snapshots) -> dict[str, int]:
@@ -632,14 +726,67 @@ def zig_command(zig: Path, targets: list[str], options: list[str], rerun: bool =
     return args
 
 
+_CODE_HELPER_SOURCE_PROOF = None
+
+
+def authenticate_code_identity(root, watched, snapshots, stack, digest_session=None):
+    """Authenticate the loaded helper under a retained, actual-provider watch."""
+    global _CODE_HELPER_SOURCE_PROOF
+    actual = Path(code_identity.__file__).absolute()
+
+    def matching(snapshot):
+        predicate = lambda name: os.path.abspath(root / name) == str(actual)
+        selected = getattr(snapshot, "selected_files", None)
+        rows = selected(predicate) if selected is not None else [
+            row for row in snapshot.identity["files"] if predicate(row["path"])]
+        if len(rows) > 1:
+            raise code_identity.CodeIdentityError("ambiguous watched helper source")
+        return rows[0] if rows else None
+
+    record = matching(watched)
+    if record is None:
+        watched = stack.enter_context(Snapshot(root, [], [actual], digest_session=digest_session))
+        watched.verification_role = "code_identity_helper"
+        snapshots.append(watched)
+        record = matching(watched)
+    if record is None:
+        raise code_identity.CodeIdentityError("actual helper provider is not watched")
+    source_sha, size = record.get("sha256"), record.get("size")
+    if (type(source_sha) is not str or len(source_sha) != 64
+            or any(character not in "0123456789abcdef" for character in source_sha)
+            or type(size) is not int or not 0 <= size <= code_identity._MAX_AUTH_SOURCE_BYTES):
+        raise code_identity.CodeIdentityError("missing or unsupported watched helper source metadata")
+    expected = code_identity._LOADED_CODE_OBJECT
+    proof = _CODE_HELPER_SOURCE_PROOF
+    # CodeType equality/hash can erase distinctions. This cache binds the same
+    # immutable object by identity and exact watched content, never metadata.
+    if (proof is not None and proof[0] is expected and proof[1] == source_sha
+            and proof[2] == code_identity.LOADED_CODE_SHA256):
+        return
+    if not watched.unchanged():
+        raise SnapshotError("helper source changed before bootstrap authentication")
+    with actual.open("rb") as stream:
+        source = stream.read(code_identity._MAX_AUTH_SOURCE_BYTES + 1)
+    if len(source) != size or hashlib.sha256(source).hexdigest() != source_sha:
+        raise SnapshotError("helper source changed during bootstrap authentication")
+    code_identity.authenticate_code_source(source, expected)
+    actual_code_sha = code_identity.loaded_code_sha256(expected)
+    if actual_code_sha != code_identity.LOADED_CODE_SHA256:
+        raise code_identity.CodeIdentityError("loaded helper identity is detached")
+    if not watched.unchanged():
+        raise SnapshotError("helper source changed after bootstrap authentication")
+    _CODE_HELPER_SOURCE_PROOF = (expected, source_sha, actual_code_sha)
+
+
 def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[str, str],
             common: dict, snapshots: list[Snapshot], stack: ExitStack,
             timings: list[dict] | None = None, phases: dict | None = None,
             digest_session=None, limits: ProcessLimits | None = None) -> tuple[dict, Snapshot, float]:
-    configuration = stack.enter_context(Snapshot(root, CONFIG_INPUTS, digest_session=digest_session))
+    configuration = snapshot_role(stack.enter_context(Snapshot(root, CONFIG_INPUTS, digest_session=digest_session)), "configuration")
     snapshots.append(configuration)
-    config = stack.enter_context(Snapshot(root, CONFIG_INPUTS + COORDINATOR_INPUTS, digest_session=digest_session))
+    config = snapshot_role(stack.enter_context(Snapshot(root, CONFIG_INPUTS + COORDINATOR_INPUTS, digest_session=digest_session)), "coordinator")
     snapshots.append(config)
+    authenticate_code_identity(root, config, snapshots, stack, digest_session)
     common["build_configuration"] = key(config.identity)
     config_key = key({"common": common, "configuration": config.identity})
     plan_path = root / "zig-out/verification/inventory.json"
@@ -667,7 +814,7 @@ def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[st
     common["build_configuration"] = key(action_configuration(config.identity, plan, root, configuration.identity))
     common["action_controls"] = plan["configuration"]
     source_started = time.monotonic()
-    sources = stack.enter_context(Snapshot(root, PREPARE_INPUTS, digest_session=digest_session))
+    sources = snapshot_role(stack.enter_context(Snapshot(root, PREPARE_INPUTS, digest_session=digest_session)), "preparation_sources")
     if phases is not None:
         phases["source_snapshot_seconds"] = time.monotonic() - source_started
     snapshots.append(sources)
@@ -694,7 +841,7 @@ def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[st
         artifacts = stack.enter_context(Snapshot(root, [], artifact_paths(root), digest_session=digest_session))
         publish_checked(cache / "preparation.json", {"key": preparation_key, "artifacts": artifacts.identity},
                         snapshots + [artifacts])
-    snapshots.append(artifacts)
+    snapshots.append(snapshot_role(artifacts, "prepared_artifacts"))
     return plan, artifacts, held
 
 
@@ -715,8 +862,17 @@ def component_source_files(options: list[str]) -> list[Path]:
 
 def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool = False,
             shared_cache_dir: Path | None = None, *, build_timeout: float | None = None,
-            gate_timeout: float | None = None, warn_after: float | None = None) -> int:
+            gate_timeout: float | None = None, warn_after: float | None = None,
+            budget_policy: Path | None = None, profile: str = "complete", quick_actions: int = 3,
+            qualification_targets=None, qualification_max_actions=4,
+            qualification_timeout=300, qualification_fuzz_steps=8) -> int:
+    if profile not in verification_profiles.PROFILES or type(quick_actions) is not int or not 1 <= quick_actions <= 1024:
+        raise ValueError("invalid verification profile or quick action bound")
+    qualification_controls = {"targets": list(verification_qualification.OBLIGATIONS if qualification_targets is None else qualification_targets),
+        "max_actions": qualification_max_actions, "action_timeout": qualification_timeout, "fuzz_steps": qualification_fuzz_steps}
+    verification_qualification.validate_options(**qualification_controls)
     build_limits, gate_limits = ProcessLimits(build_timeout), ProcessLimits(gate_timeout)
+    measurement = verification_measurement.current()
     if warn_after is not None:
         ProcessLimits(warn_after)  # Same positive, finite validation; advisory only.
     started = time.monotonic()
@@ -733,11 +889,27 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
             coordinator = key({"domain": "verification-coordinator-v1", "root": str(root)})
             stack.enter_context(shared.coordinator_lock(coordinator))
         session = verification_snapshot.DigestSession()
-        tools = stack.enter_context(Snapshot(root, tool_recipes, tool_files, digest_session=session))
-        if tool_contract(zig, env) != (tool_recipes, tool_files) or not tools.unchanged():
+        tools = snapshot_role(stack.enter_context(Snapshot(root, tool_recipes, tool_files, digest_session=session)), "tools")
+        # Recheck lookup membership now. The complete snapshot set is validated
+        # before every admitted command, cache verdict and publication below.
+        if tool_contract(zig, env) != (tool_recipes, tool_files):
             raise VerificationError("tool resolution changed while installing input watches")
         host = HostContext()
         snapshots = [tools, host]
+        failure_context = {"stage": "preparation", "actions": []}
+
+        def record_failure(error_type, error, _traceback):
+            if error_type is not None:
+                failure_status = (RETRY if isinstance(error, SnapshotError) else
+                                  130 if isinstance(error, KeyboardInterrupt) else getattr(error, "status", 2))
+                diagnostic_record(cache / "last-run.json", {"version": REPORT_VERSION, "success": False,
+                    "status": failure_status, "stage": failure_context["stage"], "error": str(error)[:1024],
+                    "actions": failure_context["actions"], "stability_diagnostics": stability_diagnostics(snapshots),
+                    "admissions": admissions, "timings": phases,
+                    "elapsed_seconds": time.monotonic() - started})
+            return False
+
+        stack.push(record_failure)
         component_sources = None
         if files := component_source_files(options):
             # Bind external pin/archive bytes before preparation and keep their
@@ -748,28 +920,35 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                   "environment": key(env), "platform": host.identity,
                   "tools": key(tools.identity),
                   "execution_limits": {"build": build_limits.execution_identity(),
-                                       "gate": gate_limits.execution_identity()},
-                  "implementation": [LOADED_CODE_SHA256, verification_snapshot.LOADED_CODE_SHA256,
+                                       "gate": gate_limits.execution_identity(),
+                                       "measurement_window_seconds": None if measurement is None else measurement.seconds},
+                  "loaded_code_format": [code_identity.FORMAT_VERSION, code_identity.LOADED_CODE_SHA256],
+                  "implementation": [LOADED_CODE_SHA256, verification_measurement.LOADED_CODE_SHA256,
+                                     verification_measurement.build_admission.LOADED_CODE_SHA256, verification_snapshot.LOADED_CODE_SHA256,
                                      fuzz_campaign_store.LOADED_CODE_SHA256,
-                                     verification_process.LOADED_CODE_SHA256]}
+                                     verification_process.LOADED_CODE_SHA256,
+                                     verification_producers.LOADED_CODE_SHA256,
+                                     verification_profiles.LOADED_CODE_SHA256, verification_qualification.LOADED_CODE_SHA256]}
         if component_sources is not None:
             common["component_sources"] = component_sources.identity
         try:
             plan, artifacts, build_seconds = prepare(root, cache, zig, options, env, common, snapshots, stack,
                                                     admissions, phases, session, build_limits)
         except VerificationError as error:
-            diagnostic_record(cache / "last-run.json", {"version": VERSION, "success": False,
+            diagnostic_record(cache / "last-run.json", {"version": REPORT_VERSION, "success": False,
                 "status": error.status, "stage": "preparation", "error": str(error), "actions": [],
                 "admissions": admissions, "timings": phases,
+                "stability_diagnostics": stability_diagnostics(snapshots),
                 "elapsed_seconds": time.monotonic() - started})
             raise
         common["artifacts"] = key(artifacts.identity)
         common["inventory"] = key(plan)
         providers = artifact_providers(root, artifacts)
+        producer_manifest = read_record(root / "zig-out/verification/artifacts.json")
         groups = plan["groups"]
         recipes = sorted({entry for group in groups for entry in group["inputs"]})
         input_started = time.monotonic()
-        inputs = stack.enter_context(Snapshot(root, recipes, digest_session=session))
+        inputs = snapshot_role(stack.enter_context(Snapshot(root, recipes, digest_session=session)), "action_inputs")
         phases["action_input_snapshot_seconds"] = time.monotonic() - input_started
         snapshots.append(inputs)
         unsupported = [name for name in UNTRACKED_ENV if env.get(name)]
@@ -781,8 +960,9 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                 path.unlink(missing_ok=True)
         metadata = {action["id"]: action for action in plan["action_metadata"]}
         results, selected, keys, summaries = [], [], {}, {}
+        failure_context.update(stage="cache_lookup", actions=results)
         for group in groups:
-            payload = action_payload(group, inputs, common, root, providers, metadata[group["id"]])
+            payload = action_payload(group, inputs, common, root, providers, metadata[group["id"]], producer_manifest)
             action_key = key(payload)
             keys[group["id"]] = action_key
             summary = verification_report.dependency_summary(group, payload["files"], dict(payload["common"], membership=metadata[group["id"]]))
@@ -810,19 +990,43 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                 if shared is not None:
                     shared.invalidate_success(action_key)
                 selected.append(group)
+        profile_plan = verification_profiles.schedule(plan, results, profile, quick_actions=quick_actions)
+        selected_ids = set(profile_plan["selected"])
+        by_id = {group["id"]: group for group in groups}
+        selected = [by_id[name] for name in profile_plan["selected"]]
+        for row in results:
+            if row["state"] != "reused" and row["id"] not in selected_ids:
+                row.update(state="skipped", reason="deferred by partial feedback profile")
+        print("verification: profile %s; %d pending, %d selected, %d deferred%s" %
+              (profile, len(profile_plan["pending"]), len(selected), len(profile_plan["deferred"]),
+               "; heuristic partial selection" if profile_plan["heuristic"] else ""), flush=True)
         if not check_all(snapshots):
-            raise VerificationError("inputs changed during cache lookup; rerun verification")
+            diagnostic_record(cache / "last-run.json", {"version": REPORT_VERSION, "success": False,
+                "status": RETRY, "stage": "cache_lookup", "actions": results,
+                "inputs_stable": False, "stability_diagnostics": stability_diagnostics(snapshots),
+                "admissions": admissions, "timings": phases,
+                "elapsed_seconds": time.monotonic() - started})
+            raise VerificationError("inputs changed during cache lookup; rerun verification", RETRY)
         phases["prepare_lookup_outside_admission_seconds"] = (time.monotonic() - started
                                                               - sum(event["elapsed_seconds"] for event in admissions))
         status, gate_seconds = 0, 0.0
+        failure_context["stage"] = "execution"
+        telemetry_directory = None
         if selected:
+            gate_environment = dict(env)
+            try:
+                telemetry_directory = Path(stack.enter_context(tempfile.TemporaryDirectory(
+                    prefix="test-telemetry-", dir=cache)))
+                gate_environment["SELKA_VERIFICATION_TELEMETRY_DIR"] = str(telemetry_directory)
+            except OSError:
+                pass  # Diagnostic storage cannot change test selection or verdict.
             # Force chosen Run steps: an outer miss (tool/environment/ABA) must not
             # be accidentally satisfied by a weaker, older inner Zig verdict.
             targets = (plan["required_targets"] if len(selected) == len(groups)
                        else [group["target"] for group in selected])
             status, gate_seconds = run_admitted(root, "gate",
                 zig_command(zig, targets, options, rerun=True),
-                env, lambda: check_all(snapshots), timings=admissions,
+                gate_environment, lambda: check_all(snapshots), timings=admissions,
                 limits=gate_limits, log_dir=cache / "last-logs/gate")
         validation_started = time.monotonic()
         stable = check_all(snapshots)
@@ -830,9 +1034,24 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
         if status == 0 and not stable:
             status = RETRY
         publication_started = time.monotonic()
+        failure_context["stage"] = "publication"
         if status == 0:
             published = []
             publication_valid = False
+            def revoke_publications():
+                for path in published:
+                    path.unlink(missing_ok=True)
+                    if shared is not None:
+                        shared.invalidate_success(path.stem)
+            def revoke_on_failure(error_type, _error, _traceback):
+                if error_type is not None:
+                    revoke_publications()
+                return False
+            stack.push(revoke_on_failure)
+            if measurement is not None:
+                # A deadline in later reporting still makes this bounded request
+                # incomplete. Retain rollback until its timing holder closes.
+                measurement.rollbacks.append(revoke_publications)
             try:
                 for group in selected:
                     if group["cacheable"] and not unsupported and not plan.get("configuration", {}).get("filtered"):
@@ -853,26 +1072,55 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                 publication_valid = status == 0
             finally:
                 if not publication_valid:
-                    for path in published:
-                        path.unlink(missing_ok=True)
-                        if shared is not None:
-                            shared.invalidate_success(path.stem)
+                    revoke_publications()
         phases["publication_seconds"] = time.monotonic() - publication_started
         # Advisory snapshots describe the last stable request, including failures.
         # They are not successes and never participate in cache authorization.
         if stable:
             for path, summary in summaries.values():
                 verification_report.write_summary(path, summary)
+        qualification_run = None
+        qualification_context = {"common": common, "action_keys": keys, "qualification": qualification_controls}
+        if profile == "long-qualification" and status == 0 and stable and not plan.get("configuration", {}).get("filtered"):
+            compiler = root / "zig-out/bin/mylang"
+            qualification_run = stack.enter_context(verification_qualification.qualify(
+                root, cache / "long-qualification", compiler, zig, qualification_context, snapshots, **qualification_controls))
+            snapshots.extend(qualification_run.additional_snapshots)
+            stable = check_all(snapshots)
+            if not stable:
+                status = RETRY
+                revoke_publications()
         elapsed = time.monotonic() - started
         observed_work = max(0.0, elapsed - sum(event["admission_wait_seconds"] for event in admissions))
         budget_report = {"scope": "coordinator elapsed excluding admission queues",
                          "observed_seconds": observed_work, "warn_after_seconds": warn_after,
                          "exceeded": warn_after is not None and observed_work > warn_after,
                          "enforced": False}
-        report = {"version": VERSION, "success": status == 0, "status": status,
+        selected_ids = {group["id"] for group in selected}
+        coverage_rows = []
+        for row in results:
+            executed = row["id"] in selected_ids
+            row["test_telemetry"] = [verification_report.test_timings(
+                telemetry_directory / (row["id"] + ".member." + str(index) + ".json")
+                if executed and telemetry_directory is not None else None,
+                action_id=row["id"], member=verification_telemetry.member_id(row["id"], index))
+                for index, _ in enumerate(metadata[row["id"]]["steps"])]
+            coverage_rows.append({"id": row["id"], "state":
+                "reused" if row["state"] == "reused" and stable else
+                "executed" if executed and status == 0 else "partial" if executed else "outstanding"})
+        profile_coverage = verification_profiles.coverage(plan, results, profile_plan["selected"], profile,
+            status=status, inputs_stable=stable,
+            qualification_required=verification_qualification.OBLIGATIONS if profile == "long-qualification" else [],
+            qualification_run=qualification_run if stable else None, qualification_context=qualification_context)
+        report_status = status if status != 0 else 0 if profile_coverage["status"] == "complete" else 3
+        report = {"version": REPORT_VERSION, "success": report_status == 0, "status": report_status,
+                  "long_qualification": None if qualification_run is None else qualification_run.report(),
+                  "selected_success": status == 0, "profile_plan": profile_plan, "profile_coverage": profile_coverage,
                   "actions": results, "inputs_stable": stable,
+                  "stability_diagnostics": stability_diagnostics(snapshots) if not stable or status == RETRY else None,
                   "component_sources": common.get("component_sources"),
                   "action_metadata": plan["action_metadata"],
+                  "action_coverage": verification_report.action_coverage(groups, coverage_rows),
                   "budget_context": key({name: value for name, value in common.items() if name != "inventory"}),
                   "build_admitted_seconds": build_seconds, "gate_admitted_seconds": gate_seconds,
                   "admissions": admissions, "timings": phases,
@@ -884,6 +1132,8 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                   "evidence_store": {"shared": shared is not None,
                                      "root": str(shared.root if shared is not None else cache / "actions")},
                   "elapsed_seconds": elapsed}
+        if measurement is not None:
+            report["measurement_window"] = measurement.report()
         try:
             report["action_budgets"] = verification_budgets.calibrate(
                 [report], plan, context=report["budget_context"], action_keys=keys)
@@ -891,15 +1141,25 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
             # Advisory evaluation cannot mask the gate verdict or revoke evidence.
             report["action_budgets"] = {"status": "unknown", "enforced": False,
                                        "reason": str(error)[:512]}
+        report["scoped_policy"] = verification_budgets.evaluate_scoped_policy(budget_policy, report, plan)
+        if report["scoped_policy"]["status"] == "unavailable":
+            print("verification: advisory budget policy unavailable: " + report["scoped_policy"]["reason"], file=sys.stderr)
+        if measurement is not None:
+            measurement.check()
+            report["measurement_window"] = measurement.report()
         diagnostic_record(cache / "last-run.json", report)
         print("verification: %s; %d reused, %d selected; build admitted %.3fs, gate admitted %.3fs" %
-              ("PASS" if status == 0 else "FAIL", len(groups) - len(selected), len(selected), build_seconds, gate_seconds), flush=True)
+              ("PASS" if report_status == 0 else "PARTIAL" if report_status == 3 else "FAIL",
+               sum(row["state"] == "reused" for row in results), len(selected), build_seconds, gate_seconds), flush=True)
         if status == RETRY:
             print("verification: inputs changed while queued or running; no new success receipts retained", file=sys.stderr)
+            causes = report["stability_diagnostics"]["reasons"]
+            if causes:
+                print("verification: invalidated input " + json.dumps(causes[0], ensure_ascii=True), file=sys.stderr)
         if budget_report["exceeded"]:
             print("verification: advisory loop budget exceeded: %.3fs > %.3fs (queue excluded)" %
                   (observed_work, warn_after), file=sys.stderr)
-        return status if status >= 0 else 128 - status
+        return report_status if report_status >= 0 else 128 - report_status
 
 
 def parse_options(options: list[str]) -> list[str]:
@@ -937,11 +1197,20 @@ def main(argv: list[str]) -> int:
         return admitted_child(int(argv[1]))
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--zig", default=os.environ.get("MYLANG_ZIG") or os.environ.get("ZIG") or "zig")
-    parser.add_argument("--force", action="store_true", help="execute every required action, retaining fresh successful evidence")
+    parser.add_argument("--profile", choices=verification_profiles.PROFILES, default="complete")
+    parser.add_argument("--quick-actions", type=int, default=3, help="Maximum quick-profile pending actions; heuristic and partial")
+    parser.add_argument("--qualification-target", action="append", choices=verification_qualification.OBLIGATIONS)
+    parser.add_argument("--qualification-max-actions", type=int, default=4)
+    parser.add_argument("--qualification-timeout", type=float, default=300)
+    parser.add_argument("--qualification-fuzz-steps", type=int, default=8)
+    parser.add_argument("--force", action="store_true", help="Ignore prior successes for the requested profile")
     parser.add_argument("--shared-cache-dir", type=Path, help="Explicit local shared success evidence; inventory and runs stay private")
     parser.add_argument("--build-timeout-seconds", type=float, help="Optional deadline per admitted preparation command; excludes queue time")
     parser.add_argument("--gate-timeout-seconds", type=float, help="Optional deadline for the admitted selected gate; excludes queue time")
     parser.add_argument("--warn-after-seconds", type=float, help="Advisory total work target excluding admission queues; never changes reuse or pass/fail")
+    parser.add_argument("--budget-policy", type=Path, help="Optional v1/v2 report-only scoped policy; never changes reuse or pass/fail")
+    parser.add_argument("--timing-window-seconds", type=float,
+                        help="Own an exclusive bounded request measurement; run directly, never under a slot")
     parser.add_argument("options", nargs=argparse.REMAINDER)
     args = parser.parse_args(argv)
     cancellation = 130
@@ -951,18 +1220,42 @@ def main(argv: list[str]) -> int:
         raise KeyboardInterrupt
     previous = {signum: signal.signal(signum, cancel) for signum in (signal.SIGTERM, signal.SIGHUP)}
     try:
+        if args.timing_window_seconds is not None:
+            verification_measurement.validate(args.timing_window_seconds)
+            if args.profile == "long-qualification":
+                raise ValueError("long qualification owns separate measurement phases; omit the request timing window")
         resolved = shutil.which(args.zig)
         if resolved is None:
             raise VerificationError("cannot find Zig: " + args.zig)
-        cache = ROOT / ".mylang-cache/verification-v1"
+        cache = ROOT / ".mylang-cache/verification-v2"
         cache.mkdir(parents=True, exist_ok=True)
         # Serialize coordinators for this checkout, outside the shared server
         # slots, so preparation and forced invalidation cannot race one another.
         with (cache / "coordinator.lock").open("a") as lock:
+            lock_requested_at = time.monotonic()
             fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
-            return execute(ROOT, cache, Path(resolved).absolute(), parse_options(args.options), args.force, args.shared_cache_dir,
-                           build_timeout=args.build_timeout_seconds, gate_timeout=args.gate_timeout_seconds,
-                           warn_after=args.warn_after_seconds)
+            lock_wait = time.monotonic() - lock_requested_at
+            with ExitStack() as stack:
+                if args.timing_window_seconds is not None:
+                    stack.enter_context(verification_measurement.timing_window(
+                        args.timing_window_seconds, coordinator_lock_wait_seconds=lock_wait))
+                return execute(ROOT, cache, Path(resolved).absolute(), parse_options(args.options), args.force, args.shared_cache_dir,
+                               build_timeout=args.build_timeout_seconds, gate_timeout=args.gate_timeout_seconds,
+                               warn_after=args.warn_after_seconds, budget_policy=args.budget_policy,
+                               profile=args.profile, quick_actions=args.quick_actions,
+                               qualification_targets=args.qualification_target,
+                               qualification_max_actions=args.qualification_max_actions,
+                               qualification_timeout=args.qualification_timeout,
+                               qualification_fuzz_steps=args.qualification_fuzz_steps)
+    except (verification_measurement.WindowExpired, verification_measurement.WindowLost) as error:
+        expired = isinstance(error, verification_measurement.WindowExpired)
+        status = 124 if expired else 2
+        diagnostic_record(ROOT / ".mylang-cache/verification-v2/last-run.json",
+                          {"version": REPORT_VERSION, "success": False, "status": status,
+                           "stage": "measurement_deadline" if expired else "measurement_authority", "error": str(error),
+                           "measurement_window_seconds": args.timing_window_seconds})
+        print("verification: FAIL: " + str(error), file=sys.stderr)
+        return status
     except (VerificationError, SnapshotError, OSError, ValueError,
             fuzz_campaign_store.FormatError, fuzz_campaign_store.DeterminismError) as error:
         print("verification: FAIL: " + str(error), file=sys.stderr)
@@ -977,7 +1270,8 @@ def main(argv: list[str]) -> int:
 
 # Bind evidence to the code actually loaded, even if the files change before
 # filesystem watches are installed. Next invocation's new code has another key.
-LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
+_LOADED_CODE_OBJECT = sys._getframe().f_code
+LOADED_CODE_SHA256 = code_identity.loaded_code_sha256(_LOADED_CODE_OBJECT)
 
 
 if __name__ == "__main__":

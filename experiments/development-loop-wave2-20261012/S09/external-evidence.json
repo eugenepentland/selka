@@ -1,0 +1,2584 @@
+{
+  "archives": [
+    {
+      "archive_files_authenticated": 44,
+      "body_schema": 10,
+      "complete": false,
+      "full_gate": "pending; prior 2a1 gate failed and terminal evidence retained",
+      "receipt": "selka-body-wave-integration-20261011",
+      "scope": "Combined schema 10 body slice; full repository gate and complete self-hosting remain open"
+    },
+    {
+      "archive_files_authenticated": 16,
+      "body_schema": null,
+      "complete": false,
+      "full_gate": "not supplied",
+      "receipt": "selka-bootstrap-gate-repairs-20261011",
+      "scope": "Focused full-gate repairs; not a passing integrated gate or bootstrap/performance proof"
+    }
+  ],
+  "authority": "request-local content observation only; caller must establish live stability",
+  "byte_budget": 2147483648,
+  "bytes_read": 1014187527,
+  "complete": false,
+  "diagnostics": [
+    {
+      "code": "installed-producer-stale",
+      "component": "parser-pilot",
+      "owner": "bootstrap",
+      "required": "rebuild and requalify exact current source/schema"
+    },
+    {
+      "code": "installed-producer-stale",
+      "component": "body-check",
+      "owner": "bootstrap",
+      "required": "rebuild and requalify exact current source/schema"
+    }
+  ],
+  "expected_commit": "dff9304b9cd7bc72e66f9feb20f1b05281d67333",
+  "host": {
+    "sha256": "590fb4260dd4f11fe97efd66f40fc2c4dbf94d7542c84b24bb6b6944585e2ce7",
+    "source_recipe_qualification": "not established by bridge"
+  },
+  "inputs": [
+    {
+      "bytes": 75059,
+      "path": "/home/epentland/.cache/mylang/components/artifacts/2aecdc37b7171ffcc2318d4e92e5cd7c15356a0683ef9a9da4c99716aca5d450/receipt.json",
+      "role": "producer-receipt",
+      "sha256": "6612218cb3d771c518330f25ada1cc7109e6d9cc371ae1ce7cbd925de065e629"
+    },
+    {
+      "bytes": 59906,
+      "path": "/home/epentland/.cache/mylang/components/artifacts/4f1de862972c0bcfcfa79d0cd96f8b9914e7a803d8ada8fba68d901e7d1e6577/receipt.json",
+      "role": "producer-receipt",
+      "sha256": "615cefefcdaade5b23ae48cd6e296da9e22667c35b0574d4388d272d5f6d519e"
+    },
+    {
+      "bytes": 58782,
+      "path": "/home/epentland/.cache/mylang/components/artifacts/636922f37986e139ad7b03c4842bfa795bd9aac76484777de09c8106bae87a66/receipt.json",
+      "role": "producer-receipt",
+      "sha256": "07ca7a9e7e001e0b1b10ba9f7d80e11ca07129ab3546fa861b6d84ab7cfb967e"
+    },
+    {
+      "bytes": 62146,
+      "path": "/home/epentland/.cache/mylang/components/artifacts/76de49ce3877bba2b194daa1684814d3ceba5925aad7ebfa55a03028d730eed8/receipt.json",
+      "role": "producer-receipt",
+      "sha256": "48de8cb73a34faea6304fe6508579d2e1e2ecc1c99167820491e4094c0fb3f39"
+    },
+    {
+      "bytes": 58617,
+      "path": "/home/epentland/.cache/mylang/components/artifacts/9d1b1240f2a85a2e56a500485df15efe828a04caa6f1d5a9ce1b216f2cf06278/receipt.json",
+      "role": "producer-receipt",
+      "sha256": "ae6f5210ee6c7727941c574f40014a7b8c5da9f796d9d8361cf19da714688ab4"
+    },
+    {
+      "bytes": 58950,
+      "path": "/home/epentland/.cache/mylang/components/artifacts/abd37cad83dfefdf977fc25f1d88debc7410047ad0def0c3186bb3660bf9aea1/receipt.json",
+      "role": "producer-receipt",
+      "sha256": "02f9f2b555168fc9e29b77e841736680582487cace06313483824cce97a0fe1a"
+    },
+    {
+      "bytes": 59110,
+      "path": "/home/epentland/.cache/mylang/components/artifacts/f0cb6c124ae9541ef5ca389872a5d81b6fac1a4033912755a3e37f3a7eebae36/receipt.json",
+      "role": "producer-receipt",
+      "sha256": "74b5cadf9ca6a2fbb7b0d7f535b38d1b8763b4a6c269b8c47488e7a88495bbde"
+    },
+    {
+      "bytes": 56803,
+      "path": "/home/epentland/.cache/mylang/components/seeds/99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc/receipt.json",
+      "role": "seed-receipt",
+      "sha256": "98e9ae5844169a6b8898b20f02962ece5aeed23bc9599503f4655b5f7cd56fc1"
+    },
+    {
+      "bytes": 59939832,
+      "path": "/home/epentland/.cache/mylang/components/seeds/99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc/source/zig-out/focus/mylang",
+      "role": "seed-executable",
+      "sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b"
+    },
+    {
+      "bytes": 26,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/.zigversion",
+      "role": "source-tool-pin",
+      "sha256": "55514671f203f691ba0fae90c7b7d8740256222cfa6f7512b71b04cd1316eb2d"
+    },
+    {
+      "bytes": 482,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/b10-full-gate-2a1-terminal.json.gz",
+      "role": "historical-gzip",
+      "sha256": "b80018e1c093e10edd6d644fc3a6954399bc7763692c45d38b3cc1a45d7f0202"
+    },
+    {
+      "bytes": 121394,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/b10-full-gate-2a1.log.gz",
+      "role": "historical-gzip",
+      "sha256": "7169f87399315a6a1262c7c2585448605bc7a6876dccbc954eb0e0ccb5ab002d"
+    },
+    {
+      "bytes": 38434,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/body-package-receipt.json.gz",
+      "role": "historical-gzip",
+      "sha256": "6b88c5981deeb78dc9880216a0fdf3d36993d8295c3105484e68c0e4eea4df64"
+    },
+    {
+      "bytes": 10943,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/integration-source.json.gz",
+      "role": "historical-gzip",
+      "sha256": "7eabdf9cd06bfbe6e608ba98e0d5bd6acebdc0ed87325f87dd9ae7308cc9e541"
+    },
+    {
+      "bytes": 23064,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/receipt.json",
+      "role": "historical-receipt",
+      "sha256": "95e79adf2df1b71a7fbe693303ba4909876cc6f98ec88bdac900542663e8874e"
+    },
+    {
+      "bytes": 903,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-format-source.log.gz",
+      "role": "historical-gzip",
+      "sha256": "c557afb703acb555970ce601513926f909f1450dcc6e827e92cf19b1ceec9c7e"
+    },
+    {
+      "bytes": 653,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-format-source.py.gz",
+      "role": "historical-gzip",
+      "sha256": "db7b02c9e41140c2207b7aade2d6daa02451460ccfe953dde398baa69a889707"
+    },
+    {
+      "bytes": 12929,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-chained.json.gz",
+      "role": "historical-gzip",
+      "sha256": "8feb5e19c661619c7b81ba88088c9d312840046a97f55f8e16b111465118f1a6"
+    },
+    {
+      "bytes": 90,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-chained.log.gz",
+      "role": "historical-gzip",
+      "sha256": "2b036bbe189e5229796ea6efb6a6670c0527fbd26775497519be6670ca8a4b65"
+    },
+    {
+      "bytes": 404082,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-constants-normal.json.gz",
+      "role": "historical-gzip",
+      "sha256": "c9fd17d9cfc00b60ed677fcc37a4d6f9dbc02fa298b075711a8ad0c0c729d001"
+    },
+    {
+      "bytes": 2093,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-constants-normal.log.gz",
+      "role": "historical-gzip",
+      "sha256": "d24a96acac191a652be15e7cb8b13842a8bbfcc6bbd06fb4fe2260af425f2972"
+    },
+    {
+      "bytes": 405859,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-constants-release.json.gz",
+      "role": "historical-gzip",
+      "sha256": "380dc64e4af882d1c25b113e6b799e772555d36e88f39d017bc7af8678f7c344"
+    },
+    {
+      "bytes": 2093,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-constants-release.log.gz",
+      "role": "historical-gzip",
+      "sha256": "d24a96acac191a652be15e7cb8b13842a8bbfcc6bbd06fb4fe2260af425f2972"
+    },
+    {
+      "bytes": 436,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-gate-accounting.log.gz",
+      "role": "historical-gzip",
+      "sha256": "9ceda8a4e9ea77ae6bc1a1c25a54943fc202c31e66f2c305cc8944c9f74a6d40"
+    },
+    {
+      "bytes": 222,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-guardian.log.gz",
+      "role": "historical-gzip",
+      "sha256": "16b544bbf003a2e8e8124732ecc0931da0d4f70b4ab8de71060bc8994adec3c3"
+    },
+    {
+      "bytes": 56,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-harness-selftests.log.gz",
+      "role": "historical-gzip",
+      "sha256": "247f2bd657b752b8b105ccb7db79d789451397e9704e5d9b6f6598802afafd74"
+    },
+    {
+      "bytes": 15072,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-hostile-capture.tar.gz",
+      "role": "historical-gzip",
+      "sha256": "b15b2845fe8eacd905ea0671a819fc836135955835056df4f654df619fe4d415"
+    },
+    {
+      "bytes": 2493,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-hostile.json.gz",
+      "role": "historical-gzip",
+      "sha256": "9ce088c447ed5e5ceb1918a921e2dcb00ff5f4468042a58fc91bd1f9c791758f"
+    },
+    {
+      "bytes": 87,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-hostile.log.gz",
+      "role": "historical-gzip",
+      "sha256": "2ad42e084f8f48540bc4939d61a5de3dea6d11a57ecb3a71f7082d147af69fe2"
+    },
+    {
+      "bytes": 975,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-install.log.gz",
+      "role": "historical-gzip",
+      "sha256": "adac7443dedfc93d1b700d7aa4e26c5996cf1a22cebcb495b40b5d7a2af7d009"
+    },
+    {
+      "bytes": 15535,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-iteration.json.gz",
+      "role": "historical-gzip",
+      "sha256": "d1aa22032f15f7fa8a8e4f4c49c9b1e6ce285e990ff76fb86198b818e701a0c2"
+    },
+    {
+      "bytes": 79,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-iteration.log.gz",
+      "role": "historical-gzip",
+      "sha256": "1291369b0911408d1a0e66c14123839bab07d3ff1d4b9637ddccd3d5e61aa0b5"
+    },
+    {
+      "bytes": 16859,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-main-body-normal.json.gz",
+      "role": "historical-gzip",
+      "sha256": "b3fcdd615daea330a9cd5e9aa7c4417075dbf35e71a312e4b3af52e6a6450672"
+    },
+    {
+      "bytes": 185,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-main-body-normal.log.gz",
+      "role": "historical-gzip",
+      "sha256": "7236e9ee1a08481042f914ee0cbfd0978db9c389814f17a1554392ace1e37d1c"
+    },
+    {
+      "bytes": 16857,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-main-body-release.json.gz",
+      "role": "historical-gzip",
+      "sha256": "5efc1407269cd658edf2999a201cd39200a0a0cf7c06b71706c71055607897b1"
+    },
+    {
+      "bytes": 185,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-main-body-release.log.gz",
+      "role": "historical-gzip",
+      "sha256": "7236e9ee1a08481042f914ee0cbfd0978db9c389814f17a1554392ace1e37d1c"
+    },
+    {
+      "bytes": 2127,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-native-controls.json.gz",
+      "role": "historical-gzip",
+      "sha256": "24d3d12aa8b1d9336e24d7a67968ce02777054a7d5bda47e965e061b94563962"
+    },
+    {
+      "bytes": 839,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-native-controls.log.gz",
+      "role": "historical-gzip",
+      "sha256": "2ca575a97ef54a8d5b0404c258aa05bf8df2cfc1fc4069fcb529390008bf5526"
+    },
+    {
+      "bytes": 1326,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-native-controls.py.gz",
+      "role": "historical-gzip",
+      "sha256": "02126a607edd750bdc0ed936feb30a548d915321ac40ef5371f8f00e3832a566"
+    },
+    {
+      "bytes": 12739,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-preflight-before-name-fix.json.gz",
+      "role": "historical-gzip",
+      "sha256": "8cccb054da50fd4228b692e82302957f9183606dbd8da4d0e81c908798a70d75"
+    },
+    {
+      "bytes": 583,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-preflight-before-name-fix.log.gz",
+      "role": "historical-gzip",
+      "sha256": "b58fed958af2229ad482635b231998b41e2f501022a728d8c667b6d62ac9dfaa"
+    },
+    {
+      "bytes": 14691,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-preflight-before-test-budget.json.gz",
+      "role": "historical-gzip",
+      "sha256": "04bf612f5c5d966541d83ffb8dba3c35fd886db0c21cc165656ddd7bbfa2a582"
+    },
+    {
+      "bytes": 1926,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-preflight-before-test-budget.log.gz",
+      "role": "historical-gzip",
+      "sha256": "6ce060016e18640c57a1b49d37e427c4a74d1341872075aabfe4598597bc1bd4"
+    },
+    {
+      "bytes": 16335,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-preflight.json.gz",
+      "role": "historical-gzip",
+      "sha256": "77a47b3e5048fd7d09291585a87baabfed09839ddb5ecc85f3637b35f21087cb"
+    },
+    {
+      "bytes": 2790,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-preflight.log.gz",
+      "role": "historical-gzip",
+      "sha256": "8fe9e94b4d5ca3ffb5a4dbe831981509028f5ca6f879b59e958e944faffc7d0a"
+    },
+    {
+      "bytes": 1598,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-preflight.py.gz",
+      "role": "historical-gzip",
+      "sha256": "99b595a09fb61e7786ba5a107c889f8808e5af917a00afe452f7193dea927ad9"
+    },
+    {
+      "bytes": 1645,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-qualification.json.gz",
+      "role": "historical-gzip",
+      "sha256": "b6c6194d7b9a3d27d1999152179e62e715e036207e86f66caef6616f15cb9479"
+    },
+    {
+      "bytes": 224,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-qualification.log.gz",
+      "role": "historical-gzip",
+      "sha256": "7c6e5f37421266663aa7042987499ba1a83746f6a6129a15c124da744fbbf685"
+    },
+    {
+      "bytes": 1194,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-qualification.py.gz",
+      "role": "historical-gzip",
+      "sha256": "8456794d7fdf8086e9433956bfcb81717e552113c924d8006b731fc5aad8c40b"
+    },
+    {
+      "bytes": 11200,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-structural.json.gz",
+      "role": "historical-gzip",
+      "sha256": "3d0e56bec9e05e042287a16a64a7451d01c8c904776edbc81ebacac17050e2e9"
+    },
+    {
+      "bytes": 78,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-integrated-structural.log.gz",
+      "role": "historical-gzip",
+      "sha256": "67692dd374d6ea04f559bac8f38a552b71f6ef24262eea1582f8fc8903c2e79e"
+    },
+    {
+      "bytes": 3975,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-native-control-before-canonical-syntax.tar.gz",
+      "role": "historical-gzip",
+      "sha256": "623cb08d83b2560f19713a8ca90300535f86d56fe642db6fa1b3b6fce818d9e4"
+    },
+    {
+      "bytes": 3903,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-native-control-before-explicit-constructor.tar.gz",
+      "role": "historical-gzip",
+      "sha256": "9ef72f19ecc45add3ed790db6f1e4e99f665c13ffc41a5f6ab40a2f1de38a0eb"
+    },
+    {
+      "bytes": 4193,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-native-control-before-syntax-fix.tar.gz",
+      "role": "historical-gzip",
+      "sha256": "cbbc103f43632ba1bf6435e5c79fe17dc0adf1cf17c0decfdddd48db74a6a42d"
+    },
+    {
+      "bytes": 24561,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-body-wave-integration-20261011/wave-pre-format-source.tar.gz",
+      "role": "historical-gzip",
+      "sha256": "10dba34b9002b429cb2e388bb133e92d7d5a6a367d64874e37d6237d7eb5cdc5"
+    },
+    {
+      "bytes": 304,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-bootstrap-gate-repairs-20261011/gate-regressions-final-guardian.log.gz",
+      "role": "historical-gzip",
+      "sha256": "420adaf12fb2bcb3e0ff2a72df4b82c29e05780e26cc744e145de079e5b82137"
+    },
+    {
+      "bytes": 803,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-bootstrap-gate-repairs-20261011/gate-regressions-focused.json.gz",
+      "role": "historical-gzip",
+      "sha256": "1e9c03126e0a483c2c3259dae34ea5eb9a7816e6dee7a3eed199dbe9eeb34c9b"
+    },
+    {
+      "bytes": 172,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-bootstrap-gate-repairs-20261011/gate-regressions-focused.log.gz",
+      "role": "historical-gzip",
+      "sha256": "c41ddd8be53448e09bc4cf49a8a8682bf0d0b026999f7cf4d4887051314eb506"
+    },
+    {
+      "bytes": 538,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-bootstrap-gate-repairs-20261011/gate-regressions-publication-cli.log.gz",
+      "role": "historical-gzip",
+      "sha256": "d879eb9ae4af3a1ae50bf0b69ca31204d0b60737a9f9b80b5edb9f29b351b28b"
+    },
+    {
+      "bytes": 1539,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-bootstrap-gate-repairs-20261011/gate-regressions-publication-release.log.gz",
+      "role": "historical-gzip",
+      "sha256": "54fc0759130c40ec49922ef51c4890dcdf3ca8624faadb3b62ea20135e061413"
+    },
+    {
+      "bytes": 608,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-bootstrap-gate-repairs-20261011/gate-regressions-release.json.gz",
+      "role": "historical-gzip",
+      "sha256": "c4ef9fb60c6e6d1baddb77ffec8eea5952f352801604a04bab8e71b7787417b8"
+    },
+    {
+      "bytes": 1663,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-bootstrap-gate-repairs-20261011/gate-regressions-release.log.gz",
+      "role": "historical-gzip",
+      "sha256": "ed2fbdd493f256f05d343dcb470ac3b63e9fd73b58dd98d4de687efba0a81533"
+    },
+    {
+      "bytes": 1275,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-bootstrap-gate-repairs-20261011/gate-regressions-stable-growth-Debug.log.gz",
+      "role": "historical-gzip",
+      "sha256": "94af8d822f9aead2c194a4c737afaa32c4ea91412bdbdcc42bec8bf200e6aff7"
+    },
+    {
+      "bytes": 1271,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-bootstrap-gate-repairs-20261011/gate-regressions-stable-growth-ReleaseFast.log.gz",
+      "role": "historical-gzip",
+      "sha256": "6506f06ccd1fb78210b946a12d1e0da4952bed01c341fc895699386298c43bc9"
+    },
+    {
+      "bytes": 426,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-bootstrap-gate-repairs-20261011/gate-regressions-stable-growth-guardian.log.gz",
+      "role": "historical-gzip",
+      "sha256": "7b5e29f8b6955b3a785bf74687f643738a632f1112b3c56acad26031b88f8da4"
+    },
+    {
+      "bytes": 682,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-bootstrap-gate-repairs-20261011/gate-regressions-stable-growth.json.gz",
+      "role": "historical-gzip",
+      "sha256": "e78e71d32b703f42728d4bbf201b7ae5dce3257f48949ff661b8bac18779bb66"
+    },
+    {
+      "bytes": 542,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-bootstrap-gate-repairs-20261011/gate-regressions-stable-growth.log.gz",
+      "role": "historical-gzip",
+      "sha256": "1eac41badbad8ebf91ebe230cc54645f3ee57e3278f0904fcdb07efc6b7c86a0"
+    },
+    {
+      "bytes": 967,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-bootstrap-gate-repairs-20261011/gate-regressions-stable-growth.py.gz",
+      "role": "historical-gzip",
+      "sha256": "7238f5d2e613f025206dc2b941b84d15a0425e38e226066bd70a5e3f279ce1d8"
+    },
+    {
+      "bytes": 3919,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-bootstrap-gate-repairs-20261011/graph-publication-test-before-stable-growth.zig.gz",
+      "role": "historical-gzip",
+      "sha256": "79f218fc6ff35925535fd7e2f626a97790a68f9f28691dd91a190478f21e67c2"
+    },
+    {
+      "bytes": 5571,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-bootstrap-gate-repairs-20261011/receipt.json",
+      "role": "historical-receipt",
+      "sha256": "0970143e2a1150d7c7631db9dbcb22ab1e1f85cacc6773bccd10fd9b4a9ae882"
+    },
+    {
+      "bytes": 574,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-bootstrap-gate-repairs-20261011/wave-full-gate-8aae.json.gz",
+      "role": "historical-gzip",
+      "sha256": "8718d929343d46034663ef16768649c0cfa93e03aeb9896e4ebf69b2b0b06806"
+    },
+    {
+      "bytes": 128114,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/docs/audits/evidence/selka-bootstrap-gate-repairs-20261011/wave-full-gate-8aae.log.gz",
+      "role": "historical-gzip",
+      "sha256": "eda935efc93e1f9d8eed388990a9eec82d731a76c8a842cda6cd8dd266963bd3"
+    },
+    {
+      "bytes": 426,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/component-seed.json",
+      "role": "seed-pin",
+      "sha256": "a2e02f86f24b139c1b3b71c035ad0f376246f43b12081f3f5beac1bbc007da1c"
+    },
+    {
+      "bytes": 21103,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/README.md",
+      "role": "component-source",
+      "sha256": "68c3bd87856d968f9f5ff2d898421d86ee6f9f76dfd811010591a6606ef1c5c4"
+    },
+    {
+      "bytes": 26831,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/WIRE.md",
+      "role": "component-source",
+      "sha256": "a5ccef9924400bf5e7034ef832e91fd9a72f0179522737afac18629b98201cda"
+    },
+    {
+      "bytes": 3056,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/array_catalog_tests.my",
+      "role": "component-source",
+      "sha256": "978275909c621f6775929ac33a005ce2ad64bf2f7bb2de6359a3ac8f3ee539cd"
+    },
+    {
+      "bytes": 1182,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/array_comprehension.my",
+      "role": "component-source",
+      "sha256": "8bece4ffee57e2df4b22a982e7d7c2728bbc4ca37fa2f045f070c723f1e26789"
+    },
+    {
+      "bytes": 2319,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/array_comprehension_tests.my",
+      "role": "component-source",
+      "sha256": "9f18973b35eea1485d4303ba3524d6e6d02afa6104ebc0445f39daf93d8edde5"
+    },
+    {
+      "bytes": 4820,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/array_engine_tests.my",
+      "role": "component-source",
+      "sha256": "37efd6209ca5964a98a1c62c4f7ee6dfbfd29a8a61456a48dfee16d768f8d4e7"
+    },
+    {
+      "bytes": 6236,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/array_index.my",
+      "role": "component-source",
+      "sha256": "456b530417ba8507adf5d917187045fc90f2f1950cd57f0469d25134d0d2bed6"
+    },
+    {
+      "bytes": 7560,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/array_index_tests.my",
+      "role": "component-source",
+      "sha256": "07b54ccbaff7ddd3253a5b25134e0c4e08f866caef5de48326fdb04e7c1d4d6b"
+    },
+    {
+      "bytes": 6726,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/array_places.my",
+      "role": "component-source",
+      "sha256": "7ec4f7ca5f47214ac574f4c7c6c3c5766feae7560921b2638758a407eebfb8c7"
+    },
+    {
+      "bytes": 11991,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/array_places_tests.my",
+      "role": "component-source",
+      "sha256": "a133f6a63d9faec2e3b285557fe9158eda7515f7aa5e5d731c0ffd24a0ddc8ba"
+    },
+    {
+      "bytes": 1529,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/array_policy_tests.my",
+      "role": "component-source",
+      "sha256": "06fdb9ea6d62d6107bb5457f649b03e04ab09ef14491f0368ae6c98bb7c4eae9"
+    },
+    {
+      "bytes": 10665,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/array_routing_tests.my",
+      "role": "component-source",
+      "sha256": "4c72b686d7cbab0656136a435befcea8e61ff1c18bef996e90a4f0a6a3829933"
+    },
+    {
+      "bytes": 12515,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/array_types.my",
+      "role": "component-source",
+      "sha256": "d858c231fc6eb2a333f0e21eec14f1ea7e4b1ad1d32bcd762142b9a586be21b7"
+    },
+    {
+      "bytes": 9968,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/array_types_tests.my",
+      "role": "component-source",
+      "sha256": "69dcba4a9bd8d45b8db620995c27a118825104bfd84d9ffa4c93addf29553249"
+    },
+    {
+      "bytes": 11939,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/array_write_tests.my",
+      "role": "component-source",
+      "sha256": "14574bca6aaa9b86fc8f4bc7590344c7ae9005d896f20ee48e63296838d0d661"
+    },
+    {
+      "bytes": 18362,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/body_tests.my",
+      "role": "component-source",
+      "sha256": "ec9deb476dd5664a6f8b6e5b35a0325c44943d392605bb3f35f486fc66ea8acc"
+    },
+    {
+      "bytes": 10352,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/buffer_engine_tests.my",
+      "role": "component-source",
+      "sha256": "e37c02f4abb2561a350ff45479dbb7f8b9b0e9b82e6d07f662e8c65e054f39f4"
+    },
+    {
+      "bytes": 2392,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/buffer_lower.my",
+      "role": "component-source",
+      "sha256": "268d52bcb03a52b1af071ba8c5babae3c30f20add3fed6b89fe014d859a5330f"
+    },
+    {
+      "bytes": 6144,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/buffer_lower_tests.my",
+      "role": "component-source",
+      "sha256": "3b1408cdeaccbd9c1d2c39339c2a1a8c94cef64fd913dbc45dc9cdee9f619acd"
+    },
+    {
+      "bytes": 4726,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/buffer_type_tests.my",
+      "role": "component-source",
+      "sha256": "d05a3f62575667bf073b98b2b9e4c97182690451ddae89728000a30bc98fce23"
+    },
+    {
+      "bytes": 2471,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/buffer_types.my",
+      "role": "component-source",
+      "sha256": "74a35aa42e3234146aeebfee36ca4a39991ce0b30aa5ab975611bfd9425ead6b"
+    },
+    {
+      "bytes": 3479,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/call_repairs.my",
+      "role": "component-source",
+      "sha256": "a246462e908cd48ff0e2e20493bb66ee60890c4bb210245b73cbf5c318291da8"
+    },
+    {
+      "bytes": 4860,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/chained_compare.my",
+      "role": "component-source",
+      "sha256": "39034a8ea6b1b34b4399e31dfe4846d3560480b87ee22945d8fdea46de2fabf9"
+    },
+    {
+      "bytes": 5711,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/chained_compare_tests.my",
+      "role": "component-source",
+      "sha256": "63eac0e561a7e7447f8e5e2b3d8a2272fd355cd4097d19472e30701234a76a8c"
+    },
+    {
+      "bytes": 12363,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/checking.my",
+      "role": "component-source",
+      "sha256": "1867728d6fb1ca65d68d3b11fbe41456887997f8d3324b0d67c09c8867a35699"
+    },
+    {
+      "bytes": 6294,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/codec.my",
+      "role": "component-source",
+      "sha256": "30187e42b4ee399dafda339413627c1f9662db7ec05b3565587cb45698f2bbfc"
+    },
+    {
+      "bytes": 1562,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/codec_label_tests.my",
+      "role": "component-source",
+      "sha256": "fd20402bab3b855e1860cab2fd1be9c148b889af5af8557b6b69e10044141f27"
+    },
+    {
+      "bytes": 5239,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/codec_tests.my",
+      "role": "component-source",
+      "sha256": "7e8be3d93dfebe880d7dd7ec50868bdf1deabc5b1baa8c8a23fa79619243a28e"
+    },
+    {
+      "bytes": 5899,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/collection_comprehension.my",
+      "role": "component-source",
+      "sha256": "03ef6c6cde40b4a96378068edf611ac97520847d3c0938b83d9d638a07fa7468"
+    },
+    {
+      "bytes": 18253,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/collection_comprehension_tests.my",
+      "role": "component-source",
+      "sha256": "82a3ae135f76a055301ba4e278d1f356b323cf9f42fbc5355cc8a130edce9cf1"
+    },
+    {
+      "bytes": 5806,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/collection_gather.my",
+      "role": "component-source",
+      "sha256": "4277c7725c0113d977e22a6a7085aab2791f0886cf0739c920b140a2e847eb6b"
+    },
+    {
+      "bytes": 8909,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/collection_gather_tests.my",
+      "role": "component-source",
+      "sha256": "33980e7d41c71268c10265080b1d9a9e2529d21740d787f29d34168d65c9bbe6"
+    },
+    {
+      "bytes": 4014,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/collection_recipe_tests.my",
+      "role": "component-source",
+      "sha256": "d2cb8905d4a322df21d71424bf99ee2ef61caa4eaf9bef19c66f468f9e123b56"
+    },
+    {
+      "bytes": 10300,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/collection_types.my",
+      "role": "component-source",
+      "sha256": "1dbdb81c2c43703f5d19cd54a807d418ce5e3aae706cd0ea9d5a2f680b007c18"
+    },
+    {
+      "bytes": 4068,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/collection_types_tests.my",
+      "role": "component-source",
+      "sha256": "af0604afec1e856dc6240e7b8cbbe94aadccf877c5452c25931a6a47bc32fe6a"
+    },
+    {
+      "bytes": 5053,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/comprehension_lower.my",
+      "role": "component-source",
+      "sha256": "5d54fdec8f423f0a48a30349b54bf2828b40040d4399346f5c9ebf3cf5aeebbb"
+    },
+    {
+      "bytes": 4170,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/constant_call.my",
+      "role": "component-source",
+      "sha256": "a3783ff37f66f6df1792afda3d76141b6ab89855275fb0f9de356d83da5d3702"
+    },
+    {
+      "bytes": 19203,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/constant_context.my",
+      "role": "component-source",
+      "sha256": "64ab05d92276ee8101cd7c1606fcf3a495bdd683ae00be4ad2a03d7420f80a30"
+    },
+    {
+      "bytes": 51699,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/constant_eval.my",
+      "role": "component-source",
+      "sha256": "e01f223cd5fb6be1cc2fae854ddefe75854c6c0bbf198ff0e72738b36322e38b"
+    },
+    {
+      "bytes": 19368,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/constant_eval_tests.my",
+      "role": "component-source",
+      "sha256": "dd13246122798fbf26f9462c4e51bb9a6d3c2fb39bd7f91bc4552b810d2d0199"
+    },
+    {
+      "bytes": 6566,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/constant_float.my",
+      "role": "component-source",
+      "sha256": "620e0af90f7519124a63773a91eeb0c05ee4fd5ec0334af6d066385f9d1cb527"
+    },
+    {
+      "bytes": 4842,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/constant_float_tests.my",
+      "role": "component-source",
+      "sha256": "e775d6dca163b988359669a39c104bde748fb80bdce378bb68553a81eb344278"
+    },
+    {
+      "bytes": 7922,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/constant_integer.my",
+      "role": "component-source",
+      "sha256": "a248bd8c5b7b09eedcb6b827dbe35e785519d9af66394ae7989117aaf42a0141"
+    },
+    {
+      "bytes": 4949,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/constant_integer_tests.my",
+      "role": "component-source",
+      "sha256": "8a8515f6ef2423840e3273a3a54e7741d858bd07cad647ef264963c557478ffb"
+    },
+    {
+      "bytes": 1755,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/constant_value.my",
+      "role": "component-source",
+      "sha256": "bacb569836a6e27510b2a175c6305a4e1c8b9bc9a466f40bd5a5898d40c57d8a"
+    },
+    {
+      "bytes": 577,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/diagnostic.my",
+      "role": "component-source",
+      "sha256": "093876a61f7da699088f1ae229ece2c8f571e2a1a915f35c527d0499624cf70c"
+    },
+    {
+      "bytes": 2953,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/dictionary_construct.my",
+      "role": "component-source",
+      "sha256": "4bb4d02dc2a180e1887fc9fa5fd8c4c46ddc7436476477be8aef1378b57d917f"
+    },
+    {
+      "bytes": 9538,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/dictionary_construct_tests.my",
+      "role": "component-source",
+      "sha256": "d85e6786f833aa283fd67581e742890c7c8377fd78b13f53c33ff87899759d93"
+    },
+    {
+      "bytes": 20150,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/dictionary_engine_tests.my",
+      "role": "component-source",
+      "sha256": "ccd17383da0a5cd474a02aa96ba94da869f73f95c88c93dc7df9b6ff0d401d85"
+    },
+    {
+      "bytes": 7993,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/dictionary_iteration.my",
+      "role": "component-source",
+      "sha256": "ad006e2d4aa04903025cc97127a940c25bc16d7ae23acfff3dbbaed653ca312e"
+    },
+    {
+      "bytes": 10481,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/dictionary_iteration_engine_tests.my",
+      "role": "component-source",
+      "sha256": "a86d123b3c3b36b4d991c0cc30be7d0771e65e8c69d49058dba01c4f51de335d"
+    },
+    {
+      "bytes": 12463,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/dictionary_iteration_tests.my",
+      "role": "component-source",
+      "sha256": "a08664ba89836de99a4a999c9643347f3f7bc2ec9c21097e355df8dc0ad69612"
+    },
+    {
+      "bytes": 6607,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/dictionary_method_tests.my",
+      "role": "component-source",
+      "sha256": "2b4971783a6cad97492e6db7c2853e5e2ce9b571cd921aa050f1382fd2f626c9"
+    },
+    {
+      "bytes": 2044,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/dictionary_places.my",
+      "role": "component-source",
+      "sha256": "c230380dc0d91bae9bf05738801382dc755914f161b97bcc3f7b9df1c592d556"
+    },
+    {
+      "bytes": 12234,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/dictionary_places_tests.my",
+      "role": "component-source",
+      "sha256": "9c5786b10b10102487a881ceef5909616dbe37870f051e92b2ba4d1576efdb65"
+    },
+    {
+      "bytes": 6611,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/dictionary_snapshot_tests.my",
+      "role": "component-source",
+      "sha256": "4036d3060ee75daa23e35162599cad1daa004d43e5b041b7d932dc7b19efd8e0"
+    },
+    {
+      "bytes": 5436,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/dictionary_view_contains.my",
+      "role": "component-source",
+      "sha256": "65ea5f90d4faead3f65761ea5e6327e4f30d0686d7772afe01307f72d5a8dcbf"
+    },
+    {
+      "bytes": 8662,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/dictionary_view_contains_tests.my",
+      "role": "component-source",
+      "sha256": "aaf3f72139e969c02af394173693dfdbac29c7eac6daffc53f140a98664bdf2e"
+    },
+    {
+      "bytes": 5291,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/dictionary_view_lower.my",
+      "role": "component-source",
+      "sha256": "34dfad04b6a9d62d25a4250f465c11eccf88713e88372ee24a73e4d34f8e2e4f"
+    },
+    {
+      "bytes": 9888,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/dictionary_view_lower_tests.my",
+      "role": "component-source",
+      "sha256": "0ce93bd6e938bde5eafa79a48bb5b697ab276a437639d3096529dead5c3f6165"
+    },
+    {
+      "bytes": 1240,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/discard_policy.my",
+      "role": "component-source",
+      "sha256": "70eb5f69af54a7a98de0151011f4a341610bf2ad45cc7e84322d5e3721db4f9e"
+    },
+    {
+      "bytes": 4175,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/discard_policy_tests.my",
+      "role": "component-source",
+      "sha256": "a99c0935569eb7e9df88fb8e54f4d3d0e5a43ef4efe5fcd3530c9bb789109895"
+    },
+    {
+      "bytes": 3628,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/emission.my",
+      "role": "component-source",
+      "sha256": "fffddc94e27120da8e3f16c47bec3e1ceca7ed2217b85d1cc8f4642827d8ea22"
+    },
+    {
+      "bytes": 438074,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/engine.my",
+      "role": "component-source",
+      "sha256": "4251acb4e1f621e49e1cc2aed26c7eeb27c2ec66a2814c4ca1a8665de8797955"
+    },
+    {
+      "bytes": 2808,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/engine_flow_tests.my",
+      "role": "component-source",
+      "sha256": "9bb1fb7dfa4399210bba05c62a72f0db117bb4a3c6763fc9f0e441885a36be1e"
+    },
+    {
+      "bytes": 5278,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/failure_lower.my",
+      "role": "component-source",
+      "sha256": "b25c91b13dd108492f88601bc83263b692d1790bb0879cdd2d225f390eb0eaac"
+    },
+    {
+      "bytes": 12528,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/failure_lower_tests.my",
+      "role": "component-source",
+      "sha256": "1c5ca4563a3a736f7974e44aaf5a1bbc19f99de49755e750dbfff6e23483b42f"
+    },
+    {
+      "bytes": 2839,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/file_operations.my",
+      "role": "component-source",
+      "sha256": "d0b86609a361c78639b6d38a03f5a6ca37c7c7b163c14dd146a7cc4aa50d1a72"
+    },
+    {
+      "bytes": 1275,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/file_operations_tests.my",
+      "role": "component-source",
+      "sha256": "48996149f67cbe5df361371ef438194515bdc8f7a52a8c5b260ba724818e5885"
+    },
+    {
+      "bytes": 4360,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/floating_literals.my",
+      "role": "component-source",
+      "sha256": "a6d8c10a65b485b5a149d3e03743707d3ed1f30de1f46b01bed1d5b2fd3e932e"
+    },
+    {
+      "bytes": 3785,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/floating_literals_tests.my",
+      "role": "component-source",
+      "sha256": "347fad008ca6c31fb532a63f8c6bd8cd783929a2ee02103da868b216b93296fc"
+    },
+    {
+      "bytes": 1349,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/floating_types.my",
+      "role": "component-source",
+      "sha256": "2823fae2a1da7f1d201a3c41748140d25d743992282d16172bef5132c2445d40"
+    },
+    {
+      "bytes": 12362,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/functions.my",
+      "role": "component-source",
+      "sha256": "03f6a22ae72f15f0fe834949ffd188d6070af309d160b93eabbec08848c9216d"
+    },
+    {
+      "bytes": 8482,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/gather_engine_tests.my",
+      "role": "component-source",
+      "sha256": "f2e3b5ffe5b09ff8036b8b74cdfc25b6fd39aa03c406fb3d3368436192dc9d93"
+    },
+    {
+      "bytes": 4769,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/gather_lower.my",
+      "role": "component-source",
+      "sha256": "e8f824050238e12e40514cfd63da985ce2d310d05b0533861f8e19abd896e4cb"
+    },
+    {
+      "bytes": 13818,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/gather_lower_tests.my",
+      "role": "component-source",
+      "sha256": "e46d9ad022d9f2bd3f633a0bc7aa958191bd8650e8336a8fbc469cac344a2b8c"
+    },
+    {
+      "bytes": 1565,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/gather_pair.my",
+      "role": "component-source",
+      "sha256": "9d2d0215b914de485cc8f741d4a079f684a0e2f5dda1ef5ac2ed586279d9d21c"
+    },
+    {
+      "bytes": 7464,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/gather_pair_tests.my",
+      "role": "component-source",
+      "sha256": "f101b9fe4eabce005074ea83e335674ece41a0caf90c04aaebe9087394171334"
+    },
+    {
+      "bytes": 4154,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/generic_bindings.my",
+      "role": "component-source",
+      "sha256": "53449204931d5bf27d3d213111fc24b404a42e18a4bc0fc18eff8360f03d7191"
+    },
+    {
+      "bytes": 16740,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/generic_engine_tests.my",
+      "role": "component-source",
+      "sha256": "83cb1ebf537cbd0236761d558d36eeb6c89f02c6c25a843570202df1245a7073"
+    },
+    {
+      "bytes": 9036,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/generic_inference.my",
+      "role": "component-source",
+      "sha256": "7da4b6f6fbd9679e28ab6d583ef4d058734c4a54875eeee01254b8e24446c456"
+    },
+    {
+      "bytes": 5537,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/generic_instances.my",
+      "role": "component-source",
+      "sha256": "c45fde38ad4736f368ae5b4badd90aa63bc0e836af1ef4302e9ef648e3c20a6f"
+    },
+    {
+      "bytes": 6242,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/generic_instances_tests.my",
+      "role": "component-source",
+      "sha256": "9d1cdd9cdd6b6bd8f4d859964b2c5fc17c272ef9b3b0b2fc868770ef266278fc"
+    },
+    {
+      "bytes": 2733,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/generic_lengths.my",
+      "role": "component-source",
+      "sha256": "a237e244c6a2de6fb23fb0ade29c7d2a1921ea5964a3d6c7837221c253dea9c1"
+    },
+    {
+      "bytes": 4363,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/generic_lengths_tests.my",
+      "role": "component-source",
+      "sha256": "9dd7b677b7e00ff0bdd49eade4d6fbf60693cd639a317310260524cd19fdf4a7"
+    },
+    {
+      "bytes": 4074,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/graph.my",
+      "role": "component-source",
+      "sha256": "60cce5eb4fd540c639c80ecdaf8da8903ed25e97f957f062337555651c3eef33"
+    },
+    {
+      "bytes": 2100,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/graph_projection_tests.my",
+      "role": "component-source",
+      "sha256": "24b4e7d7c4f773096b7609dcb0cd3b1bf66312b8f644b89a19e0774e6f382143"
+    },
+    {
+      "bytes": 6110,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/hash_keys.my",
+      "role": "component-source",
+      "sha256": "f263d4a225a6a4063835803e17eaf32ed62d96fcd3d766369488087d826e86c4"
+    },
+    {
+      "bytes": 5879,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/hash_keys_tests.my",
+      "role": "component-source",
+      "sha256": "6e0d2c696479bc6d0c757c45ecf3c7c2b41dac0d93e592850807b420b7123b0b"
+    },
+    {
+      "bytes": 7467,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/integer_literals.my",
+      "role": "component-source",
+      "sha256": "56ca6bd3bfe37e5820daa5f496925d385d12dea5063181673da71c721b26bad8"
+    },
+    {
+      "bytes": 3646,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/integer_literals_tests.my",
+      "role": "component-source",
+      "sha256": "2c27e6d293e454a9ccde94480c631f5451baaa464e66ae64d20caa83277f4654"
+    },
+    {
+      "bytes": 4160,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/io_arguments.my",
+      "role": "component-source",
+      "sha256": "07ff4afeca100a8c5634258104dd49f4f85f3c820cfa107fb741059d4cfad25b"
+    },
+    {
+      "bytes": 5108,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/io_arguments_tests.my",
+      "role": "component-source",
+      "sha256": "8c5e4f517d03693b628d28adac840cfaaf16ae405821ed95c085ae0caa7307fa"
+    },
+    {
+      "bytes": 22184,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/lexer.my",
+      "role": "component-source",
+      "sha256": "54491363b09bca64755d89f0e33248cb7106863a208ce95ea9348b11bb62b137"
+    },
+    {
+      "bytes": 13242,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/library_closure_tests.my",
+      "role": "component-source",
+      "sha256": "228847d5335a28a87f6c91466c08a3885b3e848ea716020fbb90ffb24d197805"
+    },
+    {
+      "bytes": 8963,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/library_comprehension_tests.my",
+      "role": "component-source",
+      "sha256": "304fc232dd502afe47aca9bd372df946fb37766b72d33ee65ad2ae7fafba3eb4"
+    },
+    {
+      "bytes": 7391,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/library_iteration_tests.my",
+      "role": "component-source",
+      "sha256": "aba0e772350f17dfdeb9c0a0d62710bea7e2bfe6a918def24efa642e3e3e3169"
+    },
+    {
+      "bytes": 9853,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/library_scalar_tests.my",
+      "role": "component-source",
+      "sha256": "92bca92eeb0668a88741f65c6a6ee331ba35a76384cb2ffd589f3ae8535a4cd8"
+    },
+    {
+      "bytes": 9834,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/list_engine_tests.my",
+      "role": "component-source",
+      "sha256": "6122d98338399e1eef4ed1853ffbc9c4a97ed4f11c5212f6733df44fd145e39f"
+    },
+    {
+      "bytes": 36004,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/list_iteration.my",
+      "role": "component-source",
+      "sha256": "ad424bf81d867d04df10b1b309eb58a8f36077ef69151b40476629174fc93173"
+    },
+    {
+      "bytes": 16805,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/list_iteration_tests.my",
+      "role": "component-source",
+      "sha256": "37b025a37d268e7611ce760ce05f61a3ba176a6b72262477ae36daadcbbb040c"
+    },
+    {
+      "bytes": 10030,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/list_lower.my",
+      "role": "component-source",
+      "sha256": "7c8e6372f92f3730e55b70ec35c9d34e711761ef84ed863be441ffc6067cd813"
+    },
+    {
+      "bytes": 5787,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/list_lower_tests.my",
+      "role": "component-source",
+      "sha256": "6dcd1dd923bab0ea36ca8ce205ef0a316f88dddb5092d326d45bee5712b3faae"
+    },
+    {
+      "bytes": 6101,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/list_places.my",
+      "role": "component-source",
+      "sha256": "07962a5b986b0b777c4adab01a5d81a14154c226fcd30248e81310f7165dea4e"
+    },
+    {
+      "bytes": 7686,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/list_places_tests.my",
+      "role": "component-source",
+      "sha256": "3586e00e21a4df116125fd47f0ecc5b795b1bc7bc1989f291ab3b2db1284e8fa"
+    },
+    {
+      "bytes": 4281,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/list_repeat.my",
+      "role": "component-source",
+      "sha256": "2a45f3de1234ee819538681750bccf378edaf53404e3d2e319ee06d14cf751e2"
+    },
+    {
+      "bytes": 6026,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/list_slice.my",
+      "role": "component-source",
+      "sha256": "06d2a21519cf35031c8fd1def75309d441cf631dbe26bb22baca6f95091ddb84"
+    },
+    {
+      "bytes": 10017,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/list_slice_tests.my",
+      "role": "component-source",
+      "sha256": "c2a7425185cd3e7ccbdb7525a937215f09000c434b4553a7e6bf7b702e6903fd"
+    },
+    {
+      "bytes": 5023,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/list_type_tests.my",
+      "role": "component-source",
+      "sha256": "13d5080bb3a59c32bb3a81c5ddabf146f60669be7bfe0eec6846421afa191a88"
+    },
+    {
+      "bytes": 25045,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/list_types.my",
+      "role": "component-source",
+      "sha256": "9963a61c137f7dc7f228a6c6407b5ce3ff8840d8e5c52cfe15f4241a88e5f8f1"
+    },
+    {
+      "bytes": 3350,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/locals.my",
+      "role": "component-source",
+      "sha256": "815ac30a86547e9f1b81a7875bfe8090867fb67869a004b0c224a9ebd66851d6"
+    },
+    {
+      "bytes": 710,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/locals_flow.my",
+      "role": "component-source",
+      "sha256": "bd1abc61ccb18707d040fd999778df90e3e04b9a16b285f86c9fd6813eb1e08d"
+    },
+    {
+      "bytes": 1744,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/locals_flow_tests.my",
+      "role": "component-source",
+      "sha256": "8d83721945bc0a5a5ebe64aa14ad97ffad68cdb4e18097887602446b6ffbbd90"
+    },
+    {
+      "bytes": 5430,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/loop_assigns.my",
+      "role": "component-source",
+      "sha256": "8925393ce2674e88d56d58055cde089b2cd894f6bce2cac343fb0b62d0896396"
+    },
+    {
+      "bytes": 4525,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/loop_assigns_tests.my",
+      "role": "component-source",
+      "sha256": "e079d350496f421d0bafcfe564b0cb8409b0b2163fca149197014d849377b73f"
+    },
+    {
+      "bytes": 1214,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/main.my",
+      "role": "component-source",
+      "sha256": "c92d85ae2cd6f8710e15ca5e7d0ed5b32e8009a4b01fa649e151bc8d7f9faf82"
+    },
+    {
+      "bytes": 1588,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/mapping_lower.my",
+      "role": "component-source",
+      "sha256": "ee7ab58f4c3d78ce975aa8573506f31e7dd43962d1e1c7e9d4e0205806462403"
+    },
+    {
+      "bytes": 2137,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/membership_lower.my",
+      "role": "component-source",
+      "sha256": "b1d2de6ebfbb6f0790f4626435abc4ca7adb52e3d6fb533b6ad5feb22acdbe0a"
+    },
+    {
+      "bytes": 9280,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/membership_lower_tests.my",
+      "role": "component-source",
+      "sha256": "7762b2ca290111d9d8645424ec7861b6718e1ae2f57fc69fa5dfec8436ee25d2"
+    },
+    {
+      "bytes": 3394,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/mut_marker_tests.my",
+      "role": "component-source",
+      "sha256": "86eaf140b6a9ee60af59cd1f62f09683c61c8c54d4b1ec2843441009ec012275"
+    },
+    {
+      "bytes": 5158,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/mut_markers.my",
+      "role": "component-source",
+      "sha256": "df968136e9beb34e0ca46e4763131b44b08e25b5a0c397dae495fd513fd4352d"
+    },
+    {
+      "bytes": 9669,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/mutation_places.my",
+      "role": "component-source",
+      "sha256": "e871e4297a1bb6a5fbc79db12f8b66a39e6a0b446cdb2e6840122ca364080845"
+    },
+    {
+      "bytes": 5371,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/mutation_places_tests.my",
+      "role": "component-source",
+      "sha256": "1fdbea52e832779e9b086bf183347e3a1817e5012ec7212c0a65ec2aa60e98a1"
+    },
+    {
+      "bytes": 10034,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/names.my",
+      "role": "component-source",
+      "sha256": "f93a6c3f797545f1d375b12c434c9e19b8d2170c9e4030e259c17533318258a6"
+    },
+    {
+      "bytes": 11208,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/numeric_lower.my",
+      "role": "component-source",
+      "sha256": "53de4c7d124774570a52da5cf7cd10a9d4fdd204e736578379e78b54a4c7a293"
+    },
+    {
+      "bytes": 2096,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/numeric_lower_tests.my",
+      "role": "component-source",
+      "sha256": "b5825c185dbca0e0292ed3acd05749399e570c11963bb66e3b1b1303cdd0fe9d"
+    },
+    {
+      "bytes": 2702,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/obligation_tests.my",
+      "role": "component-source",
+      "sha256": "211097717040b43258b530203fea3791214f56e6bac9754935d351a7e7ac978f"
+    },
+    {
+      "bytes": 3820,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/obligations.my",
+      "role": "component-source",
+      "sha256": "d97be071e8013a3a6e2947a5b0c65a2227daac7369aa53b937f9bc2c2e8c3aa1"
+    },
+    {
+      "bytes": 8214,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/option_engine_tests.my",
+      "role": "component-source",
+      "sha256": "1da90ce071ace6656ad612c463a06e5ab0c078b2e9ceb34d5626a9f292c95482"
+    },
+    {
+      "bytes": 7408,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/option_flow.my",
+      "role": "component-source",
+      "sha256": "5872f4c103a8b867d3b65ceb4a767fe83cd30f82ce58bfe21361bc58e87e34ae"
+    },
+    {
+      "bytes": 8061,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/option_flow_tests.my",
+      "role": "component-source",
+      "sha256": "a41c35bd8be081fe4d94f1005e071234fdac26950322036a7c0fecf3414c622f"
+    },
+    {
+      "bytes": 5288,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/option_lower.my",
+      "role": "component-source",
+      "sha256": "df0721b020fe4fc09af8c49dadfe14d944389d446689b1c57296f4ac3c8c0bc8"
+    },
+    {
+      "bytes": 7065,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/option_lower_tests.my",
+      "role": "component-source",
+      "sha256": "a785a3539ce50997f0094f0acc03a7ff1da336c5878fd641b593b4fc20bec235"
+    },
+    {
+      "bytes": 5634,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/parse_engine_tests.my",
+      "role": "component-source",
+      "sha256": "388f93f679cf4d6627fdbe886c481af683176ce13dd2c32d1e4e1b4e81f05543"
+    },
+    {
+      "bytes": 2237,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/pending_flow.my",
+      "role": "component-source",
+      "sha256": "22f64407e94dc914df4dc9049dde7ec55a4bc06d220832312259e4bc832331d0"
+    },
+    {
+      "bytes": 4419,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/pending_flow_tests.my",
+      "role": "component-source",
+      "sha256": "32d72129ebd6b358d846c87666bdef529d9cf6325bd1db2c34be8f28c322b6ea"
+    },
+    {
+      "bytes": 4130,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/prelude_arguments.my",
+      "role": "component-source",
+      "sha256": "7b1e41ee26688baa6960d9cbf77555c3a0cf18f03befc2121d6ee2042ba18971"
+    },
+    {
+      "bytes": 10443,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/prelude_fold.my",
+      "role": "component-source",
+      "sha256": "5cfed48849768f16607d91dfe095ea81bfe3e2755ac4a4e4d857d1c8ca11d7cb"
+    },
+    {
+      "bytes": 7143,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/prelude_iteration.my",
+      "role": "component-source",
+      "sha256": "eade34a17f88d11c09ec99483511dc195de3c8333ec31800edd4bf774278cdec"
+    },
+    {
+      "bytes": 3908,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/prelude_lower.my",
+      "role": "component-source",
+      "sha256": "d7e44bb285839fbc4f03f10b6493f6573a17e7d469cd73805dabddc1e7e7e847"
+    },
+    {
+      "bytes": 2949,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/prelude_order.my",
+      "role": "component-source",
+      "sha256": "09189c24477bf0c80f48c878caba9476e609b39c35701fb4024f682141804bd1"
+    },
+    {
+      "bytes": 2235,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/print_types.my",
+      "role": "component-source",
+      "sha256": "bdfd1a634ba7bb9d82c1b9a9e38cb7dcd38ce5ab5ad748b3426fc0d1f52bb5d7"
+    },
+    {
+      "bytes": 4463,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/print_types_tests.my",
+      "role": "component-source",
+      "sha256": "10d5dad02d04059b446e702c03d6a71fa1105b0b075a8698538177cb2373a38a"
+    },
+    {
+      "bytes": 1912,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/profile_tests.my",
+      "role": "component-source",
+      "sha256": "2fb49f8a60a1d7585bcacb5c9192832b537b668cd9b8ec01839fa023544d0ce5"
+    },
+    {
+      "bytes": 3818,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/range_capacity.my",
+      "role": "component-source",
+      "sha256": "9b6f4ec8c692f524f4047f2dce33bd0a458d83574be99e17029785100bfcd808"
+    },
+    {
+      "bytes": 3282,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/range_capacity_tests.my",
+      "role": "component-source",
+      "sha256": "bfba3a300bfa49fa3775828157dc54403fe963073162a921ec30fe0013ed6f8d"
+    },
+    {
+      "bytes": 6761,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/range_lower.my",
+      "role": "component-source",
+      "sha256": "a6ab79ea04016283ba5715eba890eb8f60b50fc41bcda2f1155acc033ad3c4d4"
+    },
+    {
+      "bytes": 5996,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/range_stride.my",
+      "role": "component-source",
+      "sha256": "df85b110e85e702c5fca771fdd1fa4a122a2f69bcf3d02a70ad368526611b89f"
+    },
+    {
+      "bytes": 4291,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/range_tests.my",
+      "role": "component-source",
+      "sha256": "82964b378c818b7958cbc6d04bda9f3d5b0ae83963068da7ab03603d45727b32"
+    },
+    {
+      "bytes": 18346,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/receiver_overlap.my",
+      "role": "component-source",
+      "sha256": "18656f26942331e663a52c269b8a6fa6ae333d4883baac6a7234d513b9962278"
+    },
+    {
+      "bytes": 6546,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/receiver_overlap_tests.my",
+      "role": "component-source",
+      "sha256": "6040e983e6b1cfb80a322d24c2158fa61870e62caa1aed392041abceaa430272"
+    },
+    {
+      "bytes": 2679,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/recipe_index.my",
+      "role": "component-source",
+      "sha256": "71903f67525209970e62995d96feec664a197c9529108a79d70c7728c0ced953"
+    },
+    {
+      "bytes": 1877,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/recipe_index_tests.my",
+      "role": "component-source",
+      "sha256": "e10aafdbef70f62385605605b59152b03555dc0deb592aea489cff62f9859c0e"
+    },
+    {
+      "bytes": 4022,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/record_construct.my",
+      "role": "component-source",
+      "sha256": "565a688d9af3fd97a428a98866d6d6ae491284566ebe8ffeb7f7f5dbf516ed39"
+    },
+    {
+      "bytes": 6440,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/record_construct_tests.my",
+      "role": "component-source",
+      "sha256": "2fd35b0c00a4b1d0919c9b6981cdb0736ed162ea5b6bcc91eaf9eb3eff15ad64"
+    },
+    {
+      "bytes": 8114,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/record_engine_tests.my",
+      "role": "component-source",
+      "sha256": "96472d83350b6b84473079fe1414daded999592041e7db56f65a7c5905a9f0bb"
+    },
+    {
+      "bytes": 3132,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/record_index.my",
+      "role": "component-source",
+      "sha256": "5c756454309d65df96d286c192c0bffca2e4e927b22167d4479c1654a0464872"
+    },
+    {
+      "bytes": 1747,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/record_index_tests.my",
+      "role": "component-source",
+      "sha256": "8eefee2a1b3440e59de2bf901f1909e456d86004508d590c92bf84d1f16f1b04"
+    },
+    {
+      "bytes": 6519,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/record_name_index.my",
+      "role": "component-source",
+      "sha256": "7df407da5fe863c434f4db1189f36be6b7f9de400975f5d5dee9aca21b462ca7"
+    },
+    {
+      "bytes": 12670,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/record_names.my",
+      "role": "component-source",
+      "sha256": "faa1dfdcf11ad3a93bc8f2e4ca0733f8335f2f058da1751df6c1b1e5f22c8ffa"
+    },
+    {
+      "bytes": 8162,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/record_places.my",
+      "role": "component-source",
+      "sha256": "7ef3097ddc78ca90b484eacd0d986a2cbf3e01eb4dd95bee17e2f4c2d9f55737"
+    },
+    {
+      "bytes": 6539,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/record_places_tests.my",
+      "role": "component-source",
+      "sha256": "7e3c2c1ea2c112329bc81e29c08b46b47e4fe60e60152cb53d535ae618c13457"
+    },
+    {
+      "bytes": 1649,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/record_qualified.my",
+      "role": "component-source",
+      "sha256": "5dfcda5a1989ba9d189e39887cf13f85261d1c5d9929eddb0fd707dbfc73d371"
+    },
+    {
+      "bytes": 933,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/record_qualified_tests.my",
+      "role": "component-source",
+      "sha256": "57316bcee6ebd588f0819991dbba7b0787028a4ba04acb7586f8a24230a6cb9a"
+    },
+    {
+      "bytes": 7304,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/record_type_tests.my",
+      "role": "component-source",
+      "sha256": "f5488b82fde73caef4cd8c02e1b0c93714963d62eb3f1805a8c4e21987d4a234"
+    },
+    {
+      "bytes": 21558,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/record_types.my",
+      "role": "component-source",
+      "sha256": "5546fe66ebb614dcc4f51fad4ad30b569c68291ecc9185f0cb9dba82082f953f"
+    },
+    {
+      "bytes": 23231,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/resource_engine_tests.my",
+      "role": "component-source",
+      "sha256": "54c8713d330f989a115d763b8da82e457218295545021c91d57724045b346214"
+    },
+    {
+      "bytes": 3974,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/resource_lower.my",
+      "role": "component-source",
+      "sha256": "7a5645ce67b4ebc2ebb91fa7d8fd272c37757cceabbd487c26832e0c3d858e40"
+    },
+    {
+      "bytes": 5779,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/resource_lower_tests.my",
+      "role": "component-source",
+      "sha256": "42dc65e95c92c362e8e9d943294ac8c9a519bdfb37de95652d260991733a45bb"
+    },
+    {
+      "bytes": 7325,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/scalar_gather.my",
+      "role": "component-source",
+      "sha256": "9c497a748ab61fd9d1bcddbc5ff1914a344cdc47fce2a5fd18a2c2a2e9aef792"
+    },
+    {
+      "bytes": 4062,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/scalar_gather_tests.my",
+      "role": "component-source",
+      "sha256": "5667de75661b6bdc66f1de98a2a4f7e603828a8f81be336101703264e8277bbe"
+    },
+    {
+      "bytes": 2320,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/scalar_tests.my",
+      "role": "component-source",
+      "sha256": "94a04e1c8435f51d4c44c6e7289dd34e11d5e927d73cd79f15cfd055e24858f4"
+    },
+    {
+      "bytes": 4248,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/scalars.my",
+      "role": "component-source",
+      "sha256": "239bdf02596d0cea325fd08da51e18f7b442094fb8edbf70d6ec7652041b6941"
+    },
+    {
+      "bytes": 9643,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/sequence_iteration.my",
+      "role": "component-source",
+      "sha256": "60ed9c659f2a276b03939d4f15aa7ab81f820e83793ce5ccb2fb3221434da865"
+    },
+    {
+      "bytes": 2514,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/sequence_iteration_tests.my",
+      "role": "component-source",
+      "sha256": "d2a7f170940ff4c11c83793f09ffcadd7bd7c3f4048466c4f2fe6f6f66539f7d"
+    },
+    {
+      "bytes": 15473,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/sequence_tests.my",
+      "role": "component-source",
+      "sha256": "0b69bd291b3a84f5aa4eef03fb4fd5bdb1b5b81dae286bd9be42367e72892572"
+    },
+    {
+      "bytes": 3200,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/sequences.my",
+      "role": "component-source",
+      "sha256": "99070432a8602591a4d80eb88ca7df99c25ee7c56532b3e1b4a1e418849d4285"
+    },
+    {
+      "bytes": 3300,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/set_conversion_tests.my",
+      "role": "component-source",
+      "sha256": "fce18cb5fb2c66ff12ca7989fa4c483a0ebbd864e1f9ee4f88661e13283c323c"
+    },
+    {
+      "bytes": 8043,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/set_engine_tests.my",
+      "role": "component-source",
+      "sha256": "8bededeaa82a0bbb454f42a1d76950c2ba64cab296e75a63b15aaf22c8d7bd4f"
+    },
+    {
+      "bytes": 11152,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/set_lower.my",
+      "role": "component-source",
+      "sha256": "d1c58c1609b17ab08758a34df832aa1bb891b17832cc8684d8c53da27e5a86fe"
+    },
+    {
+      "bytes": 11615,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/set_lower_tests.my",
+      "role": "component-source",
+      "sha256": "c8570b5f26660347cfb32cd05800edd2240ed91be9ef4971fc210cc0f74a0f45"
+    },
+    {
+      "bytes": 9088,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/set_method_tests.my",
+      "role": "component-source",
+      "sha256": "9d076954fb3ba6fd8941353db8335cf266001092460d159c96607bc13f62be81"
+    },
+    {
+      "bytes": 748,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/source.my",
+      "role": "component-source",
+      "sha256": "6e025ccb7de08217715aac862e4e0ec5270b10b2414282710c0ac2a4752718ed"
+    },
+    {
+      "bytes": 2962,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/suggestions.my",
+      "role": "component-source",
+      "sha256": "ffba15551dd18cb1a4f338f868459280b82c19d94d457ed07879834008dd88e4"
+    },
+    {
+      "bytes": 2437,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/syntax_codec.my",
+      "role": "component-source",
+      "sha256": "dc4e4258f9d39a39907164093ec171fed88bccfe28fd478e4e2e32ba24f11d60"
+    },
+    {
+      "bytes": 3347,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/syntax_diagnostics.my",
+      "role": "component-source",
+      "sha256": "4bb6a293b5f470db45a666c18a4bd6eade755a4845f7ec573c73e02643464e37"
+    },
+    {
+      "bytes": 723,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/syntax_diagnostics_tests.my",
+      "role": "component-source",
+      "sha256": "b83f78eced1a81523c093bfc9495de2d0cf52e46ffa9e037547ebff12abc484c"
+    },
+    {
+      "bytes": 1081,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/syntax_problem.my",
+      "role": "component-source",
+      "sha256": "e685ee9620a452c23884f41d257ba3913781ac2c7fe0fad0e34143d1a2b9ed90"
+    },
+    {
+      "bytes": 4472,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/syntax_value.my",
+      "role": "component-source",
+      "sha256": "fdf8268c366d876212b9a7145591404c01687addc06fee713bfc94c862ceb5bd"
+    },
+    {
+      "bytes": 1613,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/text_methods.my",
+      "role": "component-source",
+      "sha256": "0ec9c4e1fcca6358b9eeb40a919b2995a2c6d38db294c96d22b7d6dde01953f6"
+    },
+    {
+      "bytes": 1521,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/text_methods_tests.my",
+      "role": "component-source",
+      "sha256": "62cdfb8389117694ab9699064ffc8f3638d8b49b39debb12bfb77d14ea9449fb"
+    },
+    {
+      "bytes": 2670,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/text_repeat_tests.my",
+      "role": "component-source",
+      "sha256": "7f750b70719d9d2bb4d641012bc0f6bbe643aa7658990b0e59ae98754968eef5"
+    },
+    {
+      "bytes": 63,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/token.my",
+      "role": "component-source",
+      "sha256": "cd131994b3ead3fd00da666304380e7529991f19a5a29b80f7fcaf19057c84de"
+    },
+    {
+      "bytes": 6740,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/tuple_assignment_tests.my",
+      "role": "component-source",
+      "sha256": "d198fc120501463616a8ac1d3dc94c343afee728a53091d759f19dd1d4296dad"
+    },
+    {
+      "bytes": 2839,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/tuple_catalog_tests.my",
+      "role": "component-source",
+      "sha256": "a2786e13c77d6092edbdf57f6137ec30c97f3e9fe4754d35a54391ff76026093"
+    },
+    {
+      "bytes": 6541,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/tuple_engine_tests.my",
+      "role": "component-source",
+      "sha256": "3e7c97e0c381e675310e3e1e5b6e5e2bad554b82f87f402925058e0c9c734af9"
+    },
+    {
+      "bytes": 3312,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/tuple_lower.my",
+      "role": "component-source",
+      "sha256": "41c9d7edd30724162f12a910cff2410ceb002fdfb6f334485619bb14c69772c3"
+    },
+    {
+      "bytes": 5452,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/tuple_lower_tests.my",
+      "role": "component-source",
+      "sha256": "63056ac77c0ab781f19fea7bb99474de0ed9408d379a38e71e4fd4bbf4da116d"
+    },
+    {
+      "bytes": 3670,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/tuple_pair_engine_tests.my",
+      "role": "component-source",
+      "sha256": "fdb70072ca703b5a6ef94f864db2c51295d0b194c2ff8528de265b0d2e7a70b1"
+    },
+    {
+      "bytes": 5656,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/tuple_type_engine_tests.my",
+      "role": "component-source",
+      "sha256": "89f831476561ea95df3afa1440528d8feb0fc6d97f3e7b852ddfe05effd90e78"
+    },
+    {
+      "bytes": 10834,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/tuple_types.my",
+      "role": "component-source",
+      "sha256": "46947fb63332a70ceb56e6ff115e45fb422d4a9dc48d4a0d1af2105b92846785"
+    },
+    {
+      "bytes": 6023,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/tuple_types_tests.my",
+      "role": "component-source",
+      "sha256": "7a47074aea1ed0c93f218d3ceb6038ec550b18b179fda37408bf98f5b4f026e2"
+    },
+    {
+      "bytes": 5295,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/variant_construct.my",
+      "role": "component-source",
+      "sha256": "6d5307ba85ecd3c45dce71fa6ff4c2a318136e6a9136f72e41f87198741c259d"
+    },
+    {
+      "bytes": 8374,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/variant_construct_tests.my",
+      "role": "component-source",
+      "sha256": "5fe4d545240352a0dc8f26c956aeff88314c463f564501b34f16140e8a645caf"
+    },
+    {
+      "bytes": 21936,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/variant_patterns.my",
+      "role": "component-source",
+      "sha256": "1fff3b27a64ef90c51eb1ac2291a88540ab7121e33d882ce104007dfb906dc5b"
+    },
+    {
+      "bytes": 13054,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/variant_patterns_tests.my",
+      "role": "component-source",
+      "sha256": "6d571d4db9c824c99ec3b7be4750da97ad3e419115396703035dc0a8123762e2"
+    },
+    {
+      "bytes": 3151,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/variant_shape_tests.my",
+      "role": "component-source",
+      "sha256": "06bbd3d1cd8d797c132ee7d52323c1c1095e163bd4bbb7315a4575b669b32441"
+    },
+    {
+      "bytes": 4781,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/variant_type_tests.my",
+      "role": "component-source",
+      "sha256": "1a7d6a5488b19c606fdab81e23e6f42772a2ea863826742bb8c8d145024e6c80"
+    },
+    {
+      "bytes": 14962,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/body_check/variants.my",
+      "role": "component-source",
+      "sha256": "2cdc4718f97b86e86b7c03a07292d0d1e3c269a2aaf30a8a4ad3f3543aa63cfd"
+    },
+    {
+      "bytes": 3631,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/cache_plan/codec.my",
+      "role": "component-source",
+      "sha256": "fa0592f90fad2ac0efb7f1ca955e63a1a9059e03559e1c0c2bf97417c15102e5"
+    },
+    {
+      "bytes": 5830,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/cache_plan/codec_v2.my",
+      "role": "component-source",
+      "sha256": "c502b53cf68a48760fad7d8c539922816d2d1e38d35e497d4a873261a17d1cb4"
+    },
+    {
+      "bytes": 2593,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/cache_plan/graph.my",
+      "role": "component-source",
+      "sha256": "ae55b3f4e713a1e86cee87e2e870e2fe65ca11e7604e0000759fcbaa0145a5a7"
+    },
+    {
+      "bytes": 13818,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/cache_plan/incremental.my",
+      "role": "component-source",
+      "sha256": "01dfb35efe07f472c1ecfd2e05140cb899e2fc6514f64d8a0d140cf92621f032"
+    },
+    {
+      "bytes": 1020,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/cache_plan/main.my",
+      "role": "component-source",
+      "sha256": "03222396a6df8346c8dfe1396b384ba43adf63f370a536ad9bebf59e412cfda7"
+    },
+    {
+      "bytes": 6394,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/cache_plan/tests.my",
+      "role": "component-source",
+      "sha256": "ead75cf63e65c337dd0e708241739584d955b3e9ba8ce085daeb5830f46dbc74"
+    },
+    {
+      "bytes": 7011,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/declaration_index/README.md",
+      "role": "component-source",
+      "sha256": "014449d796dad8b5ef62ce16046b352bbd051e46fbae812d39172088d45604b0"
+    },
+    {
+      "bytes": 9916,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/declaration_index/codec.my",
+      "role": "component-source",
+      "sha256": "767d70cca4865f1185db3b287f2f84ac2bd59976fa94cd1cc473894d211ba4df"
+    },
+    {
+      "bytes": 6428,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/declaration_index/indexed.my",
+      "role": "component-source",
+      "sha256": "d2fac8905448a78b587f94a33559388d773223123188f8bf8310964d1a92a19b"
+    },
+    {
+      "bytes": 8451,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/declaration_index/indexed_tests.my",
+      "role": "component-source",
+      "sha256": "9ea878f5c77f695f5b297dfd2cc4e7b0283902dc340e42df7b389aa1ac7b0d89"
+    },
+    {
+      "bytes": 14087,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/declaration_index/indexing.my",
+      "role": "component-source",
+      "sha256": "828c183be506cd830ae600fc2867bcb22e6123f9eba3ce77096643a21ab84be5"
+    },
+    {
+      "bytes": 1169,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/declaration_index/main.my",
+      "role": "component-source",
+      "sha256": "bc5dfaae9885248c5bf9de9ed1f924dadc7862113c37ee255c12b361eb62ffaa"
+    },
+    {
+      "bytes": 1897,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/declaration_index/model.my",
+      "role": "component-source",
+      "sha256": "28de6c85d6f815a1d60219bbaf9cbbe2b33fcef0cdb5f53dbf5af24ac856f24a"
+    },
+    {
+      "bytes": 11512,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/declaration_index/tests.my",
+      "role": "component-source",
+      "sha256": "f9c6772263dfe8384638f5437d88fa0aeda0afca3635b6f8611e67b33a6952ab"
+    },
+    {
+      "bytes": 13463,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/lexer_pilot/README.md",
+      "role": "component-source",
+      "sha256": "a9339025370efc2c0ac60a5f32c2f32e9629a73da05d2ec7f2f58c47a317ee06"
+    },
+    {
+      "bytes": 577,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/lexer_pilot/diagnostic.my",
+      "role": "component-source",
+      "sha256": "093876a61f7da699088f1ae229ece2c8f571e2a1a915f35c527d0499624cf70c"
+    },
+    {
+      "bytes": 22184,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/lexer_pilot/lexer.my",
+      "role": "component-source",
+      "sha256": "54491363b09bca64755d89f0e33248cb7106863a208ce95ea9348b11bb62b137"
+    },
+    {
+      "bytes": 2629,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/lexer_pilot/main.my",
+      "role": "component-source",
+      "sha256": "b68bd7939d83b84164f770ad1a9ffbc498a63a7bb161b50d4fb16e8ccc94db8d"
+    },
+    {
+      "bytes": 3097,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/lexer_pilot/measure_transport.py",
+      "role": "component-source",
+      "sha256": "a2291ff1878db99f20e604e644961d1046cf53d45f4ab57050fb46998e5ad6db"
+    },
+    {
+      "bytes": 1747,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/lexer_pilot/range_tests.my",
+      "role": "component-source",
+      "sha256": "4390235b737a70c2302778ca661aa7d4f7d5d0e56ab298614637caf0912debdb"
+    },
+    {
+      "bytes": 748,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/lexer_pilot/source.my",
+      "role": "component-source",
+      "sha256": "6e025ccb7de08217715aac862e4e0ec5270b10b2414282710c0ac2a4752718ed"
+    },
+    {
+      "bytes": 4565,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/lexer_pilot/tests.my",
+      "role": "component-source",
+      "sha256": "648860cc95fb8ebe9525748a83d11f4b77cd105488800619fcbeb6b952ffef37"
+    },
+    {
+      "bytes": 63,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/lexer_pilot/token.my",
+      "role": "component-source",
+      "sha256": "cd131994b3ead3fd00da666304380e7529991f19a5a29b80f7fcaf19057c84de"
+    },
+    {
+      "bytes": 9198,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/lexer_pilot/wire.my",
+      "role": "component-source",
+      "sha256": "d91ab2db2163f999f00d5094b215da93355724b71f0979c381148580db065272"
+    },
+    {
+      "bytes": 15879,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/README.md",
+      "role": "component-source",
+      "sha256": "d4e90bda5fc788e7753b64adc631233cfc5c51329f694b76c582dc740a883008"
+    },
+    {
+      "bytes": 2602,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/adapter.my",
+      "role": "component-source",
+      "sha256": "dab2fa2ef19301491ca8b2cce5ffd7dd4ca430955a218824e39ebb6eae088590"
+    },
+    {
+      "bytes": 13623,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/binding_tests.my",
+      "role": "component-source",
+      "sha256": "452923eb347d957b51655dbde08690bbf3fb9f17f18f4c13715a968c83140302"
+    },
+    {
+      "bytes": 10162,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/call_tests.my",
+      "role": "component-source",
+      "sha256": "e5d1764defa5b42e92f2bf544cbcf908ebf54e27556a2c0a501af9609e734340"
+    },
+    {
+      "bytes": 577,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/diagnostic.my",
+      "role": "component-source",
+      "sha256": "093876a61f7da699088f1ae229ece2c8f571e2a1a915f35c527d0499624cf70c"
+    },
+    {
+      "bytes": 8859,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/diagnostic_tests.my",
+      "role": "component-source",
+      "sha256": "cc8b70cd7e5e2df6b61b113c3354546d0692cbe89c1815eac436242fefeb907b"
+    },
+    {
+      "bytes": 1925,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/format_tests.my",
+      "role": "component-source",
+      "sha256": "f6af56eb9ebacdd303f28f99c79f112119b95786d1542f475135237c6665be28"
+    },
+    {
+      "bytes": 5066,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/full_adapter.my",
+      "role": "component-source",
+      "sha256": "c9d38254b0a4c06337ad7bea1f8278cc8d5ce40f91665738cb7a2723f6423853"
+    },
+    {
+      "bytes": 15386,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/full_arena_migration.my",
+      "role": "component-source",
+      "sha256": "29aa6ec3fa6a44cd82a285c9ef6633b51234b14632e43625054a1d7df5bfbb58"
+    },
+    {
+      "bytes": 13523,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/full_binding_migration.my",
+      "role": "component-source",
+      "sha256": "21b9a7868557da86ef77737e0af30e9f5bbe9bb93258353e2ff9da232b512bde"
+    },
+    {
+      "bytes": 3840,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/full_calls.my",
+      "role": "component-source",
+      "sha256": "6a3ac8f50aa68cbc2e0151f6509a5753fd792f59def127d13f9ca6aeeba170ed"
+    },
+    {
+      "bytes": 3484,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/full_format.my",
+      "role": "component-source",
+      "sha256": "3b31ab390d5b5dfa13cefeae303a5713eed0dde11b29ed40be9ee7aa9ee69d55"
+    },
+    {
+      "bytes": 2320,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/full_header.my",
+      "role": "component-source",
+      "sha256": "f3657aca3db3930237a238f6d53e2b822e77c22cf5a337985b5f0bc16b160580"
+    },
+    {
+      "bytes": 6397,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/full_hints.my",
+      "role": "component-source",
+      "sha256": "e1c989e0e7a10a76b6e262bc9a6687e021eecb421f8dbea26e844f1e8d9a0da2"
+    },
+    {
+      "bytes": 10039,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/full_migration.my",
+      "role": "component-source",
+      "sha256": "a27088a0f802bfcf923bdc9f8208acc7a649d3ff647e743a7d56750142dfa1f1"
+    },
+    {
+      "bytes": 9872,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/full_migration_expressions.my",
+      "role": "component-source",
+      "sha256": "d9dc8e609e2477b58908fa59199d829d844a530a0bd4ea757e620105fa8bc098"
+    },
+    {
+      "bytes": 3474,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/full_migration_types.my",
+      "role": "component-source",
+      "sha256": "d161f85bed3d09b21e861e6dff65055ea1f214d89990228c33e8b25a4d304967"
+    },
+    {
+      "bytes": 16943,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/full_migration_variants.my",
+      "role": "component-source",
+      "sha256": "878ae0b09ac8fe87df75f9f079962cdd5f36609f4d53b83745c38ca9c4f1aa58"
+    },
+    {
+      "bytes": 10023,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/full_model.my",
+      "role": "component-source",
+      "sha256": "00fead2fede77367e69f4421cef251b5b3ac3ed7f091e8a19d21337573485a78"
+    },
+    {
+      "bytes": 3064,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/full_oracle.zig",
+      "role": "component-source",
+      "sha256": "6b62c4b7116620c4085d9850c12b44edc6db6ea358672ac397645f35c684cabd"
+    },
+    {
+      "bytes": 107276,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/full_parser.my",
+      "role": "component-source",
+      "sha256": "34ae6c276ec2be5330e8d3f21b00b6dc056ba2320a94698e72ceac9c23fd9ddb"
+    },
+    {
+      "bytes": 5383,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/full_patterns.my",
+      "role": "component-source",
+      "sha256": "ea1f679e2c704b2b17f685ca8e428c43a4b7db0b8dd4aae5353a21f6d9cc272e"
+    },
+    {
+      "bytes": 5287,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/full_resource.my",
+      "role": "component-source",
+      "sha256": "ac2a21a9481884bd0897fe9ad535859d1111351da9f53c2d55c4593dd9904f0b"
+    },
+    {
+      "bytes": 2588,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/full_tests.my",
+      "role": "component-source",
+      "sha256": "40470e766652e3f72f2ff66222f0369fb538d6736503eb9423023f43910ed1a6"
+    },
+    {
+      "bytes": 2025,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/full_values.my",
+      "role": "component-source",
+      "sha256": "3020b62baea81c31baa341fcf18b4828ce562c84b3cf98f77a2a99009249606a"
+    },
+    {
+      "bytes": 22184,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/lexer.my",
+      "role": "component-source",
+      "sha256": "54491363b09bca64755d89f0e33248cb7106863a208ce95ea9348b11bb62b137"
+    },
+    {
+      "bytes": 4694,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/literal_decoder.my",
+      "role": "component-source",
+      "sha256": "3ca334c863b751b0a22792bf62c7d2620b0849f5cb700b5d672581ad572c081d"
+    },
+    {
+      "bytes": 1404,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/literal_tests.my",
+      "role": "component-source",
+      "sha256": "a8d1ce08962904801b226e856ce34df47dc6848d5e83073f653f57dde57a6d4f"
+    },
+    {
+      "bytes": 2775,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/migration_tests.my",
+      "role": "component-source",
+      "sha256": "4fcb2906a31882528e60b6f17633b6b9fa5547d4cf74bcece1e1c6a9e997ab4b"
+    },
+    {
+      "bytes": 5093,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/oracle.zig",
+      "role": "component-source",
+      "sha256": "e2086ccda31d4c72a2a4ba0db803c44e435d95e20d83c11f08ab595a3cbcf8d4"
+    },
+    {
+      "bytes": 10689,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/parser.my",
+      "role": "component-source",
+      "sha256": "2d2948155d66eeef00a97edd79b9d57ca7ae3e462148c00574bb1da47750699d"
+    },
+    {
+      "bytes": 8345,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/pattern_tests.my",
+      "role": "component-source",
+      "sha256": "734d2afb5c7b4eb877af1a17c33cf1e53f2328abbc0f360f2a4c8e4162c50f3c"
+    },
+    {
+      "bytes": 1472,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/profile_tests.my",
+      "role": "component-source",
+      "sha256": "d32adb167142d111f1af1358eb8b35f2b1107a17210b9d90d9dc14d9bbb4400d"
+    },
+    {
+      "bytes": 4338,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/resource_tests.my",
+      "role": "component-source",
+      "sha256": "bd851fb85c660d4a312a7ce0f677447b3d35bf16ebb9c97e33e153183448c536"
+    },
+    {
+      "bytes": 748,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/source.my",
+      "role": "component-source",
+      "sha256": "6e025ccb7de08217715aac862e4e0ec5270b10b2414282710c0ac2a4752718ed"
+    },
+    {
+      "bytes": 2367,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/syntax_codec.my",
+      "role": "component-source",
+      "sha256": "1a44fe77f93c160aa94ccda8d1e9a999afcc80cb6e5da3cd3ed69f718dadd852"
+    },
+    {
+      "bytes": 3347,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/syntax_diagnostics.my",
+      "role": "component-source",
+      "sha256": "4bb6a293b5f470db45a666c18a4bd6eade755a4845f7ec573c73e02643464e37"
+    },
+    {
+      "bytes": 1081,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/syntax_problem.my",
+      "role": "component-source",
+      "sha256": "e685ee9620a452c23884f41d257ba3913781ac2c7fe0fad0e34143d1a2b9ed90"
+    },
+    {
+      "bytes": 3378,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/syntax_recovery.my",
+      "role": "component-source",
+      "sha256": "0fcaec74ddeee26717ded7f405a1d2f08fb464906e1d20f2cfd94eb5dbd8230c"
+    },
+    {
+      "bytes": 4011,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/syntax_value.my",
+      "role": "component-source",
+      "sha256": "a9b8be525aa491d7ffeaefaf79b059a8f09826d99a2b94ba3a2186b6d8a28a0d"
+    },
+    {
+      "bytes": 4572,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/tests.my",
+      "role": "component-source",
+      "sha256": "c886e5f739a44ef77ba629fdc398cfc2aa6784d4d3b68369c0dc87842326d951"
+    },
+    {
+      "bytes": 63,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/token.my",
+      "role": "component-source",
+      "sha256": "cd131994b3ead3fd00da666304380e7529991f19a5a29b80f7fcaf19057c84de"
+    },
+    {
+      "bytes": 25550,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/type_parser.my",
+      "role": "component-source",
+      "sha256": "3a5940891c02fa79d7f0d9837e5c72eb908a92dc29f06ce068b71c4c94c85928"
+    },
+    {
+      "bytes": 13862,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/type_tests.my",
+      "role": "component-source",
+      "sha256": "f54c74fbadadac85174a8643a8e72c11e5b1dba9ed47fe3fc7cc459bf06b5d85"
+    },
+    {
+      "bytes": 1711,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/parser_pilot/value_tests.my",
+      "role": "component-source",
+      "sha256": "21fb11938a2d25c9d00d79f8f537d427eeac0c43bf15d305e222750598bd9571"
+    },
+    {
+      "bytes": 3214,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/test_index/codec.my",
+      "role": "component-source",
+      "sha256": "e81c6d9535dbe66b704733d26462579057ae6798040eb3beeceb7790285bbdd2"
+    },
+    {
+      "bytes": 1268,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/test_index/graph.my",
+      "role": "component-source",
+      "sha256": "8dec40f8e2e15e5d796b4c13262e21d1d9f22e8cdd6ed139060e6679c9fc2139"
+    },
+    {
+      "bytes": 738,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/test_index/main.my",
+      "role": "component-source",
+      "sha256": "365f56a9f40de9658fed629427a43ba8bcad59f2b4c9b144654a66b1e90cf6b4"
+    },
+    {
+      "bytes": 1787,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/test_index/tests.my",
+      "role": "component-source",
+      "sha256": "f4786bf0334689801af9ce7b8dfe9f7b5a7bade785f707c704f16d58862a4140"
+    },
+    {
+      "bytes": 4455,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/README.md",
+      "role": "component-source",
+      "sha256": "2a792c715a2319f1bfb3b1eac54a4b5bd6e784457b9c7506044c0c386fe2e5c0"
+    },
+    {
+      "bytes": 4657,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/WIRE.md",
+      "role": "component-source",
+      "sha256": "2046e453d0ee7b4793e3bf40b8a9ba44b82c8af08516af5402879d1f8026eae9"
+    },
+    {
+      "bytes": 717,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/checking.my",
+      "role": "component-source",
+      "sha256": "fba92cf8c80f450a2b63ce6c94eda56010a68a91d49dfe3cfec92840018cb0d8"
+    },
+    {
+      "bytes": 16306,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/codec.my",
+      "role": "component-source",
+      "sha256": "52825f82bd6a4a7769ecf85c324131658e40f9b02031c4e8362b800fdb8d8973"
+    },
+    {
+      "bytes": 3088,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/depth.my",
+      "role": "component-source",
+      "sha256": "8977b74931f407c7d45c33d206228dba2b3a69d3d0bb83aab2fa7d834ba68fdb"
+    },
+    {
+      "bytes": 577,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/diagnostic.my",
+      "role": "component-source",
+      "sha256": "093876a61f7da699088f1ae229ece2c8f571e2a1a915f35c527d0499624cf70c"
+    },
+    {
+      "bytes": 8792,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/generics.my",
+      "role": "component-source",
+      "sha256": "3d2495254bb8bedfb1884115ac988d64c503689603b55e8607fbb599f414629f"
+    },
+    {
+      "bytes": 6428,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/indexed.my",
+      "role": "component-source",
+      "sha256": "40720bd20e7dc08d971367b496ebacc896f2b358c2477932f548b5ba43b90db2"
+    },
+    {
+      "bytes": 12802,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/indexes.my",
+      "role": "component-source",
+      "sha256": "e15d149dccc8ca1579119272f05eb38e63edf468eca966c1700fdbcc3384aaaa"
+    },
+    {
+      "bytes": 22184,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/lexer.my",
+      "role": "component-source",
+      "sha256": "54491363b09bca64755d89f0e33248cb7106863a208ce95ea9348b11bb62b137"
+    },
+    {
+      "bytes": 1215,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/main.my",
+      "role": "component-source",
+      "sha256": "54ccbd473433469b176f06fd3ce8820fc8ea70a5f60daff0b558f5841bf2dc2a"
+    },
+    {
+      "bytes": 3454,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/model.my",
+      "role": "component-source",
+      "sha256": "351d74c65f2abc41f2b281b9baeab4c5f0c9bf0854396de9855607dc0de384e7"
+    },
+    {
+      "bytes": 1306,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/prelude.my",
+      "role": "component-source",
+      "sha256": "295c94f187f065984688645d2e627256ad53d0f9ba76b47863020bfc0ce7e9bf"
+    },
+    {
+      "bytes": 1175,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/profile_tests.my",
+      "role": "component-source",
+      "sha256": "7d22a9d5cee90b956e53534535601b183ead5d0e57be7abb36eea840b90b78f6"
+    },
+    {
+      "bytes": 1228,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/qualified.my",
+      "role": "component-source",
+      "sha256": "c1777725c6b96b8fc2b918858887f7dcc44a393466f301b0572f27f6f96b0042"
+    },
+    {
+      "bytes": 5267,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/resolve.my",
+      "role": "component-source",
+      "sha256": "07bb36fdd15ec3f3fcf3d23203831c22653aa756d36682950f5829d3f12ccbef"
+    },
+    {
+      "bytes": 12189,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/signatures.my",
+      "role": "component-source",
+      "sha256": "1a8f42a6565e4abf4f4ae36ab116677c481b47a948c2eae3eb2924a61d3e5bdd"
+    },
+    {
+      "bytes": 748,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/source.my",
+      "role": "component-source",
+      "sha256": "6e025ccb7de08217715aac862e4e0ec5270b10b2414282710c0ac2a4752718ed"
+    },
+    {
+      "bytes": 14739,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/tests.my",
+      "role": "component-source",
+      "sha256": "564564051bc9e2df7b786c352e0de59cef28fa950f3ce4c14d741ecdef2a72d2"
+    },
+    {
+      "bytes": 63,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/selfhost/components/type_interface/token.my",
+      "role": "component-source",
+      "sha256": "cd131994b3ead3fd00da666304380e7529991f19a5a29b80f7fcaf19057c84de"
+    },
+    {
+      "bytes": 240674893,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/bin/mylang",
+      "role": "external-host-executable",
+      "sha256": "590fb4260dd4f11fe97efd66f40fc2c4dbf94d7542c84b24bb6b6944585e2ce7"
+    },
+    {
+      "bytes": 9080656,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/libexec/mylang/components/body-check-7315dd5a865de4b0650f259fde22f1403455ec9c8050541607c4881db3abee95",
+      "role": "component-executable",
+      "sha256": "7315dd5a865de4b0650f259fde22f1403455ec9c8050541607c4881db3abee95"
+    },
+    {
+      "bytes": 301,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/libexec/mylang/components/body-check.json",
+      "role": "component-manifest",
+      "sha256": "661e3e3774cdcab12053c6e5e977432196ca26cfe64a932f047c3b0876fad793"
+    },
+    {
+      "bytes": 613624,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/libexec/mylang/components/cache-plan-6f0704f6d7ac6f48d913e742d932cb9aed89cbf98acf8552406542861fcca794",
+      "role": "component-executable",
+      "sha256": "6f0704f6d7ac6f48d913e742d932cb9aed89cbf98acf8552406542861fcca794"
+    },
+    {
+      "bytes": 300,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/libexec/mylang/components/cache-plan.json",
+      "role": "component-manifest",
+      "sha256": "9828ce5ebc9e799cc1f771e1cf82f0cb0f23821ff436159f368a75566a7fab9d"
+    },
+    {
+      "bytes": 902176,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/libexec/mylang/components/declaration-index-5302a43d0bdd298e068112ae858918740edb1c9af81fcab78720f48d61c8d696",
+      "role": "component-executable",
+      "sha256": "5302a43d0bdd298e068112ae858918740edb1c9af81fcab78720f48d61c8d696"
+    },
+    {
+      "bytes": 314,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/libexec/mylang/components/declaration-index.json",
+      "role": "component-manifest",
+      "sha256": "f25e05ae8a0c437c0456fa97eb08749233769a55bbf39061644e92a6d1626744"
+    },
+    {
+      "bytes": 460240,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/libexec/mylang/components/lexer-pilot-35eea3e1e14a2cf4307604b910a8b03ba91e46330cdccd3084d604e45feaa938",
+      "role": "component-executable",
+      "sha256": "35eea3e1e14a2cf4307604b910a8b03ba91e46330cdccd3084d604e45feaa938"
+    },
+    {
+      "bytes": 302,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/libexec/mylang/components/lexer-pilot.json",
+      "role": "component-manifest",
+      "sha256": "5a8b913ec04f742f5cc77e80faae4a42c04dd47249d2349c6ce99901139e1ccd"
+    },
+    {
+      "bytes": 4034656,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/libexec/mylang/components/parser-pilot-9039e9de6ea48f91469f8ba2fad4e0401248e50d3a02522db79caf5a729c44ac",
+      "role": "component-executable",
+      "sha256": "9039e9de6ea48f91469f8ba2fad4e0401248e50d3a02522db79caf5a729c44ac"
+    },
+    {
+      "bytes": 304,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/libexec/mylang/components/parser-pilot.json",
+      "role": "component-manifest",
+      "sha256": "2b83e608fc5c78a1ca4fa68f9ca53bc3f61a344e0dd2c3a2424f9b219426c75c"
+    },
+    {
+      "bytes": 323608,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/libexec/mylang/components/test-index-268608027cf7f5c00fc29e98aa7b099e857ef597725e61033409210612879530",
+      "role": "component-executable",
+      "sha256": "268608027cf7f5c00fc29e98aa7b099e857ef597725e61033409210612879530"
+    },
+    {
+      "bytes": 300,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/libexec/mylang/components/test-index.json",
+      "role": "component-manifest",
+      "sha256": "d7e7bd5af3ace6ae207f4cab069d532ada5cf8d251d0d16d84494b33ae04a0fb"
+    },
+    {
+      "bytes": 1356272,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/libexec/mylang/components/type-interface-b51405b166f4f4f2a091399ae588c493e1b1a666f4f99cbe28fb2cb403025717",
+      "role": "component-executable",
+      "sha256": "b51405b166f4f4f2a091399ae588c493e1b1a666f4f99cbe28fb2cb403025717"
+    },
+    {
+      "bytes": 308,
+      "path": "/home/epentland/.codex/worktrees/selka-selfhost-pilots/mylang/zig-out/libexec/mylang/components/type-interface.json",
+      "role": "component-manifest",
+      "sha256": "bedba7ef2f63c798bedeb9ee1abc4a45bec4bb2c9bd87ab0c005e21f677134ae"
+    },
+    {
+      "bytes": 183954208,
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "role": "zig-executable",
+      "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+    }
+  ],
+  "packages": [
+    {
+      "artifact_sha256": "268608027cf7f5c00fc29e98aa7b099e857ef597725e61033409210612879530",
+      "changed_source_count": 0,
+      "changed_source_paths": [],
+      "changed_source_paths_truncated": false,
+      "complete": false,
+      "component": "test-index",
+      "expected_schema": 1,
+      "manifest_key": "9d1b1240f2a85a2e56a500485df15efe828a04caa6f1d5a9ce1b216f2cf06278",
+      "protocol": 1,
+      "schema": 1,
+      "schema_current": true,
+      "seed": {
+        "key": "99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc",
+        "pin_commit": "0689d3407c17df34915aeb2a92e309af3a04921c",
+        "scope": "receipt and binary observed; full tool-library/runtime closure remains unqualified",
+        "sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b"
+      },
+      "source_current": true,
+      "source_files": 4
+    },
+    {
+      "artifact_sha256": "6f0704f6d7ac6f48d913e742d932cb9aed89cbf98acf8552406542861fcca794",
+      "changed_source_count": 0,
+      "changed_source_paths": [],
+      "changed_source_paths_truncated": false,
+      "complete": false,
+      "component": "cache-plan",
+      "expected_schema": 2,
+      "manifest_key": "636922f37986e139ad7b03c4842bfa795bd9aac76484777de09c8106bae87a66",
+      "protocol": 2,
+      "schema": 2,
+      "schema_current": true,
+      "seed": {
+        "key": "99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc",
+        "pin_commit": "0689d3407c17df34915aeb2a92e309af3a04921c",
+        "scope": "receipt and binary observed; full tool-library/runtime closure remains unqualified",
+        "sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b"
+      },
+      "source_current": true,
+      "source_files": 6
+    },
+    {
+      "artifact_sha256": "35eea3e1e14a2cf4307604b910a8b03ba91e46330cdccd3084d604e45feaa938",
+      "changed_source_count": 0,
+      "changed_source_paths": [],
+      "changed_source_paths_truncated": false,
+      "complete": false,
+      "component": "lexer-pilot",
+      "expected_schema": 2,
+      "manifest_key": "f0cb6c124ae9541ef5ca389872a5d81b6fac1a4033912755a3e37f3a7eebae36",
+      "protocol": 1,
+      "schema": 2,
+      "schema_current": true,
+      "seed": {
+        "key": "99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc",
+        "pin_commit": "0689d3407c17df34915aeb2a92e309af3a04921c",
+        "scope": "receipt and binary observed; full tool-library/runtime closure remains unqualified",
+        "sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b"
+      },
+      "source_current": true,
+      "source_files": 10
+    },
+    {
+      "artifact_sha256": "9039e9de6ea48f91469f8ba2fad4e0401248e50d3a02522db79caf5a729c44ac",
+      "changed_source_count": 1,
+      "changed_source_paths": [
+        "diagnostic_tests.my"
+      ],
+      "changed_source_paths_truncated": false,
+      "complete": false,
+      "component": "parser-pilot",
+      "expected_schema": 2,
+      "manifest_key": "76de49ce3877bba2b194daa1684814d3ceba5925aad7ebfa55a03028d730eed8",
+      "protocol": 1,
+      "schema": 2,
+      "schema_current": true,
+      "seed": {
+        "key": "99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc",
+        "pin_commit": "0689d3407c17df34915aeb2a92e309af3a04921c",
+        "scope": "receipt and binary observed; full tool-library/runtime closure remains unqualified",
+        "sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b"
+      },
+      "source_current": false,
+      "source_files": 45
+    },
+    {
+      "artifact_sha256": "5302a43d0bdd298e068112ae858918740edb1c9af81fcab78720f48d61c8d696",
+      "changed_source_count": 0,
+      "changed_source_paths": [],
+      "changed_source_paths_truncated": false,
+      "complete": false,
+      "component": "declaration-index",
+      "expected_schema": 1,
+      "manifest_key": "abd37cad83dfefdf977fc25f1d88debc7410047ad0def0c3186bb3660bf9aea1",
+      "protocol": 1,
+      "schema": 1,
+      "schema_current": true,
+      "seed": {
+        "key": "99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc",
+        "pin_commit": "0689d3407c17df34915aeb2a92e309af3a04921c",
+        "scope": "receipt and binary observed; full tool-library/runtime closure remains unqualified",
+        "sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b"
+      },
+      "source_current": true,
+      "source_files": 8
+    },
+    {
+      "artifact_sha256": "b51405b166f4f4f2a091399ae588c493e1b1a666f4f99cbe28fb2cb403025717",
+      "changed_source_count": 0,
+      "changed_source_paths": [],
+      "changed_source_paths_truncated": false,
+      "complete": false,
+      "component": "type-interface",
+      "expected_schema": 1,
+      "manifest_key": "4f1de862972c0bcfcfa79d0cd96f8b9914e7a803d8ada8fba68d901e7d1e6577",
+      "protocol": 1,
+      "schema": 1,
+      "schema_current": true,
+      "seed": {
+        "key": "99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc",
+        "pin_commit": "0689d3407c17df34915aeb2a92e309af3a04921c",
+        "scope": "receipt and binary observed; full tool-library/runtime closure remains unqualified",
+        "sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b"
+      },
+      "source_current": true,
+      "source_files": 20
+    },
+    {
+      "artifact_sha256": "7315dd5a865de4b0650f259fde22f1403455ec9c8050541607c4881db3abee95",
+      "changed_source_count": 36,
+      "changed_source_paths": [
+        "README.md",
+        "WIRE.md",
+        "array_comprehension.my",
+        "array_comprehension_tests.my",
+        "checking.my",
+        "codec.my",
+        "codec_tests.my",
+        "collection_comprehension.my",
+        "emission.my",
+        "engine.my",
+        "file_operations.my",
+        "file_operations_tests.my",
+        "functions.my",
+        "generic_bindings.my",
+        "generic_engine_tests.my",
+        "generic_inference.my",
+        "generic_instances.my",
+        "generic_instances_tests.my",
+        "generic_lengths.my",
+        "generic_lengths_tests.my",
+        "list_iteration.my",
+        "prelude_arguments.my",
+        "prelude_fold.my",
+        "prelude_lower.my",
+        "prelude_order.my",
+        "print_types.my",
+        "print_types_tests.my",
+        "record_type_tests.my",
+        "record_types.my",
+        "resource_engine_tests.my",
+        "resource_lower.my",
+        "resource_lower_tests.my"
+      ],
+      "changed_source_paths_truncated": true,
+      "complete": false,
+      "component": "body-check",
+      "expected_schema": 11,
+      "manifest_key": "2aecdc37b7171ffcc2318d4e92e5cd7c15356a0683ef9a9da4c99716aca5d450",
+      "protocol": 1,
+      "schema": 10,
+      "schema_current": false,
+      "seed": {
+        "key": "99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc",
+        "pin_commit": "0689d3407c17df34915aeb2a92e309af3a04921c",
+        "scope": "receipt and binary observed; full tool-library/runtime closure remains unqualified",
+        "sha256": "c4f1ea0b6618cb7b146bbb8e035220eb36b99ff078d4a959d8bf0948d0c6d98b"
+      },
+      "source_current": false,
+      "source_files": 209
+    }
+  ],
+  "required_owner_deliverables": [
+    "source-current schema11 deployment and full producer/seed/tool/runtime ABI closure",
+    "owner-approved admission migration with authenticated timing provenance",
+    "complete language/compiler ownership and required correctness/fact/leak parity",
+    "seed to stage1 to stage2 to stage3 manifests and artifact equivalence",
+    "every mandatory workload median and p95 <=1.5x frozen Zig with raw samples"
+  ],
+  "schema": "bootstrap-evidence-diagnostics-v1",
+  "status": "partial"
+}

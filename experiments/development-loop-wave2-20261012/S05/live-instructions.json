@@ -1,0 +1,85 @@
+{
+  "version": "long-qualification-v1",
+  "context_sha256": "a276a6d1a1b02a6039837c1fe191fa3c21e5c0d013ee56f66a527f56dde508a3",
+  "required": [
+    "fuzz",
+    "scaling",
+    "work-counters",
+    "juice-instructions",
+    "wall-clock-performance",
+    "bootstrap"
+  ],
+  "actions": [
+    {
+      "id": "fuzz",
+      "complete": false,
+      "success": false,
+      "qualified": false,
+      "state": "deferred",
+      "reason": "not selected; obligation remains required"
+    },
+    {
+      "id": "scaling",
+      "complete": false,
+      "success": false,
+      "qualified": false,
+      "state": "deferred",
+      "reason": "not selected; obligation remains required"
+    },
+    {
+      "id": "work-counters",
+      "complete": false,
+      "success": false,
+      "qualified": false,
+      "state": "deferred",
+      "reason": "not selected; obligation remains required"
+    },
+    {
+      "id": "juice-instructions",
+      "complete": false,
+      "success": false,
+      "qualified": false,
+      "state": "partial",
+      "reason": "invalid native evidence: missing or corrupt executable"
+    },
+    {
+      "id": "wall-clock-performance",
+      "complete": false,
+      "success": false,
+      "qualified": false,
+      "state": "deferred",
+      "reason": "not selected; obligation remains required"
+    },
+    {
+      "id": "bootstrap",
+      "complete": false,
+      "success": false,
+      "qualified": false,
+      "state": "deferred",
+      "reason": "not selected; obligation remains required"
+    }
+  ],
+  "admissions": [],
+  "execution_contract": {
+    "targets": [
+      "juice-instructions"
+    ],
+    "max_obligations": 4,
+    "admitted_command_timeout_seconds": 180,
+    "fuzz_steps_per_shard": 8,
+    "fuzz_shards": 1,
+    "fuzz_max_admitted_actions": 16,
+    "juice_repeats": 3,
+    "measurement_policy": "fresh physical captures; report-only; no wall-clock qualification"
+  },
+  "outstanding": [
+    "fuzz",
+    "scaling",
+    "work-counters",
+    "juice-instructions",
+    "wall-clock-performance",
+    "bootstrap"
+  ],
+  "authority": "request-local live execution; serialized records cannot authorize completion",
+  "authenticated": []
+}

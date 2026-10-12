@@ -1,0 +1,4 @@
+build-slot: FIFO ticket 499, position 9; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 499, position 3; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 3, FIFO ticket 499 after 86s
+{"complete": true, "pairs": 1, "stage": "complete", "status": 0, "error": null}

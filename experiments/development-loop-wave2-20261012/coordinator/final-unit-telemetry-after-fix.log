@@ -1,0 +1,332 @@
+build-slot: FIFO ticket 725, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 725 after 5s
+d3a1e456091c068c57590200c93339c81f7dd7b51c916359d7fd0fba1cbbf37a
+f3478f0f0ae39b5a6e7f977e1037f73f8ca069c5da570d91ff22b578710b60eb
+verification-unit
++- verification action unit member 11 w
+guardian/test: 127 test(s) selected [shard 11/12 of 1532]
+guardian/test: test wall 3.42s; slowest over 50ms:
+guardian/test:   0.51s  resource_source_test.test.generic resource acquisition and completion return ownership for retry under allocation failures
+guardian/test:   0.23s  reference_test.test.the reference handles short nominal exports beside generic memo functions
+guardian/test:   0.21s  integers_test.test.integer casts check narrowing signedness and retain operand traps
+guardian/test:   0.14s  dotted_modules_test.test.dotted module parsing and name resolution release every failed allocation
+guardian/test:   0.14s  nominal_layouts_test.test.nominal layout collect preserves identity finite nesting and phantom arguments across allocation failures
+guardian/test:   0.12s  interfaces_test.test.module duplicate discovery preserves nominal types and callees while normalizing shared import aliases
+guardian/test:   0.11s  lint_test.test.change-without-test honors directive-comment and attribute waivers
+guardian/test:   0.09s  semantic_cache_test.test.a damaged on-demand body rechecks and republishes without retaining trees
+guardian/test:   0.09s  generic_api_test.test.public generic schema separates checked templates from calls and releases allocation failures
+guardian/test:   0.08s  prelude_builtins_test.test.abs is total for int and still a float operation for float
+guardian/test: PASS — 127 passed
+guardian/test: RESULT {"passed":127,"failed":0,"skipped":0}
+failed command: python3 scripts/verification_native_telemetry.py --action-id unit --member 11 --root-id src/root_test.zig -- sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components ./.zig-cache/o/4338461350948184d1ca01e7385e560d/test --guardian-shard=11/12 --cache-dir=./.zig-cache --seed=0x76131acc --listen=-
+
+verification-unit
++- verification action unit member 10 w
+guardian/test: 127 test(s) selected [shard 10/12 of 1532]
+guardian/test: test wall 5.00s; slowest over 50ms:
+guardian/test:   1.05s  native_execute.test.a wall-clock timeout ends an unbounded native run with R_TIMEOUT
+guardian/test:   0.58s  stand_ins_test.test.stand-ins never read or write the host resources a program is granted
+guardian/test:   0.53s  resource_source_test.test.generic owned resources clean up explicit and implicit drops under allocation failure
+guardian/test:   0.33s  integers_test.test.checked signed and unsigned operations retain each declared width
+guardian/test:   0.23s  semantic_cache_test.test.declaration and type identity changes invalidate dependents while unrelated declarations preserve reuse
+guardian/test:   0.21s  arrays_test.test.fixed arrays have structural types preserve copies and support every integer index width
+guardian/test:   0.15s  reference_test.test.same_function is discoverable through the reference
+guardian/test:   0.13s  semantic_cache_test.test.imported defaults retain exact source proof across importer edits and invalidate changed defaults
+guardian/test:   0.11s  nominal_bodies_test.test.nominal bodies propagate results with named error remapping and obligations
+guardian/test:   0.09s  domains_test.test.domain factories accessors qualified names and discovery clean up on allocation failure
+guardian/test: PASS — 127 passed
+guardian/test: RESULT {"passed":127,"failed":0,"skipped":0}
+failed command: python3 scripts/verification_native_telemetry.py --action-id unit --member 10 --root-id src/root_test.zig -- sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components ./.zig-cache/o/4338461350948184d1ca01e7385e560d/test --guardian-shard=10/12 --cache-dir=./.zig-cache --seed=0x76131acc --listen=-
+
+verification-unit
++- verification action unit member 2 w
+guardian/test: 127 test(s) selected [shard 2/12 of 1532]
+guardian/test: test wall 5.02s; slowest over 50ms:
+guardian/test:   0.46s  reference_test.test.the same query renders byte-identical answers and a dated envelope
+guardian/test:   0.45s  resource_source_test.test.fs.read_only preserves a dir scope while narrowing permissions
+guardian/test:   0.36s  interfaces_test.test.generic execution retains module identities and ordinary public schema roots
+guardian/test:   0.33s  resource_source_test.test.RC completion takes its handle over whether the provider completes or refuses it
+guardian/test:   0.28s  prelude_builtins_test.test.reversed, list and zip iterate or materialise without a new runtime
+guardian/test:   0.24s  navigation_scale_test.test.navigation has no fixed cap: the tables grow past any count only an explicit caller cap refuses
+guardian/test:   0.19s  domain_equality_test.test.domain equality compares every scalar backing by value
+guardian/test:   0.19s  generic_concrete_test.test.generic record updates and array replacement preserve snapshots under allocation failures
+guardian/test:   0.18s  semantic_project_test.test.synthetic enum payload identities retain defining modules across warm replay and relocation
+guardian/test:   0.16s  semantic_cache_test.test.shared budget holds after an oversized-single-entry session without changing acceptance
+guardian/test: PASS — 127 passed
+guardian/test: RESULT {"passed":127,"failed":0,"skipped":0}
+failed command: python3 scripts/verification_native_telemetry.py --action-id unit --member 2 --root-id src/root_test.zig -- sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components ./.zig-cache/o/4338461350948184d1ca01e7385e560d/test --guardian-shard=2/12 --cache-dir=./.zig-cache --seed=0x76131acc --listen=-
+
+verification-unit
++- verification action unit member 0 w
+guardian/test: 134 test(s) selected [shard 0/12 of 1532]
+retention: budget=6036 retained=3770 spec_bytes=3770 evictions=44 oldest_fresh_checks=+1
+mylang: cache-plan create temporary directory failed: FileNotFound
+guardian/test: test wall 5.95s; slowest over 50ms:
+guardian/test:   1.08s  semantic_cache_test.test.shared retention budget bounds distinct specializations and eviction forces fresh checks
+guardian/test:   0.78s  syntax_cache_test.test.buildWithCache lookup remember and clone preserve changed results and independent storage under allocation failures
+guardian/test:   0.52s  context_test.test.context resolves a position to the innermost declaration or its diagnostic
+guardian/test:   0.38s  resource_source_test.test.fs.dir confines a derived filesystem to its root and refuses escapes
+guardian/test:   0.35s  io_files_test.test.FILE-METHOD-1 the whole-path helpers accept the qualified method spelling
+guardian/test:   0.14s  reference_test.test.the reference includes the generic parallel map declaration
+guardian/test:   0.13s  nominal_instances_test.test.nominal display names are budgeted by the program's size, not a fixed 1 MiB
+guardian/test:   0.12s  chunked_arena.test.the chunked arena reserves at most one chunk beyond what it holds and returns what large lists leave behind
+guardian/test:   0.12s  semantic_cache_test.test.nested concrete specializations preregister validated dependencies and self-recursion remaps
+guardian/test:   0.11s  generic_instances_test.test.generic instances limits apply per declaration and preserve existing identities
+guardian/test: PASS — 134 passed
+guardian/test: RESULT {"passed":134,"failed":0,"skipped":0}
+failed command: python3 scripts/verification_native_telemetry.py --action-id unit --member 0 --root-id src/root_test.zig -- sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components ./.zig-cache/o/4338461350948184d1ca01e7385e560d/test --guardian-shard=0/12 --cache-dir=./.zig-cache --seed=0x76131acc --listen=-
+
+verification-unit
++- verification action unit member 5 w
+guardian/test: 127 test(s) selected [shard 5/12 of 1532]
+guardian/test: test wall 6.83s; slowest over 50ms:
+guardian/test:   1.13s  semantic_cache_test.test.generic publication rolls back cleanly on allocation failure
+guardian/test:   0.66s  io_files_test.test.CAPABILITY-FIELD-METHOD-1 a capability field keeps the effect, grant and trap rules of a local
+guardian/test:   0.51s  resource_io_test.test.source resource reads expose partial data EOF and padding while writes report actual progress
+guardian/test:   0.44s  domain_codecs_test.test.domain codec module relocation and public schemas preserve contracts and opaque backing under allocation failures
+guardian/test:   0.43s  nominal_layouts_test.test.a large ordinary project is not refused for its total layout work
+guardian/test:   0.36s  resource_source_test.test.fs.read_only denies a write acquisition the full capability allows
+guardian/test:   0.35s  io_files_test.test.IO-9 whole-path helpers report provider failures as readable Result errors
+guardian/test:   0.27s  native_execute.test.native execution reports original bounds indexes for read write pop array text and bytes
+guardian/test:   0.21s  nominal_templates_test.test.nominal expression checking bounds each top-level expression without issuing executable type IDs
+guardian/test:   0.18s  generic_execution_test.test.polymorphic recursion in one declaration still stops at a generic limit
+guardian/test: PASS — 127 passed
+guardian/test: RESULT {"passed":127,"failed":0,"skipped":0}
+failed command: python3 scripts/verification_native_telemetry.py --action-id unit --member 5 --root-id src/root_test.zig -- sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components ./.zig-cache/o/4338461350948184d1ca01e7385e560d/test --guardian-shard=5/12 --cache-dir=./.zig-cache --seed=0x76131acc --listen=-
+
+verification-unit
++- verification action unit member 3 w
+guardian/test: 127 test(s) selected [shard 3/12 of 1532]
+guardian/test: test wall 6.78s; slowest over 50ms:
+guardian/test:   1.06s  io_files_test.test.IO-7 with open binds a handle whose reads follow the declared mode
+guardian/test:   0.90s  float_operations_test.test.every fixed-width float conversion traps for NaN infinities and range violations
+guardian/test:   0.72s  io_files_test.test.FILE-METHOD-1 a same-named function or local keeps the free form while the method stays the receiver's
+guardian/test:   0.44s  reference_test.test.an unmatched query is a normal answer and a malformed one is a usage error
+guardian/test:   0.40s  semantic_cache_test.test.durable-hit promotion is bounded by the shared budget without changing acceptance
+guardian/test:   0.34s  resource_source_test.test.RC moves a refused handle out of its failure record into a second completion
+guardian/test:   0.30s  generic_calls_test.test.generic calls forward contracts substitute types and check recursion without body expansion
+guardian/test:   0.19s  prelude_builtins_test.test.min and max accept a list or two scalars and trap on an empty list
+guardian/test:   0.19s  nominal_layouts_test.test.nominal layout budgets apply per declaration so a program may exceed them in total
+guardian/test:   0.17s  io_print_test.test.QBE-BULK-TEXT-1 raw top-level text is encoded into the line buffer in one pass
+guardian/test: PASS — 127 passed
+guardian/test: RESULT {"passed":127,"failed":0,"skipped":0}
+failed command: python3 scripts/verification_native_telemetry.py --action-id unit --member 3 --root-id src/root_test.zig -- sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components ./.zig-cache/o/4338461350948184d1ca01e7385e560d/test --guardian-shard=3/12 --cache-dir=./.zig-cache --seed=0x76131acc --listen=-
+
+verification-unit
++- verification action unit member 4 w
+guardian/test: 127 test(s) selected [shard 4/12 of 1532]
+native_execute: `mylang run` refused a program the front end accepted:
+{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_INTERNAL_NAME","severity":"error","message":"`clock_now[...]` and `random_u64[...]` are reserved for compiler-internal standard-library sources; use the `time` or `random` standard module","location":{"path":"/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.mylang-cache/unit-tests/core/src/6fea23b5105778bfea9fbcbafa94f07b/trusted.my","start":{"line":7,"column":11},"end":{"line":7,"column":20},"bytes":{"start":79,"end":88}},"notes":[],"stack":{"frames":[],"omitted":0}}}
+
+native_execute: host failure: PathLeavesTree
+symbolic retention: budget=5724 retained=5256 symbolic_bytes=5256 templates=10 evictions=4 warm_fresh=+2 warm_reused=+10
+guardian/test: test wall 6.92s; slowest over 50ms:
+guardian/test:   1.23s  io_files_test.test.FILE-METHOD-1 with fs.open binds a direct handle and propagates through the method mark
+guardian/test:   1.10s  native_execute.test.a program only trusted source may spell is refused by mylang, and a path that leaves its tree is not written
+guardian/test:   0.56s  nominal_providers_test.test.nominal providers specialize named payloads byte inputs and completion retry ownership
+guardian/test:   0.43s  near_duplicates_test.test.banded distance and edit explanations agree with a full matrix over short sequences
+guardian/test:   0.34s  resource_source_test.test.generic bodies derive a dir scope and resolve under it
+guardian/test:   0.33s  io_files_test.test.IO-8 writing modes create truncate and append through a write grant
+guardian/test:   0.27s  integers_test.test.all integer widths accept their limits and reject one-past literals
+guardian/test:   0.19s  prelude_scalar_test.test.ord and chr trap R_TEXT_SCALAR on anything but one Unicode scalar
+guardian/test:   0.16s  prelude_builtins_test.test.sorted returns a new ascending list for int, float and str
+guardian/test:   0.15s  generic_arrays_test.test.generic array specialization and execution clean up under allocation failure
+guardian/test: PASS — 127 passed
+guardian/test: RESULT {"passed":127,"failed":0,"skipped":0}
+failed command: python3 scripts/verification_native_telemetry.py --action-id unit --member 4 --root-id src/root_test.zig -- sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components ./.zig-cache/o/4338461350948184d1ca01e7385e560d/test --guardian-shard=4/12 --cache-dir=./.zig-cache --seed=0x76131acc --listen=-
+
+verification-unit
++- verification action unit member 6 w
+guardian/test: 127 test(s) selected [shard 6/12 of 1532]
+guardian/test: test wall 9.09s; slowest over 50ms:
+guardian/test:   3.78s  generic_execution_test.test.generic execution reuses instances and counts them per declaration, not per program
+guardian/test:   0.48s  io_files_test.test.the default grant reads a FIFO named by its absolute path the way fopen does
+guardian/test:   0.45s  nominal_providers_test.test.nominal providers propagate host failures and release acquired owners exactly once
+guardian/test:   0.43s  resource_source_test.test.partial source acquisition propagates failure and releases acquired resources once
+guardian/test:   0.36s  resource_io_test.test.resource owners are released exactly once by completion and by scope exit
+guardian/test:   0.35s  integers_test.test.inlined multiplication keeps every width and traps past its bounds
+guardian/test:   0.33s  syntax_cache_large_test.test.default syntax retention survives 97 modules and matches fresh execution and errors after leaf edits
+guardian/test:   0.25s  embed_test.test.a user function named like an embed builtin keeps its own meaning
+guardian/test:   0.24s  semantic_cache_test.test.shared budget covers ordinary hash growth boundaries
+guardian/test:   0.18s  native_execute.test.unsigned overflow cast and division traps quote their operands unsigned and signed ones unchanged
+guardian/test: PASS — 127 passed
+guardian/test: RESULT {"passed":127,"failed":0,"skipped":0}
+failed command: python3 scripts/verification_native_telemetry.py --action-id unit --member 6 --root-id src/root_test.zig -- sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components ./.zig-cache/o/4338461350948184d1ca01e7385e560d/test --guardian-shard=6/12 --cache-dir=./.zig-cache --seed=0x76131acc --listen=-
+
+verification-unit
++- verification action unit member 1 w
+guardian/test: 128 test(s) selected [shard 1/12 of 1532]
+guardian/test: SLOW  7.50s  nominal_layouts_test.test.nominal layout expansion bounds distinct array identities
+guardian/test: test wall 11.72s; slowest over 50ms:
+guardian/test:   7.50s  nominal_layouts_test.test.nominal layout expansion bounds distinct array identities
+guardian/test:   0.59s  generic_bodies_test.test.generic body contracts bound wide statement work without host execution
+guardian/test:   0.35s  resource_source_test.test.fs.dir records a scope without opening the directory or adding an effect
+guardian/test:   0.31s  reference_test.test.unsupported and removed names answer as exclusions, never as features
+guardian/test:   0.29s  resource_source_test.test.source acquisition delegates authority and failed completion returns owned resource for retry
+guardian/test:   0.29s  semantic_cache_test.test.durable entries isolate every contract dimension and the mutation version
+guardian/test:   0.19s  semantic_cache_test.test.const-length specialization keys and resolved nominal generics reuse
+guardian/test:   0.15s  nominal_type_syntax_test.test.public nominal templates survive cached syntax and project relocation with requirements intact
+guardian/test:   0.10s  semantic_project_test.test.nominal specialization arguments isolate same spelled declarations in different modules
+guardian/test:   0.10s  component_protocol_test.test.component runChild deadline includes wait after both output streams close
+guardian/test: PASS — 128 passed
+guardian/test: RESULT {"passed":128,"failed":0,"skipped":0}
+failed command: python3 scripts/verification_native_telemetry.py --action-id unit --member 1 --root-id src/root_test.zig -- sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components ./.zig-cache/o/4338461350948184d1ca01e7385e560d/test --guardian-shard=1/12 --cache-dir=./.zig-cache --seed=0x76131acc --listen=-
+
+verification-unit
++- verification action unit member 9 w
+guardian/test: 127 test(s) selected [shard 9/12 of 1532]
+guardian/test: SLOW  8.81s  semantic_cache_test.test.semantic cache reuses unchanged checked bodies after edits and preserves diagnostics and ownership under allocation failures
+guardian/test: test wall 14.30s; slowest over 50ms:
+guardian/test:   8.81s  semantic_cache_test.test.semantic cache reuses unchanged checked bodies after edits and preserves diagnostics and ownership under allocation failures
+guardian/test:   1.27s  io_files_test.test.IO-11 a with scope closes its file on every exit including traps and propagation
+guardian/test:   1.21s  generic_arrays_test.test.expanding generic array recursion stops at the specialization budget
+guardian/test:   0.32s  nominal_bodies_test.test.nominal bodies bound growing function specialization before checking succeeds
+guardian/test:   0.29s  resource_source_test.test.source frame traps release the resource moved through recursive calls
+guardian/test:   0.18s  integers_test.test.inlined negation traps only at each signed width's minimum
+guardian/test:   0.18s  quality_test.test.static call reachability traverses a long chain without host recursion
+guardian/test:   0.17s  semantic_cache_test.test.durable bodies restore beyond the retention budget with edits and remapped identities
+guardian/test:   0.16s  reference_test.test.the embed builtins are discoverable through the reference
+guardian/test:   0.09s  semantic_cache_test.test.semantic cache retains a bounded prefix of bodies when the snapshot exceeds its budget
+guardian/test: PASS — 127 passed
+guardian/test: RESULT {"passed":127,"failed":0,"skipped":0}
+failed command: python3 scripts/verification_native_telemetry.py --action-id unit --member 9 --root-id src/root_test.zig -- sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components ./.zig-cache/o/4338461350948184d1ca01e7385e560d/test --guardian-shard=9/12 --cache-dir=./.zig-cache --seed=0x76131acc --listen=-
+
+verification-unit
++- verification action unit member 8 w
+guardian/test: 127 test(s) selected [shard 8/12 of 1532]
+F10 request 0: 19 record name visits, 19 records, 16 checked, 0 reused
+F10 request 1: 19 record name visits, 19 records, 0 checked, 16 reused
+guardian/test: SLOW  26.42s  resource_io_test.test.source IO traps at every instruction boundary release or complete exactly once
+guardian/test: test wall 30.58s; slowest over 50ms:
+guardian/test:   26.42s  resource_io_test.test.source IO traps at every instruction boundary release or complete exactly once
+guardian/test:   0.50s  io_files_test.test.IO-10 a read-only grant denies every writing mode
+guardian/test:   0.44s  reference_test.test.builtin and collection-method facts answer from the checker's own tables
+guardian/test:   0.36s  integers_test.test.inlined shifts wrap within the width and reject out of range counts
+guardian/test:   0.22s  reference_test.test.function_digest is discoverable through the reference
+guardian/test:   0.22s  compiler_test.test.short circuit skips traps while an explicit drop retains evaluation
+guardian/test:   0.18s  domains_test.test.domain backing types require built-in scalars and exact wrapping types
+guardian/test:   0.15s  semantic_cache_test.test.semantic cache contract fingerprint forces a fresh check and identical contract reuses
+guardian/test:   0.15s  contracts_test.test.contracts: an invariant traps R_INVARIANT where a value is built or changed
+guardian/test:   0.11s  semantic_project_test.test.semantic project body reuse relocates module spans and invalidates changed imports exports signatures and types
+guardian/test: PASS — 127 passed
+guardian/test: RESULT {"passed":127,"failed":0,"skipped":0}
+failed command: python3 scripts/verification_native_telemetry.py --action-id unit --member 8 --root-id src/root_test.zig -- sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components ./.zig-cache/o/4338461350948184d1ca01e7385e560d/test --guardian-shard=8/12 --cache-dir=./.zig-cache --seed=0x76131acc --listen=-
+
+verification-unit
++- verification action unit member 7 w
+guardian/test: 127 test(s) selected [shard 7/12 of 1532]
+guardian/test: SLOW  36.66s  nominal_providers_test.test.nominal providers unwind traps at every instruction including failed completion ownership transfer
+guardian/test: SLOW  24.79s  resource_source_test.test.nested resource wrappers release at scope exit and traps unwind every instruction
+expected 41, found 1
+guardian/test: test wall 65.19s; slowest over 50ms:
+guardian/test:   36.66s  nominal_providers_test.test.nominal providers unwind traps at every instruction including failed completion ownership transfer
+guardian/test:   24.79s  resource_source_test.test.nested resource wrappers release at scope exit and traps unwind every instruction
+guardian/test:   0.43s  io_files_test.test.a restricted grant refuses a FIFO inside the granted directory without blocking
+guardian/test:   0.41s  integers_test.test.inlined division and remainder trap zero and narrow overflow only
+guardian/test:   0.32s  nominal_bodies_test.test.nominal bodies release shape catalogs and VM storage after every allocation failure
+guardian/test:   0.32s  compiler_test.test.all comparisons boolean operations and logical precedence have observable results
+guardian/test:   0.25s  domain_codecs_test.test.source codec operations resolve declared methods and preserve formatting under allocation failures
+guardian/test:   0.24s  resource_io_test.test.a refused acquisition propagates its host category and leaves no owner behind
+guardian/test:   0.23s  io_print_test.test.IO-1 print renders scalars, text, bytes and containers with Python spellings
+guardian/test:   0.15s  reference_test.test.a generic declaration without an instantiation publishes no inferred effect
+guardian/test: PASS — 127 passed
+guardian/test: RESULT {"passed":127,"failed":0,"skipped":0}
+failed command: python3 scripts/verification_native_telemetry.py --action-id unit --member 7 --root-id src/root_test.zig -- sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components ./.zig-cache/o/4338461350948184d1ca01e7385e560d/test --guardian-shard=7/12 --cache-dir=./.zig-cache --seed=0x76131acc --listen=-
+
+Build Summary: 25/25 steps succeeded; 1532/18384 tests passed (16852 skipped)
+verification-unit success
++- verification action unit member 0 134 pass, 1398 skip (1532 total) 7s MaxRSS:65M
+|  +- compile test debug native cached 13ms MaxRSS:41M
+|  |  +- run exe build-identity (build_identity) cached
+|  |  |  +- compile exe build-identity debug native cached 7ms MaxRSS:37M
+|  |  +- options cached
+|  |     +- compile exe mylang debug native cached 11ms MaxRSS:41M
+|  |        +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|  |        +- WriteFile cached
+|  |        +- compile obj juice_bytes_hash fast native cached 7ms MaxRSS:37M
+|  |        +- compile obj juice_bytes_hash fast native (reused)
+|  |        +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 10ms MaxRSS:41M
+|  +- verification action component-preparation member 0 success 660ms
+|  |  +- compile exe selka-components safe native cached 8ms MaxRSS:38M
+|  +- verification action input-discovery member 0 success 3s
+|  +- verification action environment-discovery member 0 success 6ms
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 1 128 pass, 1404 skip (1532 total) 12s MaxRSS:99M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 2 127 pass, 1405 skip (1532 total) 6s MaxRSS:93M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 3 127 pass, 1405 skip (1532 total) 8s MaxRSS:65M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 4 127 pass, 1405 skip (1532 total) 8s MaxRSS:65M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 5 127 pass, 1405 skip (1532 total) 8s MaxRSS:65M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 6 127 pass, 1405 skip (1532 total) 10s MaxRSS:67M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 7 127 pass, 1405 skip (1532 total) 1m MaxRSS:65M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 8 127 pass, 1405 skip (1532 total) 31s MaxRSS:65M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 9 127 pass, 1405 skip (1532 total) 15s MaxRSS:139M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 10 127 pass, 1405 skip (1532 total) 6s MaxRSS:66M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 11 127 pass, 1405 skip (1532 total) 4s MaxRSS:65M
+   +- compile test debug native (+2 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (reused)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+

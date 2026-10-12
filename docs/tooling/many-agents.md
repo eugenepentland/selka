@@ -181,7 +181,7 @@ and the complete artifact snapshot remains watched through publication. The
 input-coverage checker stays fresh because it probes whether source-named paths
 exist, including paths outside its explicit source list.
 
-Evidence lives in `.mylang-cache/verification-v1/`. `last-run.json` records every
+Evidence lives in `.mylang-cache/verification-v2/`. `last-run.json` records every
 required cohort, the verdict, elapsed time, and admitted build/gate seconds.
 These durations include admission validation and are operational observations,
 not isolated performance benchmarks. Admission events separate wait/startup,

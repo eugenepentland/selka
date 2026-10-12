@@ -7,7 +7,7 @@ through publication. Unknown loader behavior returns None and requires fresh wor
 """
 from dataclasses import dataclass
 import hashlib
-import marshal
+import verification_code_identity as code_identity
 import os
 from pathlib import Path
 import re
@@ -19,7 +19,8 @@ import sys
 import time
 from typing import Mapping
 
-LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
+_LOADED_CODE_OBJECT = sys._getframe().f_code
+LOADED_CODE_SHA256 = code_identity.loaded_code_sha256(_LOADED_CODE_OBJECT)
 OUTPUT_LIMIT = 1024 * 1024
 TIMEOUT_SECONDS = 15
 _INTERPRETERS = frozenset(("/lib64/ld-linux-x86-64.so.2",

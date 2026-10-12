@@ -1,0 +1,1943 @@
+{
+  "base": "041fe08bf2a7713706f67be326d64fb33535af99",
+  "previous_qualification": "4493db3a525705b6f1222c50796175cdff55b2301d5160e8d02297d43942885e",
+  "candidate_qualification": "6e21ce1c64e0d3e82e2ce1fee75053579b67221706d4aeb46f128691049801c6",
+  "configuration": {
+    "format": 1,
+    "recipes": [
+      "./*.zig",
+      "build.zig.zon",
+      ".zigversion",
+      "guardian.toml",
+      "src/user_docs.zig",
+      "selfhost/*.zig",
+      "../guardian-zig/build.zig",
+      "../guardian-zig/build.zig.zon",
+      "../guardian-zig/src/"
+    ],
+    "files": [
+      {
+        "path": "../guardian-zig/build.zig",
+        "sha256": "277ae2f5ffda4c8679fd5bca5762e86684d806f99d671cabfd91c26a8807ebd0",
+        "size": 9554,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/build.zig"
+      },
+      {
+        "path": "../guardian-zig/build.zig.zon",
+        "sha256": "e9748b13dbe48677d83c4d1242db6140b8388f41fcb53ca2184d2b3e30a5ee37",
+        "size": 356,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/build.zig.zon"
+      },
+      {
+        "path": "../guardian-zig/src/accept_session.zig",
+        "sha256": "f7a7c6c406cdbab04240c7a161cd45ed192894d9685603a14a9b5bc7990fb274",
+        "size": 9390,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/accept_session.zig"
+      },
+      {
+        "path": "../guardian-zig/src/ast/containers.zig",
+        "sha256": "13188bd1e829f30aed6255dad473ccea046c4c9b5b61e07c1cd434f6ba966dbe",
+        "size": 17273,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/ast/containers.zig"
+      },
+      {
+        "path": "../guardian-zig/src/ast/decls.zig",
+        "sha256": "0b2fd073863059aee1a724c4374c1588f3da9aab573a4b5ccb859a987f4f7bf1",
+        "size": 5717,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/ast/decls.zig"
+      },
+      {
+        "path": "../guardian-zig/src/ast/import_graph.zig",
+        "sha256": "6984a851903dbe704a2ded8a678e6b3329bf8bcb8dcb5f28fd68ab2fcfc6359b",
+        "size": 22838,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/ast/import_graph.zig"
+      },
+      {
+        "path": "../guardian-zig/src/ast/index.zig",
+        "sha256": "e9ce3dfe76b747ba864d8a328c82755c0ba184bcd218fdb58b9db774324f9942",
+        "size": 8903,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/ast/index.zig"
+      },
+      {
+        "path": "../guardian-zig/src/ast/parser.zig",
+        "sha256": "d2216ea99f0ed1473cf6b3c58747b3c7ba5a515878279e8475a2637f93f770b3",
+        "size": 16572,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/ast/parser.zig"
+      },
+      {
+        "path": "../guardian-zig/src/ast/test_reach.zig",
+        "sha256": "0665b86a5fc13fa3404d63a798a3824cd3543e103c6b9252fb9ace05e62eb659",
+        "size": 16891,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/ast/test_reach.zig"
+      },
+      {
+        "path": "../guardian-zig/src/ast/test_refs.zig",
+        "sha256": "83912f35d1cf128dfaa5a2126454c217e51b31c52b4c34007274cf4cf964fc0d",
+        "size": 13903,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/ast/test_refs.zig"
+      },
+      {
+        "path": "../guardian-zig/src/baseline.zig",
+        "sha256": "7c080a0287635d544425925134c634bcdb607f69f9e57c019061a42801f59705",
+        "size": 201256,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/baseline.zig"
+      },
+      {
+        "path": "../guardian-zig/src/benchmark.zig",
+        "sha256": "d72bf24400ce39e51c1f76cc88e4aa4d7cfe8f7f56a0b73ce5cfea34cd859e63",
+        "size": 24149,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/benchmark.zig"
+      },
+      {
+        "path": "../guardian-zig/src/budget_runner.zig",
+        "sha256": "0bf51bb1fba01b406dbdf4043fe7ed210e31010c23b34381c799a07dcb1b2c9a",
+        "size": 3507,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/budget_runner.zig"
+      },
+      {
+        "path": "../guardian-zig/src/build_helper.zig",
+        "sha256": "5f8f9935d2bbdc8ce210f828b3304864614f6cab3c678c55cda285a8ef648c2b",
+        "size": 33569,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/build_helper.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cache.zig",
+        "sha256": "7e6d00619c04c554c92595c15756bc43cc3bda4beb2f96cc34b9476da8c0fc17",
+        "size": 43550,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cache.zig"
+      },
+      {
+        "path": "../guardian-zig/src/check.zig",
+        "sha256": "6ef9cf3c9d70f96dcf509fe3322b74b8810e23f03082bc78b26c01080ca6e76d",
+        "size": 55456,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/check.zig"
+      },
+      {
+        "path": "../guardian-zig/src/check_roi.zig",
+        "sha256": "6a661739c26f61bbc3b6f22b82ed38a4062bcd5d83588dc643fc2b1e28bdf882",
+        "size": 36155,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/check_roi.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/abi_layout.zig",
+        "sha256": "8f198722fc6638b099c89429bf99ebb508c466b07f55e5ea2e26795636dd4d0f",
+        "size": 30702,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/abi_layout.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/allocator_hygiene.zig",
+        "sha256": "f306a23a0c3c9d0e0a49a9ccb7bb8dd8f5010d17cde9652aa71941e190f417ef",
+        "size": 15336,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/allocator_hygiene.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/anytype_budget.zig",
+        "sha256": "b560be870067a2271aa0a755ad5ff2a4df70f1f7dbd07cad09dee45e62d1babf",
+        "size": 7245,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/anytype_budget.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/assert_density.zig",
+        "sha256": "e439c3e088b413d9f52543ffd6a6006381228ea09274799d38c9a44180eac021",
+        "size": 37990,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/assert_density.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/assert_doc_consistency.zig",
+        "sha256": "b4bdd3c6e6ba702d4a3e3f835e52f9482473af023db34a24b807db7da0074fb7",
+        "size": 9938,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/assert_doc_consistency.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/ban.zig",
+        "sha256": "36d3ebf7ca87c9b7044e2f0653d2bc0290a127896db649e3a023b215c7c166fe",
+        "size": 10855,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/ban.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/ban_env.zig",
+        "sha256": "04cfd8267d642ba18e24f0dd8f32416e254f56901460730b4498474d6d4f3f58",
+        "size": 2225,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/ban_env.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/ban_fs.zig",
+        "sha256": "faf08663d022b6163acc99e8eb865705bc809b7c323f18eaa090159debd2dc09",
+        "size": 2790,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/ban_fs.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/ban_globals.zig",
+        "sha256": "b67827e3a9599b297f0bbcdb5594b3f7f3b75cf9beac9544576437c72c65d70a",
+        "size": 11947,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/ban_globals.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/ban_hardcoded_paths.zig",
+        "sha256": "3f36398939434f3747e25b16391a2db1ee24390bbacbe9086244d6cec619e301",
+        "size": 7530,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/ban_hardcoded_paths.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/ban_net.zig",
+        "sha256": "2f28af669fa6d34522e723e69f77db94b1a6f5d07ab5e9ee40710c9f5472a251",
+        "size": 1841,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/ban_net.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/ban_rng.zig",
+        "sha256": "52d05a2d2a24acfaa0ea47c5bc858675d745fc764cb054f7e69e1518094f7c55",
+        "size": 2017,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/ban_rng.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/ban_secrets.zig",
+        "sha256": "f9d67fb2cf2b9ba6933e887cb894001f36460fc050a54e49f7fc406cc990bbf1",
+        "size": 23950,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/ban_secrets.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/ban_sleep.zig",
+        "sha256": "941f4fee7b78d4d41b2f46510eab60a7724539742ec0201bec31fcbd6bef3991",
+        "size": 2067,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/ban_sleep.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/ban_time.zig",
+        "sha256": "4bed0f4d85bd24cbc090e880f01dac577d8a2f1b5aa2b2da06e90db438ae1580",
+        "size": 2532,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/ban_time.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/banned_symbol_helper.zig",
+        "sha256": "7d53566d0963f34099e5dc6179dad8fb192d9226a0b3334a95e3019a14a88300",
+        "size": 25103,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/banned_symbol_helper.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/bool_ops_per_condition.zig",
+        "sha256": "2f663ee20806ad55ccfd6d3cf556a708593505dd2ad23aa7af3a0b33d2620693",
+        "size": 7072,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/bool_ops_per_condition.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/boundaries.zig",
+        "sha256": "7953453c9516f10b37006937652e4221877151a673a3ae26b79469596b6d0f44",
+        "size": 4733,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/boundaries.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/canonical_idiom.zig",
+        "sha256": "fd38ca73021133973dacc9f68b38ce22f16646e966f794619503e5db62e2c7d5",
+        "size": 31373,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/canonical_idiom.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/catch_discipline.zig",
+        "sha256": "90c6cbff92eaa3ecd7932983bca1f203a3246c2d006c5657bc3e65f7b562527e",
+        "size": 16248,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/catch_discipline.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/change_classification.zig",
+        "sha256": "c67ffd4dfa32ea983924f4a94bef2ffeff889618975ea6b13d85a7a270904a6e",
+        "size": 24981,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/change_classification.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/cognitive_complexity.zig",
+        "sha256": "2e46739e4f3d3794413e58cebfe9341e1491e49211aad03846b9f76c8b40340f",
+        "size": 8069,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/cognitive_complexity.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/completeness.zig",
+        "sha256": "6bfeaaf3c7f061464726e673b31d64ea21fc7b2d6854194ac6b47e3521344b29",
+        "size": 25852,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/completeness.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/compound_assert.zig",
+        "sha256": "4ebb6faeb67115eea1c79c73b416b0fefa8f3f95c25cc500ab3d0e83d14fcc3d",
+        "size": 18294,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/compound_assert.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/concept.zig",
+        "sha256": "3dbec4194113008eb8f6bc5e99dea3b0e9f0fee4473c3a8da7e1ffc3789453c9",
+        "size": 72390,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/concept.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/concurrency_presence.zig",
+        "sha256": "7af013826b8fc3761d84885f8e6c061ae6d50c203d4215d6366ceb3a6e05e743",
+        "size": 18932,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/concurrency_presence.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/const_fold.zig",
+        "sha256": "48ef9d991168a1616a5e9211b33c85d470c313ddad5d08abe2d3e71d1d69df51",
+        "size": 16442,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/const_fold.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/dead_model_field.zig",
+        "sha256": "89d5329677660447f64ede67b7a862b8c598d8b199fbefbbb176c4ecb055946b",
+        "size": 13924,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/dead_model_field.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/dead_pub.zig",
+        "sha256": "c688b7899a5b22f861590e8832b1c1d447044b990aa31624dbf6791e2a5e95f0",
+        "size": 11783,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/dead_pub.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/debug_print_ban.zig",
+        "sha256": "b93f7f51b67a71e722a584cbc71a70d31dc11a4f1f5c0fe41c7f7117eec0ddc8",
+        "size": 7454,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/debug_print_ban.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/deprecated_alias.zig",
+        "sha256": "8ab41d272f9dfab13649f98a9c26e26bded45bdbb01e1713d3bab03f88db4873",
+        "size": 20882,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/deprecated_alias.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/divergent_const.zig",
+        "sha256": "0704f371693a8f3955853ec34ba4ab4a628ef727497ed452f0369ec943ca7bfe",
+        "size": 28339,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/divergent_const.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/doc_comments.zig",
+        "sha256": "3bc0c6634f61c2265edf99731122b543d23acea776ea7f7a61c36dc234c16a80",
+        "size": 12058,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/doc_comments.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/duplicate_json_key.zig",
+        "sha256": "61fd33ca13e99f69a6410f1a825e5e7e7fca146f0446fa7e0b83974d484d34e2",
+        "size": 31061,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/duplicate_json_key.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/errdefer_in_init.zig",
+        "sha256": "0638614bafc0d87d79996b5d3c8691b389ae27785f61ada67c5697fedc46c5ce",
+        "size": 5089,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/errdefer_in_init.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/error_discipline.zig",
+        "sha256": "b32fbff0c396b55e24e2d4c85ee516be21ba08606b1c123d3d9beb9f5e3ff0b3",
+        "size": 11947,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/error_discipline.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/error_path_testing.zig",
+        "sha256": "a2c3cb2ae4238aaa6e7c1e3b4cc4cb470ddc76efb48dfdb9fd689f822aa90c6f",
+        "size": 31865,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/error_path_testing.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/external_gates.zig",
+        "sha256": "408b2e9a98860bf23af02160e82933485d832d80d78a53edb1a571f3db2fb98e",
+        "size": 23924,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/external_gates.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/fatal_exit.zig",
+        "sha256": "d5d22c301fbd6895a0b5f7ce46314f4e31cc8c908fc06fd891c9340c0021e583",
+        "size": 9667,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/fatal_exit.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/file_size.zig",
+        "sha256": "2e921ba5ba460e9e375fcf1368dfc6b2248526881db8dff45698d85f457ee9ff",
+        "size": 16920,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/file_size.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/formatting.zig",
+        "sha256": "6c4389906f8795a356f7679c7eb71c5822d2d26e94907d317d2b009c9a554407",
+        "size": 6376,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/formatting.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/function_length.zig",
+        "sha256": "9757b2d5cf5e93109f39667dbc8180b07b436db79942c501abb4ad4cadfffdb4",
+        "size": 10903,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/function_length.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/function_size.zig",
+        "sha256": "069ed2908902dd076b739b63dba048ddb406566057e4fc70738cc7e5281096a5",
+        "size": 5707,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/function_size.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/fuzz_presence.zig",
+        "sha256": "17ca8a8749045a8a9d510c02fb72bb3239045022e550ea19327b2f0a279e5713",
+        "size": 6764,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/fuzz_presence.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/import_layering.zig",
+        "sha256": "c1fae534d31e922416a7f743c002328720d9872eba455017bb506454ae99d313",
+        "size": 21144,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/import_layering.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/import_resolution.zig",
+        "sha256": "7f678ed53cfcb2b45cf24b94ccfd881516d0ec92aa9528b19d606dbfb356bcc5",
+        "size": 16565,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/import_resolution.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/imports.zig",
+        "sha256": "ce1b701bd9629b77edcb896ad0a72029ac0dc445a810bfa57ead7f309b79ccfe",
+        "size": 1022,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/imports.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/init_deinit_symmetry.zig",
+        "sha256": "ae3c8308c4745f60d8fc4edb80fe4607e6e95d0af1742afdfb69d80c71c16ed3",
+        "size": 10418,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/init_deinit_symmetry.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/int_from_float_budget.zig",
+        "sha256": "3a5c54db7131520e733e06c6a07e9cfb731b17561bee0f2517c27401ae2d6793",
+        "size": 13173,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/int_from_float_budget.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/lexical_scan.zig",
+        "sha256": "eb9d8e0fecce338a8b45c08be963a10b95094df2909b13b989326ffd2b8a7b00",
+        "size": 19427,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/lexical_scan.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/line_length.zig",
+        "sha256": "3eead90b980363ec6a40e10f323e846c56132822d63d66be7b5af4bb18827b95",
+        "size": 9294,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/line_length.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/measure_vocabulary.zig",
+        "sha256": "22361a4a7d167ea3ef8147390bc60b49521b92a70088dacc3d269110b8af9c9a",
+        "size": 43060,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/measure_vocabulary.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/merge_state.zig",
+        "sha256": "dd9e5799eb8f26fac7340c83287a15e7c3e1101b5bd46e1ffc8a8e08e6157603",
+        "size": 7834,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/merge_state.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/module_doc_header.zig",
+        "sha256": "7d9836e7ce326244394e86c90ea899b4fc93d6f00c4a224b21a9377223c4c3d9",
+        "size": 10251,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/module_doc_header.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/must_return_ref.zig",
+        "sha256": "4a9d9be67ee8a4c03a0683d97f0f21f1a7ad7fa95110480740c435c468dafb95",
+        "size": 27376,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/must_return_ref.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/naming.zig",
+        "sha256": "3720e64b9af8b1448ed82aab0775b1fc43ae8056e1ff7fc63c049aef3a97caa5",
+        "size": 14842,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/naming.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/nesting_depth.zig",
+        "sha256": "6902ce7638d5342ba4d4e9472724bb508329e8bc4bde3ae30124aec039d5e272",
+        "size": 9616,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/nesting_depth.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/no_test_imports_in_prod.zig",
+        "sha256": "9abe66c29800779535343f1e4d677baf34c0bb36fd057d577b0d44977cc060c4",
+        "size": 4458,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/no_test_imports_in_prod.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/oom_discipline.zig",
+        "sha256": "d7a82ed14e445f1d20457a431ad6e953a42ab6844b02c71bfb8d834abb807eb4",
+        "size": 9964,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/oom_discipline.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/operation_contracts.zig",
+        "sha256": "7cbec48757183555a57134ef09bc837a065258267a437d536753b2854bc6567d",
+        "size": 5093,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/operation_contracts.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/orphan_files.zig",
+        "sha256": "b816ea5381b6622c762f83ff6c0d97eeea14491f7244145ff90a32723e706f84",
+        "size": 6447,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/orphan_files.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/panic_budget.zig",
+        "sha256": "acdb2aa49cedccc3760560d335f333807433a7d7b3125ce826c28d31202d47e0",
+        "size": 15641,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/panic_budget.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/policy_drift.zig",
+        "sha256": "3411b778dcb8b5996f6ead4b19b323cb9ca033d9822fe65b57131b7528922b45",
+        "size": 3428,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/policy_drift.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/projection_completeness.zig",
+        "sha256": "fffdbce6b53ee5c78e1e679a94bb012405671659525863d03b215856aa48f83b",
+        "size": 32825,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/projection_completeness.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/pub_api_surface.zig",
+        "sha256": "52ed15ae4f1b35ad7aaebb74a4f4cb86e6bf764ebcc633fe46672dee43806b1a",
+        "size": 27805,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/pub_api_surface.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/pub_exposes_private.zig",
+        "sha256": "7e4b20a95bde050580c2b6608d8a04d340323f44d7366546ea8afaeb5cdf4451",
+        "size": 18576,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/pub_exposes_private.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/repeated_string_literal.zig",
+        "sha256": "5af0b64c5392e3200eead1ec27dcaa06362bef804641255ff68e3cda610ec9af",
+        "size": 21599,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/repeated_string_literal.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/script_string_safety.zig",
+        "sha256": "3e98a753aac94f25f7147501cd7df0f0556d8ff5c98251ba40504e2ef82af7b3",
+        "size": 13634,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/script_string_safety.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/shadowed_const.zig",
+        "sha256": "62621483553aa4087cf6a008bc0269f4a9f12008e0549071ccc97e6ac6a11cb4",
+        "size": 40121,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/shadowed_const.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/spec.zig",
+        "sha256": "c6770d0c31477f9981ca1c548ed85a2538091d161da74053d05bb49f25ee4e08",
+        "size": 26853,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/spec.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/spec_init.zig",
+        "sha256": "d5cf25642a261e35cdf00cd0a037207c9c9c2173778adad7707124f0d16de31c",
+        "size": 1995,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/spec_init.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/spec_quality.zig",
+        "sha256": "fec71acecadcb38295d77e8c8874a8f25017a5f8fda088f895c504019cf0a9ac",
+        "size": 6113,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/spec_quality.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/stack_escape.zig",
+        "sha256": "2db889f446d1e88f9bcf74dd9961696e5f8719f01bc6fb4edb36b53a7cf8dea5",
+        "size": 34021,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/stack_escape.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/stub_body_ban.zig",
+        "sha256": "a4c88af7e61fe7e00ddc603102833d76a79ffba108776b39957b40c2d2df10d6",
+        "size": 10108,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/stub_body_ban.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/test_coverage.zig",
+        "sha256": "e5ea8a965dbf1c97fedf9959f12a33869e32a6823e9a1fb39c1d3b81538c77d7",
+        "size": 9677,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/test_coverage.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/test_erosion.zig",
+        "sha256": "edaf46e18a6ecc058f23e57bfd19e83225b5b7278130ceb1c8dbd7b8842174e6",
+        "size": 21818,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/test_erosion.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/test_has_assertion.zig",
+        "sha256": "f178af7aadc791a6413e83b68c4118fce70b85584b72aa820786d9b7fd0757bf",
+        "size": 10293,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/test_has_assertion.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/test_no_conditional.zig",
+        "sha256": "148346c2ead5ed864372dc24172038744f6689617a7d352c8b5be4e56d82f2e0",
+        "size": 22625,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/test_no_conditional.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/test_reachability.zig",
+        "sha256": "18e13bf072a1c98ca504ececafc0bd251a71981eb2c7ff489ca839bfb8eac011",
+        "size": 12260,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/test_reachability.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/test_skip_ban.zig",
+        "sha256": "391dac69a2b50fcc5fb71703e9900b12866c3981502265fcb5d39d676fec7848",
+        "size": 8680,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/test_skip_ban.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/try_in_return.zig",
+        "sha256": "4ef2848212de7d393bbaa1fbf4ea25e6ba6e4b9dce7a9fca0276ca1476c75a8a",
+        "size": 9636,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/try_in_return.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/twin_drift.zig",
+        "sha256": "2d44c26f8bb10ea4a0e4dd7a5e442aef0dae0e09a0b391a1567a4122ca5f6498",
+        "size": 136273,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/twin_drift.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/twin_parity.zig",
+        "sha256": "737b79d0689b511ac5961d007a19b1e3049a397903154845e6dfad46d2bb4a9a",
+        "size": 16708,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/twin_parity.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/twin_referent.zig",
+        "sha256": "01070c3f07464ac5e28a2585091f4e0256b741334268598e13c7d0b7a454c0b1",
+        "size": 35994,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/twin_referent.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/type_size.zig",
+        "sha256": "7ceb5a210def4af9ce91c76e75a932f18d8260822d9d4a97b86db7825c438161",
+        "size": 8362,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/type_size.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/undefined_init.zig",
+        "sha256": "68466e9aec899a5a6753d9aa46a17523dae1b66c22e5c7fa1afd0d83e0512c11",
+        "size": 33928,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/undefined_init.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/unsafe_ops_budget.zig",
+        "sha256": "e078663c7d152054f4ce8396736debd4066ac0bb1e62e2c3c9003f84cad82cdc",
+        "size": 25992,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/unsafe_ops_budget.zig"
+      },
+      {
+        "path": "../guardian-zig/src/checks/unwrap_discipline.zig",
+        "sha256": "cba30a35ea5dd496f142ec90da745ec5dd6fba512677a390143bb4564029da1e",
+        "size": 6641,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/checks/unwrap_discipline.zig"
+      },
+      {
+        "path": "../guardian-zig/src/child_env.zig",
+        "sha256": "a0f4c232aec67ef750af5c267d6d7b48849eab70ab881c1e634691a1f7cf6e2e",
+        "size": 1165,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/child_env.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/accept.zig",
+        "sha256": "62138010e2b6d40de8b4747c875f1328adebe30397a0b211308680abfede848b",
+        "size": 18585,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/accept.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/bench.zig",
+        "sha256": "72bd91f5e67f0ec26cb8a68c7902539c190cc51e33bd77617ce78cc96a433ff2",
+        "size": 16719,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/bench.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/commit.zig",
+        "sha256": "caa3afd6b08b0fc6ead8d07d6e2660bf98aaf10cb17a267eba3bf3f121d511d5",
+        "size": 81408,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/commit.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/commit_mutate.zig",
+        "sha256": "0ce5f13810e5e1b1a81fb03577e0cd647620a8df5491b809e6c68457385f950d",
+        "size": 22520,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/commit_mutate.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/debt.zig",
+        "sha256": "35c6f2e7ca6913baeecf44c22a0aa9ab845e77c1b45ebaca3ff01feb5862a499",
+        "size": 48404,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/debt.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/debt_current.zig",
+        "sha256": "db2f986a79a911f952ef3c9a5a274feb3220d9b4176efd992d9d793025b2f7fe",
+        "size": 36363,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/debt_current.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/doctor.zig",
+        "sha256": "5474b61b7e0ad780b0717bd5d3f4de13cd73d08fecf6f69bbdbdfb543a121cf0",
+        "size": 22864,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/doctor.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/explain.zig",
+        "sha256": "6b922d176394f1bd7e82d332ad9111812936f7ef358fa32477cf26e04fd96200",
+        "size": 132930,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/explain.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/install_hook.zig",
+        "sha256": "1308b52b7100b3b73cc6c3658c8e5f625b167e6d3b6cdfbdb1d9c9e39140392a",
+        "size": 14885,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/install_hook.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/introspect.zig",
+        "sha256": "1891f5219c185ee263983e1dd8234e41dce4a9803554159d8ddf213162a1c298",
+        "size": 30754,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/introspect.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/merge_driver.zig",
+        "sha256": "cdd2152153d81455956bb99bfcf1be8e7531652db0f85fdccf9f142dc1e398c4",
+        "size": 11768,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/merge_driver.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/merge_file.zig",
+        "sha256": "8d5bfcfa43157f6576310cfe39edd36acfae0ea8fee211b1be87b39071e556cb",
+        "size": 24468,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/merge_file.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/migrate.zig",
+        "sha256": "47d91f0260c7b0e3179aae037069969e1838d9aeea336c98a62ded66f0bf6340",
+        "size": 2306,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/migrate.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/mutate.zig",
+        "sha256": "e33ac30f503eacc211999247a068514d036eb341ab2753a93984476db302801e",
+        "size": 24898,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/mutate.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/nightly.zig",
+        "sha256": "fc2db76af44e2aa5fd8e481b3d074a792fba164e1006673a20c58580751c0710",
+        "size": 5335,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/nightly.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/optimize_divergence.zig",
+        "sha256": "da0d497bf066ca62ad8da55a92838d4723e19d6359455672c95f5d31943e67e7",
+        "size": 26324,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/optimize_divergence.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/registry.zig",
+        "sha256": "129bee198ff4af520325c34e5d22d0abd095127510a123f6a809a2b787f7317b",
+        "size": 41929,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/registry.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/retired.zig",
+        "sha256": "38a9915be8b4ce842610cc369450cf48a4bb172d593e99aaa9e4ff5754f0cef1",
+        "size": 2435,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/retired.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/run_all.zig",
+        "sha256": "dffdb3c2d370910993557acfaf3cf92458a6379070f11f5b3c3df8a0215310e0",
+        "size": 111769,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/run_all.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/run_view.zig",
+        "sha256": "93451bc828d9b0d26322a0708de8eb178983c4bc459dc21231bf3243ed05c46f",
+        "size": 19625,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/run_view.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/selfcheck.zig",
+        "sha256": "23794715df463d36eb74e0fb165e045412191db7c15d6e76f00327417620d141",
+        "size": 8555,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/selfcheck.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/size.zig",
+        "sha256": "2f7eea66213959f044cbd76c8167eb26d370af807db78931fd925fb86fe00baa",
+        "size": 11775,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/size.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/spec_sync.zig",
+        "sha256": "6d2f213fa37753ec8222b86a21e048b3de70c33de55fd4b697c167b8f106bcf6",
+        "size": 4940,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/spec_sync.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/test_filter.zig",
+        "sha256": "1d1a07a86d7683ff075aca0d7739e2200be8e01e079293c5e7f84c65bb4cb047",
+        "size": 9041,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/test_filter.zig"
+      },
+      {
+        "path": "../guardian-zig/src/cli/types.zig",
+        "sha256": "a3acebaf1f5d0f6fb2aaaf934c2fa8bea5696f02a1575bb60e12426190670ff8",
+        "size": 17946,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/cli/types.zig"
+      },
+      {
+        "path": "../guardian-zig/src/config.zig",
+        "sha256": "074ef0a139702117ec2517278b5478e4924a0891a0006dd920c172f22c5e4591",
+        "size": 59304,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/config.zig"
+      },
+      {
+        "path": "../guardian-zig/src/config_parser.zig",
+        "sha256": "18cf9d678dc5b9d3a0a541837efe61d1234e3a7a29efdf4276488da8829aa0e4",
+        "size": 205356,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/config_parser.zig"
+      },
+      {
+        "path": "../guardian-zig/src/config_policy.zig",
+        "sha256": "4ea131c7519df27fc8d1e83bc256af08787dd6e9926127262d739bd65d44d12c",
+        "size": 2834,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/config_policy.zig"
+      },
+      {
+        "path": "../guardian-zig/src/config_semantics.zig",
+        "sha256": "38d45ec4bcc5d22180ebe745e27bec2be2430d1899c08b2872f3641323eea4aa",
+        "size": 8210,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/config_semantics.zig"
+      },
+      {
+        "path": "../guardian-zig/src/config_value.zig",
+        "sha256": "e8a2ec27be28020edca3c5fa6edede441842e8351ce211c814a053469dae4ac9",
+        "size": 19894,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/config_value.zig"
+      },
+      {
+        "path": "../guardian-zig/src/contracts/analyze.zig",
+        "sha256": "be0a066ac12633aef87082151726d5fe095525fd8b0676679910dc57bd103f6a",
+        "size": 6806,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/contracts/analyze.zig"
+      },
+      {
+        "path": "../guardian-zig/src/contracts/error_flow.zig",
+        "sha256": "0c6f8f1b5542c3c01ccac79d31f641c3ba0743df213143e71c6614c7a4cd0564",
+        "size": 7340,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/contracts/error_flow.zig"
+      },
+      {
+        "path": "../guardian-zig/src/contracts/index.zig",
+        "sha256": "b8c35376c0863d1a0aed5aacda2869b51944153b0da235d67591776b43f47b15",
+        "size": 10494,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/contracts/index.zig"
+      },
+      {
+        "path": "../guardian-zig/src/contracts/model.zig",
+        "sha256": "e46242495c479b13885caeae816e85496893a1e44f2982ad04913b7de898a9b9",
+        "size": 3924,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/contracts/model.zig"
+      },
+      {
+        "path": "../guardian-zig/src/contracts/tests.zig",
+        "sha256": "80fef976ffddd86cc1c25adcb58070bfff004c6d797dd7f60c085d505082e941",
+        "size": 7663,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/contracts/tests.zig"
+      },
+      {
+        "path": "../guardian-zig/src/dora.zig",
+        "sha256": "c8d4ef00d22c6386548da5c7fbf82bc05ffaeffefd5ee18b688505dd2a4ddfea",
+        "size": 18414,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/dora.zig"
+      },
+      {
+        "path": "../guardian-zig/src/external_inputs.zig",
+        "sha256": "b620c6a57c0b35297b28d92f0f056386fbc81c4e40a040167e903b96525730b0",
+        "size": 5838,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/external_inputs.zig"
+      },
+      {
+        "path": "../guardian-zig/src/fakes/clock.zig",
+        "sha256": "b2552094a68c31bb48f5e50b7c8027d84e5ae7ddbd1eab0807368e22e1ea9d14",
+        "size": 3666,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/fakes/clock.zig"
+      },
+      {
+        "path": "../guardian-zig/src/fakes/env.zig",
+        "sha256": "481c8b7555cba105df87039375219b5fc7bf06e43cc4b5f6e0038d4c1269d7cc",
+        "size": 2952,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/fakes/env.zig"
+      },
+      {
+        "path": "../guardian-zig/src/fakes/fakes.zig",
+        "sha256": "48eeef62d285316dd3c186240e24c09d3912527183a45b876ce64a5f871dbe88",
+        "size": 1961,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/fakes/fakes.zig"
+      },
+      {
+        "path": "../guardian-zig/src/fakes/fs.zig",
+        "sha256": "c8eddc13778cf6a879663e195ed40979c768e2955ec0ae439454de9a67c9bc28",
+        "size": 5839,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/fakes/fs.zig"
+      },
+      {
+        "path": "../guardian-zig/src/fakes/owned_map.zig",
+        "sha256": "27cc2ca445467fda2deddcbcdc073f55ee6742755efea64dc1f683af5ef8039c",
+        "size": 2610,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/fakes/owned_map.zig"
+      },
+      {
+        "path": "../guardian-zig/src/fakes/random.zig",
+        "sha256": "c746a27b219e60f661065853838768524c8e3d8258a2d19d7672c6452a63260e",
+        "size": 2230,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/fakes/random.zig"
+      },
+      {
+        "path": "../guardian-zig/src/file_metrics.zig",
+        "sha256": "84742b8d525868d332aeab2be5961950d78fb891d5622dc15a7e6ed5b102f273",
+        "size": 17859,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/file_metrics.zig"
+      },
+      {
+        "path": "../guardian-zig/src/fs.zig",
+        "sha256": "0f27a8ad111c31e7392bc37a8a207f6a6ed8623b78cfdf5c13115e18ab9b4466",
+        "size": 15226,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/fs.zig"
+      },
+      {
+        "path": "../guardian-zig/src/git.zig",
+        "sha256": "fc1d8463a89e303d16a0e8c303bab503425b2506fc47beb625a2ace55c87bc72",
+        "size": 47870,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/git.zig"
+      },
+      {
+        "path": "../guardian-zig/src/hysteresis.zig",
+        "sha256": "8544e15fbd276aefbfa753916de5caf4624ec273e2d2ccf2182d292f1c3dab7f",
+        "size": 31278,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/hysteresis.zig"
+      },
+      {
+        "path": "../guardian-zig/src/measurement.zig",
+        "sha256": "69bd7c94b7333b59211abac1d8de8528d859bf35ed5741cb98b908f5b8d3b2c2",
+        "size": 20510,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/measurement.zig"
+      },
+      {
+        "path": "../guardian-zig/src/merge/artifact.zig",
+        "sha256": "3821ccf7a49535a9932cec1890265e91625c8aca45bea8a4c1641101aa8b5a8b",
+        "size": 19830,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/merge/artifact.zig"
+      },
+      {
+        "path": "../guardian-zig/src/merge/scan.zig",
+        "sha256": "d8d1790e72f4fd7b9cde2400cf752a0ba0199e93bde65f51b32754fdbc974817",
+        "size": 8372,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/merge/scan.zig"
+      },
+      {
+        "path": "../guardian-zig/src/merge/three_way.zig",
+        "sha256": "e6dd95d421bf9888eee03fed42d8e88702a09aec76892cb50980f7605207a56b",
+        "size": 14995,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/merge/three_way.zig"
+      },
+      {
+        "path": "../guardian-zig/src/metadata_transaction.zig",
+        "sha256": "9c25515116a3ea94ec275f23c9c18d0da483af999fcb341899cb7b9fcaddce52",
+        "size": 9974,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/metadata_transaction.zig"
+      },
+      {
+        "path": "../guardian-zig/src/missing_inputs.zig",
+        "sha256": "e0590a14638d6cf66b03546f2cff802884b3d8c010a3982253c5183d9206c375",
+        "size": 7265,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/missing_inputs.zig"
+      },
+      {
+        "path": "../guardian-zig/src/mutation/cache.zig",
+        "sha256": "4bb71a3723983232c1f75f7d0a2d11533574bbf30368ee1bb0d13b5657a5128c",
+        "size": 15299,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/mutation/cache.zig"
+      },
+      {
+        "path": "../guardian-zig/src/mutation/gen.zig",
+        "sha256": "c8c9c157c4a5ab3f347f770c345214dab5ef42be2c31fd6e833ed7e08be962a2",
+        "size": 20037,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/mutation/gen.zig"
+      },
+      {
+        "path": "../guardian-zig/src/mutation/journal.zig",
+        "sha256": "3fff29177cc3161bf492fb63d14a3c7d22d7826ddc689245fba6decd48d1cdbd",
+        "size": 18325,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/mutation/journal.zig"
+      },
+      {
+        "path": "../guardian-zig/src/mutation/report.zig",
+        "sha256": "836be814c937fc73d901cb9fd0c90cbd6ae489ce2f7cbef4bd71c0d005a88664",
+        "size": 11047,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/mutation/report.zig"
+      },
+      {
+        "path": "../guardian-zig/src/mutation/runner.zig",
+        "sha256": "dadc0497d8659524e7b9fefe53325d41e04be24e0fd91a1f1776a28a4a024ada",
+        "size": 28135,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/mutation/runner.zig"
+      },
+      {
+        "path": "../guardian-zig/src/near_cap.zig",
+        "sha256": "4b2f5f422b8fd87fba1ab058a11389b5f05fd1b33d4e5d429cf04c06b9957bd5",
+        "size": 8312,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/near_cap.zig"
+      },
+      {
+        "path": "../guardian-zig/src/ratchet.zig",
+        "sha256": "35f86d179c644d3be06b7f89f92dfc9034bc1d6d06c0df4ccf2a2c22a69bdca5",
+        "size": 38999,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/ratchet.zig"
+      },
+      {
+        "path": "../guardian-zig/src/relocation.zig",
+        "sha256": "11eaff4dd242c35d0a2fb7b06b98b68a44e3903d7f5b25959c5bfe9a98dd84f8",
+        "size": 23554,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/relocation.zig"
+      },
+      {
+        "path": "../guardian-zig/src/reporter.zig",
+        "sha256": "d5d911f7dc1535939bbfa4852825a73885b07a8d7f02b549eda767a8794a6d4b",
+        "size": 26969,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/reporter.zig"
+      },
+      {
+        "path": "../guardian-zig/src/required_inputs.zig",
+        "sha256": "c85893ba11c48edd6fd59c49e2568eb988b1ed2678b32361c7a9556f3c9e2bb0",
+        "size": 6332,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/required_inputs.zig"
+      },
+      {
+        "path": "../guardian-zig/src/scope.zig",
+        "sha256": "152bd9e2bd7d80bf8a9c2887c194db0a1c13ad3d1a232a0a128d82dec9f5febf",
+        "size": 15888,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/scope.zig"
+      },
+      {
+        "path": "../guardian-zig/src/sink.zig",
+        "sha256": "19239c642f59a93b19953f732a4ff4b84c4268444679b008f29b947515eeb3c1",
+        "size": 17075,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/sink.zig"
+      },
+      {
+        "path": "../guardian-zig/src/snapshot.zig",
+        "sha256": "d097586a4731532a4980cb7735d175e58c473acf7d41acbddb1f84bfa927c5b4",
+        "size": 22535,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/snapshot.zig"
+      },
+      {
+        "path": "../guardian-zig/src/snapshot_helper.zig",
+        "sha256": "68d40205004ae72e6484a9a8003d96facfd777f27b88db815c73b0926ad8ecf8",
+        "size": 29649,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/snapshot_helper.zig"
+      },
+      {
+        "path": "../guardian-zig/src/source_digest.zig",
+        "sha256": "8361a49c1b699787a50ea2a8a822ac929a85d5b220333be8ffe557a9e88e1e6b",
+        "size": 12246,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/source_digest.zig"
+      },
+      {
+        "path": "../guardian-zig/src/spec/hints.zig",
+        "sha256": "a4a2335eae6812a6e843a12986a4438929c48a0081b36eb12139d84adb7eb2bf",
+        "size": 18390,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/spec/hints.zig"
+      },
+      {
+        "path": "../guardian-zig/src/spec/init.zig",
+        "sha256": "2153864fe0946ef9b2156102b6436b2265ff4075cafd5c1083c276d68b333ea0",
+        "size": 6899,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/spec/init.zig"
+      },
+      {
+        "path": "../guardian-zig/src/spec/matcher.zig",
+        "sha256": "7775506a2e217591b880fd5f9c198285139a0c68b82e67f6b2a44fb17d2d84d7",
+        "size": 24224,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/spec/matcher.zig"
+      },
+      {
+        "path": "../guardian-zig/src/spec/parser.zig",
+        "sha256": "c22a1da41100d8cddea710529c07edaff0f9ab29a86e8acdc675008d727adff3",
+        "size": 16602,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/spec/parser.zig"
+      },
+      {
+        "path": "../guardian-zig/src/test_count.zig",
+        "sha256": "46616d1282f4a8ee9e3821b325e9db9a095f56d38731811b836441ea671693fa",
+        "size": 9112,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/test_count.zig"
+      },
+      {
+        "path": "../guardian-zig/src/test_filter.zig",
+        "sha256": "4ee314a5f40224347edce97f9c8ebdc9a566af885de2598b7290e85ce099f2cf",
+        "size": 16609,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/test_filter.zig"
+      },
+      {
+        "path": "../guardian-zig/src/test_runner.zig",
+        "sha256": "164aa945c88baa013375fab196363ef0df97ca59f28f7b5064e3fb43bfe8ce13",
+        "size": 60854,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/test_runner.zig"
+      },
+      {
+        "path": "../guardian-zig/src/test_timing.zig",
+        "sha256": "5bc80b6c7bf039a82df3d58333c546101a060410e3641dd9111a4e40e00ec90d",
+        "size": 29088,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/test_timing.zig"
+      },
+      {
+        "path": "../guardian-zig/src/testing/golden/debug-print-ban/alias-and-test-allowed/expected.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/testing/golden/debug-print-ban/alias-and-test-allowed/expected.txt"
+      },
+      {
+        "path": "../guardian-zig/src/testing/golden/debug-print-ban/alias-and-test-allowed/input.zig.in",
+        "sha256": "8ae7d93fc5f5c4e72a69bee037562673e989455f8d2ffa3bfeece35b3c904ba9",
+        "size": 294,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/testing/golden/debug-print-ban/alias-and-test-allowed/input.zig.in"
+      },
+      {
+        "path": "../guardian-zig/src/testing/golden/debug-print-ban/raw-call-outside-main/expected.txt",
+        "sha256": "2784df69a808c8e7e39b9d97cb9f3e74e4d08dffdfd2bc6893eacc2f6e300047",
+        "size": 122,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/testing/golden/debug-print-ban/raw-call-outside-main/expected.txt"
+      },
+      {
+        "path": "../guardian-zig/src/testing/golden/debug-print-ban/raw-call-outside-main/input.zig.in",
+        "sha256": "0166cdf544e1ab912a3134211d50c24f3d65a10b04a56a112f95fbc407a9d489",
+        "size": 151,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/testing/golden/debug-print-ban/raw-call-outside-main/input.zig.in"
+      },
+      {
+        "path": "../guardian-zig/src/testing/golden/doc-comments/all-good/expected.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/testing/golden/doc-comments/all-good/expected.txt"
+      },
+      {
+        "path": "../guardian-zig/src/testing/golden/doc-comments/all-good/input.zig.in",
+        "sha256": "e87fb0c33db2db1f290b7ac95946a294a84f871b4394cd8e5a86f52762f65715",
+        "size": 256,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/testing/golden/doc-comments/all-good/input.zig.in"
+      },
+      {
+        "path": "../guardian-zig/src/testing/golden/doc-comments/empty-and-placeholder/expected.txt",
+        "sha256": "f3940e59fd0e8eb8b911ff15632ee525fab93c589a870abea7287c58b3f12438",
+        "size": 181,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/testing/golden/doc-comments/empty-and-placeholder/expected.txt"
+      },
+      {
+        "path": "../guardian-zig/src/testing/golden/doc-comments/empty-and-placeholder/input.zig.in",
+        "sha256": "96d5506b9afbd081c9a02f729334ad091eebd4f10d394d95ad33c12c2f364adc",
+        "size": 224,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/testing/golden/doc-comments/empty-and-placeholder/input.zig.in"
+      },
+      {
+        "path": "../guardian-zig/src/testing/golden/stub-body-ban/all-three-forms/expected.txt",
+        "sha256": "d6d8cd1cdb06f94f2be0dbf15198b241cd1717ef0e0d8c87f2fb7d8ec72744fc",
+        "size": 251,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/testing/golden/stub-body-ban/all-three-forms/expected.txt"
+      },
+      {
+        "path": "../guardian-zig/src/testing/golden/stub-body-ban/all-three-forms/input.zig.in",
+        "sha256": "41f3a9633d108ea347d02929e82c9c96e318d1fc0931d90b860bca6c2a1f1294",
+        "size": 273,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/testing/golden/stub-body-ban/all-three-forms/input.zig.in"
+      },
+      {
+        "path": "../guardian-zig/src/testing/golden/stub-body-ban/noreturn-allowed/expected.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/testing/golden/stub-body-ban/noreturn-allowed/expected.txt"
+      },
+      {
+        "path": "../guardian-zig/src/testing/golden/stub-body-ban/noreturn-allowed/input.zig.in",
+        "sha256": "b03451ec37b7e192a74e48b9f63e0abd9a8508df0558147ebc9156660d704b8f",
+        "size": 86,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/testing/golden/stub-body-ban/noreturn-allowed/input.zig.in"
+      },
+      {
+        "path": "../guardian-zig/src/testing/golden_runner.zig",
+        "sha256": "fba88777bdf3f09fa317aa7af30b7810cddf6e5462cca2afae2363411068c558",
+        "size": 5725,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/testing/golden_runner.zig"
+      },
+      {
+        "path": "../guardian-zig/src/text.zig",
+        "sha256": "d9bf6d139a37d46cc9b32322a1842f63076ca04b588cab14d7b4571efdede299",
+        "size": 8210,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/text.zig"
+      },
+      {
+        "path": "../guardian-zig/src/version.zig",
+        "sha256": "b4b643ac0aae41a1f21df0b0af7437513f14f634e8da2cdad04c79e6a8ec6f8b",
+        "size": 815,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/version.zig"
+      },
+      {
+        "path": "../guardian-zig/src/violation_key.zig",
+        "sha256": "b4267c772b9210d86ea293597e4b56221a82deaccb6a395abcfc75a3d02be2f2",
+        "size": 19992,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/violation_key.zig"
+      },
+      {
+        "path": "../guardian-zig/src/walk.zig",
+        "sha256": "a57b5dba89fdc4c692306e5f8ff534e6d5b1a1d4d179553c58f074db62a8b140",
+        "size": 12571,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/walk.zig"
+      },
+      {
+        "path": "../guardian-zig/src/wiring.zig",
+        "sha256": "d8a325fe0ab8a9e69cb0d1863e8812e60a0eafd75769104e4e90390f745c2570",
+        "size": 2341,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/wiring.zig"
+      },
+      {
+        "path": "../guardian-zig/src/writer_lock.zig",
+        "sha256": "f490445c5286af3b30b0a9301346c3a3f8f32beb56953589dbe7d20f67bd3629",
+        "size": 3993,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000,
+        "resolved": "/home/epentland/ai/canopy/guardian-zig/src/writer_lock.zig"
+      },
+      {
+        "path": ".zigversion",
+        "sha256": "55514671f203f691ba0fae90c7b7d8740256222cfa6f7512b71b04cd1316eb2d",
+        "size": 26,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000
+      },
+      {
+        "path": "build.zig",
+        "sha256": "d731d5b0eb932eb9d19b1aa4e6e9e0f4f49ee0adc222a2152a60d66c363a6c30",
+        "size": 73466,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000
+      },
+      {
+        "path": "build.zig.zon",
+        "sha256": "ce238ef90c68bf0ff94d92721d0bfd0288006c728ca028476fc8d52aa2cc259e",
+        "size": 483,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000
+      },
+      {
+        "path": "build_identity.zig",
+        "sha256": "9528b5b6b2d6a90c2ecee9084c901b238cb02a7390c987b8fc1ddccc8104a294",
+        "size": 8985,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000
+      },
+      {
+        "path": "build_verification.zig",
+        "sha256": "50f4b62f8b206b8e425035f8a8e4d79ca74e815c6db5375d6cb6a0a66186567d",
+        "size": 18111,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000
+      },
+      {
+        "path": "guardian.toml",
+        "sha256": "150e197f22f9e0bb34b0055d4d7d32782ecb163f551fae21995e3fd216c4f7f0",
+        "size": 836,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000
+      },
+      {
+        "path": "selfhost/component_archive.zig",
+        "sha256": "d8adb175b1399e0a93ad856456be5cdd8b29df57af27e223baf357f33feb3aed",
+        "size": 4047,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000
+      },
+      {
+        "path": "selfhost/component_files.zig",
+        "sha256": "5abb3f52b1bd2cec6c7911d153aa93f34a90eb7209946ea77ecf347480c88def",
+        "size": 9919,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000
+      },
+      {
+        "path": "selfhost/component_support_test.zig",
+        "sha256": "e6adb0c37bf79fbc42034c898f70d05271e75e600ce1267b6aef4ea746c2615a",
+        "size": 12439,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000
+      },
+      {
+        "path": "selfhost/components.zig",
+        "sha256": "b3cda593a1a828038d43fe9d89438ace719a09b3d3b16f7f46b5a7acd973fde7",
+        "size": 21644,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000
+      },
+      {
+        "path": "src/user_docs.zig",
+        "sha256": "df3239dff8ec13f2c7997a14dcb33bbbb36cae21a3ba8e5d6f00ca9a1bb01b2a",
+        "size": 3974,
+        "mode": 436,
+        "uid": 1000,
+        "gid": 1000
+      }
+    ],
+    "symlinks": {}
+  },
+  "reviewers": [
+    "coordinator",
+    "S01 delegated configuration review"
+  ],
+  "changed_consumers": [
+    "build.zig: verification_cache telemetry output environment literal"
+  ],
+  "unchanged_contracts": [
+    "declared input lists",
+    "required actions and members",
+    "compiler/runtime/ABI/seed/toolchain",
+    "source recipes",
+    "pure producer closures",
+    "install graph"
+  ],
+  "status": "explicitly qualified; complete candidate and two unchanged complete requests passed",
+  "changed_files": [
+    {
+      "path": "build.zig",
+      "old": "ada57d367f6658c23512842b8360b05e92f907ca417ae48cdde643deec260754",
+      "new": "d731d5b0eb932eb9d19b1aa4e6e9e0f4f49ee0adc222a2152a60d66c363a6c30"
+    }
+  ],
+  "qualified_source": "fe7637e82f58430573d99473e5389a4369bbba7e"
+}
