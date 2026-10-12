@@ -364,7 +364,7 @@ class WatchdogTests(unittest.TestCase):
     def test_preexisting_detached_admission_helper_survives(self):
         with tempfile.TemporaryDirectory() as temporary:
             marker = Path(temporary)/'settled'
-            helper_argv = [sys.executable, '-c', f'import time; from pathlib import Path; time.sleep(.4); Path({str(marker)!r}).write_text("settled")']
+            helper_argv = [sys.executable, '-c', f'import time; from pathlib import Path; time.sleep(.4); target=Path({str(marker)!r}); temporary=target.with_suffix(".tmp"); temporary.write_text("settled"); temporary.rename(target)']
             for worker_source, timeout, expected in [('pass', 1, 0), ('import time; time.sleep(60)', .15, 124)]:
                 marker.unlink(missing_ok=True)
                 prefix = (f'subprocess.Popen({helper_argv!r},start_new_session=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL); ')
@@ -408,6 +408,92 @@ class WatchdogTests(unittest.TestCase):
             self.assertLess(time.monotonic()-started, 1)
         finally:
             timer.join()
+
+    def test_inherited_helper_later_child_survives_cancellation(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            marker = Path(temporary)/'helper-child-finished'
+            ready = Path(temporary)/'helper-child-ready'
+            helper_child = (f'from pathlib import Path; import time; Path({str(ready)!r}).write_text("ready"); '
+                            f'time.sleep(.6); target=Path({str(marker)!r}); temporary=target.with_suffix(".tmp"); temporary.write_text("finished"); temporary.rename(target)')
+            helper = ('import subprocess,time; time.sleep(.1); '
+                      f'subprocess.Popen({[sys.executable, "-c", helper_child]!r},start_new_session=True); '
+                      'time.sleep(2)')
+            prefix = ('import subprocess; '
+                      f'subprocess.Popen({[sys.executable, "-c", helper]!r},start_new_session=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL); ')
+            child = self.ready_spawn('import time; time.sleep(60)', supervised=True, prefix=prefix)
+            self.await_file(ready)
+            result = wait_owned(child, limits=ProcessLimits(.15,.5))
+            self.assertEqual(result.returncode, 124)
+            self.await_file(marker)
+            self.assertEqual(marker.read_text(), 'finished')
+
+    def test_sigint_cancels_detached_lineage_and_releases_claim_fd(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            pid_path = Path(temporary)/'pid'
+            read_fd, write_fd = os.pipe()
+            source = ('import subprocess,time; child=subprocess.Popen(["sleep","60"],start_new_session=True); '
+                      f'open({str(pid_path)!r},"w").write(str(child.pid)); __FIXTURE_READY__; time.sleep(60)')
+            child = self.supervised(source, pass_fds=(write_fd,))
+            os.close(write_fd)
+            os.kill(child.pid, signal.SIGINT)
+            result = wait_owned(child, limits=ProcessLimits(2,.5))
+            self.assertEqual(result.returncode, 130)
+            self.assertEqual(os.read(read_fd, 1), b'')
+            os.close(read_fd)
+            with self.assertRaises(ProcessLookupError):
+                os.kill(int(pid_path.read_text()), 0)
+
+    def test_detached_forking_descendants_are_frozen_before_cleanup(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            pids = Path(temporary)/'pids'
+            source = ('import os,time,signal; os.setsid(); '
+                      f'out=open({str(pids)!r},"a",buffering=1); out.write(str(os.getpid())+"\\n"); '
+                      'signal.signal(signal.SIGTERM,signal.SIG_IGN); __FIXTURE_READY__; '
+                      '\nfor _ in range(24):'
+                      '\n pid=os.fork()'
+                      '\n if pid == 0:'
+                      '\n  out.write(str(os.getpid())+"\\n"); time.sleep(60); os._exit(0)'
+                      '\n time.sleep(.002)'
+                      '\ntime.sleep(60)')
+            child = self.supervised(source)
+            result = wait_owned(child, limits=ProcessLimits(.15,.5))
+            self.assertEqual(result.returncode, 124)
+            for pid in map(int, pids.read_text().splitlines()):
+                with self.assertRaises(ProcessLookupError):
+                    os.kill(pid, 0)
+
+    def test_cancellation_during_supervisor_startup_does_not_start_work(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            ready = Path(temporary)/'supervisor-ready'
+            started = Path(temporary)/'worker-started'
+            worker = [sys.executable, '-c', f'from pathlib import Path; Path({str(started)!r}).write_text("started")']
+            source = ('import ctypes,os,time; from pathlib import Path; '
+                      'from scripts.verification_process import run_supervised; '
+                      '\nclass StartupBarrier:'
+                      '\n def prctl(self,*args):'
+                      f'\n  Path({str(ready)!r}).write_text("ready"); time.sleep(.2); return 0'
+                      '\nctypes.CDLL=lambda *args,**kwargs: StartupBarrier()'
+                      f'\nraise SystemExit(run_supervised({worker!r},dict(os.environ)))')
+            child = self.spawn(source)
+            self.await_file(ready)
+            os.killpg(child.pid, signal.SIGTERM)
+            result = wait_owned(child, limits=ProcessLimits(2,.5))
+            self.assertEqual(result.returncode, 130)
+            self.assertFalse(started.exists())
+
+    def test_timeout_during_publication_never_returns_complete(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            staging = Path(temporary)/'staging'
+            success = Path(temporary)/'success'
+            source = ('from pathlib import Path; import time; '
+                      f'Path({str(staging)!r}).write_text("unpublished"); __FIXTURE_READY__; '
+                      f'time.sleep(60); Path({str(staging)!r}).rename({str(success)!r})')
+            result = wait_owned(self.supervised(source), limits=ProcessLimits(.15,.5))
+            self.assertFalse(result.complete)
+            self.assertFalse(success.exists())
+            retry = self.supervised(f'from pathlib import Path; Path({str(success)!r}).write_text("fresh")')
+            self.assertTrue(wait_owned(retry).complete)
+            self.assertEqual(success.read_text(), 'fresh')
 
     def test_interrupt_cleans_and_propagates(self):
         class Interrupt:

@@ -338,7 +338,7 @@ def _descendants(pid):
     return result
 
 
-def _kill_identity(pid, birth):
+def _signal_identity(pid, birth, sig):
     """Pin a process with pidfd, verify birth, then signal that exact process."""
     try:
         descriptor = os.pidfd_open(pid)
@@ -347,12 +347,38 @@ def _kill_identity(pid, birth):
     try:
         if _process_starttime(pid) != birth:
             return
-        signal.pidfd_send_signal(descriptor, signal.SIGSTOP)
-        signal.pidfd_send_signal(descriptor, signal.SIGKILL)
+        signal.pidfd_send_signal(descriptor, sig)
     except ProcessLookupError:
         pass
     finally:
         os.close(descriptor)
+
+
+def _kill_identity(pid, birth):
+    _signal_identity(pid, birth, signal.SIGSTOP)
+    _signal_identity(pid, birth, signal.SIGKILL)
+
+
+def _close_lineage():
+    """Freeze the complete lineage before killing; reaping reveals adopted children."""
+    deadline = time.monotonic() + 0.3
+    leftovers = _descendants(os.getpid())
+    while leftovers and time.monotonic() < deadline:
+        # Killing parents one at a time lets an unvisited child fork indefinitely.
+        # Stop every discovered process, then include any child born during freeze.
+        frozen = {}
+        while leftovers != frozen and time.monotonic() < deadline:
+            for pid, birth in leftovers.items():
+                _signal_identity(pid, birth, signal.SIGSTOP)
+            frozen = leftovers
+            leftovers = _descendants(os.getpid())
+        for pid, birth in leftovers.items():
+            _signal_identity(pid, birth, signal.SIGKILL)
+        _reap_adopted()
+        leftovers = _descendants(os.getpid())
+        if leftovers:
+            time.sleep(0.005)
+    return leftovers
 
 
 def _reap_adopted():
@@ -365,7 +391,7 @@ def _reap_adopted():
             return
 
 
-def run_supervised(argv: list[str], env: dict[str, str]) -> int:
+def _run_lineage(argv: list[str], env: dict[str, str], restore_mask) -> int:
     """Run inside the admitted child, retaining and reaping its entire lineage.
 
     Linux subreaping is enabled here only, never in the shared coordinator.
@@ -379,10 +405,6 @@ def run_supervised(argv: list[str], env: dict[str, str]) -> int:
     if libc.prctl(36, 1, 0, 0, 0) != 0:  # PR_SET_CHILD_SUBREAPER
         error = ctypes.get_errno()
         raise OSError(error, os.strerror(error))
-    inherited = _descendants(os.getpid())
-    def owned_descendants():
-        return {pid: birth for pid, birth in _descendants(os.getpid()).items()
-                if inherited.get(pid) != birth}
     interrupted = False
     def interrupt(signum, frame):
         nonlocal interrupted
@@ -390,29 +412,25 @@ def run_supervised(argv: list[str], env: dict[str, str]) -> int:
     previous = {sig: signal.signal(sig, interrupt) for sig in (signal.SIGTERM, signal.SIGINT)}
     worker = None
     try:
+        # Pending fork-window cancellation reaches this handler before work starts.
+        signal.pthread_sigmask(signal.SIG_SETMASK, restore_mask)
+        if interrupted:
+            return 130
         worker = subprocess.Popen(argv, env=env, close_fds=False)
         while worker.poll() is None and not interrupted:
             time.sleep(0.01)
         status = worker.poll()
         _reap_adopted()
-        leftovers = owned_descendants()
+        leftovers = _descendants(os.getpid())
         # Known build cleanup helpers poll their former parent once per second.
         # Their closeout is execution: the outer watchdog remains active here.
         natural_drain_until = time.monotonic() + 2.0
         while leftovers and not interrupted and time.monotonic() < natural_drain_until:
             time.sleep(0.01)
             _reap_adopted()
-            leftovers = owned_descendants()
+            leftovers = _descendants(os.getpid())
         incomplete = status is not None and bool(leftovers)
-        # Stop before kill so descendants cannot keep forking during shutdown.
-        deadline = time.monotonic() + 0.3
-        while leftovers and time.monotonic() < deadline:
-            for pid, birth in leftovers.items():
-                _kill_identity(pid, birth)
-            _reap_adopted()
-            leftovers = owned_descendants()
-            if leftovers:
-                time.sleep(0.005)
+        leftovers = _close_lineage()
         if worker.returncode is None:
             # waitpid above may have reaped it; preserve only incomplete status.
             worker.poll()
@@ -424,6 +442,50 @@ def run_supervised(argv: list[str], env: dict[str, str]) -> int:
             return 125
         return 128 - status if status < 0 else status
     finally:
+        # An exception must not orphan a detached worker or publish completion.
+        _close_lineage()
+        for sig, handler in previous.items():
+            signal.signal(sig, handler)
+
+
+def run_supervised(argv: list[str], env: dict[str, str]) -> int:
+    """Isolate admitted work in a subreaper with no inherited child ownership.
+
+    The outer launcher may already own admission helpers. Their later children
+    belong to that launcher, including after their parent exits. A dedicated
+    inner process owns only the action lineage, so cleanup cannot mistake these
+    helpers for action children. Admission descriptors remain inherited.
+    Call in the fresh admitted launcher, never in a multithreaded coordinator.
+    The parent watchdog must allow at least 0.5 seconds for lineage cleanup.
+    """
+    interrupted = False
+    child = None
+    def interrupt(signum, frame):
+        nonlocal interrupted
+        interrupted = True
+        if child is not None and child != 0:
+            try:
+                os.kill(child, signum)
+            except ProcessLookupError:
+                pass
+    previous = {sig: signal.signal(sig, interrupt) for sig in (signal.SIGTERM, signal.SIGINT)}
+    restore_mask = signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGTERM, signal.SIGINT})
+    try:
+        child = os.fork()
+        if child == 0:
+            try:
+                status = 130 if interrupted else _run_lineage(argv, env, restore_mask)
+            except BaseException:
+                status = 125
+            os._exit(status)
+        signal.pthread_sigmask(signal.SIG_SETMASK, restore_mask)
+        while True:
+            pid, status = os.waitpid(child, 0)
+            if pid == child:
+                result = os.waitstatus_to_exitcode(status)
+                return 130 if interrupted else 128 - result if result < 0 else result
+    finally:
+        signal.pthread_sigmask(signal.SIG_SETMASK, restore_mask)
         for sig, handler in previous.items():
             signal.signal(sig, handler)
 

@@ -1,0 +1,18 @@
+build-slot: FIFO ticket 3551, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 3551 after 10s
+..........................................F.........................................................................................
+======================================================================
+FAIL: test_preexisting_detached_admission_helper_survives (verification_process_test.WatchdogTests.test_preexisting_detached_admission_helper_survives)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S02/scripts/verification_process_test.py", line 377, in test_preexisting_detached_admission_helper_survives
+    self.assertEqual(marker.read_text(), 'settled')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '' != 'settled'
++ settled
+
+
+----------------------------------------------------------------------
+Ran 132 tests in 44.471s
+
+FAILED (failures=1)
