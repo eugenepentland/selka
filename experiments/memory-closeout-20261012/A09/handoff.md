@@ -167,3 +167,12 @@ not a heavy-build peak. The coordinator separately approved3 build slots with an
 8GiB available-memory admission threshold. An external cooperating development-loop
 session held timing admission for several minutes with all build slots idle;
 its delay is queue time, not compiler/guest time. It was not interrupted.
+
+The coordinator authorized continuation branch
+`codex/memory-closeout-20261012-A09-continuation` at
+`35e6f3cf333abe84937af1d2e4450885cf17a2f8`; original worker branch/evidence remain.
+`measure.py` now explicitly selects opt-in C0/C1 versus ordinary C2/C3 commands,
+records actual options, and supports a bounded enclosing build lease. Nine
+existing calibrated C0 binaries were reused with exact hashes/options preserved;
+negative selector/admission controls passed. These are harness checks, not final
+runtime pairs. All final-candidate measurement dependencies remain open.

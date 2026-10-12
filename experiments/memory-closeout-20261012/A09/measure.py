@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Fresh same-host timing of prepared binaries; never writes historical evidence.
 
-Build owns build admission. Run must be invoked inside one timing admission.
+Build owns admission unless --admission=held names an enclosing build lease.
+Run must be invoked inside one timing admission.
 Manifests describe exact sources, outputs, worker counts and semantic changes.
 """
 import argparse
@@ -102,13 +103,18 @@ def run_once(argv, cwd, env, cpus, expected, timeout):
 
 
 def build(args):
+    if args.admission == "held" and os.environ.get("MYLANG_ADMISSION_KIND") != "build":
+        raise ValueError("--admission=held requires an enclosing build lease")
+    if args.admission == "per-build" and os.environ.get("MYLANG_ADMISSION_KIND"):
+        raise ValueError("do not nest admission; use --admission=held inside a build lease")
     manifest = json.loads(args.manifest.read_text())
     if (args.output / "builds.json").exists():
         raise ValueError("refusing to overwrite prepared artifact evidence")
     args.output.mkdir(parents=True, exist_ok=True)
     record = {"source_commit": args.commit, "compiler": str(args.compiler),
               "compiler_sha256": digest(args.compiler), "manifest_sha256": digest(args.manifest),
-              "zig": str(args.zig), "zig_sha256": digest(args.zig), "cases": []}
+              "zig": str(args.zig), "zig_sha256": digest(args.zig),
+              "ownership_selection": args.ownership, "admission": args.admission, "cases": []}
     prepared = {}
     reusable = []
     if args.reuse_builds:
@@ -122,7 +128,10 @@ def build(args):
         target = args.output / case["id"]
         target.mkdir(parents=True, exist_ok=True)
         binary = target / "program"
-        options = case.get("flags", ["--experimental-zero-rc", "--release"])
+        defaults = ["--experimental-zero-rc", "--release"] if args.ownership == "opt-in" else ["--release"]
+        options = case.get("flags", defaults)
+        if args.ownership == "default" and any(flag.startswith("--experimental-") for flag in options):
+            raise ValueError("normal-default evidence cannot select an experimental ownership mode")
         if "--counters" in options:
             raise ValueError("counted binary cannot be used for timing")
         argv = [str(args.compiler), "build", str(source), *options, "--zig", str(args.zig),
@@ -141,7 +150,8 @@ def build(args):
         if key in prepared:
             binary, argv, status, stderr_path = prepared[key]
         else:
-            result = subprocess.run([str(ROOT / "scripts/build-slot.sh"), "build", *argv],
+            command = argv if args.admission == "held" else [str(ROOT / "scripts/build-slot.sh"), "build", *argv]
+            result = subprocess.run(command,
                                     cwd=ROOT, env=clean_env(), capture_output=True, text=True)
             (target / "build.stdout").write_text(result.stdout)
             (target / "build.stderr").write_text(result.stderr)
@@ -152,7 +162,7 @@ def build(args):
                 if "myl_count_current" in symbols or "myl_count_written" in symbols:
                     raise ValueError(f"{case['id']}: counting runtime found in timing binary")
             prepared[key] = binary, argv, status, stderr_path
-        row = {**case, "source": str(source), "source_sha256": digest(source),
+        row = {**case, "flags": options, "source": str(source), "source_sha256": digest(source),
                "source_inputs_sha256": source_inputs(source),
                "build_command": argv, "build_status": status, "build_stderr": stderr_path,
                "artifact_preparation": "reused" if reused_build else "fresh"}
@@ -262,6 +272,10 @@ def main():
     b.add_argument("--compiler", type=lambda p: Path(p).resolve(), required=True)
     b.add_argument("--zig", type=lambda p: Path(p).resolve(), required=True)
     b.add_argument("--commit", required=True)
+    b.add_argument("--ownership", choices=("opt-in", "default"), default="opt-in",
+                   help="opt-in for C0/C1; default for actual C2/C3 ordinary commands")
+    b.add_argument("--admission", choices=("per-build", "held"), default="per-build",
+                   help="held permits bounded preparation under one existing build lease")
     b.add_argument("--output", type=lambda p: Path(p).resolve(), required=True)
     b.set_defaults(handler=build)
     r = sub.add_parser("run")

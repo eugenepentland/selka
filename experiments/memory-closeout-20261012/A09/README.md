@@ -142,3 +142,20 @@ trusted/verified leak-checked execution; a positive control still unswitches.
 Focused tests pass 2/2 and Guardian passes 88/88. Full integrated qualification
 remains the coordinator's gate. Exact evidence is in
 [the versioning report](raw/version/results.json).
+
+## Default-command measurement preparation
+
+`measure.py build --ownership=opt-in` retains the C0/C1 selector. For actual
+C2/C3 compilers, `--ownership=default` uses `--release` with no experimental flag
+and rejects a manifest that supplies an experimental selector. Every new build
+receipt records the actual flags and ownership selection. This option does not
+establish that the compiler default has changed; command/ABI qualification and
+its exact candidate identity remain prerequisites.
+
+Bounded preparation batches may use `--admission=held` within an existing shared
+build lease. The harness rejects missing or nested admission. Default per-build
+admission remains available. Validation preserved all nine existing calibrated
+C0 artifact identities through checked reuse, rejected an experimental selector
+under default-command preparation before invoking the compiler, and rejected a
+missing enclosing lease. No new runtime sample or candidate qualification was
+produced by these harness checks.
