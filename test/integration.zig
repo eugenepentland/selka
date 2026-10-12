@@ -245,8 +245,19 @@ fn runFixture(command: []const u8, text: []const u8, options: []const []const u8
     try args.appendSlice(testing.allocator, &.{ compilerPath(), command, path });
     // These fixtures assert the entry point's int result, which `run` now reports only on request.
     if (std.mem.startsWith(u8, command, "run")) try args.appendSlice(testing.allocator, &(.{"--print-result"} ++ tools));
+    const cache = try privateTestCache(path);
+    defer testing.allocator.free(cache);
+    if (std.mem.eql(u8, command, "test")) try args.appendSlice(testing.allocator, &.{ "--cache-dir", cache });
     try args.appendSlice(testing.allocator, options);
     return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+}
+
+/// A receipt cache beside a fixture, removed with its temporary directory. Receipt
+/// keys name the entry relative to its root (RECEIPT-PATHS-1), so a fixture tested
+/// through the shared default cache would hit an earlier run's receipt and report
+/// `cached` where its test asserts `passed`.
+fn privateTestCache(entry: []const u8) ![]const u8 {
+    return std.fs.path.join(testing.allocator, &.{ std.fs.path.dirname(entry).?, "test-cache" });
 }
 
 /// `runFixture` for a module-syntax entry. The public clock/random read surface
@@ -263,6 +274,9 @@ fn runProjectFixture(command: []const u8, text: []const u8, options: []const []c
     defer args.deinit(testing.allocator);
     try args.appendSlice(testing.allocator, &.{ compilerPath(), command, path });
     if (std.mem.startsWith(u8, command, "run")) try args.appendSlice(testing.allocator, &(.{"--print-result"} ++ tools));
+    const cache = try privateTestCache(path);
+    defer testing.allocator.free(cache);
+    if (std.mem.eql(u8, command, "test")) try args.appendSlice(testing.allocator, &.{ "--cache-dir", cache });
     try args.appendSlice(testing.allocator, options);
     return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
 }
@@ -3455,7 +3469,9 @@ test "CLI formatter and test agree on headerless sibling test imports" {
     defer testing.allocator.free(checked.stdout);
     defer testing.allocator.free(checked.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, checked.term);
-    const tested = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compilerPath(), "test", path } });
+    const cache = try privateTestCache(path);
+    defer testing.allocator.free(cache);
+    const tested = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compilerPath(), "test", path, "--cache-dir", cache } });
     defer testing.allocator.free(tested.stdout);
     defer testing.allocator.free(tested.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, tested.term);
