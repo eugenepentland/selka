@@ -1,0 +1,48 @@
+--- original/text.my
++++ migrated/text.my
+@@ -55,7 +55,7 @@
+         other = ["a", "needle", "absentΩ", "é"]
+     elif kind == "string_split" or kind == "string_join":
+         mut options = ["", "alpha", "café", "x", "naïve"]
+-        fragments = [for j in range(size) yield options[(seed + j) % 5]]
++        fragments = [for j in range(size) yield options[(seed + j) % 5].copy()]
+         texts = ["|".join(fragments), "::".join(fragments)]
+     elif kind == "int_parse":
+         for j in range(size):
+@@ -103,7 +103,7 @@
+ func word_job(text: str) -> int:
+     mut counts: dict[str, int] = {}
+     for word in text.split():
+-        counts[word] = (if (word in counts) then (counts[word] + 1) else (1))
++        counts[word.copy()] = (if (word in counts) then (counts[word] + 1) else (1))
+     mut result = 0
+     for word in counts:
+         result += score(word) * counts[word] * counts[word]
+@@ -162,7 +162,8 @@
+         match parse_int(row[3]):
+             case Some(amount):
+                 if row[4] == "1":
+-                    groups[row[2]] += amount
++                    const region = row[2].copy()
++                    groups[region] += amount
+                     accepted += 1
+                     names += score(row[1])
+             case None:
+@@ -196,7 +197,7 @@
+                         match row:
+                             case json.Json.object(value=fields):
+                                 if json_active(fields["active"]):
+-                                    mut result: dict[str, json.Json] = {"id": fields["id"], "name": fields["name"], "amount": json.integer(json_integer(fields["amount"]) + bump)}
++                                    mut result: dict[str, json.Json] = {"id": fields["id"].copy(), "name": fields["name"].copy(), "amount": json.integer(json_integer(fields["amount"]) + bump)}
+                                     output.append(json.object(result))
+                             case _:
+                                 return 0
+@@ -289,7 +290,7 @@
+ func main(args: str[], host: Host, out: Stream) -> int:
+     if len(args) != 4:
+         return 2
+-    mut kind = args[0]
++    mut kind = args[0].copy()
+     mut cases = ["bytes_scan", "string_equal", "string_search", "string_split", "string_join", "int_parse", "int_format", "word_count", "csv_aggregate", "json_transform"]
+     if kind not in cases:
+         return 2

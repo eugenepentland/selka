@@ -1,0 +1,120 @@
+
+extern func runtime_bench_now(host: Host) -> i64 effects(host)
+
+
+record Item:
+    code: int
+    bias: int
+    payload: int[]
+
+
+enum Value:
+    integer(value: int)
+    boolean(value: bool)
+
+
+func read_item(item: Item) -> int:
+    return item.code + item.bias + item.payload[0]
+
+
+func as_integer(value: Value) -> int:
+    match value:
+        case Value.integer(value=n):
+            return n
+        case Value.boolean(value=_):
+            return 0
+
+
+func parse_number(text: str) -> int:
+    match parse_int(text):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+
+func main(args: str[], host: Host, out: Stream) -> int:
+    if len(args) != 4:
+        return 2
+    mut size = parse_number(args[1])
+    mut iterations = parse_number(args[2])
+    mut seed = parse_number(args[3])
+    if size < 2 or iterations < 1 or seed < 1 or seed > 1000000:
+        return 2
+    mut checksum = 0
+    mut elapsed = 0
+    if args[0] == "record_reads":
+        mut records: Item[] = []
+        for j in range(size):
+            records.append(Item(code=(seed + j * 17) % 1009, bias=(seed * 3 + j * 7) % 257, payload=[j + seed, j + seed + 1, j + seed + 2, j + seed + 3]))
+        mut index = seed % size
+        mut start = runtime_bench_now(host)
+        for step in range(iterations):
+            mut result = read_item(records[index])
+            checksum = (checksum + result) % 1000000007
+            index = (index + 2 * seed + 1) % size
+        elapsed = runtime_bench_now(host) - start
+    elif args[0] == "tagged_stack":
+        mut opcodes = [for j in range(size) yield (j + seed) % 4]
+        mut stack: Value[] = [Value.integer(value=seed), Value.boolean(value=False)]
+        mut cursor = 0
+        mut start = runtime_bench_now(host)
+        for step in range(iterations):
+            mut popped = stack.pop()
+            mut base = as_integer(stack[0])
+            mut opcode = opcodes[cursor]
+            mut delta = 0
+            match popped:
+                case Value.boolean(value=b):
+                    if opcode == 0:
+                        delta = (if (b) then (3) else (1))
+                    elif opcode == 1:
+                        delta = 7
+                    elif opcode == 2:
+                        delta = 11
+                    else:
+                        delta = 13
+                case Value.integer(value=n):
+                    if opcode == 0:
+                        delta = n % 5
+                    elif opcode == 1:
+                        delta = n % 7
+                    elif opcode == 2:
+                        delta = n % 11
+                    else:
+                        delta = n % 13
+            mut new_base = (base + delta + opcode + 1) % 1000003
+            stack[0] = Value.integer(value=new_base)
+            if opcode == 0 or opcode == 2:
+                stack.append(Value.boolean(value=new_base % 2 == 0))
+            else:
+                stack.append(Value.integer(value=new_base % 97))
+            cursor = (cursor + 1) % size
+        elapsed = runtime_bench_now(host) - start
+        checksum = as_integer(stack[0]) * 101
+        match stack[1]:
+            case Value.boolean(value=b):
+                checksum += (if (b) then (1) else (0))
+            case Value.integer(value=n):
+                checksum += n
+    elif args[0] == "mutate_unique" or args[0] == "mutate_shared":
+        mut values = [for j in range(size) yield (seed + j * 13) % 1009]
+        mut shared = args[0] == "mutate_shared"
+        mut start = runtime_bench_now(host)
+        for batch in range(iterations):
+            mut index = (seed + batch * 17) % size
+            if shared:
+                mut snapshot = values.copy()
+                values[index] = (values[index] + batch + 1) % 1000003
+                checksum = (checksum + snapshot[index] + values[index]) % 1000000007
+                snapshot = []
+            else:
+                values[index] = (values[index] + batch + 1) % 1000003
+                checksum = (checksum + values[index]) % 1000000007
+        elapsed = runtime_bench_now(host) - start
+        for value in values:
+            checksum = (checksum + value) % 1000000007
+    else:
+        return 2
+    out.print(checksum, elapsed)
+    return 0

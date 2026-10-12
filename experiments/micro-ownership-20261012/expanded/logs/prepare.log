@@ -1,0 +1,25 @@
+Building legacy-mylang-original-rc-runtime
+Building legacy-mylang-original-rc-counted
+Building legacy-mylang-migrated-rc-runtime
+Building legacy-mylang-migrated-rc-counted
+Building legacy-mylang-zero-rc-runtime
+Building legacy-mylang-zero-rc-counted
+Building compute-mylang-original-rc-runtime
+Building compute-mylang-original-rc-counted
+Building compute-mylang-migrated-rc-runtime
+Building compute-mylang-migrated-rc-counted
+Building compute-mylang-zero-rc-runtime
+Building compute-mylang-zero-rc-counted
+Building collections-mylang-original-rc-runtime
+Building collections-mylang-original-rc-counted
+Building collections-mylang-migrated-rc-runtime
+Building collections-mylang-migrated-rc-counted
+Building collections-mylang-zero-rc-runtime
+Building collections-mylang-zero-rc-counted
+Building text-mylang-original-rc-runtime
+Building text-mylang-original-rc-counted
+Building text-mylang-migrated-rc-runtime
+Building text-mylang-migrated-rc-counted
+Building text-mylang-zero-rc-runtime
+Building text-mylang-zero-rc-counted
+Done 24 builds 1200 probes; failures 0

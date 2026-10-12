@@ -1,0 +1,3 @@
+text.my:58:49: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value
+          fragments = [for j in range(size) yield options[(seed + j) % 5]]
+                                                  ^

@@ -1,0 +1,3 @@
+/home/epentland/ai/canopy/mylang-micro-expanded-20261012/experiments/micro-ownership-20261012/expanded/original/collections.my:123:26: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value
+              text_mapping[keys[j]] = values[j]
+                           ^

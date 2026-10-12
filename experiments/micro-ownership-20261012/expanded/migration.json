@@ -1,0 +1,22 @@
+{
+  "legacy": {
+    "changed_lines": 5,
+    "original_sha256": "55d2bebfb847d940df1ff8b6fcfac61b51e9d7216e43e63d7a1a5b289f3b49ab",
+    "migrated_sha256": "a1dec21e5a805b9d205bd46b351bbc6612c049c3e422aaf368d6f238cd5431b0"
+  },
+  "compute": {
+    "changed_lines": 0,
+    "original_sha256": "3a7d055019dafe2310430fc7ece556a54404ae6bced2ed6b053563d517df224a",
+    "migrated_sha256": "3a7d055019dafe2310430fc7ece556a54404ae6bced2ed6b053563d517df224a"
+  },
+  "collections": {
+    "changed_lines": 8,
+    "original_sha256": "1ca0fe3bbfd0037f4d22ef52f168520a50aec343402e33716a8e817210c23e3c",
+    "migrated_sha256": "cba73fda681cea7b7baaaf43098b6980763a20c617f796052faab2bb6fb22946"
+  },
+  "text": {
+    "changed_lines": 11,
+    "original_sha256": "ec603e139e2a8ce909b97c1d776a1c76c82f0284472097f04e0dedcecd6069c2",
+    "migrated_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754"
+  }
+}
