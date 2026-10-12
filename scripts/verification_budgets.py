@@ -114,7 +114,7 @@ def collect_report(report, inventory):
     try:
         # The embedded evaluation is derived from these same observations. Its
         # presence or later target-only reevaluation must not create a new run.
-        source_report = ({key: value for key, value in report.items() if key != 'action_budgets'}
+        source_report = ({key: value for key, value in report.items() if key not in ('action_budgets', 'scoped_policy')}
                          if isinstance(report, dict) else report)
         report_digest = hashlib.sha256(_json(source_report)).hexdigest()
     except (ValueError, TypeError, OverflowError, RecursionError):
@@ -362,6 +362,7 @@ def read_json(path):
 
 def _test_policy_observations(report):
     """Consume S01's validated per-member supported-runner records when available."""
+    from verification_policy import CLOCKS, PROTOCOL_CLOCK
     observations = []
     actions = report.get('actions', [])
     if not isinstance(actions, list) or len(actions) > MAX_ACTIONS:
@@ -390,9 +391,14 @@ def _test_policy_observations(report):
                 ns = row.get('elapsed_ns')
                 if row.get('state') != 'passed' or type(ns) is not int or ns < 0:
                     continue
+                elapsed_scope = row.get('elapsed_scope', 'test-execution')
+                if elapsed_scope not in ('test-execution', 'runner-protocol-interval'):
+                    continue
+                clock = (PROTOCOL_CLOCK if elapsed_scope == 'runner-protocol-interval'
+                         else CLOCKS['individual_test'])
                 observations.append(dict(action_id=record['action_id'], member_id=record['member_id'],
                     test_id=row['test_id'], scope='individual_test',
-                    clock='supported_runner_start_to_stop_including_teardown', elapsed_seconds=ns / 1e9,
+                    clock=clock, elapsed_seconds=ns / 1e9,
                     fresh=True, complete=True, successful=True))
                 if len(observations) > MAX_MEMBERS:
                     raise ValueError('policy test observation bound')

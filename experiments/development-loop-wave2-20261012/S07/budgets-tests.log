@@ -1,0 +1,21 @@
+test_ambiguous_labels_and_duplicate_rows_rejected (verification_budgets_test.BudgetTests.test_ambiguous_labels_and_duplicate_rows_rejected) ... ok
+test_capture_and_parser_integrity_are_required (verification_budgets_test.BudgetTests.test_capture_and_parser_integrity_are_required) ... ok
+test_cohorts_do_not_mix_environment_or_action_contract (verification_budgets_test.BudgetTests.test_cohorts_do_not_mix_environment_or_action_contract) ... ok
+test_duplicate_report_does_not_inflate_samples (verification_budgets_test.BudgetTests.test_duplicate_report_does_not_inflate_samples) ... ok
+test_embedded_evaluation_round_trip_is_not_another_execution (verification_budgets_test.BudgetTests.test_embedded_evaluation_round_trip_is_not_another_execution) ... ok
+test_failed_reused_cancelled_incomplete_and_cached_rejected (verification_budgets_test.BudgetTests.test_failed_reused_cancelled_incomplete_and_cached_rejected) ... ok
+test_history_is_bounded_and_keeps_provenance (verification_budgets_test.BudgetTests.test_history_is_bounded_and_keeps_provenance) ... ok
+test_missing_identity_is_explicit_unknown (verification_budgets_test.BudgetTests.test_missing_identity_is_explicit_unknown) ... ok
+test_overlapping_members_are_never_added (verification_budgets_test.BudgetTests.test_overlapping_members_are_never_added) ... ok
+test_regression_threshold_is_advisory_with_small_samples (verification_budgets_test.BudgetTests.test_regression_threshold_is_advisory_with_small_samples) ... ok
+test_report_only_candidates_separate_targets_and_limits (verification_budgets_test.BudgetTests.test_report_only_candidates_separate_targets_and_limits) ... ok
+test_saved_provenance_cannot_duplicate_one_member_run (verification_budgets_test.BudgetTests.test_saved_provenance_cannot_duplicate_one_member_run) ... ok
+test_strict_input_and_limits (verification_budgets_test.BudgetTests.test_strict_input_and_limits) ... ok
+test_threshold_reassessment_preserves_samples (verification_budgets_test.BudgetTests.test_threshold_reassessment_preserves_samples) ... ok
+test_tiny_samples_have_no_recommendation_or_percentiles (verification_budgets_test.BudgetTests.test_tiny_samples_have_no_recommendation_or_percentiles) ... ok
+test_unstable_inputs_and_changed_member_meaning_rejected (verification_budgets_test.BudgetTests.test_unstable_inputs_and_changed_member_meaning_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.013s
+
+OK

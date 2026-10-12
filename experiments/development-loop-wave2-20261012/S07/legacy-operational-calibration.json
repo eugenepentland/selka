@@ -1,0 +1,3339 @@
+{
+  "actions": [
+    {
+      "action_elapsed_seconds": null,
+      "id": "component-preparation",
+      "members": [
+        {
+          "label": "verification action component-preparation member 0",
+          "maximum_seconds": 0.6960000000000001,
+          "median_seconds": 0.6140000000000001,
+          "minimum_seconds": 0.532,
+          "provenance": [
+            {
+              "action_id": "component-preparation",
+              "action_key": "97545ad7b8161c11e319e34307ed15b5f74f12233d32c4cb6e454ebc53e5a226",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action component-preparation member 0",
+              "provenance": [
+                0,
+                1,
+                9
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 0.532,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "component-preparation",
+              "action_key": "97545ad7b8161c11e319e34307ed15b5f74f12233d32c4cb6e454ebc53e5a226",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action component-preparation member 0",
+              "provenance": [
+                0,
+                1,
+                9
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 0.6960000000000001,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "input-discovery",
+      "members": [
+        {
+          "label": "verification action input-discovery member 0",
+          "maximum_seconds": 2.0,
+          "median_seconds": 2.0,
+          "minimum_seconds": 2.0,
+          "provenance": [
+            {
+              "action_id": "input-discovery",
+              "action_key": "b694bda37f56180aa862411d2e48717c5e00e4ed2a55e6732a319f2445b24388",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action input-discovery member 0",
+              "provenance": [
+                0,
+                1,
+                20
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 2.0,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "input-discovery",
+              "action_key": "b694bda37f56180aa862411d2e48717c5e00e4ed2a55e6732a319f2445b24388",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action input-discovery member 0",
+              "provenance": [
+                0,
+                1,
+                20
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 2.0,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "environment-discovery",
+      "members": [
+        {
+          "label": "verification action environment-discovery member 0",
+          "maximum_seconds": 0.007,
+          "median_seconds": 0.005,
+          "minimum_seconds": 0.003,
+          "provenance": [
+            {
+              "action_id": "environment-discovery",
+              "action_key": "4ea409f8c87bf8c4f44e3dfdeb56b20a9c4fa322bba71030a64197fc225470f2",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action environment-discovery member 0",
+              "provenance": [
+                0,
+                1,
+                21
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 0.003,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "environment-discovery",
+              "action_key": "4ea409f8c87bf8c4f44e3dfdeb56b20a9c4fa322bba71030a64197fc225470f2",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action environment-discovery member 0",
+              "provenance": [
+                0,
+                1,
+                21
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 0.007,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "core",
+      "members": [
+        {
+          "label": "verification action core member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action core member 1",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action core member 2",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action core member 3",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action core member 4",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action core member 5",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action core member 6",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action core member 7",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "tooling_unit",
+      "members": [
+        {
+          "label": "verification action tooling_unit member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "text_scalar_unit",
+      "members": [
+        {
+          "label": "verification action text_scalar_unit member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "memory_budget",
+      "members": [
+        {
+          "label": "verification action memory_budget member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "unit",
+      "members": [
+        {
+          "label": "verification action unit member 1",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action unit member 2",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action unit member 3",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action unit member 4",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action unit member 5",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action unit member 6",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action unit member 7",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action unit member 8",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action unit member 9",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action unit member 10",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action unit member 11",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action unit member 12",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "cli",
+      "members": [
+        {
+          "label": "verification action cli member 1",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action cli member 2",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action cli member 3",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action cli member 4",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action cli member 5",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action cli member 6",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "golden",
+      "members": [
+        {
+          "label": "verification action golden member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "idioms_self",
+      "members": [
+        {
+          "label": "verification action idioms_self member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "idioms",
+      "members": [
+        {
+          "label": "verification action idioms member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "incremental",
+      "members": [
+        {
+          "label": "verification action incremental member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action incremental member 1",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "interfaces",
+      "members": [
+        {
+          "label": "verification action interfaces member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action interfaces member 1",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "interface_oracle",
+      "members": [
+        {
+          "label": "verification action interface_oracle member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "parser_hints",
+      "members": [
+        {
+          "label": "verification action parser_hints member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action parser_hints member 1",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "friction",
+      "members": [
+        {
+          "label": "verification action friction member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "tooling_isolation",
+      "members": [
+        {
+          "label": "verification action tooling_isolation member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "application_cache",
+      "members": [
+        {
+          "label": "verification action application_cache member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "component_builder",
+      "members": [
+        {
+          "label": "verification action component_builder member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "component_native",
+      "members": [
+        {
+          "label": "verification action component_native member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "component-support",
+      "members": [
+        {
+          "label": "verification action component-support member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "selfhost_numeric",
+      "members": [
+        {
+          "label": "verification action selfhost_numeric member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "spec-history",
+      "members": [
+        {
+          "label": "verification action spec-history member 0",
+          "maximum_seconds": 4.0,
+          "median_seconds": 3.5,
+          "minimum_seconds": 3.0,
+          "provenance": [
+            {
+              "action_id": "spec-history",
+              "action_key": "0c9e19207d986ddd362100c114031c0c7123a3b29895a33e0020ffef4de1327f",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action spec-history member 0",
+              "provenance": [
+                0,
+                1,
+                26
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 3.0,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "spec-history",
+              "action_key": "0c9e19207d986ddd362100c114031c0c7123a3b29895a33e0020ffef4de1327f",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action spec-history member 0",
+              "provenance": [
+                0,
+                1,
+                26
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 4.0,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "juice_pure",
+      "members": [
+        {
+          "label": "verification action juice_pure member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "juice",
+      "members": [
+        {
+          "label": "verification action juice member 0",
+          "maximum_seconds": 6.0,
+          "median_seconds": 3.5,
+          "minimum_seconds": 1.0,
+          "provenance": [
+            {
+              "action_id": "juice",
+              "action_key": "9567dd715a3c568d3484d7a5ea38f8361f64e2d054ab234b2bc9ad405f370ffe",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action juice member 0",
+              "provenance": [
+                0,
+                1,
+                24
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 1.0,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "juice",
+              "action_key": "9567dd715a3c568d3484d7a5ea38f8361f64e2d054ab234b2bc9ad405f370ffe",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action juice member 0",
+              "provenance": [
+                0,
+                1,
+                24
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 6.0,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        },
+        {
+          "label": "verification action juice member 1",
+          "maximum_seconds": 10.0,
+          "median_seconds": 6.5,
+          "minimum_seconds": 3.0,
+          "provenance": [
+            {
+              "action_id": "juice",
+              "action_key": "9567dd715a3c568d3484d7a5ea38f8361f64e2d054ab234b2bc9ad405f370ffe",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action juice member 1",
+              "provenance": [
+                0,
+                1,
+                25
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 3.0,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "juice",
+              "action_key": "9567dd715a3c568d3484d7a5ea38f8361f64e2d054ab234b2bc9ad405f370ffe",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action juice member 1",
+              "provenance": [
+                0,
+                1,
+                25
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 10.0,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "juice-runtime",
+      "members": [
+        {
+          "label": "verification action juice-runtime member 0",
+          "maximum_seconds": 0.715,
+          "median_seconds": 0.6865,
+          "minimum_seconds": 0.658,
+          "provenance": [
+            {
+              "action_id": "juice-runtime",
+              "action_key": "3418e7a1b84b0a7270bb9d14e758b2ca5f5577b601af5ed90e9666502bc62a13",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action juice-runtime member 0",
+              "provenance": [
+                0,
+                1,
+                23
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 0.658,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "juice-runtime",
+              "action_key": "3418e7a1b84b0a7270bb9d14e758b2ca5f5577b601af5ed90e9666502bc62a13",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action juice-runtime member 0",
+              "provenance": [
+                0,
+                1,
+                23
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 0.715,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "identity-qualification",
+      "members": [
+        {
+          "label": "verification action identity-qualification member 0",
+          "maximum_seconds": 10.0,
+          "median_seconds": 7.5,
+          "minimum_seconds": 5.0,
+          "provenance": [
+            {
+              "action_id": "identity-qualification",
+              "action_key": "12a56513b32d9b7abecfc115f17655393855e4d0c0782dbd94f0d1abb052dc3d",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action identity-qualification member 0",
+              "provenance": [
+                0,
+                1,
+                22
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 5.0,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "identity-qualification",
+              "action_key": "12a56513b32d9b7abecfc115f17655393855e4d0c0782dbd94f0d1abb052dc3d",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action identity-qualification member 0",
+              "provenance": [
+                0,
+                1,
+                22
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 10.0,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "affected",
+      "members": [
+        {
+          "label": "verification action affected member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action affected member 1",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "coverage_self",
+      "members": [
+        {
+          "label": "verification action coverage_self member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "coverage",
+      "members": [
+        {
+          "label": "verification action coverage member 0",
+          "maximum_seconds": 0.625,
+          "median_seconds": 0.4975,
+          "minimum_seconds": 0.37,
+          "provenance": [
+            {
+              "action_id": "coverage",
+              "action_key": "4987bd87e44b9e009e8ad8b2562e257257eba46ea193079ff43078ab4ace2aa6",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action coverage member 0",
+              "provenance": [
+                0,
+                1,
+                19
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 0.37,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "coverage",
+              "action_key": "4987bd87e44b9e009e8ad8b2562e257257eba46ea193079ff43078ab4ace2aa6",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action coverage member 0",
+              "provenance": [
+                0,
+                1,
+                19
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 0.625,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "manifest_self",
+      "members": [
+        {
+          "label": "verification action manifest_self member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "verification_cache",
+      "members": [
+        {
+          "label": "verification action verification_cache member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action verification_cache member 1",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action verification_cache member 2",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action verification_cache member 3",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action verification_cache member 4",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action verification_cache member 5",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action verification_cache member 6",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action verification_cache member 7",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action verification_cache member 8",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action verification_cache member 9",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action verification_cache member 10",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "verification_session",
+      "members": [
+        {
+          "label": "verification action verification_session member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "fuzz_campaign",
+      "members": [
+        {
+          "label": "verification action fuzz_campaign member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action fuzz_campaign member 1",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action fuzz_campaign member 2",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action fuzz_campaign member 3",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action fuzz_campaign member 4",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "juice_cache",
+      "members": [
+        {
+          "label": "verification action juice_cache member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action juice_cache member 1",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action juice_cache member 2",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        },
+        {
+          "label": "verification action juice_cache member 3",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "doc-coverage",
+      "members": [
+        {
+          "label": "verification action doc-coverage member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "guest",
+      "members": [
+        {
+          "label": "verification action guest member 0",
+          "maximum_seconds": 0.91,
+          "median_seconds": 0.7345,
+          "minimum_seconds": 0.559,
+          "provenance": [
+            {
+              "action_id": "guest",
+              "action_key": "be55fe2db6773f9c8e939278a0b6870e339d526c5971b63a9de063749dc94268",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action guest member 0",
+              "provenance": [
+                0,
+                1,
+                18
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 0.559,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "guest",
+              "action_key": "be55fe2db6773f9c8e939278a0b6870e339d526c5971b63a9de063749dc94268",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action guest member 0",
+              "provenance": [
+                0,
+                1,
+                18
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 0.91,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "language",
+      "members": [
+        {
+          "label": "verification action language member 0",
+          "maximum_seconds": 12.0,
+          "median_seconds": 11.5,
+          "minimum_seconds": 11.0,
+          "provenance": [
+            {
+              "action_id": "language",
+              "action_key": "81adea70f20ff1dac09818d0bbc5b697adb81d1dad590f703a7c272bb6bf8787",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action language member 0",
+              "provenance": [
+                0,
+                1,
+                3
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 11.0,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "language",
+              "action_key": "81adea70f20ff1dac09818d0bbc5b697adb81d1dad590f703a7c272bb6bf8787",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action language member 0",
+              "provenance": [
+                0,
+                1,
+                3
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 12.0,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        },
+        {
+          "label": "verification action language member 1",
+          "maximum_seconds": 10.0,
+          "median_seconds": 10.0,
+          "minimum_seconds": 10.0,
+          "provenance": [
+            {
+              "action_id": "language",
+              "action_key": "81adea70f20ff1dac09818d0bbc5b697adb81d1dad590f703a7c272bb6bf8787",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action language member 1",
+              "provenance": [
+                0,
+                1,
+                10
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 10.0,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "language",
+              "action_key": "81adea70f20ff1dac09818d0bbc5b697adb81d1dad590f703a7c272bb6bf8787",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action language member 1",
+              "provenance": [
+                0,
+                1,
+                10
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 10.0,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        },
+        {
+          "label": "verification action language member 2",
+          "maximum_seconds": 23.0,
+          "median_seconds": 17.5,
+          "minimum_seconds": 12.0,
+          "provenance": [
+            {
+              "action_id": "language",
+              "action_key": "81adea70f20ff1dac09818d0bbc5b697adb81d1dad590f703a7c272bb6bf8787",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action language member 2",
+              "provenance": [
+                0,
+                1,
+                11
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 12.0,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "language",
+              "action_key": "81adea70f20ff1dac09818d0bbc5b697adb81d1dad590f703a7c272bb6bf8787",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action language member 2",
+              "provenance": [
+                0,
+                1,
+                11
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 23.0,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        },
+        {
+          "label": "verification action language member 3",
+          "maximum_seconds": 1.0,
+          "median_seconds": 1.0,
+          "minimum_seconds": 1.0,
+          "provenance": [
+            {
+              "action_id": "language",
+              "action_key": "81adea70f20ff1dac09818d0bbc5b697adb81d1dad590f703a7c272bb6bf8787",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action language member 3",
+              "provenance": [
+                0,
+                1,
+                12
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 1.0,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "language",
+              "action_key": "81adea70f20ff1dac09818d0bbc5b697adb81d1dad590f703a7c272bb6bf8787",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action language member 3",
+              "provenance": [
+                0,
+                1,
+                12
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 1.0,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        },
+        {
+          "label": "verification action language member 4",
+          "maximum_seconds": 1.0,
+          "median_seconds": 0.9605,
+          "minimum_seconds": 0.921,
+          "provenance": [
+            {
+              "action_id": "language",
+              "action_key": "81adea70f20ff1dac09818d0bbc5b697adb81d1dad590f703a7c272bb6bf8787",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action language member 4",
+              "provenance": [
+                0,
+                1,
+                13
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 0.921,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "language",
+              "action_key": "81adea70f20ff1dac09818d0bbc5b697adb81d1dad590f703a7c272bb6bf8787",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action language member 4",
+              "provenance": [
+                0,
+                1,
+                13
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 1.0,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        },
+        {
+          "label": "verification action language member 5",
+          "maximum_seconds": 1.0,
+          "median_seconds": 1.0,
+          "minimum_seconds": 1.0,
+          "provenance": [
+            {
+              "action_id": "language",
+              "action_key": "81adea70f20ff1dac09818d0bbc5b697adb81d1dad590f703a7c272bb6bf8787",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action language member 5",
+              "provenance": [
+                0,
+                1,
+                14
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 1.0,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "language",
+              "action_key": "81adea70f20ff1dac09818d0bbc5b697adb81d1dad590f703a7c272bb6bf8787",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action language member 5",
+              "provenance": [
+                0,
+                1,
+                14
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 1.0,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        },
+        {
+          "label": "verification action language member 6",
+          "maximum_seconds": 2.0,
+          "median_seconds": 1.5,
+          "minimum_seconds": 1.0,
+          "provenance": [
+            {
+              "action_id": "language",
+              "action_key": "81adea70f20ff1dac09818d0bbc5b697adb81d1dad590f703a7c272bb6bf8787",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action language member 6",
+              "provenance": [
+                0,
+                1,
+                15
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 1.0,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "language",
+              "action_key": "81adea70f20ff1dac09818d0bbc5b697adb81d1dad590f703a7c272bb6bf8787",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action language member 6",
+              "provenance": [
+                0,
+                1,
+                15
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 2.0,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        },
+        {
+          "label": "verification action language member 7",
+          "maximum_seconds": 1.0,
+          "median_seconds": 1.0,
+          "minimum_seconds": 1.0,
+          "provenance": [
+            {
+              "action_id": "language",
+              "action_key": "81adea70f20ff1dac09818d0bbc5b697adb81d1dad590f703a7c272bb6bf8787",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action language member 7",
+              "provenance": [
+                0,
+                1,
+                16
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 1.0,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "language",
+              "action_key": "81adea70f20ff1dac09818d0bbc5b697adb81d1dad590f703a7c272bb6bf8787",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action language member 7",
+              "provenance": [
+                0,
+                1,
+                16
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 1.0,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        },
+        {
+          "label": "verification action language member 8",
+          "maximum_seconds": 5.0,
+          "median_seconds": 4.5,
+          "minimum_seconds": 4.0,
+          "provenance": [
+            {
+              "action_id": "language",
+              "action_key": "81adea70f20ff1dac09818d0bbc5b697adb81d1dad590f703a7c272bb6bf8787",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action language member 8",
+              "provenance": [
+                0,
+                1,
+                17
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 5.0,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "language",
+              "action_key": "81adea70f20ff1dac09818d0bbc5b697adb81d1dad590f703a7c272bb6bf8787",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action language member 8",
+              "provenance": [
+                0,
+                1,
+                17
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 4.0,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "doctest",
+      "members": [
+        {
+          "label": "verification action doctest member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "zig-format",
+      "members": [
+        {
+          "label": "verification action zig-format member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "my_format",
+      "members": [
+        {
+          "label": "verification action my_format member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "my_format_self",
+      "members": [
+        {
+          "label": "verification action my_format_self member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "noalloc_lint",
+      "members": [
+        {
+          "label": "verification action noalloc_lint member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "embedded_migration",
+      "members": [
+        {
+          "label": "verification action embedded_migration member 0",
+          "maximum_seconds": null,
+          "median_seconds": null,
+          "minimum_seconds": null,
+          "provenance": [],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 0,
+          "status": "unknown"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    },
+    {
+      "action_elapsed_seconds": null,
+      "id": "guardian",
+      "members": [
+        {
+          "label": "verification action guardian member 0",
+          "maximum_seconds": 2.0,
+          "median_seconds": 1.5,
+          "minimum_seconds": 1.0,
+          "provenance": [
+            {
+              "action_id": "guardian",
+              "action_key": "e51747c766921b9e2e3261286dd34e22e38c6bffa1c2a58427851bf57ac57aa5",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action guardian member 0",
+              "provenance": [
+                0,
+                1,
+                0
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 1.0,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "guardian",
+              "action_key": "e51747c766921b9e2e3261286dd34e22e38c6bffa1c2a58427851bf57ac57aa5",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action guardian member 0",
+              "provenance": [
+                0,
+                1,
+                0
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 2.0,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        },
+        {
+          "label": "verification action guardian member 1",
+          "maximum_seconds": 0.006,
+          "median_seconds": 0.0055,
+          "minimum_seconds": 0.005,
+          "provenance": [
+            {
+              "action_id": "guardian",
+              "action_key": "e51747c766921b9e2e3261286dd34e22e38c6bffa1c2a58427851bf57ac57aa5",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action guardian member 1",
+              "provenance": [
+                0,
+                1,
+                1
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 0.005,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "guardian",
+              "action_key": "e51747c766921b9e2e3261286dd34e22e38c6bffa1c2a58427851bf57ac57aa5",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action guardian member 1",
+              "provenance": [
+                0,
+                1,
+                1
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 0.006,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        },
+        {
+          "label": "verification action guardian member 2",
+          "maximum_seconds": 2.0,
+          "median_seconds": 1.5,
+          "minimum_seconds": 1.0,
+          "provenance": [
+            {
+              "action_id": "guardian",
+              "action_key": "e51747c766921b9e2e3261286dd34e22e38c6bffa1c2a58427851bf57ac57aa5",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action guardian member 2",
+              "provenance": [
+                0,
+                1,
+                2
+              ],
+              "report_sha256": "6cc489e52c11244ba8093f48d5cdec38f97086275da127d1d192b13e61533c33",
+              "seconds": 1.0,
+              "source": "zig-summary"
+            },
+            {
+              "action_id": "guardian",
+              "action_key": "e51747c766921b9e2e3261286dd34e22e38c6bffa1c2a58427851bf57ac57aa5",
+              "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+              "member": "verification action guardian member 2",
+              "provenance": [
+                0,
+                1,
+                2
+              ],
+              "report_sha256": "562e4cf75da0291ca9818ed9feef5574013496dbfbcbcfe1c2145f9c10c528a9",
+              "seconds": 2.0,
+              "source": "zig-summary"
+            }
+          ],
+          "recommendation": {
+            "expected_seconds": null,
+            "hard_deadline_seconds": null,
+            "regression_seconds": null
+          },
+          "regression_evaluation": {
+            "enforced": false,
+            "samples_exceeding": null,
+            "scope": "named member elapsed observations",
+            "status": "not_configured",
+            "threshold_seconds": null
+          },
+          "sample_count": 2,
+          "status": "insufficient_samples"
+        }
+      ],
+      "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+      "targets": {
+        "expected_seconds": null,
+        "hard_deadline_seconds": null,
+        "regression_seconds": null
+      }
+    }
+  ],
+  "context": "f7567fa96635e2fc3ae8e84b2bc7f74b0d8453c3a36a1cdab53de1669e21b1ac",
+  "enforced": false,
+  "minimum_samples": 5,
+  "notes": [
+    "shared-host operational observations; no isolated latency qualification",
+    "no percentile or hard deadline calibration",
+    "recommendations require review; legacy actions remain report-only"
+  ],
+  "rejections": [
+    "capture unavailable, incomplete, malformed or truncated",
+    "unmapped, ambiguous or reused action observation",
+    "unmapped, ambiguous or reused action observation",
+    "unmapped, ambiguous or reused action observation",
+    "unmapped, ambiguous or reused action observation",
+    "unmapped, ambiguous or reused action observation",
+    "capture unavailable, incomplete, malformed or truncated",
+    "unmapped, ambiguous or reused action observation",
+    "unmapped, ambiguous or reused action observation",
+    "unmapped, ambiguous or reused action observation",
+    "unmapped, ambiguous or reused action observation",
+    "unmapped, ambiguous or reused action observation"
+  ],
+  "sample_limit": 64,
+  "version": 1
+}

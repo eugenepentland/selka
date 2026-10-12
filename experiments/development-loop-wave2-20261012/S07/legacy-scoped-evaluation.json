@@ -1,0 +1,1295 @@
+{
+  "enforced": false,
+  "entries": [
+    {
+      "action_id": "core",
+      "additive": false,
+      "calibration": {
+        "calibration_samples": 0,
+        "candidate_expected_seconds": null,
+        "capture_evidence": [],
+        "clock": "admission_handshake_to_lineage_closeout",
+        "cohort": null,
+        "cohort_selection": "latest_in_caller_order",
+        "enforced": false,
+        "evidence_gaps": [
+          "compatible_capture_provenance",
+          "descriptive_calibration_samples",
+          "independent_validation_runs",
+          "isolated_measurement"
+        ],
+        "headroom": {
+          "expected_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "hard_deadline_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "memory_ceiling_bytes": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "regression_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "work_ceiling": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          }
+        },
+        "holdout_status": "not_observed",
+        "minimum_descriptive_samples": 5,
+        "notes": [
+          "independent validation runs are never training samples",
+          "observed headroom does not establish tail safety or enforcement",
+          "no hard deadline, memory or work limit is inferred from expected cost"
+        ],
+        "qualification": "not_qualified",
+        "rejections": {},
+        "sample_limit_per_role": 64,
+        "status": "unavailable",
+        "unknown_metrics": {
+          "calibration": [],
+          "validation": []
+        },
+        "unresolved_declared_evidence": [],
+        "validation_samples": 0,
+        "version": 1
+      },
+      "clock": "admission_handshake_to_lineage_closeout",
+      "evaluations": {
+        "expected_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "hard_deadline_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "memory_ceiling_bytes": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "regression_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "work_ceiling": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        }
+      },
+      "exception": {
+        "name": "compiler core shards",
+        "reason": "Cold compiler/core integration requires native compilation and per-shard execution.",
+        "review_point": "Collect exact shard names, flags and cold/warm cache tier; review native test protocol intervals separately from action admission."
+      },
+      "headroom_status": "unqualified",
+      "member_id": null,
+      "sample_count": 0,
+      "scope": "admitted_action",
+      "test_id": null,
+      "work_unit": null
+    },
+    {
+      "action_id": "unit",
+      "additive": false,
+      "calibration": {
+        "calibration_samples": 0,
+        "candidate_expected_seconds": null,
+        "capture_evidence": [],
+        "clock": "admission_handshake_to_lineage_closeout",
+        "cohort": null,
+        "cohort_selection": "latest_in_caller_order",
+        "enforced": false,
+        "evidence_gaps": [
+          "compatible_capture_provenance",
+          "descriptive_calibration_samples",
+          "independent_validation_runs",
+          "isolated_measurement"
+        ],
+        "headroom": {
+          "expected_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "hard_deadline_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "memory_ceiling_bytes": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "regression_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "work_ceiling": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          }
+        },
+        "holdout_status": "not_observed",
+        "minimum_descriptive_samples": 5,
+        "notes": [
+          "independent validation runs are never training samples",
+          "observed headroom does not establish tail safety or enforcement",
+          "no hard deadline, memory or work limit is inferred from expected cost"
+        ],
+        "qualification": "not_qualified",
+        "rejections": {},
+        "sample_limit_per_role": 64,
+        "status": "unavailable",
+        "unknown_metrics": {
+          "calibration": [],
+          "validation": []
+        },
+        "unresolved_declared_evidence": [],
+        "validation_samples": 0,
+        "version": 1
+      },
+      "clock": "admission_handshake_to_lineage_closeout",
+      "evaluations": {
+        "expected_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "hard_deadline_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "memory_ceiling_bytes": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "regression_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "work_ceiling": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        }
+      },
+      "exception": {
+        "name": "broad compiler units",
+        "reason": "Broad integration units execute compiler and host/diagnostic fixtures.",
+        "review_point": "Preserve exact shard coverage and corruption/allocation-failure cases; independently measure setup and supported test clocks."
+      },
+      "headroom_status": "unqualified",
+      "member_id": null,
+      "sample_count": 0,
+      "scope": "admitted_action",
+      "test_id": null,
+      "work_unit": null
+    },
+    {
+      "action_id": "golden",
+      "additive": false,
+      "calibration": {
+        "calibration_samples": 0,
+        "candidate_expected_seconds": null,
+        "capture_evidence": [],
+        "clock": "admission_handshake_to_lineage_closeout",
+        "cohort": null,
+        "cohort_selection": "latest_in_caller_order",
+        "enforced": false,
+        "evidence_gaps": [
+          "compatible_capture_provenance",
+          "descriptive_calibration_samples",
+          "independent_validation_runs",
+          "isolated_measurement"
+        ],
+        "headroom": {
+          "expected_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "hard_deadline_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "memory_ceiling_bytes": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "regression_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "work_ceiling": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          }
+        },
+        "holdout_status": "not_observed",
+        "minimum_descriptive_samples": 5,
+        "notes": [
+          "independent validation runs are never training samples",
+          "observed headroom does not establish tail safety or enforcement",
+          "no hard deadline, memory or work limit is inferred from expected cost"
+        ],
+        "qualification": "not_qualified",
+        "rejections": {},
+        "sample_limit_per_role": 64,
+        "status": "unavailable",
+        "unknown_metrics": {
+          "calibration": [],
+          "validation": []
+        },
+        "unresolved_declared_evidence": [],
+        "validation_samples": 0,
+        "version": 1
+      },
+      "clock": "admission_handshake_to_lineage_closeout",
+      "evaluations": {
+        "expected_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "hard_deadline_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "memory_ceiling_bytes": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "regression_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "work_ceiling": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        }
+      },
+      "exception": {
+        "name": "native golden corpus",
+        "reason": "222 live compiler launches and fresh mutable work directories remain required.",
+        "review_point": "Use S03 paired cold/warm/RSS cohort and unchanged604 classification/222 launch counters; do not convert native interval to pure execution time."
+      },
+      "headroom_status": "unqualified",
+      "member_id": null,
+      "sample_count": 0,
+      "scope": "admitted_action",
+      "test_id": null,
+      "work_unit": null
+    },
+    {
+      "action_id": "component_native",
+      "additive": false,
+      "calibration": {
+        "calibration_samples": 0,
+        "candidate_expected_seconds": null,
+        "capture_evidence": [],
+        "clock": "admission_handshake_to_lineage_closeout",
+        "cohort": null,
+        "cohort_selection": "latest_in_caller_order",
+        "enforced": false,
+        "evidence_gaps": [
+          "compatible_capture_provenance",
+          "descriptive_calibration_samples",
+          "independent_validation_runs",
+          "isolated_measurement"
+        ],
+        "headroom": {
+          "expected_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "hard_deadline_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "memory_ceiling_bytes": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "regression_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "work_ceiling": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          }
+        },
+        "holdout_status": "not_observed",
+        "minimum_descriptive_samples": 5,
+        "notes": [
+          "independent validation runs are never training samples",
+          "observed headroom does not establish tail safety or enforcement",
+          "no hard deadline, memory or work limit is inferred from expected cost"
+        ],
+        "qualification": "not_qualified",
+        "rejections": {},
+        "sample_limit_per_role": 64,
+        "status": "unavailable",
+        "unknown_metrics": {
+          "calibration": [],
+          "validation": []
+        },
+        "unresolved_declared_evidence": [],
+        "validation_samples": 0,
+        "version": 1
+      },
+      "clock": "admission_handshake_to_lineage_closeout",
+      "evaluations": {
+        "expected_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "hard_deadline_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "memory_ceiling_bytes": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "regression_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "work_ceiling": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        }
+      },
+      "exception": {
+        "name": "authenticated native components",
+        "reason": "Debug/release/fact/leak and --no-cache qualification deliberately execute fresh compiler work.",
+        "review_point": "Retain seed/artifact authentication, cold tiers and both components; separate build/oracle/installation clocks before limit review."
+      },
+      "headroom_status": "unqualified",
+      "member_id": null,
+      "sample_count": 0,
+      "scope": "admitted_action",
+      "test_id": null,
+      "work_unit": null
+    },
+    {
+      "action_id": "language",
+      "additive": false,
+      "calibration": {
+        "calibration_samples": 0,
+        "candidate_expected_seconds": null,
+        "capture_evidence": [],
+        "clock": "admission_handshake_to_lineage_closeout",
+        "cohort": null,
+        "cohort_selection": "latest_in_caller_order",
+        "enforced": false,
+        "evidence_gaps": [
+          "compatible_capture_provenance",
+          "descriptive_calibration_samples",
+          "independent_validation_runs",
+          "isolated_measurement"
+        ],
+        "headroom": {
+          "expected_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "hard_deadline_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "memory_ceiling_bytes": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "regression_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "work_ceiling": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          }
+        },
+        "holdout_status": "not_observed",
+        "minimum_descriptive_samples": 5,
+        "notes": [
+          "independent validation runs are never training samples",
+          "observed headroom does not establish tail safety or enforcement",
+          "no hard deadline, memory or work limit is inferred from expected cost"
+        ],
+        "qualification": "not_qualified",
+        "rejections": {},
+        "sample_limit_per_role": 64,
+        "status": "unavailable",
+        "unknown_metrics": {
+          "calibration": [],
+          "validation": []
+        },
+        "unresolved_declared_evidence": [],
+        "validation_samples": 0,
+        "version": 1
+      },
+      "clock": "admission_handshake_to_lineage_closeout",
+      "evaluations": {
+        "expected_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "hard_deadline_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "memory_ceiling_bytes": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "regression_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "work_ceiling": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        }
+      },
+      "exception": {
+        "name": "mandatory guest language modes",
+        "reason": "Debug and release/fact/leak members must execute required tests.",
+        "review_point": "Keep mode/fact/leak/test inventory exact and fresh execution; guest whole-command clocks do not establish individual test duration."
+      },
+      "headroom_status": "unqualified",
+      "member_id": null,
+      "sample_count": 0,
+      "scope": "admitted_action",
+      "test_id": null,
+      "work_unit": null
+    },
+    {
+      "action_id": "doctest",
+      "additive": false,
+      "calibration": {
+        "calibration_samples": 0,
+        "candidate_expected_seconds": null,
+        "capture_evidence": [],
+        "clock": "admission_handshake_to_lineage_closeout",
+        "cohort": null,
+        "cohort_selection": "latest_in_caller_order",
+        "enforced": false,
+        "evidence_gaps": [
+          "compatible_capture_provenance",
+          "descriptive_calibration_samples",
+          "independent_validation_runs",
+          "isolated_measurement"
+        ],
+        "headroom": {
+          "expected_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "hard_deadline_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "memory_ceiling_bytes": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "regression_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "work_ceiling": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          }
+        },
+        "holdout_status": "not_observed",
+        "minimum_descriptive_samples": 5,
+        "notes": [
+          "independent validation runs are never training samples",
+          "observed headroom does not establish tail safety or enforcement",
+          "no hard deadline, memory or work limit is inferred from expected cost"
+        ],
+        "qualification": "not_qualified",
+        "rejections": {},
+        "sample_limit_per_role": 64,
+        "status": "unavailable",
+        "unknown_metrics": {
+          "calibration": [],
+          "validation": []
+        },
+        "unresolved_declared_evidence": [],
+        "validation_samples": 0,
+        "version": 1
+      },
+      "clock": "admission_handshake_to_lineage_closeout",
+      "evaluations": {
+        "expected_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "hard_deadline_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "memory_ceiling_bytes": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "regression_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "work_ceiling": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        }
+      },
+      "exception": {
+        "name": "runnable documentation corpus",
+        "reason": "The complete runnable documentation corpus contributes compiler startup and native builds.",
+        "review_point": "Preserve discovered snippets and fixture membership, collect exact source/tool/cache cohort and independent holdout."
+      },
+      "headroom_status": "unqualified",
+      "member_id": null,
+      "sample_count": 0,
+      "scope": "admitted_action",
+      "test_id": null,
+      "work_unit": null
+    },
+    {
+      "action_id": "guest",
+      "additive": false,
+      "calibration": {
+        "calibration_samples": 0,
+        "candidate_expected_seconds": null,
+        "capture_evidence": [],
+        "clock": "admission_handshake_to_lineage_closeout",
+        "cohort": null,
+        "cohort_selection": "latest_in_caller_order",
+        "enforced": false,
+        "evidence_gaps": [
+          "compatible_capture_provenance",
+          "descriptive_calibration_samples",
+          "independent_validation_runs",
+          "isolated_measurement"
+        ],
+        "headroom": {
+          "expected_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "hard_deadline_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "memory_ceiling_bytes": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "regression_seconds": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          },
+          "work_ceiling": {
+            "calibration": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            },
+            "validation": {
+              "maximum_to_threshold_ratio": null,
+              "observed_maximum": null,
+              "remaining": null,
+              "sample_count": 0,
+              "samples_exceeding": null,
+              "status": "not_configured",
+              "threshold": null
+            }
+          }
+        },
+        "holdout_status": "not_observed",
+        "minimum_descriptive_samples": 5,
+        "notes": [
+          "independent validation runs are never training samples",
+          "observed headroom does not establish tail safety or enforcement",
+          "no hard deadline, memory or work limit is inferred from expected cost"
+        ],
+        "qualification": "not_qualified",
+        "rejections": {},
+        "sample_limit_per_role": 64,
+        "status": "unavailable",
+        "unknown_metrics": {
+          "calibration": [],
+          "validation": []
+        },
+        "unresolved_declared_evidence": [],
+        "validation_samples": 0,
+        "version": 1
+      },
+      "clock": "admission_handshake_to_lineage_closeout",
+      "evaluations": {
+        "expected_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "hard_deadline_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "memory_ceiling_bytes": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "regression_seconds": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        },
+        "work_ceiling": {
+          "enforced": false,
+          "observed_maximum": null,
+          "status": "not_configured",
+          "threshold": null
+        }
+      },
+      "exception": {
+        "name": "guest test-root checks",
+        "reason": "Guest checks require actual child execution and fresh external effect cases.",
+        "review_point": "Collect supported test clocks and complete work counters; verify timeouts/crashes remain fail-closed before proposing any deadline."
+      },
+      "headroom_status": "unqualified",
+      "member_id": null,
+      "sample_count": 0,
+      "scope": "admitted_action",
+      "test_id": null,
+      "work_unit": null
+    }
+  ],
+  "mode": "report_only",
+  "notes": [
+    "shared gate wall time is not an individual action duration",
+    "headroom and enforcement remain unqualified",
+    "advisory policy does not authorize reuse or success publication"
+  ],
+  "observation_contract": "explicit fresh complete successful clock scopes only",
+  "status": "evaluated",
+  "version": 2
+}
