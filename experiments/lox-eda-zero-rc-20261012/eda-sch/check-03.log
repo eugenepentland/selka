@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1664, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 3, FIFO ticket 1664 after 10s
+export_kicad_sch.my:634:12: error[E_SINGLE_OWNER_BORROW]: a borrowed selection is read-only; make an explicit .copy() before changing it
+      return self.pin_net.get(pin_key(ref, pad), b"")
+             ^

@@ -1,0 +1,4 @@
+build-slot: build slot 1, FIFO ticket 1653 after 0s
+export_kicad_sch.my:237:20: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value
+          mut inst = self.instances[i]
+                     ^

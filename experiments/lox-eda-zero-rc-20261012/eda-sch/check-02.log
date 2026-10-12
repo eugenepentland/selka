@@ -1,0 +1,4 @@
+build-slot: build slot 1, FIFO ticket 1660 after 0s
+export_kicad_sch.my:241:32: error[E_SINGLE_OWNER_MOVED]: 'key' was moved or is unavailable on this path; use .copy() when both values are needed
+          mut lookup = strs.text(key)
+                                 ^
