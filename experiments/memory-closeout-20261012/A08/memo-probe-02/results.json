@@ -1,0 +1,291 @@
+[
+  {
+    "name": "debug-warm",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-debug-install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-04/memo/debug/source/main.my",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/debug-warm/cache",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--unoptimized",
+      "--counters",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/debug-warm/program",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/debug-warm/program.ll",
+      "--report"
+    ],
+    "status": 1,
+    "stdout": "",
+    "stderr": "",
+    "selected": null
+  },
+  {
+    "name": "rf-fn",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-04/memo/debug/source/main.my",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-fn/cache",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--unoptimized",
+      "--counters",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-fn/program",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-fn/program.ll",
+      "--report"
+    ],
+    "status": 1,
+    "stdout": "",
+    "stderr": "",
+    "selected": [
+      {
+        "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/618c3fc6074dc7c8d0dbb3a95354f4667ba33e19d4920611bfdce776a9d8bad4",
+        "key": "fn\u001fmain\u001f\u001fexercise",
+        "bytes": 17122
+      },
+      {
+        "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/3e98a3b76679a86c9899a436393a7e3d01e9c6c3d4d08c835680ced89cb20b4d",
+        "key": "fn\u001fmain\u001f\u001fmain",
+        "bytes": 3547
+      },
+      {
+        "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/e5d610ee7a5dd96dc1009a71f868657c988b2c3630b1b6afc967fa0fd770bd16",
+        "key": "fn\u001fmain\u001f\u001fcompute",
+        "bytes": 5441
+      },
+      {
+        "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/8c8258ca5db1c1b5ff522c1fff3b70d34a728f00827c752873ba6793e684e5c6",
+        "key": "fn\u001fmemo\u001f\u001fmessage",
+        "bytes": 1744
+      }
+    ]
+  },
+  {
+    "name": "rf-spec",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-04/memo/debug/source/main.my",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-spec/cache",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--unoptimized",
+      "--counters",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-spec/program",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-spec/program.ll",
+      "--report"
+    ],
+    "status": 0,
+    "stdout": "",
+    "stderr": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":10,\"reused\":10,\"compiled\":0,\"verified\":0,\"processes\":1,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":4649142,\"lowering\":1051115,\"optimizer\":1663022,\"emission\":5076739,\"native\":24377805,\"linker\":16862149,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":262758,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":1032148,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":25299,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":97792,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":270367,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":430424,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":783116,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":444,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":17791,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":582452,\"inclusive\":false},{\"name\":\"specialization_body_replay\",\"nanoseconds\":350427,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":506,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":275230,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":355,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":1174,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":39268,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":2982592,\"inclusive\":true}]},\"frontend\":{\"checked\":4,\"reused\":5,\"summaries\":0,\"syntax_hits\":0,\"syntax_misses\":2,\"stored\":9,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":9,\"deferred\":0,\"fallbacks\":0,\"materialized\":9,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[0,0,0,0,0,0,9],\"bypassed\":0,\"active_functions\":0,\"fresh_work\":0,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":0},\"emission\":{\"units\":10,\"reused\":0,\"rendered\":10,\"seeds_reused\":0,\"seeds_rendered\":2,\"workers\":10,\"work\":{\"receipts_checked\":0,\"keys_built\":12,\"llvm_loaded_bytes\":233334,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,5,4,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,5,4,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":2776288,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":69885,\"save_bytes_prepared\":315905,\"sequence_locks\":42}}},\"program_shared\":false}\n",
+    "selected": [
+      {
+        "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/00510e302cda3f0603d72d7417eddbec06ab9d94d8ee3053f66e4267df194468",
+        "key": "spec\u001fv2\u001f92aa3dda1b1871e20f7f92011090aade2835aec726a07c6a0d1252aa83d4fb5d",
+        "bytes": 3123
+      },
+      {
+        "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/4a1c7935bf844bb63c30777aaf6f28e43e12fb085eca9dcd554890a789240043",
+        "key": "spec\u001fv2\u001f9d5feb2dad75bbffe038d4072e3f7318fe1f9246e8ae90c2f675ce4e25890d88",
+        "bytes": 1830
+      },
+      {
+        "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/c5459ae4ea9305906f9f8b639a5ace2a92441a9c3e6da6b2bb0bb39f4c810189",
+        "key": "spec\u001fv2\u001f8128f002b16f9473abe3ae4cdd1b91353785da1a518e2167e0f64d14306c6663",
+        "bytes": 1494
+      },
+      {
+        "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/205a509d2815b8bd9686f1024b8b6f8d666717defc2db48e95235f43d4efe6f7",
+        "key": "spec\u001fv2\u001fcfb2b3b938ec59cafc2177db3d3dba06b2878052cb0404a607b1932208ee1214",
+        "bytes": 5804
+      },
+      {
+        "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/b65acc4e9dc80b314e90c709861a5b87ea19ad2c826d07206ce18753e73a4e03",
+        "key": "spec\u001fv2\u001fce46e72df87477e0d9ded367200b249467dbee95f6d8185f2fc7b04e78ee69f6",
+        "bytes": 9884
+      }
+    ]
+  },
+  {
+    "name": "rf-sym",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-04/memo/debug/source/main.my",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-sym/cache",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--unoptimized",
+      "--counters",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-sym/program",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-sym/program.ll",
+      "--report"
+    ],
+    "status": 0,
+    "stdout": "",
+    "stderr": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":10,\"reused\":10,\"compiled\":0,\"verified\":0,\"processes\":1,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":3255073,\"lowering\":670620,\"optimizer\":1167232,\"emission\":4016153,\"native\":18042554,\"linker\":14015357,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":183694,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":782441,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":22869,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":69876,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":226914,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":567110,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":123675,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":486,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":15570,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":674444,\"inclusive\":false},{\"name\":\"specialization_body_replay\",\"nanoseconds\":15396,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":923,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":179524,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":411,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":1703,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":30135,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":2025901,\"inclusive\":true}]},\"frontend\":{\"checked\":9,\"reused\":0,\"summaries\":0,\"syntax_hits\":0,\"syntax_misses\":2,\"stored\":9,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":9,\"deferred\":0,\"fallbacks\":0,\"materialized\":9,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[0,0,0,0,0,0,9],\"bypassed\":0,\"active_functions\":0,\"fresh_work\":0,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":0},\"emission\":{\"units\":10,\"reused\":0,\"rendered\":10,\"seeds_reused\":0,\"seeds_rendered\":2,\"workers\":10,\"work\":{\"receipts_checked\":0,\"keys_built\":12,\"llvm_loaded_bytes\":233334,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,5,4,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,5,4,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":2778515,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":69877,\"save_bytes_prepared\":315905,\"sequence_locks\":42}}},\"program_shared\":false}\n",
+    "selected": [
+      {
+        "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/eed21c5d36fc402653fdb01e1634ea8412702b868ac129544dbc4bc4f09f6061",
+        "key": "sym\u001fabstract-v1\u001fproject\u001ffn\u001fmemo\u001f\u001fcall",
+        "bytes": 1785
+      },
+      {
+        "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/0b68333deebc6149b91411cdbb708f04070011efd5e2306c483d0edd8d9834b3",
+        "key": "sym\u001fabstract-v1\u001fproject\u001ffn\u001fmemo\u001f\u001fcreate",
+        "bytes": 1069
+      },
+      {
+        "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/83df9573cd76e96bf1a13e7061fc89574d5ed176c87176e39caf22a956ca657d",
+        "key": "sym\u001fabstract-v1\u001fproject\u001ffn\u001fmemo\u001f\u001fcapacity",
+        "bytes": 541
+      },
+      {
+        "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/148f302cadc3e9a54497e62caf331b08a8c823df008a9d3487aff03f9765c7bb",
+        "key": "sym\u001fabstract-v1\u001fproject\u001ffn\u001fmemo\u001f\u001fcount",
+        "bytes": 534
+      },
+      {
+        "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/efe014f5fb8787e909fa3b9b36577be8326d65c6c16db1bdf30d11bf1bca7df7",
+        "key": "sym\u001fabstract-v1\u001fproject\u001ffn\u001fmemo\u001f\u001fclear",
+        "bytes": 553
+      }
+    ]
+  },
+  {
+    "name": "rf-one-618c3fc607",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-04/memo/debug/source/main.my",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-one-618c3fc607/cache",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--unoptimized",
+      "--counters",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-one-618c3fc607/program",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-one-618c3fc607/program.ll",
+      "--report"
+    ],
+    "status": 0,
+    "stdout": "",
+    "stderr": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":10,\"reused\":10,\"compiled\":0,\"verified\":0,\"processes\":1,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":4603799,\"lowering\":1215023,\"optimizer\":1676905,\"emission\":5237072,\"native\":21976938,\"linker\":15205810,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":152486,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":672607,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":22099,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":60476,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":198279,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":1339781,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":625584,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":403,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":21734,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":751644,\"inclusive\":false},{\"name\":\"specialization_body_replay\",\"nanoseconds\":30603,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":477,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":285300,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":440,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":1330,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":40899,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":3483789,\"inclusive\":true}]},\"frontend\":{\"checked\":9,\"reused\":0,\"summaries\":0,\"syntax_hits\":0,\"syntax_misses\":2,\"stored\":14,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":9,\"deferred\":0,\"fallbacks\":0,\"materialized\":9,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[0,0,0,0,0,0,9],\"bypassed\":0,\"active_functions\":0,\"fresh_work\":0,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":0},\"emission\":{\"units\":10,\"reused\":0,\"rendered\":10,\"seeds_reused\":0,\"seeds_rendered\":2,\"workers\":10,\"work\":{\"receipts_checked\":0,\"keys_built\":12,\"llvm_loaded_bytes\":233334,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,5,3,0,0,0,1,0,0,0,0,0,0,0,0,0],\"lookup\":[0,5,3,0,0,0,1,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":2783077,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":69885,\"save_bytes_prepared\":315905,\"sequence_locks\":42}}},\"program_shared\":false}\n",
+    "selected": [
+      {
+        "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/618c3fc6074dc7c8d0dbb3a95354f4667ba33e19d4920611bfdce776a9d8bad4",
+        "key": "fn\u001fmain\u001f\u001fexercise",
+        "bytes": 17122
+      }
+    ]
+  },
+  {
+    "name": "rf-one-3e98a3b766",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-04/memo/debug/source/main.my",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-one-3e98a3b766/cache",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--unoptimized",
+      "--counters",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-one-3e98a3b766/program",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-one-3e98a3b766/program.ll",
+      "--report"
+    ],
+    "status": 1,
+    "stdout": "",
+    "stderr": "",
+    "selected": [
+      {
+        "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/3e98a3b76679a86c9899a436393a7e3d01e9c6c3d4d08c835680ced89cb20b4d",
+        "key": "fn\u001fmain\u001f\u001fmain",
+        "bytes": 3547
+      }
+    ]
+  },
+  {
+    "name": "rf-one-e5d610ee7a",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-04/memo/debug/source/main.my",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-one-e5d610ee7a/cache",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--unoptimized",
+      "--counters",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-one-e5d610ee7a/program",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-one-e5d610ee7a/program.ll",
+      "--report"
+    ],
+    "status": 0,
+    "stdout": "",
+    "stderr": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":10,\"reused\":10,\"compiled\":0,\"verified\":0,\"processes\":1,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":3675719,\"lowering\":1100778,\"optimizer\":1758974,\"emission\":3406425,\"native\":24098816,\"linker\":18998645,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":143261,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":560178,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":16487,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":50551,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":189479,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":838063,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":491012,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":243,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":41375,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":669545,\"inclusive\":false},{\"name\":\"specialization_body_replay\",\"nanoseconds\":26163,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":563,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":248762,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":456,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":1417,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":28698,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":2685305,\"inclusive\":true}]},\"frontend\":{\"checked\":8,\"reused\":1,\"summaries\":0,\"syntax_hits\":0,\"syntax_misses\":2,\"stored\":13,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":9,\"deferred\":0,\"fallbacks\":0,\"materialized\":9,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[0,0,0,0,0,0,9],\"bypassed\":0,\"active_functions\":0,\"fresh_work\":0,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":0},\"emission\":{\"units\":10,\"reused\":0,\"rendered\":10,\"seeds_reused\":0,\"seeds_rendered\":2,\"workers\":10,\"work\":{\"receipts_checked\":0,\"keys_built\":12,\"llvm_loaded_bytes\":233334,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,5,3,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,5,3,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":4226403,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":69879,\"save_bytes_prepared\":315905,\"sequence_locks\":42}}},\"program_shared\":false}\n",
+    "selected": [
+      {
+        "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/e5d610ee7a5dd96dc1009a71f868657c988b2c3630b1b6afc967fa0fd770bd16",
+        "key": "fn\u001fmain\u001f\u001fcompute",
+        "bytes": 5441
+      }
+    ]
+  },
+  {
+    "name": "rf-one-8c8258ca5d",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-04/memo/debug/source/main.my",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-one-8c8258ca5d/cache",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--unoptimized",
+      "--counters",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-one-8c8258ca5d/program",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/memo-probe-02/rf-one-8c8258ca5d/program.ll",
+      "--report"
+    ],
+    "status": 0,
+    "stdout": "",
+    "stderr": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":10,\"reused\":10,\"compiled\":0,\"verified\":0,\"processes\":1,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":5376259,\"lowering\":1280207,\"optimizer\":1656979,\"emission\":3282560,\"native\":20884920,\"linker\":16397042,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":189333,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":790198,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":28707,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":77584,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":238341,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":1177325,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":784862,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":480,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":43631,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":1061031,\"inclusive\":false},{\"name\":\"specialization_body_replay\",\"nanoseconds\":45937,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":731,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":395379,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":316,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":1941,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":52948,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":4018929,\"inclusive\":true}]},\"frontend\":{\"checked\":8,\"reused\":1,\"summaries\":0,\"syntax_hits\":0,\"syntax_misses\":2,\"stored\":13,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":9,\"deferred\":0,\"fallbacks\":0,\"materialized\":9,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[0,0,0,0,0,0,9],\"bypassed\":0,\"active_functions\":0,\"fresh_work\":0,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":0},\"emission\":{\"units\":10,\"reused\":0,\"rendered\":10,\"seeds_reused\":0,\"seeds_rendered\":2,\"workers\":10,\"work\":{\"receipts_checked\":0,\"keys_built\":12,\"llvm_loaded_bytes\":233334,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,5,3,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,5,3,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":3838643,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":69883,\"save_bytes_prepared\":315905,\"sequence_locks\":42}}},\"program_shared\":false}\n",
+    "selected": [
+      {
+        "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/8c8258ca5db1c1b5ff522c1fff3b70d34a728f00827c752873ba6793e684e5c6",
+        "key": "fn\u001fmemo\u001f\u001fmessage",
+        "bytes": 1744
+      }
+    ]
+  }
+]

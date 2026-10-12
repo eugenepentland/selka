@@ -1,0 +1,276 @@
+{
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "rows": 39,
+  "all_passed": true,
+  "scope": "Fresh cold/warm/relocation/earlier declaration/edit/dependency and whole-build receipt/replay correctness; source-negative cases remain included. Not a complete C1 qualification. Memo hydration and fresh provider marker preflight remain separate blockers.",
+  "groups": {
+    "borrow": {
+      "path": "support7-borrow/results.json",
+      "sha256": "e3c0d905b67058adf74d8e95249c6aecc2056a76b2f4be33d131eaa4b92c4412",
+      "rows": 12,
+      "passed": 12,
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+      "compiler_allocator_clean": true,
+      "cases": [
+        {
+          "name": "borrow-cold",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "borrow-warm",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "borrow-receipt",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "borrow-replay",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "borrow-relocated-cold",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "borrow-relocated-warm",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "borrow-physical-edit-cold",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "borrow-physical-edit-warm",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "borrow-invalid-fallback-warm",
+          "status": 1,
+          "passed": true,
+          "outcome": "source_refusal"
+        },
+        {
+          "name": "borrow-invalid-fallback-cold",
+          "status": 1,
+          "passed": true,
+          "outcome": "source_refusal"
+        },
+        {
+          "name": "borrow-invalid-dictionary-warm",
+          "status": 1,
+          "passed": true,
+          "outcome": "source_refusal"
+        },
+        {
+          "name": "borrow-invalid-dictionary-cold",
+          "status": 1,
+          "passed": true,
+          "outcome": "source_refusal"
+        }
+      ]
+    },
+    "tuple": {
+      "path": "support7-tuple/results.json",
+      "sha256": "eab97a2c500ba7945e07f373a1cbcfb6dc2473e39ac956a268a8dd6e7074db96",
+      "rows": 11,
+      "passed": 11,
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+      "compiler_allocator_clean": true,
+      "cases": [
+        {
+          "name": "tuple-cold",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "tuple-warm",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "tuple-receipt",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "tuple-replay",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "tuple-relocated-cold",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "tuple-relocated-warm",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "tuple-declaration-edit-cold",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "tuple-declaration-edit-warm",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "tuple-valid-edit",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "tuple-invalid-edit-warm",
+          "status": 1,
+          "passed": true,
+          "outcome": "source_refusal"
+        },
+        {
+          "name": "tuple-invalid-edit-cold",
+          "status": 1,
+          "passed": true,
+          "outcome": "source_refusal"
+        }
+      ]
+    },
+    "selection": {
+      "path": "support7-selection/results.json",
+      "sha256": "54431f2de7377de2f624d5c84509c3dac587fdc518fe3471780d8719520c6f00",
+      "rows": 16,
+      "passed": 16,
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+      "compiler_allocator_clean": true,
+      "cases": [
+        {
+          "name": "selection-cold",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "selection-warm",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "selection-receipt",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "selection-replay",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "selection-relocated-cold",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "selection-relocated-warm",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "selection-discovery-cold",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "selection-discovery-warm",
+          "status": 0,
+          "passed": true,
+          "outcome": "completed"
+        },
+        {
+          "name": "selection-invalid-first_parent_invalidated-warm",
+          "status": 1,
+          "passed": true,
+          "outcome": "source_refusal"
+        },
+        {
+          "name": "selection-invalid-first_parent_invalidated-cold",
+          "status": 1,
+          "passed": true,
+          "outcome": "source_refusal"
+        },
+        {
+          "name": "selection-invalid-second_parent_invalidated-warm",
+          "status": 1,
+          "passed": true,
+          "outcome": "source_refusal"
+        },
+        {
+          "name": "selection-invalid-second_parent_invalidated-cold",
+          "status": 1,
+          "passed": true,
+          "outcome": "source_refusal"
+        },
+        {
+          "name": "selection-invalid-optional_receiver_invalidated-warm",
+          "status": 1,
+          "passed": true,
+          "outcome": "source_refusal"
+        },
+        {
+          "name": "selection-invalid-optional_receiver_invalidated-cold",
+          "status": 1,
+          "passed": true,
+          "outcome": "source_refusal"
+        },
+        {
+          "name": "selection-invalid-fresh_escape-warm",
+          "status": 1,
+          "passed": true,
+          "outcome": "source_refusal"
+        },
+        {
+          "name": "selection-invalid-fresh_escape-cold",
+          "status": 1,
+          "passed": true,
+          "outcome": "source_refusal"
+        }
+      ]
+    }
+  }
+}

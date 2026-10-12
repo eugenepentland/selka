@@ -1,0 +1,11 @@
+{
+  "status": "passed",
+  "harness_sha256": "e4b2452d62f8cace728246a3425e72bb71b714ef4789bf1033e8b152f4359c39",
+  "engine_sha256": "8383389bf1c59130c58e0be8899597a4bccb0c7ad3ffe0e930b92adb34289cbd",
+  "fixture_manifest_sha256": "2ceab5480a43fe37d465f00dc43f54ea1d230cb7efedca65a61211b7ee9364f9",
+  "compiler_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "cases": 16,
+  "scope": "Actual min/max/Optional typed selections, native release, exact oracle, LLVM RC audit, observed stage reuse, receipt replay, relocation, earlier physical catalog discovery and warm/cold root refusal.",
+  "boundaries": "Semantic-cache-v9 wire/copy validation and A04 full mode matrix are separate. No timing or final milestone claim."
+}

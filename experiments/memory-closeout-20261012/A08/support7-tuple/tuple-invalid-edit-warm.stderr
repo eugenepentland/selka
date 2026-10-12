@@ -1,0 +1,6 @@
+build-slot: FIFO ticket 1101, position 14; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1101, position 6; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 1101 after 100s
+/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/support7-tuple/source/main.my:13:25: error[E_SINGLE_OWNER_MOVED]: 'rows_pair' was moved or is unavailable on this path; use .copy() when both values are needed
+      const repeated, _ = rows_pair
+                          ^

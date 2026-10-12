@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1143, position 9; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 1143 after 60s
+/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/support7-selection/invalid-optional_receiver_invalidated/main.my:7:39: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+      return len(value.unwrap_or(change(mut value)).copy())
+                                        ^

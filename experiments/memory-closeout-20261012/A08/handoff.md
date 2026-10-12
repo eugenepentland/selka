@@ -5,14 +5,18 @@ Worktree: `/home/epentland/ai/canopy/mylang-memory-20261012-A08`.
 Branch: `codex/memory-closeout-20261012-A08-integrated` (original worker branch preserved).
 Proposed commits: the A08 sequence contains tested comprehension/copy fixes,
 component source migrations, bounded phi cleanup, and cache/scaling evidence.
-Support7 common ReleaseFast qualification is now running from frozen source
+Support7 common ReleaseFast component and new cache qualification completed on frozen source
 `bed11cf3bf3102ffec44487e431a1573fdf02ad5`, compiler SHA-256
 `540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef`.
 The complete installation contains actual owned components. A08's 39 new cache
-rows, repeated component protocols and remaining common-artifact checks are
-recorded separately; no qualified-C1, default or retirement milestone is claimed.
-Support7 memo warm-cache failure is under investigation using private copies of
-A05's retained cache. Historical failures and intermediate evidence remain intact.
+rows all pass: borrowed dictionary selections 12, tuple unpacking 11, and typed
+min/max/Optional selections 16. `support7-cache39-summary.json` binds the reports.
+Warm rows require actual frontend/lowering reuse; whole-build rows require replay;
+invalid edits remain refused. No qualified-C1, default or retirement milestone is
+claimed. Existing cache transitions/scaling still need the final compiler.
+Support7 memo warm-cache failure is isolated to an ordinary caller's raw bracketed
+call name during callable recipe hydration; the separate fix is under test in
+A08-memo. Historical failures and intermediate evidence remain intact.
 
 The later v9 schema, borrowed-selection, tuple, provider and component sections
 supersede early proposed-contract descriptions below. The C3 draft remains

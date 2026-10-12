@@ -1,0 +1,72 @@
+[
+  {
+    "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/618c3fc6074dc7c8d0dbb3a95354f4667ba33e19d4920611bfdce776a9d8bad4",
+    "key": "fn\u001fmain\u001f\u001fexercise",
+    "bytes": 17122
+  },
+  {
+    "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/00510e302cda3f0603d72d7417eddbec06ab9d94d8ee3053f66e4267df194468",
+    "key": "spec\u001fv2\u001f92aa3dda1b1871e20f7f92011090aade2835aec726a07c6a0d1252aa83d4fb5d",
+    "bytes": 3123
+  },
+  {
+    "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/3e98a3b76679a86c9899a436393a7e3d01e9c6c3d4d08c835680ced89cb20b4d",
+    "key": "fn\u001fmain\u001f\u001fmain",
+    "bytes": 3547
+  },
+  {
+    "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/4a1c7935bf844bb63c30777aaf6f28e43e12fb085eca9dcd554890a789240043",
+    "key": "spec\u001fv2\u001f9d5feb2dad75bbffe038d4072e3f7318fe1f9246e8ae90c2f675ce4e25890d88",
+    "bytes": 1830
+  },
+  {
+    "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/c5459ae4ea9305906f9f8b639a5ace2a92441a9c3e6da6b2bb0bb39f4c810189",
+    "key": "spec\u001fv2\u001f8128f002b16f9473abe3ae4cdd1b91353785da1a518e2167e0f64d14306c6663",
+    "bytes": 1494
+  },
+  {
+    "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/e5d610ee7a5dd96dc1009a71f868657c988b2c3630b1b6afc967fa0fd770bd16",
+    "key": "fn\u001fmain\u001f\u001fcompute",
+    "bytes": 5441
+  },
+  {
+    "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/205a509d2815b8bd9686f1024b8b6f8d666717defc2db48e95235f43d4efe6f7",
+    "key": "spec\u001fv2\u001fcfb2b3b938ec59cafc2177db3d3dba06b2878052cb0404a607b1932208ee1214",
+    "bytes": 5804
+  },
+  {
+    "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/eed21c5d36fc402653fdb01e1634ea8412702b868ac129544dbc4bc4f09f6061",
+    "key": "sym\u001fabstract-v1\u001fproject\u001ffn\u001fmemo\u001f\u001fcall",
+    "bytes": 1785
+  },
+  {
+    "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/0b68333deebc6149b91411cdbb708f04070011efd5e2306c483d0edd8d9834b3",
+    "key": "sym\u001fabstract-v1\u001fproject\u001ffn\u001fmemo\u001f\u001fcreate",
+    "bytes": 1069
+  },
+  {
+    "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/8c8258ca5db1c1b5ff522c1fff3b70d34a728f00827c752873ba6793e684e5c6",
+    "key": "fn\u001fmemo\u001f\u001fmessage",
+    "bytes": 1744
+  },
+  {
+    "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/83df9573cd76e96bf1a13e7061fc89574d5ed176c87176e39caf22a956ca657d",
+    "key": "sym\u001fabstract-v1\u001fproject\u001ffn\u001fmemo\u001f\u001fcapacity",
+    "bytes": 541
+  },
+  {
+    "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/148f302cadc3e9a54497e62caf331b08a8c823df008a9d3487aff03f9765c7bb",
+    "key": "sym\u001fabstract-v1\u001fproject\u001ffn\u001fmemo\u001f\u001fcount",
+    "bytes": 534
+  },
+  {
+    "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/efe014f5fb8787e909fa3b9b36577be8326d65c6c16db1bdf30d11bf1bca7df7",
+    "key": "sym\u001fabstract-v1\u001fproject\u001ffn\u001fmemo\u001f\u001fclear",
+    "bytes": 553
+  },
+  {
+    "file": "semantic-cache-v9/1c1b2b05df2c38e71e41eb1e2cb707838da14747db632b35b2ff38b702ff9e4e/b65acc4e9dc80b314e90c709861a5b87ea19ad2c826d07206ce18753e73a4e03",
+    "key": "spec\u001fv2\u001fce46e72df87477e0d9ded367200b249467dbee95f6d8185f2fc7b04e78ee69f6",
+    "bytes": 9884
+  }
+]
