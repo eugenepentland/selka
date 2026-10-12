@@ -72,6 +72,15 @@ fn refuses(parent: std.mem.Allocator, source: []const u8, code: []const u8) !voi
     try std.testing.expectEqualStrings(code, failure.code);
 }
 
+fn frontendRefuses(parent: std.mem.Allocator, source: []const u8, code: []const u8) !void {
+    var arena = std.heap.ArenaAllocator.init(parent);
+    defer arena.deinit();
+    var unit = try language.Compilation.init(arena.allocator(), "nested-write.my", source);
+    try std.testing.expectError(error.SourceError, unit.check());
+    try std.testing.expect(unit.diagnostics.items.len != 0);
+    try std.testing.expectEqualStrings(code, unit.diagnostics.items[0].code);
+}
+
 // spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
 test "zero RC nested writeback rejects another field another base and partial moves" {
     // Matching the owner alone would accidentally admit the wrong field.
@@ -174,6 +183,12 @@ const slot_records =
     \\
 ;
 
+fn functionRetains(text: []const u8, name: []const u8) bool {
+    const start = std.mem.indexOf(u8, text, name) orelse return false;
+    const end = std.mem.indexOfPos(u8, text, start + name.len, "\nfn ") orelse text.len;
+    return std.mem.indexOf(u8, text[start..end], "retain") != null;
+}
+
 // spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
 // spec-case: NEW-CORE-TAKE-READS-1
 test "zero RC fixed array writeback captures a dynamic signed index once" {
@@ -206,21 +221,23 @@ test "zero RC array transfer analysis preserves unknown index and conditional li
         \\    const held = cells[read_index]
         \\    cells[write_index].value = 9
         \\    return len(held.text)
-        \\func main() -> int:
-        \\    return 0
+        \\func main(args: str[]) -> int:
+        \\    mut cells = FixedArray[Cell, 2]([Cell(value=1, text="left"), Cell(value=2, text="right")])
+        \\    return overlap(mut cells, len(args) % 2, (len(args) + 1) % 2)
     );
-    try std.testing.expect(std.mem.indexOf(u8, unknown, "retain") != null);
+    try std.testing.expect(functionRetains(unknown, "fn overlap("));
     const conditional = try support.ownedText(arena.allocator(), slot_records ++
-        \\func conditional(mut cells: FixedArray[Cell, 2], replace: bool) -> int:
+        \\func conditional(mut cells: FixedArray[Cell, 2], should_write: bool) -> int:
         \\    mut held = cells[0]
         \\    held.value = 9
-        \\    if replace:
+        \\    if should_write:
         \\        cells[0] = held
         \\    return cells[0].value
-        \\func main() -> int:
-        \\    return 0
+        \\func main(args: str[]) -> int:
+        \\    mut cells = FixedArray[Cell, 2]([Cell(value=1, text="left"), Cell(value=2, text="right")])
+        \\    return conditional(mut cells, len(args) != 0)
     );
-    try std.testing.expect(std.mem.indexOf(u8, conditional, "retain") != null);
+    try std.testing.expect(functionRetains(conditional, "fn conditional("));
 }
 
 // spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
@@ -279,7 +296,7 @@ test "zero RC list slot nested writeback preserves exact owner and index" {
         \\    rows[0] = replace(other[0], scalar=7)
         \\    return rows[0].scalar
     , "E_SINGLE_OWNER_BORROW");
-    try refuses(std.testing.allocator, records ++
+    try frontendRefuses(std.testing.allocator, records ++
         \\func change(mut rows: Inner[]) -> int:
         \\    rows.clear()
         \\    return 7
@@ -287,7 +304,7 @@ test "zero RC list slot nested writeback preserves exact owner and index" {
         \\    mut rows = [Inner(scalar=1, text="one")]
         \\    rows[0] = replace(rows[0], scalar=change(mut rows))
         \\    return 0
-    , "E_SINGLE_OWNER_BORROW");
+    , "E_MUTATION_OVERLAP");
 }
 
 // spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1

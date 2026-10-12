@@ -1434,9 +1434,18 @@ fn mergeable(arena: std.mem.Allocator, f: *const ir.Function, group: ReadGroup, 
 fn takeFields(arena: std.mem.Allocator, module: *const ir.Module, f: *const ir.Function, marks: *Marks) Error!void {
     const graph = try UseGraph.of(arena, f);
     for (f.insts.items, 0..) |record, i| {
-        if (module.kind(record.ty) != .record or !module.managed(record.ty)) continue;
+        const kind = module.kind(record.ty);
+        if ((kind != .record and kind != .array) or !module.managed(record.ty)) continue;
         if (!ownedRecord(f, record) and !marks.owned_get.contains(@intCast(i))) continue;
         const ref: ir.Ref = @fromBackingInt(@intCast(i));
+        const ctx: Taking = .{ .arena = arena, .module = module, .f = f, .graph = graph, .marks = marks };
+        if (kind == .array) {
+            for (graph.uses[i].items) |user| {
+                const inst = f.inst(user);
+                if (inst.op == .array_set and f.resolve(inst.a) == ref) try ctx.takeArrayReplaced(ref, user);
+            }
+            continue;
+        }
         var reads_only = true;
         var sets: std.ArrayList(ir.Ref) = .empty;
         for (graph.uses[i].items) |user| {
@@ -1447,7 +1456,6 @@ fn takeFields(arena: std.mem.Allocator, module: *const ir.Module, f: *const ir.F
                 try sets.append(arena, user);
             } else reads_only = false;
         }
-        const ctx: Taking = .{ .arena = arena, .module = module, .f = f, .graph = graph, .marks = marks };
         // Each set replaces its own field: arms of a branch may each update another one.
         for (sets.items) |update| try ctx.takeReplaced(ref, update);
         if (sets.items.len == 0 and reads_only) try ctx.empty(ref);
@@ -1526,6 +1534,46 @@ const Taking = struct {
         }
         try self.marks.owned_get.put(self.arena, @backingInt(get), {});
         try self.marks.taken.put(self.arena, @backingInt(update), {});
+    }
+
+    /// An inline array lends its exact selected slot to a nested update, under
+    /// the same path and borrow-window checks used for named record fields.
+    fn takeArrayReplaced(self: Taking, array: ir.Ref, update: ir.Ref) Error!void {
+        const f = self.f;
+        if (!self.module.managed(self.module.compound(f.inst(array).ty).array.elem)) return;
+        const index = f.inst(update).b;
+        const def = if (f.inst(array).op == .param) 0 else self.graph.block_of[array.index()];
+        var reads: std.ArrayList(ir.Ref) = .empty;
+        for (self.graph.uses[array.index()].items) |user| {
+            const inst = f.inst(user);
+            if (inst.op == .array_get and f.resolve(inst.a) == array and arrayIndex(f, index, inst.b) != .different)
+                try addUnique(self.arena, &reads, user);
+        }
+        for (reads.items) |get| {
+            if (arrayIndex(f, index, f.inst(get).b) != .same) continue;
+            if (!try self.takes(get, update, reads.items, def)) continue;
+            if (!try self.arrayWindow(array, get, update, def)) continue;
+            try self.marks.owned_get.put(self.arena, @backingInt(get), {});
+            try self.marks.taken.put(self.arena, @backingInt(update), {});
+            return;
+        }
+    }
+
+    fn arrayWindow(self: Taking, array: ir.Ref, get: ir.Ref, update: ir.Ref, def: u32) Error!bool {
+        const f = self.f;
+        for (self.graph.uses[array.index()].items) |user| {
+            if (user == get or user == update) continue;
+            const inst = f.inst(user);
+            if (inst.op == .array_get and arrayIndex(f, f.inst(get).b, inst.b) == .different) continue;
+            if (inst.op == .phi) {
+                if (try phiAfter(self, array, get, user, def)) return false;
+                continue;
+            }
+            if (!try runsAfter(self.arena, f, self.graph.block_of, get, user, def)) continue;
+            if (self.borrowsFirst(array, get, user)) continue;
+            return false;
+        }
+        return true;
     }
 
     /// `update` replaces a field of `record`, which updates of other fields made from an earlier
@@ -1761,7 +1809,7 @@ fn reachesOrTrapsBlock(arena: std.mem.Allocator, f: *const ir.Function, from: u3
 /// Whether `op` reads a part of its first operand that borrows from it (§5).
 fn readsPart(op: ir.Op) bool {
     return switch (op) {
-        .list_get, .list_get_field, .record_get, .union_payload, .box_get => true,
+        .list_get, .list_get_field, .record_get, .array_get, .union_payload, .box_get => true,
         else => false,
     };
 }
@@ -1816,11 +1864,22 @@ fn blockReachable(arena: std.mem.Allocator, f: *const ir.Function, from: u32, ta
     return false;
 }
 
+/// An unresolved pair may alias: only exact SSA identity or two constants prove it.
+fn arrayIndex(f: *const ir.Function, left: ir.Ref, right: ir.Ref) enum { same, different, unknown } {
+    const a = f.resolve(left);
+    const b = f.resolve(right);
+    if (a == b) return .same;
+    const x = f.inst(a);
+    const y = f.inst(b);
+    if (x.op != .iconst or y.op != .iconst or x.ty != y.ty) return .unknown;
+    return if (x.data == y.data) .same else .different;
+}
+
 /// Whether a record value is owned where it is defined: built, updated, joined,
 /// returned by a call, or a `mut` parameter.
 fn ownedRecord(f: *const ir.Function, record: ir.Inst) bool {
     return switch (record.op) {
-        .record_make, .record_set, .phi, .call, .union_take, .box_take => true,
+        .record_make, .record_set, .array_set, .phi, .call, .union_take, .box_take => true,
         .param => ownedParameter(f.signature, record.data),
         else => false,
     };

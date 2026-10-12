@@ -165,7 +165,14 @@ const State = struct {
     transferable: bool = false,
     dependency: usize = none,
 };
-const Access = enum { read, move, mutate, update };
+const Access = enum { read, move, mutate, update, writeback };
+fn writebackBase(access: Access) Access {
+    return switch (access) {
+        .writeback => .read,
+        .update => .mutate,
+        else => .move,
+    };
+}
 const Loan = struct { root: usize, write: bool };
 const Loop = struct { id: usize, before: []const State };
 
@@ -360,6 +367,41 @@ const Checker = struct {
         return c.zero_rc and ty.isAggregate() and c.program.records[ty.recordIndex()].collection.kind == .string;
     }
 
+    /// An element update can read only the exact element being rebuilt. Keep
+    /// the containing operation's loan active for all replacement operands.
+    fn sameIndexWriteback(c: *const Checker, base: typed.NodeId, index: typed.NodeId, from_end: bool, value: typed.NodeId) bool {
+        const nested_base = switch (c.program.nodes[@backingInt(value)].data) {
+            .update => |update| update.base,
+            .replace => |replace| replace.base,
+            else => return false,
+        };
+        return switch (c.program.nodes[@backingInt(nested_base)].data) {
+            .index => |projection| projection.base == base and projection.index == index and projection.from_end == from_end,
+            else => false,
+        };
+    }
+
+    /// The front end's field destination captures a slot in a synthetic local
+    /// and later writes the rebuilt value to that same collection and key.
+    /// Ordinary extracted values and unrelated keys cannot take this path.
+    fn sameSlotWriteback(c: *const Checker, owner: typed.LocalId, index: typed.NodeId, value: typed.NodeId) bool {
+        const base = switch (c.program.nodes[@backingInt(value)].data) {
+            .update => |update| update.base,
+            .replace => |replace| replace.base,
+            else => return false,
+        };
+        const slot = switch (c.program.nodes[@backingInt(base)].data) {
+            .local => |local| @backingInt(local),
+            else => return false,
+        };
+        if (!c.temporary(slot) or !c.state[slot].borrowed) return false;
+        const definition = c.state[slot].view_definition orelse return false;
+        return switch (c.program.nodes[@backingInt(definition)].data) {
+            .buffer_operation => |read| read.kind == .read and read.owner == owner and read.arguments.len == 1 and read.arguments[0] == index,
+            else => false,
+        };
+    }
+
     fn wholeOwner(c: *const Checker, id: typed.NodeId) bool {
         return switch (c.program.nodes[@backingInt(id)].data) {
             .local => |slot| c.state[@backingInt(slot)].root == none or c.state[@backingInt(slot)].transferable,
@@ -401,6 +443,7 @@ const Checker = struct {
                     .writable = local.origin != .iteration and c.state[source].writable,
                     .root = source,
                     .transferable = c.wholeOwner(store.value),
+                    .view_definition = store.value,
                     .dependency = c.state[source].dependency,
                 };
                 return;
@@ -469,13 +512,13 @@ const Checker = struct {
             .array => |items| for (items) |item| try c.expression(item, .move),
             .record => |fields| try c.recordFields(fields),
             .update => |update| {
-                try c.expression(update.base, if (access == .update) .mutate else .move);
-                for (update.fields) |field| try c.expression(field.value, if (access == .update and c.sameFieldWriteback(update.base, field)) .update else .move);
+                try c.expression(update.base, writebackBase(access));
+                for (update.fields) |field| try c.expression(field.value, if ((access == .update or access == .writeback) and c.sameFieldWriteback(update.base, field)) access else .move);
             },
             .replace => |replace| {
-                try c.expression(replace.base, if (access == .update) .mutate else .move);
+                try c.expression(replace.base, writebackBase(access));
                 try c.expression(replace.index, .read);
-                try c.expression(replace.value, .move);
+                try c.expression(replace.value, if ((access == .update or access == .writeback) and c.sameIndexWriteback(replace.base, replace.index, replace.from_end, replace.value)) access else .move);
             },
             .acquire_buffer => |buffer| try c.expression(buffer.capacity, .read),
             .buffer_operation => try c.collection(node, access),
@@ -668,7 +711,8 @@ const Checker = struct {
                     .pop_default => index == 1,
                     else => false,
                 } else operation.kind == .append or (operation.kind == .write and index == 1) or (operation.kind == .insert and index == 1);
-                try c.expression(argument, if (consumes) .move else .read);
+                const writeback = schema.collection.kind == .list and operation.kind == .write and index == 1 and c.sameSlotWriteback(operation.owner, operation.arguments[0], argument);
+                try c.expression(argument, if (writeback) .writeback else if (consumes) .move else .read);
             }
             // These methods implicitly duplicate elements. Nested owned
             // lists need an explicit deep copy, which .copy() provides.

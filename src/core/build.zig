@@ -460,6 +460,8 @@ const Ssa = struct {
     resources: std.ArrayList(build_cap.Scope) = .empty,
     /// Parents already detached for a hidden receiver's imminent write-back.
     prepared: std.AutoHashMapUnmanaged(u32, PreparedPath) = .empty,
+    /// Exact nested reconstruction reads share their parent's normalized index.
+    array_indices: std.AutoHashMapUnmanaged(typed.NodeId, ir.Ref) = .empty,
 };
 
 /// Where `break` and `continue` of one checked loop go.
@@ -1269,6 +1271,28 @@ const FnBuilder = struct {
         return self.emit(.{ .op = .list_set, .ty = self.typeOfRef(list), .a = list, .b = index, .data = data, .check = .exact, .span = span });
     }
 
+    /// A checked field destination reconstructs its hidden read into the exact
+    /// same slot. Preserve that transfer before store narrowing or ownership.
+    fn transferSlotRead(self: *FnBuilder, value: typed.NodeId, list: ir.Ref, index: ir.Ref) Error!void {
+        if (!self.module().zero_rc) return;
+        const base = switch (self.nodeOf(value).data) {
+            .update => |update| update.base,
+            .replace => |replace| replace.base,
+            else => return,
+        };
+        const slot = switch (self.nodeOf(base).data) {
+            .local => |binding| self.local(binding),
+            else => return,
+        };
+        if (!std.mem.startsWith(u8, self.checked.scope.locals[slot].name, "<")) return;
+        const ref = self.function.resolve(try self.read(slot, self.current.?));
+        const instruction = self.function.inst(ref);
+        if (instruction.op != .list_get or !self.module().managed(instruction.ty)) return;
+        if (instruction.data != 0 and instruction.data != flags.place_read) return;
+        if (self.function.resolve(instruction.a) != self.function.resolve(list) or self.function.resolve(instruction.b) != self.function.resolve(index)) return;
+        self.function.insts.items[ref.index()].data = flags.place_read;
+    }
+
     fn storeInto(self: *FnBuilder, base: ir.Ref, steps: []const Step, value: ir.Ref, span: u32) Error!ir.Ref {
         if (steps.len == 0) return value;
         if (steps.len == 1) return self.stepSet(base, steps[0], value, span);
@@ -1448,7 +1472,7 @@ const FnBuilder = struct {
                 if (self.mb.module.kind(buffer_type) == .dict and self.typeOfRef(capacity) != .u64) capacity = try self.emit(.{ .op = .convert, .ty = .u64, .a = capacity, .check = .exact, .span = span });
                 return self.emit(.{ .op = if (self.mb.module.kind(buffer_type) == .dict) .dict_new else .list_new, .ty = buffer_type, .a = capacity, .span = span });
             },
-            .index => |index| return self.indexExpression(index, n.ty, try self.typeOf(id), span, out),
+            .index => return self.indexExpression(id, try self.typeOf(id), span, out),
             .arena_escape => |value| return self.expression(value),
             .length => |operand| return self.stringLength(operand, span),
             .variant => |case| return self.variantMake(id, case.tag, case.value, span),
@@ -1535,15 +1559,17 @@ const FnBuilder = struct {
     }
 
     /// Read a dictionary or array element and remember its place for mut write-back.
-    fn arrayGet(self: *FnBuilder, index: @FieldType(@FieldType(typed.Node, "data"), "index"), span: u32, out: ?*?Place) Error!ir.Ref {
+    fn arrayGet(self: *FnBuilder, id: typed.NodeId, span: u32, out: ?*?Place) Error!ir.Ref {
+        const index = self.nodeOf(id).data.index;
         var base_place: ?Place = null;
         const base = try self.expressionPlace(index.base, if (out != null) &base_place else null);
-        const raw = try self.expression(index.index);
+        const captured = self.ssa.array_indices.get(id);
+        const raw = if (captured == null) try self.expression(index.index) else ir.Ref.none;
         if (self.current == null) return .none;
         const ty = self.typeOfRef(base);
         const dictionary = self.mb.module.kind(ty) == .dict;
         if (!dictionary and self.mb.module.kind(ty) != .array) return self.mb.refuse("index of a non-array", span);
-        const at = if (dictionary) try build_dict.find(@TypeOf(self), self, base, raw, span) else try self.arrayIndex(base, raw, index.from_end, span);
+        const at = captured orelse if (dictionary) try build_dict.find(@TypeOf(self), self, base, raw, span) else try self.arrayIndex(base, raw, index.from_end, span);
         if (dictionary) try build_dict.requirePresent(@TypeOf(self), self, at, span);
         if (out) |place| if (base_place) |found| {
             place.* = try self.extendPlace(found, .{ .element = at });
@@ -1556,11 +1582,39 @@ const FnBuilder = struct {
     fn arrayReplace(self: *FnBuilder, replacement: @FieldType(@FieldType(typed.Node, "data"), "replace"), span: u32) Error!ir.Ref {
         const base = try self.expression(replacement.base);
         const raw = try self.expression(replacement.index);
+        if (self.current == null) return .none;
+        const shared = if (self.module().zero_rc and self.mb.module.kind(self.typeOfRef(base)) == .array) self.reconstructedIndex(replacement) else null;
+        if (shared) |index| {
+            const normalized = try self.arrayIndex(base, raw, replacement.from_end, span);
+            const previous = self.ssa.array_indices.get(index);
+            try self.ssa.array_indices.put(self.allocator(), index, normalized);
+            defer {
+                if (previous) |old| self.ssa.array_indices.getPtr(index).?.* = old else _ = self.ssa.array_indices.remove(index);
+            }
+            const value = try self.expression(replacement.value);
+            if (self.current == null) return .none;
+            return self.arraySet(base, normalized, value, span);
+        }
         const value = try self.expression(replacement.value);
         if (self.current == null) return .none;
         if (self.mb.module.kind(self.typeOfRef(base)) == .dict) return build_dict.put(@TypeOf(self), self, base, raw, value, span);
         if (self.mb.module.kind(self.typeOfRef(base)) != .array) return self.mb.refuse("replace of a non-array", span);
         return self.arraySet(base, try self.arrayIndex(base, raw, replacement.from_end, span), value, span);
+    }
+
+    /// Only the exact typed projection being rebuilt can reuse this normalization.
+    fn reconstructedIndex(self: *FnBuilder, replacement: @FieldType(@FieldType(typed.Node, "data"), "replace")) ?typed.NodeId {
+        const base = switch (self.nodeOf(replacement.value).data) {
+            .update => |update| update.base,
+            .replace => |replace| replace.base,
+            else => return null,
+        };
+        const projection = switch (self.nodeOf(base).data) {
+            .index => |index| index,
+            else => return null,
+        };
+        if (projection.base != replacement.base or projection.index != replacement.index or projection.from_end != replacement.from_end) return null;
+        return base;
     }
 
     /// Replace one normalized array element, preserving aggregate ownership semantics.
@@ -2269,15 +2323,17 @@ const FnBuilder = struct {
         return build_text.operation(@TypeOf(self), self, operation, ty, span);
     }
 
-    fn indexExpression(self: *FnBuilder, index: @FieldType(@FieldType(typed.Node, "data"), "index"), source_type: typed.Type, result: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
+    fn indexExpression(self: *FnBuilder, id: typed.NodeId, result: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
+        const node = self.nodeOf(id);
+        const index = node.data.index;
         const base_type = try self.typeOf(index.base);
         if (base_type == .str_view) {
             const text = self.mb.input.program.records[self.nodeOf(index.base).ty.recordIndex()].collection.kind == .string;
             return build_view.indexed(@TypeOf(self), self, try self.expression(index.base), try self.expression(index.index), text, result, span);
         }
         if (base_type == .str or base_type == .bytes or base_type == .byte_buffer) return build_text.indexed(@TypeOf(self), self, index.base, index.index, span, result);
-        const value = try self.arrayGet(index, span, out);
-        return if (source_type == .unit) .none else value;
+        const value = try self.arrayGet(id, span, out);
+        return if (node.ty == .unit) .none else value;
     }
 
     fn bufferOperation(self: *FnBuilder, operation: BufferOperation, ty: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
@@ -2344,6 +2400,7 @@ const FnBuilder = struct {
                 if (self.current == null) return .none;
                 if (value == .none or self.typeOfRef(value) == .void) value = try self.constant(.bool, 0);
                 const list = try self.writableReceiverOf(owner, span);
+                try self.transferSlotRead(argument_nodes[1], list, index);
                 try self.writeOwner(owner, try self.listSet(list, index, value, span), span);
                 return .none;
             },
