@@ -1087,10 +1087,16 @@ def row6_judge(run: Run) -> list[dict]:
 
 # Row 7 ----------------------------------------------------------------------
 
-def row7_env(ctx: Context, tree: Path, shared: Path, side: str) -> dict:
-    return ctx.tree_env(tree, CODEX_THREAD_ID="lane-f-row07-" + side, TERM="xterm-256color" if side == "a" else "dumb",
-                        MYLANG_TEST_SHARED_CACHE=str(shared / "tests"),
-                        MYLANG_COMPILER_SHARED_CACHE=str(shared / "compiler"), **ctx.keyed_extra())
+def row7_env(ctx: Context, tree: Path, shared: Path, side: str, stores: bool = True) -> dict:
+    """The launcher of worktree SIDE. The native shared stores are set only for
+    its `mylang test` run: the complete gate's own tests assume no shared store
+    (see REPORT.md, row 7), and the coordinator shares through
+    --shared-cache-dir instead."""
+    env = ctx.tree_env(tree, CODEX_THREAD_ID="lane-f-row07-" + side, TERM="xterm-256color" if side == "a" else "dumb",
+                       **ctx.keyed_extra())
+    if stores:
+        env.update(MYLANG_TEST_SHARED_CACHE=str(shared / "tests"), MYLANG_COMPILER_SHARED_CACHE=str(shared / "compiler"))
+    return env
 
 
 def row7_plan(ctx: Context) -> list:
@@ -1104,10 +1110,21 @@ def row7_plan(ctx: Context) -> list:
             Cmd("build-a", ["zig", "build"], str(a), env_a, slot="build", required=True),
             Cmd("build-b", ["zig", "build"], str(b), env_b, slot="build", required=True),
             test("tests-a", a, env_a), test("tests-b", b, env_b),
-            coordinator(ctx, "complete-a", a, *verification, env=env_a),
-            coordinator(ctx, "complete-b", b, *verification, env=env_b),
+            coordinator(ctx, "complete-a", a, *verification, env=row7_env(ctx, a, shared, "a", stores=False)),
+            coordinator(ctx, "complete-b", b, *verification, env=row7_env(ctx, b, shared, "b", stores=False)),
             Py("binary-paths", "grep -a counts of each root path in installed units/core/cli test binaries", row7_binary_paths),
+            Py("keep-diagnostics", "copy each tree's coordinator diagnostics (per-action dependency summaries)", row7_keep),
             remove_worktree("row07-a"), remove_worktree("row07-b")]
+
+
+def row7_keep(run: Run) -> dict:
+    copied = {}
+    for side in ("row07-a", "row07-b"):
+        source = run.ctx.scratch(side) / ".mylang-cache/verification-v3/diagnostics"
+        if source.exists():
+            shutil.copytree(source, run.dir / (side + "-diagnostics"), dirs_exist_ok=True)
+            copied[side] = len(list(source.iterdir()))
+    return copied
 
 
 def row7_binary_paths(run: Run) -> dict:
