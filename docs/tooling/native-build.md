@@ -250,12 +250,12 @@ current directory:
 | `programs-v1/` | linked executables, keyed by every linked object's bytes and the link settings; a build whose objects all match copies the program and links nothing |
 | `foreign-v1/` | `--link` C objects with the headers their depfile listed; one is served only while the source and every listed header keep their bytes |
 | `replay-v1/` | one replay record per entry and settings (below) |
-| `tests/receipts-v2/`, `tests/manifests-v2/` | `mylang test` result receipts ([guest tests](guest-tests.md#reusing-unaffected-results)) |
+| `tests/receipts-v3/`, `tests/manifests-v3/` | `mylang test` result receipts ([guest tests](guest-tests.md#reusing-unaffected-results)) |
 
 `mylang test --shared-cache-dir DIR` additionally shares eligible ordinary test
 successes across project roots; `MYLANG_TEST_SHARED_CACHE` supplies the same
-opt-in. Its separate portable identities and `DIR/native-tests-v2` namespace do
-not relocate these private frontend, executable or report-manifest caches. See
+opt-in. Its `DIR/native-tests-v3` namespace holds the same root-relative keys as
+the private receipts and does not relocate these private frontend, executable or report-manifest caches. See
 [shared test results](guest-tests.md#reusing-unaffected-results) for eligibility.
 
 **Replay.** A build records every file it read — each module source, embedded file,
@@ -284,9 +284,10 @@ mylang build app/main.my -o app.bin --cache-dir .mylang-cache/private --report
 ```
 
 The namespace is `compiler-artifacts-v2`, separate from test-success receipts.
-The shared program key binds the compiler, exact ordered object bytes and
-qualified toolchain/link settings, including `SOURCE_DATE_EPOCH` and
-`ZERO_AR_DATE`. Existing logical module paths can produce identical objects
+The shared program key (`core-shared-program-v2`, SHARED-PROGRAM-2) binds the
+exact ordered object bytes and qualified toolchain/link settings, including
+`SOURCE_DATE_EPOCH` and `ZERO_AR_DATE`, and no longer the compiler identity: the
+objects determine the bytes and the store's byte verification guards the rest. Existing logical module paths can produce identical objects
 across roots. Absolute source provenance may change their bytes and miss;
 source paths and literal strings are never rewritten to manufacture a hit.
 Foreign `--link` inputs and unqualified tools do not use shared programs.

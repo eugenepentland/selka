@@ -42,7 +42,7 @@ environment variable, described below; revision indexes stay private.
 Each worktree still requires its own `ZIG_LOCAL_CACHE_DIR`.
 
 The native `mylang test --shared-cache-dir DIR` command accepts a shared root,
-using the independent `native-tests-v2` namespace for portable ordinary test
+using the independent `native-tests-v3` namespace for shareable test
 successes. It uses the native retention policy below, separately from the
 Python developer evidence store. See [guest tests](guest-tests.md#reusing-unaffected-results)
 for eligibility. Native tests, shared lookup and collection require no Python.
@@ -54,7 +54,7 @@ for eligibility. Native tests, shared lookup and collection require no Python.
 bodies and linked executables. Private mutable indexes and materialized
 executables remain in each worktree. See [compiler caches](caches.md#shared-compiler-artifacts)
 for eligibility and [native builds](native-build.md#shared-compiler-artifacts)
-for usage. The same root may hold `native-tests-v2`; budgets are per namespace.
+for usage. The same root may hold `native-tests-v3`; budgets are per namespace.
 
 Native compiler artifacts are bounded to 128 MiB per payload and protected by
 checksummed records and atomic rename. Staging/hashing precedes a per-key

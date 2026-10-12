@@ -145,10 +145,12 @@ stderr, and is killed and reaped on timeout. Component failure has no automatic
 reference fallback.
 
 `mylang test --json` adds a `cache` object to each verdict with `action`,
-`reason`, `key`, `component`, `key_method` and optional `work`. `component` identifies the bound
-planner, including its mode. Typical reasons are `no-success-receipt`,
-`receipt-hit`, `whole-report-hit`, `force`, `verify-facts`, `leak-check`,
-`native-links` and `live-effects`. Whole-report reuse reports the current reuse
+`reason`, `key`, `component`, `key_method` and optional `work` and
+`execution_key`. `component` identifies the bound planner, including its mode.
+Typical reasons are `no-success-receipt`, `receipt-hit`, `whole-receipt-hit`,
+`whole-report-hit`, `exec-receipt-hit`, `whole-exec-receipt-hit`,
+`shared-receipt-hit`, `force`, `native-links` and `live-effects`; fact
+verification and leak checking are keyed modes, not refusals. Whole-report reuse reports the current reuse
 decision rather than replaying the earlier execution reason. This explains
 admission to existing test caches; it does not yet report every compiler stage
 or schedule the entire toolchain.
