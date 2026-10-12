@@ -1,0 +1,54 @@
+{
+  "scope": "launcher preparation observation; child captures actual function/context hashes at measurement start",
+  "environment": {
+    "MYLANG_SLOT_DIR": "/home/epentland/.cache/mylang/slots",
+    "MYLANG_BUILD_SLOTS": "3",
+    "MYLANG_GATE_SLOTS": "2",
+    "MYLANG_DEV_JOBS": "4",
+    "MYLANG_DEV_MAXRSS": "8589934592",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.zig-cache",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/work"
+  },
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+  "files": {
+    "zig": {
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+    },
+    "dev_env": {
+      "path": "/home/epentland/.config/mylang/dev-env.sh",
+      "sha256": "2731287ef088fd02d913b8123754afec1820c5f9d9c882edd31435d42db48e24"
+    },
+    "host_loader_cache": {
+      "path": "/etc/ld.so.cache",
+      "sha256": "d519185506fec90f5efbdc206f606f4c259891e83c4e98e48b9fa4694b64fbe6"
+    },
+    "harness": {
+      "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S04/scripts/verification_planning_timing.py",
+      "sha256": "af3eb2afcf76b246575d8dab68645f8b433dec16f387534d7c96ba750648842e"
+    }
+  }
+}

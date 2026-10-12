@@ -63,17 +63,38 @@ def main():
     project = output / 'project'; project.mkdir()
     compiler = args.compiler.resolve()
     zig = Path(os.environ['MYLANG_ZIG']).resolve()
+    artifact_manifest_path = compiler.parent.parent / 'manifest.json'
+    artifact_manifest = None
+    companion_hashes = {}
+    if artifact_manifest_path.is_file():
+        encoded_manifest = artifact_manifest_path.read_bytes()
+        if len(encoded_manifest) > 16 * 1024 * 1024:
+            raise RuntimeError('artifact manifest exceeds bound')
+        artifact_manifest = json.loads(encoded_manifest)
+        for relative, expected in artifact_manifest['files'].items():
+            name = Path(relative)
+            if name.is_absolute() or '..' in name.parts:
+                raise RuntimeError('artifact manifest path escapes prefix')
+            actual = (compiler.parent.parent / name).resolve()
+            actual.relative_to(compiler.parent.parent)
+            observed = digest(actual)
+            if observed != expected:
+                raise RuntimeError('frozen prefix differs from artifact manifest')
+            companion_hashes[str(actual)] = observed
     environment = dict(os.environ, MYLANG_CORE_RUNTIME_CACHE=str(output / 'runtime-cache'))
     environment.pop('MYLANG_COMPILER_SHARED_CACHE', None)
     manifest = {'version': 1, 'source': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                 'compiler_source': args.compiler_source,
                 'harness_sha256': digest(__file__),
+                'artifact_manifest_sha256': digest(artifact_manifest_path) if artifact_manifest else None,
+                'compiler_source_tree_sha256': artifact_manifest.get('source_tree_sha256') if artifact_manifest else None,
+                'companion_file_sha256': companion_hashes,
                 'compiler': str(compiler), 'compiler_sha256': digest(compiler), 'compiler_mode': args.mode,
                 'zig': str(zig), 'zig_sha256': digest(zig), 'affinity': sorted(os.sched_getaffinity(0)),
                 'slot_directory': environment.get('MYLANG_SLOT_DIR'),
                 'declared_build_slots': environment.get('MYLANG_BUILD_SLOTS'),
                 'admission_kind': environment.get('MYLANG_ADMISSION_KIND'), 'workload': args.workload,
-                'cache_tier': 'first project/runtime cold; Zig global explicitly shared warm; subsequent unique warm edits',
+                'cache_tier': 'private project/runtime placement; shared Zig global requested; unapproved tool overrides with private per-link global/local and objects',
                 'clock': 'source edit + validation + real check + output checks/report write' if args.check_only else 'source edit + validation + real check + forced two-test command + output checks/report write',
                 'scope': 'guest project edit; does not measure Zig compiler-source rebuilding or whole gate',
                 'first_feedback_scope': 'completed type/semantic check; visibly partial before two tests',
@@ -109,6 +130,8 @@ def main():
                       and names == manifest['selected_test_names'] and payload['passed'] == 2
                       and payload['cached'] == payload['failed'] == payload['skipped'] == 0)
         row = {'index': index, 'cache_tier': 'cold-project-runtime' if index == 0 else 'warm-unique-edit',
+               'native_cache_reasons': sorted({r.get('cache', {}).get('reason', 'unknown') for r in payload.get('tests', [])}),
+               'effective_native_tier': 'not executed' if args.check_only else ('uncacheable private per-link objects/global/local' if any(r.get('cache', {}).get('reason') == 'uncacheable-toolchain' for r in payload.get('tests', [])) else 'see exact native work/reason records'),
                'source_sha256': source_hashes, 'edit_validation_ns': edit_end - started,
                'first_feedback_ns': first_feedback, 'check': check, 'test': trial, 'selected_tests': len(names), 'completed_successful_tests': payload.get('passed', 0),
                'passed': passed, 'measurement_kind': 'isolated' if os.environ.get('MYLANG_ADMISSION_KIND') == 'timing' else 'operational'}
@@ -118,6 +141,10 @@ def main():
         with (output / 'rows.jsonl').open('a') as stream: stream.write(json.dumps(row, sort_keys=True) + '\n')
         if not passed:
             raise RuntimeError('real compiler/test verdict or exact fresh inventory disagrees')
+    if digest(__file__) != manifest['harness_sha256']:
+        raise RuntimeError('collector source changed during cohort')
+    if artifact_manifest and (digest(artifact_manifest_path) != manifest['artifact_manifest_sha256'] or any(digest(path) != value for path, value in companion_hashes.items())):
+        raise RuntimeError('artifact manifest or companion files changed during cohort')
     if digest(compiler) != manifest['compiler_sha256'] or digest(zig) != manifest['zig_sha256']:
         raise RuntimeError('frozen tools changed during cohort')
     warm = rows[1:]

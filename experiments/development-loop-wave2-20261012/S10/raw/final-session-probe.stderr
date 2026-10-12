@@ -1,0 +1,55 @@
+usage: cache_session.py [-h] [--zig ZIG]
+                        [--profile {quick,complete,long-qualification}]
+                        [--quick-actions QUICK_ACTIONS]
+                        [--qualification-target {fuzz,scaling,work-counters,juice-instructions,wall-clock-performance,bootstrap}]
+                        [--qualification-max-actions QUALIFICATION_MAX_ACTIONS]
+                        [--qualification-timeout QUALIFICATION_TIMEOUT]
+                        [--qualification-fuzz-steps QUALIFICATION_FUZZ_STEPS]
+                        [--force] [--shared-cache-dir SHARED_CACHE_DIR]
+                        [--build-timeout-seconds BUILD_TIMEOUT_SECONDS]
+                        [--gate-timeout-seconds GATE_TIMEOUT_SECONDS]
+                        [--warn-after-seconds WARN_AFTER_SECONDS]
+                        [--budget-policy BUDGET_POLICY]
+                        [--timing-window-seconds TIMING_WINDOW_SECONDS]
+                        ...
+
+Run the complete verification inventory, reusing qualified successes before
+admission. python3 scripts/verify_cache.py --zig /path/to/pinned/zig python3
+scripts/verify_cache.py --force -- -j3 --maxrss 8589934592 This developer
+entry point owns build/gate admission; do not wrap it in another build-slot
+invocation. Normal `zig build test fmt-check` remains supported. Receipts are
+local evidence, never a replacement for an unregistered gate action.
+
+positional arguments:
+  options
+
+options:
+  -h, --help            show this help message and exit
+  --zig ZIG
+  --profile {quick,complete,long-qualification}
+  --quick-actions QUICK_ACTIONS
+                        Maximum quick-profile pending actions; heuristic and
+                        partial
+  --qualification-target {fuzz,scaling,work-counters,juice-instructions,wall-clock-performance,bootstrap}
+  --qualification-max-actions QUALIFICATION_MAX_ACTIONS
+  --qualification-timeout QUALIFICATION_TIMEOUT
+  --qualification-fuzz-steps QUALIFICATION_FUZZ_STEPS
+  --force               Ignore prior successes for the requested profile
+  --shared-cache-dir SHARED_CACHE_DIR
+                        Explicit local shared success evidence; inventory and
+                        runs stay private
+  --build-timeout-seconds BUILD_TIMEOUT_SECONDS
+                        Optional deadline per admitted preparation command;
+                        excludes queue time
+  --gate-timeout-seconds GATE_TIMEOUT_SECONDS
+                        Optional deadline for the admitted selected gate;
+                        excludes queue time
+  --warn-after-seconds WARN_AFTER_SECONDS
+                        Advisory total work target excluding admission queues;
+                        never changes reuse or pass/fail
+  --budget-policy BUDGET_POLICY
+                        Optional v1/v2 report-only scoped policy; never
+                        changes reuse or pass/fail
+  --timing-window-seconds TIMING_WINDOW_SECONDS
+                        Own an exclusive bounded request measurement; run
+                        directly, never under a slot

@@ -1,0 +1,4 @@
+build-slot: FIFO ticket 36, position 1; draining active work (build1.lock); waiting (0s so far)
+build-slot: FIFO ticket 36, position 1; draining active work (build1.lock); waiting (60s so far)
+build-slot: timing slot 1, FIFO ticket 36 after 100s
+{"repetitions": 40, "median_ns": 5830585034.0, "empirical_p95_ns": 6110226607, "first_feedback_empirical_p95_ns": 82051751, "targets": {"feedback_5s": true, "completion_empirical_p95_15s": true}, "all_completed": true, "scope": "guest project edit; does not measure Zig compiler-source rebuilding or whole gate", "qualification": "empirical cohort only; no stable tail inference or broader compiler-edit claim"}
