@@ -507,6 +507,20 @@ class Snapshot:
             raise SnapshotError("snapshot identity is only available in an active context")
         return copy.deepcopy(self._identity)
 
+    def selected_files(self, include_path) -> list[dict]:
+        """Copy matching records; pass immutable paths to the selection predicate.
+
+        Selection never validates or extends authority. Keep the snapshot live
+        and preserve unchanged checks through lookup, execution and publication.
+        The identity property still returns a fully detached complete document.
+        """
+        if self._lease is not None:
+            return self._lease[1].selected_files(include_path)
+        if self._identity is None or self._watcher is None:
+            raise SnapshotError("snapshot is not active")
+        selected = [item for item in self._identity["files"] if include_path(item["path"])]
+        return copy.deepcopy(selected)
+
     def __enter__(self) -> Snapshot:
         if self._entered:
             raise SnapshotError("a snapshot cannot be entered more than once")

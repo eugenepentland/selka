@@ -38,6 +38,49 @@ class InputSnapshot(unittest.TestCase):
         with Snapshot(self.root, ['input.txt']) as changed:
             self.assertNotEqual(json.dumps(changed.identity, sort_keys=True), identity)
 
+    def test_selected_files_matches_detached_projection_without_observations(self):
+        self.file('a/input')
+        self.file('b/input')
+        with Snapshot(self.root, ['a/', 'b/']) as snapshot:
+            expected = [row for row in snapshot.identity['files'] if row['path'].startswith('a/')]
+            before = snapshot.statistics
+            selected = snapshot.selected_files(lambda path: path.startswith('a/'))
+            self.assertEqual(selected, expected)
+            self.assertEqual(snapshot.statistics, before)
+            selected[0]['sha256'] = 'caller mutation'
+            self.assertEqual(snapshot.selected_files(lambda path: path.startswith('a/')), expected)
+            self.assertIsInstance(json.dumps(snapshot.selected_files(lambda path: True)), str)
+            self.assertTrue(snapshot.unchanged())
+
+    def test_selected_files_preserves_borrowed_authority_and_rejects_closed_context(self):
+        path = self.file('input')
+        with RetainedSession() as retained, retained.activate():
+            with Snapshot(self.root, ['input']) as snapshot:
+                expected = snapshot.identity['files']
+                self.assertEqual(snapshot.selected_files(lambda path: True), expected)
+                path.write_bytes(b'mutated')
+                self.assertFalse(snapshot.unchanged())
+                self.assertEqual(snapshot.selected_files(lambda path: True), expected)
+                snapshot.close()
+                with self.assertRaisesRegex(SnapshotError, 'not active'):
+                    snapshot.selected_files(lambda path: True)
+
+    def test_selected_files_path_only_predicate_empty_and_alias_projection(self):
+        self.file('real/input')
+        (self.root / 'alias').symlink_to(self.root / 'real/input')
+        with Snapshot(self.root, ['alias']) as snapshot:
+            seen = []
+            def include(path):
+                self.assertIsInstance(path, str)
+                seen.append(path)
+                return True
+            selected = snapshot.selected_files(include)
+            self.assertEqual(selected, snapshot.identity['files'])
+            self.assertEqual(seen, ['alias'])
+            self.assertIn('resolved', selected[0])
+            self.assertEqual(snapshot.selected_files(lambda path: False), [])
+            self.assertTrue(snapshot.unchanged())
+
     def test_session_reads_overlapping_bytes_once_without_changing_identity(self):
         self.file('input', b'content')
         session = DigestSession()
