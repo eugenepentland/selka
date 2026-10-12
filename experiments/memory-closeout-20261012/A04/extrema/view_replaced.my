@@ -1,0 +1,5 @@
+func main() -> int:
+    mut words = ["a" + str(1), "z" + str(2)]
+    const selected = min(words).borrow(0, 1)
+    words[0] = "changed"
+    return len(selected)

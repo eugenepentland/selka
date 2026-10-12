@@ -8,6 +8,7 @@ comptime {
     _ = @import("a02_mut_call_test.zig");
     _ = @import("a02_list_methods_test.zig");
     _ = @import("a06_nested_write_test.zig");
+    _ = @import("a04_extrema_test.zig");
     _ = @import("a04_render_test.zig");
     _ = @import("phi_cleanup_test.zig");
     _ = @import("single_owner_test.zig");

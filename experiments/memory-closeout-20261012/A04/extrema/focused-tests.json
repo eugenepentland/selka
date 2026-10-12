@@ -1,0 +1,25 @@
+{
+  "command": "scripts/build-slot.sh build \"$ZIG\" build test-core test-units affected-compiler -Dtest-filter=\"A04 list extrema\" -Dtest-filter=\"min and max accept\" -j\"$MYLANG_DEV_JOBS\" --maxrss \"$MYLANG_DEV_MAXRSS\"",
+  "exit_status": 0,
+  "core": {
+    "passed": 4,
+    "failed": 0
+  },
+  "unit": {
+    "passed": 8,
+    "failed": 0,
+    "named_matches": 1,
+    "unnamed_blocks": 7
+  },
+  "notes": "Existing ordinary prelude case exercises scalar min/max, text noalloc, and empty-list traps; new focused ownership tests preserve positive copies and negative escape/invalidation. Raw output contains an existing failed-command trailer despite all tests and build exit passing.",
+  "source_commit": "4ab84724d45de3710f2e1b4ba20b7fab8f4082a3",
+  "guardian_followup": {
+    "initial_guardian_status": "failed allocator-hygiene on helper using global std.testing.allocator",
+    "change": "Thread allocator explicitly through focused test helper; no production or guest fixture change",
+    "command": "scripts/build-slot.sh build \"$ZIG\" build test-core -Dtest-filter=\"A04 list extrema\" -j\"$MYLANG_DEV_JOBS\" --maxrss \"$MYLANG_DEV_MAXRSS\"",
+    "exit_status": 0,
+    "core_passed": 4,
+    "core_failed": 0,
+    "log": "focused-tests-allocator-followup.log"
+  }
+}

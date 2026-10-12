@@ -229,3 +229,19 @@ tuples.my:26 (A01 complete unpack work), retaining its five tests in the 133 tot
 The minimal pending tuple migration is snapshotted with exact hashes but is not
 qualified or integrated. Native command JSON and earlier Support5 survey remain
 in migrations evidence. No running A04 processes remain.
+
+List extrema follow-up: `extrema/` records the exact A09 list-only scalar-index
+patch, four new Core tests, eight passing existing unit blocks and 23 passing
+native lanes plus three expected source refusals. The unchanged fixture refuses
+Support6 before its explicit copy; the A04 prototype compiler SHA256 is
+8a6905b47120f6b279e53fe30cb05951da6d862380826a327a4cd9051e420beb on base
+4ab84724d45de3710f2e1b4ba20b7fab8f4082a3 plus the recorded diff. A07 approved the
+final borrow-root behavior. All ten normal-return checked lanes are RC0/live0
+and structurally clean; fatal empty-list runs separately retain the existing
+32-byte live empty-header observations (including the ordinary control), with
+all exact source/span traps preserved. The README explains fatal `_exit` without
+owner unwinding; these negative executions are not claimed as leak-free returns.
+The coordinator authored SPEC/root-test overlays. Different-root two-string
+extrema and Optional.unwrap_or remain separate support blockers for follow-up;
+no generic ownership merge or helper registry was changed. Final integration
+qualification remains required, and the pending tuple migration stays separate.

@@ -1,0 +1,6 @@
+func main() -> int:
+    mut words = ["a" + str(1), "z" + str(2)]
+    const selected = min(words).borrow(0, 2)
+    const copied = selected.copy()
+    words.clear()
+    return if copied == "a1" then 0 else 1

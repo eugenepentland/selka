@@ -492,17 +492,17 @@ fn extremeOfList(comptime Checker: type, checker: *Checker, span: source.Span, i
     const owner = try b.local(list);
     const index = try b.local(.i64);
     const limit = try b.local(.i64);
-    const result = try b.local(element);
+    const result = try b.local(.i64);
     const i = try b.read(index);
     const guard = try b.stmt(.{ .discard = try b.operation(owner, .iteration_check, &.{try b.read(limit)}) });
     const candidate = try b.operation(owner, .read, &.{i});
     const replace = comptime if (greatest) less else swapLess;
-    const condition = try replace(Checker, checker, span, family, try b.read(result), candidate);
+    const condition = try replace(Checker, checker, span, family, try b.operation(owner, .read, &.{try b.read(result)}), candidate);
     const body = try b.stmt(.{ .block = try keep(Checker, checker, &.{
         guard,
         try b.stmt(.{ .branch = .{
             .condition = condition,
-            .then_body = try b.stmt(.{ .assign = .{ .slot = result, .value = try b.operation(owner, .read, &.{i}) } }),
+            .then_body = try b.stmt(.{ .assign = .{ .slot = result, .value = i } }),
             .else_body = null,
         } }),
     }) });
@@ -512,14 +512,16 @@ fn extremeOfList(comptime Checker: type, checker: *Checker, span: source.Span, i
     }) });
     const loop = checker.loops.next;
     checker.loops.next += 1;
-    // An empty list has no smallest element, and the first read reports it as a located trap.
+    // Keep only a scalar selection across the loop; the selected element borrows
+    // from owner once at the end. The first read preserves the empty-list trap.
     return b.block(&.{
         try b.stmt(.{ .initialize = .{ .slot = owner, .value = input } }),
         try b.stmt(.{ .initialize = .{ .slot = index, .value = try b.integer(1) } }),
         try b.stmt(.{ .initialize = .{ .slot = limit, .value = try b.length(owner) } }),
-        try b.stmt(.{ .initialize = .{ .slot = result, .value = try b.operation(owner, .read, &.{try b.integer(0)}) } }),
+        try b.stmt(.{ .discard = try b.operation(owner, .read, &.{try b.integer(0)}) }),
+        try b.stmt(.{ .initialize = .{ .slot = result, .value = try b.integer(0) } }),
         try b.stmt(.{ .loop = .{ .id = loop, .condition = try b.binary(.lt, i, try b.read(limit), .bool), .body = body, .step = step } }),
-    }, try b.read(result));
+    }, try b.operation(owner, .read, &.{try b.read(result)}));
 }
 
 /// `sorted(xs)`, `sorted(xs, key=callback)` and `sorted(xs, reverse=flag)`: a

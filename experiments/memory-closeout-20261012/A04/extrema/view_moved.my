@@ -1,0 +1,5 @@
+func main() -> int:
+    mut words = ["a" + str(1), "z" + str(2)]
+    const selected = max(words).borrow(0, 1)
+    const moved = words
+    return len(selected) + len(moved)
