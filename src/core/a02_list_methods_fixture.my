@@ -121,6 +121,17 @@ func independent_children() -> bool:
     return choice_number(extended[0]) == 5 and choice_number(reversed[0]) == 6 and choice_number(first[0]) == 5 and len(empty) == 0
 
 
+func nested_extension(source_index: int) -> bool:
+    mut rows: int[][][] = [[], []]
+    rows[0].extend(rows[0])
+    for value in range(16):
+        rows[0].append([value])
+        rows[1].append([value + 100])
+    rows[0].extend(rows[source_index])
+    rows[0][0].append(99)
+    return len(rows[0]) == 32 and len(rows[1]) == 16 and len(rows[0][16]) == 1 and rows[0][16][0] == source_index * 100 and rows[0][31][0] == source_index * 100 + 15 and len(rows[1][0]) == 1
+
+
 func main(args: str[], out: Stream) -> int:
     if len(args) > 0:
         mut rows = [[1], [2]]
@@ -141,5 +152,6 @@ func main(args: str[], out: Stream) -> int:
         total += nested(seed)
         assert wide(seed)
         assert recursive(seed)
+        assert nested_extension(seed % 2)
     out.print(total)
     return 0

@@ -1,0 +1,6 @@
+build-slot: build slot 2, FIFO ticket 700 after 0s
+release True
+debug True
+verify True
+optimized_debug True
+no_facts True

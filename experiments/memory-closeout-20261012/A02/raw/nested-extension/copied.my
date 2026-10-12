@@ -1,0 +1,10 @@
+record Node:
+    value: int
+    children: Node[]
+
+
+func main(out: Stream) -> int:
+    mut tree = Node(value=0, children=[Node(value=1, children=[]), Node(value=2, children=[])])
+    tree.children[1].children.extend(tree.children.copy())
+    out.print(len(tree.children[1].children), len(tree.children[1].children[1].children))
+    return 0

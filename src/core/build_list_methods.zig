@@ -50,9 +50,30 @@ pub fn operation(comptime Context: type, b: Context, node: Operation, result_ty:
     return .none;
 }
 
-/// Append each source element once, preserving shared/self-extension snapshots.
+/// Append each source element once; a nested receiver can alias a distinct read.
 pub fn extend(comptime Context: type, b: Context, target: ir.Ref, source: ir.Ref, span: u32) Error!ir.Ref {
-    return compose(Context, b, target, source, false, span);
+    if (!b.module().zero_rc or b.function.resolve(target) == b.function.resolve(source))
+        return compose(Context, b, target, source, false, span);
+    const ty = b.typeOfRef(target);
+    const identical = try b.runtimeCall("myl_core_owned_same_block", &.{ ty, ty }, .i64, &.{ target, source }, span);
+    const result = try b.synthetic(ty);
+    const same = try b.newBlock();
+    const distinct = try b.newBlock();
+    const end = try b.newBlock();
+    try b.branch(try compare(Context, b, .ne, identical, try b.constant(.i64, 0), span), same, distinct, span);
+    try b.seal(same);
+    b.enter(same);
+    const extended_self = try compose(Context, b, target, target, false, span);
+    try b.write(result, b.current.?, extended_self);
+    try b.jump(end);
+    try b.seal(distinct);
+    b.enter(distinct);
+    const extended_other = try compose(Context, b, target, source, false, span);
+    try b.write(result, b.current.?, extended_other);
+    try b.jump(end);
+    try b.seal(end);
+    b.enter(end);
+    return b.read(result, end);
 }
 
 fn length(comptime Context: type, b: Context, source: ir.Ref, span: u32) Error!ir.Ref {

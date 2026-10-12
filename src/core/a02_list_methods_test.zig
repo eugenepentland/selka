@@ -31,6 +31,7 @@ test "zero RC A02 list methods move nested wide recursive children and preserve 
         try std.testing.expect(zero.emittedClean(emitted));
         try std.testing.expect(std.mem.indexOf(u8, emitted, "@myl_core_owned_list_rotate") != null);
         try std.testing.expect(std.mem.indexOf(u8, emitted, "@myl_core_owned_list_reverse") != null);
+        try std.testing.expect(std.mem.indexOf(u8, emitted, "@myl_core_owned_same_block") != null);
         var environment = try std.testing.environ.createMap(a);
         defer environment.deinit();
         try environment.put("MYLANG_COUNTERS", counts);
@@ -44,11 +45,13 @@ test "zero RC A02 list methods move nested wide recursive children and preserve 
         const parsed = try std.json.parseFromSliceLeaky(std.json.Value, a, text, .{});
         const totals = parsed.object.get("totals").?.object;
         try std.testing.expectEqual(@as(i64, 0), totals.get("live_bytes_at_exit").?.integer);
-        for ([_][]const u8{ "retain", "release", "uniqueness" }) |kind| {
+        for ([_][]const u8{ "retain", "release", "unique_test", "uniqueness" }) |kind| {
             for (parsed.object.get("sites").?.array.items) |site| {
                 if (std.mem.eql(u8, site.object.get("kind").?.string, kind)) try std.testing.expectEqual(@as(i64, 0), site.object.get("count").?.integer);
             }
         }
+        for ([_][]const u8{ "runtime_retains", "runtime_releases", "shared_retains", "shared_releases", "share_marks" }) |kind|
+            try std.testing.expectEqual(@as(i64, 0), totals.get(kind).?.integer);
         for ([_][]const u8{ "negative", "positive", "empty", "missing" }) |scenario| {
             const failed = try std.process.run(a, io, .{ .argv = &.{ binary, scenario }, .environ_map = &environment });
             if (failed.term != .exited or failed.term.exited != 1) std.debug.print("A02 trap {s}: {any} {s}{s}\n", .{ scenario, failed.term, failed.stdout, failed.stderr });

@@ -68,6 +68,7 @@ pub fn contract(symbol: []const u8) ?Contract {
         if (std.mem.eql(u8, symbol, name)) return .{ .views = 1, .result = .fresh };
     }
     const readers = [_][]const u8{
+        "myl_core_owned_same_block",
         "myl_core_round_float",
         "myl_core_parse_int_range",
         "myl_core_parse_float_range",

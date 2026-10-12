@@ -705,6 +705,12 @@ myl_block *myl_core_list_grow(myl_block *list, int64_t element_size) {
 /* OWNED-LIST-MUTATION-1: permutations consume and return the sole list owner.
    Child bits move between slots; no child is copied, allocated or destroyed.
    A one-byte temporary also bounds scratch space for wide aggregate elements. */
+/* A nested writable receiver and a borrowed operand can denote one block even
+   when their Core reads differ. This scalar query borrows both inputs. */
+int64_t myl_core_owned_same_block(const myl_block *left, const myl_block *right) {
+    return left == right;
+}
+
 myl_block *myl_core_owned_list_rotate(myl_block *list, int64_t at, int64_t element_size, int64_t last_to_index) {
     if (at < 0 || at >= list->len) abort(); /* The caller emits the located check. */
     (void)block_data_size(list->len, element_size, false);

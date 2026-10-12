@@ -144,3 +144,22 @@ time to avoid holding up independent compiler work.
 The registered `A02 list methods` test passes release, unoptimized debug, verified release, optimized debug, and release without facts. Every mode checks 100 nested-list, wide-record and recursive-union trials (output `500`), independent snapshots, clamped insertion, discarded pop, removed-child cleanup and four failure paths. Counted runs have zero exit-live bytes, clean RC symbols/LLVM, and exact indexed-pop error metadata for -3/2, 2/2 and 0/0. `remove` of a missing element reports `R_LIST_VALUE`. Exact compiler, source, binary and LLVM hashes and complete counter/trap results are in `raw/list-methods/`. No runtime-speed or RSS claim is made for this API completion.
 
 The test uses a read-only equality helper for nested comparisons: direct nested-list equality followed by mutation currently produces an unrelated ownership phi retain. A07 received the full IR reproducer at `.tmp/memory-closeout/A02/list-methods-ir.txt`; this remains a separate support issue, not a passed general equality claim.
+
+## Nested receiver extension
+
+Nested self-extension now distinguishes physical identity even when receiver
+and source have different IR references. The self path reads from the current
+growing owner; the distinct path borrows the original source. Original length
+bounds the work and each copied child remains independently owned. A07's
+integrated parent-identity and exact-slot fixes preserve the containing owner.
+Recursive ancestor sources require an explicit independent `.copy()`.
+
+On integrated validation base `3c5d19c74`, the registered test and durable native
+matrix pass all five compilation modes, including dynamic self/sibling sources,
+empty input, forced growth, cleanup and traps. Two ancestor-source negatives
+refuse; the explicit-copy control passes all five modes. Counted normal returns
+have RC0/live0, and LLVM/symbol audits are clean. The earlier aborts remain in
+the [before evidence](raw/nested-extension/before/); exact successful compiler,
+source, counter and artifact identities are in the
+[qualification summary](raw/nested-extension/summary.json). No performance claim
+or zero-RC installed-package claim is made by these focused results.

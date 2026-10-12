@@ -1,0 +1,7 @@
+guardian/test: 1 test(s) selected by filter: "zero RC A02 list methods"
+guardian/test: SLOW  6.29s  a02_list_methods_test.test.zero RC A02 list methods move nested wide recursive children and preserve traps
+All 1 tests passed.
+guardian/test: test wall 6.29s; slowest over 50ms:
+guardian/test:   6.29s  a02_list_methods_test.test.zero RC A02 list methods move nested wide recursive children and preserve traps
+guardian/test: PASS — 1 passed
+guardian/test: RESULT {"passed":1,"failed":0,"skipped":0}

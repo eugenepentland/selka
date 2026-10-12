@@ -1,0 +1,55 @@
+{
+  "compiler_sha256": "77117ba66286346c51a5970f1f8b67d21946b68f0d217d3b653365f25f080c1d",
+  "cases": {
+    "self": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.zig-cache/o/a3797f4c1b76e6cbfb8735a3c862b481/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/nested-self-extend/self-trace.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/nested-self-extend/self-trace.ll",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/nested-self-extend/trace-cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/nested-self-extend/self-trace"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "run": {
+        "status": 134,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/nested-self-extend/abort_trace.so+0x11ab abort\n/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/nested-self-extend/self-trace+0xcf72 ?\n/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/nested-self-extend/self-trace+0x3fed6 ?\n/usr/lib/x86_64-linux-gnu/libc.so.6+0x2a601 ?\n/usr/lib/x86_64-linux-gnu/libc.so.6+0x2a718 __libc_start_main\n/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/nested-self-extend/self-trace+0xb1ea ?\n"
+      }
+    },
+    "no-extend": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.zig-cache/o/a3797f4c1b76e6cbfb8735a3c862b481/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/nested-self-extend/no-extend-trace.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/nested-self-extend/no-extend-trace.ll",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/nested-self-extend/trace-cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/nested-self-extend/no-extend-trace"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "run": {
+        "status": 0,
+        "stdout": "passed\n",
+        "stderr": ""
+      }
+    }
+  }
+}

@@ -139,3 +139,47 @@ final wrappers in `raw/harness-preparation/`; they are harness authoring errors,
 not new compiler defects. Four Python AST checks, all three CLI help parsers,
 the 20 historical artifact controls, missing-counter/output-reuse guards and
 `git diff --check` pass. These checks do not replace native execution under C2/C3.
+
+## Qualified nested receiver extension on integrated validation base
+
+The five-file physical-identity feature is now qualified on coordinator-provided
+validation base `3c5d19c74b5e323306d76bcc0fed18f90290d1af`, with A07's parent
+identity/shallow-copy safety fix (`eb9dd1f8d`), exact slot transfers (`e597dbb26`),
+and recursive-ancestor source guard (`f88116064`) integrated. The private compiler
+SHA256 is `adfbb043082b12264701664274e93efb642b4c410bef89f88fb4b1fb9592da94`.
+Exact source and artifact hashes are in `raw/nested-extension/summary.json`.
+
+`extend` checks physical block identity when nested receiver/source expressions
+produce different IR references. Identical blocks extend from the current
+growing owner; distinct blocks retain the source borrow. Both paths capture the
+original length and copy children into independent destination storage. The
+borrowed pointer comparison allocates nothing and introduces no RC. A07
+reaffirmed the complete helper/branch review after the new matrix passed.
+
+The coordinator's requested single admitted build/test lease compiled
+`core-test-binary -Dtest-filter='zero RC A02 list methods'` and ran the same
+`--guardian-filter`: 1/1 registered tests passed. Its native matrix covers all
+five compiler modes, empty/nested self-extension, dynamic same/sibling sources,
+forced growth, child independence, wide and recursive payload cleanup and four
+traps. The durable native matrix also passes all five modes, prints `500`, has
+RC0/live0 and clean LLVM/linked-symbol audits. `release_unique` direct destruction
+is recorded separately from RC events; the erroneous assertion is removed.
+
+Exact and dynamic recursive ancestor sources refuse with
+`E_SINGLE_OWNER_OVERLAP` and explicit-copy advice. The ancestor `.copy()` control
+passes all five native modes, prints `2 0`, and has RC0/live0 plus clean LLVM and
+symbols. The earlier native aborts, source, compiler hashes and ordinary
+snapshot controls remain preserved under `raw/nested-extension/before/`.
+
+Only the five approved feature files and A02 evidence are included. The driver
+dependency is already in the integration base and is not included as an A02
+change. The original worker checkout is untouched by this validation. The
+runtime-retirement preview was refreshed separately under
+`retirement/nested-extension-refresh/` to preserve the new helper; it remains
+unapplied and has only a textual apply check at this revision.
+
+This is feature qualification, not a completed closeout milestone. The compiler
+uses explicitly recorded Support5 staged components, which remain a legacy
+interim packaging boundary. Ownership is still opt-in and active RC remains.
+The coordinator must integrate the feature and run the frozen candidate's full
+verification and subsequent default/retirement qualification.
