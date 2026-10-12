@@ -89,8 +89,19 @@ selective sample removal was performed.
 
 A [read-only JSON audit](split/json-guard-readonly-deferred.md) records the
 serializer and byte-loop costs before these follow-ups. The broader dictionary
-lookup compiler transformation it outlines remains deferred. A narrower
-extension to the existing byte-index optimization is undergoing qualification.
+lookup compiler transformation it outlines remains deferred.
+
+The narrower [span-index extension](span-index/handoff.md) has passed eight focused
+tests, seven native modes, cold/warm cache equivalence, and all 88 Guardian
+checks. It forwards only proven nonnegative indices with the exact borrowed
+receiver and runtime contract; bounds traps remain covered. Analysis has fixed
+size and candidate limits. The combined compiler is frozen at
+`8b7d59eba868775b1b8d7f64c54b07abdd23d470` in the
+[common-002 receipt](coordinator/common-002/build-receipt.json). Its runtime
+and counted guests passed 100 oracle probes, including zero RC and zero
+exit-live checks. The [native audit](coordinator/common-002/native-audit.json)
+confirms removal of the quoted-string normalization call and serializer key
+hash/search calls. Combined timing and complete verification remain pending.
 
 The [read-only CSV audit](split/csv-common001-readonly.md) records a separate,
 deferred bounds-check opportunity with required safety conditions.

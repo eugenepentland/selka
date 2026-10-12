@@ -1,0 +1,95 @@
+{
+  "common-001": {
+    "binary": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+    "sha256": "429854488c74f3bc0a39aa0e0a8216e81bb21362bfad58e573a7fb1a96bc7994",
+    "functions": {
+      "my.json::write_quoted": {
+        "calls": [
+          "myl_core_buffer_push_checked",
+          "myl_core_buffer_push_checked",
+          "myl_core_buffer_push_checked",
+          "myl_core_span_bytes_index_offset",
+          "memmove@plt",
+          "myl_core_buffer_push_checked",
+          "myl_core_buffer_push_checked",
+          "myl_core_buffer_append_span_checked",
+          "myl_core_buffer_append_checked",
+          "myl_core_buffer_append_checked",
+          "memmove@plt",
+          "myl_core_buffer_append_span_checked",
+          "myl_core_trap"
+        ],
+        "span_normalization_calls": 1,
+        "dictionary_hash_find_calls": 0
+      },
+      "my.json::write_value": {
+        "calls": [
+          "my.json::write_quoted",
+          "myl_core_buffer_push_checked",
+          "my.json::write_value",
+          "myl_core_buffer_push_checked",
+          "my.json::write_value",
+          "myl_core_buffer_push_checked",
+          "my.json::write_value",
+          "myl_core_dict_ordinal",
+          "myl_core_buffer_push_checked",
+          "my.json::write_quoted",
+          "myl_core_buffer_push_checked",
+          "myl_core_str_hash",
+          "myl_core_str_eq",
+          "myl_core_dict_find",
+          "myl_core_str_eq",
+          "myl_core_buffer_push_checked",
+          "myl_core_trap"
+        ],
+        "span_normalization_calls": 0,
+        "dictionary_hash_find_calls": 2
+      }
+    }
+  },
+  "common-002": {
+    "binary": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/text-runtime",
+    "sha256": "c6e1d18bece4f98d0a0a56d04e5d1afbfe51170625a2a82aa12b4fc6c5381626",
+    "functions": {
+      "my.json::write_quoted": {
+        "calls": [
+          "myl_core_buffer_push_checked",
+          "myl_core_buffer_push_checked",
+          "myl_core_buffer_push_checked",
+          "memmove@plt",
+          "myl_core_buffer_push_checked",
+          "myl_core_buffer_append_span_checked",
+          "myl_core_buffer_append_checked",
+          "myl_core_buffer_append_checked",
+          "memmove@plt",
+          "myl_core_buffer_append_span_checked"
+        ],
+        "span_normalization_calls": 0,
+        "dictionary_hash_find_calls": 0
+      },
+      "my.json::write_value": {
+        "calls": [
+          "my.json::write_quoted",
+          "myl_core_buffer_push_checked",
+          "my.json::write_value",
+          "myl_core_buffer_push_checked",
+          "my.json::write_value",
+          "myl_core_buffer_push_checked",
+          "myl_core_dict_ordinal",
+          "myl_core_dict_ordinal",
+          "my.json::write_quoted",
+          "myl_core_buffer_push_checked",
+          "my.json::write_value",
+          "myl_core_dict_ordinal",
+          "myl_core_dict_ordinal",
+          "myl_core_buffer_push_checked",
+          "my.json::write_quoted",
+          "myl_core_buffer_push_checked",
+          "my.json::write_value"
+        ],
+        "span_normalization_calls": 0,
+        "dictionary_hash_find_calls": 0
+      }
+    }
+  }
+}
