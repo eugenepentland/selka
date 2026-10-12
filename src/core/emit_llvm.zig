@@ -3818,8 +3818,11 @@ const FunctionEmitter = struct {
         const signature = if (inst.op == .call_indirect) m.compound(self.typeOf(inst.a)).@"fn" else m.functions.items[inst.a.index()].signature;
         const external = signature.linkage != .internal;
         const program = !external or (inst.op == .call and emit_values.generated(&m.functions.items[inst.a.index()]));
-        if (inst.op == .call) try self.state.dependency(@intCast(inst.a.index()));
-        if (inst.op == .call) try emit_cap.beforeCall(@TypeOf(self), self, out, inst);
+        if (inst.op == .call) {
+            try self.state.dependency(@intCast(inst.a.index()));
+            try emit_cap.beforeCall(@TypeOf(self), self, out, inst);
+        }
+        if (try @import("emit_render.zig").runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
         if (try emit_bytes.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
         if (try emit_text.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
         if (try emit_text_split.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;

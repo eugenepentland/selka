@@ -36,11 +36,8 @@ pub const Contract = struct { owned: u64 = 0, views: u64 = 0, result: enum { sca
 
 /// Keep this list explicit: adding a helper requires auditing its complete path.
 pub fn contract(symbol: []const u8) ?Contract {
-    if (std.mem.eql(u8, symbol, "myl_core_owned_list_rotate") or
-        std.mem.eql(u8, symbol, "myl_core_owned_list_reverse")) return .{ .owned = 1, .result = .transferred };
-    if (std.mem.eql(u8, symbol, "myl_core_owned_sort_keyed")) return .{ .owned = 3, .result = .transferred };
-    if (std.mem.eql(u8, symbol, "myl_core_owned_map")) return .{ .owned = 64, .result = .transferred };
-    if (std.mem.eql(u8, symbol, "myl_core_owned_task_submit")) return .{ .owned = 4 };
+    if (transferContract(symbol)) |boundary| return boundary;
+    if (@import("build_render.zig").generated(symbol)) |kind| return if (kind == .show) .{ .result = .fresh } else .{};
     // The item marker writes only thread-local diagnostic context. Task entry
     // saves/restores this context, including when a worker runs a nested map.
     if (std.mem.eql(u8, symbol, "myl_core_task_item")) return .{};
@@ -112,6 +109,15 @@ pub fn contract(symbol: []const u8) ?Contract {
         "myl_core_buffer_append_i64",   "myl_core_buffer_append_f64",
     };
     for (mutations) |name| if (std.mem.eql(u8, symbol, name)) return .{ .owned = 1, .result = .transferred };
+    return null;
+}
+
+fn transferContract(symbol: []const u8) ?Contract {
+    if (std.mem.eql(u8, symbol, "myl_core_owned_list_rotate") or
+        std.mem.eql(u8, symbol, "myl_core_owned_list_reverse")) return .{ .owned = 1, .result = .transferred };
+    if (std.mem.eql(u8, symbol, "myl_core_owned_sort_keyed")) return .{ .owned = 3, .result = .transferred };
+    if (std.mem.eql(u8, symbol, "myl_core_owned_map")) return .{ .owned = 64, .result = .transferred };
+    if (std.mem.eql(u8, symbol, "myl_core_owned_task_submit")) return .{ .owned = 4 };
     return null;
 }
 

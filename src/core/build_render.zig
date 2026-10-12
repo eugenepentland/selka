@@ -9,6 +9,32 @@ pub const Error = error{ OutOfMemory, Unsupported };
 pub const prefix = "\x00myl.core.render.source.";
 /// Compiler-only declarations authorize each metadata string index and graph ID.
 pub const declaration_prefix = "myl_core_render_shape_";
+/// Rendering declarations contain numeric private identities, never arbitrary names.
+pub const Generated = enum { show, shape };
+
+/// Exact compiler-generated name grammar, shared with ownership and emission.
+pub fn generated(symbol: []const u8) ?Generated {
+    const show = "myl_core_show_";
+    if (std.mem.startsWith(u8, symbol, show)) return if (renderId(symbol[show.len..])) .show else null;
+    if (!std.mem.startsWith(u8, symbol, declaration_prefix)) return null;
+    const suffix = symbol[declaration_prefix.len..];
+    const split = std.mem.indexOfScalar(u8, suffix, '_') orelse return null;
+    if (!decimalId(suffix[0..split]) or !renderId(suffix[split + 1 ..])) return null;
+    return .shape;
+}
+
+fn renderId(id: []const u8) bool {
+    const split = std.mem.indexOf(u8, id, "_p") orelse return decimalId(id);
+    return decimalId(id[0..split]) and decimalId(id[split + 2 ..]);
+}
+
+fn decimalId(id: []const u8) bool {
+    if (id.len == 0) return false;
+    for (id) |byte| if (!std.ascii.isDigit(byte)) return false;
+    _ = std.fmt.parseInt(u32, id, 10) catch return false;
+    return true;
+}
+
 /// The runtime descriptor's seven fields, with symbolic child references.
 pub const Shape = struct {
     kind: u32 = 0,
@@ -20,7 +46,7 @@ pub const Shape = struct {
     names: []const []const u8 = &.{},
 };
 
-/// Render one checked source type through a borrowed, managed physical box.
+/// Render one checked source type without making its borrowed value an owner.
 pub fn render(comptime Context: type, b: Context, value: ir.Ref, source: typed.Type, span: u32) Error!ir.Ref {
     if (value == .none) return b.runtimeCall("myl_core_none_text", &.{}, .str, &.{}, span);
     const first_string = b.mb.module.strings.items.len;
@@ -30,12 +56,10 @@ pub fn render(comptime Context: type, b: Context, value: ir.Ref, source: typed.T
         b.mb.module.functions.shrinkRetainingCapacity(first_function);
     }
     const physical = b.typeOfRef(value);
-    _ = try descriptor(Context, b, source, physical, span);
-    const box = try b.mb.module.intern(b.allocator(), .{ .box = physical });
-    const held = try b.emit(.{ .op = .box_make, .ty = box, .a = value, .span = span });
-    const symbol = try std.fmt.allocPrint(b.allocator(), "myl_core_show_{d}", .{@backingInt(source)});
-    const callee = try b.mb.runtimeFunction(symbol, &.{box}, .str, .runtime_c);
-    return b.emit(.{ .op = .call, .ty = .str, .a = @fromBackingInt(callee), .data = try b.extraSlice(&.{held}), .span = span });
+    const id = try descriptor(Context, b, source, physical, span);
+    const symbol = try std.fmt.allocPrint(b.allocator(), "myl_core_show_{s}", .{id});
+    const callee = try b.mb.runtimeFunction(symbol, &.{physical}, .str, .runtime_c);
+    return b.emit(.{ .op = .call, .ty = .str, .a = @fromBackingInt(callee), .data = try b.extraSlice(&.{value}), .span = span });
 }
 
 /// Reserve before visiting children, so boxed recursive schemas form a finite graph.

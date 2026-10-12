@@ -4,7 +4,7 @@ const ir = @import("ir.zig");
 const metadata = @import("build_render.zig");
 const Out = std.ArrayList(u8);
 /// Invalid private metadata or allocation stops emission.
-pub const Error = error{ OutOfMemory, UnsupportedInstruction };
+pub const Error = error{ OutOfMemory, UnsupportedEntry, UnsupportedInstruction };
 
 /// An adapter's LLVM symbol and visibility, independent of lowering metadata IDs.
 pub const AdapterNames = struct { symbol: []const u8, linkage: []const u8 };
@@ -15,16 +15,41 @@ pub fn adapter(a: std.mem.Allocator, out: *Out, function: *const ir.Function) Er
 }
 
 /// Emit source-aware rendering under the stable symbol assigned by unit emission.
-pub fn adapterNamed(a: std.mem.Allocator, out: *Out, function: *const ir.Function, naming: AdapterNames) Error!bool {
+pub fn adapterNamed(_: std.mem.Allocator, _: *Out, function: *const ir.Function, _: AdapterNames) Error!bool {
     if (function.signature.linkage != .runtime_c) return false;
     // Metadata declarations carry authority only and have no emitted symbol.
-    if (std.mem.startsWith(u8, function.name, metadata.declaration_prefix)) return true;
+    if (std.mem.startsWith(u8, function.name, metadata.declaration_prefix)) {
+        if (metadata.generated(function.name) == null) return error.UnsupportedInstruction;
+        return true;
+    }
     const prefix = "myl_core_show_";
     if (!std.mem.startsWith(u8, function.name, prefix)) return false;
-    const number = function.name[prefix.len..];
-    try out.print(a, "define {s} fastcc ptr @{s}(ptr %value) nounwind {{\nentry:\n" ++
-        "  %at = getelementptr inbounds i8, ptr %value, i64 32\n" ++
-        "  %text = call ptr @myl_core_values_render(ptr @myl.render.{s}, ptr %at)\n  ret ptr %text\n}}\n", .{ naming.linkage, naming.symbol, number });
+    if (metadata.generated(function.name) == null) return error.UnsupportedInstruction;
+    // Every compiler-only show call is emitted inline by runtimeCall. No owning
+    // box adapter or independently callable symbol survives the lowering.
+    return true;
+}
+
+/// A synchronous read of a canonical stack image returns independent text.
+pub fn runtimeCall(comptime Context: type, comptime Output: type, context: Context, out: Output, name: []const u8, inst: ir.Inst) Error!bool {
+    if (inst.op != .call) return false;
+    const module = context.state.module;
+    const callee = &module.functions.items[inst.a.index()];
+    if (callee.signature.linkage != .runtime_c) return false;
+    const prefix = "myl_core_show_";
+    if (!std.mem.startsWith(u8, callee.name, prefix)) return false;
+    if (metadata.generated(callee.name) == null) return error.UnsupportedInstruction;
+    const signature = callee.signature;
+    if (signature.params.len != 1 or signature.ret != .str or signature.owned != 0 or signature.views != 0) return error.UnsupportedInstruction;
+    const operands = context.function.operands(inst.data);
+    if (operands.len != 1) return error.UnsupportedInstruction;
+    const physical = signature.params[0];
+    if (context.typeOf(operands[0]) != physical) return error.UnsupportedInstruction;
+    const slot = try context.stackSlot(module.size(physical));
+    // Tagged unions and records use their memory layout, not the compact LLVM
+    // register representation. This is a borrow; the stack image owns nothing.
+    try context.storeOperand(out, physical, operands[0], slot);
+    try out.print(context.a(), "  {s} = call ptr @myl_core_values_render(ptr @myl.render.{s}, ptr {s})\n", .{ name, callee.name[prefix.len..], slot });
     return true;
 }
 
@@ -33,6 +58,9 @@ pub fn descriptors(a: std.mem.Allocator, m: *const ir.Module, out: *Out) Error!v
     for (m.functions.items) |function| {
         if (function.signature.linkage != .runtime_c) continue;
         if (!std.mem.startsWith(u8, function.name, metadata.declaration_prefix)) continue;
+        if (metadata.generated(function.name) == null) return error.UnsupportedInstruction;
+        const signature = function.signature;
+        if (signature.params.len != 0 or signature.ret != .void or signature.owned != 0 or signature.views != 0) return error.UnsupportedInstruction;
         const authority = function.name[metadata.declaration_prefix.len..];
         const split = std.mem.indexOfScalar(u8, authority, '_') orelse return error.UnsupportedInstruction;
         const index = std.fmt.parseInt(usize, authority[0..split], 10) catch return error.UnsupportedInstruction;
