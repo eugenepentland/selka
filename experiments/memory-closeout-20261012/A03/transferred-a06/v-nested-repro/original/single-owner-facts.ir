@@ -1,0 +1,346 @@
+fn main(cap) -> i64
+b0:
+  %2 = list_new list[list[i64]] 2:i64
+  %4 = list_new list[i64] 1:i64
+  %6 = list_push list[i64] %4, 1:i64
+  %7 = list_push list[list[i64]] %2, %6
+  %9 = list_new list[i64] 2:i64
+  %11 = list_push list[i64] %9, 2:i64
+  %13 = list_push list[i64] %11, 3:i64
+  %14 = list_push list[list[i64]] %7, %13
+  %17 = call i64 grow(%14, 1:i64, 9:i64)
+  %20 = iconst bool 0
+  branch 0:bool, b1, b2
+b1: ; preds b0
+  %22 = list_len u64 %14
+  %23 = convert.exact i64 %22
+  %24 = add.exact i64 %23, 1:i64
+  jump b2
+b2: ; preds b0 b1
+  %26 = phi i64 1:i64, %24
+  %28 = list_get.proven list[i64] %14, %26
+  %29 = list_len u64 %28
+  release %14
+  %30 = convert.proven i64 %29
+  print param0, %17, %30
+  %33 = list_new list[record{i64, list[i64]}] 2:i64
+  %36 = list_new list[i64] 2:i64
+  %38 = list_push list[i64] %36, 1:i64
+  %40 = list_push list[i64] %38, 2:i64
+  %41 = record_make record{i64, list[i64]} 1:i64, %40
+  %42 = list_push list[record{i64, list[i64]}] %33, %41
+  %45 = list_new list[i64] 1:i64
+  %47 = list_push list[i64] %45, 3:i64
+  %48 = record_make record{i64, list[i64]} 2:i64, %47
+  %49 = list_push list[record{i64, list[i64]}] %42, %48
+  %51 = list_len u64 %49
+  %52 = list_new list[record{i64, list[i64]}] %51
+  jump b3
+b3: ; preds b2 b4
+  %55 = phi u64 0:u64, %66
+  %63 = phi list[record{i64, list[i64]}] %52, %64
+  %56 = cmp.lt bool %55, %51
+  branch %56, b4, b5
+b4: ; preds b3
+  %59 = list_get_field.proven i64 %49, %55, path 0
+  %60 = list_get_field list[i64] %49, %55, path 1
+  %61 = list_copy list[i64] %60
+  %62 = record_make record{i64, list[i64]} %59, %61
+  %64 = list_push list[record{i64, list[i64]}] %63, %62
+  %66 = add u64 %55, 1:u64
+  jump b3
+b5: ; preds b3
+  %68 = record_make record{list[record{i64, list[i64]}]} %63
+  %70 = call i64 deep(%68, 55:i64)
+  release %68
+  %74 = iconst bool 0
+  branch 0:bool, b6, b7
+b6: ; preds b5
+  %76 = list_len u64 %49
+  %77 = convert.exact i64 %76
+  %78 = add.exact i64 %77, 0:i64
+  jump b7
+b7: ; preds b5 b6
+  %80 = phi i64 0:i64, %78
+  %83 = list_get_field.proven list[i64] %49, %80, path 1
+  %86 = iconst bool 0
+  branch 0:bool, b8, b9
+b8: ; preds b7
+  %88 = list_len u64 %83
+  %89 = convert.exact i64 %88
+  %90 = add.exact i64 %89, 0:i64
+  jump b9
+b9: ; preds b7 b8
+  %92 = phi i64 0:i64, %90
+  %94 = list_get.exact i64 %83, %92
+  %99 = iconst bool 0
+  branch 0:bool, b10, b11
+b10: ; preds b9
+  %101 = list_len u64 %49
+  %102 = convert.exact i64 %101
+  %103 = add.exact i64 %102, 1:i64
+  jump b11
+b11: ; preds b9 b10
+  %105 = phi i64 1:i64, %103
+  %108 = list_get_field.proven list[i64] %49, %105, path 1
+  %109 = list_len u64 %108
+  release %49
+  %110 = convert.proven i64 %109
+  print param0, %70, %94, %110
+  ret 0:i64
+fn grow(list[list[i64]], i64, i64) -> i64
+b0:
+  %3 = list_len u64 param0
+  %4 = list_new list[list[i64]] %3
+  jump b1
+b1: ; preds b0 b2
+  %7 = phi u64 0:u64, %15
+  %12 = phi list[list[i64]] %4, %13
+  %8 = cmp.lt bool %7, %3
+  branch %8, b2, b3
+b2: ; preds b1
+  %10 = list_get.proven list[i64] param0, %7
+  %11 = list_copy list[i64] %10
+  %13 = list_push list[list[i64]] %12, %11
+  %15 = add u64 %7, 1:u64
+  jump b1
+b3: ; preds b1
+  %19 = iconst bool 0
+  branch 0:bool, b4, b5
+b4: ; preds b3
+  %21 = list_len u64 %12
+  %22 = convert.exact i64 %21
+  %23 = add.exact i64 %22, param1
+  jump b5
+b5: ; preds b3 b4
+  %25 = phi i64 param1, %23
+  %27 = list_get.exact list[i64] %12, %25
+  %32 = list_get.proven list[i64] %12, %25
+  %33 = list_push list[i64] %32, param2
+  %34 = list_set.proven list[list[i64]] %12, %25, %33
+  %37 = iconst bool 0
+  branch 0:bool, b6, b7
+b6: ; preds b5
+  %39 = list_len u64 %34
+  %40 = convert.exact i64 %39
+  %41 = add.exact i64 %40, param1
+  jump b7
+b7: ; preds b5 b6
+  %43 = phi i64 param1, %41
+  %45 = list_get.proven list[i64] %34, %43
+  %46 = list_len u64 %45
+  release %34
+  %47 = convert.proven i64 %46
+  %49 = mul.proven i64 %47, 100:i64
+  %55 = iconst bool 0
+  branch 0:bool, b8, b9
+b8: ; preds b7
+  %57 = list_len u64 param0
+  %58 = convert.exact i64 %57
+  %59 = add.exact i64 %58, param1
+  jump b9
+b9: ; preds b7 b8
+  %61 = phi i64 param1, %59
+  %63 = list_get.exact list[i64] param0, %61
+  %64 = list_len u64 %63
+  %65 = convert.proven i64 %64
+  %66 = add.proven i64 %49, %65
+  ret %66
+fn deep(record{list[record{i64, list[i64]}]}, i64) -> i64
+b0:
+  %2 = record_get list[record{i64, list[i64]}] param0, field0
+  %3 = list_len u64 %2
+  %4 = list_new list[record{i64, list[i64]}] %3
+  jump b1
+b1: ; preds b0 b2
+  %7 = phi u64 0:u64, %18
+  %15 = phi list[record{i64, list[i64]}] %4, %16
+  %8 = cmp.lt bool %7, %3
+  branch %8, b2, b3
+b2: ; preds b1
+  %11 = list_get_field.proven i64 %2, %7, path 0
+  %12 = list_get_field list[i64] %2, %7, path 1
+  %13 = list_copy list[i64] %12
+  %14 = record_make record{i64, list[i64]} %11, %13
+  %16 = list_push list[record{i64, list[i64]}] %15, %14
+  %18 = add u64 %7, 1:u64
+  jump b1
+b3: ; preds b1
+  %20 = record_make record{list[record{i64, list[i64]}]} %15
+  %22 = record_get list[record{i64, list[i64]}] %20, field0
+  %25 = iconst bool 0
+  branch 0:bool, b4, b5
+b4: ; preds b3
+  %27 = list_len u64 %22
+  %28 = convert.exact i64 %27
+  %29 = add.exact i64 %28, 0:i64
+  jump b5
+b5: ; preds b3 b4
+  %31 = phi i64 0:i64, %29
+  %34 = list_get_field.exact list[i64] %22, %31, path 1
+  %37 = iconst bool 0
+  branch 0:bool, b6, b7
+b6: ; preds b5
+  %39 = list_len u64 %34
+  %40 = convert.exact i64 %39
+  %41 = add.exact i64 %40, 0:i64
+  jump b7
+b7: ; preds b5 b6
+  %43 = phi i64 0:i64, %41
+  %201 = list_copy list[i64] %34
+  %49 = list_set.exact list[i64] %201, %43, param1
+  %54 = list_set_field.proven list[record{i64, list[i64]}] %22, %31, path 1, %49
+  %55 = record_set record{list[record{i64, list[i64]}]} %20, field0, %54
+  %56 = record_get list[record{i64, list[i64]}] %55, field0
+  %59 = iconst bool 0
+  branch 0:bool, b8, b9
+b8: ; preds b7
+  %61 = list_len u64 %56
+  %62 = convert.exact i64 %61
+  %63 = add.exact i64 %62, 1:i64
+  jump b9
+b9: ; preds b7 b8
+  %65 = phi i64 1:i64, %63
+  %68 = list_get_field.exact list[i64] %56, %65, path 1
+  %73 = add.proven i64 param1, 1:i64
+  %202 = list_copy list[i64] %68
+  %75 = list_push list[i64] %202, %73
+  %80 = list_set_field.proven list[record{i64, list[i64]}] %56, %65, path 1, %75
+  %81 = record_set record{list[record{i64, list[i64]}]} %55, field0, %80
+  %83 = record_get list[record{i64, list[i64]}] %81, field0
+  %86 = iconst bool 0
+  branch 0:bool, b10, b11
+b10: ; preds b9
+  %88 = list_len u64 %83
+  %89 = convert.exact i64 %88
+  %90 = add.exact i64 %89, 1:i64
+  jump b11
+b11: ; preds b9 b10
+  %92 = phi i64 1:i64, %90
+  %99 = list_set_field.exact list[record{i64, list[i64]}] %83, %92, path 0, 77:i64
+  %100 = record_set record{list[record{i64, list[i64]}]} %81, field0, %99
+  %101 = record_get list[record{i64, list[i64]}] %100, field0
+  %104 = iconst bool 0
+  branch 0:bool, b12, b13
+b12: ; preds b11
+  %106 = list_len u64 %101
+  %107 = convert.exact i64 %106
+  %108 = add.exact i64 %107, 0:i64
+  jump b13
+b13: ; preds b11 b12
+  %110 = phi i64 0:i64, %108
+  %113 = list_get_field.exact list[i64] %101, %110, path 1
+  %116 = iconst bool 0
+  branch 0:bool, b14, b15
+b14: ; preds b13
+  %118 = list_len u64 %113
+  %119 = convert.exact i64 %118
+  %120 = add.exact i64 %119, 0:i64
+  jump b15
+b15: ; preds b13 b14
+  %122 = phi i64 0:i64, %120
+  %124 = list_get.exact i64 %113, %122
+  %126 = mul.exact i64 %124, 10000:i64
+  %129 = record_get list[record{i64, list[i64]}] %100, field0
+  %132 = iconst bool 0
+  branch 0:bool, b16, b17
+b16: ; preds b15
+  %134 = list_len u64 %129
+  %135 = convert.exact i64 %134
+  %136 = add.exact i64 %135, 1:i64
+  jump b17
+b17: ; preds b15 b16
+  %138 = phi i64 1:i64, %136
+  %141 = list_get_field.exact list[i64] %129, %138, path 1
+  %142 = list_len u64 %141
+  %143 = convert.proven i64 %142
+  %145 = mul.proven i64 %143, 100:i64
+  %146 = add.exact i64 %126, %145
+  %158 = iconst bool 0
+  branch 0:bool, b18, b19
+b18: ; preds b17
+  %160 = list_len u64 %2
+  %161 = convert.exact i64 %160
+  %162 = add.exact i64 %161, 0:i64
+  jump b19
+b19: ; preds b17 b18
+  %164 = phi i64 0:i64, %162
+  %167 = list_get_field.exact list[i64] %2, %164, path 1
+  %170 = iconst bool 0
+  branch 0:bool, b20, b21
+b20: ; preds b19
+  %172 = list_len u64 %167
+  %173 = convert.exact i64 %172
+  %174 = add.exact i64 %173, 0:i64
+  jump b21
+b21: ; preds b19 b20
+  %176 = phi i64 0:i64, %174
+  %178 = list_get.exact i64 %167, %176
+  %179 = add.exact i64 %146, %178
+  %186 = iconst bool 0
+  branch 0:bool, b22, b23
+b22: ; preds b21
+  %188 = list_len u64 %129
+  %189 = convert.exact i64 %188
+  %190 = add.exact i64 %189, 1:i64
+  jump b23
+b23: ; preds b21 b22
+  %192 = phi i64 1:i64, %190
+  %195 = list_get_field.exact i64 %129, %192, path 0
+  release %100
+  %196 = add.exact i64 %179, %195
+  ret %196
+facts main: %17=[0,14214486323888128] %20=[0,0] %26=[1,1] %29=[0,140737488355328] %30=[0,140737488355328] %51=[2,2] %55=[0,2] %56=[0,1] %59=[-9223372036854775808,9223372036854775807] %66=[1,2] %70=[-9223372036854775808,9223372036854775807] %74=[0,0] %80=[0,0] %86=[0,0] %92=[0,0] %94=[-9223372036854775808,9223372036854775807] %99=[0,0] %105=[1,1] %109=[0,140737488355328] %110=[0,140737488355328]
+list main %2: settled=true length=%-1 len=[0,0]
+list main %4: settled=true length=%-1 len=[0,0]
+list main %6: settled=true length=%-1 elements=[1,1] len=[1,1]
+list main %7: settled=true length=%-1 len=[1,1]
+list main %9: settled=true length=%-1 len=[0,0]
+list main %11: settled=true length=%-1 elements=[2,2] len=[1,1]
+list main %13: settled=true length=%-1 elements=[2,3] len=[2,2]
+list main %14: settled=true length=%-1 len=[2,2]
+list main %28: settled=true length=%-1
+list main %33: settled=true length=%-1 len=[0,0]
+list main %36: settled=true length=%-1 len=[0,0]
+list main %38: settled=true length=%-1 elements=[1,1] len=[1,1]
+list main %40: settled=true length=%-1 elements=[1,2] len=[2,2]
+list main %42: settled=true length=%-1 len=[1,1]
+list main %45: settled=true length=%-1 len=[0,0]
+list main %47: settled=true length=%-1 elements=[3,3] len=[1,1]
+list main %49: settled=true length=%-1 len=[2,2]
+list main %52: settled=true length=%-1 len=[0,0]
+list main %61: settled=true length=%-1
+list main %63: settled=true length=%-1 len=[0,140737488355328]
+list main %64: settled=true length=%-1 len=[1,140737488355328]
+list main %94: settled=true length=%-1
+facts grow: %1=[1,1] %2=[9,9] %3=[0,140737488355328] %7=[0,140737488355328] %8=[0,1] %15=[1,140737488355328] %17=[-9223372036854775808,9223372036854775807] %19=[0,0] %25=[1,1] %28=[-9223372036854775808,9223372036854775807] %29=[-9223372036854775808,9223372036854775807] %35=[-9223372036854775808,9223372036854775807] %37=[0,0] %43=[1,1] %46=[0,140737488355328] %47=[0,140737488355328] %49=[0,14073748835532800] %53=[-9223372036854775808,9223372036854775807] %55=[0,0] %61=[1,1] %64=[0,140737488355328] %65=[0,140737488355328] %66=[0,14214486323888128]
+list grow %4: settled=true length=%-1 len=[0,0]
+list grow %10: settled=true length=%-1
+list grow %11: settled=true length=%-1
+list grow %12: settled=true length=%-1 len=[0,140737488355328]
+list grow %13: settled=true length=%-1 len=[1,140737488355328]
+list grow %27: settled=true length=%-1
+list grow %31: settled=true length=%-1 len=[0,140737488355328]
+list grow %32: settled=true length=%-1
+list grow %33: settled=true length=%-1
+list grow %34: settled=true length=%-1 len=[0,140737488355328]
+list grow %45: settled=true length=%-1
+list grow %63: settled=true length=%-1
+facts deep: %1=[55,55] %3=[0,140737488355328] %7=[0,140737488355328] %8=[0,1] %11=[-9223372036854775808,9223372036854775807] %18=[1,140737488355328] %21=[-9223372036854775808,9223372036854775807] %25=[0,0] %31=[0,0] %37=[0,0] %43=[0,0] %44=[-9223372036854775808,9223372036854775807] %45=[-9223372036854775808,9223372036854775807] %59=[0,0] %65=[1,1] %69=[-9223372036854775808,9223372036854775807] %70=[-9223372036854775808,9223372036854775807] %71=[-9223372036854775808,9223372036854775807] %73=[56,56] %86=[0,0] %92=[1,1] %96=[-9223372036854775808,9223372036854775807] %104=[0,0] %110=[0,0] %116=[0,0] %122=[0,0] %124=[-9223372036854775808,9223372036854775807] %126=[-9223372036854775808,9223372036854775807] %132=[0,0] %138=[1,1] %142=[0,140737488355328] %143=[0,140737488355328] %145=[0,14073748835532800] %146=[-9223372036854775808,9223372036854775807] %158=[0,0] %164=[0,0] %170=[0,0] %176=[0,0] %178=[-9223372036854775808,9223372036854775807] %179=[-9223372036854775808,9223372036854775807] %186=[0,0] %192=[1,1] %195=[-9223372036854775808,9223372036854775807] %196=[-9223372036854775808,9223372036854775807]
+list deep %4: settled=true length=%-1 len=[0,0]
+list deep %13: settled=true length=%-1
+list deep %15: settled=true length=%-1 len=[0,140737488355328]
+list deep %16: settled=true length=%-1 len=[1,140737488355328]
+list deep %49: settled=true length=%-1
+list deep %51: settled=true length=%-1
+list deep %52: settled=true length=%-1
+list deep %54: settled=true length=%-1
+list deep %75: settled=true length=%-1
+list deep %77: settled=true length=%-1
+list deep %78: settled=true length=%-1
+list deep %80: settled=true length=%-1
+list deep %94: settled=true length=%-1
+list deep %95: settled=true length=%-1
+list deep %99: settled=true length=%-1
+list deep %124: settled=true length=%-1
+list deep %178: settled=true length=%-1

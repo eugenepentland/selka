@@ -25,5 +25,5 @@ func main(out: Stream) -> int:
     mut rows = [[1], [2, 3]]
     out.print(grow(rows, 1, 9), len(rows[1]))
     mut items = [Item(code=1, payload=[1, 2]), Item(code=2, payload=[3])]
-    out.print(deep(Box(items=items), 55), items[0].payload[0], len(items[1].payload))
+    out.print(deep(Box(items=items.copy()), 55), items[0].payload[0], len(items[1].payload))
     return 0

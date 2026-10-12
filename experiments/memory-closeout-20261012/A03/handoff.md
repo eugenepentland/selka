@@ -142,3 +142,15 @@ The list-field `+=` and nested-dictionary mutable-child compiler failures remain
 Three other known failures await fixes excluded from Support6. See
 `guest-migrations/support6-summary.json` for every selected, held and unmeasured
 file and archived attempts. The final 435-build/695-execution census remains due.
+
+Three additional source reservations transferred from A06: explicit snapshots
+in `rc_owning_element_borrows.my` and `row_cow.my` pass all five Support6 modes,
+including 40 Boolean test executions and the unchanged 57-line row oracle.
+Every admitted run has RC0/live0 and clean LLVM/symbols. `v_nested.my` admits at
+source but all five native modes refuse the nested scalar slot write at line20;
+A07/coordinator own this compiler blocker. The three sources retain C0, prior
+A06, incoming and reviewed identities and oracles under `transferred-a06/`.
+The approved row-return allocation effect and live index loop are documented
+source-contract changes, not compiler-only performance wins. A reduced native
+reproducer and successful raw/facts IR dumps are included; dump success does
+not qualify the refused native lowering. No census denominator changed.
