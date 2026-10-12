@@ -1,0 +1,43 @@
+
+# The draw production module is merged into render_svg_context; tests stay
+# separate so each mapped Zig file has exactly its original counterparts.
+import byte_builder
+import render_svg_context as m
+import support_expect as ex
+
+# test "rail output pin labels"
+public func test_rail_output_pin_labels(out: Stream) -> bool:
+    for label in [b"OUT", b"OUTS", b"VOUT", b"VOUT_2", b"out_1", b"OUTPUT", b"OUTA", b"Vout"]:
+        if not ex.ok(out, "rail-producing label", m.is_rail_output_pin_label(label)):
+            return False
+    for other in [b"OUT_EN", b"VDD", b"VIN", b"SW", b"PGOOD", b"FB", b"PG", b"OUTFB", b""]:
+        if not ex.ok(out, "other label", not m.is_rail_output_pin_label(other)):
+            return False
+    return True
+
+
+# test "functional signal classification sees through a sub-block path"
+public func test_functional_signal_classification_sees_through_a_sub_block_path(out: Stream) -> bool:
+    for signal in [b"PAR_CTRL", b"dsa/PAR_CTRL", b"LMX_VTUNE"]:
+        if not ex.ok(out, "functional signal", m.is_functional_signal_net(signal)):
+            return False
+    for rail in [b"VDD_F", b"dsa/VDD_F", b"ldo/V_3V3", b"dsa/GND", b"", b"dsa/"]:
+        if not ex.ok(out, "no functional return", not m.is_functional_signal_net(rail)):
+            return False
+    return ex.ok(out, "path-qualified VCC", m.is_supply_like_net(b"mix/VCC")) and ex.ok(out, "path-qualified ground", m.is_supply_like_net(b"amp1/GND")) and ex.ok(out, "OUTP signal", not m.is_supply_like_net(b"mix/OUTP")) and ex.ok(out, "SW signal", not m.is_supply_like_net(b"boost5/SW"))
+
+
+# test "drawNetWire escapes a quote/angle-bracket in the net name"
+public func test_drawnetwire_escapes_a_quote_angle_bracket_in_the_net_name(out: Stream) -> bool:
+    mut w = byte_builder.create()
+    m.draw_net_wire(mut w, 0.0, 0.0, 10.0, 0.0, b"\"><script>alert(1)</script>")
+    mut written = byte_builder.finish(w)
+    return ex.ok(out, "raw script rejected", written.find(b"<script>") < 0) and ex.ok(out, "attribute XML escaping", written.find(b"data-net=\"&quot;&gt;&lt;script&gt;") >= 0)
+
+
+# test "drawWire emits a straight line for a horizontal (y1==y2) wire"
+public func test_drawwire_emits_a_straight_line_for_a_horizontal_y1_y2_wire(out: Stream) -> bool:
+    mut w = byte_builder.create()
+    m.draw_wire(mut w, 0.0, 5.0, 10.0, 5.0)
+    mut written = byte_builder.finish(w)
+    return ex.ok(out, "straight line", written.find(b"<line ") >= 0) and ex.ok(out, "no bend", written.find(b"<polyline") < 0)

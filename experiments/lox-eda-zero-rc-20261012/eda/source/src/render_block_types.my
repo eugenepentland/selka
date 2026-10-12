@@ -1,0 +1,129 @@
+
+import eval_env as env_mod
+import support_strs as strs
+
+# Coarse category classification shared by the system overview and HTML page.
+public enum Category:
+    mcu
+    power
+    memory
+    peripheral
+    connector
+    clock
+    comms
+    sensor
+    analog
+    protection
+
+
+# GitHub-style dark-theme palette, consistent with schematic/review pages.
+public func category_color(cat: Category) -> bytes:
+    match cat:
+        case Category.mcu:
+            return b"#1f6feb"
+        case Category.power:
+            return b"#da3633"
+        case Category.memory:
+            return b"#8957e5"
+        case Category.peripheral:
+            return b"#2ea043"
+        case Category.connector:
+            return b"#d29922"
+        case Category.clock:
+            return b"#4a9"
+        case Category.comms:
+            return b"#2196f3"
+        case Category.sensor:
+            return b"#2ea043"
+        case Category.analog:
+            return b"#e040fb"
+        case Category.protection:
+            return b"#8b949e"
+
+
+# An unrecognised explicit key falls back to the name heuristic.
+func category_from_key(key: bytes) -> Category?:
+    mut keys = category_keys()
+    mut text = strs.text(key)
+    if text in keys:
+        return Some(keys[text])
+    return None
+
+
+# Public table lets the reference list exactly the keys the classifier reads.
+public func category_keys() -> dict[str, Category]:
+    return {"mcu": Category.mcu, "power": Category.power, "memory": Category.memory, "peripheral": Category.peripheral, "connector": Category.connector, "clock": Category.clock, "comms": Category.comms, "sensor": Category.sensor, "analog": Category.analog, "protection": Category.protection}
+
+
+# Explicit category is authoritative; otherwise use keywords and ref-deses.
+public func classify_section(sec: env_mod.Section) -> Category:
+    if len(sec.category) > 0:
+        mut category = category_from_key(sec.category)
+        if category is not None:
+            return category
+    return classify_by_name(sec.name, sec.instances)
+
+
+# Placeholder parts use the same classifier as authored sections.
+public func classify_category_key(category: bytes, name: bytes) -> Category:
+    if len(category) > 0:
+        mut parsed = category_from_key(category)
+        if parsed is not None:
+            return parsed
+    return classify_by_name(name, [])
+
+
+public record NameRule:
+    category: Category
+    keywords: bytes[]
+
+
+# Priority order is significant: MCU keywords beat an embedded debug header's
+# connector heuristic. This is the classifier/reference's single keyword table.
+public func name_rules() -> NameRule[]:
+    return [NameRule(category=Category.mcu, keywords=[b"MCU", b"SoC", b"CPU", b"Core System", b"STM32", b"ESP32", b"nRF", b"Microcontroller"]), NameRule(category=Category.power, keywords=[b"Buck", b"LDO", b"Regulator", b"Power", b"Charger", b"Converter", b"PMIC"]), NameRule(category=Category.memory, keywords=[b"Flash", b"PSRAM", b"RAM", b"EEPROM", b"SD Card"]), NameRule(category=Category.clock, keywords=[b"Clock", b"HSE", b"LSE", b"Oscillator", b"PLL", b"Crystal"]), NameRule(category=Category.comms, keywords=[b"USB", b"Ethernet", b"BLE", b"WiFi", b"CAN", b"UART"]), NameRule(category=Category.sensor, keywords=[b"IMU", b"ADC", b"Sensor", b"Temperature", b"Accelerometer", b"Gyro"]), NameRule(category=Category.analog, keywords=[b"Analog", b"DAC", b"Op-Amp", b"Reference", b"Amplifier"]), NameRule(category=Category.protection, keywords=[b"ESD", b"Protection", b"Fuse", b"TVS"]), NameRule(category=Category.connector, keywords=[b"Connector", b"Expansion", b"Header", b"Mounting", b"SWD", b"Debug", b"RJ45", b"B2B"])]
+
+
+# None distinguishes a keyword match from the later connector/default fallback.
+public func name_keyword_category(name: bytes) -> Category?:
+    for rule in name_rules():
+        for kw in rule.keywords:
+            if contains_ci(name, kw):
+                return Some(rule.category)
+    return None
+
+
+public func classify_by_name(name: bytes, instances: env_mod.Instance[]) -> Category:
+    mut category = name_keyword_category(name)
+    if category is not None:
+        return category
+    for inst in instances:
+        if len(inst.ref_des) > 0 and (inst.ref_des[0] == 74 or inst.ref_des[0] == 80):
+            return Category.connector
+    return Category.peripheral
+
+
+# No allocated lowercased copy in the hot scan over non-normalised names.
+public func contains_ci(haystack: bytes, needle: bytes) -> bool:
+    if len(needle) > len(haystack):
+        return False
+    mut i = 0
+    while i + len(needle) <= len(haystack):
+        mut matches = True
+        mut j = 0
+        while j < len(needle):
+            if to_lower(haystack[i + j]) != to_lower(needle[j]):
+                matches = False
+                break
+            j += 1
+        if matches:
+            return True
+        i += 1
+    return False
+
+
+# ASCII-only lowercase remains allocation-free and panic-free.
+public func to_lower(c: int) -> int:
+    if c >= 65 and c <= 90:
+        return c + 32
+    return c
