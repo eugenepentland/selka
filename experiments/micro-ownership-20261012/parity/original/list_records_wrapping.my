@@ -1,0 +1,25 @@
+# list_records_wrapping: list_records with an unchecked accumulator.
+#
+# Identical to `list_records.my` except that the two accumulating steps use the
+# prelude's `wrapping_add` instead of `+`. The sums never overflow, so the
+# printed line is byte-identical to `list_records.my`; the accumulator can no
+# longer trap, which is what lets the optimizer vectorise the reduction. This is
+# the "checked arithmetic floor" evidence for the performance roadmap.
+record Row:
+    a: int
+    b: int
+    c: int
+    d: int
+
+
+func main(out: Stream) -> int:
+    mut rows: Row[] = []
+    for i in range(2000000):
+        rows.append(Row(a=i, b=i + 1, c=i + 2, d=i + 3))
+    mut total = 0
+    for pass_index in range(10):
+        total = wrapping_add(total, pass_index)
+        for row in rows:
+            total = wrapping_add(total, row.c)
+    out.print(total)
+    return 0

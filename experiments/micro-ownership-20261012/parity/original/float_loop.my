@@ -1,0 +1,7 @@
+# float_loop: a binary64 multiply-add-sqrt dependency chain.
+func main(out: Stream) -> int:
+    mut x = 0.0
+    for i in range(20000000):
+        x = x * 0.999 + sqrt(float(i))
+    out.print(int(x * 1000.0))
+    return 0

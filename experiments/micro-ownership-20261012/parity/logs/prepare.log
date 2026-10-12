@@ -1,0 +1,72 @@
+build-slot: build slot 1, FIFO ticket 1718 after 0s
+alloc_churn migrated-rc-count 0
+alloc_churn original-rc-count 0
+alloc_churn migrated-rc True
+alloc_churn original-rc True
+alloc_churn zero-rc-count 0
+alloc_churn zero-rc True
+bytes_scan original-rc True
+bytes_scan original-rc-count 0
+bytes_scan migrated-rc True
+bytes_scan migrated-rc-count 0
+bytes_scan zero-rc True
+bytes_scan zero-rc-count 0
+bytes_scan zig-fast True
+alloc_churn zig-fast True
+calls original-rc-count 0
+calls original-rc True
+calls migrated-rc-count 0
+calls migrated-rc True
+calls zero-rc-count 0
+calls zero-rc True
+calls zig-fast True
+dict_count original-rc True
+dict_count original-rc-count 0
+dict_count migrated-rc True
+dict_count migrated-rc-count 0
+dict_count zero-rc True
+dict_count zero-rc-count 0
+dict_count zig-fast True
+bytes_scan zig-safe True
+alloc_churn zig-safe True
+fib original-rc True
+fib original-rc-count 0
+calls zig-safe True
+dict_count zig-safe True
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/prepare.py", line 37, in <module>
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool: results=list(pool.map(build,jobs))
+                                                                               ~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 639, in result_iterator
+    yield _result_or_cancel(fs.pop())
+          ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 311, in _result_or_cancel
+    return fut.result(timeout)
+           ~~~~~~~~~~^^^^^^^^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 443, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/concurrent/futures/_base.py", line 395, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.14/concurrent/futures/thread.py", line 86, in run
+    result = ctx.run(self.task)
+  File "/usr/lib/python3.14/concurrent/futures/thread.py", line 73, in run
+    return fn(*args, **kwargs)
+  File "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/prepare.py", line 17, in build
+    r=subprocess.run(cmd,cwd=source.parent,capture_output=True,timeout=1800)
+  File "/usr/lib/python3.14/subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1990, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'rustc'

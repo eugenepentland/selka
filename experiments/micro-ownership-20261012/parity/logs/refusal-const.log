@@ -1,0 +1,3 @@
+/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/refusal-const.my:8:21: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value
+          const key = keys[(i * 7919) % 1000]
+                      ^
