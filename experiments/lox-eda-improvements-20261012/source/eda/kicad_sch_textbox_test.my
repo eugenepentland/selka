@@ -103,3 +103,70 @@ public func test_kicad_sch_a_zero_size_pin_name_is_not_measured_while_its_number
     if not ex.eq_int(out, "number remains", after.texts, 1):
         return False
     return ex.eq_int(out, "no collision", after.overlaps, 0)
+
+
+# P5: exact strict 10-unit boundaries, stable ties, and retained report strings.
+public func test_p5_overlap_boundaries_ties_and_owned_report(out: Stream) -> bool:
+    mut empty = scan_text(b"(kicad_sch)")
+    if empty is None or empty.texts != 0 or empty.overlaps != 0 or empty.first.is_some():
+        return False
+    mut one = scan_text(b"(kicad_sch (global_label \"A\" (at -2.5 -2.5) (effects (font (size 1)))))")
+    if one is None or one.texts != 1 or one.overlaps != 0:
+        return False
+    mut exact = scan_text(b"(kicad_sch (global_label \"A\" (at 0 0) (effects (font (size 1)))) (global_label \"B\" (at 0.9 0) (effects (font (size 1)))))")
+    if exact is None or not ex.eq_int(out, "10-unit boundary", exact.overlaps, 0):
+        return False
+    mut inside = scan_text(b"(kicad_sch (global_label \"A\" (at 0 0) (effects (font (size 1)))) (global_label \"B\" (at 0.89 0) (effects (font (size 1)))))")
+    if inside is None or not ex.eq_int(out, "11-unit overlap", inside.overlaps, 1):
+        return False
+    mut ties = scan_text(b"(kicad_sch (global_label \"A\" (at -2.5 -2.5) (effects (font (size 1)))) (global_label \"B\" (at -2.5 -2.5) (effects (font (size 1)))) (global_label \"C\" (at -2.5 -2.5) (effects (font (size 1)))))")
+    if ties is None or not ex.eq_int(out, "dense ties", ties.overlaps, 3):
+        return False
+    match ties.first:
+        case Some(pair):
+            if not ex.eq_bytes(out, "stable first", pair.a, b"A") or not ex.eq_bytes(out, "stable second", pair.b, b"B"):
+                return False
+            return ex.eq_int(out, "negative x", pair.x, -138) and ex.eq_int(out, "negative y", pair.y, -300)
+        case None:
+            return False
+
+
+public func test_p5_overlap_sparse_y_boundary_and_long_text(out: Stream) -> bool:
+    mut clear = scan_text(b"(kicad_sch (global_label \"A\" (at 0 0) (effects (font (size 1)))) (global_label \"B\" (at 100 0) (effects (font (size 1)))) (global_label \"C\" (at 200 0) (effects (font (size 1)))))")
+    if clear is None or clear.texts != 3 or clear.overlaps != 0:
+        return False
+    mut ybound = scan_text(b"(kicad_sch (global_label \"A\" (at 0 0) (effects (font (size 1)))) (global_label \"B\" (at 0 0.9) (effects (font (size 1)))))")
+    if ybound is None or ybound.overlaps != 0:
+        return False
+    mut text = byte_builder.create()
+    for i in range(4096):
+        _ = byte_builder.append_byte(mut text, 65)
+    mut long = byte_builder.finish(text)
+    mut doc = b"".join([b"(kicad_sch (global_label \"", long.copy(), b"\" (at 0 0) (effects (font (size 1)))) (global_label \"B\" (at 0 0) (effects (font (size 1)))))"])
+    mut hit = scan_text(doc)
+    if hit is None or hit.texts != 2 or hit.overlaps != 1:
+        return False
+    match hit.first:
+        case Some(pair):
+            return ex.eq_bytes(out, "owned long report text", pair.a, long) and ex.eq_bytes(out, "owned short report text", pair.b, b"B")
+        case None:
+            return False
+
+
+public func test_p5_overlap_sort_order_and_first_qualifying_at(out: Stream) -> bool:
+    mut ordered = scan_text(b"(kicad_sch (global_label \"A\" (at 0.2 0) (effects (font (size 1)))) (global_label \"B\" (at 0 0.2) (effects (font (size 1)))) (global_label \"C\" (at 0 0) (effects (font (size 1)))))")
+    if ordered is None or ordered.overlaps != 3:
+        return False
+    match ordered.first:
+        case Some(pair):
+            if pair.a != b"C" or pair.b != b"B":
+                return False
+        case None:
+            return False
+    mut short = scan_text(b"(kicad_sch (global_label \"A\" (at 0) (at 0 0) (effects (font (size 1)))))")
+    if short is None or not ex.eq_int(out, "short at is skipped", short.texts, 1):
+        return False
+    mut invalid = scan_text(b"(kicad_sch (global_label \"A\" (at bad 0) (at 0 0) (effects (font (size 1)))))")
+    if invalid is None:
+        return False
+    return ex.eq_int(out, "first full at is selected", invalid.texts, 0)

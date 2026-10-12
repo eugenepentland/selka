@@ -47,14 +47,16 @@ public record Report:
 public func scan(root: ast.Node) -> Report:
     mut items: Item[] = []
     mut libs: LibSymbol[] = []
-    mut cl = ast.as_list(root)
-    if cl is None:
-        return Report()
-    for child in cl[1:len(cl)]:
-        if ast.is_form(child, b"lib_symbols"):
-            read_lib_symbols(child, mut libs)
-    for child2 in cl[1:len(cl)]:
-        read_top(child2, libs, mut items)
+    match root.tag:
+        case ast.Tag.list(value=cl):
+            for i in range(len(cl)):
+                if i > 0 and ast.is_form(cl[i], b"lib_symbols"):
+                    read_lib_symbols(cl[i], mut libs)
+            for i in range(len(cl)):
+                if i > 0:
+                    read_top(cl[i], libs, mut items)
+        case _:
+            return Report()
     return overlaps_of(items)
 
 
@@ -129,27 +131,34 @@ func advance(text: bytes, size: int) -> int:
 
 
 func overlaps_of(items: Item[]) -> Report:
-    mut ordered = items.copy()
-    srt.sort_by(mut ordered, left_of)
-    mut out = Report(texts=len(ordered))
+    # Sort only scalar identities. Item storage stays borrowed throughout scanning.
+    mut order = [for k in range(len(items)) yield k]
+    srt.sort_by_ctx(mut order, items, left_index)
+    mut out = Report(texts=len(items))
     mut i = 0
-    for a in ordered:
-        for b in ordered[i + 1:len(ordered)]:
-            if b.box.x0 >= a.box.x1 - 10:
+    while i < len(order):
+        mut a = order[i]
+        mut j = i + 1
+        while j < len(order):
+            mut b = order[j]
+            if items[b].box.x0 >= items[a].box.x1 - 10:
                 break
-            if not hits(a.box, b.box):
-                continue
-            out.overlaps += 1
-            if out.first.is_none():
-                out.first = Some(Pair(a=a.text.copy(), b=b.text.copy(), kind_a=a.kind, kind_b=b.kind, x=max(a.box.x0, b.box.x0), y=max(a.box.y0, b.box.y0)))
+            if hits(items[a].box, items[b].box):
+                out.overlaps += 1
+                if out.first.is_none():
+                    out.first = Some(Pair(a=items[a].text.copy(), b=items[b].text.copy(), kind_a=items[a].kind, kind_b=items[b].kind, x=max(items[a].box.x0, items[b].box.x0), y=max(items[a].box.y0, items[b].box.y0)))
+            j += 1
         i += 1
     return out
 
 
-func left_of(a: Item, b: Item) -> bool:
-    if a.box.x0 != b.box.x0:
-        return a.box.x0 < b.box.x0
-    return a.box.y0 < b.box.y0
+func left_index(items: Item[], a: int, b: int) -> bool:
+    if items[a].box.x0 != items[b].box.x0:
+        return items[a].box.x0 < items[b].box.x0
+    return items[a].box.y0 < items[b].box.y0
+
+
+
 
 
 func hits(a: Box, b: Box) -> bool:
@@ -186,66 +195,72 @@ func libraries_find(self: LibSymbol[], id_: bytes) -> LibSymbol?:
 
 
 func read_lib_symbols(node: ast.Node, mut libs: LibSymbol[]):
-    mut cl = ast.as_list(node)
-    if cl is None:
-        return
-    for sym in cl[1:len(cl)]:
-        if not ast.is_form(sym, b"symbol"):
-            continue
-        mut sl = ast.as_list(sym)
-        if sl is None:
-            continue
-        if len(sl) < 2:
-            continue
-        mut name = ast.as_text(sl[1])
-        if name is None:
-            continue
-        mut entry = LibSymbol(name=name.copy(), pins=[])
-        read_pin_policy(sym, mut entry)
-        for sub in sl[2:len(sl)]:
-            read_lib_unit(sub, mut entry)
-        libs.append(entry)
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            for i in range(len(cl)):
+                if i == 0 or not ast.is_form(cl[i], b"symbol"):
+                    continue
+                match cl[i].tag:
+                    case ast.Tag.list(value=sl):
+                        if len(sl) < 2:
+                            continue
+                        mut name = ast.as_text(sl[1])
+                        if name is None:
+                            continue
+                        mut entry = LibSymbol(name=name.copy(), pins=[])
+                        read_pin_policy(cl[i], mut entry)
+                        for j in range(len(sl)):
+                            if j >= 2:
+                                read_lib_unit(sl[j], mut entry)
+                        libs.append(entry)
+                    case _:
+                        pass
+        case _:
+            pass
 
 
 func read_pin_policy(sym: ast.Node, mut entry: LibSymbol):
-    mut cl = ast.as_list(sym)
-    if cl is None:
-        return
-    for child in cl[1:len(cl)]:
-        if ast.is_form(child, b"pin_numbers"):
-            entry.show_numbers = not hidden(child)
-        if not ast.is_form(child, b"pin_names"):
-            continue
-        entry.show_names = not hidden(child)
-        entry.name_offset = number_child(child, b"offset").unwrap_or(0)
+    match sym.tag:
+        case ast.Tag.list(value=cl):
+            for i in range(len(cl)):
+                if i == 0:
+                    continue
+                if ast.is_form(cl[i], b"pin_numbers"):
+                    entry.show_numbers = not hidden(cl[i])
+                if ast.is_form(cl[i], b"pin_names"):
+                    entry.show_names = not hidden(cl[i])
+                    entry.name_offset = number_child(cl[i], b"offset").unwrap_or(0)
+        case _:
+            pass
 
 
 func read_lib_unit(sub: ast.Node, mut entry: LibSymbol):
     if not ast.is_form(sub, b"symbol"):
         return
-    mut l = ast.as_list(sub)
-    if l is None:
-        return
-    if len(l) < 2:
-        return
-    mut unit = sub_unit(ast.as_text(l[1]).unwrap_or(b""))
-    if unit is None:
-        return
-    for item in l[2:len(l)]:
-        if not ast.is_form(item, b"pin"):
-            continue
-        mut pin = read_lib_pin(item, unit)
-        if pin is not None:
-            entry.pins.append(pin.copy())
+    match sub.tag:
+        case ast.Tag.list(value=l):
+            if len(l) < 2:
+                return
+            mut unit = sub_unit(ast.as_text(l[1]).unwrap_or(b""))
+            if unit is None:
+                return
+            for i in range(len(l)):
+                if i < 2 or not ast.is_form(l[i], b"pin"):
+                    continue
+                mut pin = read_lib_pin(l[i], unit)
+                if pin is not None:
+                    entry.pins.append(pin.copy())
+        case _:
+            pass
 
 
 func read_lib_pin(item: ast.Node, unit: int) -> LibPin?:
-    mut at = try at_form(item)
+    mut at = try at_pose(item)
     mut name = named_text(item, b"name")
     mut number = named_text(item, b"number")
-    mut x = try coord(at[1])
-    mut y = try coord(at[2])
-    return Some(LibPin(unit=unit, x=x, y=y, angle=angle_at(at), len=number_child(item, b"length").unwrap_or(0), name=name.text.copy(), name_size=name.size, number=number.text.copy(), number_size=number.size))
+    mut x = at.x
+    mut y = at.y
+    return Some(LibPin(unit=unit, x=x, y=y, angle=at.angle, len=number_child(item, b"length").unwrap_or(0), name=name.text.copy(), name_size=name.size, number=number.text.copy(), number_size=number.size))
 
 
 record NamedText:
@@ -254,36 +269,39 @@ record NamedText:
 
 
 func named_text(item: ast.Node, form: bytes) -> NamedText:
-    mut cl = ast.as_list(item)
-    if cl is None:
-        return NamedText(text=b"")
-    for child in cl[1:len(cl)]:
-        if not ast.is_form(child, form):
-            continue
-        mut l = ast.as_list(child)
-        if l is None:
-            continue
-        if len(l) < 2:
-            continue
-        return NamedText(text=ast.as_text(l[1]).unwrap_or(b"").copy(), size=font_size(child))
+    match item.tag:
+        case ast.Tag.list(value=cl):
+            for i in range(len(cl)):
+                if i == 0 or not ast.is_form(cl[i], form):
+                    continue
+                match cl[i].tag:
+                    case ast.Tag.list(value=l):
+                        if len(l) >= 2:
+                            return NamedText(text=ast.as_text(l[1]).unwrap_or(b"").copy(), size=font_size(cl[i]))
+                    case _:
+                        pass
+        case _:
+            pass
     return NamedText(text=b"")
 
 
 func font_size(node: ast.Node) -> int:
-    mut cl = ast.as_list(node)
-    if cl is None:
-        return 0
-    for child in cl[1:len(cl)]:
-        if not ast.is_form(child, b"effects"):
-            continue
-        if hidden(child):
-            return 0
-        mut el = ast.as_list(child)
-        if el is None:
-            continue
-        for f in el[1:len(el)]:
-            if ast.is_form(f, b"font"):
-                return number_child(f, b"size").unwrap_or(0)
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            for i in range(len(cl)):
+                if i == 0 or not ast.is_form(cl[i], b"effects"):
+                    continue
+                if hidden(cl[i]):
+                    return 0
+                match cl[i].tag:
+                    case ast.Tag.list(value=el):
+                        for j in range(len(el)):
+                            if j > 0 and ast.is_form(el[j], b"font"):
+                                return number_child(el[j], b"size").unwrap_or(0)
+                    case _:
+                        pass
+        case _:
+            pass
     return 0
 
 
@@ -297,41 +315,39 @@ func read_top(node: ast.Node, libs: LibSymbol[], mut items: Item[]):
 
 
 func append_caption(node: ast.Node, mut items: Item[]):
-    mut cl = ast.as_list(node)
-    if cl is None:
-        return
-    if len(cl) < 2:
-        return
-    mut text = ast.as_text(cl[1])
-    mut at = at_form(node)
-    if text is None or at is None:
-        return
-    mut size = font_size(node)
-    mut x = coord(at[1])
-    mut y = coord(at[2])
-    if size == 0 or x is None or y is None:
-        return
-    mut p = Placement(x=x, y=y, dir=angle_at(at), w=advance(text, size), h=size, just=Just.start, cross=Cross.above)
-    items.append(Item(kind=Kind.caption, text=text.copy(), box=box_of(p)))
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            if len(cl) < 2:
+                return
+            mut text = ast.as_text(cl[1])
+            mut at = at_pose(node)
+            if text is None or at is None:
+                return
+            mut size = font_size(node)
+            if size == 0:
+                return
+            mut p = Placement(x=at.x, y=at.y, dir=at.angle, w=advance(text, size), h=size, just=Just.start, cross=Cross.above)
+            items.append(Item(kind=Kind.caption, text=text.copy(), box=box_of(p)))
+        case _:
+            pass
 
 
 func append_label(node: ast.Node, mut items: Item[]):
-    mut cl = ast.as_list(node)
-    if cl is None:
-        return
-    if len(cl) < 2:
-        return
-    mut text = ast.as_text(cl[1])
-    mut at = at_form(node)
-    if text is None or at is None:
-        return
-    mut size = font_size(node)
-    mut x = coord(at[1])
-    mut y = coord(at[2])
-    if size == 0 or x is None or y is None:
-        return
-    mut p = Placement(x=x, y=y, dir=angle_at(at), w=advance(text, size), h=size, lead=label_lead(size), just=Just.start, cross=Cross.center)
-    items.append(Item(kind=Kind.label, text=text.copy(), box=box_of(p)))
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            if len(cl) < 2:
+                return
+            mut text = ast.as_text(cl[1])
+            mut at = at_pose(node)
+            if text is None or at is None:
+                return
+            mut size = font_size(node)
+            if size == 0:
+                return
+            mut p = Placement(x=at.x, y=at.y, dir=at.angle, w=advance(text, size), h=size, lead=label_lead(size), just=Just.start, cross=Cross.center)
+            items.append(Item(kind=Kind.label, text=text.copy(), box=box_of(p)))
+        case _:
+            pass
 
 
 record Pose:
@@ -341,14 +357,10 @@ record Pose:
 
 
 func append_symbol(node: ast.Node, libs: LibSymbol[], mut items: Item[]):
-    mut at = at_form(node)
+    mut at = at_pose(node)
     if at is None:
         return
-    mut x = coord(at[1])
-    mut y = coord(at[2])
-    if x is None or y is None:
-        return
-    mut origin = Pose(x=x, y=y, angle=angle_at(at))
+    mut origin = Pose(x=at.x, y=at.y, angle=at.angle)
     append_fields(node, origin, mut items)
     mut id_ = form_text(node, b"lib_id")
     if id_ is None:
@@ -363,35 +375,37 @@ func append_symbol(node: ast.Node, libs: LibSymbol[], mut items: Item[]):
 
 
 func append_fields(node: ast.Node, origin: Pose, mut items: Item[]):
-    mut cl = ast.as_list(node)
-    if cl is None:
-        return
-    for child in cl[1:len(cl)]:
-        if not ast.is_form(child, b"property") or hidden(child):
-            continue
-        mut l = ast.as_list(child)
-        if l is None:
-            continue
-        if len(l) < 3:
-            continue
-        mut text = ast.as_text(l[2])
-        if text is None:
-            continue
-        if len(text) == 0:
-            continue
-        mut size = font_size(child)
-        mut at = at_form(child)
-        if size == 0 or at is None:
-            continue
-        mut x = coord(at[1])
-        mut y = coord(at[2])
-        if x is None or y is None:
-            continue
-        mut just = Just.middle
-        if justified_left(child):
-            just = Just.start
-        mut p = Placement(x=x, y=y, dir=drawn_field_angle(angle_at(at), origin.angle), w=advance(text, size), h=size, just=just, cross=Cross.center)
-        items.append(Item(kind=Kind.field, text=text.copy(), box=box_of(p)))
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            for i in range(len(cl)):
+                if i == 0 or not ast.is_form(cl[i], b"property") or hidden(cl[i]):
+                    continue
+                append_field(cl[i], origin, mut items)
+        case _:
+            pass
+
+
+func append_field(child: ast.Node, origin: Pose, mut items: Item[]):
+    match child.tag:
+        case ast.Tag.list(value=l):
+            if len(l) < 3:
+                return
+            mut text = ast.as_text(l[2])
+            if text is None:
+                return
+            if len(text) == 0:
+                return
+            mut size = font_size(child)
+            mut at = at_pose(child)
+            if size == 0 or at is None:
+                return
+            mut just = Just.middle
+            if justified_left(child):
+                just = Just.start
+            mut p = Placement(x=at.x, y=at.y, dir=drawn_field_angle(at.angle, origin.angle), w=advance(text, size), h=size, just=just, cross=Cross.center)
+            items.append(Item(kind=Kind.field, text=text.copy(), box=box_of(p)))
+        case _:
+            pass
 
 
 func drawn_field_angle(field: int, parent: int) -> int:
@@ -452,14 +466,22 @@ func coord(node: ast.Node) -> int?:
     return Some(int(value))
 
 
-func at_form(node: ast.Node) -> ast.Node[]?:
-    mut cl = try ast.as_list(node)
-    for child in cl[1:len(cl)]:
-        if not ast.is_form(child, b"at"):
-            continue
-        mut l = ast.as_list(child)
-        if l is not None and len(l) >= 3:
-            return Some(l.copy())
+func at_pose(node: ast.Node) -> Pose?:
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            for i in range(len(cl)):
+                if i == 0 or not ast.is_form(cl[i], b"at"):
+                    continue
+                match cl[i].tag:
+                    case ast.Tag.list(value=l):
+                        if len(l) >= 3:
+                            mut x = try coord(l[1])
+                            mut y = try coord(l[2])
+                            return Some(Pose(x=x, y=y, angle=angle_at(l)))
+                    case _:
+                        pass
+        case _:
+            pass
     return None
 
 
@@ -473,74 +495,98 @@ func angle_at(at: ast.Node[]) -> int:
 
 
 func number_child(node: ast.Node, form: bytes) -> int?:
-    mut cl = try ast.as_list(node)
-    for child in cl[1:len(cl)]:
-        if not ast.is_form(child, form):
-            continue
-        mut l = ast.as_list(child)
-        if l is not None and len(l) >= 2:
-            return coord(l[1])
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            for i in range(len(cl)):
+                if i == 0 or not ast.is_form(cl[i], form):
+                    continue
+                match cl[i].tag:
+                    case ast.Tag.list(value=l):
+                        if len(l) >= 2:
+                            return coord(l[1])
+                    case _:
+                        pass
+        case _:
+            pass
     return None
 
 
 func form_text(node: ast.Node, form: bytes) -> bytes?:
-    mut cl = try ast.as_list(node)
-    for child in cl[1:len(cl)]:
-        if not ast.is_form(child, form):
-            continue
-        mut l = ast.as_list(child)
-        if l is not None and len(l) >= 2:
-            return ast.as_text(l[1])
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            for i in range(len(cl)):
+                if i == 0 or not ast.is_form(cl[i], form):
+                    continue
+                match cl[i].tag:
+                    case ast.Tag.list(value=l):
+                        if len(l) >= 2:
+                            return ast.as_text(l[1])
+                    case _:
+                        pass
+        case _:
+            pass
     return None
 
 
 func hidden(node: ast.Node) -> bool:
-    mut cl = ast.as_list(node)
-    if cl is None:
-        return False
-    for child in cl[1:len(cl)]:
-        if ast.is_form(child, b"hide"):
-            mut l = ast.as_list(child)
-            if l is not None and len(l) >= 2:
-                return ast.as_atom(l[1]).unwrap_or(b"") == b"yes"
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            for i in range(len(cl)):
+                if i == 0 or not ast.is_form(cl[i], b"hide"):
+                    continue
+                match cl[i].tag:
+                    case ast.Tag.list(value=l):
+                        if len(l) >= 2:
+                            return ast.as_atom(l[1]).unwrap_or(b"") == b"yes"
+                    case _:
+                        pass
+        case _:
+            pass
     return False
 
 
 func justified_left(node: ast.Node) -> bool:
-    mut cl = ast.as_list(node)
-    if cl is None:
-        return False
-    for child in cl[1:len(cl)]:
-        if not ast.is_form(child, b"effects"):
-            continue
-        mut el = ast.as_list(child)
-        if el is None:
-            continue
-        for j in el[1:len(el)]:
-            if not ast.is_form(j, b"justify"):
-                continue
-            mut jl = ast.as_list(j)
-            if jl is None:
-                continue
-            for word in jl[1:len(jl)]:
-                if ast.as_atom(word).unwrap_or(b"") == b"left":
-                    return True
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            for i in range(len(cl)):
+                if i == 0 or not ast.is_form(cl[i], b"effects"):
+                    continue
+                match cl[i].tag:
+                    case ast.Tag.list(value=el):
+                        for j in range(len(el)):
+                            if j == 0 or not ast.is_form(el[j], b"justify"):
+                                continue
+                            match el[j].tag:
+                                case ast.Tag.list(value=jl):
+                                    for k in range(len(jl)):
+                                        if k > 0 and ast.as_atom(jl[k]).unwrap_or(b"") == b"left":
+                                            return True
+                                case _:
+                                    pass
+                    case _:
+                        pass
+        case _:
+            pass
     return False
 
 
 func unit_of(node: ast.Node) -> int:
-    mut cl = ast.as_list(node)
-    if cl is None:
-        return 1
-    for child in cl[1:len(cl)]:
-        if not ast.is_form(child, b"unit"):
-            continue
-        mut l = ast.as_list(child)
-        if l is not None and len(l) >= 2:
-            mut n = numeric.checked_i64(math.round(ast.as_number(l[1]).unwrap_or(1.0)))
-            if n is None:
-                return 1
-            return max(int(n), 0)
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            for i in range(len(cl)):
+                if i == 0 or not ast.is_form(cl[i], b"unit"):
+                    continue
+                match cl[i].tag:
+                    case ast.Tag.list(value=l):
+                        if len(l) >= 2:
+                            mut n = numeric.checked_i64(math.round(ast.as_number(l[1]).unwrap_or(1.0)))
+                            if n is None:
+                                return 1
+                            return max(int(n), 0)
+                    case _:
+                        pass
+        case _:
+            pass
     return 1
 
 
