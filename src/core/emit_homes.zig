@@ -742,13 +742,14 @@ const Planner = struct {
         for (self.classes.members.items[outer].items) |w| {
             // The liveness of `w`'s old field bytes: only the uses that read them.
             var old_bytes = try self.emptyLive(blocks);
+            const origin = self.fieldOrigin(w, region);
             for (self.tracked.sites.items[w].items) |site| {
-                if (self.readsRegion(w, site, region)) try self.record(&old_bytes, self.tracked.defs.items[w], site);
+                if (self.readsRegion(w, site, region)) try self.record(&old_bytes, origin, site);
             }
             const writes = self.writesRegion(w, region, inner);
             for (self.classes.members.items[inner].items) |e| {
                 const de = self.tracked.defs.items[e];
-                if (liveAfterIn(&old_bytes, self.tracked.defs.items[w], de.block, de.pos)) return false;
+                if (liveAfterIn(&old_bytes, origin, de.block, de.pos)) return false;
                 if (try self.readsAtDef(e, w, region)) return false;
                 if (!writes) continue;
                 const dw = self.tracked.defs.items[w];
@@ -768,6 +769,29 @@ const Planner = struct {
             };
         }
         return true;
+    }
+
+    /// A sibling update gives unchanged bytes a new SSA name, not a new
+    /// lifetime. Follow those versions before weighing an embedded child.
+    fn fieldOrigin(self: *const Planner, start: u32, region: Region) Def {
+        const f = self.fun();
+        const m = self.mod();
+        var current = start;
+        // Complicated joins and long chains conservatively retain the bytes
+        // from entry; they never justify overwriting a live old field early.
+        const entry: Def = .{ .block = 0, .pos = 0, .entry = true };
+        for (0..64) |_| {
+            const inst = f.inst(self.tracked.refs.items[current]);
+            if (inst.op == .phi) return entry;
+            if (inst.op != .record_set) return self.tracked.defs.items[current];
+            const old = self.places.dense[f.resolve(inst.a).index()];
+            if (old == none or self.findConst(old) != self.findConst(current)) return self.tracked.defs.items[current];
+            const field_type = m.compound(inst.ty).record[@intCast(inst.data)];
+            const written: Region = .{ .offset = m.fieldOffset(inst.ty, @intCast(inst.data)), .size = m.size(field_type) };
+            if (overlaps(written, region)) return self.tracked.defs.items[current];
+            current = old;
+        }
+        return entry;
     }
 
     /// The byte range a view names inside the tracked value it lies in.
