@@ -71,17 +71,17 @@ public func error_line(mut o: Output, text: bytes):
 
 
 func string_chars(rt: heap.Runtime, ref: value.ObjRef) -> bytes:
-    return heap.string_obj(rt, ref).chars.copy()
+    return heap.string_chars(rt, ref)
 
 
-func function_text(rt: heap.Runtime, function: object.FunctionObj) -> bytes:
-    if function.name == value.NO_OBJ:
+func function_text(rt: heap.Runtime, name: value.ObjRef) -> bytes:
+    if name == value.NO_OBJ:
         return b"<script>"
-    return b"<fn " + string_chars(rt, function.name) + b">"
+    return b"<fn " + string_chars(rt, name) + b">"
 
 
 func closure_text(rt: heap.Runtime, closure: value.ObjRef) -> bytes:
-    return function_text(rt, heap.function_obj(rt, heap.closure_obj(rt, closure).function))
+    return function_text(rt, heap.function_name(rt, heap.closure_function(rt, closure)))
 
 
 func object_text(rt: heap.Runtime, ref: value.ObjRef) -> bytes:
@@ -89,7 +89,7 @@ func object_text(rt: heap.Runtime, ref: value.ObjRef) -> bytes:
         case object.Obj.string(value=payload):
             return payload.chars.copy()
         case object.Obj.function(value=payload):
-            return function_text(rt, payload)
+            return function_text(rt, payload.name)
         case object.Obj.native(value=_):
             return b"<native fn>"
         case object.Obj.closure(value=_):
@@ -99,7 +99,7 @@ func object_text(rt: heap.Runtime, ref: value.ObjRef) -> bytes:
         case object.Obj.klass(value=payload):
             return string_chars(rt, payload.name)
         case object.Obj.instance(value=payload):
-            return string_chars(rt, heap.class_obj(rt, payload.klass).name) + b" instance"
+            return string_chars(rt, heap.class_name(rt, payload.klass)) + b" instance"
         case object.Obj.bound_method(value=payload):
             return closure_text(rt, payload.method)
         case object.Obj.env(value=_):

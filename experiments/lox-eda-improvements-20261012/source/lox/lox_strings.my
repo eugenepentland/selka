@@ -17,13 +17,12 @@ public func fnv1a(chars: bytes) -> u32:
 # The interned string with exactly these bytes, or NO_OBJ. Probes like
 # `find_entry`, comparing length, hash and then bytes of each live key.
 public func find_string(rt: heap.Runtime, chars: bytes, hash: u32) -> value.ObjRef:
-    mut entries = rt.strings.entries.copy()
     if rt.strings.count == 0:
         return value.NO_OBJ
-    mut mask = len(entries) - 1
+    mut mask = len(rt.strings.entries) - 1
     mut index = int(bit_and(hash, u32(mask)))
     while True:
-        mut entry = entries[index]
+        mut entry = rt.strings.entries[index]
         if entry.key == value.NO_OBJ:
             match entry.value:
                 case value.Value.nil:
@@ -31,8 +30,7 @@ public func find_string(rt: heap.Runtime, chars: bytes, hash: u32) -> value.ObjR
                 case _:
                     pass
         elif entry.hash == hash:
-            mut candidate = heap.string_obj(rt, entry.key).chars.copy()
-            if len(candidate) == len(chars) and candidate == chars:
+            if heap.string_matches(rt, entry.key, chars):
                 return entry.key
         index = bit_and(index + 1, mask)
 
@@ -57,9 +55,24 @@ public func copy_string(mut rt: heap.Runtime, chars: bytes) -> value.ObjRef:
 # String's bytes, or is dropped when that string already exists. Both
 # operands must still be rooted by the caller.
 public func concat(mut rt: heap.Runtime, a: value.ObjRef, b: value.ObjRef) -> value.ObjRef:
-    mut chars = heap.string_obj(rt, a).chars + heap.string_obj(rt, b).chars.copy()
+    mut chars = concat_chars(rt, a, b)
     mut hash = fnv1a(chars)
     mut existing = find_string(rt, chars, hash)
     if existing != value.NO_OBJ:
         return existing
     return intern(mut rt, chars, hash)
+
+
+# Both immutable string payloads remain borrowed until the joined owner exists.
+func concat_chars(rt: heap.Runtime, a: value.ObjRef, b: value.ObjRef) -> bytes:
+    match rt.objects[a]:
+        case object.Obj.string(value=left):
+            match rt.objects[b]:
+                case object.Obj.string(value=right):
+                    return left.chars + right.chars
+                case _:
+                    assert False, "object is not a string"
+                    return b""
+        case _:
+            assert False, "object is not a string"
+            return b""
