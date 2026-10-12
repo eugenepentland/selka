@@ -1,0 +1,97 @@
+func pick_list[T](value: T) -> T[]:
+    mut values: T[] = []
+    values.append(value)
+    return values
+
+
+func pick_answer[T](value: T) -> Result[T, i64]:
+    return Ok(value)
+
+
+func builtin_answer_1() -> Result[i64, i64]:
+    return Ok(42)
+
+
+func empty_list() -> i64[]:
+    return []
+
+
+func builtin_answer_2() -> Result[i64, i64]:
+    return Ok(42)
+
+
+func recover_result(value: Result[i64, i64]) -> i64:
+    match value:
+        case Result.ok(n):
+            return n
+        case Result.err(e):
+            return e
+
+
+record Holder:
+    values: i64[]
+
+
+func choose_holder(mut value: Holder, other: i64[]) -> i64:
+    _ = other
+    mut xs = value.values
+    xs.append(42)
+    value.values = xs
+    return xs[0u64]
+
+
+func unit_done() -> Result[Unit, i64]:
+    return Ok(())
+
+
+# spec: BUILTIN-CONTEXT-5
+public func test_generic_list_result_and_contextual_constructors_keep_symbolic_type_parameters() -> bool:
+    mut values = pick_list(42)
+    mut value = values[0]
+    match pick_answer(value):
+        case Result.ok(n):
+            return n == 42
+        case Result.err(e):
+            return e == 42
+
+
+# spec: BUILTIN-CONTEXT-1
+public func test_builtin_list_and_result_resolve_without_imports_or_explicit_declarations() -> bool:
+    mut values: i64[] = []
+    values.append(42)
+    match builtin_answer_1():
+        case Result.ok(n):
+            return n == 42
+        case Result.err(e):
+            return e == 42
+
+
+# spec: BUILTIN-CONTEXT-2
+public func test_empty_lists_and_ok_err_inherit_binding_return_and_argument_contexts() -> bool:
+    mut values: i64[] = []
+    values.append(42)
+    mut result: Result[i64, i64] = Err(values[0u64])
+    _ = result
+    return recover_result(Ok(42)) == 42
+
+
+# spec: BUILTIN-CONTEXT-3
+public func test_record_fields_and_nested_list_elements_propagate_empty_list_context() -> bool:
+    mut nested: i64[][] = []
+    mut inner: i64[] = []
+    nested.append(inner)
+    mut holder = Holder(values=[])
+    return choose_holder(mut holder, []) == 42
+
+
+# spec: BUILTIN-CONTEXT-4
+public func test_ok_unit_values_preserve_fallible_result_handling() -> bool:
+    match unit_done():
+        case Result.ok(_):
+            return True
+        case Result.err(e):
+            return e == 42
+
+
+func main() -> int:
+    return 0

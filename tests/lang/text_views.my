@@ -1,15 +1,11 @@
-# A slice, a split piece, a line, a stripped text and a field may share their
-# receiver's octets instead of copying them (SPEC.md TEXT-VIEW-1..4). None of
-# that is observable: every answer below is what a copy answers. The inputs are
-# shaped so that most pieces are at least a quarter of their receiver, which is
-# when a piece is shared rather than copied. The runner collects at every
-# allocation (`--gc-stress`), so a piece whose receiver is no longer referenced
-# anywhere else is read after many collections.
+# Owned slices, split pieces, lines, stripped text and fields preserve their
+# values after source destruction and replacement. These fixtures retain the
+# original value assertions; they do not require shared backing or collection.
 # `times` copies of `piece` by doubling, so a long input costs a logarithmic
 # number of guest steps.
 func repeated(piece: str, times: int) -> str:
     mut out = ""
-    mut chunk = piece
+    mut chunk = piece.copy()
     mut remaining = times
     while remaining > 0:
         if remaining % 2 == 1:
@@ -146,7 +142,7 @@ public func test_every_consumer_reads_a_piece() -> bool:
     ok = ok and words == ["padded", "words", "here"] and " ".join(words) == "padded words here"
     ok = ok and f"<{fields[1].strip()}>" == "<padded words here>" and str(pair[0]) == "12345678901"
     ok = ok and len(fields[0].encode()) == 30 and fields[2].encode() == repeated("y", 30).encode()
-    ok = ok and sorted([fields[0], fields[2]])[1] == fields[2] and sorted([fields[2], fields[0], fields[1]])[0] == fields[1]
+    ok = ok and sorted([fields[0].copy(), fields[2].copy()])[1] == fields[2] and sorted([fields[2].copy(), fields[0].copy(), fields[1].copy()])[0] == fields[1]
     ok = ok and fields[1].upper() == "  PADDED WORDS HERE  " and pair[0].zfill(13) == "0012345678901"
     ok = ok and fields[1].replace("words", "w") == "  padded w here  " and pair[0].isdigit()
     return ok and fields[1].startswith("  pad") and fields[1].endswith("re  ") and fields[0] + "," + fields[1] == row[:52]

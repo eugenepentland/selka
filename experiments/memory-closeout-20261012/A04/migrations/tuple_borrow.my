@@ -1,0 +1,8 @@
+func first(pair: tuple[int, str]) -> str:
+    const number, word = pair
+    return word.copy()
+
+
+func main() -> int:
+    assert first((1, "a")) == "a"
+    return 0

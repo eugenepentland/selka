@@ -46,7 +46,7 @@ func append_twice(mut out: Output, value: bytes):
 
 
 func append_rebound(mut out: Output, value: bytes):
-    mut copy = value
+    mut copy = value.copy()
     copy = copy + b"!"
     if not out.buffer.append_range(copy, 1, len(copy)):
         out.failed = True
@@ -66,7 +66,8 @@ public func test_appending_a_snapshot_of_the_same_buffer_reads_the_old_octets() 
     append(mut out, b"abc")
     mut snapshot = bytes(out.buffer)
     append(mut out, snapshot)
-    append(mut out, bytes(out.buffer))
+    const repeated = bytes(out.buffer)
+    append(mut out, repeated)
     return bytes(out.buffer) == b"abcabcabcabc" and snapshot == b"abc"
 
 

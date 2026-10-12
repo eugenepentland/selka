@@ -3,16 +3,16 @@ func frequencies(seq: str, width: int) -> dict[str, int]:
     mut counts: dict[str, int] = {}
     for i in range(len(seq) - width + 1):
         mut key = seq[i:i + width]
-        counts[key] = counts.get(key, 0) + 1
+        counts[key.copy()] = counts.get(key, 0) + 1
     return counts
 
 
 func published(seq: str) -> dict[str, int]:
     mut counts: dict[str, int] = {}
-    mut before = counts
+    mut before = counts.copy()
     for i in range(len(seq)):
         mut key = seq[i:i + 1]
-        counts[key] = counts.get(key, 0) + 1
+        counts[key.copy()] = counts.get(key, 0) + 1
     if len(before) != 0:
         counts["bad"] = 1
     return counts
@@ -21,9 +21,9 @@ func published(seq: str) -> dict[str, int]:
 func exposed(seq: str) -> dict[str, int]:
     mut counts: dict[str, int] = {}
     for i in range(len(seq)):
-        mut before = counts
+        mut before = counts.copy()
         mut key = seq[i:i + 1]
-        counts[key] = counts.get(key, 0) + 1
+        counts[key.copy()] = counts.get(key, 0) + 1
         if before.get(key, 0) + 1 != counts[key]:
             counts["bad"] = 1
     return counts

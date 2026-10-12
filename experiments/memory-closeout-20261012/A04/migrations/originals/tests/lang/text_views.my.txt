@@ -1,0 +1,175 @@
+# A slice, a split piece, a line, a stripped text and a field may share their
+# receiver's octets instead of copying them (SPEC.md TEXT-VIEW-1..4). None of
+# that is observable: every answer below is what a copy answers. The inputs are
+# shaped so that most pieces are at least a quarter of their receiver, which is
+# when a piece is shared rather than copied. The runner collects at every
+# allocation (`--gc-stress`), so a piece whose receiver is no longer referenced
+# anywhere else is read after many collections.
+# `times` copies of `piece` by doubling, so a long input costs a logarithmic
+# number of guest steps.
+func repeated(piece: str, times: int) -> str:
+    mut out = ""
+    mut chunk = piece
+    mut remaining = times
+    while remaining > 0:
+        if remaining % 2 == 1:
+            out = out + chunk
+        remaining = remaining // 2
+        if remaining > 0:
+            chunk = chunk + chunk
+    return out
+
+
+# The receiver lives only inside this call: the piece it answers outlives it.
+func middle_of_fresh_text() -> str:
+    mut text = repeated("0123456789", 100) + "tail"
+    return text[5:len(text) - 2]
+
+
+# Three 299-scalar lines of a text that lives only inside this call.
+func lines_of_fresh_text() -> str[]:
+    mut text = repeated(repeated("L", 297) + "-x\n", 3)
+    return text.split("\n")
+
+
+func churn(rounds: int) -> int:
+    mut total = 0
+    for index in range(rounds):
+        total += len(f"garbage {index} {index * 7}")
+    return total
+
+
+# spec: TEXT-VIEW-1
+public func test_pieces_outlive_every_other_reference_to_their_receiver() -> bool:
+    mut piece = middle_of_fresh_text()
+    mut lines = lines_of_fresh_text()
+    _ = churn(2000)
+    mut ok = len(piece) == 997 and piece[:6] == "567890" and piece[-4:] == "89ta"
+    ok = ok and len(lines) == 4 and len(lines[0]) == 299 and lines[0][-3:] == "L-x"
+    return ok and lines[2] == lines[0] and lines[3] == "" and piece.count("0123456789") == 99
+
+
+# spec-case: TEXT-VIEW-1
+public func test_views_of_views_read_the_right_octets() -> bool:
+    mut base = repeated("abcdefghijklmnopqrstuvwxyz", 40)
+    mut first = base[3:900]
+    mut second = first[20:800]
+    mut third = second[100:500]
+    mut fourth = third[1:]
+    mut ok = first[0] == "d" and second[0] == "x" and third[0] == "t" and fourth[0] == "u"
+    ok = ok and len(first) == 897 and len(second) == 780 and len(third) == 400 and len(fourth) == 399
+    ok = ok and third == base[123:523] and fourth == base[124:523]
+    return ok and fourth.find("abc") == 6 and fourth[-1] == "c"
+
+
+# Non-ASCII receivers: scalar indexing, lengths and searches of a piece count
+# the piece's own scalars, whatever octet of the receiver it starts at.
+# spec-case: TEXT-VIEW-1
+public func test_non_ascii_pieces_index_by_scalar() -> bool:
+    mut base = repeated("aé🙂z—", 200)
+    mut piece = base[7:600]
+    mut inner = piece[3:400]
+    mut ok = len(base) == 1000 and len(piece) == 593 and len(inner) == 397
+    ok = ok and piece[0] == "🙂" and piece[1] == "z" and piece[2] == "—" and inner[0] == "a"
+    ok = ok and inner[1] == "é" and inner[-1] == base[406] and inner.find("🙂") == 2
+    ok = ok and inner == base[10:407] and inner.count("é") == 80
+    return ok and piece.split("—")[1] == "aé🙂z" and ord(inner[2]) == 128578
+
+
+# Pieces as dictionary keys: a stored piece, a fresh piece and an owned copy of
+# the same octets all find one entry, and iteration answers the stored keys.
+# spec: TEXT-VIEW-2
+public func test_pieces_are_dictionary_keys_equal_to_owned_text() -> bool:
+    mut base = repeated("GATTACA-CATTAGA-", 50)
+    mut counts: dict[str, int] = {}
+    for index in range(len(base) - 250):
+        mut key = base[index:index + 250]
+        counts[key] = counts.get(key, 0) + 1
+    mut ok = len(counts) == 16 and counts[base[0:250]] == 35 and counts[base[1:251]] == 35
+    mut owned = repeated("GATTACA-CATTAGA-", 15) + "GATTACA-CA"
+    ok = ok and owned in counts and counts[owned] == 35 and counts[base[32:282]] == 35
+    mut keys = sorted(list(counts.keys()))
+    ok = ok and keys[0][:15] == "-CATTAGA-GATTAC" and len(keys) == 16
+    mut dropped = counts.pop(base[16:266])
+    return ok and dropped == 35 and len(counts) == 15 and not (owned in counts)
+
+
+# The retention bound: each round keeps only short pieces of a large text, so
+# the large texts are collected. If a piece kept its receiver, 600 rounds of a
+# 1 MiB text would exceed the test's 512 MiB memory budget.
+# spec: TEXT-VIEW-3
+public func test_a_short_piece_does_not_keep_a_large_receiver_alive() -> bool:
+    mut kept: str[] = []
+    mut block = repeated("0123456789abcdef", 65536)
+    for index in range(600):
+        mut large = block + f"{index}"
+        kept.append(large[index:index + 40])
+        kept.append(large[-60:len(large)])
+    mut ok = len(kept) == 1200 and kept[0] == "0123456789abcdef0123456789abcdef01234567"
+    ok = ok and kept[2] == "123456789abcdef0123456789abcdef012345678" and kept[1][:4] == "5678"
+    return ok and kept[1199] == "789abcdef0123456789abcdef0123456789abcdef0123456789abcdef599"
+
+
+# Edges of the copy/view choice: short pieces, the length at which pieces start
+# to share, a quarter of the receiver, the whole receiver and empty pieces all
+# answer the same octets.
+# spec-case: TEXT-VIEW-3
+public func test_pieces_at_the_policy_edges() -> bool:
+    mut base = "abcdefghijklmnopqrstuvwxyz0123456789"
+    mut ok = base[0:8] == "abcdefgh" and base[0:9] == "abcdefghi" and base[27:36] == "123456789"
+    ok = ok and base[9:18] == "jklmnopqr" and base[0:36] == base and base[:] == base
+    ok = ok and base[5:5] == "" and base[40:50] == "" and len(base[1:10]) == 9
+    ok = ok and base[0:9] + base[9:] == base and base.strip() == base and base.split("?")[0] == base
+    mut padded = "   " + base + "   "
+    return ok and padded.strip() == base and padded.lstrip()[-3:] == "   " and padded.rstrip()[:3] == "   "
+
+
+# Every consumer reads a piece's octets: number parsing, formatting, encoding,
+# joining, case mapping, comparison and sorting.
+# spec: TEXT-VIEW-4
+public func test_every_consumer_reads_a_piece() -> bool:
+    mut pair = "12345678901,-4250.0000e-1".split(",")
+    mut ok = False
+    match parse_int(pair[0]):
+        case Some(value):
+            ok = value == 12345678901
+        case None:
+            ok = False
+    match parse_float(pair[1]):
+        case Some(value):
+            ok = ok and value == -425.0
+        case None:
+            ok = False
+    mut row = repeated("x", 30) + ",  padded words here  ," + repeated("y", 30)
+    mut fields = row.split(",")
+    mut words = fields[1].strip().split(" ")
+    ok = ok and words == ["padded", "words", "here"] and " ".join(words) == "padded words here"
+    ok = ok and f"<{fields[1].strip()}>" == "<padded words here>" and str(pair[0]) == "12345678901"
+    ok = ok and len(fields[0].encode()) == 30 and fields[2].encode() == repeated("y", 30).encode()
+    ok = ok and sorted([fields[0], fields[2]])[1] == fields[2] and sorted([fields[2], fields[0], fields[1]])[0] == fields[1]
+    ok = ok and fields[1].upper() == "  PADDED WORDS HERE  " and pair[0].zfill(13) == "0012345678901"
+    ok = ok and fields[1].replace("words", "w") == "  padded w here  " and pair[0].isdigit()
+    return ok and fields[1].startswith("  pad") and fields[1].endswith("re  ") and fields[0] + "," + fields[1] == row[:52]
+
+
+func inner_piece(index: int) -> str:
+    return repeated("inner-text-", 100)[index:index + 300]
+
+
+# Omitted upper bounds keep streaming tails, including a tail of a tail. A
+# bounded slice still asks for the ordinary retention policy.
+public func test_streaming_tails_preserve_scalars_and_consumers() -> bool:
+    mut owner = repeated("abcdefé😀", 40) + "é😀abcdefghi"
+    mut tail = owner[-11:]
+    mut nested = tail[1:]
+    mut ok = tail == "é😀abcdefghi" and nested == "😀abcdefghi"
+    ok = ok and nested[1:] == "abcdefghi" and nested[2:] == "bcdefghi"
+    ok = ok and owner[len(owner):] == "" and owner[len(owner) + 5:] == ""
+    ok = ok and owner[-10000:] == owner and nested[:9] == "😀abcdefgh"
+    ok = ok and nested.find("ghi") == 7 and nested.rfind("a", 0, 10) == 1
+    ok = ok and nested.strip("😀i") == "abcdefgh" and repr(nested) == "'😀abcdefghi'"
+    return ok and nested.encode() == b"\xf0\x9f\x98\x80abcdefghi"
+
+
+func main() -> int:
+    return 0

@@ -8,8 +8,8 @@ record BytesPacket:
 
 
 func bytes_pair[T: copy + storable](value: T) -> T[]:
-    mut values: T[] = [value]
-    values.append(value)
+    mut values: T[] = [value.copy()]
+    values.append(value.copy())
     return values
 
 
@@ -65,7 +65,7 @@ public func test_membership_accepts_a_byte_scalar_or_a_contiguous_subsequence() 
 # spec-case: PY-BYTES-1
 public func test_byte_strings_alias_through_helpers_and_survive_collection_stress() -> bool:
     mut seed = b"\x01"
-    mut grown = seed
+    mut grown = seed.copy()
     for step in range(6):
         grown = bytes_widen(grown)
     mut holder: bytes[] = []
@@ -92,13 +92,13 @@ public func test_split_join_prefix_suffix_search_and_container_storage() -> bool
         return False
     if line.find(b"bb") != 2 or line.find(b"zz") != -1:
         return False
-    mut packets: BytesPacket[] = [BytesPacket(tag="first", body=parts[1])]
+    mut packets: BytesPacket[] = [BytesPacket(tag="first", body=parts[1].copy())]
     mut index: dict[str, bytes] = {}
     for packet in packets:
-        index[packet.tag] = packet.body
+        index[packet.tag.copy()] = packet.body.copy()
     if index["first"] != b"bb":
         return False
-    mut optional: bytes? = Some(line)
+    mut optional: bytes? = Some(line.copy())
     match optional:
         case Some(value):
             if value != line:
@@ -162,7 +162,7 @@ public func test_find_any_searches_a_two_octet_set_with_one_pass_per_octet() -> 
 # `times` copies of `piece` by doubling.
 func doubled(piece: bytes, times: int) -> bytes:
     mut out = b""
-    mut chunk = piece
+    mut chunk = piece.copy()
     mut remaining = times
     while remaining > 0:
         if remaining % 2 == 1:
@@ -229,7 +229,7 @@ public func test_find_any_clamps_start_and_reads_values_as_a_byte_set() -> bool:
         return False
     mut values: int[] = []
     for value in range(256):
-        values.append(value)
+        values.append(value.copy())
     mut every = bytes(values)
     if len(every) != 256:
         return False

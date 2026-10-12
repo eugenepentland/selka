@@ -11,7 +11,7 @@ public func program() -> int:
     if f"{True} {()} {1.5}" == "True None 1.5":
         score = score + 4
     mut name = "x"
-    if f"a\t{name}b" == "a\tx" + "b":
+    if f"a\t{name.copy()}b" == "a\tx" + "b":
         score = score + 8
     if f"{f'{name}'}" == "x":
         score = score + 16

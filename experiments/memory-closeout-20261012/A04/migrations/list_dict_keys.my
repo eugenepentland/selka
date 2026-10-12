@@ -1,0 +1,5 @@
+func main() -> int:
+    const values = {"a": 1, "b": 2}
+    const keys = list(values.keys())
+    assert keys == ["a", "b"] and len(values) == 2
+    return 0

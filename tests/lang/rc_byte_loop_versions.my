@@ -13,7 +13,7 @@ public func test_full_short_empty_and_negative_byte_scans() -> bool:
 public func test_byte_snapshot_and_rebound_source_keep_canonical_backing() -> bool:
     mut source = byte_buffer([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])
     mut data = bytes(source)
-    mut snapshot = data
+    mut snapshot = data.copy()
     _ = source.append_byte(99)
     mut total = 0
     for i in range(len(data)):

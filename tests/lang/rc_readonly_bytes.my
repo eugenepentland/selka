@@ -1,5 +1,5 @@
 func returned(values: bytes[], index: int) -> bytes:
-    return values[index]
+    return values[index].copy()
 
 
 func octet(values: bytes[], index: int) -> int:

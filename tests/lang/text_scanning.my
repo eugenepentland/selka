@@ -2,7 +2,7 @@
 # number of guest steps and stays inside a test's instruction budget.
 func repeated(piece: str, times: int) -> str:
     mut out = ""
-    mut chunk = piece
+    mut chunk = piece.copy()
     mut remaining = times
     while remaining > 0:
         if remaining % 2 == 1:

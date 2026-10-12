@@ -1,8 +1,5 @@
-# A `mut` record callee that writes through a field path keeps the caller's
-# receiver loan (RC-PLAIN-UPDATE-CALL-2). The receiver `frame.rows` is
-# captured before the index call runs, so each read sees the captured list
-# while the call's write reaches the caller. Answers match the collector;
-# RC counting builds balance.
+# Explicitly copy the receiver before a nested mutation when a read needs
+# its earlier contents. The caller still receives the mutable writeback.
 record Frame:
     rows: int[][]
     ip: int
@@ -33,15 +30,21 @@ func element_argument(mut frame: Frame) -> int:
 
 
 func read_nested(mut frame: Frame) -> int:
-    return len(frame.rows[nested(mut frame)])
+    const captured = frame.rows.copy()
+    const index = nested(mut frame)
+    return len(captured[index])
 
 
 func read_field_argument(mut frame: Frame) -> int:
-    return frame.rows[field_argument(mut frame)][1]
+    const captured = frame.rows.copy()
+    const index = field_argument(mut frame)
+    return captured[index][1]
 
 
 func read_element_argument(mut frame: Frame) -> int:
-    return len(frame.rows[element_argument(mut frame)])
+    const captured = frame.rows.copy()
+    const index = element_argument(mut frame)
+    return len(captured[index])
 
 
 public func test_a_nested_write_callee_keeps_the_captured_receiver() -> bool:
