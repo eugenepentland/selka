@@ -1,134 +1,128 @@
-# A09 handoff — preparation checkpoint
+# A09 handoff — prepared runtime matrix, frozen baselines and versioning fix
 
-Base: `fbfcaa7a923186a8e773c3760f81c10aa345a432`.
-Owned files: this evidence directory and its measurement harness only.
-Initially evidence-only. The coordinator later reserved `src/core/version.zig` and
-`src/core/a09_version_test.zig` for a concrete migration blocker; root registration
-and SPEC changes were supplied by the coordinator. No old reports were overwritten.
+Base C0: `fbfcaa7a923186a8e773c3760f81c10aa345a432`.
+Worktree: `/home/epentland/ai/canopy/mylang-memory-20261012-A09`.
+Evidence and scratch remain private to A09. Historical reports were not overwritten.
 
-Fresh complete C0 Debug installation built successfully at
-`/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0`.
-Compiler SHA-256:
-`324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a`.
-All six installed files and package manifests are pinned in
-`C0-installation.json`; raw build output is `C0-build.log`.
-Installation is frozen and shared read-only with all ten workers.
+## Changes and commits
 
-Build command, run with the shared environment sourced:
+A09's preparation commits are `077400f76`, `4a700cb52`, `35bab5be4`,
+`e41f9fd61`, `e5fb737d3` and `d64d01fec9eeb29a7e182cbad3b6d0494377f1b8`.
+They provide frozen installations, runtime/RSS harnesses, calibrated sources,
+raw controlled capacity experiments and explicit methodology/host limitations.
 
-```sh
-scripts/build-slot.sh build "$ZIG" build \
-  -p "$PWD/.tmp/memory-closeout/A09/C0" \
-  -j"$MYLANG_DEV_JOBS" --maxrss "$MYLANG_DEV_MAXRSS"
-```
+The coordinator temporarily reserved `src/core/version.zig` and new
+`src/core/a09_version_test.zig` for a migration blocker. Fix
+`714ae7645b0315a38eb152e27b8a8b0bb44b79b6` includes the coordinator's root test
+registration and SPEC amendment. Those production reservations are now released.
+No other production files were edited by A09, and no shared-file requests remain.
 
-Build passed Guardian's 88 diff-scoped checks and exited zero. This is not
-complete final verification. The harness passes CLI, output/exit validation,
-per-process wait4 usage and timeout smoke checks. Guest baseline timing builds
-are queued. No before/after timing or memory improvement is claimed yet.
+## Frozen installations
 
-`manifest.json` pins nine initial guest cases: enlarged JSON array/object lookup,
-owned record unpack, and A01's same-source cheap/expensive maps at 1/2/8 workers.
-Expected checksums are calculated independently. See `methodology.md` for the
-fixed two-warmup/nine-measured alternating-pair procedure, affinity, noise review,
-RSS limitations, compile-cache states and timing schedule.
+Both installations are complete, with `bin/`, `libexec/` and `tools/` together:
 
-`build-memory-observation.json` is a 16-second observed process-memory envelope
-used by the coordinator for its centrally approved two-build-slot trial. Its
-148,948 KiB maximum sum is **not a full-run build peak**. It double counts shared
-pages and may include same-name unrelated processes. It is not RSS evidence for
-compiler performance or memory savings.
+- Debug: `.tmp/memory-closeout/A09/C0/bin/mylang`, SHA-256
+  `324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a`.
+- ReleaseFast: `.tmp/memory-closeout/A09/C0-releasefast/bin/mylang`, SHA-256
+  `78ac31605c7505c7cb330d41bdf2d3a232043e032f487e599f454b3bc6f2bd37`.
 
-Outstanding: frozen integrated candidate/default/retirement identities; A06
-qualified uninstrumented application binaries; final matched measurements;
-A03 allocation/RC/managed-memory results; A08 cache/scaling results; A01 scheduling
-and A02 policy evidence. Final performance conclusions depend on those artifacts.
+`C0-installation.json` and `C0-releasefast-installation.json` pin every installed
+file and tool. Both compilers were freshly built here from C0 production inputs,
+under shared admission. Their build logs are retained. The ReleaseFast source
+comparison against C0 was empty for compiler/build/docs inputs; only A09 evidence
+commits differed. The compiler's Debug mode does not imply Debug guest binaries:
+all primary runtime timing binaries are uninstrumented Release builds.
 
-Preparation followup: `measure.py run --cases ID --cpu 10` supports bounded
-per-case timing windows and appends only if both artifact sets still match.
-The coordinator approved CPU10 after CPU0's sibling was observed busy. Another
-session's `mylang-dl-closeout-20261012-S10` ReleaseFast build was observed outside
-our admission locks; this limits host isolation. `host.json` records the actual
-allowed affinity, sibling set, cgroup and lack of delegated cgroup writes.
-JSON inputs were extended again to 4,000,000 lookups in distinct `_long.my`
-files after a first-array correctness smoke completed below 100 ms. The earlier
-source/artifact remains preserved; it is not used for throughput conclusions.
-The C0-guest-v2 preparation restarted with the centrally approved two-slot env
-only while its old child wrapper was queued and unadmitted.
+Installed C0 components still derive from the historical component seed; this
+baseline package is not claimed entirely RC-free. These frozen installations were
+not rebuilt or modified by the later versioning fix.
 
-Additional preparation: compiler scaling uses a distinct ReleaseFast C0 build
-(required by repository policy), never Debug smoke timings. `tree_rss.py` provides
-separate memory-only sampled descendant RSS; its two-process/16 MB smoke passed.
-The wrapper does not claim cgroup accuracy and its instrumented elapsed time is
-excluded from primary results. A06's four application timing entrypoints are
-recorded in `applications-manifest.json` and baseline plain builds are queued.
-All four application shapes already passed A06's C0 release correctness checks;
-those counted results remain A06 evidence, not A09 runtime measurements.
+## Tests and evidence
 
-`schedule.json` records approved timing windows and observed limits. A02's first
-native policy comparisons are very noisy. The deterministic five-element-list
-allocation regression supports retaining the current capacity policy; no native
-policy throughput improvement is claimed. The first two windows' sources and
-binaries belong to A02's controlled C0 policy experiment, not an integrated final
-compiler. Final C1/C2/C3 measurement dependencies remain outstanding.
+The versioning defect was ordinary-mode `index_return` migration: loop members
+included an inlined early-return join also entered from outside via the normal
+loop exit. A clone copied that outside predecessor while the outside block still
+branched to the original join. `duplicate()` now rejects such a region before
+allocating clones; the sole permitted outside edge is preheader to header. The
+source program remains supported with unchanged semantics.
 
-C0 ReleaseFast is now built and frozen. Compiler SHA-256:
-`78ac31605c7505c7cb330d41bdf2d3a232043e032f487e599f454b3bc6f2bd37`.
-Its complete installation is `.tmp/memory-closeout/A09/C0-releasefast`; manifest
-and raw build log are committed. Nine C0 guest and six A06 application timing
-entries are built; exact identities are in `raw/C0-guests.json` and
-`raw/C0-applications.json`. Final candidate paired comparisons remain pending.
+Before the fix, the two-test focused suite passes the positive optimization
+control and fails the reduced source with InvalidIr. After the guard, both tests
+pass, including three leak-checked native executions in trusted/verified pipelines
+and the empty-input path. The positive single-entry fixture still unswitches.
+A first after-run had an incorrect lowercase Boolean expectation, corrected to
+`True`; its log is preserved. Guardian initially rejected cognitive complexity;
+extracting `singleEntry()` resolved it, and the final gate passed all 88 checks.
+`raw/version/results.json` records exact commands, compiler/source/test-binary
+hashes, before/after logs and the original optimized IR. A08 confirmed the source
+change invalidates optimization/emission/native/replay cache namespaces through
+build_identity. The coordinator still owns integrated verification.
 
-A09 completed A02's remaining replacement/buffer/reserved native policy timings
-on the same verified binaries, using longer workloads with two warmup and nine
-alternating measured pairs. All samples/checksums/RSS are preserved in `raw/`.
-The growth policy remains unchanged; no runtime or RSS saving is established.
-The broad-noise buffer median triggers review but does not establish a repeatable
-regression; the list-capacity edit does not change the byte-buffer growth path.
-See `README.md` and machine-readable `results.json` for scope and precise metrics.
+Native capacity-policy continuation is complete: two warmup and nine alternating
+measured pairs each for lengthened replacement, growing buffer and reserved
+buffer workloads, CPU 10, exact frozen baseline/start-one binary hashes. All
+samples/RSS/checksums are in `raw/capacity-*-long.json`. No runtime or RSS saving
+is established. A02 retains current growth based on deterministic allocation
+tradeoffs; the broad-noise buffer median is reviewed as an unchanged-path noise
+control, not a repeatable regression. See README/results.json for separate metrics.
 
-An A01 prototype map binary was built only for workload calibration. An attempted
-cancellation of the queued no-op barrier did not prevent the shell's subsequent
-pilot command: it later admitted and completed all 21 one-shot rows. The earlier
-statement that calibration never ran was incorrect. `raw/workload-pilot.json`
-preserves those actual observations as calibration only, not paired performance
-results. No compilation was interrupted and no data was lost. No A09 timing lease
-or request remains while the coordinator's critical component fix is underway.
+The final runtime matrix has 15 prepared C0 cases: nine JSON/record/map entries
+and six entries covering four application shapes, including parallel 1/2/8 workers.
+`calibrated-manifest.json` and `calibrated-applications-manifest.json` freeze source
+paths, local module hashes, runtime arguments, checksums and CPU affinity.
+`raw/C0-calibrated-guests.json` and `raw/C0-calibrated-applications.json` pin binaries.
+Recalibration reused verified artifacts; only record unpack needed a new source
+with one million iterations. Earlier sources and evidence remain preserved.
 
-The pilot identifies record unpack and several applications as too short, and
-prototype cheap-map cases need more repetitions. Expensive-map one-shot timings
-are slower in the prototype, but unrestricted hybrid P/E CPU selection is a
-material confound. Final qualification will pin the same comparable CPU topology
-on both arms and use the required alternating pairs before interpreting it.
+The final-input pilot passed all 21 exact-output checks (15 C0 and six A01
+prototype map entries), UTC 2026-10-12 01:38:38.742775–01:39:05.456624. Admitted
+elapsed time was 26.71 seconds; its 15-second queue wait is excluded. The shortest
+sample was 158.1 ms. `raw/workload-pilot-final-inputs.json` retains every observation.
+A01's prototype is solely a sizing control, not C1 or final performance evidence.
+Earlier all-CPU and fixed-topology pilots also remain preserved.
 
+## Running final qualification
 
-Coordinator-requested correctness fix: ordinary-mode migration of `index_return`
-exposed a loop-duplication graph bug. An inlined early-return join is included in
-`members()` but also has a predecessor outside the cloned region. Copying that
-predecessor creates an edge the outside block does not branch to. `duplicate()`
-now declines regions with any outside entry except preheader to header, before
-allocating cloned blocks. This is an optimizer eligibility restriction; the
-program remains supported with the same semantics.
+Use an exact frozen integrated Debug installation to build candidate timing
+artifacts through `measure.py build`; it owns build admission, so do not nest it.
+A06 timing source files currently resolve through its separate worktree using
+`--source-root`. After integration the same hashes can resolve in the coordinator
+checkout. The default/retirement selector may change, but paired guest inputs,
+arguments, environment, workers and affinity must remain identical.
 
-Before the fix, the focused regression suite passes its positive single-entry
-optimization control and fails the early-return fixture with InvalidIr. After
-the guard, both tests pass, including three leak-checked native runs across
-trusted/verified pipelines and the empty-input path. The first after-run exposed
-only an incorrect lowercase Boolean expectation, now corrected to `True`;
-that failed log remains preserved. `raw/version/results.json` pins source,
-compiler and raw evidence. The source change invalidates compiler cache namespaces
-through build_identity (confirmed by A08). This focused fix still requires the
-coordinator's final full gate and integrated artifact qualification.
+`compare.py --before BUILDS.json --after BUILDS.json --output NEW_DIRECTORY`
+checks compiler/binary identities, runs one case per exclusive timing lease, and
+uses an ordinary admission barrier between cases. It preserves completed cases
+on resume, rejects changed artifacts and stops on failure. Do not wrap this
+orchestrator in admission. Each case uses two warmup and nine measured alternating
+pairs. `measure.py run --cases ID` supports manual per-case scheduling as needed.
 
+Use the separate frozen ReleaseFast compiler pair for A08 compilation scaling.
+A08 owns cold/warm/receipt/replay/edit cases and their phase metrics. Its
+representative sampled tree RSS run is separate from timing; the very short
+replay sample missed the compiler and is explicitly invalid as replay tree RSS.
+`tree_rss.py` documents sampling/shared-page limitations; cgroup peak is unavailable.
 
-Version fix committed as `714ae7645b0315a38eb152e27b8a8b0bb44b79b6`; Guardian
-88/88 passed after extracting the eligibility predicate to meet the complexity
-limit. The coordinator owns integration and final full verification.
+Final workers use CPU 10 for one worker, CPUs 8/10 for two, and CPUs 0–11 for eight.
+The last set is six physical P cores with twelve logical CPUs. Cheap-map iteration
+counts differ across worker cases to bound the slower baseline windows, so raw
+wall times across those worker counts are not a scaling claim. Each paired case
+uses identical work. All input preparation is now complete.
 
-Current measurement preparation: calibrated manifests, 15 immutable C0 case
-records and six experimental map rows are ready. `compare.py` runs one case per
-timing lease with ordinary barriers and preserves completed evidence on resume.
-The final input-sizing pilot is not enqueued: its owning shell was terminated
-while only an ordinary no-op barrier was queued, before any timing wrapper
-existed. Waiting for the coordinator's gate-release notice. Final C1 Debug and
-ReleaseFast installations remain required before paired runtime/scaling results.
+## Limits and outstanding work
+
+A09 has zero final-candidate runtime pairs. C1 Debug/ReleaseFast installations and
+final A03/A06/A08 qualification remain dependencies owned by the coordinator and
+those agents. A03's original30/pinned81 census remains separate from timing-input
+supplements; metrics with different input sizes are not mixed. Default promotion
+and RC retirement require fresh affected artifacts/reruns. Earlier binaries will
+not be relabeled as C1/C2/C3. None of the three closeout milestones is claimed here.
+
+Shared timing admission drains cooperating jobs, not the whole host. Unrelated
+builds and historical unadmitted Guardian hooks are disclosed in schedule.json.
+A09's earlier commit ending 00:46:58 overlaps A02's noisy nested-five window;
+its hook admission is not established by preserved metadata. Future A09 commits
+explicitly use shared gate admission. The initial 16-second process snapshot is
+only an observed envelope, not a full-run build RSS peak. Managed counters, child
+RSS high-water marks, sampled descendant RSS, allocation traffic and wall time
+are reported separately.

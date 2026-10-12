@@ -225,7 +225,14 @@
       "calibrated-applications-manifest.json"
     ],
     "baseline_binaries_built": 15,
-    "final_input_pilot": "pending gate release",
+    "final_input_pilot": {
+      "status": "all21 checks passed",
+      "raw": "raw/workload-pilot-final-inputs.json",
+      "started_utc": "2026-10-12T01:38:38.742775+00:00",
+      "finished_utc": "2026-10-12T01:39:05.456624+00:00",
+      "minimum_sample_ms": 158.054702,
+      "scope": "input sizing only; not final paired performance"
+    },
     "prototype_scope": "A01 map71940901d plus A07 helper only; not integrated candidate",
     "affinity_by_workers": {
       "1": [

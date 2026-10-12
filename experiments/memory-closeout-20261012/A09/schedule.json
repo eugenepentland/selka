@@ -100,10 +100,21 @@
     },
     {
       "owner": "A09",
-      "id": "runtime-final-input-pilot",
-      "status": "not yet enqueued; owning orchestration terminated while ordinary barrier was queued, before timing wrapper existed",
+      "id": "runtime-final-input-pilot-deferred",
+      "status": "owning orchestration terminated while ordinary barrier queued, before timing wrapper; later rerun in ticket21 after gate-release notice",
       "ordinary_barrier_ticket": 245,
       "scope": "awaiting coordinator gate-release notification"
+    },
+    {
+      "owner": "A09",
+      "id": "runtime-final-input-pilot",
+      "status": "complete21 one-shot output checks; all samples over100ms",
+      "started_utc": "2026-10-12T01:38:38.742775+00:00",
+      "finished_utc": "2026-10-12T01:39:05.456624+00:00",
+      "timing_admission_ticket": 21,
+      "queue_wait_s": 15,
+      "raw_path": "A09/raw/workload-pilot-final-inputs.json",
+      "scope": "input sizing only; not final integrated compiler performance"
     }
   ],
   "hook_admission_audit": {

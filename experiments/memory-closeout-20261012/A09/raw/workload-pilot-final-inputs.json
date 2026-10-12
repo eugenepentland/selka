@@ -1,0 +1,513 @@
+{
+  "scope": "One invocation per artifact to select workload sizes; no speedup conclusions.",
+  "started_utc": "2026-10-12T01:38:38.742775+00:00",
+  "host": {
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "allowed_cpus": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "cpuinfo": "processor\t: 0\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2599.971\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 0\ncpu cores\t: 14\napicid\t\t: 0\ninitial apicid\t: 0\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 1\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2600.000\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 0\ncpu cores\t: 14\napicid\t\t: 1\ninitial apicid\t: 1\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 2\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2600.000\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 4\ncpu cores\t: 14\napicid\t\t: 8\ninitial apicid\t: 8\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 3\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2600.000\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 4\ncpu cores\t: 14\napicid\t\t: 9\ninitial apicid\t: 9\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 4\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2600.028\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 8\ncpu cores\t: 14\napicid\t\t: 16\ninitial apicid\t: 16\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 5\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2600.000\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 8\ncpu cores\t: 14\napicid\t\t: 17\ninitial apicid\t: 17\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 6\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2599.973\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 12\ncpu cores\t: 14\napicid\t\t: 24\ninitial apicid\t: 24\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 7\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2599.973\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 12\ncpu cores\t: 14\napicid\t\t: 25\ninitial apicid\t: 25\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 8\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2599.973\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 16\ncpu cores\t: 14\napicid\t\t: 32\ninitial apicid\t: 32\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 9\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2600.000\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 16\ncpu cores\t: 14\napicid\t\t: 33\ninitial apicid\t: 33\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 10\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2599.973\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 20\ncpu cores\t: 14\napicid\t\t: 40\ninitial apicid\t: 40\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 11\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2600.000\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 20\ncpu cores\t: 14\napicid\t\t: 41\ninitial apicid\t: 41\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 12\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2398.850\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 24\ncpu cores\t: 14\napicid\t\t: 48\ninitial apicid\t: 48\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 13\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2398.598\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 25\ncpu cores\t: 14\napicid\t\t: 50\ninitial apicid\t: 50\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 14\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2398.789\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 26\ncpu cores\t: 14\napicid\t\t: 52\ninitial apicid\t: 52\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 15\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2398.667\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 27\ncpu cores\t: 14\napicid\t\t: 54\ninitial apicid\t: 54\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 16\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2386.891\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 28\ncpu cores\t: 14\napicid\t\t: 56\ninitial apicid\t: 56\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 17\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2387.261\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 29\ncpu cores\t: 14\napicid\t\t: 58\ninitial apicid\t: 58\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 18\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2387.331\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 30\ncpu cores\t: 14\napicid\t\t: 60\ninitial apicid\t: 60\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 19\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2387.466\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 31\ncpu cores\t: 14\napicid\t\t: 62\ninitial apicid\t: 62\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\n",
+    "cgroup": "0::/user.slice/user-1000.slice/session-3387.scope\n",
+    "boot_id": "52bc285e-69f2-4d0b-a648-1196587b54ba",
+    "loadavg": "19.01 14.97 15.37 12/1878 2684183"
+  },
+  "cases": [
+    {
+      "id": "array",
+      "builds_path": ".tmp/memory-closeout/A09/C0-calibrated-final/builds.json",
+      "cpus": [
+        10
+      ],
+      "binary_sha256": "de4b61e31498a7677ae6f9c06a73b5889ad2ba63e101c39143b4d1d300fb2bfe",
+      "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+      "args": [],
+      "wall_ns": 715531713,
+      "maxrss_kib": 254148,
+      "user_s": 0.7035659999999999,
+      "system_s": 0.001993,
+      "status": 0,
+      "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+      "stderr": ""
+    },
+    {
+      "id": "object",
+      "builds_path": ".tmp/memory-closeout/A09/C0-calibrated-final/builds.json",
+      "cpus": [
+        10
+      ],
+      "binary_sha256": "da5a86e49d86bb2ae069cebf553ef3dc2ee8454700dfa9280159d203206da107",
+      "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+      "args": [],
+      "wall_ns": 860958183,
+      "maxrss_kib": 254148,
+      "user_s": 0.854235,
+      "system_s": 0.001,
+      "status": 0,
+      "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+      "stderr": ""
+    },
+    {
+      "id": "record",
+      "builds_path": ".tmp/memory-closeout/A09/C0-calibrated-final/builds.json",
+      "cpus": [
+        10
+      ],
+      "binary_sha256": "f5f994a9341c49ad5ac3e0e61c72aa239ad0ad5d509e25dfd38f3c2c2a48840b",
+      "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+      "args": [],
+      "wall_ns": 504260305,
+      "maxrss_kib": 254148,
+      "user_s": 0.501512,
+      "system_s": 0.001001,
+      "status": 0,
+      "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+      "stderr": ""
+    },
+    {
+      "id": "parallel_cheap_1",
+      "builds_path": ".tmp/memory-closeout/A09/C0-calibrated-final/builds.json",
+      "cpus": [
+        10
+      ],
+      "binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+      "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+      "args": [
+        "513",
+        "65536",
+        "cheap"
+      ],
+      "wall_ns": 3640737609,
+      "maxrss_kib": 254148,
+      "user_s": 3.635551,
+      "system_s": 0.001999,
+      "status": 0,
+      "stdout_sha256": "1095e5e88363f9c322ebafe23ad246a9d4712d8f186897dd6865bdfb9d240e6d",
+      "stderr": ""
+    },
+    {
+      "id": "parallel_cheap_2",
+      "builds_path": ".tmp/memory-closeout/A09/C0-calibrated-final/builds.json",
+      "cpus": [
+        8,
+        10
+      ],
+      "binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+      "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+      "args": [
+        "513",
+        "16384",
+        "cheap"
+      ],
+      "wall_ns": 4459448780,
+      "maxrss_kib": 254148,
+      "user_s": 5.647687,
+      "system_s": 2.351596,
+      "status": 0,
+      "stdout_sha256": "56284fed1cf17be62ae4906f70c3b23e3eb799e1e42b802c58a32e2c671be53a",
+      "stderr": ""
+    },
+    {
+      "id": "parallel_cheap_8",
+      "builds_path": ".tmp/memory-closeout/A09/C0-calibrated-final/builds.json",
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+      "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+      "args": [
+        "513",
+        "8192",
+        "cheap"
+      ],
+      "wall_ns": 2954129533,
+      "maxrss_kib": 254148,
+      "user_s": 21.433944,
+      "system_s": 1.192219,
+      "status": 0,
+      "stdout_sha256": "cd4cbec99e605239f80d6975fdb4547a7735e661836f7b6317709aced4be16d5",
+      "stderr": ""
+    },
+    {
+      "id": "parallel_expensive_1",
+      "builds_path": ".tmp/memory-closeout/A09/C0-calibrated-final/builds.json",
+      "cpus": [
+        10
+      ],
+      "binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+      "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+      "args": [
+        "8193",
+        "32",
+        "expensive"
+      ],
+      "wall_ns": 2052198998,
+      "maxrss_kib": 254148,
+      "user_s": 2.048477,
+      "system_s": 0.002,
+      "status": 0,
+      "stdout_sha256": "6fa918f45367b06aa3b28d6376ae4ddb576dafb69524425d2379fcaf482e654f",
+      "stderr": ""
+    },
+    {
+      "id": "parallel_expensive_2",
+      "builds_path": ".tmp/memory-closeout/A09/C0-calibrated-final/builds.json",
+      "cpus": [
+        8,
+        10
+      ],
+      "binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+      "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+      "args": [
+        "8193",
+        "32",
+        "expensive"
+      ],
+      "wall_ns": 1292770744,
+      "maxrss_kib": 254148,
+      "user_s": 2.084272,
+      "system_s": 0.076973,
+      "status": 0,
+      "stdout_sha256": "6fa918f45367b06aa3b28d6376ae4ddb576dafb69524425d2379fcaf482e654f",
+      "stderr": ""
+    },
+    {
+      "id": "parallel_expensive_8",
+      "builds_path": ".tmp/memory-closeout/A09/C0-calibrated-final/builds.json",
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+      "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+      "args": [
+        "8193",
+        "32",
+        "expensive"
+      ],
+      "wall_ns": 310123648,
+      "maxrss_kib": 254148,
+      "user_s": 2.13934,
+      "system_s": 0.06747399999999999,
+      "status": 0,
+      "stdout_sha256": "6fa918f45367b06aa3b28d6376ae4ddb576dafb69524425d2379fcaf482e654f",
+      "stderr": ""
+    },
+    {
+      "id": "a06_word_count",
+      "builds_path": ".tmp/memory-closeout/A09/C0-apps-calibrated-final/builds.json",
+      "cpus": [
+        10
+      ],
+      "binary_sha256": "13974c4ea293b0e43d0f6b5a2dc7c3c0289d5ad691642d0044affd6be88e3efb",
+      "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+      "args": [
+        "200"
+      ],
+      "wall_ns": 490671877,
+      "maxrss_kib": 254612,
+      "user_s": 0.485805,
+      "system_s": 0.0009989999999999999,
+      "status": 0,
+      "stdout_sha256": "3933788a2b7038cb7ff83c75a4ab02a9008c08d3eadd24e48d8c7e4b17ee53ba",
+      "stderr": ""
+    },
+    {
+      "id": "a06_nested_json",
+      "builds_path": ".tmp/memory-closeout/A09/C0-apps-calibrated-final/builds.json",
+      "cpus": [
+        10
+      ],
+      "binary_sha256": "5c2737ad2521138f3e7a4a25b685912e87889716379268ebbc085889ac64ffc5",
+      "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+      "args": [
+        "80"
+      ],
+      "wall_ns": 214589763,
+      "maxrss_kib": 254612,
+      "user_s": 0.208705,
+      "system_s": 0.001003,
+      "status": 0,
+      "stdout_sha256": "f86c99186bc1d39c2e3780ce523e4039bfd947506bd821342ad5a24a9b7ee4dd",
+      "stderr": ""
+    },
+    {
+      "id": "a06_file_processing",
+      "builds_path": ".tmp/memory-closeout/A09/C0-apps-calibrated-final/builds.json",
+      "cpus": [
+        10
+      ],
+      "binary_sha256": "c460a2ddff3ddf0d75b4495f49b3d83ef0b02ef22d6c7914e3039dbccde3e161",
+      "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+      "args": [
+        "150"
+      ],
+      "wall_ns": 158054702,
+      "maxrss_kib": 254612,
+      "user_s": 0.151641,
+      "system_s": 0.001995,
+      "status": 0,
+      "stdout_sha256": "86f3986b6146069cf805d131dd7152f7fbd3a91a941d977b7b60d089e81e246d",
+      "stderr": ""
+    },
+    {
+      "id": "a06_parallel_t1",
+      "builds_path": ".tmp/memory-closeout/A09/C0-apps-calibrated-final/builds.json",
+      "cpus": [
+        10
+      ],
+      "binary_sha256": "3be619806b8517c2de383b9aef455aa9d603a7fb02ca1fd4f6762e6ce474653b",
+      "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+      "args": [
+        "40"
+      ],
+      "wall_ns": 1154233451,
+      "maxrss_kib": 254612,
+      "user_s": 1.14536,
+      "system_s": 0.0009989999999999999,
+      "status": 0,
+      "stdout_sha256": "60cbdb244b9d86cb116d872272046034a8199046dc68be317b8b976b5b06f932",
+      "stderr": ""
+    },
+    {
+      "id": "a06_parallel_t2",
+      "builds_path": ".tmp/memory-closeout/A09/C0-apps-calibrated-final/builds.json",
+      "cpus": [
+        8,
+        10
+      ],
+      "binary_sha256": "3be619806b8517c2de383b9aef455aa9d603a7fb02ca1fd4f6762e6ce474653b",
+      "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+      "args": [
+        "40"
+      ],
+      "wall_ns": 604621392,
+      "maxrss_kib": 254612,
+      "user_s": 1.122253,
+      "system_s": 0.009975,
+      "status": 0,
+      "stdout_sha256": "60cbdb244b9d86cb116d872272046034a8199046dc68be317b8b976b5b06f932",
+      "stderr": ""
+    },
+    {
+      "id": "a06_parallel_t8",
+      "builds_path": ".tmp/memory-closeout/A09/C0-apps-calibrated-final/builds.json",
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "binary_sha256": "3be619806b8517c2de383b9aef455aa9d603a7fb02ca1fd4f6762e6ce474653b",
+      "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+      "args": [
+        "40"
+      ],
+      "wall_ns": 270124856,
+      "maxrss_kib": 254612,
+      "user_s": 1.599642,
+      "system_s": 0.008953,
+      "status": 0,
+      "stdout_sha256": "60cbdb244b9d86cb116d872272046034a8199046dc68be317b8b976b5b06f932",
+      "stderr": ""
+    },
+    {
+      "id": "parallel_cheap_1",
+      "builds_path": ".tmp/memory-closeout/A09/map-prototype-calibrated-final/builds.json",
+      "cpus": [
+        10
+      ],
+      "binary_sha256": "d9be43ba78efc561d608f3bb5f1a6aca3aa176e877359211c98df92476865182",
+      "compiler_sha256": "1efd0c92cc0b98768a9a89961c50f0c1c554b5ae4635dcaa9f218217c50f5275",
+      "args": [
+        "513",
+        "65536",
+        "cheap"
+      ],
+      "wall_ns": 182756767,
+      "maxrss_kib": 255004,
+      "user_s": 0.178429,
+      "system_s": 0.0010019999999999999,
+      "status": 0,
+      "stdout_sha256": "1095e5e88363f9c322ebafe23ad246a9d4712d8f186897dd6865bdfb9d240e6d",
+      "stderr": ""
+    },
+    {
+      "id": "parallel_cheap_2",
+      "builds_path": ".tmp/memory-closeout/A09/map-prototype-calibrated-final/builds.json",
+      "cpus": [
+        8,
+        10
+      ],
+      "binary_sha256": "d9be43ba78efc561d608f3bb5f1a6aca3aa176e877359211c98df92476865182",
+      "compiler_sha256": "1efd0c92cc0b98768a9a89961c50f0c1c554b5ae4635dcaa9f218217c50f5275",
+      "args": [
+        "513",
+        "16384",
+        "cheap"
+      ],
+      "wall_ns": 200693172,
+      "maxrss_kib": 255004,
+      "user_s": 0.135152,
+      "system_s": 0.08658099999999999,
+      "status": 0,
+      "stdout_sha256": "56284fed1cf17be62ae4906f70c3b23e3eb799e1e42b802c58a32e2c671be53a",
+      "stderr": ""
+    },
+    {
+      "id": "parallel_cheap_8",
+      "builds_path": ".tmp/memory-closeout/A09/map-prototype-calibrated-final/builds.json",
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "binary_sha256": "d9be43ba78efc561d608f3bb5f1a6aca3aa176e877359211c98df92476865182",
+      "compiler_sha256": "1efd0c92cc0b98768a9a89961c50f0c1c554b5ae4635dcaa9f218217c50f5275",
+      "args": [
+        "513",
+        "8192",
+        "cheap"
+      ],
+      "wall_ns": 223388465,
+      "maxrss_kib": 255004,
+      "user_s": 1.33367,
+      "system_s": 0.103517,
+      "status": 0,
+      "stdout_sha256": "cd4cbec99e605239f80d6975fdb4547a7735e661836f7b6317709aced4be16d5",
+      "stderr": ""
+    },
+    {
+      "id": "parallel_expensive_1",
+      "builds_path": ".tmp/memory-closeout/A09/map-prototype-calibrated-final/builds.json",
+      "cpus": [
+        10
+      ],
+      "binary_sha256": "d9be43ba78efc561d608f3bb5f1a6aca3aa176e877359211c98df92476865182",
+      "compiler_sha256": "1efd0c92cc0b98768a9a89961c50f0c1c554b5ae4635dcaa9f218217c50f5275",
+      "args": [
+        "8193",
+        "32",
+        "expensive"
+      ],
+      "wall_ns": 2004773637,
+      "maxrss_kib": 255004,
+      "user_s": 2.000807,
+      "system_s": 0.0,
+      "status": 0,
+      "stdout_sha256": "6fa918f45367b06aa3b28d6376ae4ddb576dafb69524425d2379fcaf482e654f",
+      "stderr": ""
+    },
+    {
+      "id": "parallel_expensive_2",
+      "builds_path": ".tmp/memory-closeout/A09/map-prototype-calibrated-final/builds.json",
+      "cpus": [
+        8,
+        10
+      ],
+      "binary_sha256": "d9be43ba78efc561d608f3bb5f1a6aca3aa176e877359211c98df92476865182",
+      "compiler_sha256": "1efd0c92cc0b98768a9a89961c50f0c1c554b5ae4635dcaa9f218217c50f5275",
+      "args": [
+        "8193",
+        "32",
+        "expensive"
+      ],
+      "wall_ns": 957295702,
+      "maxrss_kib": 255004,
+      "user_s": 1.903254,
+      "system_s": 0.0009989999999999999,
+      "status": 0,
+      "stdout_sha256": "6fa918f45367b06aa3b28d6376ae4ddb576dafb69524425d2379fcaf482e654f",
+      "stderr": ""
+    },
+    {
+      "id": "parallel_expensive_8",
+      "builds_path": ".tmp/memory-closeout/A09/map-prototype-calibrated-final/builds.json",
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "binary_sha256": "d9be43ba78efc561d608f3bb5f1a6aca3aa176e877359211c98df92476865182",
+      "compiler_sha256": "1efd0c92cc0b98768a9a89961c50f0c1c554b5ae4635dcaa9f218217c50f5275",
+      "args": [
+        "8193",
+        "32",
+        "expensive"
+      ],
+      "wall_ns": 291438383,
+      "maxrss_kib": 255004,
+      "user_s": 1.9161,
+      "system_s": 0.008046,
+      "status": 0,
+      "stdout_sha256": "6fa918f45367b06aa3b28d6376ae4ddb576dafb69524425d2379fcaf482e654f",
+      "stderr": ""
+    }
+  ],
+  "finished_utc": "2026-10-12T01:39:05.456624+00:00"
+}

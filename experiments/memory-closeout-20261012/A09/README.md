@@ -89,7 +89,7 @@ sibling. [Methodology](methodology.md), [host metadata](host.json), and the
 [timing schedule](schedule.json) record these constraints.
 
 Still required: freeze C1; compile candidate binaries from identical source/inputs;
-confirm the final lengthened input pilot; run the full two-warmup/nine-pair runtime comparisons;
+run the full two-warmup/nine-pair runtime comparisons;
 combine A03/A06/A08 evidence on that exact candidate; repeat affected measurements
 after default promotion and retirement. Earlier artifacts will not be relabeled
 as C1, C2 or C3 results. The prepared harness and baseline do not close those items.
@@ -121,8 +121,9 @@ P cores with twelve logical CPUs; E cores are excluded. The
 [calibrated guest](calibrated-manifest.json) and
 [application](calibrated-applications-manifest.json) manifests and frozen binary
 records retain those exact choices. Argument-only recalibration reuses verified
-binary identities; it does not rebuild or relabel the compiler. The final-input
-pilot is postponed until the coordinator releases its verification gate.
+binary identities; it does not rebuild or relabel the compiler. The [final-input pilot](raw/workload-pilot-final-inputs.json) completed all 21
+output checks in a 26.71-second admitted window; the shortest sample was 158.1 ms.
+This completes input sizing, while final-candidate paired measurements remain pending.
 
 `compare.py` prepares no binaries itself. Given frozen before/after build records,
 it runs one case per timing lease and yields through an ordinary admission ticket
