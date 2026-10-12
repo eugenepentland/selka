@@ -1,0 +1,48 @@
+{
+  "base": "8fa0560309cc2c78b9691a94a6c7e2be2815d4a4",
+  "milestones_complete": false,
+  "items": [
+    {
+      "id": "sources",
+      "state": "in_progress",
+      "owner": "lox_owned,eda_owned",
+      "requirement": "Frozen original and migrated full applications with source provenance"
+    },
+    {
+      "id": "clock_borrow",
+      "state": "in_progress",
+      "owner": "lox_provider",
+      "requirement": "Bounded read-only optional provider argument contract and Lox source threading; cleanup and refusal regressions"
+    },
+    {
+      "id": "correctness",
+      "state": "pending",
+      "owner": "lox_owned,eda_owned",
+      "requirement": "All full-port tests plus 26 Lox performance cells and 34 EDA output goldens; no omitted failures"
+    },
+    {
+      "id": "runtime_rss",
+      "state": "prepared",
+      "owner": "lox_eda_bench",
+      "requirement": "Same-compiler original RC / migrated RC / migrated zeroRC, four reference arms; 2warmups9measured3RSS, bounded guest deadlines"
+    },
+    {
+      "id": "managed_counters",
+      "state": "pending",
+      "owner": "lox_eda_bench",
+      "requirement": "Separate counted mylang builds: allocation traffic,reallocations,managed peak,exit-live,RC events"
+    },
+    {
+      "id": "history",
+      "state": "prepared",
+      "owner": "lox_eda_bench",
+      "requirement": "Stored historical suite and exact new identities, separate from fresh paired controls"
+    },
+    {
+      "id": "verification",
+      "state": "pending",
+      "owner": "root",
+      "requirement": "Focused ownership/native checks then complete registered gate on frozen integrated compiler"
+    }
+  ]
+}
