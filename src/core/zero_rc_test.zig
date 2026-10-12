@@ -1905,3 +1905,27 @@ test "zero RC list extension accepts independent copies of recursive ancestors" 
         \\    return 0
     , "2 0\n4 1\n");
 }
+
+// spec-case: NEW-CORE-U2-BORROW-1
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC scalar field snapshots do not borrow a later loop owner" {
+    try executes(std.testing.allocator,
+        \\record Marks:
+        \\    seen: int[]
+        \\    generation: int
+        \\func visit(mut marks: Marks, n: int) -> int:
+        \\    marks.generation += 1
+        \\    const generation = marks.generation
+        \\    marks.seen[0] = generation
+        \\    mut next = 0
+        \\    while next < n:
+        \\        marks.seen[next % len(marks.seen)] = generation
+        \\        next += 1
+        \\    return marks.seen[0]
+        \\func main(args: str[], out: Stream) -> int:
+        \\    mut marks = Marks(seen=[0, 0], generation=0)
+        \\    out.print(visit(mut marks, len(args) + 2))
+        \\    out.print(marks.seen[0], marks.seen[1])
+        \\    return 0
+    , "1\n1 1\n");
+}
