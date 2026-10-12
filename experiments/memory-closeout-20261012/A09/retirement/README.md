@@ -39,3 +39,18 @@ current `.snapshot()`/single-owner compatibility coverage will give way to
 independent explicit-copy storage checks; experimental selectors disappear only
 when the coordinator applies the rollout/retirement changes. No runtime policy,
 source denominator or safety assertion is dropped to make an oracle pass.
+
+`count-test-retirement.patch` is also unapplied. It replaces the legacy positive
+snapshot-sharing cost comparison with explicit child independence at the same
+40-row size, preserving `2 3` output and adding an independent child-value check
+through mutation of the original. Support5 debug/release measurements are pinned
+in `independent-copy-support5.json.gz`: 41 list copies / 960 copy bytes, 91 balanced
+allocations/frees, zero runtime RC and zero exit-live managed bytes. The outer
+list copy is now included by the corrected recursive-copy hook; these totals
+must not be relabeled as the previous sharing fixture's results.
+
+The patch removes experimental selectors from this test file and gives the new
+independence test all five ordinary pipelines. It also makes the small uncounted
+`twice` fixture's independent return explicit. Actual default-command execution
+of the patch is still pending C2/Stage4; the current evidence used the opt-in flag.
+The existing negative `.snapshot()` ownership test is retained by its owner.
