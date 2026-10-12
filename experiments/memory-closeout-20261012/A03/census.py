@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Fresh, failure-preserving census; historical evidence is read-only.
 
-Every compiler invocation takes build admission itself. Do not wrap this harness
-in build-slot.sh. Results and raw artifacts are only written below --output.
+Bounded groups of compiler invocations share one build admission lease. Do not
+wrap this harness in build-slot.sh. Writes are only below --output.
 """
 import argparse
+import atexit
 import hashlib
 import importlib.util
 import json
@@ -13,6 +14,7 @@ from pathlib import Path
 import subprocess
 import sys
 import time
+import signal
 
 sys.dont_write_bytecode = True
 HERE = Path(__file__).resolve().parent
@@ -22,6 +24,8 @@ MODES = {"release": ["--release"], "debug": ["--unoptimized"],
          "no_facts": ["--release", "--no-facts"]}
 RC_SYMBOLS = ("myl_core_retain", "myl_core_release", "myl_core_share",
               "myl_core_free_block")
+LEASE = None
+STOP_REQUESTED = False
 
 
 def digest(path):
@@ -31,6 +35,61 @@ def digest(path):
 def save(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, indent=2) + "\n")
+
+
+class AdmissionLease:
+    """A cooperating child holds the slot while this parent runs bounded work."""
+
+    def __init__(self, output, env, limit):
+        self.output, self.env, self.limit = output, env, limit
+        self.child = None
+        self.count = 0
+        self.serial = len(list((output / "raw/admission").glob("lease-*.json")))
+
+    def close(self):
+        if self.child is None:
+            return
+        self.child.stdin.close()
+        status = self.child.wait(timeout=30)
+        self.child.stdout.close()
+        self.log.close()
+        self.record.update(release_status=status, compiler_invocations=self.count,
+                           admitted_work_ns=time.monotonic_ns() - self.admitted_at)
+        save(self.receipt, self.record)
+        self.child = None
+
+    def command(self):
+        if self.child is not None and (self.count >= self.limit or time.monotonic_ns() - self.admitted_at >= 60_000_000_000):
+            self.close()
+        if self.child is None:
+            self.serial += 1
+            directory = self.output / "raw/admission"
+            directory.mkdir(parents=True, exist_ok=True)
+            self.receipt = directory / f"lease-{self.serial}.json"
+            self.log = (directory / f"lease-{self.serial}.stderr").open("w")
+            code = "import sys; print('admitted', flush=True); sys.stdin.buffer.read()"
+            argv = [str(ROOT / "scripts/build-slot.sh"), "build", sys.executable, "-u", "-c", code]
+            started = time.monotonic_ns()
+            self.child = subprocess.Popen(argv, cwd=ROOT, env=self.env, stdin=subprocess.PIPE,
+                                          stdout=subprocess.PIPE, stderr=self.log)
+            ready = self.child.stdout.readline()
+            if ready != b"admitted\n":
+                self.child.stdin.close()
+                self.child.wait(timeout=30)
+                self.child.stdout.close()
+                self.log.close()
+                self.child = None
+                raise RuntimeError("build admission lease failed: " + ready.decode(errors="replace"))
+            self.admitted_at = time.monotonic_ns()
+            self.record = {"argv": argv, "queue_wait_ns": self.admitted_at - started,
+                           "limit_compiler_invocations": self.limit, "release_after_ns": 60_000_000_000,
+                           "note": "Release happens at a safe command boundary; an individual compile may exceed 60 seconds."}
+            save(self.receipt, self.record)
+            self.count = 0
+        if self.child.poll() is not None:
+            raise RuntimeError("admission holder exited before compilation")
+        self.count += 1
+        return str(self.receipt.relative_to(self.output))
 
 
 def read(relative):
@@ -106,8 +165,12 @@ def load_helper(name, relative):
 
 def invoke(argv, prefix, env, admitted=False, timeout=1200):
     argv = list(map(str, argv))
+    admission = None
     if admitted:
-        argv = [str(ROOT / "scripts/build-slot.sh"), "build", *argv]
+        if LEASE is None:
+            argv = [str(ROOT / "scripts/build-slot.sh"), "build", *argv]
+        else:
+            admission = LEASE.command()
     prefix.parent.mkdir(parents=True, exist_ok=True)
     start = time.monotonic_ns()
     try:
@@ -117,6 +180,9 @@ def invoke(argv, prefix, env, admitted=False, timeout=1200):
     except subprocess.TimeoutExpired as error:
         record = {"argv": argv, "exit": None, "error": "timeout", "stdout": (error.stdout or b"").decode(errors="replace"),
                   "stderr": (error.stderr or b"").decode(errors="replace"), "wall_ns_including_admission": time.monotonic_ns() - start}
+    if admission:
+        record["admission_receipt"] = admission
+        record["wall_ns_excludes_admission_wait"] = True
     save(prefix.with_suffix(".json"), record)
     return record
 
@@ -230,6 +296,7 @@ def summarize(result, cases):
 
 
 def main():
+    global LEASE, STOP_REQUESTED
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--write-manifest", action="store_true")
     parser.add_argument("--compiler", type=Path)
@@ -241,7 +308,10 @@ def main():
     parser.add_argument("--family", action="append", default=[])
     parser.add_argument("--modes", nargs="+", choices=MODES, default=list(MODES))
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--batch-size", type=int, default=10, help="compiler calls per shared build lease (1..10)")
     args = parser.parse_args()
+    if not 1 <= args.batch_size <= 10:
+        parser.error("batch size must be 1..10")
     if args.write_manifest:
         save(HERE / "manifest.json", manifest())
         return
@@ -258,6 +328,12 @@ def main():
     env = dict(os.environ, ZIG=str(args.zig), MYLANG_ZIG=str(args.zig), MYL_CORE_LEAKCHECK="1")
     for key in ("MYLANG_COUNTERS", "MYLANG_OPTIONS", "MYLANG_CORE_SANITIZE"):
         env.pop(key, None)
+    LEASE = AdmissionLease(args.output, env, args.batch_size)
+    atexit.register(LEASE.close)
+    def request_checkpoint(_signum, _frame):
+        global STOP_REQUESTED
+        STOP_REQUESTED = True
+    signal.signal(signal.SIGUSR1, request_checkpoint)
     audit = load_helper("a03_audit", "experiments/zero-rc-20261011/audit.py")
     census = load_helper("a03_historical_census", "experiments/rc-census-20261010/census.py")
     identities = {"compiler": {"path": str(args.compiler), "sha256": digest(args.compiler), "commit": args.compiler_commit},
@@ -270,7 +346,7 @@ def main():
     else:
         result = {"schema": "memory-closeout-census-v1", "identities": identities,
                   "limitations": ["Managed counts omit native scratch, provider buffers, stacks, and allocator overhead; not RSS.",
-                                  "Build wall time includes admission; no compile/runtime speed claims.",
+                                  "Admission receipts preserve queue wait separately; command receipts flag its exclusion. No compile/runtime speed claims.",
                                   "Emitted/runtime RC events can overlap and are not added.",
                                   "Original source refusals are recorded separately from migrated workload results."], "cases": {}}
     for case in cases:
@@ -290,6 +366,11 @@ def main():
             result["summary"] = summarize(result, cases)
             save(result_path, result)
             print(row["status"], case["id"], mode, flush=True)
+            if STOP_REQUESTED:
+                print("checkpoint requested; all completed lanes saved", flush=True)
+                LEASE.close()
+                return 3
+    LEASE.close()
     for key in ("compiler", "zig"):
         assert digest(getattr(args, key)) == identities[key]["sha256"], "tool changed during run"
     print(json.dumps(result["summary"], indent=2), flush=True)

@@ -131,7 +131,7 @@ def main():
               "For every admitted executable, machine-readable results preserve source/binary/LLVM hashes, output, workload and whole-program counters, and LLVM/linked-symbol audit results.",
               "`raw-json.tar.gz` contains the command receipts and complete counted reports. Full native binaries and LLVM remain in the recorded scratch run directory.",
               "Managed peak is never subtracted as traffic and is not process RSS. Native dictionaries, sort scratch, provider buffers, task stacks and allocator overhead lie outside these counters.",
-              "Compilation receipts include admission wait; they are not compile-performance evidence. A09 owns runtime/RSS/compile timings.", ""]
+              "Admission receipts record queue wait separately for batched runs; command receipts mark whether wait is excluded. These are not compile-performance measurements. A09 owns runtime/RSS/compile timings.", ""]
     failures = [(name, mode, lane) for name, case in result["cases"].items() for mode, lane in case["modes"].items() if lane["status"] != "passed"]
     if failures:
         lines += ["## Failures and refusals", ""]
