@@ -46,6 +46,18 @@ pub fn contract(symbol: []const u8) ?Contract {
     if (std.mem.eql(u8, symbol, "myl_core_group_open") or std.mem.eql(u8, symbol, "myl_core_owned_group_take")) return .{ .result = .fresh };
     if (std.mem.eql(u8, symbol, "myl_core_owned_file_scope_end") or std.mem.eql(u8, symbol, "myl_core_owned_cap_scope_end")) return .{ .owned = 1 };
     if (std.mem.eql(u8, symbol, "myl_core_clock_advance") or std.mem.eql(u8, symbol, "myl_core_host_check")) return .{};
+    // Trial transport keeps native FILE/path state, never a managed argument.
+    // Register accepts only a compiler-generated static function pointer.
+    const test_helpers = [_][]const u8{
+        "myl_core_test_register",    "myl_core_test_open",       "myl_core_test_run",
+        "myl_core_test_trace",       "myl_core_test_read",       "myl_core_test_write",
+        "myl_core_test_read_bool",   "myl_core_test_write_bool", "myl_core_test_read_float",
+        "myl_core_test_write_float", "myl_core_test_write_text", "myl_core_test_limits",
+        "myl_core_test_tick",        "myl_core_test_ceilings",   "myl_core_test_enter",
+        "myl_core_test_leave",
+    };
+    for (test_helpers) |name| if (std.mem.eql(u8, symbol, name)) return .{};
+    if (std.mem.eql(u8, symbol, "myl_core_test_read_text") or std.mem.eql(u8, symbol, "myl_core_test_read_bytes")) return .{ .result = .fresh };
     if (std.mem.startsWith(u8, symbol, @import("emit_values.zig").copy_prefix)) return .{ .result = .fresh };
     if (std.mem.eql(u8, symbol, "myl_core_view_slice")) return .{ .views = 1, .result = .borrowed };
     for ([_][]const u8{ "myl_core_view_chars", "myl_core_view_index", "myl_core_view_byte" }) |name| {

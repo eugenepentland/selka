@@ -1,0 +1,64 @@
+build-slot: FIFO ticket 62, position 14; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 62, position 12; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 62, position 9; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 62, position 4; earlier build tickets must run first; waiting (181s so far)
+build-slot: build slot 1, FIFO ticket 62 after 201s
+9860b781455ba0fff0277654eea23ec3a893cb3614551f277cbf67d7850f6cf7
+d7c7a2468458d4cddf08970071fd85e6b6c3ff126b450eb15d8f1628fe38d91f
+test-core
++- verification action core member 0 72 pass, 1 fail (73 total)
+guardian/test: SLOW  5.23s  zero_rc_task_test.test.zero RC task captures and results are free from ThreadSanitizer reports
+guardian/test: test wall 27.50s; slowest over 50ms:
+guardian/test:   5.23s  zero_rc_task_test.test.zero RC task captures and results are free from ThreadSanitizer reports
+guardian/test:   3.75s  zero_rc_task_test.test.zero RC source map borrows inputs until joining and owns each result
+guardian/test:   3.04s  shared_counts_test.test.zero RC runtime ABI has no count member and forbids legacy helpers
+guardian/test:   2.37s  zero_rc_test.test.zero RC Result main destroys text errors and borrowed argv in five modes
+guardian/test:   1.02s  zero_rc_task_test.test.zero RC task groups move captures and results across joins at 1 2 8 threads
+guardian/test:   0.91s  zero_rc_task_test.test.zero RC task groups join and destroy discarded results on implicit exit
+guardian/test:   0.57s  zero_rc_test.test.zero RC fallible file scopes borrow named helper providers through propagation
+guardian/test:   0.50s  count_test.test.zero RC views repeated borrowing performs no managed allocations or RC
+guardian/test:   0.49s  zero_rc_test.test.zero RC recursive owned values borrow match payloads
+guardian/test:   0.49s  zero_rc_test.test.zero RC fresh match JSON decoding and rendering return owned strings
+guardian/test: FAIL — 1 failed of 73
+guardian/test: RESULT {"passed":72,"failed":1,"skipped":0}
+error: 'zero_rc_test.test.zero RC fallible file scopes borrow named helper providers through propagation' failed:
+       guardian/test: 73 test(s) selected by filter: "zero RC"
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/sema.zig:1610:21: 0x1e86cfb in checkBodies (compiler.zig)
+               if (failed) return error.SourceError;
+                           ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/sema.zig:1537:5: 0x1e8665f in retryOr (compiler.zig)
+           return err;
+           ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/sema.zig:1854:46: 0x1c1ad3d in checkProgram (compiler.zig)
+           }, contracts_failed, failed) catch |err| return retryOr(&plan, err);
+                                                    ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/sema.zig:1750:9: 0x1c05b1f in checkCore (compiler.zig)
+               return err;
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/sema.zig:1708:5: 0x1c0542d in checkCached (compiler.zig)
+           return checkCore(allocator, src, program, sink, .{ .names = module_names, .cache = cache });
+           ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/project_compile.zig:91:43: 0x28e021e in checkWithCache (compiler.zig)
+                   const semantic = cache orelse return err;
+                                                 ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/project_compile.zig:58:9: 0x28df3f6 in check (compiler.zig)
+               return self.checkWithCache(null);
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/embedded_project.zig:19:9: 0x28dba5c in init (compiler.zig)
+               try self.compilation.check();
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/zero_rc_test.zig:148:9: 0x29ab8ea in checked (root_test.zig)
+               try project.init(a, .{ .context = &entry, .read = ProjectEntry.read });
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/zero_rc_test.zig:171:21: 0x29ac293 in executes (root_test.zig)
+           const program = try checked(a, source);
+                           ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/zero_rc_test.zig:473:5: 0x29ba595 in test.zero RC fallible file scopes borrow named helper providers through propagation (root_test.zig)
+           try executes(std.testing.allocator,
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A07/zig-out/libexec/mylang/components ./.tmp/memory-closeout/A07/zig-cache/o/627cfd456b8e7329872cc7b3388ad098/test "--guardian-filter=zero RC" --cache-dir=./.tmp/memory-closeout/A07/zig-cache --seed=0x465ed0a0 --listen=-
+
+Build Summary: 10/12 steps succeeded (1 failed); 72/73 tests passed (1 failed)
+test-core transitive failure
++- verification action core member 0 72 pass, 1 fail (73 total)
+

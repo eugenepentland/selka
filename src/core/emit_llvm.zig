@@ -750,7 +750,8 @@ const ModuleState = struct {
         try body.appendSlice(self.allocator, "failed.main:\n");
         try helper.unionPayload(&body, .{ .result = "%error", .union_type = ret, .value = "%r", .case = shape.error_tag });
         if (error_type == .str) {
-            try body.print(self.allocator, "  call void @myl_core_main_error_str(ptr %error)\n  call void @myl_core_release(ptr %error)\n{s}  %e = call i32 @myl_core_exit(i64 1)\n", .{release_args});
+            const destroy = if (self.module.zero_rc) "myl_core_drop_owned" else "myl_core_release";
+            try body.print(self.allocator, "  call void @myl_core_main_error_str(ptr %error)\n  call void @{s}(ptr %error)\n{s}  %e = call i32 @myl_core_exit(i64 1)\n", .{ destroy, release_args });
         } else if (error_type == .bool) {
             try body.print(self.allocator, "  call void @myl_core_main_error_bool(i1 zeroext %error)\n{s}  %e = call i32 @myl_core_exit(i64 1)\n", .{release_args});
         } else {

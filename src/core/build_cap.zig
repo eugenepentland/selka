@@ -284,8 +284,10 @@ pub fn Lower(comptime Context: type) type {
 }
 
 /// The source-level parent whose lifetime encloses a dependent scope.
-pub fn scopeProvider(node: typed.Node) ?typed.NodeId {
+pub fn scopeProvider(nodes: []const typed.Node, source: typed.NodeId) ?typed.NodeId {
+    const node = nodes[@backingInt(source)];
     return switch (node.data) {
+        .propagate => |value| scopeProvider(nodes, value.value),
         .file_access => |file| file.arguments[0],
         .dir_resource => |dir| dir.capability,
         .host_resource => |host| host.capability,

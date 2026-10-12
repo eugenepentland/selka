@@ -277,7 +277,7 @@ const Checker = struct {
         if (c.view(local.ty) and access != .read) return c.reject(span, view_escape, "views are read-only; use .copy() for independent owned storage");
         const write = access != .read;
         for (c.loans.items) |loan| if (loan.root == root and (loan.write or write)) {
-            return c.reject(span, overlap_error, "a list cannot be moved or mutated while another argument or iteration borrows it");
+            return c.reject(span, overlap_error, "a value cannot be moved or mutated while another argument or iteration borrows it");
         };
         if (access == .move) {
             if (c.state[slot].borrowed) {
@@ -660,9 +660,9 @@ const Checker = struct {
             .with_scope => |scope| {
                 const source = scope.resource orelse return c.reject(statement.span, zero_unsupported, "zero-RC scopes require an explicit file owner");
                 const node = c.program.nodes[@backingInt(source)];
-                const provider = @import("build_cap.zig").scopeProvider(node) orelse return c.reject(statement.span, zero_unsupported, "open a dependent scope directly from a named provider in this prototype");
+                const provider = @import("build_cap.zig").scopeProvider(c.program.nodes, source) orelse return c.reject(statement.span, zero_unsupported, "open a dependent scope directly from a named provider in this prototype");
                 if (c.program.nodes[@backingInt(provider)].data != .local) return c.reject(statement.span, zero_unsupported, "bind the provider to a local before opening a scoped file");
-                if (node.data == .file_access) {
+                if (node.data == .file_access or node.data == .propagate) {
                     try c.expression(source, .read);
                 } else {
                     switch (node.data) {

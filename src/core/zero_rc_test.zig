@@ -380,6 +380,133 @@ test "zero RC task item diagnostics do not transfer managed ownership" {
     try std.testing.expect(zero.contract("myl_core_task_submit") == null);
 }
 
+fn resultEntryCase(parent: std.mem.Allocator, mode: support.RunOptions, failed: bool, direct: bool) !void {
+    var arena = std.heap.ArenaAllocator.init(parent);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const source = if (failed)
+        \\func main(args: str[]) -> Result[int, str]:
+        \\    return Err("failure-" + str(len(args)))
+    else
+        \\func main(args: str[]) -> Result[int, str]:
+        \\    return Ok(len(args))
+    ;
+    var program = try checked(a, source);
+    // Source compilation normally synthesizes an integer-returning wrapper.
+    // Also exercise the emitter's direct Core Result entry, used by IR clients.
+    if (direct) for (program.functions) |function| {
+        if (language.typed.resultShape(function.signature.return_type, program.records) != null) {
+            program.main = function.id;
+            break;
+        }
+    };
+    var failure: contract.Failure = .{};
+    try contract.checkMode(a, program, &failure, true);
+    var refusal: build.Refusal = .{};
+    var module = try build.buildExecutable(a, .{ .program = program, .single_owner = true, .zero_rc = true }, &refusal);
+    const result = if (mode.own) try passes.run(a, &module, if (mode.verify) .verify else .trusted) else try passes.debug(a, &module);
+    try contract.verifyLowered(&module, &failure);
+    const run = try support.runOwned(a, &module, .{
+        .own = false,
+        .release = mode.release,
+        .verify = mode.verify,
+        .analysis = support.analysis(&result),
+        .main = .{ .parameters = &.{"args"}, .result = .{ .ok_tag = 0, .error_tag = 1 } },
+    });
+    try std.testing.expectEqual(@as(u8, if (failed) 1 else 0), run.status);
+    try std.testing.expectEqualStrings("", run.stdout);
+    if (failed) {
+        try std.testing.expect(std.mem.startsWith(u8, run.stderr, "error: failure-0\n"));
+        if (direct) try std.testing.expect(std.mem.indexOf(u8, run.llvm, "call void @myl_core_drop_owned(ptr %error)") != null);
+    } else try std.testing.expectEqualStrings("", run.stderr);
+    try std.testing.expect(std.mem.indexOf(u8, run.stderr, "leak") == null);
+    try std.testing.expect(zero.emittedClean(run.llvm));
+}
+
+fn resultEntryModes(parent: std.mem.Allocator) !void {
+    const modes = [_]support.RunOptions{
+        .{ .own = false },
+        .{ .release = true },
+        .{ .release = true, .verify = true },
+        .{},
+        .{ .release = true, .own = false },
+    };
+    for (modes) |mode| {
+        try resultEntryCase(parent, mode, false, false);
+        try resultEntryCase(parent, mode, true, false);
+        try resultEntryCase(parent, mode, false, true);
+        try resultEntryCase(parent, mode, true, true);
+    }
+}
+
+// spec-case: NEW-CORE-ZERO-RC-2
+test "zero RC Result main destroys text errors and borrowed argv in five modes" {
+    try resultEntryModes(std.testing.allocator);
+}
+
+// spec-case: NEW-CORE-ZERO-RC-3
+test "zero RC test transport borrows writes and returns independent decoded blocks" {
+    try std.testing.expectEqual(.fresh, zero.contract("myl_core_test_read_text").?.result);
+    try std.testing.expectEqual(.fresh, zero.contract("myl_core_test_read_bytes").?.result);
+    try std.testing.expectEqual(@as(u64, 0), zero.contract("myl_core_test_write_text").?.owned);
+    try std.testing.expectEqual(@as(u64, 0), zero.contract("myl_core_test_open").?.owned);
+    try std.testing.expectEqual(.scalar, zero.contract("myl_core_test_register").?.result);
+    try std.testing.expect(zero.contract("myl_core_test_unreviewed") == null);
+}
+
+// spec-case: DICT-VIEWS-1
+test "zero RC immediate dictionary snapshots own keys values and item children" {
+    try executes(std.testing.allocator,
+        \\func main(out: Stream) -> int:
+        \\    mut source = {"key-" + str(1): ["value-" + str(1)]}
+        \\    const keys = list(source.keys())
+        \\    const values = list(source.values())
+        \\    const items = list(source.items())
+        \\    source.clear()
+        \\    out.print(keys[0], values[0][0], items[0].key, items[0].value[0])
+        \\    return 0
+    , "key-1 value-1 key-1 value-1\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-RESOURCE-SCOPES-1
+test "zero RC fallible file scopes borrow named helper providers through propagation" {
+    try executes(std.testing.allocator,
+        \\import filesystem
+        \\func read(fs: Filesystem, path: str, fail: bool) -> Result[int, str]:
+        \\    with try fs.open(path, "rb") as file:
+        \\        if fail:
+        \\            return Err("inside")
+        \\        return Ok(len(file.read(16)))
+        \\func nested(fs: Filesystem) -> Result[int, str]:
+        \\    with try fs.open("outer", "w") as outer:
+        \\        _ = outer.write("saved")
+        \\        with try fs.open("missing", "r") as inner:
+        \\            return Ok(len(inner.read()))
+        \\func main(out: Stream) -> int:
+        \\    const fs = filesystem.memory()
+        \\    with fs.open("data", "w") as file:
+        \\        _ = file.write("abc")
+        \\    match read(fs, "data", False):
+        \\        case Ok(size):
+        \\            out.print(size)
+        \\        case Err(message):
+        \\            out.print(message)
+        \\    match read(fs, "data", True):
+        \\        case Ok(size):
+        \\            out.print(size)
+        \\        case Err(message):
+        \\            out.print(message)
+        \\    match nested(fs):
+        \\        case Ok(size):
+        \\            out.print(size)
+        \\        case Err(message):
+        \\            out.print("missing")
+        \\    with fs.open("outer", "r") as outer:
+        \\        out.print(outer.read())
+        \\    return 0
+    , "3\ninside\nmissing\nsaved\n");
+}
+
 // spec-case: NEW-CORE-ZERO-RC-1
 test "zero RC CLI mode is distinct from earlier single owner mode" {
     const args = @import("cli_args.zig");
