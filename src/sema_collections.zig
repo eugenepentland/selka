@@ -316,6 +316,9 @@ fn bindElement(comptime Checker: type, self: *Checker, name: source.Span, slot: 
     self.locals.items[@backingInt(slot)].mutable = false;
     self.locals.items[@backingInt(slot)].name = text;
     self.locals.items[@backingInt(slot)].declaration = name;
+    // A named comprehension element is the same borrowed iteration binding as
+    // a statement loop element, even after it loses its synthetic local name.
+    self.locals.items[@backingInt(slot)].origin = .iteration;
     self.locals.items[@backingInt(slot)].ownership.initialized = true;
     return self.bindScoped(text, slot);
 }

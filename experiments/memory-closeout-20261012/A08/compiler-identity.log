@@ -1,0 +1,9 @@
+build-slot: FIFO ticket 10, position 4; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 10, position 2; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 10 after 75s
+ok   base tree embeds its identity (a8f527d3d44c)
+ok   a second tree sharing the Zig cache fails and names the first tree
+ok   the second tree, with its own cache, embeds its own identity
+ok   front-end, core and runtime edits move compiler_identity
+ok   test-only edits leave compiler_identity unchanged
+compiler identity cache: all checks passed

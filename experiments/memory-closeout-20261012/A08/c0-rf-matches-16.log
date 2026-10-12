@@ -1,0 +1,7 @@
+build-slot: FIFO ticket 4, position 1; waiting for memory-accounting settle delay or another measurement; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 4 after 5s
+{"name": "matches-16-cold", "status": 0, "passed": true, "elapsed_ns": 4609717678, "max_rss_kib": "123120"}
+{"name": "matches-16-warm", "status": 0, "passed": true, "elapsed_ns": 107400060, "max_rss_kib": "10348"}
+{"name": "matches-16-receipt", "status": 0, "passed": true, "elapsed_ns": 106666936, "max_rss_kib": "10700"}
+{"name": "matches-16-replay", "status": 0, "passed": true, "elapsed_ns": 105455043, "max_rss_kib": "3936"}
+{"name": "matches-16-edit", "status": 0, "passed": true, "elapsed_ns": 104644229, "max_rss_kib": "58844"}

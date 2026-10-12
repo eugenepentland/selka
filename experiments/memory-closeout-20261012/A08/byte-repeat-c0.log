@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 111, position 6; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 111 after 40s
+byte-repeat.my:2:18: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit
+      const data = b"a" * 32
+                   ^

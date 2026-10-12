@@ -1,0 +1,30 @@
+build-slot: FIFO ticket 52, position 20; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 52, position 11; earlier build tickets must run first; waiting (61s so far)
+build-slot: FIFO ticket 52, position 5; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 52, position 3; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 52, position 1; all 2 build slot(s) busy; waiting (241s so far)
+build-slot: build slot 1, FIFO ticket 52 after 246s
+test_index/graph.my 1  graph.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main
+  # Informational call graph inversion. IDs are local to one immutable snapshot.
+  ^
+
+test_index/codec.my 1  codec.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main
+  import graph
+  ^
+
+cache_plan/graph.my 1  graph.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main
+  # Core receipt traversal over immutable snapshot-local function IDs.
+  ^
+
+cache_plan/codec.my 1  codec.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main
+  public record Request:
+  ^
+
+cache_plan/incremental.my 1  incremental.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main
+  # Generation-bound admission and SCC-shared closure work.
+  ^
+
+cache_plan/codec_v2.my 1  codec_v2.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main
+  import incremental
+  ^
+

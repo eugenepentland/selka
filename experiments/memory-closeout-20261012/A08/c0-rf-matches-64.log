@@ -1,0 +1,6 @@
+build-slot: timing slot 1, FIFO ticket 6 after 0s
+{"name": "matches-64-cold", "status": 0, "passed": true, "elapsed_ns": 3807859276, "max_rss_kib": "122932"}
+{"name": "matches-64-warm", "status": 0, "passed": true, "elapsed_ns": 102712681, "max_rss_kib": "11316"}
+{"name": "matches-64-receipt", "status": 0, "passed": true, "elapsed_ns": 102740923, "max_rss_kib": "11440"}
+{"name": "matches-64-replay", "status": 0, "passed": true, "elapsed_ns": 102787799, "max_rss_kib": "4096"}
+{"name": "matches-64-edit", "status": 0, "passed": true, "elapsed_ns": 102785363, "max_rss_kib": "59668"}

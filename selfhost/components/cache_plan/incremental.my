@@ -270,16 +270,15 @@ func close_group(mut closures: Closures, group: int, mut work: Work) fails str:
 
 public func build(input: Input) -> Result fails str:
     mut work = Work(index_nodes=0, index_edges=0, affected_nodes=0, closure_nodes=0, closure_edges=0, reused_tests=0, planned_tests=0)
-    mut adjacency = input.graph.adjacency
-    if len(adjacency) != len(input.graph.digests) or len(input.roots) != len(input.candidates):
+    if len(input.graph.adjacency) != len(input.graph.digests) or len(input.roots) != len(input.candidates):
         fail "invalid incremental tables"
     for digest in input.graph.digests:
         if len(digest) != 32:
             fail "invalid function digest"
-    mut reverse = try transpose(adjacency, mut work)
+    mut reverse = try transpose(input.graph.adjacency, mut work)
     mut groups: int[] = []
     if len(input.prior.topology) > 0:
-        if input.prior.topology != input.graph.topology or len(input.prior.reverse) != len(reverse) or len(input.prior.groups) != len(adjacency):
+        if input.prior.topology != input.graph.topology or len(input.prior.reverse) != len(reverse) or len(input.prior.groups) != len(input.graph.adjacency):
             fail "invalid retained graph indexes"
         for node in range(len(reverse)):
             work.index_nodes += 1
@@ -287,17 +286,17 @@ public func build(input: Input) -> Result fails str:
             try check_work(work)
             if input.prior.reverse[node] != reverse[node]:
                 fail "invalid retained graph indexes"
-        mut valid = try valid_groups(adjacency, reverse, input.prior.groups, mut work)
+        mut valid = try valid_groups(input.graph.adjacency, reverse, input.prior.groups, mut work)
         if valid:
-            groups = input.prior.groups
+            groups = input.prior.groups.copy()
         else:
-            groups = try scc(adjacency, reverse, mut work)
+            groups = try scc(input.graph.adjacency, reverse, mut work)
     else:
-        groups = try scc(adjacency, reverse, mut work)
-    mut dirty: bool[] = [for node in range(len(adjacency)) yield False]
+        groups = try scc(input.graph.adjacency, reverse, mut work)
+    mut dirty: bool[] = [for node in range(len(input.graph.adjacency)) yield False]
     mut pending: int[] = []
     for node in input.changed:
-        if node < 0 or node >= len(adjacency):
+        if node < 0 or node >= len(input.graph.adjacency):
             fail "invalid changed function index"
         if dirty[node]:
             fail "duplicate changed function index"
@@ -318,7 +317,7 @@ public func build(input: Input) -> Result fails str:
     for batch in range(len(input.roots)):
         mut reuse = input.candidates[batch]
         for root in input.roots[batch]:
-            if root < 0 or root >= len(adjacency):
+            if root < 0 or root >= len(input.graph.adjacency):
                 fail "invalid root function index"
             if dirty[root]:
                 reuse = False
@@ -334,9 +333,9 @@ public func build(input: Input) -> Result fails str:
     if payload_size > 67108800:
         fail "response frame exceeds limit"
     if work.planned_tests > 0:
-        mut closures = try prepare_groups(adjacency, groups, mut work)
-        mut seen: int[] = [for node in range(len(adjacency)) yield 0]
-        mut seen_groups: int[] = [for node in range(len(adjacency)) yield 0]
+        mut closures = try prepare_groups(input.graph.adjacency, groups, mut work)
+        mut seen: int[] = [for node in range(len(input.graph.adjacency)) yield 0]
+        mut seen_groups: int[] = [for node in range(len(input.graph.adjacency)) yield 0]
         for batch in range(len(reused)):
             if not reused[batch]:
                 mut generation = batch + 1
@@ -358,4 +357,4 @@ public func build(input: Input) -> Result fails str:
                                 if payload_size > 67108800:
                                     fail "response frame exceeds limit"
                 batches[batch] = order_nodes(input.graph.digests, reached)
-    return Result(indexes=Indexes(topology=input.graph.topology, reverse=reverse, groups=groups), batches=batches, reused=reused, work=work)
+    return Result(indexes=Indexes(topology=input.graph.topology.copy(), reverse=reverse, groups=groups), batches=batches, reused=reused, work=work)
