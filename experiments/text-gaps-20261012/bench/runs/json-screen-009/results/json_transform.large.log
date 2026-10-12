@@ -1,0 +1,3 @@
+build-slot: FIFO ticket 480, position 1; waiting for memory-accounting settle delay or another measurement; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 480 after 5s
+text-gaps/json-screen-009/json_transform/large {'checked-baseline': True, 'checked-candidate': True, 'rust': True}

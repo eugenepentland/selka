@@ -1,0 +1,2 @@
+build-slot: timing slot 1, FIFO ticket 481 after 0s
+text-gaps/json-screen-009/json_transform/small {'checked-baseline': True, 'checked-candidate': True, 'rust': True}
