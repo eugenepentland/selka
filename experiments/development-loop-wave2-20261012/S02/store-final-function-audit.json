@@ -1,0 +1,25 @@
+{
+  "base_matches_frozen_hash": true,
+  "final_commit": "5e6180689b5b837aa60bd5a43f60b0981c58b638",
+  "unchanged_definitions": [
+    "CorpusError",
+    "DeterminismError",
+    "FormatError",
+    "InputsChanged",
+    "RetentionError",
+    "Store",
+    "_atomic",
+    "_bounded_read",
+    "_decode",
+    "_digests",
+    "_encoded",
+    "_envelope",
+    "_identity",
+    "_json_value",
+    "_nonfinite",
+    "_unique"
+  ],
+  "changed_definitions": [],
+  "added": [],
+  "removed": []
+}

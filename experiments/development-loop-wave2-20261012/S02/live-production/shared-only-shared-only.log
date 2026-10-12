@@ -1,0 +1,3 @@
+verification: reused lifecycle (valid prior success)
+verification: profile complete; 0 pending, 0 selected, 0 deferred
+verification: PASS; 1 reused, 0 selected; build admitted 0.000s, gate admitted 0.000s

@@ -1,0 +1,27 @@
+{
+  "old_process_commit": "32faf6077dfa8693bd91ef3850c3fb103c83be74",
+  "final_commit": "5e6180689b5b837aa60bd5a43f60b0981c58b638",
+  "identical_definitions": [
+    "BoundedProcessLogs",
+    "ProcessLimits",
+    "ProcessResult",
+    "_cleanup",
+    "_close_lineage",
+    "_descendants",
+    "_group_exists",
+    "_kill_identity",
+    "_positive",
+    "_process_starttime",
+    "_reap_adopted",
+    "_run_lineage",
+    "_signal_group",
+    "_signal_identity",
+    "arm_parent_death",
+    "run_supervised",
+    "terminate_owned",
+    "wait_owned"
+  ],
+  "changed_definitions": [],
+  "added_definitions": [],
+  "removed_definitions": []
+}

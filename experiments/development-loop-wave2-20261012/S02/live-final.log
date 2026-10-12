@@ -1,0 +1,17 @@
+live lifecycle: matching_complete
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/scripts/verification_live_lifecycle.py", line 410, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/scripts/verification_live_lifecycle.py", line 400, in main
+    result['cases'][name] = dict(status='passed', **CASES[name](scratch, args.output))
+                                                    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/scripts/verification_live_lifecycle.py", line 241, in matching_complete
+    marker = fixture.started()[0]
+             ~~~~~~~~~~~~~~~^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/scripts/verification_live_lifecycle.py", line 178, in started
+    return await_condition(ready, f'{self.name}: {count} admitted gates did not start')
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/scripts/verification_live_lifecycle.py", line 75, in await_condition
+    time.sleep(.02)
+    ~~~~~~~~~~^^^^^
+KeyboardInterrupt

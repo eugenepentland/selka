@@ -1,0 +1,78 @@
+{
+  "cache_conditions": "one disposable fixture; retain prepared artifacts/inventory; reset only its action receipts/shared store with no active borrowers",
+  "cases": {
+    "crash_after_admission": {
+      "gates": 2,
+      "incomplete_successes": 0,
+      "owned_lineage_reaped": true,
+      "owner_status": -9,
+      "status": "passed",
+      "waiter_status": 0
+    },
+    "crash_before_admission": {
+      "gates": 1,
+      "owner_status": -9,
+      "pre_handshake": true,
+      "retry_status": 0,
+      "status": "passed",
+      "wrapper_reaped": true
+    },
+    "matching_complete": {
+      "dispatch": "two real retained-session verify requests",
+      "gates": 1,
+      "owner_status": 0,
+      "reused": 1,
+      "status": "passed",
+      "waiter_status": 0
+    },
+    "owner_cancel_retry": {
+      "cancelled_successes": 0,
+      "gates": 2,
+      "owner_status": 143,
+      "status": "passed",
+      "waiter_status": 0
+    },
+    "publication_interrupt": {
+      "error": "'Store' object has no attribute 'lookup_success'",
+      "status": "failed",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/scripts/verification_live_lifecycle.py\", line 510, in main\n    result['cases'][name] = dict(status='passed', **CASES[name](scratch, args.output))\n                                                    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/scripts/verification_live_lifecycle.py\", line 393, in publication_interrupt\n    if Store(fixture.shared).lookup_success(action_key) is not None:\n       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'Store' object has no attribute 'lookup_success'. Did you mean: 'load_success'?\n"
+    },
+    "shared_only_reuse": {
+      "gates": 1,
+      "private_receipts_removed": 1,
+      "shared_reused": 1,
+      "status": "passed"
+    },
+    "timeout_retry": {
+      "gates": 2,
+      "queue_seconds": 50.50820989906788,
+      "reaped": true,
+      "retry_status": 0,
+      "status": "passed",
+      "timeout_status": 124,
+      "worker_seconds": 0.34272884693928063
+    },
+    "waiter_cancel": {
+      "gates": 1,
+      "owner_status": 0,
+      "reused": 1,
+      "status": "passed",
+      "waiter_status": 143
+    }
+  },
+  "harness_sha256": "406c33a3bdf188db8c75fd059f5d231fe4d4ad9de066684bca868e73bb4ff89c",
+  "model": "serialized contenders; no shared in-flight subscriber ownership",
+  "native_full_inventory": "not qualified",
+  "production_sources": {
+    "build-slot.sh": "9d20bcc3a62576c7c04c5686eb8865121b41a1f1d7824af6f3c626fbfbb5ebee",
+    "cache_session.py": "472c0c95c3bb8e2a29b62d534e88dff0ea00a16bd3f82b657b66937c10362af4",
+    "fuzz_campaign_store.py": "1f995c00b2add163d242e22432f0fcc38141d51b21726425de7a264b91b6d725",
+    "verification_process.py": "9aa44fe96053d7b72a4c5a9c3760df4c15bab4e464d824bd0eb78322b1998d1d",
+    "verify_cache.py": "979d1fdb41dfb98ecb0206b0038da6d9c9c052adf11edc149a309c93e8dfcb03"
+  },
+  "python_executable_sha256": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+  "source_commit": "c80a31e777283297c3084e457c471025b9b837aa",
+  "source_dirty_status": " M scripts/build_admission.py\n M scripts/cache_session.py\n M scripts/verify_cache.py\n M scripts/verify_cache_test.py\n?? scripts/verification_measurement.py\n?? scripts/verification_measurement_test.py\n",
+  "success": false,
+  "version": 1
+}

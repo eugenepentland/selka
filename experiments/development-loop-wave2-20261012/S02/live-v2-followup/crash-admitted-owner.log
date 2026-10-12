@@ -1,0 +1,4 @@
+verification: execute lifecycle (no valid receipt)
+verification: profile complete; 1 pending, 1 selected, 0 deferred
+build-slot: FIFO ticket 174, position 2; earlier gate tickets must run first; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 174 after 20s

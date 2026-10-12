@@ -1,0 +1,16 @@
+live lifecycle: matching_complete
+live lifecycle: matching_complete passed
+live lifecycle: waiter_cancel
+live lifecycle: waiter_cancel passed
+live lifecycle: owner_cancel_retry
+live lifecycle: owner_cancel_retry passed
+live lifecycle: timeout_retry
+live lifecycle: timeout_retry passed
+live lifecycle: shared_only_reuse
+live lifecycle: shared_only_reuse passed
+live lifecycle: publication_interrupt
+live lifecycle: publication_interrupt failed
+live lifecycle: crash_after_admission
+live lifecycle: crash_after_admission passed
+live lifecycle: crash_before_admission
+live lifecycle: crash_before_admission passed

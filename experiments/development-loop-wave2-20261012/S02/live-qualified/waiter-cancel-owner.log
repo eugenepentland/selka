@@ -1,0 +1,4 @@
+build-slot: FIFO ticket 405, position 18; earlier build tickets must run first; waiting (0s so far)
+Terminated                 sleep "$poll"
+verification: cancelled; no new success receipts
+{"id":"owner","status":143,"ok":false,"restart_required":false,"snapshot_work":{"files_hashed":764,"bytes_hashed":263252808,"digest_reuses":9,"directories_enumerated":80,"metadata_observations":9634,"validation_calls":4,"snapshot_reuses":0},"error":"request cancelled; session stopped"}

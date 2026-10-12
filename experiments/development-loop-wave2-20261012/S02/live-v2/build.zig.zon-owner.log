@@ -1,0 +1,4 @@
+build-slot: FIFO ticket 393, position 18; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 393, position 14; earlier build tickets must run first; waiting (61s so far)
+Terminated                 sleep "$poll"
+verification: cancelled; no new success receipts

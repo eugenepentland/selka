@@ -1,0 +1,21 @@
+{
+  "cases": {
+    "waiter_cancel": {
+      "error": "waiter-cancel: 1 admitted gates did not start",
+      "status": "failed",
+      "traceback": "Traceback (most recent call last):\n  File \"/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/scripts/verification_live_lifecycle.py\", line 339, in main\n    CASES = {\n    \n  File \"/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/scripts/verification_live_lifecycle.py\", line 201, in matching_waiter_cancel\n    row = json.loads(path.read_text())\n         ^^^^^^^^^^^^^^^^^\n  File \"/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/scripts/verification_live_lifecycle.py\", line 148, in started\n  File \"/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/scripts/verification_live_lifecycle.py\", line 74, in await_condition\n    return value\nAssertionError: waiter-cancel: 1 admitted gates did not start\n"
+    }
+  },
+  "model": "serialized contenders; no shared in-flight subscriber ownership",
+  "native_full_inventory": "not qualified",
+  "production_sources": {
+    "build-slot.sh": "9d20bcc3a62576c7c04c5686eb8865121b41a1f1d7824af6f3c626fbfbb5ebee",
+    "cache_session.py": "690e634596cb7a139ddf0fa3481d2810f4eb522b697afbbcaa0a53ebe45ee0b7",
+    "fuzz_campaign_store.py": "1f995c00b2add163d242e22432f0fcc38141d51b21726425de7a264b91b6d725",
+    "verification_process.py": "8dd8dd4d04482f58a94d03f147362dbace897c7f5f76715a72ac7c721451479d",
+    "verify_cache.py": "9793bdd98348db8a9a61e5a6c0db3e61c1047fc3f1a353b7ce8c55070cc50ca5"
+  },
+  "source_commit": "c1857310e0bf623545380c8de24515f1b9970021",
+  "success": false,
+  "version": 1
+}

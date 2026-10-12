@@ -1,0 +1,17 @@
+live lifecycle: waiter_cancel
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/scripts/verification_live_lifecycle.py", line 379, in <module>
+    try:
+    
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/scripts/verification_live_lifecycle.py", line 369, in main
+    args.output.mkdir(parents=True, exist_ok=True)
+    
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/scripts/verification_live_lifecycle.py", line 230, in matching_waiter_cancel
+    pass
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/scripts/verification_live_lifecycle.py", line 167, in started
+    rows = [json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S02/scripts/verification_live_lifecycle.py", line 76, in await_condition
+    raise AssertionError(message)
+        ^^^^^^^^^^^^^^^
+KeyboardInterrupt
