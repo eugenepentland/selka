@@ -1,0 +1,16 @@
+{
+  "status": "prepared only; apply after coordinator C2 approval with A05/A07 runtime and coordinator counter patches",
+  "base_commit": "3e645690b41fdd1a4fe096ff2310d71e6865650a",
+  "files": [
+    {
+      "path": "src/core/runtime/core_rt.c",
+      "before_sha256": "40715efa7436be3bade842fcfc109c417405c2c87679660294de5c2a4bab1f8f",
+      "after_sha256": "8b90aaa78f7cd3d8eb392dfe3fb2fd3319c2e5e0d4e08c781803737a6817017e"
+    },
+    {
+      "path": "src/core/runtime/core_bytes.c",
+      "before_sha256": "3e776dd1d693c638d661086b1c375988e59a124bb132cc132c02bb531af05d96",
+      "after_sha256": "e9dea0f02d73aa7601d1a278ac40b9d467df99f67f68f3fa8f5221feeddcf363"
+    }
+  ]
+}
