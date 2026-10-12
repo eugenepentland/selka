@@ -65,6 +65,7 @@ comptime {
     _ = @import("driver_test.zig");
     _ = @import("driver_handles_test.zig");
     _ = @import("pipeline_emission_test.zig");
+    _ = @import("entry_path_test.zig");
     _ = @import("backend_owned_test.zig");
     _ = @import("driver_native_cache_test.zig");
     _ = @import("unit_cache.zig");
