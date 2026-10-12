@@ -207,7 +207,7 @@ appear only as C macros are not environment variables.)
 | `MYLANG_COMPONENT_DIR` | placement | per-worktree directory of component artifacts, which are identified separately |
 | `MYLANG_JOBS`, `MYLANG_UNIT_JOBS`, `MYLANG_UNIT_SHARDS` | placement | job counts |
 | `MYLANG_TEST_ISOLATE`, `MYLANG_TEST_CHILDREN` | placement | which process runs a test (oracles of the batch runner) |
-| `MYLANG_TEST_COMPILER` | placement | reserved: the compiler a test binary runs, supplied at run time by the build graph |
+| `MYLANG_TEST_COMPILER` | placement | the compiler a test binary runs, set at run time by the build graph's wrapper (TEST-PATHS-1, [below](#in-the-build-graph)) |
 | `MYLANG_SLOT_DIR`, `MYLANG_ADMISSION_*`, `MYLANG_BUILD_SLOTS`, `MYLANG_BUILD_MEM`, `MYLANG_GATE_SLOTS`, `MYLANG_GATE_MEM`, `MYLANG_TIMING_MEM`, `MYLANG_TIMING_CPUS`, `MYLANG_SLOT_SETTLE`, `MYLANG_SLOT_POLL` | placement | build-slot admission settings |
 | `MYLANG_DEV_JOBS`, `MYLANG_DEV_MAXRSS` | placement | developer job sizing from the environment script |
 | `MYLANG_TEST_TELEMETRY_DIR`, `SELKA_VERIFICATION_TELEMETRY_DIR` | placement | per-request diagnostic directories |
