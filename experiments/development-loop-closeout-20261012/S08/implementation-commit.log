@@ -1,0 +1,17 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10004 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/dl-closeout-20261012-S08 9a91cabdc] Bound snapshot stability diagnostics and remove redundant construction checks
+ 10 files changed, 662 insertions(+), 8 deletions(-)
+ create mode 100644 experiments/development-loop-closeout-20261012/S08/baseline-counters.json
+ create mode 100644 experiments/development-loop-closeout-20261012/S08/candidate-counters.json
+ create mode 100644 experiments/development-loop-closeout-20261012/S08/comparison.json
+ create mode 100644 experiments/development-loop-closeout-20261012/S08/manifest.json
+ create mode 100644 experiments/development-loop-closeout-20261012/S08/rejected-memo.json
+ create mode 100644 experiments/development-loop-closeout-20261012/S08/rejected-memo.py
+ create mode 100644 experiments/development-loop-closeout-20261012/S08/snapshot-tests.log
+ create mode 100644 scripts/verification_snapshot_profile.py
