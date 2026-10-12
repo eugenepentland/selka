@@ -488,6 +488,7 @@ const Checker = struct {
     }
 
     fn checkStore(c: *Checker, store: typed.Store, initializing: bool, span: Span) Error!void {
+        if (store.unpack != null) return c.checkUnpack(store, initializing, span);
         const slot = @backingInt(store.slot);
         const local = c.function.scope.locals[slot];
         if (c.view(local.ty)) {
@@ -533,6 +534,27 @@ const Checker = struct {
         const affine = c.zero_rc and resources.affine(c.program, local.ty);
         const dependency = if (c.zero_rc and resources.dependent(c.program, local.ty)) try c.resourceOrigin(store.value) else null;
         c.state[slot] = .{ .available = true, .borrowed = parameter and !affine, .writable = local.mutable, .dependency = dependency orelse none };
+    }
+
+    /// The entire tuple transfers once, before any destination expression runs.
+    fn checkUnpack(c: *Checker, store: typed.Store, initializing: bool, span: Span) Error!void {
+        const fields = @import("tuple_unpack.zig").fields(c.a, c.program, c.function, store, initializing) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.Invalid => return c.reject(span, zero_unsupported, "invalid complete tuple staging"),
+        };
+        try c.expression(store.value, .move);
+        const dependency = if (c.zero_rc) try c.resourceOrigin(store.value) else null;
+        if (dependency) |provider| if (!c.state[provider].available)
+            return c.reject(span, resource_escape, "tuple fields cannot outlive their dependent provider");
+        c.state[@backingInt(store.slot)] = .{};
+        for (fields, store.unpack.?) |field, optional| {
+            const slot = @backingInt(optional orelse continue);
+            c.state[slot] = .{
+                .available = true,
+                .writable = c.function.scope.locals[slot].mutable,
+                .dependency = if (c.zero_rc and resources.dependent(c.program, field.ty)) dependency orelse none else none,
+            };
+        }
     }
 
     fn expression(c: *Checker, id: typed.NodeId, access: Access) Error!void {

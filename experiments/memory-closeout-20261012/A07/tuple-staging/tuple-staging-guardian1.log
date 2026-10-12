@@ -1,0 +1,17 @@
+build-slot: build slot 1, FIFO ticket 814 after 0s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10113 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 2/88 failed (spec, test-no-conditional)
+guardian: failures grouped by check (2):
+  spec (5 findings)
+    - unlinked tag: TUPLE-3, PY-DESTRUCTURE-PLACE-1 in src/core/zero_rc_test.zig
+    - unlinked tag: TUPLE-3, NEW-CORE-ZERO-RC-CONTAINERS-1 in src/core/zero_rc_test.zig
+    - unlinked tag: TUPLE-3, PY-DESTRUCTURE-PLACE-1 in src/core/zero_rc_test.zig
+    - +2 more — use --verbose for full detail
+  test-no-conditional (1 finding)
+    - src/core/zero_rc_test.zig:2236: more than one top-level loop — a test may keep one; hoist the loop at line 2236 into a named helper, or merge the loops into one table-driven loop
+      fix: one top-level loop is fine; merge multiple loops into one table-driven loop, split a branch into two independent tests, or hoist the computation into a helper. A multi-loop finding names the loop to hoist — the assertion-free one when there is one, otherwise the extra loop itself.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

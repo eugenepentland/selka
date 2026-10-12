@@ -71,7 +71,16 @@ const Dumper = struct {
                 try self.node(value, depth + 1);
             },
             .initialize, .assign => |store| {
-                try self.out.print(self.allocator, " %{d}{s}\n", .{ @backingInt(store.slot), if (store.element) " element" else "" });
+                try self.out.print(self.allocator, " %{d}{s}", .{ @backingInt(store.slot), if (store.element) " element" else "" });
+                if (store.unpack) |slots| {
+                    try self.out.appendSlice(self.allocator, " unpack=[");
+                    for (slots, 0..) |slot, index| {
+                        if (index != 0) try self.out.appendSlice(self.allocator, ", ");
+                        if (slot) |field| try self.out.print(self.allocator, "%{d}", .{@backingInt(field)}) else try self.out.appendSlice(self.allocator, "_");
+                    }
+                    try self.out.appendSlice(self.allocator, "]");
+                }
+                try self.out.appendSlice(self.allocator, "\n");
                 try self.node(store.value, depth + 1);
             },
             .branch => |branch| {

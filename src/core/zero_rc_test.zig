@@ -2176,3 +2176,157 @@ test "zero RC borrowed defaults cannot mutate the selected receiver" {
         \\    return 0
     , "E_SINGLE_OWNER_BORROW");
 }
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+// spec-case: TUPLE-3
+// spec-case: PY-DESTRUCTURE-PLACE-1
+test "zero RC tuple staging consumes whole owners before destination effects" {
+    try executes(std.testing.allocator,
+        \\func pair(mut calls: int[]) -> tuple[str, str]:
+        \\    calls.append(1)
+        \\    return "first-" + str(1), "second-" + str(2)
+        \\func at(mut calls: int[], value: int) -> int:
+        \\    calls.append(value)
+        \\    return 0
+        \\func owned() -> tuple[str, int[]]:
+        \\    return "owned-" + str(3), [4, 5]
+        \\func early() -> str:
+        \\    const text, _ = owned()
+        \\    return text
+        \\func main(out: Stream) -> int:
+        \\    mut words = ["a" + str(1), "b" + str(2)]
+        \\    words[0], words[1] = words[1].copy(), words[0].copy()
+        \\    mut calls: int[] = []
+        \\    words[at(mut calls, 2)], words[at(mut calls, 3)] = pair(mut calls)
+        \\    const complete = owned()
+        \\    const text, items = complete
+        \\    const _, _ = owned()
+        \\    const ignored, number = (), 7
+        \\    out.print(words[0], words[1], len(calls), calls[0], calls[1], calls[2], text, items[0], early(), number)
+        \\    return 0
+    , "second-2 a1 3 1 2 3 owned-3 4 owned-3 7\n");
+}
+
+// spec-case: TUPLE-3
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC tuple staging refuses borrowed whole tuples and reuse" {
+    try refuses(std.testing.allocator,
+        \\func consume(pair: tuple[str, int]) -> str:
+        \\    const text, number = pair
+        \\    return text
+        \\func main() -> int:
+        \\    return 0
+    , "E_SINGLE_OWNER_BORROW");
+    try refuses(std.testing.allocator,
+        \\func main() -> int:
+        \\    const pair = ("value-" + str(1), [2])
+        \\    const first, items = pair
+        \\    const again, second = pair
+        \\    return len(first) + len(again)
+    , "E_SINGLE_OWNER_MOVED");
+}
+
+// spec-case: TUPLE-3
+// spec-case: PY-DESTRUCTURE-PLACE-1
+test "zero RC tuple staging validates complete cached shape before lowering" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const program = try checked(a,
+        \\func main(out: Stream) -> int:
+        \\    const first, second = ("value-" + str(1), [2])
+        \\    out.print(first, second[0])
+        \\    return 0
+    );
+    const statement = try tupleStore(program);
+    const original = statement.*;
+    defer statement.* = original;
+    const store = original.data.initialize;
+    const wrong: [2]?language.typed.LocalId = .{ store.unpack.?[0], store.unpack.?[0] };
+    for ([_][]const ?language.typed.LocalId{ store.unpack.?[0..1], &wrong, &.{ store.slot, store.unpack.?[1] } }) |slots| {
+        statement.data.initialize.unpack = slots;
+        var failure: contract.Failure = .{};
+        try std.testing.expectError(error.Rejected, contract.checkMode(a, program, &failure, true));
+        var refusal: build.Refusal = .{};
+        try std.testing.expectError(error.Unsupported, build.buildExecutable(a, .{ .program = program, .single_owner = true, .zero_rc = true }, &refusal));
+    }
+    statement.* = original;
+    statement.data = .{ .assign = store };
+    var refusal: build.Refusal = .{};
+    try std.testing.expectError(error.Unsupported, build.buildExecutable(a, .{ .program = program, .zero_rc = true }, &refusal));
+}
+
+// spec-case: TUPLE-3
+// spec-case: NEW-CORE-ZERO-RC-AFFINE-RESOURCES-1
+test "zero RC tuple staging preserves dependent resource roots" {
+    try executes(std.testing.allocator,
+        \\import filesystem
+        \\resource File: filesystem
+        \\result Open:
+        \\    ok: File,
+        \\    err: int
+        \\func main(out: Stream) -> int:
+        \\    const fs = filesystem.memory()
+        \\    _ = fs.write_text("x", "value")
+        \\    match acquire_resource[Open](fs, FixedArray[u8, 3]([114u8, 58u8, 120u8])):
+        \\        case Open.ok(file):
+        \\            const pair = (file, 7)
+        \\            const owner, code = pair
+        \\            _ = owner
+        \\            out.print(code)
+        \\        case Open.err(code):
+        \\            return code
+        \\    return 0
+    , "7\n");
+    try refuses(std.testing.allocator,
+        \\import filesystem
+        \\resource File: filesystem
+        \\result Open:
+        \\    ok: File,
+        \\    err: int
+        \\func main() -> int:
+        \\    mut fs = filesystem.memory()
+        \\    match acquire_resource[Open](fs, FixedArray[u8, 0]([])):
+        \\        case Open.ok(file):
+        \\            const pair = (file, 7)
+        \\            const owner, code = pair
+        \\            fs = filesystem.memory()
+        \\            _ = owner
+        \\            return code
+        \\        case Open.err(code):
+        \\            return code
+    , "E_ZERO_RC_RESOURCE_ESCAPE");
+}
+
+// spec-case: TUPLE-3
+// spec-case: PY-DESTRUCTURE-PLACE-1
+test "zero RC tuple staging ordinary mode keeps borrowed input usable" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var refusal: build.Refusal = .{};
+    var module = try support.buildSource(a,
+        \\func extend(pair: tuple[str, int[]]) -> int:
+        \\    mut text, items = pair
+        \\    items.append(9)
+        \\    const again, original = pair
+        \\    return len(items) * 10 + len(original)
+        \\func main(out: Stream) -> int:
+        \\    const pair = ("text-" + str(1), [2, 3])
+        \\    out.print(extend(pair))
+        \\    const text, original = pair
+        \\    out.print(text, len(original))
+        \\    return 0
+    , &refusal);
+    const run = try support.runOwned(a, &module, .{});
+    try std.testing.expectEqual(@as(u8, 0), run.status);
+    try std.testing.expectEqualStrings("32\ntext-1 2\n", run.stdout);
+    try std.testing.expectEqualStrings("", run.stderr);
+}
+
+fn tupleStore(program: language.typed.Program) !*language.typed.Statement {
+    for (@constCast(program.statements)) |*candidate| {
+        if (candidate.data == .initialize and candidate.data.initialize.unpack != null) return candidate;
+    }
+    return error.TestUnexpectedResult;
+}

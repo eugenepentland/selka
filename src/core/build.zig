@@ -777,6 +777,7 @@ const FnBuilder = struct {
 
     /// Lower one binding store and preserve its alias and assignment facts.
     fn storeStatement(self: *FnBuilder, store: typed.Store, span: u32, assign: bool) Error!void {
+        if (store.unpack != null) return self.unpackStore(store, span, assign);
         if (store.element) {
             const kind = self.mb.module.kind(self.ssa.types.items[self.local(store.slot)]);
             if (kind != .array and kind != .record) return self.mb.refuse("element store", span);
@@ -790,6 +791,32 @@ const FnBuilder = struct {
         try self.assigned(self.local(store.slot));
         if (assign) try build_capture.invalidate(@TypeOf(self), self, .{ .root = self.local(store.slot), .steps = &.{} }, span);
         try self.noteAlias(store.slot, place);
+    }
+
+    /// Validate the complete logical shape before evaluating or splitting a tuple.
+    fn unpackStore(self: *FnBuilder, store: typed.Store, span: u32, assign: bool) Error!void {
+        _ = @import("tuple_unpack.zig").fields(self.allocator(), self.mb.input.program, self.checked, store, !assign) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.Invalid => return self.mb.refuse("invalid complete tuple staging", span),
+        };
+        var place: ?Place = null;
+        const value = try self.expressionPlace(store.value, &place);
+        const block = self.current orelse return;
+        if (self.module().zero_rc) {
+            // The moved source's lexical provider pin must no longer name it.
+            // Other whole owners are unavailable under the same source contract.
+            if (place) |source| if (source.steps.len == 0) {
+                const empty = try self.detached(.{ .op = .undef, .ty = self.typeOfRef(value) });
+                try self.write(source.root, block, empty);
+            };
+            return self.unpackPayload(value, store.unpack.?, span);
+        }
+        // Ordinary RC tuple parameters can remain borrowed after destructuring.
+        for (store.unpack.?, 0..) |optional, index| {
+            const slot = optional orelse continue;
+            const field = try self.fieldGet(value, index, span);
+            try self.write(self.local(slot), self.current.?, field);
+        }
     }
 
     fn providerStore(self: *FnBuilder, store: typed.Store, place: ?Place, value: ir.Ref, assign: bool, span: u32) Error!void {
