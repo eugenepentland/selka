@@ -32,6 +32,7 @@ pub fn allocation(module: *const ir.Module, function: *const ir.Function, inst: 
 }
 
 fn calleeAllocation(module: *const ir.Module, callee: *const ir.Function) Allocation {
+    if (@import("borrow_selection.zig").declaration(module, callee) catch return .unresolved) return .never;
     if (@import("aggregate_provider.zig").marker(module, callee) catch return .unresolved) return .never;
     const allocation_free = runtimeAllocationFree(callee.name) or (!module.zero_rc and std.mem.eql(u8, callee.name, "myl_core_text_encode"));
     return switch (callee.signature.linkage) {

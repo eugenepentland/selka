@@ -76,6 +76,10 @@ pub fn verifyModule(arena: std.mem.Allocator, module: *const ir.Module, failure:
             failure.* = .{ .function = f.name, .reason = "invalid compiler-only provider lifetime marker" };
             return error.InvalidIr;
         };
+        _ = @import("borrow_selection.zig").declaration(module, f) catch {
+            failure.* = .{ .function = f.name, .reason = "invalid borrowed selection marker declaration" };
+            return error.InvalidIr;
+        };
         for (f.signature.params, 0..) |param, i| {
             const span = i < 64 and f.signature.views & (@as(u64, 1) << @intCast(i)) != 0;
             const invalid_span = span and !Verifier.admittedView(f.signature, i);
@@ -599,6 +603,7 @@ const Verifier = struct {
                     const span_input = (ty == .str_view or ty == .bytes) and admittedView(callee, i);
                     if (ty != param and !span_input) break :blk false;
                 }
+                _ = @import("borrow_selection.zig").call(m, self.f, inst) catch break :blk false;
                 break :blk true;
             },
             .print => inst.ty == .void and s.extra.len != 0 and self.typeOf(s.extra[0]) == .cap,

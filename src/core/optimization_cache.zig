@@ -296,6 +296,10 @@ pub const Context = struct {
             error.OutOfMemory => return error.OutOfMemory,
             else => return null,
         };
+        @import("borrow_selection.zig").validate(a, self.source.module, &restored) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.UnsupportedInstruction => return null,
+        };
         if (!try ancestry.restore(a, self.source, function, &restored, table)) return null;
         self.changed(function);
         return restored;

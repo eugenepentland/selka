@@ -448,6 +448,7 @@ const ModuleState = struct {
     }
 
     fn declareExtern(self: *ModuleState, index: u32) !void {
+        if (try @import("borrow_selection.zig").declaration(self.module, &self.module.functions.items[index])) return;
         const function = &self.module.functions.items[index];
         return self.external(function, self.functionName(index));
     }
@@ -3822,8 +3823,21 @@ const FunctionEmitter = struct {
         return emit_text_split.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst);
     }
 
+    fn borrowedSelection(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!bool {
+        const selection = (try @import("borrow_selection.zig").call(self.state.module, self.function, inst)) orelse return false;
+        if (self.state.module.isBlock(inst.ty)) {
+            try out.print(self.a(), same_pointer, .{ name, try self.value(selection.value) });
+        } else {
+            const slot = try self.stackSlot(self.state.module.size(inst.ty));
+            try self.storeOperand(out, inst.ty, selection.value, slot);
+            try self.loadValue(out, inst.ty, slot, name);
+        }
+        return true;
+    }
+
     /// Emit a direct or indirect call under the internal aggregate ABI.
     pub fn call(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!void {
+        if (try self.borrowedSelection(out, name, inst)) return;
         const m = self.state.module;
         const signature = if (inst.op == .call_indirect) m.compound(self.typeOf(inst.a)).@"fn" else m.functions.items[inst.a.index()].signature;
         const external = signature.linkage != .internal;

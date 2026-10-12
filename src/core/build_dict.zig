@@ -199,8 +199,10 @@ pub fn operation(comptime Context: type, b: Context, op: Operation, ty: ir.Type,
             const probe = try find(Context, b, dict, stored_key, span);
             if (op.kind == .contains) return present(Context, b, probe, span);
             if (op.kind == .get) {
-                const result = try selectValue(Context, b, dict, probe, fallback, false, span);
-                if (b.module().zero_rc and b.module().managed(ty)) try b.rememberDefault(result, .{ .dict = dict, .probe = probe, .fallback = fallback });
+                const selected = try selectValue(Context, b, dict, probe, fallback, false, span);
+                if (!b.module().zero_rc or !b.module().managed(ty)) return selected;
+                const result = try b.borrowSelection(selected, dict, fallback, span);
+                try b.rememberDefault(result, .{ .dict = dict, .probe = probe, .fallback = fallback });
                 return result;
             }
             try requirePresent(Context, b, probe, span);

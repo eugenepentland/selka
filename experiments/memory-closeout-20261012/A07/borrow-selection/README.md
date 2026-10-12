@@ -1,0 +1,5 @@
+# Borrowed dictionary defaults
+
+The checked compiler now preserves both evaluated inputs while a managed `dict.get(key, fallback)` result is used by a readonly expression or borrowed call. Nested selections keep all possible owners live; direct ownership escape and mutation refuse. The implementation adds a versioned compiler-only call marker with no runtime allocation or reference counting, validates it before effects/ownership and after decoded cache restore, and rejects malformed or consuming uses. Explicit `.copy()` still creates independent storage.
+
+The final focused run passed all six tests and Guardian passed 88 checks. Native positive regressions run unoptimized debug and verified release with managed leak and LLVM RC checks. These are worker results; final integrated library, cache, census and performance qualification remains required. See `validation.json` and raw logs. Earlier failed runs preserve a real validation-order bug (malformed marker reached effects first) and a corrected negative-test diagnostic oracle; neither is counted as a passing implementation.

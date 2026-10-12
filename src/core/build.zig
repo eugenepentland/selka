@@ -1095,6 +1095,16 @@ const FnBuilder = struct {
         return single_owner_copy.copy(@TypeOf(self), self, value, span);
     }
 
+    /// Pin both evaluated get inputs without allocating or transferring either.
+    pub fn borrowSelection(self: *FnBuilder, selected: ir.Ref, dictionary: ir.Ref, fallback: ir.Ref, span: u32) Error!ir.Ref {
+        const ty = self.typeOfRef(selected);
+        const callee = @import("borrow_selection.zig").declare(self.allocator(), self.module(), self.typeOfRef(dictionary), ty) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.UnsupportedInstruction => return self.mb.refuse("invalid borrowed dictionary selection", span),
+        };
+        return self.emit(.{ .op = .call, .ty = ty, .a = @fromBackingInt(callee), .data = try self.extraSlice(&.{ selected, dictionary, fallback }), .span = span });
+    }
+
     /// Preserve one evaluated lookup for an immediately requested independent copy.
     pub fn rememberDefault(self: *FnBuilder, value: ir.Ref, selection: build_dict.DefaultSelection) Error!void {
         try self.ssa.dictionary_defaults.put(self.allocator(), self.function.resolve(value), selection);

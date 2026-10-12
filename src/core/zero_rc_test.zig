@@ -2000,3 +2000,179 @@ test "zero RC single dictionary items preserve enumeration and unit members" {
         \\    return 0
     , "0 key-1 7\n1 key-2 11\nempty-3\nvalue-4\n");
 }
+
+// spec: NEW-CORE-ZERO-RC-DEFAULT-BORROWS-1
+test "zero RC borrowed defaults keep both roots through readonly and nested uses" {
+    try executes(std.testing.allocator,
+        \\record Item:
+        \\    values: int[]
+        \\    label: str
+        \\func fallback(mut calls: int, value: int) -> int[]:
+        \\    calls += 1
+        \\    return [value, value + 1]
+        \\func score(value: int[]) -> int:
+        \\    return value[0] + len(value)
+        \\func main(out: Stream) -> int:
+        \\    mut calls = 0
+        \\    mut first = {"hit": [7]}
+        \\    mut second = {"hit": [11, 12]}
+        \\    mut backup = [17, 18, 19]
+        \\    out.print(score(first.get("hit", fallback(mut calls, 20))))
+        \\    out.print(score(first.get("miss", fallback(mut calls, 30))))
+        \\    out.print(score(first.get("miss", second.get("hit", backup))))
+        \\    out.print(score(first.get("miss", second.get("miss", backup))))
+        \\    out.print(calls, backup[0], first["hit"][0], second["hit"][0])
+        \\    const saved = first.get("miss", second.get("miss", backup)).copy()
+        \\    backup.clear()
+        \\    first.clear()
+        \\    second.clear()
+        \\    out.print(saved[0], len(saved))
+        \\    mut records = {1: Item(values=[3], label="item-" + str(1))}
+        \\    const other = Item(values=[5, 6], label="other-" + str(2))
+        \\    out.print(len(records.get(1, other).values), len(records.get(2, other).values))
+        \\    return 0
+    , "8\n32\n13\n20\n2 17 7 11\n17 3\n1 2\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-DEFAULT-BORROWS-1
+test "zero RC borrowed defaults refuse mutation of either possible root" {
+    const prefix =
+        \\func overwrite(mut values: int[]) -> int:
+        \\    values.clear()
+        \\    return 0
+        \\func replace(mut values: dict[str, int[]]) -> int:
+        \\    values.clear()
+        \\    return 0
+        \\func use(values: int[], ignored: int) -> int:
+        \\    return len(values)
+        \\func main() -> int:
+        \\    mut values = {"hit": [7]}
+        \\    mut other = {"hit": [8]}
+        \\    mut fallback = [9]
+        \\
+    ;
+    inline for (.{
+        "    return use(values.get(\"missing\", fallback), overwrite(mut fallback))\n",
+        "    return use(values.get(\"hit\", fallback), replace(mut values))\n",
+        "    return use(values.get(\"missing\", other.get(\"missing\", fallback)), overwrite(mut fallback))\n",
+        "    return use(values.get(\"missing\", other.get(\"hit\", fallback)), replace(mut other))\n",
+    }) |tail| try refuses(std.testing.allocator, prefix ++ tail, "E_SINGLE_OWNER_OVERLAP");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-DEFAULT-BORROWS-1
+test "zero RC borrowed defaults reject malformed and consuming IR markers" {
+    const selections = @import("borrow_selection.zig");
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const source =
+        \\func size(values: dict[str, int[]], key: str, fallback: int[]) -> int noalloc:
+        \\    return len(values.get(key, fallback))
+        \\func main() -> int:
+        \\    return size({"a": [1]}, "b", [2])
+    ;
+    var unit = try language.Compilation.init(a, "default-borrow.my", source);
+    try unit.check();
+    const program = unit.program.?;
+    var refusal: build.Refusal = .{};
+    var module = try build.buildExecutable(a, .{ .program = program, .single_owner = true, .zero_rc = true }, &refusal);
+    var found = false;
+    for (module.functions.items) |*function| {
+        for (function.insts.items) |*instruction| {
+            const selection = (try selections.call(&module, function, instruction.*)) orelse continue;
+            found = true;
+            try selections.validate(a, &module, function);
+            const original = instruction.*;
+            instruction.data = std.math.maxInt(u64);
+            try std.testing.expectError(error.UnsupportedInstruction, selections.validate(a, &module, function));
+            try std.testing.expectError(error.Unsupported, @import("own.zig").function(a, &module, function, .{}));
+            const violation = (try @import("allocation_contract.zig").validate(a, program, unit.src, &module)).?;
+            try std.testing.expect(violation.unresolved);
+            try std.testing.expectEqualStrings("size", violation.function);
+            instruction.* = original;
+            const declaration = &module.functions.items[instruction.a.index()];
+            declaration.signature.owned = 1;
+            try std.testing.expectError(error.UnsupportedInstruction, selections.declaration(&module, declaration));
+            declaration.signature.owned = 0;
+            declaration.signature.linkage = .extern_c;
+            try std.testing.expectError(error.UnsupportedInstruction, selections.declaration(&module, declaration));
+            declaration.signature.linkage = .runtime_c;
+            const phi = selection.phi.?;
+            const selected = function.insts.items[phi.index()];
+            function.insts.items[phi.index()].data = std.math.maxInt(u64);
+            try std.testing.expectError(error.UnsupportedInstruction, selections.validate(a, &module, function));
+            function.insts.items[phi.index()] = selected;
+            try function.insts.append(a, .{ .op = .ret, .ty = .void, .a = phi });
+            try std.testing.expectError(error.UnsupportedInstruction, selections.validate(a, &module, function));
+            function.insts.items.len -= 1;
+            try selections.validate(a, &module, function);
+            break;
+        }
+        if (found) break;
+    }
+    try std.testing.expect(found);
+}
+
+// spec-case: NEW-CORE-ZERO-RC-DEFAULT-BORROWS-1
+test "zero RC borrowed defaults release fresh fallback on success and error exits" {
+    try executes(std.testing.allocator,
+        \\func inspect(values: dict[str, bytes], key: str) -> Result[int, str]:
+        \\    const size = len(values.get(key, ("fallback-" + key).encode()))
+        \\    if key == "error":
+        \\        return Err("failure-" + str(size))
+        \\    return Ok(size)
+        \\func outer(key: str) -> Result[int, str]:
+        \\    const values = {"hit": ("value-" + str(7)).encode()}
+        \\    const size = try inspect(values, key)
+        \\    return Ok(size + 1)
+        \\func main(out: Stream) -> int:
+        \\    for key in ["hit", "miss", "error"]:
+        \\        match outer(key):
+        \\            case Ok(size):
+        \\                out.print(size)
+        \\            case Err(message):
+        \\                out.print(message)
+        \\    return 0
+    , "8\n14\nfailure-14\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-DEFAULT-BORROWS-1
+test "zero RC borrowed defaults preserve a 64-level shared-root selection chain" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    try executes(a, try nestedDefaultSource(a, 64), "1 3\n");
+}
+
+fn nestedDefaultSource(a: std.mem.Allocator, depth: usize) ![]const u8 {
+    var source: std.ArrayList(u8) = .empty;
+    try source.appendSlice(a, "func size(values: dict[int, int[]]) -> int:\n    return len(");
+    for (0..depth) |index| try source.print(a, "values.get({d}, ", .{index});
+    try source.appendSlice(a, "[42]");
+    for (0..depth) |_| try source.append(a, ')');
+    try source.appendSlice(a, ")\nfunc main(out: Stream) -> int:\n    out.print(size({}), size({31: [1, 2, 3]}))\n    return 0\n");
+    return source.items;
+}
+
+// spec-case: NEW-CORE-ZERO-RC-DEFAULT-BORROWS-1
+test "zero RC borrowed defaults cannot mutate the selected receiver" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var unit = try language.Compilation.init(arena.allocator(), "default-mutation.my",
+        \\func main() -> int:
+        \\    mut values = {"hit": [7]}
+        \\    mut fallback = [9]
+        \\    values.get("missing", fallback).append(10)
+        \\    return 0
+    );
+    try std.testing.expectError(error.SourceError, unit.check());
+    try std.testing.expectEqualStrings("E_ASSIGNMENT_TARGET", unit.diagnostics.items[0].code);
+    try refuses(std.testing.allocator,
+        \\func main() -> int:
+        \\    mut values = {"hit": [7]}
+        \\    mut fallback = [9]
+        \\    mut selected = values.get("missing", fallback)
+        \\    selected.append(10)
+        \\    return 0
+    , "E_SINGLE_OWNER_BORROW");
+}

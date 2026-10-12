@@ -305,6 +305,7 @@ const Checker = struct {
             const message = try std.fmt.allocPrint(c.diagnostic_allocator, "'{s}' was moved or is unavailable on this path; use .copy() when both values are needed", .{local.name});
             return c.reject(span, "E_SINGLE_OWNER_MOVED", message);
         }
+        if (c.state[slot].ambiguous_borrow and access != .read) return c.reject(span, borrow_error, "a dictionary default selection is read-only; make an explicit .copy() before changing it");
         if (c.view(local.ty) and access != .read) return c.reject(span, view_escape, "views are read-only; use .copy() for independent owned storage");
         const write = access != .read;
         if (c.zero_rc) try c.resourceAccess(slot, root, write, span);
@@ -387,6 +388,53 @@ const Checker = struct {
             },
             else => false,
         };
+    }
+
+    /// Preserve all possible roots of a generated default-selection receiver.
+    /// Only provenance edges are visited; ordinary calls produce independent owners.
+    fn loanExpression(c: *Checker, id: typed.NodeId, write: bool) Error!void {
+        if (!c.ambiguousBorrow(id)) {
+            if (c.origin(id)) |root| try c.loans.append(c.a, .{ .root = root, .write = write });
+            return;
+        }
+        var pending: std.ArrayList(typed.NodeId) = .empty;
+        var seen: std.AutoHashMapUnmanaged(typed.NodeId, void) = .empty;
+        try pending.append(c.a, id);
+        while (pending.pop()) |current| {
+            const visited = try seen.getOrPut(c.a, current);
+            if (visited.found_existing) continue;
+            if (c.origin(current)) |root| try c.loans.append(c.a, .{ .root = root, .write = write });
+            try c.borrowParents(current, &pending);
+        }
+    }
+
+    fn borrowLocal(c: *Checker, slot: usize, pending: *std.ArrayList(typed.NodeId)) Error!void {
+        const state = c.state[slot];
+        if (!state.ambiguous_borrow) return;
+        if (state.view_definition) |definition| try pending.append(c.a, definition);
+    }
+
+    fn borrowParents(c: *Checker, id: typed.NodeId, pending: *std.ArrayList(typed.NodeId)) Error!void {
+        switch (c.program.nodes[@backingInt(id)].data) {
+            .local => |slot| try c.borrowLocal(@backingInt(slot), pending),
+            .field => |field| try pending.append(c.a, field.base),
+            .index => |index| try pending.append(c.a, index.base),
+            .wrap, .unwrap, .cast => |value| try pending.append(c.a, value),
+            .block_value => |block| try pending.append(c.a, block.value),
+            .buffer_operation => |operation| {
+                try c.borrowLocal(@backingInt(operation.owner), pending);
+                if (operation.kind == .get and operation.arguments.len == 2)
+                    try pending.append(c.a, operation.arguments[1]);
+            },
+            else => {},
+        }
+    }
+
+    fn loanReceiver(c: *Checker, slot: usize) Error!void {
+        try c.loans.append(c.a, .{ .root = c.rootOf(slot), .write = false });
+        if (c.state[slot].ambiguous_borrow) {
+            if (c.state[slot].view_definition) |definition| try c.loanExpression(definition, false);
+        }
     }
 
     /// An element update can read only the exact element being rebuilt. Keep
@@ -512,7 +560,7 @@ const Checker = struct {
                 const saved = c.loans.items.len;
                 defer c.loans.shrinkRetainingCapacity(saved);
                 if (c.tracked(c.program.nodes[@backingInt(binary.left)].ty)) {
-                    if (c.origin(binary.left)) |root| try c.loans.append(c.a, .{ .root = root, .write = false });
+                    try c.loanExpression(binary.left, false);
                 }
                 // Conservatively join short-circuit paths: a move on the RHS
                 // makes its source unavailable after the expression.
@@ -529,7 +577,7 @@ const Checker = struct {
                 try c.expression(index.base, .read);
                 const saved = c.loans.items.len;
                 defer c.loans.shrinkRetainingCapacity(saved);
-                if (c.origin(index.base)) |root| try c.loans.append(c.a, .{ .root = root, .write = false });
+                try c.loanExpression(index.base, false);
                 try c.expression(index.index, .read);
             },
             .array => |items| for (items) |item| try c.expression(item, .move),
@@ -787,6 +835,7 @@ const Checker = struct {
 
     fn collection(c: *Checker, node: typed.Node, access: Access) Error!void {
         const operation = node.data.buffer_operation;
+        if (operation.kind == .get and access != .read and c.owns(node.ty)) return c.reject(node.span, borrow_error, "a dictionary default selection is read-only; make an explicit .copy() before changing it");
         if (c.zero_rc and (operation.kind == .snapshot or operation.kind == .view))
             return c.reject(node.span, zero_unsupported, "shared snapshots and retained views are unsupported; use .borrow() for a checked view or .copy() for ownership");
         const owner = @backingInt(operation.owner);
@@ -813,7 +862,7 @@ const Checker = struct {
             defer c.loans.shrinkRetainingCapacity(saved);
             // Operands finish before the operation mutates. Permit reads (including
             // the generated negative-index length check), but forbid invalidation.
-            if (linear) try c.loans.append(c.a, .{ .root = c.rootOf(owner), .write = false });
+            if (linear) try c.loanReceiver(owner);
             const schema = c.program.records[c.function.scope.locals[owner].ty.recordIndex()];
             const borrowed_read = switch (operation.kind) {
                 .read, .get => schema.collection.kind == .list or schema.collection.kind == .dictionary,
@@ -859,7 +908,7 @@ const Checker = struct {
             try c.expression(arg, if (write) .mutate else if (affine) .move else .read);
             if (affine) if (try c.resourceOrigin(arg)) |provider| try c.loans.append(c.a, .{ .root = provider, .write = false });
             if (c.tracked(c.program.nodes[@backingInt(arg)].ty)) {
-                if (c.origin(arg)) |root| try c.loans.append(c.a, .{ .root = root, .write = write });
+                try c.loanExpression(arg, write);
             }
         }
     }

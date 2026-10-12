@@ -626,7 +626,11 @@ const FinalRestorer = struct {
         const context = self.context orelse return;
         var scratch = std.heap.ArenaAllocator.init(self.backing);
         defer scratch.deinit();
-        try passes.restoreDeferredFinal(self.arena, scratch.allocator(), context, index, self.result);
+        passes.restoreDeferredFinal(self.arena, scratch.allocator(), context, index, self.result) catch |err| switch (err) {
+            error.Unsupported => return error.CacheMiss,
+            error.OutOfMemory => return error.OutOfMemory,
+            error.CacheMiss => return error.CacheMiss,
+        };
     }
 };
 
