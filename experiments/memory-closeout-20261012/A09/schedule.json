@@ -1,0 +1,36 @@
+{
+  "shared_admission": "/home/epentland/.cache/mylang/slots",
+  "host_isolation": "cooperating builds/gates only; independent dl-closeout builds observed outside admission",
+  "windows": [
+    {
+      "owner": "A02",
+      "id": "native-policy-initial",
+      "actual_cpu": 0,
+      "completed_cases": [
+        "nested",
+        "append",
+        "reuse"
+      ],
+      "duration_s_approx": 90,
+      "status": "interrupted after complete cases; no throughput conclusion from noisy ranges",
+      "raw_path": "A02/.tmp/memory-closeout/A02/capacity/timing.json",
+      "start_end_unavailable": true
+    },
+    {
+      "owner": "A02",
+      "id": "native-policy-nested5",
+      "actual_cpu": 10,
+      "started_utc": "2026-10-12T00:46:43.317895+00:00",
+      "finished_utc": "2026-10-12T00:47:10.310418+00:00",
+      "status": "complete 2 warmup and9 measured groups; broad noise; first0.5s warmup overlapped counted harness",
+      "raw_path": "A02/.tmp/memory-closeout/A02/capacity-v2/timing-nested5.json"
+    },
+    {
+      "owner": "A02",
+      "id": "native-policy-replacement",
+      "actual_cpu": 10,
+      "status": "queued, waiting for C0 ReleaseFast compiler build to drain",
+      "max_admitted_duration_s": 30
+    }
+  ]
+}

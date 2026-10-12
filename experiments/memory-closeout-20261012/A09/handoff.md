@@ -53,3 +53,19 @@ files after a first-array correctness smoke completed below 100 ms. The earlier
 source/artifact remains preserved; it is not used for throughput conclusions.
 The C0-guest-v2 preparation restarted with the centrally approved two-slot env
 only while its old child wrapper was queued and unadmitted.
+
+Additional preparation: compiler scaling uses a distinct ReleaseFast C0 build
+(required by repository policy), never Debug smoke timings. `tree_rss.py` provides
+separate memory-only sampled descendant RSS; its two-process/16 MB smoke passed.
+The wrapper does not claim cgroup accuracy and its instrumented elapsed time is
+excluded from primary results. A06's four application timing entrypoints are
+recorded in `applications-manifest.json` and baseline plain builds are queued.
+All four application shapes already passed A06's C0 release correctness checks;
+those counted results remain A06 evidence, not A09 runtime measurements.
+
+`schedule.json` records approved timing windows and observed limits. A02's first
+native policy comparisons are very noisy. The deterministic five-element-list
+allocation regression supports retaining the current capacity policy; no native
+policy throughput improvement is claimed. The first two windows' sources and
+binaries belong to A02's controlled C0 policy experiment, not an integrated final
+compiler. Final C1/C2/C3 measurement dependencies remain outstanding.

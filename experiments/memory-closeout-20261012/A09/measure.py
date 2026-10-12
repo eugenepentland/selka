@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import signal
 import statistics
 import subprocess
@@ -22,6 +23,20 @@ UNSET = ("MYLANG_COUNTERS", "MYLANG_OPTIONS", "MYLANG_CORE_SANITIZE", "MYL_CORE_
 
 def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def source_inputs(source):
+    pending, seen = [source], {}
+    while pending:
+        path = pending.pop()
+        if path.name in seen:
+            continue
+        seen[path.name] = digest(path)
+        for module in re.findall(r"^import ([A-Za-z_]\w*)", path.read_text(), re.M):
+            dependency = path.parent / (module + ".my")
+            if dependency.exists():
+                pending.append(dependency)
+    return seen
 
 
 def save(path, value):
@@ -94,7 +109,7 @@ def build(args):
               "zig": str(args.zig), "zig_sha256": digest(args.zig), "cases": []}
     prepared = {}
     for case in manifest["cases"]:
-        source = (ROOT / case["source"]).resolve()
+        source = (args.source_root / case["source"]).resolve()
         target = args.output / case["id"]
         target.mkdir(parents=True, exist_ok=True)
         binary = target / "program"
@@ -105,23 +120,30 @@ def build(args):
                 "--cache-dir", str(args.output / "cache"), "-o", str(binary)]
         key = (str(source), tuple(options))
         if key in prepared:
-            binary, argv = prepared[key]
+            binary, argv, status, stderr_path = prepared[key]
         else:
             result = subprocess.run([str(ROOT / "scripts/build-slot.sh"), "build", *argv],
                                     cwd=ROOT, env=clean_env(), capture_output=True, text=True)
             (target / "build.stdout").write_text(result.stdout)
             (target / "build.stderr").write_text(result.stderr)
-            if result.returncode:
-                raise RuntimeError(f"{case['id']} failed: {result.stderr}")
-            symbols = subprocess.run(["nm", "-a", str(binary)], capture_output=True, text=True, check=True).stdout
-            if "myl_count_current" in symbols or "myl_count_written" in symbols:
-                raise ValueError(f"{case['id']}: counting runtime found in timing binary")
-            prepared[key] = binary, argv
-        record["cases"].append({**case, "source": str(source), "source_sha256": digest(source),
-                                "binary": str(binary), "binary_sha256": digest(binary),
-                                "build_command": argv, "instrumentation": "absent; flags and nm checked"})
+            status = result.returncode
+            stderr_path = str(target / "build.stderr")
+            if not status:
+                symbols = subprocess.run(["nm", "-a", str(binary)], capture_output=True, text=True, check=True).stdout
+                if "myl_count_current" in symbols or "myl_count_written" in symbols:
+                    raise ValueError(f"{case['id']}: counting runtime found in timing binary")
+            prepared[key] = binary, argv, status, stderr_path
+        row = {**case, "source": str(source), "source_sha256": digest(source),
+               "source_inputs_sha256": source_inputs(source),
+               "build_command": argv, "build_status": status, "build_stderr": stderr_path}
+        if not status:
+            row.update(binary=str(binary), binary_sha256=digest(binary),
+                       instrumentation="absent; flags and nm checked")
+        record["cases"].append(row)
         save(args.output / "builds.json", record)
-        print("built", case["id"], flush=True)
+        print("built" if not status else "refused", case["id"], flush=True)
+    if any(c["build_status"] for c in record["cases"]):
+        raise SystemExit("one or more cases refused; retained in builds.json")
 
 
 def run(args):
@@ -152,6 +174,12 @@ def run(args):
         raise ValueError("unknown case selection")
     for name in selected:
         first, second = cases["before"][name], cases["after"][name]
+        if first.get("build_status", 0) or second.get("build_status", 0):
+            result["cases"][name] = {"status": "not_comparable", "reason": "one or both compiler arms refused",
+                                     "before_status": first.get("build_status", 0),
+                                     "after_status": second.get("build_status", 0)}
+            save(args.output, result)
+            continue
         if first["expected"] != second["expected"]:
             raise ValueError(f"{name}: expected outputs differ")
         cpus = first.get("cpus", [min(allowed)])
@@ -186,7 +214,8 @@ def run(args):
         summary["noisy_ranges"] = any(summary[f"{arm}_wall_ns"]["max"] /
                                       summary[f"{arm}_wall_ns"]["min"] > 1.20 for arm in observations)
         summary["comparison_scope"] = ("same-source compiler comparison" if
-                                       first["source_sha256"] == second["source_sha256"] else
+                                       first.get("source_inputs_sha256", {Path(first["source"]).name: first["source_sha256"]}) ==
+                                       second.get("source_inputs_sha256", {Path(second["source"]).name: second["source_sha256"]}) else
                                        "compiler and source migration; not a compiler-only comparison")
         summary["slowdown_review_trigger"] = ratio > 1.05
         summary["tiny_workload"] = min(summary[f"{arm}_wall_ns"]["median"] for arm in observations) < 100_000_000
@@ -202,6 +231,7 @@ def main():
     sub = parser.add_subparsers(dest="command", required=True)
     b = sub.add_parser("build")
     b.add_argument("--manifest", type=Path, required=True)
+    b.add_argument("--source-root", type=lambda p: Path(p).resolve(), default=ROOT)
     b.add_argument("--compiler", type=lambda p: Path(p).resolve(), required=True)
     b.add_argument("--zig", type=lambda p: Path(p).resolve(), required=True)
     b.add_argument("--commit", required=True)

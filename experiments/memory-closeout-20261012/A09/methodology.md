@@ -39,7 +39,12 @@ threads. If a workload spawns child processes, this measurement is not the
 simultaneous summed process-tree peak. Dedicated cgroup measurement is not
 available to this session (the cgroup filesystem is not writable); compiler
 RSS reported by A08's GNU time method is explicitly a child high-water metric,
-not a process-tree aggregate. No managed-counter observation is called RSS.
+not a process-tree aggregate. `tree_rss.py` adds separate memory-only executions
+that sample the simultaneous descendant RSS sum every 10 ms, following children
+across all process threads. These sampled sums can miss short transients and
+double count shared pages; they are not a cgroup measurement. Their elapsed
+times are instrumented and excluded from primary timing. No managed-counter
+observation is called RSS.
 
 A03's counted runs separately provide allocation/reallocation events,
 cumulative bytes, peak live managed bytes, exit-live bytes and RC events.
@@ -48,10 +53,11 @@ overhead. Peaks are observations and are never subtracted as if they were
 allocation traffic. A01 separates scheduler storage from final and temporary
 result storage; A02's policy experiments may close with a measured rejection.
 
-Compile measurements use matched compiler modes and matched cold/warm/edit
+Compile measurements use matched ReleaseFast compilers and matched cold/warm/edit
 cache state. A08 owns those cases and requests a separate exclusive window.
-The C0 compiler is Debug; Debug compiler timings are identified as such and
-cannot be described as production compiler throughput. Whole-build replay and warm stages are measured separately: requesting LLVM
+The initial C0 compiler is Debug and is used for correctness and generating
+Release guest binaries. A separate C0-releasefast installation is queued for
+compiler throughput measurements; Debug compiler smoke timings are not results. Whole-build replay and warm stages are measured separately: requesting LLVM
 emission disables whole replay. Checked ownership disables lazy/demand
 restoration, rather than all replay.
 
@@ -75,3 +81,11 @@ new binaries and affected-case reruns; earlier binaries are never relabeled.
 
 The shared host permits unrelated activity outside this session. Exclusive
 admission drains cooperating builds and gates; it is not complete host isolation.
+
+The A06 application timing manifest is preserved separately as
+`applications-manifest.json`: word counts, nested JSON transforms, resource file
+processing and prime mapping all repeat fixed checksummed work. `--source-root`
+permits building the same module files from A06's worktree before integration.
+Build records hash the entrypoint and its local imported modules. Refused cases
+stay in build records and paired results explicitly mark them not comparable;
+they are not silently removed from the application denominator.
