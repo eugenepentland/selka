@@ -434,3 +434,27 @@ native authority/cleanup requirements. This is a design request to coordinator/A
 not implemented support or an added helper whitelist. It preserves actual entry
 providers and leaves ordinary owning provider records unchanged. No production
 file was edited for that audit; the original checked-source refusal remains.
+
+The borrowed-entry audit now has a concrete, tested proposal in
+`borrowed-provider/README.md`. New helper/tests are reserved A05 files; eight
+shared consumer changes are supplied as `borrowed-provider/shared-hooks.patch`
+for coordinator application, with captured input hashes. A07 reviewed ownership,
+ABI/home and inlining behavior; root approved the exact cost/noalloc contracts.
+The final private overlay compiler SHA is
+`0fdd1d8afa9e7e833d5508888b3da0065b89935dbee4d6bb3aafb47e7254bc24`.
+Eight named focused tests (including corrupted persisted provider roots) pass;
+wrapper, owned-provider regressions and exact entry authority all pass five-mode
+native coverage; nine source negatives and seven cache/edit/relocation cases pass.
+Raw receipts retain the preliminary new-fixture syntax error and its corrected
+reruns. A07's verifier scratch leak was exposed and fixed; final compiler output
+is clean. This is ready for integration review, not a qualified common C1 or
+completed rollout/retirement. Test-root registration and the exact shared SPEC
+request are included in the proposal README.
+
+The final implementation is delivered in an evidence-only commit: apply
+`borrowed-provider/new-files.patch`, `shared-hooks.patch` and
+`registration.patch` together on integration; their exact bytes/hashes and the
+full private-overlay reproduction delta are recorded. The first failed worker
+production commit gate and corrected style findings remain in evidence. The
+older worker tree intentionally has no orphaned new production source files;
+root owns the complete registered implementation commit and final gate.

@@ -1,0 +1,11 @@
+--- a/src/core/root_test.zig
++++ b/src/core/root_test.zig
+@@ -1,6 +1,8 @@
+ //! Test root of the new compiler core (`zig build test-core`): unit tests of
+ //! each stage, then the end-to-end slice programs under `test/core`.
+ comptime {
++    _ = @import("borrowed_provider_test.zig");
++    _ = @import("borrowed_provider_cache_test.zig");
+     _ = @import("a02_scalar_child_test.zig");
+     _ = @import("a08_borrow_cache_test.zig");
+     _ = @import("provider_store_test.zig");

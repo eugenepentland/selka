@@ -1,0 +1,764 @@
+--- a/src/core/single_owner.zig
++++ b/src/core/single_owner.zig
+@@ -165,6 +165,7 @@
+     transferable: bool = false,
+     dependency: usize = none,
+     ambiguous_borrow: bool = false,
++    provider_context: bool = false,
+ };
+ const Access = enum { read, move, mutate, update, writeback };
+ fn writebackBase(access: Access) Access {
+@@ -305,6 +306,7 @@
+             const message = try std.fmt.allocPrint(c.diagnostic_allocator, "'{s}' was moved or is unavailable on this path; use .copy() when both values are needed", .{local.name});
+             return c.reject(span, "E_SINGLE_OWNER_MOVED", message);
+         }
++        if (c.state[root].provider_context and access != .read) return c.reject(span, borrow_error, "a borrowed provider context is read-only and cannot be moved, stored or returned");
+         if (c.state[slot].ambiguous_borrow and access != .read) return c.reject(span, borrow_error, "a dictionary default selection is read-only; make an explicit .copy() before changing it");
+         if (c.view(local.ty) and access != .read) return c.reject(span, view_escape, "views are read-only; use .copy() for independent owned storage");
+         const write = access != .read;
+@@ -491,6 +493,11 @@
+         if (store.unpack != null) return c.checkUnpack(store, initializing, span);
+         const slot = @backingInt(store.slot);
+         const local = c.function.scope.locals[slot];
++        if (c.zero_rc and initializing and @import("borrowed_provider.zig").initializer(c.program, c.function, store.value)) {
++            for (c.program.nodes[@backingInt(store.value)].data.record) |field| try c.expression(field.value, .read);
++            c.state[slot] = .{ .available = true, .borrowed = true, .provider_context = true };
++            return;
++        }
+         if (c.view(local.ty)) {
+             if (local.mutable and !c.temporary(slot)) return c.reject(span, view_unsupported, "view bindings are immutable in this prototype; create a new const view");
+             try c.expression(store.value, .read);
+@@ -589,6 +596,9 @@
+                 try c.expression(binary.right, .read);
+             },
+             .field => |field| {
++                if (access != .read and c.owns(node.ty)) if (c.origin(field.base)) |root| {
++                    if (c.state[root].provider_context) return c.reject(node.span, borrow_error, "a borrowed provider context cannot transfer a provider field; pass it to a read-only helper");
++                };
+                 if (access == .move and c.owns(node.ty)) return c.reject(node.span, borrow_error, "moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper");
+                 try c.expression(field.base, if (access == .mutate or access == .update) .mutate else .read);
+             },
+--- a/src/core/build.zig
++++ b/src/core/build.zig
+@@ -784,7 +784,8 @@
+         }
+         try self.guardViewRebind(self.local(store.slot), span);
+         var place: ?Place = null;
+-        const value = try self.expressionPlace(store.value, &place);
++        const borrowed_context = self.module().zero_rc and !assign and @import("borrowed_provider.zig").initializer(self.mb.input.program, self.checked, store.value);
++        const value = if (borrowed_context) try self.borrowedProvider(store.value, span) else try self.expressionPlace(store.value, &place);
+         const block = self.current orelse return;
+         try self.providerStore(store, place, value, assign, span);
+         try self.write(self.local(store.slot), block, value);
+@@ -1709,6 +1710,24 @@
+             if (shape.error_tag == tag) _ = try self.emit(.{ .op = .err_trace, .ty = .void, .data = @backingInt(ir.TraceMode.origin), .span = span });
+         }
+         return made;
++    }
++
++    /// A local parameter-rooted provider context borrows each field without clearing ownership pins.
++    fn borrowedProvider(self: *FnBuilder, id: typed.NodeId, span: u32) Error!ir.Ref {
++        const ty = try self.typeOf(id);
++        const stored = self.module().compound(ty).record;
++        const values = try self.allocator().alloc(ir.Ref, stored.len);
++        @memset(values, .none);
++        for (self.nodeOf(id).data.record) |field| {
++            const value = try self.expression(field.value);
++            if (self.current == null) return .none;
++            values[field.index] = try self.boxFor(stored[field.index], value, span);
++        }
++        const callee = @import("borrowed_provider.zig").declare(self.allocator(), self.module(), ty) catch |err| switch (err) {
++            error.OutOfMemory => return error.OutOfMemory,
++            error.UnsupportedInstruction => return self.mb.refuse("invalid borrowed provider context", span),
++        };
++        return self.emit(.{ .op = .call, .ty = ty, .a = @fromBackingInt(callee), .data = try self.extraSlice(values), .span = span });
+     }
+ 
+     /// `Name(fields)`: the fields are evaluated in the order written and placed in declaration order.
+--- a/src/core/own.zig
++++ b/src/core/own.zig
+@@ -393,7 +393,7 @@
+                 // Source `mut` and inferred consuming parameters both receive one count.
+                 .param => if (ownedParameter(f.signature, instruction.data)) .owned else .borrowed,
+                 .str_const, .undef => .immortal,
+-                .call => if (self.viewSource(instruction) orelse self.encodedSource(instruction)) |source| blk: {
++                .call => if ((@import("borrowed_provider.zig").call(self.module, f, instruction) catch return error.Unsupported) != null) .borrowed else if (self.viewSource(instruction) orelse self.encodedSource(instruction)) |source| blk: {
+                     self.parent[i] = source;
+                     break :blk .borrowed;
+                 } else .owned,
+@@ -2053,6 +2053,7 @@
+ /// returned by a call, or a `mut` parameter.
+ fn ownedRecord(module: *const ir.Module, f: *const ir.Function, record: ir.Inst) bool {
+     if (borrowedItem(module, f, record) != null) return false;
++    if ((@import("borrowed_provider.zig").call(module, f, record) catch null) != null) return false;
+     if ((selections.call(module, f, record) catch null) != null) return false;
+     return switch (record.op) {
+         .record_make, .record_set, .array_set, .phi, .call, .union_take, .box_take => true,
+--- a/src/core/emit_llvm.zig
++++ b/src/core/emit_llvm.zig
+@@ -449,6 +449,7 @@
+ 
+     fn declareExtern(self: *ModuleState, index: u32) !void {
+         if (try @import("borrow_selection.zig").declaration(self.module, &self.module.functions.items[index])) return;
++        if (try @import("borrowed_provider.zig").declaration(self.module, &self.module.functions.items[index])) return;
+         const function = &self.module.functions.items[index];
+         return self.external(function, self.functionName(index));
+     }
+@@ -3837,6 +3838,13 @@
+ 
+     /// Emit a direct or indirect call under the internal aggregate ABI.
+     pub fn call(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!void {
++        if ((try @import("borrowed_provider.zig").call(self.state.module, self.function, inst)) != null) {
++            var construction = inst;
++            construction.op = .record_make;
++            construction.a = .none;
++            try self.recordMake(out, name, construction);
++            return;
++        }
+         if (try self.borrowedSelection(out, name, inst)) return;
+         const m = self.state.module;
+         const signature = if (inst.op == .call_indirect) m.compound(self.typeOf(inst.a)).@"fn" else m.functions.items[inst.a.index()].signature;
+--- a/src/core/verify_ir.zig
++++ b/src/core/verify_ir.zig
+@@ -74,6 +74,10 @@
+     for (module.functions.items) |*f| {
+         _ = @import("aggregate_provider.zig").marker(module, f) catch {
+             failure.* = .{ .function = f.name, .reason = "invalid compiler-only provider lifetime marker" };
++            return error.InvalidIr;
++        };
++        _ = @import("borrowed_provider.zig").declaration(module, f) catch {
++            failure.* = .{ .function = f.name, .reason = "invalid borrowed provider context declaration" };
+             return error.InvalidIr;
+         };
+         _ = @import("borrow_selection.zig").declaration(module, f) catch {
+@@ -603,6 +607,7 @@
+                     const span_input = (ty == .str_view or ty == .bytes) and admittedView(callee, i);
+                     if (ty != param and !span_input) break :blk false;
+                 }
++                _ = @import("borrowed_provider.zig").call(m, self.f, inst) catch break :blk false;
+                 _ = @import("borrow_selection.zig").call(m, self.f, inst) catch break :blk false;
+                 break :blk true;
+             },
+--- a/src/core/inline.zig
++++ b/src/core/inline.zig
+@@ -70,6 +70,7 @@
+             if (call.op != .call or call.a.index() == index) continue;
+             if (demand) |handles| try handles.ensure(@intCast(call.a.index()));
+             const callee = &module.functions.items[call.a.index()];
++            if (@import("borrowed_provider.zig").contains(module, callee)) continue;
+             const helper = cfg.qualifies(callee);
+             if (!helper) {
+                 // Each clone adds at most the callee's instructions and a jump.
+@@ -143,6 +144,7 @@
+             if (call.op != .call or call.a.index() == index) continue;
+             if (demand) |handles| try handles.ensure(@intCast(call.a.index()));
+             const callee = &module.functions.items[call.a.index()];
++            if (@import("borrowed_provider.zig").contains(module, callee)) continue;
+             const result = leaf(callee) orelse continue;
+             if (proof.needsProof(callee)) {
+                 if (known == null) known = try facts.analyze(scratch, caller, .{ .fold = false, .mark = false, .params = parameters });
+--- a/src/core/marker_validation.zig
++++ b/src/core/marker_validation.zig
+@@ -2,6 +2,7 @@
+ const std = @import("std");
+ const ir = @import("ir.zig");
+ const selection = @import("borrow_selection.zig");
++const providers = @import("borrowed_provider.zig");
+ const verify = @import("verify_ir.zig");
+ 
+ pub const Error = std.mem.Allocator.Error || selection.Error;
+@@ -17,10 +18,15 @@
+ /// Check each marker-bearing function once, never once per marker. Local shape
+ /// checks run first so malformed operand tables cannot reach the general verifier.
+ pub fn validate(a: std.mem.Allocator, module: *const ir.Module, function: *const ir.Function) Error!void {
+-    if (!present(module, function)) return;
++    if (!present(module, function) and !providers.contains(module, function)) return;
++    try providers.validate(a, module, function);
+     try selection.validate(a, module, function);
++    // The general verifier owns scratch tables for one invocation, not the
++    // caller's lifetime. Some ownership/cache callers pass a backing allocator.
++    var scratch = std.heap.ArenaAllocator.init(a);
++    defer scratch.deinit();
+     var failure: verify.Failure = .{};
+-    verify.verifyFunction(a, module, function, &failure) catch |err| switch (err) {
++    verify.verifyFunction(scratch.allocator(), module, function, &failure) catch |err| switch (err) {
+         error.OutOfMemory => return error.OutOfMemory,
+         error.InvalidIr => return error.UnsupportedInstruction,
+     };
+@@ -29,6 +35,7 @@
+ /// Fresh bodies and declarations receive the same proof as decoded cache bodies.
+ pub fn validateModule(a: std.mem.Allocator, module: *const ir.Module) Error!void {
+     for (module.functions.items) |*function| {
++        _ = try providers.declaration(module, function);
+         _ = try selection.declaration(module, function);
+         try validate(a, module, function);
+     }
+--- a/src/core/cost.zig
++++ b/src/core/cost.zig
+@@ -32,6 +32,8 @@
+ }
+ 
+ fn calleeAllocation(module: *const ir.Module, callee: *const ir.Function) Allocation {
++    if (@import("borrowed_provider.zig").declaration(module, callee) catch return .unresolved) return .never;
++    if (@import("borrowed_provider.zig").keepalive(module, callee) catch return .unresolved) return .never;
+     if (@import("borrow_selection.zig").declaration(module, callee) catch return .unresolved) return .never;
+     if (@import("aggregate_provider.zig").marker(module, callee) catch return .unresolved) return .never;
+     const allocation_free = runtimeAllocationFree(callee.name) or (!module.zero_rc and std.mem.eql(u8, callee.name, "myl_core_text_encode"));
+--- /dev/null
++++ b/src/core/borrowed_provider.zig
+@@ -0,0 +1,299 @@
++//! Flat local contexts borrowing immutable provider parameters for one invocation.
++const std = @import("std");
++const typed = @import("mylang").typed;
++const ir = @import("ir.zig");
++
++pub const prefix = "myl_core_borrowed_provider_v1_";
++pub const Error = error{UnsupportedInstruction};
++// The first contract uses bounded flat records and bounded parameter projections.
++pub const max_fields = 64;
++pub const max_projection_depth = 64;
++
++fn provider(ty: typed.Type) bool {
++    return ty.capabilityIndex() != null and !ty.isStream() and ty != .host_cap;
++}
++
++fn scalar(program: typed.Program, ty: typed.Type) bool {
++    if (ty.isInteger() or ty == .bool or ty == .unit) return true;
++    if (ty == .stream_cap or ty == .host_cap) return true;
++    if (!ty.isAggregate() or ty.recordIndex() >= program.records.len) return false;
++    const record = program.records[ty.recordIndex()];
++    return record.shape.domain != null and std.mem.eql(u8, record.name, "float");
++}
++
++/// One exact immutable parameter root; no local aliases, calls or origin inference.
++fn sourceParameter(program: typed.Program, function: typed.Function, raw: typed.NodeId) bool {
++    var at = raw;
++    for (0..max_projection_depth) |_| {
++        if (@backingInt(at) >= program.nodes.len) return false;
++        const node = program.nodes[@backingInt(at)];
++        switch (node.data) {
++            .local => |slot| {
++                const index = @backingInt(slot);
++                if (index >= 64 or index >= function.signature.parameter_count or index >= function.scope.locals.len) return false;
++                const local = function.scope.locals[index];
++                return !local.mutable and !typed.moveOnly(local.ty, program.records) and !local.ty.isFile();
++            },
++            .field => |field| {
++                if (@backingInt(field.base) >= program.nodes.len) return false;
++                const ty = program.nodes[@backingInt(field.base)].ty;
++                if (!ty.isAggregate() or ty.recordIndex() >= program.records.len) return false;
++                const record = program.records[ty.recordIndex()];
++                if (field.index >= record.fields.len or record.fields[field.index].boxed) return false;
++                if (record.fields[field.index].ty != node.ty) return false;
++                at = field.base;
++            },
++            else => return false,
++        }
++    }
++    return false;
++}
++
++/// Used only for a direct local initializer by both source checking and lowering.
++/// Nested borrowed contexts and mixed owned-managed/provider storage do not qualify.
++pub fn initializer(program: typed.Program, function: typed.Function, id: typed.NodeId) bool {
++    if (@backingInt(id) >= program.nodes.len) return false;
++    const node = program.nodes[@backingInt(id)];
++    if (!node.ty.isAggregate() or node.ty.recordIndex() >= program.records.len) return false;
++    const record = program.records[node.ty.recordIndex()];
++    if (record.managed or record.isCollection() or record.collection.box) return false;
++    if (record.shape.array != null or record.shape.variants != null or record.shape.resource != null) return false;
++    if (record.shape.domain != null or record.contract.callback != null) return false;
++    if (record.fields.len == 0 or record.fields.len > max_fields) return false;
++    var has_provider = false;
++    for (record.fields) |field| {
++        if (field.boxed) return false;
++        if (provider(field.ty)) has_provider = true else if (!scalar(program, field.ty)) return false;
++    }
++    if (!has_provider) return false;
++    const fields = switch (node.data) {
++        .record => |fields| fields,
++        else => return false,
++    };
++    if (fields.len != record.fields.len) return false;
++    var seen: u64 = 0;
++    for (fields) |field| {
++        if (field.index >= record.fields.len or @backingInt(field.value) >= program.nodes.len) return false;
++        const bit = @as(u64, 1) << @intCast(field.index);
++        if (seen & bit != 0) return false;
++        seen |= bit;
++        const ty = record.fields[field.index].ty;
++        if (program.nodes[@backingInt(field.value)].ty != ty) return false;
++        if (provider(ty) and !sourceParameter(program, function, field.value)) return false;
++    }
++    return true;
++}
++
++/// Canonical physical identity; parsing a name never admits its declaration alone.
++pub fn markerType(symbol: []const u8) ?ir.Type {
++    if (!std.mem.startsWith(u8, symbol, prefix)) return null;
++    const digits = symbol[prefix.len..];
++    if (digits.len == 0 or digits[0] == '0') return null;
++    for (digits) |digit| if (digit < '0' or digit > '9') return null;
++    const ty: ir.Type = @fromBackingInt(std.fmt.parseInt(u32, digits, 10) catch return null);
++    return if (ty.isCompound()) ty else null;
++}
++
++fn physicalScalar(ty: ir.Type) bool {
++    if (ty.integer() != null or ty == .bool or ty == .void) return true;
++    return ty == .f64 or ty == .cap;
++}
++
++/// Validate every field and all ABI bits, including a declaration with no body.
++pub fn declaration(module: *const ir.Module, function: *const ir.Function) Error!bool {
++    if (!std.mem.startsWith(u8, function.name, prefix)) return false;
++    const ty = markerType(function.name) orelse return error.UnsupportedInstruction;
++    if (!module.zero_rc or !module.valid(ty) or module.kind(ty) != .record) return error.UnsupportedInstruction;
++    const fields = module.compound(ty).record;
++    if (fields.len == 0 or fields.len > max_fields) return error.UnsupportedInstruction;
++    var has_provider = false;
++    for (fields) |field| {
++        if (field == .capability) has_provider = true else if (!physicalScalar(field)) return error.UnsupportedInstruction;
++    }
++    if (!has_provider) return error.UnsupportedInstruction;
++    const sig = function.signature;
++    if (sig.linkage != .runtime_c or sig.ret != ty or !std.mem.eql(ir.Type, fields, sig.params)) return error.UnsupportedInstruction;
++    if (sig.owned != 0 or sig.consumes != 0 or sig.views != 0) return error.UnsupportedInstruction;
++    if (function.blocks.items.len != 0 or function.insts.items.len != 0) return error.UnsupportedInstruction;
++    return true;
++}
++
++fn checkedInst(function: *const ir.Function, ref: ir.Ref) Error!ir.Inst {
++    if (ref == .none or ref.index() >= function.insts.items.len) return error.UnsupportedInstruction;
++    return function.inst(ref);
++}
++
++fn operands(function: *const ir.Function, data: u64) Error![]const ir.Ref {
++    const range = ir.ExtraSlice.unpack(data);
++    if (range.start > function.extra.items.len or range.len > function.extra.items.len - range.start) return error.UnsupportedInstruction;
++    return function.extra.items[range.start..][0..range.len];
++}
++
++/// A bounded copy/projection path rooted in a readonly parameter of this function.
++fn parameter(module: *const ir.Module, function: *const ir.Function, raw: ir.Ref) Error!void {
++    var ref = raw;
++    for (0..max_projection_depth) |_| {
++        const inst = try checkedInst(function, ref);
++        switch (inst.op) {
++            .param => {
++                if (inst.data >= function.signature.params.len or inst.data >= 64) return error.UnsupportedInstruction;
++                if (function.signature.params[@intCast(inst.data)] != inst.ty) return error.UnsupportedInstruction;
++                const bit = @as(u64, 1) << @intCast(inst.data);
++                if ((function.signature.owned | function.signature.consumes) & bit != 0) return error.UnsupportedInstruction;
++                return;
++            },
++            .record_get => {
++                const base = try checkedInst(function, inst.a);
++                if (!module.valid(base.ty) or module.kind(base.ty) != .record) return error.UnsupportedInstruction;
++                const fields = module.compound(base.ty).record;
++                if (inst.data >= fields.len or fields[@intCast(inst.data)] != inst.ty) return error.UnsupportedInstruction;
++                ref = inst.a;
++            },
++            .copy => {
++                if ((try checkedInst(function, inst.a)).ty != inst.ty) return error.UnsupportedInstruction;
++                ref = inst.a;
++            },
++            else => return error.UnsupportedInstruction,
++        }
++    }
++    return error.UnsupportedInstruction;
++}
++
++/// The existing native helper is exactly a no-op borrow, never source FFI authority.
++pub fn keepalive(module: *const ir.Module, function: *const ir.Function) Error!bool {
++    if (!std.mem.eql(u8, function.name, "myl_core_provider_keepalive")) return false;
++    const sig = function.signature;
++    if (!module.zero_rc or function.span != 0 or sig.linkage != .runtime_c) return error.UnsupportedInstruction;
++    if (sig.ret != .void or !std.mem.eql(ir.Type, sig.params, &.{.capability})) return error.UnsupportedInstruction;
++    if (sig.owned != 0 or sig.consumes != 0 or sig.views != 0) return error.UnsupportedInstruction;
++    if (function.blocks.items.len != 0 or function.insts.items.len != 0) return error.UnsupportedInstruction;
++    return true;
++}
++
++/// The call constructs its inline borrowed record directly, with no owned intermediate.
++pub fn call(module: *const ir.Module, function: *const ir.Function, inst: ir.Inst) Error!?[]const ir.Ref {
++    if (inst.op != .call) return null;
++    if (inst.a == .none or inst.a.index() >= module.functions.items.len) return error.UnsupportedInstruction;
++    const callee = &module.functions.items[inst.a.index()];
++    if (!try declaration(module, callee)) return null;
++    if (inst.ty != callee.signature.ret) return error.UnsupportedInstruction;
++    const args = try operands(function, inst.data);
++    if (args.len != callee.signature.params.len) return error.UnsupportedInstruction;
++    for (args, callee.signature.params) |arg, ty| {
++        if ((try checkedInst(function, arg)).ty != ty) return error.UnsupportedInstruction;
++        if (ty == .capability) try parameter(module, function, arg);
++    }
++    return args;
++}
++
++/// Do not let a future inliner erase the parameter-root proof before ownership.
++pub fn contains(module: *const ir.Module, function: *const ir.Function) bool {
++    for (function.insts.items) |inst| {
++        if (inst.op != .call or inst.a == .none or inst.a.index() >= module.functions.items.len) continue;
++        if (std.mem.startsWith(u8, module.functions.items[inst.a.index()].name, prefix)) return true;
++    }
++    return false;
++}
++
++/// A declaration is compiler-created; source extern declarations cannot select it.
++pub fn declare(a: std.mem.Allocator, module: *ir.Module, ty: ir.Type) (Error || std.mem.Allocator.Error)!u32 {
++    if (!module.valid(ty) or module.kind(ty) != .record) return error.UnsupportedInstruction;
++    const symbol = try std.fmt.allocPrint(a, "{s}{d}", .{ prefix, @backingInt(ty) });
++    for (module.functions.items, 0..) |*function, index| {
++        if (!std.mem.eql(u8, function.name, symbol)) continue;
++        if (!try declaration(module, function)) return error.UnsupportedInstruction;
++        return @intCast(index);
++    }
++    const index: u32 = @intCast(module.functions.items.len);
++    const function: ir.Function = .{ .name = symbol, .signature = .{
++        .params = try a.dupe(ir.Type, module.compound(ty).record),
++        .ret = ty,
++        .linkage = .runtime_c,
++    } };
++    if (!try declaration(module, &function)) return error.UnsupportedInstruction;
++    try module.functions.append(a, function);
++    return index;
++}
++
++/// Verify before optimization and after cache restore. Propagate only copy/field
++/// dependencies once via reverse edges; arbitrary ownership DAG inference is absent.
++pub fn validate(a: std.mem.Allocator, module: *const ir.Module, function: *const ir.Function) (Error || std.mem.Allocator.Error)!void {
++    if (!contains(module, function)) return;
++    const count = function.insts.items.len;
++    const none = std.math.maxInt(usize);
++    const heads = try a.alloc(usize, count);
++    defer a.free(heads);
++    @memset(heads, none);
++    const next = try a.alloc(usize, count);
++    defer a.free(next);
++    @memset(next, none);
++    const borrowed = try a.alloc(bool, count);
++    defer a.free(borrowed);
++    @memset(borrowed, false);
++    var queue: std.ArrayList(usize) = .empty;
++    defer queue.deinit(a);
++    for (function.insts.items, 0..) |inst, index| {
++        if (inst.op == .copy or inst.op == .record_get) {
++            _ = try checkedInst(function, inst.a);
++            next[index] = heads[inst.a.index()];
++            heads[inst.a.index()] = index;
++        }
++        if ((try call(module, function, inst)) != null) {
++            borrowed[index] = true;
++            try queue.append(a, index);
++        }
++    }
++    var at: usize = 0;
++    while (at < queue.items.len) : (at += 1) {
++        var child = heads[queue.items[at]];
++        while (child != none) {
++            // Scalar projections may freely escape; providers and contexts may not.
++            const ty = function.insts.items[child].ty;
++            if (!module.valid(ty)) return error.UnsupportedInstruction;
++            if (module.managed(ty) and !borrowed[child]) {
++                borrowed[child] = true;
++                try queue.append(a, child);
++            }
++            child = next[child];
++        }
++    }
++    for (function.insts.items) |inst| {
++        if (inst.op.hasExtra()) _ = try operands(function, inst.data);
++        const values = function.valueOperands(inst);
++        for (0..values.len()) |index| {
++            const value = values.get(index);
++            _ = try checkedInst(function, value);
++            if (borrowed[value.index()] and takes(module, function, inst, index)) return error.UnsupportedInstruction;
++        }
++    }
++}
++
++fn takes(module: *const ir.Module, function: *const ir.Function, inst: ir.Inst, index: usize) bool {
++    if (index == 0 and inst.op.consumesOperand0()) return true;
++    if (inst.op == .call) {
++        if (inst.a == .none or inst.a.index() >= module.functions.items.len or index >= 64) return true;
++        const sig = module.functions.items[inst.a.index()].signature;
++        return (sig.owned | sig.consumes) & (@as(u64, 1) << @intCast(index)) != 0;
++    }
++    if (inst.op == .call_indirect) {
++        if (index == 0) return false;
++        const callee = checkedInst(function, inst.a) catch return true;
++        if (!module.valid(callee.ty) or module.kind(callee.ty) != .@"fn" or index > 64) return true;
++        const sig = module.compound(callee.ty).@"fn";
++        return (sig.owned | sig.consumes) & (@as(u64, 1) << @intCast(index - 1)) != 0;
++    }
++    return switch (inst.op) {
++        .list_push, .record_set => true,
++        .list_set, .list_set_field, .array_set, .dict_set_value, .dict_insert => index >= 2,
++        .list_pop, .union_make, .union_take, .box_make, .box_take, .ret, .release, .record_make, .phi => true,
++        else => false,
++    };
++}
++
++/// Check all declarations, including unused malformed identities, before effects.
++pub fn validateModule(a: std.mem.Allocator, module: *const ir.Module) (Error || std.mem.Allocator.Error)!void {
++    for (module.functions.items) |*function| {
++        _ = try declaration(module, function);
++        try validate(a, module, function);
++    }
++}
+--- /dev/null
++++ b/src/core/borrowed_provider_cache_test.zig
+@@ -0,0 +1,63 @@
++//! Persisted borrowed-provider records must repeat their parameter-root proof.
++const std = @import("std");
++const language = @import("mylang");
++const borrowed = @import("borrowed_provider.zig");
++const ir = @import("ir.zig");
++const cache = @import("optimization_cache.zig");
++const snapshot = @import("ir_snapshot.zig");
++const store = @import("stage_store.zig");
++const origins = @import("inline_origins.zig");
++const emit = @import("emit_llvm.zig");
++
++fn locate(_: *const anyopaque, span: u32) emit.Location {
++    return .{ .line = 1, .column = span + 1 };
++}
++
++// spec-case: CAPABILITY-FIELD-METHOD-1
++test "borrowed provider checksum-valid cache body refuses corrupted owning parameter roots" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    const source =
++        \\record Context:
++        \\    fs: Filesystem
++        \\    env: Environment
++        \\    value: int
++        \\func main(fs: Filesystem, env: Environment) -> int:
++        \\    const ctx = Context(fs=fs, env=env, value=7)
++        \\    return ctx.value
++    ;
++    var unit = try language.Compilation.init(a, "cached-provider.my", source);
++    try unit.check();
++    var failure: @import("single_owner.zig").Failure = .{};
++    try @import("single_owner.zig").checkMode(a, unit.program.?, &failure, true);
++    var refusal: @import("build.zig").Refusal = .{};
++    var module = try @import("build.zig").buildExecutable(a, .{ .program = unit.program.?, .single_owner = true, .zero_rc = true }, &refusal);
++    const index = markerFunction(&module).?;
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
++    defer storage.deinit();
++    const context = try snapshot.Context.init(a, &module, null);
++    const token: u8 = 0;
++    var optimizer = cache.Context.init(&storage, context, .{ .context = &token, .locate = locate });
++    var ancestry: origins.Table = .{};
++    const provenance = try cache.Provenance.capture(a, context, &ancestry, index);
++    var wire = try snapshot.capture(a, context, module.functions.items[index]);
++    try std.testing.expect((try optimizer.restore(a, index, wire, provenance, &ancestry)) != null);
++    wire.function.signature.owned |= 1;
++    const key = storage.key("borrowed-provider-corrupted-root-v1", &.{});
++    try storage.storeValue(key, snapshot.Wire, wire);
++    const decoded = (try storage.loadValue(a, key, snapshot.Wire)).?;
++    const malformed = try snapshot.restore(a, context, decoded);
++    // The snapshot is structurally decodable; the ownership marker alone must refuse it.
++    try std.testing.expectError(error.UnsupportedInstruction, @import("marker_validation.zig").validate(std.testing.allocator, &module, &malformed));
++    try std.testing.expect((try optimizer.restore(a, index, decoded, provenance, &ancestry)) == null);
++}
++
++fn markerFunction(module: *const ir.Module) ?u32 {
++    for (module.functions.items, 0..) |*function, index| {
++        if (borrowed.contains(module, function)) return @intCast(index);
++    }
++    return null;
++}
+--- /dev/null
++++ b/src/core/borrowed_provider_test.zig
+@@ -0,0 +1,179 @@
++//! The borrowed-provider identity carries no ownership or runtime implementation.
++const std = @import("std");
++const ir = @import("ir.zig");
++const borrowed = @import("borrowed_provider.zig");
++const Hand = @import("test_support.zig").Hand;
++
++const Fixture = struct { module: ir.Module, function: u32, marker: u32, value: ir.Ref, first: ir.Ref, second: ir.Ref };
++fn fixture(a: std.mem.Allocator) !Fixture {
++    var module: ir.Module = .{ .zero_rc = true };
++    const ty = try module.intern(a, .{ .record = &.{ .capability, .capability, .i64 } });
++    const marker = try borrowed.declare(a, &module, ty);
++    var h = try Hand.init(a, &module, "context", .{ .params = &.{ .capability, .capability }, .ret = .i64 });
++    const first = try h.param(0);
++    const second = try h.param(1);
++    const value = try h.emit(.{ .op = .call, .ty = ty, .a = @fromBackingInt(marker), .data = try h.extra(&.{ first, second, try h.int(.i64, 7) }) });
++    const scalar = try h.emit(.{ .op = .record_get, .ty = .i64, .a = value, .data = 2 });
++    _ = try h.emit(.{ .op = .ret, .ty = .void, .a = scalar });
++    const index = try h.finish();
++    return .{ .module = module, .function = index, .marker = marker, .value = value, .first = first, .second = second };
++}
++
++// spec-case: CAPABILITY-FIELD-METHOD-1
++test "borrowed provider marker admits only exact flat signature and parameter roots" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var f = try fixture(a);
++    try borrowed.validateModule(a, &f.module);
++    const function = &f.module.functions.items[f.function];
++    try std.testing.expect(borrowed.contains(&f.module, function));
++    try std.testing.expectEqual(@as(usize, 3), (try borrowed.call(&f.module, function, function.inst(f.value))).?.len);
++    function.signature.owned = 1;
++    try std.testing.expectError(error.UnsupportedInstruction, borrowed.validate(a, &f.module, function));
++    function.signature.owned = 0;
++    function.signature.consumes = 2;
++    try std.testing.expectError(error.UnsupportedInstruction, borrowed.validate(a, &f.module, function));
++}
++
++// spec-case: CAPABILITY-FIELD-METHOD-1
++test "borrowed provider marker refuses wrong ABI malformed identity and nested storage" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var f = try fixture(a);
++    const marker = &f.module.functions.items[f.marker];
++    const original = marker.*;
++    for ([_][]const u8{ borrowed.prefix, borrowed.prefix ++ "015", borrowed.prefix ++ "15x", borrowed.prefix ++ "4294967295" }) |name| {
++        marker.name = name;
++        try std.testing.expectError(error.UnsupportedInstruction, borrowed.declaration(&f.module, marker));
++    }
++    marker.* = original;
++    marker.signature.linkage = .internal;
++    try std.testing.expectError(error.UnsupportedInstruction, borrowed.declaration(&f.module, marker));
++    marker.* = original;
++    marker.signature.owned = 1;
++    try std.testing.expectError(error.UnsupportedInstruction, borrowed.declaration(&f.module, marker));
++    marker.* = original;
++    marker.signature.ret = .capability;
++    try std.testing.expectError(error.UnsupportedInstruction, borrowed.declaration(&f.module, marker));
++    marker.* = original;
++    const nested = try f.module.intern(a, .{ .record = &.{original.signature.ret} });
++    try std.testing.expectError(error.UnsupportedInstruction, borrowed.declare(a, &f.module, nested));
++    const mixed = try f.module.intern(a, .{ .record = &.{ .capability, .str } });
++    try std.testing.expectError(error.UnsupportedInstruction, borrowed.declare(a, &f.module, mixed));
++}
++
++// spec-case: CAPABILITY-FIELD-METHOD-1
++test "borrowed provider marker refuses field return and structural mutation through copies" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var f = try fixture(a);
++    const function = &f.module.functions.items[f.function];
++    const index = function.insts.items.len - 1;
++    const original = function.insts.items[index];
++    function.insts.items[index].a = f.value;
++    try std.testing.expectError(error.UnsupportedInstruction, borrowed.validate(a, &f.module, function));
++    function.insts.items[index] = original;
++    const alias: ir.Ref = @fromBackingInt(@intCast(function.insts.items.len));
++    try function.insts.append(a, .{ .op = .copy, .ty = function.inst(f.value).ty, .a = f.value });
++    const projected: ir.Ref = @fromBackingInt(@intCast(function.insts.items.len));
++    try function.insts.append(a, .{ .op = .record_get, .ty = .capability, .a = alias, .data = 0 });
++    function.insts.items[index].a = projected;
++    try std.testing.expectError(error.UnsupportedInstruction, borrowed.validate(a, &f.module, function));
++    function.insts.items[index] = .{ .op = .record_set, .ty = function.inst(f.value).ty, .a = alias, .b = f.first, .data = 0 };
++    try std.testing.expectError(error.UnsupportedInstruction, borrowed.validate(a, &f.module, function));
++}
++
++// spec-case: CAPABILITY-FIELD-METHOD-1
++test "borrowed provider marker rejects foreign origins malformed operand ranges and copy cycles" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var f = try fixture(a);
++    const function = &f.module.functions.items[f.function];
++    const original = function.insts.items[f.value.index()];
++    function.insts.items[f.value.index()].data = std.math.maxInt(u64);
++    try std.testing.expectError(error.UnsupportedInstruction, borrowed.validate(a, &f.module, function));
++    function.insts.items[f.value.index()] = original;
++    const param = function.insts.items[f.first.index()];
++    function.insts.items[f.first.index()] = .{ .op = .undef, .ty = .capability };
++    try std.testing.expectError(error.UnsupportedInstruction, borrowed.validate(a, &f.module, function));
++    function.insts.items[f.first.index()] = .{ .op = .copy, .ty = .capability, .a = f.first };
++    try std.testing.expectError(error.UnsupportedInstruction, borrowed.validate(a, &f.module, function));
++    function.insts.items[f.first.index()] = param;
++    f.module.zero_rc = false;
++    try std.testing.expectError(error.UnsupportedInstruction, borrowed.validateModule(a, &f.module));
++}
++
++// spec-case: CAPABILITY-FIELD-METHOD-1
++test "borrowed provider construction prevents inlining away immutable parameter provenance" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var f = try fixture(a);
++    var caller = try Hand.init(a, &f.module, "caller", .{ .params = &.{ .capability, .capability }, .ret = .i64 });
++    const result = try caller.emit(.{ .op = .call, .ty = .i64, .a = @fromBackingInt(f.function), .data = try caller.extra(&.{ try caller.param(0), try caller.param(1) }) });
++    _ = try caller.emit(.{ .op = .ret, .ty = .void, .a = result });
++    const index = try caller.finish();
++    var origins: @import("inline_origins.zig").Table = .{};
++    const changed = try @import("inline.zig").leafCaller(a, &f.module, index, &.{}, &origins);
++    try std.testing.expectEqual(@as(u32, 0), changed);
++    const cfg = try @import("inline.zig").cfgCallerDemandWithScratch(a, a, &f.module, index, &origins, null);
++    try std.testing.expectEqual(@as(u32, 0), cfg);
++    try std.testing.expect(!try @import("destination.zig").qualifies(a, &f.module, &f.module.functions.items[f.function]));
++    try borrowed.validateModule(a, &f.module);
++}
++
++// spec-case: CAPABILITY-FIELD-METHOD-1
++test "borrowed provider source predicate recognizes exact immutable parameters and excludes nesting" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    const source =
++        \\record Context:
++        \\    fs: Filesystem
++        \\    env: Environment
++        \\func main(fs: Filesystem, env: Environment) -> int:
++        \\    mut ctx = Context(fs=fs, env=env)
++        \\    return len(ctx.env.names())
++    ;
++    var unit = try @import("mylang").Compilation.init(a, "borrowed-provider.my", source);
++    try unit.check();
++    const program = unit.program.?;
++    const function = program.functions[@backingInt(program.main)];
++    try std.testing.expectEqual(@as(usize, 1), initializerCount(program, function));
++    const locals = try a.dupe(@import("mylang").typed.Local, function.scope.locals);
++    locals[0].mutable = true;
++    var mutable = function;
++    mutable.scope.locals = locals;
++    try std.testing.expectEqual(@as(usize, 0), initializerCount(program, mutable));
++}
++
++fn initializerCount(program: @import("mylang").typed.Program, function: @import("mylang").typed.Function) usize {
++    var count: usize = 0;
++    for (program.nodes, 0..) |node, index| {
++        if (node.data == .record and borrowed.initializer(program, function, @fromBackingInt(index))) count += 1;
++    }
++    return count;
++}
++
++// spec-case: CAPABILITY-FIELD-METHOD-1
++test "borrowed provider noalloc proof refuses malformed helpers and source extern names" {
++    var module: ir.Module = .{ .zero_rc = true };
++    var function: ir.Function = .{ .name = "myl_core_provider_keepalive", .signature = .{ .params = &.{.capability}, .ret = .void, .linkage = .runtime_c } };
++    try std.testing.expect(try borrowed.keepalive(&module, &function));
++    const original = function;
++    function.signature.linkage = .extern_c;
++    try std.testing.expectError(error.UnsupportedInstruction, borrowed.keepalive(&module, &function));
++    function = original;
++    function.span = 4;
++    try std.testing.expectError(error.UnsupportedInstruction, borrowed.keepalive(&module, &function));
++    function = original;
++    function.signature.params = &.{.i64};
++    try std.testing.expectError(error.UnsupportedInstruction, borrowed.keepalive(&module, &function));
++    function = original;
++    function.signature.owned = 1;
++    try std.testing.expectError(error.UnsupportedInstruction, borrowed.keepalive(&module, &function));
++}
+--- a/src/core/root_test.zig
++++ b/src/core/root_test.zig
+@@ -149,3 +149,5 @@
+     _ = @import("a01_fresh_field_test.zig");
+     _ = @import("a01_tuple_unpack_test.zig");
+ }
++
++comptime { _ = @import("borrowed_provider_test.zig"); _ = @import("borrowed_provider_cache_test.zig"); }

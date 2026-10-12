@@ -1,0 +1,5 @@
+func main(fs: Filesystem, env: Environment) -> int:
+    const pair = (fs, env)
+    const left, right = pair
+    _ = left.read_text("note")
+    return len(right.names())

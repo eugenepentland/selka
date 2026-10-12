@@ -1,0 +1,6 @@
+record Mixed:
+    fs: Filesystem
+    name: str
+func main(fs: Filesystem, env: Environment) -> int:
+    const ctx = Mixed(fs=fs, name="owned")
+    return len(ctx.name) + len(env.names())

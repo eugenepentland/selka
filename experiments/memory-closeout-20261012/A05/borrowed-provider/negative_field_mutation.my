@@ -1,0 +1,8 @@
+record Context:
+    fs: Filesystem
+    env: Environment
+
+func main(fs: Filesystem, env: Environment) -> int:
+    mut ctx = Context(fs=fs, env=env)
+    ctx.env = env
+    return len(ctx.env.names())

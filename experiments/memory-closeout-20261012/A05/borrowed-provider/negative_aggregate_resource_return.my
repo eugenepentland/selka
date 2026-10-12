@@ -1,0 +1,14 @@
+record Context:
+    fs: Filesystem
+    env: Environment
+
+func opened(ctx: Context) -> Result[TextFile, str]:
+    return ctx.fs.open("note", "r")
+func wrapper(fs: Filesystem, env: Environment) -> Result[int, str]:
+    const ctx = Context(fs=fs, env=env)
+    with try opened(ctx) as file:
+        _ = file.read()
+        return Ok(len(ctx.env.names()))
+func main(fs: Filesystem, env: Environment) -> int:
+    _ = wrapper(fs, env)
+    return 0
