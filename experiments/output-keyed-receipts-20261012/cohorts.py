@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Run the measurement cohorts of cohorts.md and archive their raw evidence.
 
-    python3 -B cohorts.py --tree PATH --cohort C1|C2C3|C4 [--samples N]
+    python3 -B cohorts.py --tree PATH --cohort C1|C2|C3|C4 [--samples N]
 
-C1 runs in the target tree. C2C3 and C4 run in scratch worktrees under work/.
+C1 and C3 run in the target tree (C3 reverts its edit). C2 and C4 run in
+scratch worktrees under work/.
 Every timed sample takes an exclusive window: the coordinator through
 `--timing-window-seconds`, other commands through `scripts/build-slot.sh
 timing /usr/bin/time`. Queue time is recorded beside each sample and never
@@ -140,13 +141,13 @@ def c1(target: Path, out: Path, samples: int) -> dict:
             "gate_admitted_seconds": median([r["gate_admitted_seconds"] for r in rows])}
 
 
-def c2c3(target: Path, out: Path, samples: int, c3_samples: int) -> dict:
+def c2(target: Path, out: Path, samples: int) -> dict:
     tree = HERE / "work/c2-tree"
     add_worktree(target, tree)
     env = tree_env(tree)
     cache = HERE / "work/c2-cache"
     shutil.rmtree(cache, ignore_errors=True)
-    result = {"cohort": "C2C3", "build": build(tree, env, out, "build-0")}
+    result = {"cohort": "C2", "build": build(tree, env, out, "build-0")}
     manifest(target, tree, out, "C2-before")
     result["warm"] = [timed_test(tree, env, out, "warm-%d" % i, cache) for i in (1, 2)]
     c2 = []
@@ -160,16 +161,30 @@ def c2c3(target: Path, out: Path, samples: int, c3_samples: int) -> dict:
     result["c2"] = c2
     result["c2_elapsed"] = median([r["elapsed_seconds"] for r in c2])
     manifest(target, tree, out, "C2-after")
-    result["c3_prime"] = coordinator_sample(tree, env, out, "c3-prime", None)
-    c3 = []
-    for i in range(1, c3_samples + 1):
-        with open(tree / "src/parser.zig", "a") as handle:
-            handle.write("\n// cohort C3 edit %d\n" % i)
-        c3.append(coordinator_sample(tree, env, out, "c3-edit-%d" % i, 1800))
-    result["c3"] = c3
-    result["c3_request_seconds"] = median([r["request_seconds"] for r in c3])
     subprocess.run(["git", "-C", str(tree), "checkout", "--", "src/parser.zig"])
     remove_worktree(target, tree)
+    return result
+
+
+def c3(target: Path, out: Path, samples: int) -> dict:
+    """Complete verification after a comment edit, in the target tree itself:
+    scratch trees under work/ nest deep enough to fail path-sensitive CLI tests
+    (REPORT.md, row 12), which would turn every sample into a failing gate.
+    The edit is reverted afterwards, whatever happens."""
+    env = tree_env(target)
+    manifest(target, target, out, "C3-before")
+    result = {"cohort": "C3", "prime": coordinator_sample(target, env, out, "prime", None)}
+    rows = []
+    try:
+        for i in range(1, samples + 1):
+            with open(target / "src/parser.zig", "a") as handle:
+                handle.write("\n// cohort C3 edit %d\n" % i)
+            rows.append(coordinator_sample(target, env, out, "edit-%d" % i, 1800))
+    finally:
+        subprocess.run(["git", "-C", str(target), "checkout", "--", "src/parser.zig"])
+    result["samples"] = rows
+    result["request_seconds"] = median([r["request_seconds"] for r in rows])
+    result["gate_admitted_seconds"] = median([r["gate_admitted_seconds"] for r in rows])
     return result
 
 
@@ -193,9 +208,8 @@ def c4(target: Path, out: Path, samples: int, shared: Path) -> dict:
 def main(argv):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--tree", required=True)
-    parser.add_argument("--cohort", required=True, choices=("C1", "C2C3", "C4"))
+    parser.add_argument("--cohort", required=True, choices=("C1", "C2", "C3", "C4"))
     parser.add_argument("--samples", type=int, default=5)
-    parser.add_argument("--c3-samples", type=int, default=2)
     parser.add_argument("--shared", help="C4: a shared evidence store warmed by another worktree")
     parser.add_argument("--evidence", default=str(HERE / "evidence-phase2/cohorts"))
     args = parser.parse_args(argv)
@@ -208,12 +222,14 @@ def main(argv):
     out.mkdir(parents=True)
     if args.cohort == "C1":
         result = c1(target, out, args.samples)
-    elif args.cohort == "C2C3":
-        result = c2c3(target, out, args.samples, args.c3_samples)
+    elif args.cohort == "C2":
+        result = c2(target, out, args.samples)
+    elif args.cohort == "C3":
+        result = c3(target, out, args.samples)
     else:
         result = c4(target, out, args.samples, Path(args.shared).resolve())
     (out / "result.json").write_text(json.dumps(result, indent=1, sort_keys=True, default=str))
-    print(json.dumps({k: v for k, v in result.items() if k not in ("samples", "c2", "c3", "warm", "prime", "c3_prime")},
+    print(json.dumps({k: v for k, v in result.items() if k not in ("samples", "c2", "warm", "prime")},
                      indent=1, default=str))
     return 0
 
