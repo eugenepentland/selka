@@ -95,3 +95,18 @@ RUN NEW_OUTPUT --case json_transform --check-artifacts`. CSV uses corresponding
 warmup/paired/RSS/count protocol remains3/15/3; final integrated validation runs
 all six cells. Reporter JSON includes candidate/common paired comparisons as
 well as all foreign ratios; no historical runtime samples are pooled.
+
+Future final campaigns use separate `prepare_observed_trial.py` with the same
+arguments as `prepare_trial.py`, followed by `schedule_observed.py`. These new
+helpers leave every previously pinned script and run untouched. Inside each
+exclusive timing lease, `observe_cell.py` saves one read-only process-name/CPU,
+load, CPU topology and frequency snapshot before the unchanged calibration and
+measurement. The expected snapshot path and helper sources are pinned in the
+new frozen spec; measurement hashes the resulting snapshot before/after.
+Snapshots use no process arguments, environment inspection, process signals,
+affinity changes or governor changes. ps CPU percentages are lifetime averages;
+a snapshot cannot prove interference during the following samples. Missing
+sysfs fields are recorded as unavailable. The existing reporter still validates
+all snapshot hashes as artifacts. No automatic retries or sample exclusions.
+A failed run with an existing snapshot needs a new evidence suffix; snapshots
+are never overwritten. Use the prepared run's `results` directory as output.
