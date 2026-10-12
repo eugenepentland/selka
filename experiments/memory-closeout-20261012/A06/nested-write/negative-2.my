@@ -1,0 +1,11 @@
+record Inner:
+    scalar: int
+    text: str
+record Outer:
+    left: Inner
+    right: Inner
+
+func detach(owner: Outer) -> Inner:
+    return owner.left
+func main() -> int:
+    return 0

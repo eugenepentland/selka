@@ -1,0 +1,23 @@
+--- a/src/core/single_owner.zig
++++ b/src/core/single_owner.zig
+@@
+             .update => |update| {
+                 try c.expression(update.base, if (access == .update) .mutate else .move);
+-                for (update.fields) |field| try c.expression(field.value, .move);
++                for (update.fields) |field| try c.expression(field.value, if (access == .update and c.sameFieldWriteback(update.base, field)) .update else .move);
+             },
+@@
++    /// Only the exact projection reconstructed by a parent write may mutate in
++    /// place. A replacement from another field or owner remains a moved value.
++    fn sameFieldWriteback(c: *const Checker, base: typed.NodeId, field: typed.FieldInit) bool {
++        const nested = c.program.nodes[@backingInt(field.value)];
++        const nested_base = switch (nested.data) {
++            .update => |update| update.base,
++            .replace => |replace| replace.base,
++            else => return false,
++        };
++        return switch (c.program.nodes[@backingInt(nested_base)].data) {
++            .field => |projection| projection.base == base and projection.index == field.index,
++            else => false,
++        };
++    }

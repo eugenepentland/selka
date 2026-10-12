@@ -1,0 +1,21 @@
+record Inner:
+    scalar: int
+    text: str
+record Outer:
+    left: Inner
+    right: Inner
+
+func sample(early: bool) -> int:
+    mut owner = Outer(left=Inner(scalar=2, text="left-" + str(1)), right=Inner(scalar=4, text="right-" + str(2)))
+    owner.left.scalar += 3
+    owner.right.scalar = 9
+    const snapshot = owner.copy()
+    owner.left.scalar = 17
+    owner.right.text = "changed-" + str(3)
+    if early:
+        return snapshot.left.scalar + len(snapshot.right.text)
+    owner = Outer(left=Inner(scalar=0, text="replacement-" + str(4)), right=Inner(scalar=0, text="replacement-" + str(5)))
+    return snapshot.left.scalar * 100 + snapshot.right.scalar * 10 + len(snapshot.left.text) + len(snapshot.right.text)
+func main(out: Stream) -> int:
+    out.print(sample(False), sample(True))
+    return 0

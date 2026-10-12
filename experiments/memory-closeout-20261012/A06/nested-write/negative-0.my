@@ -1,0 +1,11 @@
+record Inner:
+    scalar: int
+    text: str
+record Outer:
+    left: Inner
+    right: Inner
+
+func main() -> int:
+    mut owner = Outer(left=Inner(scalar=2, text="left"), right=Inner(scalar=4, text="right"))
+    owner.left = replace(owner.right, scalar=7)
+    return owner.left.scalar
