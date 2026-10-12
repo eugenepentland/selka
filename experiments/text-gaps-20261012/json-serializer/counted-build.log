@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 2368, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 2368 after 5s
+text.my:279:17: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              mut cursor = seed + step
+                  ^

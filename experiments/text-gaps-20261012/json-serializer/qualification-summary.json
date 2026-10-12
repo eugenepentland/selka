@@ -1,0 +1,130 @@
+{
+  "native_runs": 48,
+  "passed": 176,
+  "failed": 0,
+  "unsupported": 0,
+  "oracle_cases": 100,
+  "json_counter_comparison": [
+    {
+      "size": 2,
+      "seed": 1,
+      "guard": {
+        "allocs": 61,
+        "text_copies": 4,
+        "dict_copies": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "live_bytes_at_exit": 0
+      },
+      "items": {
+        "allocs": 61,
+        "text_copies": 4,
+        "dict_copies": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "live_bytes_at_exit": 0
+      }
+    },
+    {
+      "size": 3,
+      "seed": 42,
+      "guard": {
+        "allocs": 333,
+        "text_copies": 22,
+        "dict_copies": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "live_bytes_at_exit": 0
+      },
+      "items": {
+        "allocs": 333,
+        "text_copies": 22,
+        "dict_copies": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "live_bytes_at_exit": 0
+      }
+    },
+    {
+      "size": 17,
+      "seed": 999983,
+      "guard": {
+        "allocs": 5627,
+        "text_copies": 373,
+        "dict_copies": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "live_bytes_at_exit": 0
+      },
+      "items": {
+        "allocs": 5627,
+        "text_copies": 373,
+        "dict_copies": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "live_bytes_at_exit": 0
+      }
+    },
+    {
+      "size": 16,
+      "seed": 42,
+      "guard": {
+        "allocs": 569,
+        "text_copies": 34,
+        "dict_copies": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "live_bytes_at_exit": 0
+      },
+      "items": {
+        "allocs": 569,
+        "text_copies": 34,
+        "dict_copies": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "live_bytes_at_exit": 0
+      }
+    },
+    {
+      "size": 256,
+      "seed": 42,
+      "guard": {
+        "allocs": 8026,
+        "text_copies": 514,
+        "dict_copies": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "live_bytes_at_exit": 0
+      },
+      "items": {
+        "allocs": 8026,
+        "text_copies": 514,
+        "dict_copies": 0,
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "live_bytes_at_exit": 0
+      }
+    }
+  ],
+  "baseline_new_fixture_passed": 16
+}

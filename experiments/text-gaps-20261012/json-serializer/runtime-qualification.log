@@ -1,0 +1,3 @@
+build-slot: FIFO ticket 2367, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 2367 after 5s
+{"probes": 50, "all_ok": true}

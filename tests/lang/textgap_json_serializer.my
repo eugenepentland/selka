@@ -1,0 +1,36 @@
+import json
+
+# spec-case: STANDARD-JSON-1
+public func test_textgap_json_serializer_items_keep_order_and_independent_children() -> bool:
+    for index in range(30):
+        mut fields: dict[str, json.Json] = {"first": json.integer(1), "removed": json.text("old"), "last": json.array([json.text("λ😀-" + str(index)), json.boolean(True)])}
+        _ = fields.pop("removed")
+        fields["removed"] = json.text("new")
+        const saved = json.object(fields)
+        fields.clear()
+        mut expected = "{\"first\":1,\"last\":[\"λ😀-" + str(index) + "\",true],\"removed\":\"new\"}"
+        if json.dumps(saved) != expected or json.dumps(saved) != expected:
+            return False
+    return True
+
+
+# spec-case: STANDARD-JSON-1
+public func test_textgap_json_serializer_integer_boundaries_and_float_fallback() -> bool:
+    mut documents = ["-9223372036854775808", "9223372036854775807", "9223372036854775808", "-9223372036854775809", "1.25", "1e+2", "-2.5e-2"]
+    for index in range(len(documents)):
+        match json.loads(documents[index]):
+            case Ok(value):
+                if index == 0 and json.as_int(value) != Some(0 - 9223372036854775807 - 1):
+                    return False
+                if index == 1 and json.as_int(value) != Some(9223372036854775807):
+                    return False
+                if index >= 2 and json.as_int(value) != None:
+                    return False
+                match json.loads(json.dumps(value)):
+                    case Ok(_):
+                        pass
+                    case Err(_):
+                        return False
+            case Err(_):
+                return False
+    return True
