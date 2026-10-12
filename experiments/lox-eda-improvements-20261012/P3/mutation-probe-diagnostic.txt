@@ -1,0 +1,3 @@
+experiments/lox-eda-improvements-20261012/P3/mutation-probe.my:13:13: error[E_IMMUTABLE]: this binding and its nested data are read-only; declare it with `mut` to update it
+              payload.slots[0] = 2
+              ^

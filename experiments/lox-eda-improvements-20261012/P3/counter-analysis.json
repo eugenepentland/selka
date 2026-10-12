@@ -1,0 +1,42 @@
+[
+  {
+    "width": 1,
+    "arm": "query",
+    "iterations": 100,
+    "read_allocation_traffic_bytes": 0,
+    "whole_process_allocation_traffic_bytes": 290048,
+    "managed_peak_live_bytes": 286688,
+    "managed_exit_live_bytes": 0,
+    "raw_counter_sha256": "8cacaccf028e9294ba51c04bfec99c8b5a1c15bf74c8b8d78907119d672c9a8e"
+  },
+  {
+    "width": 1,
+    "arm": "snapshot",
+    "iterations": 100,
+    "read_allocation_traffic_bytes": 153600,
+    "whole_process_allocation_traffic_bytes": 443712,
+    "managed_peak_live_bytes": 286784,
+    "managed_exit_live_bytes": 0,
+    "raw_counter_sha256": "e10371189d0249058ef45b2657f46cec5b3fdc6f5d136c623a05752bb4c7b416"
+  },
+  {
+    "width": 1024,
+    "arm": "query",
+    "iterations": 100,
+    "read_allocation_traffic_bytes": 0,
+    "whole_process_allocation_traffic_bytes": 1889224,
+    "managed_peak_live_bytes": 788000,
+    "managed_exit_live_bytes": 0,
+    "raw_counter_sha256": "9c066c88ac042388d04a6824a08f83d07d80c38e517f1c468e5a37f215a60a43"
+  },
+  {
+    "width": 1024,
+    "arm": "snapshot",
+    "iterations": 100,
+    "read_allocation_traffic_bytes": 28860800,
+    "whole_process_allocation_traffic_bytes": 30750088,
+    "managed_peak_live_bytes": 788096,
+    "managed_exit_live_bytes": 0,
+    "raw_counter_sha256": "a3874c22d28f87a066cb863475ec3ade0b1fdc5d8c78079b14a152eba6aa8d4e"
+  }
+]

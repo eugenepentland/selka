@@ -1,0 +1,84 @@
+# Bounded allocation-only probe: one vs 1024 unrelated payload elements.
+# First argument "large" selects size 1024; any second selects old snapshots.
+import chunk
+import heap
+import lox_strings
+import object
+import table
+import value
+
+func snapshot_reads(rt: heap.Runtime, text: value.ObjRef, env: value.ObjRef, function: value.ObjRef, closure: value.ObjRef, klass: value.ObjRef, instance: value.ObjRef, key: value.ObjRef) -> int:
+    mut sum = 0
+    mut i = 0
+    while i < 100:
+        sum += int(heap.string_obj(rt, text).hash)
+        sum += heap.env_obj(rt, env).enclosing
+        sum += heap.function_obj(rt, function).arity
+        sum += heap.function_obj(rt, function).code.code[0]
+        sum += heap.closure_obj(rt, closure).function
+        sum += heap.class_obj(rt, klass).name
+        assert table.get(heap.class_obj(rt, klass).methods, key, heap.string_hash(rt, key)) != None
+        match rt.objects[instance].copy():
+            case object.Obj.instance(value=payload):
+                sum += payload.klass
+                assert table.get(payload.fields, key, heap.string_hash(rt, key)) != None
+            case _:
+                assert False
+        i += 1
+    return sum
+
+
+func query_reads(rt: heap.Runtime, text: value.ObjRef, env: value.ObjRef, function: value.ObjRef, closure: value.ObjRef, klass: value.ObjRef, instance: value.ObjRef, key: value.ObjRef) -> int:
+    mut sum = 0
+    mut i = 0
+    while i < 100:
+        sum += int(heap.string_hash(rt, text))
+        sum += heap.env_enclosing(rt, env)
+        sum += heap.function_arity(rt, function)
+        sum += heap.function_instruction(rt, function, 0)
+        sum += heap.closure_function(rt, closure)
+        sum += heap.class_name(rt, klass)
+        sum += heap.instance_class(rt, instance)
+        assert heap.class_method(rt, klass, key, heap.string_hash(rt, key)) != None
+        assert heap.instance_field(rt, instance, key, heap.string_hash(rt, key)) != None
+        assert heap.env_slot(rt, env, 0) == value.Value.nil
+        assert heap.closure_upvalue(rt, closure, 0) == value.NO_OBJ
+        i += 1
+    return sum
+
+
+func main(args: str[], out: Stream) -> int:
+    mut size = 1
+    if len(args) > 0 and args[0] == "large":
+        size = 1024
+    mut rt = heap.new_runtime(False)
+    mut chars = b""
+    mut function = object.new_function()
+    mut code = chunk.new_chunk()
+    mut i = 0
+    while i < size:
+        chars = chars + b"a"
+        chunk.write_byte(mut code, 17, 1)
+        _ = chunk.add_constant(mut code, value.Value.nil)
+        i += 1
+    function.code = code
+    mut text = lox_strings.copy_string(mut rt, chars)
+    mut env = heap.allocate(mut rt, object.Obj.env(value=object.new_env(value.NO_OBJ, size)))
+    mut fn = heap.allocate(mut rt, object.Obj.function(value=function))
+    mut closure = heap.allocate(mut rt, object.Obj.closure(value=object.new_closure(fn, size)))
+    mut methods = table.new_table()
+    mut key = value.NO_OBJ
+    i = 0
+    while i < size:
+        mut current = lox_strings.copy_string(mut rt, str(i).encode())
+        if i == 0:
+            key = current
+        _ = table.set(mut methods, current, heap.string_hash(rt, current), value.Value.nil)
+        i += 1
+    mut klass = heap.allocate(mut rt, object.Obj.klass(value=object.ClassObj(name=text, methods=methods.copy())))
+    mut instance = heap.allocate(mut rt, object.Obj.instance(value=object.InstanceObj(klass=klass, fields=methods)))
+    if len(args) > 1:
+        out.print(snapshot_reads(rt, text, env, fn, closure, klass, instance, key))
+    else:
+        out.print(query_reads(rt, text, env, fn, closure, klass, instance, key))
+    return 0

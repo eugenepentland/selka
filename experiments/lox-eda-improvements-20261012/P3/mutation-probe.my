@@ -1,0 +1,22 @@
+# Bounded probe only: can a borrowed union payload be mutated in place?
+record Env:
+    slots: int[]
+
+
+enum Obj:
+    env(value: Env)
+
+
+func set_slot(mut objects: Obj[], index: int):
+    match objects[index]:
+        case Obj.env(value=payload):
+            payload.slots[0] = 2
+
+
+func main(out: Stream) -> int:
+    mut objects = [Obj.env(value=Env(slots=[1]))]
+    set_slot(mut objects, 0)
+    match objects[0]:
+        case Obj.env(value=payload):
+            out.print(payload.slots[0])
+            return 0

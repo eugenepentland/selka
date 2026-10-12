@@ -1,0 +1,11 @@
+{
+  "seed_commit": "094d2555bf68c04f563db4cc1b11d87d522b28e7",
+  "helper_commit": "6ab8449ab69d8b8fb71767385f52bf62827ca2cb",
+  "caller_commit": "9b703a423e4668b7b454e629990c6ed6b83e2c58",
+  "compiler_path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+  "compiler_sha256": "2dcba1cb1a98846bb8c1319575da1b3564e60af70162e195c2fbb6ec3af0f329",
+  "probe_binary_sha256": "880f2bebd20ea73b649ddc25d29eaacbf966d833b4482577dc016a5e0ace293f",
+  "mode": "release checked ownership, --experimental-zero-rc",
+  "suite": "69 passed, 0 cached, 0 failed, 0 skipped",
+  "probe": "4 allocation-only runs; width1/1024,100read iterations; no wall-time samples"
+}
