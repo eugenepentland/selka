@@ -233,3 +233,31 @@ pub fn runtimeCall(comptime Context: type, comptime Output: type, context: Conte
     context.label = join;
     return true;
 }
+
+/// Read an octet from an SSA span, retaining the original located list bounds trap.
+pub fn byteRead(comptime Context: type, comptime Output: type, context: Context, out: Output, name: []const u8, inst: ir.Inst) Error!void {
+    const view = try context.value(inst.a);
+    const length = try context.fresh("%bytelen");
+    const data = try context.fresh("%bytedata");
+    const slot = try context.fresh("%byteslot");
+    const index = try context.widened(out, inst.b);
+    try out.print(context.a(), "  {s} = extractvalue {{ ptr, i64 }} {s}, 1\n", .{ length, view });
+    if (context.checkOf(inst) == .exact) {
+        const outside = try context.fresh("%byteoob");
+        try out.print(context.a(), "  {s} = icmp uge i64 {s}, {s}\n", .{ outside, index, length });
+        const site = try context.site(.list_bounds, inst, "index");
+        var reported = index;
+        const offset = context.function.inst(context.function.resolve(inst.b));
+        if (offset.op == .call and offset.a.index() < context.state.module.functions.items.len) {
+            const callee = context.state.module.functions.items[offset.a.index()];
+            const signature = callee.signature;
+            const audited = signature.linkage == .runtime_c and signature.views == 1 and signature.owned == 0 and signature.consumes == 0;
+            const layout = signature.ret == .u64 and @import("std").mem.eql(ir.Type, signature.params, &.{ .str, .i64 });
+            if (audited and layout and @import("std").mem.eql(u8, callee.name, "myl_core_span_bytes_index_offset")) {
+                reported = try context.value(context.function.operands(offset.data)[1]);
+            }
+        }
+        try context.trapIf(out, outside, site, reported, length);
+    }
+    try out.print(context.a(), "  {s} = extractvalue {{ ptr, i64 }} {s}, 0\n  {s} = getelementptr inbounds i8, ptr {s}, i64 {s}\n  {s} = load i8, ptr {s}, align 1\n", .{ data, view, slot, data, index, name, slot });
+}

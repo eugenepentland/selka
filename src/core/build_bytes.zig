@@ -149,7 +149,10 @@ fn appendFragment(comptime Context: type, context: Context, node: Operation, spa
     const end = if (context.typeOfRef(stop) == .i64) stop else try context.emit(.{ .op = .convert, .ty = .i64, .a = stop, .span = span });
     const valid = try context.runtimeCall("myl_core_buffer_range_valid", &.{ context.typeOfRef(source), .i64, .i64 }, .bool, &.{ source, start, end }, span);
     // Text is encoded once; the encoding borrows the text's own octets.
-    const octets = if (context.typeOfRef(source) == .str) try context.runtimeCall("myl_core_text_encode", &.{.str}, .bytes, &.{source}, span) else source;
+    const octets = if (context.typeOfRef(source) == .str) encoded: {
+        if (context.module().zero_rc) break :encoded try context.effectCall("myl_core_text_encode", &.{.str}, .bytes, &.{source}, span);
+        break :encoded try context.runtimeCall("myl_core_text_encode", &.{.str}, .bytes, &.{source}, span);
+    } else source;
     const receiver = try context.writableReceiverOf(node.owner, span);
     const updated = try handedOver(Context, context, "myl_core_buffer_append_checked", &.{ .byte_buffer, context.typeOfRef(octets), .i64, .i64 }, &.{ receiver, octets, start, end }, span);
     try context.writeOwner(node.owner, updated, span);

@@ -2532,6 +2532,7 @@ const FunctionEmitter = struct {
     }
 
     fn listGet(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+        if (self.typeOf(inst.a) == .str_view) return emit_text.byteRead(@TypeOf(self), @TypeOf(out), self, out, name, inst);
         const list = try self.value(inst.a);
         const index = try self.checkedIndex(out, inst, list, try self.value(inst.b));
         // A read nothing uses is only its bounds check: the element is never loaded (a verify

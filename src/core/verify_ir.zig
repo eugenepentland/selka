@@ -447,7 +447,8 @@ const Verifier = struct {
         for (0..operands.len()) |i| {
             if (self.typeOf(operands.get(i)) != .str_view) continue;
             const admitted = switch (s.inst.op) {
-                .str_from_view, .str_len, .str_parse_int, .str_view_of, .copy => i == 0,
+                .str_from_view, .str_len, .list_len, .str_parse_int, .str_view_of, .copy => i == 0,
+                .list_get => i == 0 and s.inst.ty == .u8,
                 .ret, .print => self.module.zero_rc,
                 .dict_find => i == 1 and if (self.compoundOf(s.a, .dict)) |dict| dict.key == .str else false,
                 .call => s.inst.a.index() < self.module.functions.items.len and admittedView(self.module.functions.items[s.inst.a.index()].signature, i),
@@ -566,8 +567,8 @@ const Verifier = struct {
         const inst = s.inst;
         return switch (inst.op) {
             .list_new => self.compoundOf(inst.ty, .list) != null and isInteger(s.a),
-            .list_len => isInteger(inst.ty) and (self.compoundOf(s.a, .list) != null or s.a == .bytes or s.a == .byte_buffer),
-            .list_get => if (s.a == .bytes or s.a == .byte_buffer) inst.ty == .u8 and isInteger(s.b) else if (self.compoundOf(s.a, .list)) |element| element == inst.ty and isInteger(s.b) else false,
+            .list_len => isInteger(inst.ty) and (self.compoundOf(s.a, .list) != null or s.a == .bytes or s.a == .byte_buffer or s.a == .str_view),
+            .list_get => if (s.a == .bytes or s.a == .byte_buffer or s.a == .str_view) inst.ty == .u8 and isInteger(s.b) else if (self.compoundOf(s.a, .list)) |element| element == inst.ty and isInteger(s.b) else false,
             .list_push => if (self.compoundOf(s.a, .list)) |element| inst.ty == s.a and s.b == element else false,
             .list_copy, .list_pop => self.compoundOf(s.a, .list) != null and inst.ty == s.a,
             .list_set => if (self.compoundOf(s.a, .list)) |element| inst.ty == s.a and isInteger(s.b) and s.extra.len == 1 and self.typeOf(s.extra[0]) == element else false,

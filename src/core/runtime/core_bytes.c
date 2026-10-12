@@ -173,3 +173,9 @@ myl_block *myl_core_buffer_append_i64(myl_block *buffer, int64_t value) {
     if (negative) bytes[0] = '-';
     return myl_core_buffer_append_spelled(buffer, bytes, length);
 }
+
+/* A synchronous borrowed octet reader; identical negative-index normalization. */
+uint64_t myl_core_span_bytes_index_offset(const unsigned char *data, uint64_t len, int64_t index) {
+    (void)data;
+    return index < 0 ? (uint64_t)index + len : (uint64_t)index;
+}
