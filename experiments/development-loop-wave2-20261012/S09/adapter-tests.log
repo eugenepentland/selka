@@ -1,0 +1,23 @@
+test_aggregate_read_budget_is_not_a_success (__main__.EvidenceBridgeTests.test_aggregate_read_budget_is_not_a_success) ... ok
+test_bounded_reader_refuses_oversize (__main__.EvidenceBridgeTests.test_bounded_reader_refuses_oversize) ... ok
+test_changed_producer_recipe_cannot_preserve_key (__main__.EvidenceBridgeTests.test_changed_producer_recipe_cannot_preserve_key) ... ok
+test_compressed_corruption_is_invalid (__main__.EvidenceBridgeTests.test_compressed_corruption_is_invalid) ... ok
+test_conflicting_seed_receipts_are_refused (__main__.EvidenceBridgeTests.test_conflicting_seed_receipts_are_refused) ... ok
+test_final_recheck_detects_replacement (__main__.EvidenceBridgeTests.test_final_recheck_detects_replacement) ... ok
+test_hostile_archive_path_is_refused (__main__.EvidenceBridgeTests.test_hostile_archive_path_is_refused) ... ok
+test_malformed_or_duplicate_json_fails (__main__.EvidenceBridgeTests.test_malformed_or_duplicate_json_fails) ... ok
+test_missing_selected_artifact_is_invalid (__main__.EvidenceBridgeTests.test_missing_selected_artifact_is_invalid) ... ok
+test_replaced_seed_binary_invalidates_evidence (__main__.EvidenceBridgeTests.test_replaced_seed_binary_invalidates_evidence) ... ok
+test_schema10_receipt_cannot_qualify_current_body_profile (__main__.EvidenceBridgeTests.test_schema10_receipt_cannot_qualify_current_body_profile) ... ok
+test_source_aba_is_not_accepted_as_unchanged (__main__.EvidenceBridgeTests.test_source_aba_is_not_accepted_as_unchanged) ... ok
+test_source_edit_is_partial_provenance_without_adoption (__main__.EvidenceBridgeTests.test_source_edit_is_partial_provenance_without_adoption) ... ok
+test_source_membership_added_before_final_check_is_invalid (__main__.EvidenceBridgeTests.test_source_membership_added_before_final_check_is_invalid) ... ok
+test_tracked_owner_mutation_refuses_snapshot (__main__.EvidenceBridgeTests.test_tracked_owner_mutation_refuses_snapshot) ... ok
+test_uncompressed_hash_is_independently_verified (__main__.EvidenceBridgeTests.test_uncompressed_hash_is_independently_verified) ... ok
+test_valid_partial_evidence_never_grants_bootstrap (__main__.EvidenceBridgeTests.test_valid_partial_evidence_never_grants_bootstrap) ... ok
+test_wrong_owner_commit_refuses_snapshot (__main__.EvidenceBridgeTests.test_wrong_owner_commit_refuses_snapshot) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.414s
+
+OK
