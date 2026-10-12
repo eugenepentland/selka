@@ -55,6 +55,10 @@
     "lowering_demand.zig": {
       "before_sha256": "727ed2d270ab8a83a0622d2b62fd2f96cd29130428de1b5cc3d9e9a9f902f83e",
       "draft_sha256": "3ec29796a22237a754653d9906790baaac046238a512bcecfa6ad315f2a50c64"
+    },
+    "build_replay.zig": {
+      "before_sha256": "fb18d6cc7c785704c978ce536af0b33da8ccd21f8ff6bbdc282cb1bb06af0d4e",
+      "draft_sha256": "8197c90f05c49b34058ed85636ef9d1a61f49e173c6c92201efc93455538235d"
     }
   },
   "new_tests": {
@@ -63,6 +67,11 @@
     "status": "prepared_uncompiled_unrun",
     "registered_tests": 3
   },
-  "patch_sha256": "60780e0cc45f21b61a348cc26529be469d72b356bc8bc6d33d92a7de2b54ecf6",
-  "validation": "Zig fmt syntax check only; API/typechecking and all tests await coordinated C3 integration after C2."
+  "patch_sha256": "4d58f673a44efe2673bf87d0e80fb149ae510b3145eaa4c6caeb237f79c18a9d",
+  "validation": "Zig fmt syntax check only; API/typechecking and all tests await coordinated C3 integration after C2.",
+  "whole_replay_test": {
+    "file": "src/core/build_replay.zig",
+    "status": "prepared_uncompiled_unrun",
+    "cases": "missing payload ABI, foreign payload ABI, retired envelope version, valid current record, missing envelope ABI"
+  }
 }

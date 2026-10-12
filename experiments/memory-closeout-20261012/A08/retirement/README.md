@@ -23,6 +23,9 @@ The draft covers:
 - Required ABI in LLVM artifacts, dependency receipts and native handles;
   centralized completed-artifact admission checks the actual text marker. The
   compact native-handle path carries provenance even when LLVM is not loaded.
+- Whole-build replay requires fixed ABI in both the JSON envelope and its
+  checksum-protected snapshot before checking or copying a program. Old/foreign
+  tags refuse and the replay version, key and directory change.
 - Native object settings, mapping records and linked-program identities bind
   the fixed ABI. Every input unit is checked before native tool discovery;
   dependency flags are combined only after that check. There is no ABI OR.
@@ -37,9 +40,10 @@ foreign C sources retain their explicit provider/link boundary. Neither is an
 alternate legacy guest LLVM path.
 
 Only `zig fmt` syntax checks have run. No C3 typechecking, regression, native,
-ABI, package or performance result is claimed. The three drafted regressions
+ABI, package or performance result is claimed. The three new-file drafted regressions
 cover checksum-valid legacy and foreign artifact images, compact/native receipt
-provenance, and a mixed guest bundle refusing before tool discovery. Source
+provenance, and a mixed guest bundle refusing before tool discovery. One additional in-file replay test covers missing/foreign
+payload ABI, missing envelope ABI and an old envelope version. Source
 snapshot/optimizer envelope corruption, native-handle recovery and old receipt
 replay must also pass on the combined C3 compiler.
 
@@ -66,6 +70,9 @@ requests, not edits to another worker's files:
 - Direct shortcut index tests use `EntryIndex` or `DemandIndex` with explicit
   ABI and new key scopes. Direct lowering-demand receipt tests use the new
   manifest envelope. Test misses must remain observed rather than inferred.
+- Update `driver_cache_test.zig` replay-loss path to `cache/replay-owned-v2`;
+  update `compiler_shared_cache_test.zig` absent shared-replay path likewise.
+  Preserve all existing native receipt/recovery controls.
 - Register `a08_retired_abi_test.zig` in the Core test root. Existing spec tags
   are NEW-CORE-STAGE-CACHE-9 and NEW-CORE-DRIVER-1.
 
@@ -88,6 +95,7 @@ that broad retirement migration belongs to the coordinator/A07/A10 assignments.
 | LLVM stores | `llvm-helper-seed-owned-v2`, `llvm-unit-owned-v2`, `llvm-compact-receipt-owned-v3` |
 | Native unit | `core-unit-object-owned-v2` |
 | Native mapping | `native-unit-receipt-owned-v2` plus required ABI record |
+| Whole-build replay | `core-build-replay-owned-v2`, `replay-owned-v2`, required ABI envelope and snapshot |
 | Program | `core-program-owned-v3`, `core-shared-program-owned-v2` |
 | Runtime object | `core-runtime-object-owned-v5` |
 
