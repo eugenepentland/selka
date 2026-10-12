@@ -426,3 +426,11 @@ SPEC.md correction request for the stale shared-pool wording.
 Exact coordinator-owned C2 replacement request (do not apply before promotion):
 
 > [STANDARD-POOL-1] A standard pool hands out copyable generational handles into a reusable slot store. Removing a slot advances its generation so every earlier handle stops matching; a stale or out-of-range handle reports absence and no handle traps, and released slots are reused before the store grows. An assignment can move a pool owner; `.copy()` creates an independent pool, including independent managed element storage. A handle names a slot and a generation rather than a pool, so callers keep it with the appropriate pool value.
+
+Coordinator requested a read-only audit of A10's original borrowed entry Context.
+`borrowed-entry-context-audit.md` records the exact source/receipt and a proposed
+parameter-only local borrowing contract, with matching source/Core/ABI/cache and
+native authority/cleanup requirements. This is a design request to coordinator/A07,
+not implemented support or an added helper whitelist. It preserves actual entry
+providers and leaves ordinary owning provider records unchanged. No production
+file was edited for that audit; the original checked-source refusal remains.
