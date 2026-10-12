@@ -1,0 +1,64 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "checked": 222,
+  "compiler_launches_before_and_after": 222,
+  "corpora": {
+    "qbe_arena.json": {
+      "entries": 19,
+      "sha256": "82b3d54663fe52a420b58e6475fd0c10ae71e7947ec0799edf8a77b4b4ac39e0"
+    },
+    "qbe_bytes.json": {
+      "entries": 13,
+      "sha256": "805278a9b0e7691f5b71d61a56ffc34c8823e8069b970afcd1795523c70263d5"
+    },
+    "qbe_docs.json": {
+      "entries": 27,
+      "sha256": "c01dd78e91b7d88613daccd1424ccee79f21125f3dda815d7b1c027c82557f86"
+    },
+    "qbe_files.json": {
+      "entries": 28,
+      "sha256": "ef515d5c45c965d42ee21ec3b8188cba6f0935a571000b0b544deb58d60144fb"
+    },
+    "qbe_io.json": {
+      "entries": 10,
+      "sha256": "0468bd67bb876d26ac4f97c19c96ea2c07d91ec8345674394c9570b1417eb19e"
+    },
+    "qbe_managed.json": {
+      "entries": 14,
+      "sha256": "50ef585d89f60fb1025c4c3f8080bd4708bd6f18ecdbe1f05dafbf8f0cdc271a"
+    },
+    "qbe_native_cases.json": {
+      "entries": 401,
+      "sha256": "93bb1460ee7b31ede8e7d67ebda9efb83cfcaa936c9348c2d5c782ebaa745695"
+    },
+    "qbe_parity.json": {
+      "entries": 74,
+      "sha256": "a5ad4451093c5ff3a99c5f5f6fe0eb602ba3812c04d7177b0056815803a4eb2e"
+    },
+    "qbe_resource_parity.json": {
+      "entries": 1,
+      "sha256": "583c34044f3e79c5c499beab0747b31142158120f4aeb6a1525be1b2cccb25d2"
+    },
+    "qbe_text.json": {
+      "entries": 17,
+      "sha256": "333784881739b68be7e4541d0f3ddd87b289b9eb50dbcc79a0de354514f0ebda"
+    }
+  },
+  "counts": {
+    "data": 1,
+    "docs": 27,
+    "fixture": 55,
+    "retired": 9,
+    "source": 167,
+    "unmatched": 345
+  },
+  "distinct_checked_sources": 165,
+  "fresh_work_directories_before_and_after": 222,
+  "manifest_sha256": "d6f7becc53109d2560ed40de4e2c5fd2a27a6b58c33ca8a682163bbd00ba655b",
+  "mutable_fixture_file_writes_before_and_after": 444,
+  "source_bytes_after": 66752,
+  "source_bytes_before": 90182,
+  "source_writes_after": 165,
+  "source_writes_before": 222,
+  "total": 604
+}

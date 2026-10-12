@@ -1,0 +1,46 @@
+build-slot: build slot 3, FIFO ticket 3562 after 0s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs fbfcaa7a923186a8e773c3760f81c10aa345a432: 0/681 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s), none in scope — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs fbfcaa7a923186a8e773c3760f81c10aa345a432, 0 file(s) in scope
+c57b98cba2c1928720697a82d5548d28434c26e4ced9f6e58dd21a04b18edd83
+e21adad21557629ce16766f172032590185c3f6b9678da4e7f8850ae55024053
+test-golden
++- verification action golden member 0 w
+guardian/test: 2 test(s) selected by filter: "golden preparation"
+guardian/test: test wall 0.28s; slowest over 50ms:
+guardian/test:   0.20s  golden_parity.test.golden preparation keeps mutable fixture trees isolated
+guardian/test:   0.08s  golden_parity.test.golden preparation shares exact source bytes while preserving changed payloads
+guardian/test: PASS — 2 passed
+guardian/test: RESULT {"passed":2,"failed":0,"skipped":0}
+failed command: cd . && sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S07/zig-out/libexec/mylang/components ./.zig-cache/o/6684486c149a113fe2ce4a572d2a8a49/test "--guardian-filter=golden preparation" --cache-dir=./.zig-cache --seed=0xd587a2e9 --listen=-
+
+Build Summary: 20/20 steps succeeded; 2/2 tests passed
+test-golden success
++- verification action golden member 0 2 pass (2 total) 1s MaxRSS:7M
+   +- compile test debug native success 752ms MaxRSS:156M
+   |  +- options success
+   |     +- compile exe mylang debug native success 17s MaxRSS:593M
+   |     |  +- run exe build-identity (build_identity) success 697ms
+   |     |  |  +- compile exe build-identity debug native success 393ms MaxRSS:150M
+   |     |  +- WriteFile success
+   |     |  +- compile obj juice_bytes_hash fast native success 178ms MaxRSS:111M
+   |     |  +- compile obj juice_bytes_hash fast native (reused)
+   |     |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 success 1s MaxRSS:156M
+   |     +- compile exe selka-components safe native success 19s MaxRSS:542M
+   +- install success
+   |  +- install mylang success
+   |  |  +- compile exe mylang debug native (+5 more reused dependencies)
+   |  |  +- verification action guardian member 2 success 10s
+   |  |     +- guardian-selfcheck success
+   |  |        +- verification action guardian member 0 success 56ms
+   |  +- install generated to selka-components success
+   |  |  +- compile exe selka-components safe native (reused)
+   |  +- verification action component-preparation member 0 success 19s
+   |  |  +- compile exe selka-components safe native (reused)
+   |  +- verification action guardian member 2 (+1 more reused dependencies)
+   +- verification action input-discovery member 0 success 10s
+   +- verification action environment-discovery member 0 success 8ms
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+
