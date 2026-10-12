@@ -1,0 +1,10 @@
+build-slot: build slot 1, FIFO ticket 2453 after 0s
+test_failed_reference_does_not_launch_checked_guest (__main__.DeadlineTests.test_failed_reference_does_not_launch_checked_guest) ... ok
+test_fast_guest_completes_with_wall_and_rss (__main__.DeadlineTests.test_fast_guest_completes_with_wall_and_rss) ... ok
+test_slow_guest_is_censored_once_and_not_retried_in_later_chunk (__main__.DeadlineTests.test_slow_guest_is_censored_once_and_not_retried_in_later_chunk) ... ok
+test_timeout_kills_descendant_process (__main__.DeadlineTests.test_timeout_kills_descendant_process) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 2.580s
+
+OK

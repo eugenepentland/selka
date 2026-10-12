@@ -1,0 +1,5 @@
+{
+  "status": "setup_error",
+  "reason": "New wrapper enumerated only .my files; frozen EDA manifest also contains mylang.json. All121 .my files match; no application source or build failure.",
+  "resolution": "Include project config in source identity; start unused eda-2 output directories."
+}

@@ -1,0 +1,98 @@
+[
+  {
+    "name": "checked-tests",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+      "test",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-zero-rc-20261012/lox/migrated",
+      "--experimental-zero-rc",
+      "--release",
+      "--verify-facts",
+      "--jobs",
+      "4",
+      "--max-steps",
+      "1000000000",
+      "--max-frames",
+      "40000",
+      "--max-memory",
+      "2G",
+      "--timeout-ms",
+      "120000",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-rerun-20261012/qualification/lox/cache",
+      "--json"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "conformance-original-rc",
+    "command": [
+      "python3",
+      "-B",
+      "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/harness/lox_bench.py",
+      "conformance",
+      "--binary",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-rerun-20261012/lox/original-rc",
+      "--engine",
+      "both",
+      "--stress",
+      "--jobs",
+      "4"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "conformance-migrated-rc",
+    "command": [
+      "python3",
+      "-B",
+      "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/harness/lox_bench.py",
+      "conformance",
+      "--binary",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-rerun-20261012/lox/migrated-rc",
+      "--engine",
+      "both",
+      "--stress",
+      "--jobs",
+      "4"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "conformance-zero-rc",
+    "command": [
+      "python3",
+      "-B",
+      "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/harness/lox_bench.py",
+      "conformance",
+      "--binary",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-rerun-20261012/lox/zero-rc",
+      "--engine",
+      "both",
+      "--stress",
+      "--jobs",
+      "4"
+    ],
+    "returncode": 0
+  },
+  {
+    "name": "smoke-gc-parity",
+    "command": [
+      "python3",
+      "-B",
+      "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/harness/lox_bench.py",
+      "check",
+      "--tier",
+      "smoke",
+      "--jobs",
+      "4",
+      "--binary",
+      "original-rc=/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-rerun-20261012/lox/original-rc",
+      "--binary",
+      "migrated-rc=/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-rerun-20261012/lox/migrated-rc",
+      "--binary",
+      "zero-rc=/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-rerun-20261012/lox/zero-rc"
+    ],
+    "returncode": 0
+  }
+]

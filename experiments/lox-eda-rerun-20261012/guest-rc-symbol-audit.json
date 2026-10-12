@@ -1,0 +1,20 @@
+{
+  "lox": {
+    "binary": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-rerun-20261012/lox/zero-rc",
+    "binary_sha256": "03d20c862445d13709b19f9cb6c629b712b0c6b48820c2492331a180fb6b0aa0",
+    "llvm": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-rerun-20261012/lox/zero-rc.ll",
+    "llvm_sha256": "da6ff3acbbbe7dc2cbd02be056f9a4d5937a9487749d70b73dd1b983a55ec0ac",
+    "legacy_rc_call_names": [],
+    "legacy_rc_native_symbols": [],
+    "classification": "Audits retain/release prefix guest memory helpers; direct drop/destruction and Lox guest-object GC are separate."
+  },
+  "eda": {
+    "binary": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-rerun-20261012/eda-2/zero-rc",
+    "binary_sha256": "6605dded3ff15363aada4de52abdbce79a69aa0faafbc4396794a1a1b5773549",
+    "llvm": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-rerun-20261012/eda-2/zero-rc.ll",
+    "llvm_sha256": "9bdba4fe537bcd9ff53be44969932847353615ce3cd00733e62dba52109a8be5",
+    "legacy_rc_call_names": [],
+    "legacy_rc_native_symbols": [],
+    "classification": "Audits retain/release prefix guest memory helpers; direct drop/destruction and Lox guest-object GC are separate."
+  }
+}
