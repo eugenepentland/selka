@@ -4,6 +4,24 @@ Prepared for the coordinator's bounded aggregate-root implementation. These
 fixtures are not yet qualified on that implementation. C0 identities of the
 mandatory capability-field fixture remain in `migrations.json`.
 
+Support6 release status: nested `provider_record` executes with RC0/live0 and
+clean LLVM/symbol audits; all ten aggregate boundary probes refuse at the intended
+source boundary. Complete `provider_tuple` unpack still refuses
+`E_SINGLE_OWNER_BORROW`, and the mandatory `guest_capability_fields` constructor
+refuses `E_ZERO_RC_LOWERING`. Both failures remain in the nine-case release report
+and are assigned to the tuple/compiler owners; aggregate qualification is incomplete.
+Compiler source `5167c588be79dd43d21d5013c36db15110bf239b`, SHA256
+`bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4`.
+The receipts are `evidence/support6-aggregate-release.json`,
+`evidence/support6-boundaries.json` and `evidence/support6-positive-modes.json`.
+The nested record positive and explicit dictionary-default copy fixture pass all
+five modes. Constructor isolation finds that direct five-provider construction,
+return and inline nesting compile, whereas a named provider record moved into an
+outer record refuses at lowering. `boundaries/provider_width/wrap_five.my` is the
+small transfer reproducer; compile-only receipts are
+`evidence/support6-provider-width.json` and `evidence/support6-provider-transfer.json`.
+Those probes were not executed and do not count as cleanup qualification.
+
 Run the existing A05 counted/structural harness under one admitted build batch;
 use the exact new compiler revision and an unused output directory:
 

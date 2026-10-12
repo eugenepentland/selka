@@ -1,0 +1,14 @@
+# spec-case: CAPABILITY-FIELD-METHOD-1
+import filesystem
+import environment
+import network
+import time
+import random
+
+record Ports:
+    fs: Filesystem
+
+func main() -> int:
+    const ports = Ports(fs=filesystem.memory())
+    assert not ports.fs.exists("missing")
+    return 0

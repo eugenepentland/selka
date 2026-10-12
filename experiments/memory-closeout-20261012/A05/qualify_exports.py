@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Combine explicit candidate receipts without borrowing mixed-revision evidence."""
+"""Combine explicit qualify.py receipts without borrowing mixed-revision evidence."""
 # spec: NEW-CORE-ZERO-RC-LIBRARY-1
 import argparse
 import hashlib

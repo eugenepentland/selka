@@ -4,7 +4,7 @@ Base is `fbfcaa7a923186a8e773c3760f81c10aa345a432`; worker branch is
 `codex/memory-closeout-20261012-A05`. No peer merges, pushes, default promotion,
 legacy-RC deletion or Guardian feedback edits were performed.
 
-## Current status before Support6
+## Current status after the first Support6 matrices
 
 All 95 functions and 25 type/resource declarations have at least one labelled
 intermediate counted fixture reference. This is not common-C1 qualification.
@@ -14,11 +14,19 @@ managed exit-live0 and clean LLVM/symbol audits. The earlier scalar-copy,
 dictionary-snapshot, network acquisition, returned-file and callable-authority
 blockers described below are resolved in labelled interim evidence.
 
-Remaining work is aggregate-field provider qualification and the new explicit
-managed-get copy/view checks on Support6, followed by the frozen common C1 suite
-and affected ordinary-command C2/C3 reruns. General noncopy managed-get lowering
-remains a separate compiler boundary; `boundaries/dictionary_get_readonly.my`
-keeps an exact check/build probe. Same-root simultaneous mutable child loans are
+Support6 source `5167c588be79dd43d21d5013c36db15110bf239b`, compiler SHA256
+`bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4`, passes
+nested provider records and explicit managed-get copies in all five modes
+(10/10 runs, RC0/live0 and clean LLVM/symbol audits). All ten aggregate negatives,
+the ambiguous-get view and the simultaneous mutable-child negative refuse as
+specified. Complete provider tuple unpack still refuses `E_SINGLE_OWNER_BORROW`;
+mandatory capability-field tests still refuse `E_ZERO_RC_LOWERING` at their
+constructor. Both remain qualification blockers. General noncopy managed-get
+lowering remains a separate check-pass/build-refusal boundary, with no execution.
+
+Remaining work is both aggregate fixes, the frozen common C1 suite, and affected
+ordinary-command C2/C3 reruns. `boundaries/dictionary_get_readonly.my` keeps the
+exact readonly check/build probe. Same-root simultaneous mutable child loans are
 an intentional source refusal with an explicit-copy migration, not a compiler bug.
 
 Commit `172629acf` carries the latest 20-run evidence. Commit `443478167` is the
@@ -392,3 +400,14 @@ This export report never substitutes for package, ABI, performance or full-gate
 qualification. Support5 readonly managed-get source check passes but native build
 refuses `E_ZERO_RC_LOWERING`; `evidence/support5-get-readonly.json` records both
 phases and explicitly records no execution.
+
+The first Support6 matrices contain ten executed positives across all five modes,
+twelve expected source refusals, and two required positive build failures. The
+failures remain in the denominator: A01 owns complete provider tuple unpack;
+coordinator/A07 own named provider-record transfer into an enclosing record.
+`capability_fields.my` retains all assertions and fails at its named Ports value
+construction. Twelve separate compile-only probes isolate that direct five-field
+construction/return and inline nesting compile, while named Ports-to-App transfer
+does not. No source workaround or execution claim is applied to those probes.
+The readonly managed-get probe still passes check and refuses build on Support6.
+All reports preserve exact source/compiler hashes; passing runs retain raw counters.

@@ -1,0 +1,102 @@
+{
+  "compiler_source_revision": "5167c588be79dd43d21d5013c36db15110bf239b",
+  "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "executed": false,
+  "cases": {
+    "mutable_five": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/boundaries/provider_width/mutable_five.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-transfer/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-transfer/mutable_five"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+      "source_sha256": "36c33a3ca209788821f65c11c4b93cf4b5d1ad02efabe7404ccaf6ec297dbce1"
+    },
+    "return_five": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/boundaries/provider_width/return_five.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-transfer/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-transfer/return_five"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+      "source_sha256": "e77933e5147dbcbebb6d25ce91652d0ecf52d5126947ef93954f64002d36153b"
+    },
+    "wrap_five": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/boundaries/provider_width/wrap_five.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-transfer/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-transfer/wrap_five"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\nwrap_five.my:20:19: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression\n      const ports = Ports(fs=filesystem.memory(), env=environment.fixed({\"LANG\":\"C\"}), net=network.denied(), clock=time.simulated_clock(time.from_unix_nanoseconds(42)), entropy=random.seeded_entropy(7))\n                    ^\n",
+      "source_sha256": "6a5af54e086d0c14ebe9c6d1050087e60f40285642d12779b21c30cbbba8300c"
+    },
+    "wrap_return_five": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/boundaries/provider_width/wrap_return_five.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-transfer/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-transfer/wrap_return_five"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\nwrap_return_five.my:20:17: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression\n      mut ports = Ports(fs=filesystem.memory(), env=environment.fixed({\"LANG\":\"C\"}), net=network.denied(), clock=time.simulated_clock(time.from_unix_nanoseconds(42)), entropy=random.seeded_entropy(7))\n                  ^\n",
+      "source_sha256": "60cac9d004294abfcaf86c6edfb549601db5e65fe6c7aab978ccad696a04d556"
+    },
+    "nested_return_five": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/boundaries/provider_width/nested_return_five.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-transfer/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support6-provider-transfer/nested_return_five"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+      "source_sha256": "c0f0ece09d731c1827efe2436eec1567e2fec77df825d73970cfff78cca7a7a8"
+    }
+  }
+}
