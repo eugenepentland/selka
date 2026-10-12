@@ -1,0 +1,15 @@
+build-slot: FIFO ticket 497, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 497, position 1; waiting for memory-accounting settle delay or another measurement; waiting (60s so far)
+build-slot: FIFO ticket 497, position 1; waiting for memory-accounting settle delay or another measurement; waiting (120s so far)
+build-slot: FIFO ticket 497, position 1; waiting for memory-accounting settle delay or another measurement; waiting (181s so far)
+build-slot: FIFO ticket 497, position 1; waiting for memory-accounting settle delay or another measurement; waiting (241s so far)
+build-slot: FIFO ticket 497, position 1; waiting for memory-accounting settle delay or another measurement; waiting (301s so far)
+build-slot: FIFO ticket 497, position 1; waiting for memory-accounting settle delay or another measurement; waiting (361s so far)
+build-slot: FIFO ticket 497, position 1; waiting for memory-accounting settle delay or another measurement; waiting (421s so far)
+build-slot: FIFO ticket 497, position 1; waiting for memory-accounting settle delay or another measurement; waiting (482s so far)
+build-slot: FIFO ticket 497, position 1; waiting for memory-accounting settle delay or another measurement; waiting (542s so far)
+build-slot: FIFO ticket 497, position 1; waiting for memory-accounting settle delay or another measurement; waiting (602s so far)
+build-slot: FIFO ticket 497, position 1; waiting for memory-accounting settle delay or another measurement; waiting (662s so far)
+build-slot: FIFO ticket 497, position 1; waiting for memory-accounting settle delay or another measurement; waiting (722s so far)
+build-slot: timing slot 1, FIFO ticket 497 after 767s
+text-gaps/json-serializer-trial-001/json_transform/small {'checked-baseline': True, 'checked-common': True, 'checked-candidate': True, 'zig-safe': True, 'zig-fast': True, 'rust': True, 'go': True}

@@ -1,0 +1,895 @@
+{
+  "schema": "text-gap-report-v1",
+  "cells": [
+    {
+      "case": "json_transform",
+      "profile": "large",
+      "size": 256,
+      "unit": "one complete JSON parse/filter/transform/serialize/fold job",
+      "receipt": "experiments/text-gaps-20261012/bench/runs/json-serializer-trial-001/results/json_transform.large.json",
+      "receipt_sha256": "d41eab514b041fad28bb77b505dcc5c505f7603f538987f815bc215863ab3039",
+      "iterations": 471,
+      "expected_checksum": 317292972,
+      "calibration": {
+        "iterations": 471,
+        "fastest_ns": 55752681,
+        "slowest_ns": 240620117,
+        "reason": "target",
+        "limited": false
+      },
+      "cpu": 8,
+      "loadavg_before": [
+        3.71875,
+        5.15234375,
+        11.4814453125
+      ],
+      "loadavg_after": [
+        4.14111328125,
+        5.158203125,
+        11.34765625
+      ],
+      "started_utc": "2026-10-12T19:00:46.284694+00:00",
+      "finished_utc": "2026-10-12T19:01:09.655660+00:00",
+      "arms": {
+        "checked-baseline": {
+          "median_ns": 344260.9957537155,
+          "min_ns": 264046.3121019108,
+          "max_ns": 438632.6942675159,
+          "mad_fraction": 0.1818583317109878,
+          "last5_over_first5": 0.796385880259258,
+          "rss_kib": {
+            "median": 2372,
+            "min": 2372,
+            "max": 2372
+          },
+          "binary_sha256": "d2b4bf647021acc7bd761cecd63a52865ca9950562fd789231b86b4a11f06db1",
+          "flags": [
+            "--release",
+            "--experimental-zero-rc",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/expanded-text-runtime",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/cache/expanded-text-runtime",
+            "--link",
+            "/home/epentland/ai/canopy/mylang-memory-20261012/benchmarks/runtime/ports/native_clock.c"
+          ],
+          "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+          "managed": {
+            "allocs": 4614183,
+            "reallocs": 3774,
+            "alloc_bytes": 334021264,
+            "realloc_added_bytes": 10146816,
+            "peak_live_bytes": 287408,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "cumulative_allocated_bytes": 344168080,
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0,
+            "release_unique": 2335651,
+            "rc_events": 0,
+            "direct_destructions": 2335651
+          }
+        },
+        "checked-common": {
+          "median_ns": 171873.08280254778,
+          "min_ns": 132970.63481953292,
+          "max_ns": 229527.0997876858,
+          "mad_fraction": 0.22265527189605738,
+          "last5_over_first5": 0.865904410578148,
+          "rss_kib": {
+            "median": 2152,
+            "min": 2148,
+            "max": 2152
+          },
+          "binary_sha256": "429854488c74f3bc0a39aa0e0a8216e81bb21362bfad58e573a7fb1a96bc7994",
+          "flags": [
+            "--release",
+            "--experimental-zero-rc",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/cache-runtime",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+            "--link",
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/benchmarks/runtime/ports/native_clock.c"
+          ],
+          "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+          "managed": {
+            "allocs": 1135906,
+            "reallocs": 3774,
+            "alloc_bytes": 115175152,
+            "realloc_added_bytes": 10146816,
+            "peak_live_bytes": 213464,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "cumulative_allocated_bytes": 125321968,
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0,
+            "release_unique": 123669,
+            "rc_events": 0,
+            "direct_destructions": 123669
+          }
+        },
+        "checked-candidate": {
+          "median_ns": 172725.8450106157,
+          "min_ns": 128951.90233545647,
+          "max_ns": 259835.48619957536,
+          "mad_fraction": 0.20663307572338932,
+          "last5_over_first5": 0.8497223939340588,
+          "rss_kib": {
+            "median": 2216,
+            "min": 2216,
+            "max": 2216
+          },
+          "binary_sha256": "aeaec89640b3fee69803e2dfd7e84d173b31210e243be6e6fafd9d1c403dd624",
+          "flags": [
+            "--release",
+            "--experimental-zero-rc",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-serializer/cache-runtime",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-serializer/text-runtime",
+            "--link",
+            "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/benchmarks/runtime/ports/native_clock.c",
+            "--emit-llvm",
+            "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-serializer/runtime.ll"
+          ],
+          "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+          "managed": {
+            "allocs": 1135906,
+            "reallocs": 3774,
+            "alloc_bytes": 115175152,
+            "realloc_added_bytes": 10146816,
+            "peak_live_bytes": 213464,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "cumulative_allocated_bytes": 125321968,
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0,
+            "release_unique": 123669,
+            "rc_events": 0,
+            "direct_destructions": 123669
+          }
+        },
+        "zig-safe": {
+          "median_ns": 328526.2951167728,
+          "min_ns": 233158.05307855626,
+          "max_ns": 491019.9044585987,
+          "mad_fraction": 0.16022881828607502,
+          "last5_over_first5": 0.8355578608032943,
+          "rss_kib": {
+            "median": 2864,
+            "min": 2864,
+            "max": 2864
+          },
+          "binary_sha256": "6997b7027dc85edd47ddd6a1a842e26b96c93cc3b5a98f82e270eb932f5ea003",
+          "flags": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "build-exe",
+            "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/main.zig",
+            "-lc",
+            "-O",
+            "ReleaseSafe",
+            "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-zig-safe"
+          ],
+          "source_sha256": "94dd771cf7c78deef2a1f81aabfa63cad5515ab5ceb811d2a249659457547ddd"
+        },
+        "zig-fast": {
+          "median_ns": 224110.94267515923,
+          "min_ns": 182601.65392781317,
+          "max_ns": 375370.4203821656,
+          "mad_fraction": 0.18396137854607839,
+          "last5_over_first5": 0.8297213949047455,
+          "rss_kib": {
+            "median": 2640,
+            "min": 2640,
+            "max": 2640
+          },
+          "binary_sha256": "7e4e9f2b3586cd7797a19c0ae9361f9cfa13ce8a4618bab867080d33d281f776",
+          "flags": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "build-exe",
+            "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/main.zig",
+            "-lc",
+            "-O",
+            "ReleaseFast",
+            "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-zig-fast"
+          ],
+          "source_sha256": "94dd771cf7c78deef2a1f81aabfa63cad5515ab5ceb811d2a249659457547ddd"
+        },
+        "rust": {
+          "median_ns": 154122.63481953292,
+          "min_ns": 124849.75159235668,
+          "max_ns": 225595.48407643312,
+          "mad_fraction": 0.1899324084450852,
+          "last5_over_first5": 0.8307186218081982,
+          "rss_kib": {
+            "median": 2720,
+            "min": 2688,
+            "max": 2724
+          },
+          "binary_sha256": "230ff4317181142193c29c7ee5f260fa6866d527fb59caf512aefe33c1a0b7d4",
+          "flags": [
+            "/home/epentland/.cargo/bin/cargo",
+            "build",
+            "--release",
+            "--locked",
+            "--manifest-path",
+            "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/Cargo.toml",
+            "--target-dir",
+            "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/cargo-target"
+          ],
+          "source_sha256": "cdd8d7bba9d2d7590d6786ca1912bdba65ed6c36c6789f8f16252d14a1d7673c"
+        },
+        "go": {
+          "median_ns": 846008.8492569003,
+          "min_ns": 544147.9872611465,
+          "max_ns": 1023648.4840764331,
+          "mad_fraction": 0.17355662118224122,
+          "last5_over_first5": 0.6506453025110778,
+          "rss_kib": {
+            "median": 8384,
+            "min": 8216,
+            "max": 8780
+          },
+          "binary_sha256": "82021b9547264b3420dbe83e4354feb8cdf1037c148dcdaed0b85d63ccac7cad",
+          "flags": [
+            "/home/epentland/.local/bin/go",
+            "build",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-go",
+            "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/main.go"
+          ],
+          "source_sha256": "034f1b96198f48b20200032ca3f5dc76641d0985b98b712253b430c6c17e7e8d"
+        }
+      },
+      "comparisons": {
+        "checked-baseline/checked-common": {
+          "ratio": 2.0029954088227497,
+          "ci95": [
+            1.6456397188363974,
+            2.1726945327158877
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-baseline/checked-candidate": {
+          "ratio": 1.993106449892066,
+          "ci95": [
+            1.6609512039475938,
+            2.495403906816175
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-baseline/zig-safe": {
+          "ratio": 1.0478947982880635,
+          "ci95": [
+            0.891273023226958,
+            1.2765310924591062
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-baseline/zig-fast": {
+          "ratio": 1.536118636798157,
+          "ci95": [
+            1.2148563479405186,
+            1.6196053357175193
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-baseline/rust": {
+          "ratio": 2.2336822631978857,
+          "ci95": [
+            1.6658906693845927,
+            2.4069275722571764
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-baseline/go": {
+          "ratio": 0.4069236344940131,
+          "ci95": [
+            0.3790619050809344,
+            0.6046175613648604
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-common/checked-baseline": {
+          "ratio": 0.49925226767631226,
+          "ci95": [
+            0.4602579814797946,
+            0.6076664220933379
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-common/checked-candidate": {
+          "ratio": 0.9950629148288983,
+          "ci95": [
+            0.8261320563331934,
+            1.3745936961572978
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-common/zig-safe": {
+          "ratio": 0.5231638543315276,
+          "ci95": [
+            0.4644375570223191,
+            0.7375835161916072
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-common/zig-fast": {
+          "ratio": 0.7669107128413254,
+          "ci95": [
+            0.595650330038352,
+            0.9680357988800409
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-common/rust": {
+          "ratio": 1.1151709351699017,
+          "ci95": [
+            0.8355975217673861,
+            1.4194492184878242
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-common/go": {
+          "ratio": 0.2031575472922229,
+          "ci95": [
+            0.18390802886904678,
+            0.3141798042859158
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-candidate/checked-baseline": {
+          "ratio": 0.5017293482012231,
+          "ci95": [
+            0.4007367293400913,
+            0.6020646468260437
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-candidate/checked-common": {
+          "ratio": 1.0049615809186805,
+          "ci95": [
+            0.7274876953062702,
+            1.2104602313079624
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-candidate/zig-safe": {
+          "ratio": 0.5257595741285223,
+          "ci95": [
+            0.45226640107485744,
+            0.5858441922924332
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-candidate/zig-fast": {
+          "ratio": 0.7707158024004906,
+          "ci95": [
+            0.5651009901869093,
+            0.9196032742279306
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-candidate/rust": {
+          "ratio": 1.1207039460029078,
+          "ci95": [
+            0.7941435129212443,
+            1.3396413849672288
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-candidate/go": {
+          "ratio": 0.20416552990235393,
+          "ci95": [
+            0.17098296996221277,
+            0.3034672256889946
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        }
+      },
+      "noise_flags": [
+        "checked-baseline",
+        "checked-common",
+        "checked-candidate",
+        "zig-safe",
+        "zig-fast",
+        "rust",
+        "go"
+      ]
+    },
+    {
+      "case": "json_transform",
+      "profile": "small",
+      "size": 16,
+      "unit": "one complete JSON parse/filter/transform/serialize/fold job",
+      "receipt": "experiments/text-gaps-20261012/bench/runs/json-serializer-trial-001/results/json_transform.small.json",
+      "receipt_sha256": "7ec8e56f1f648ca40fc230059d30c47eb593b199eabd3150d7b5cb46f4a8425e",
+      "iterations": 7923,
+      "expected_checksum": 302650221,
+      "calibration": {
+        "iterations": 7923,
+        "fastest_ns": 56124512,
+        "slowest_ns": 241302272,
+        "reason": "target",
+        "limited": false
+      },
+      "cpu": 8,
+      "loadavg_before": [
+        2.5087890625,
+        10.4814453125,
+        12.37109375
+      ],
+      "loadavg_after": [
+        2.07958984375,
+        9.8662109375,
+        12.12744140625
+      ],
+      "started_utc": "2026-10-12T19:13:59.096334+00:00",
+      "finished_utc": "2026-10-12T19:14:15.833579+00:00",
+      "arms": {
+        "checked-baseline": {
+          "median_ns": 14243.524801211663,
+          "min_ns": 14085.844503344693,
+          "max_ns": 14447.961125836173,
+          "mad_fraction": 0.007949548046114079,
+          "last5_over_first5": 1.00838754863285,
+          "rss_kib": {
+            "median": 2052,
+            "min": 2052,
+            "max": 2052
+          },
+          "binary_sha256": "d2b4bf647021acc7bd761cecd63a52865ca9950562fd789231b86b4a11f06db1",
+          "flags": [
+            "--release",
+            "--experimental-zero-rc",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/bin/expanded-text-runtime",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/cache/expanded-text-runtime",
+            "--link",
+            "/home/epentland/ai/canopy/mylang-memory-20261012/benchmarks/runtime/ports/native_clock.c"
+          ],
+          "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+          "managed": {
+            "allocs": 4904734,
+            "reallocs": 0,
+            "alloc_bytes": 358030056,
+            "realloc_added_bytes": 0,
+            "peak_live_bytes": 18592,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "cumulative_allocated_bytes": 358030056,
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0,
+            "release_unique": 2487979,
+            "rc_events": 0,
+            "direct_destructions": 2487979
+          }
+        },
+        "checked-common": {
+          "median_ns": 7612.0424081787205,
+          "min_ns": 7543.199545626657,
+          "max_ns": 7825.191594093147,
+          "mad_fraction": 0.00552448729578324,
+          "last5_over_first5": 0.9943487493161626,
+          "rss_kib": {
+            "median": 1832,
+            "min": 1828,
+            "max": 1832
+          },
+          "binary_sha256": "429854488c74f3bc0a39aa0e0a8216e81bb21362bfad58e573a7fb1a96bc7994",
+          "flags": [
+            "--release",
+            "--experimental-zero-rc",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/cache-runtime",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+            "--link",
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/benchmarks/runtime/ports/native_clock.c"
+          ],
+          "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+          "managed": {
+            "allocs": 1307369,
+            "reallocs": 0,
+            "alloc_bytes": 134384328,
+            "realloc_added_bytes": 0,
+            "peak_live_bytes": 13728,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "cumulative_allocated_bytes": 134384328,
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0,
+            "release_unique": 174333,
+            "rc_events": 0,
+            "direct_destructions": 174333
+          }
+        },
+        "checked-candidate": {
+          "median_ns": 7370.553956834532,
+          "min_ns": 7297.441878076486,
+          "max_ns": 7654.055408304935,
+          "mad_fraction": 0.008501033590841938,
+          "last5_over_first5": 1.0030592720342908,
+          "rss_kib": {
+            "median": 1832,
+            "min": 1832,
+            "max": 1832
+          },
+          "binary_sha256": "aeaec89640b3fee69803e2dfd7e84d173b31210e243be6e6fafd9d1c403dd624",
+          "flags": [
+            "--release",
+            "--experimental-zero-rc",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-serializer/cache-runtime",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-serializer/text-runtime",
+            "--link",
+            "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/benchmarks/runtime/ports/native_clock.c",
+            "--emit-llvm",
+            "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-serializer/runtime.ll"
+          ],
+          "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+          "managed": {
+            "allocs": 1307369,
+            "reallocs": 0,
+            "alloc_bytes": 134384328,
+            "realloc_added_bytes": 0,
+            "peak_live_bytes": 13728,
+            "live_bytes_at_exit": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "cumulative_allocated_bytes": 134384328,
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0,
+            "release_unique": 174333,
+            "rc_events": 0,
+            "direct_destructions": 174333
+          }
+        },
+        "zig-safe": {
+          "median_ns": 11668.994825192478,
+          "min_ns": 11514.670957970466,
+          "max_ns": 12197.57427742017,
+          "mad_fraction": 0.0064446489101119804,
+          "last5_over_first5": 1.018515654111135,
+          "rss_kib": {
+            "median": 2532,
+            "min": 2532,
+            "max": 2532
+          },
+          "binary_sha256": "6997b7027dc85edd47ddd6a1a842e26b96c93cc3b5a98f82e270eb932f5ea003",
+          "flags": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "build-exe",
+            "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/main.zig",
+            "-lc",
+            "-O",
+            "ReleaseSafe",
+            "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-zig-safe"
+          ],
+          "source_sha256": "94dd771cf7c78deef2a1f81aabfa63cad5515ab5ceb811d2a249659457547ddd"
+        },
+        "zig-fast": {
+          "median_ns": 8328.644452858765,
+          "min_ns": 8201.843619840969,
+          "max_ns": 8972.199671841474,
+          "mad_fraction": 0.010309610026694168,
+          "last5_over_first5": 1.022698884028301,
+          "rss_kib": {
+            "median": 2320,
+            "min": 2320,
+            "max": 2320
+          },
+          "binary_sha256": "7e4e9f2b3586cd7797a19c0ae9361f9cfa13ce8a4618bab867080d33d281f776",
+          "flags": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "build-exe",
+            "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/main.zig",
+            "-lc",
+            "-O",
+            "ReleaseFast",
+            "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-zig-fast"
+          ],
+          "source_sha256": "94dd771cf7c78deef2a1f81aabfa63cad5515ab5ceb811d2a249659457547ddd"
+        },
+        "rust": {
+          "median_ns": 6987.202953426732,
+          "min_ns": 6894.179477470655,
+          "max_ns": 7330.512305944718,
+          "mad_fraction": 0.010310640019151843,
+          "last5_over_first5": 1.021693475601755,
+          "rss_kib": {
+            "median": 2368,
+            "min": 2356,
+            "max": 2376
+          },
+          "binary_sha256": "230ff4317181142193c29c7ee5f260fa6866d527fb59caf512aefe33c1a0b7d4",
+          "flags": [
+            "/home/epentland/.cargo/bin/cargo",
+            "build",
+            "--release",
+            "--locked",
+            "--manifest-path",
+            "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/Cargo.toml",
+            "--target-dir",
+            "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/cargo-target"
+          ],
+          "source_sha256": "cdd8d7bba9d2d7590d6786ca1912bdba65ed6c36c6789f8f16252d14a1d7673c"
+        },
+        "go": {
+          "median_ns": 30302.966679288147,
+          "min_ns": 30162.419033194496,
+          "max_ns": 30795.0021456519,
+          "mad_fraction": 0.0018383033674335947,
+          "last5_over_first5": 1.0040707245119882,
+          "rss_kib": {
+            "median": 8224,
+            "min": 8224,
+            "max": 8224
+          },
+          "binary_sha256": "82021b9547264b3420dbe83e4354feb8cdf1037c148dcdaed0b85d63ccac7cad",
+          "flags": [
+            "/home/epentland/.local/bin/go",
+            "build",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/text-go",
+            "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text/main.go"
+          ],
+          "source_sha256": "034f1b96198f48b20200032ca3f5dc76641d0985b98b712253b430c6c17e7e8d"
+        }
+      },
+      "comparisons": {
+        "checked-baseline/checked-common": {
+          "ratio": 1.8711830593465664,
+          "ci95": [
+            1.8604933810186586,
+            1.8946705513347868
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-baseline/checked-candidate": {
+          "ratio": 1.9324904050127731,
+          "ci95": [
+            1.9106080995731483,
+            1.9568098993078034
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-baseline/zig-safe": {
+          "ratio": 1.22062996981205,
+          "ci95": [
+            1.2115015244462806,
+            1.2351737196800068
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-baseline/zig-fast": {
+          "ratio": 1.7101852386462055,
+          "ci95": [
+            1.6878622112988153,
+            1.7414197108650609
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-baseline/rust": {
+          "ratio": 2.038515969287283,
+          "ci95": [
+            2.017268443734769,
+            2.062457848960751
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-baseline/go": {
+          "ratio": 0.47003730532255134,
+          "ci95": [
+            0.468553202418754,
+            0.4749597417192447
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-common/checked-baseline": {
+          "ratio": 0.5344212555821283,
+          "ci95": [
+            0.5277962436770364,
+            0.5374918342641345
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-common/checked-candidate": {
+          "ratio": 1.032763948647342,
+          "ci95": [
+            1.0199026683737027,
+            1.0423731203935604
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-common/zig-safe": {
+          "ratio": 0.6523306010681311,
+          "ci95": [
+            0.646161600341506,
+            0.6569686912577313
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-common/zig-fast": {
+          "ratio": 0.9139593425153267,
+          "ci95": [
+            0.9007851197453824,
+            0.9263818672960618
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-common/rust": {
+          "ratio": 1.089426263830729,
+          "ci95": [
+            1.0765615798658739,
+            1.1008004436020244
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-common/go": {
+          "ratio": 0.2511979268809181,
+          "ci95": [
+            0.2498412175477388,
+            0.2529117183904674
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-candidate/checked-baseline": {
+          "ratio": 0.5174669935778493,
+          "ci95": [
+            0.5110358447970532,
+            0.5233908234764838
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-candidate/checked-common": {
+          "ratio": 0.96827547215387,
+          "ci95": [
+            0.9593493734973116,
+            0.9804857179112604
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-candidate/zig-safe": {
+          "ratio": 0.6316357207496625,
+          "ci95": [
+            0.6248318913479795,
+            0.6380097272722901
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-candidate/zig-fast": {
+          "ratio": 0.8849644139034686,
+          "ci95": [
+            0.8725122733132744,
+            0.9011134048084344
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-candidate/rust": {
+          "ratio": 1.0548647299875258,
+          "ci95": [
+            1.039771786371212,
+            1.0720008888055002
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        },
+        "checked-candidate/go": {
+          "ratio": 0.24322879125469424,
+          "ci95": [
+            0.24190109006642832,
+            0.2458039298487165
+          ],
+          "paired_rounds": 15,
+          "bootstrap_repetitions": 10000,
+          "estimator": "ratio of medians; matched round indices resampled jointly"
+        }
+      },
+      "noise_flags": []
+    }
+  ],
+  "reporter_sha256": "d459772aac447022366f313f3742f2c3d349f528165067b35e91a2551ee0d62a",
+  "artifact_relocations": null,
+  "limitations": [
+    "Exploratory single-session paired bootstrap intervals, ratio of medians; matched round indices resampled jointly.",
+    "Managed counters include setup and exclude allocator overhead; foreign managed counters unavailable. Process RSS is separate.",
+    "Representation/library policies differ. MyLang split returns owned results at the API level; optimized immediate consumers can eliminate fragment materialization. Rust/Zig use borrowed slices. Ports remain unchanged.",
+    "Historical ratios are not used; all comparisons use fresh same-round guest runs. No aggregate score."
+  ]
+}

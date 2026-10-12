@@ -1,0 +1,68 @@
+{
+  "schema": "text-gap-target-assessment-v1",
+  "report_sha256": "5d5664622efcd66bf6e0b34dfababe94313df48f946d4b603bc3e58edf95ac39",
+  "cells": [
+    {
+      "profile": "large",
+      "candidate_vs_common": {
+        "ratio": 1.0049615809186805,
+        "ci95": [
+          0.7274876953062702,
+          1.2104602313079624
+        ],
+        "paired_rounds": 15,
+        "bootstrap_repetitions": 10000,
+        "estimator": "ratio of medians; matched round indices resampled jointly"
+      },
+      "candidate_vs_rust": {
+        "ratio": 1.1207039460029078,
+        "ci95": [
+          0.7941435129212443,
+          1.3396413849672288
+        ],
+        "paired_rounds": 15,
+        "bootstrap_repetitions": 10000,
+        "estimator": "ratio of medians; matched round indices resampled jointly"
+      },
+      "noise_flags": [
+        "checked-baseline",
+        "checked-common",
+        "checked-candidate",
+        "zig-safe",
+        "zig-fast",
+        "rust",
+        "go"
+      ],
+      "all_foreign_upper_ci_below_one": false,
+      "managed_totals_equal_common": true
+    },
+    {
+      "profile": "small",
+      "candidate_vs_common": {
+        "ratio": 0.96827547215387,
+        "ci95": [
+          0.9593493734973116,
+          0.9804857179112604
+        ],
+        "paired_rounds": 15,
+        "bootstrap_repetitions": 10000,
+        "estimator": "ratio of medians; matched round indices resampled jointly"
+      },
+      "candidate_vs_rust": {
+        "ratio": 1.0548647299875258,
+        "ci95": [
+          1.039771786371212,
+          1.0720008888055002
+        ],
+        "paired_rounds": 15,
+        "bootstrap_repetitions": 10000,
+        "estimator": "ratio of medians; matched round indices resampled jointly"
+      },
+      "noise_flags": [],
+      "all_foreign_upper_ci_below_one": false,
+      "managed_totals_equal_common": true
+    }
+  ],
+  "all_samples_preserved": true,
+  "automatic_repeat": false
+}

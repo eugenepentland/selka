@@ -1,0 +1,9 @@
+# Serializer source trial
+
+Fresh seven-arm JSON small/large trial with original C0, immutable common001, isolated serializer candidate, and four unchanged foreign arms. Three warmups, fifteen paired rounds, three separate RSS observations, and three counted checked binaries per cell. All hashes, oracles, order, RSS and ownership checks pass. Candidate host3996885281a792308881031e4182e7ac38ad32c7e089d9c264a1f338bdf97688; runtimeaeaec89640b3fee69803e2dfd7e84d173b31210e243be6e6fafd9d1c403dd624; countedebcb26f16a1787452d695aded0b62883c5c831e0bf7895635420d80df3536ec1. Exact source and compiler receipts are pinned in every spec.
+
+The small cell has no noise flags: candidate/common0.9683 [0.9593,0.9805], candidate/Rust1.0549 [1.0398,1.0720]. It improves over common but misses the target. The large cell flags all seven arms: candidate/common1.005 [0.727,1.210], candidate/Rust1.121 [0.794,1.340]. It is inconclusive; no target or speedup claim. All fifteen samples remain, with no exclusions or automatic repeat. Absolute durations from the two cells/earlier sessions are not pooled.
+
+Large timing ticket495 waited286s behind a gate. Small ticket497 waited767s behind a separate timing window/settle admission. Raw logs preserve both waits. host-observation.json records a read-only process-name/CPU snapshot after the large cell, including unrelated browser load. ps percentages are process-lifetime averages, and the snapshot was not collected during the measured cell; causal attribution is unproven. No processes, affinities, governors or locks were modified.
+
+Managed storage/traffic and independent process RSS remain separate from raw allocator calls/temporaries. Counted execution includes setup at the same iteration count as measured execution. The source change is benchmark-general serializer iteration; benchmark source, ports and oracles remain unchanged. Other prepared specs were not measured. Final combined full six-cell validation remains outstanding.

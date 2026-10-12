@@ -1,0 +1,12 @@
+{
+  "schema": "text-gap-host-observation-v1",
+  "utc": "2026-10-12T19:03:18.621885+00:00",
+  "command": [
+    "ps",
+    "-eo",
+    "pid,ppid,psr,pcpu,comm",
+    "--sort=-pcpu"
+  ],
+  "stdout": "    PID    PPID PSR %CPU COMMAND\n1261427 1261410  12  825 chrome-headless\n1261483 1261411   8  336 chrome-headless\n1281628 1281232  10  104 mylang\n1281580 1281235   2  100 mylang\n1281582 1261971   4 93.7 python3\n1281645 1281635  12 75.0 python3\n1281235 1281200  18 41.0 test\n1261408 1261390  16 29.3 chrome-headless\n1281200 1256291   0 21.1 python3\n1281199 1256291  15 20.0 python3\n1261390 1261269  19 10.7 node\n1261971 1256291   8  8.3 python3\n1253958 1115726   0  7.0 python3\n2677378       1   6  2.7 netdata",
+  "limitation": "Read-only observation after large measured cell. ps CPU percentages are process-lifetime averages, not direct concurrent utilization samples during measurement. Unrelated load is observed but causal attribution is unproven. No processes/locks modified."
+}

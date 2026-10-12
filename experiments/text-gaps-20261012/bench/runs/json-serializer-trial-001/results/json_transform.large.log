@@ -1,0 +1,7 @@
+build-slot: FIFO ticket 495, position 1; draining active work (gate1.lock); waiting (0s so far)
+build-slot: FIFO ticket 495, position 1; draining active work (gate1.lock); waiting (60s so far)
+build-slot: FIFO ticket 495, position 1; draining active work (gate1.lock); waiting (120s so far)
+build-slot: FIFO ticket 495, position 1; draining active work (gate1.lock); waiting (180s so far)
+build-slot: FIFO ticket 495, position 1; draining active work (gate1.lock); waiting (240s so far)
+build-slot: timing slot 1, FIFO ticket 495 after 286s
+text-gaps/json-serializer-trial-001/json_transform/large {'checked-baseline': True, 'checked-common': True, 'checked-candidate': True, 'zig-safe': True, 'zig-fast': True, 'rust': True, 'go': True}
