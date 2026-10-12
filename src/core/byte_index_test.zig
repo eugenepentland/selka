@@ -4,6 +4,8 @@ const options = @import("core_test_options");
 const support = @import("test_support.zig");
 const report = std.debug.print;
 const ir = @import("ir.zig");
+const signed_min_text = "-9223372036854775808";
+const signed_max_text = "9223372036854775807";
 const facts = @import("facts.zig");
 const byte_index = @import("byte_index.zig");
 
@@ -99,8 +101,8 @@ fn nativeIndices(a: std.mem.Allocator, root: []const u8, mode: []const []const u
         .{ .index = "2", .output = "99\n", .normalized = "" },
         .{ .index = "-4", .output = "", .normalized = "-4" },
         .{ .index = "3", .output = "", .normalized = "3" },
-        .{ .index = "-9223372036854775808", .output = "", .normalized = "-9223372036854775808" },
-        .{ .index = "9223372036854775807", .output = "", .normalized = "9223372036854775807" },
+        .{ .index = signed_min_text, .output = "", .normalized = signed_min_text },
+        .{ .index = signed_max_text, .output = "", .normalized = signed_max_text },
     };
     for ([_][]const u8{ "bytes", "buffer" }) |receiver| {
         for (cases) |case| {
@@ -256,4 +258,183 @@ test "the exact nonnegative byte index premise traps R_CORE_FACT when an injecte
     try std.testing.expectEqual(@as(u8, 1), ran.status);
     try std.testing.expectEqualStrings("", ran.stdout);
     try std.testing.expect(std.mem.indexOf(u8, ran.stderr, "error[R_CORE_FACT]: native execution failed (range [0, 9223372036854775807]: value -1") != null);
+}
+
+const span_fixture = "textgap_span_index.my";
+const emitter = @import("emit_llvm.zig");
+const cache_store = @import("stage_store.zig");
+const optimizer_cache = @import("optimization_cache.zig");
+const snapshot = @import("ir_snapshot.zig");
+const passes = @import("passes.zig");
+
+fn spanModule(a: std.mem.Allocator, raw: ?i64, returns: bool, other: bool, extra: bool) !ir.Module {
+    var module: ir.Module = .{ .zero_rc = true };
+    try module.strings.append(a, "abc");
+    try module.functions.append(a, .{ .name = "myl_core_span_bytes_index_offset", .signature = .{ .params = &.{ .str, .i64 }, .ret = .u64, .linkage = .runtime_c, .views = 1 } });
+    var h = try support.Hand.init(a, &module, "read", .{ .params = &.{.i64}, .ret = if (returns) .u64 else .i64 });
+    const text = try h.loose(.{ .op = .str_const, .ty = .str });
+    const start = try h.int(.u64, 0);
+    const width = try h.extra(&.{try h.int(.u64, 3)});
+    const view = try h.emit(.{ .op = .str_view_of, .ty = .str_view, .a = text, .b = start, .data = width });
+    const receiver = if (other) try h.emit(.{ .op = .str_view_of, .ty = .str_view, .a = text, .b = start, .data = width }) else view;
+    const index = if (raw) |value| try h.int(.i64, value) else try h.param(0);
+    const offset = try h.emit(.{ .op = .call, .ty = .u64, .a = @fromBackingInt(0), .data = try h.extra(&.{ view, index }) });
+    if (extra) _ = try h.emit(.{ .op = .cmp, .ty = .bool, .a = offset, .b = start, .data = @backingInt(ir.Predicate.eq) });
+    const result = if (returns) offset else result: {
+        const read = try h.emit(.{ .op = .list_get, .ty = .u8, .a = receiver, .b = offset, .check = .exact });
+        break :result try h.emit(.{ .op = .convert, .ty = .i64, .a = read });
+    };
+    _ = try h.emit(.{ .op = .ret, .ty = .void, .a = result });
+    module.entry = try h.finish();
+    try support.verified(a, &module, &.{});
+    return module;
+}
+
+const SpanCase = enum { valid, negative, unknown, escaped, other, extra, foreign, symbol, views, owned, consumes, layout, result, flag, raw_type, ordinary };
+
+fn qualifySpan(a: std.mem.Allocator, case: SpanCase) !void {
+    var module = try spanModule(a, if (case == .unknown) null else if (case == .negative) -1 else 1, case == .escaped, case == .other, case == .extra);
+    const function = &module.functions.items[module.entry];
+    switch (case) {
+        .foreign => module.functions.items[0].signature.linkage = .extern_c,
+        .symbol => module.functions.items[0].name = "myl_core_span_bytes_index_offset_other",
+        .views => module.functions.items[0].signature.views = 0,
+        .owned => module.functions.items[0].signature.owned = 1,
+        .consumes => module.functions.items[0].signature.consumes = 1,
+        .layout => module.functions.items[0].signature.params = &.{ .bytes, .i64 },
+        .result => module.functions.items[0].signature.ret = .i64,
+        .flag => for (function.insts.items) |*inst| {
+            if (inst.op == .list_get) inst.data = 1;
+        },
+        .raw_type => for (function.insts.items) |inst| {
+            if (inst.op == .call) function.insts.items[function.resolve(function.operands(inst.data)[1]).index()].ty = .u64;
+        },
+        .ordinary => module.zero_rc = false,
+        else => {},
+    }
+    const known = try facts.analyze(a, function, .{ .fold = false });
+    try std.testing.expectEqual(@as(u32, if (case == .valid) 1 else 0), byte_index.forward(&module, function, &known));
+}
+
+// spec-case: NEW-CORE-LLVM-1
+// spec-case: NEW-CORE-S1-VIEW-4
+test "span byte index forwarding requires exact authority receiver and complete read-only result use" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    for (std.enums.values(SpanCase)) |case| try qualifySpan(arena.allocator(), case);
+}
+
+fn spanSource(a: std.mem.Allocator) !ir.Module {
+    const path = try std.fs.path.join(a, &.{ options.fixtures, span_fixture });
+    const source = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(1 << 20));
+    var unit = try @import("mylang").Compilation.init(a, span_fixture, source);
+    try unit.check();
+    var refusal: @import("build.zig").Refusal = .{};
+    return @import("build.zig").buildExecutable(a, .{ .program = unit.program.?, .single_owner = true, .zero_rc = true }, &refusal);
+}
+
+const SpanCompiled = struct { llvm: []const u8, statistics: optimizer_cache.Statistics };
+
+fn compileSpan(a: std.mem.Allocator, scratch: std.mem.Allocator, storage: ?*cache_store.Store) !SpanCompiled {
+    var module = try spanSource(a);
+    const token: u8 = 0;
+    const locator: emitter.Locator = .{ .context = &token, .locate = location };
+    var context: optimizer_cache.Context = undefined;
+    if (storage) |s| context = optimizer_cache.Context.init(s, try snapshot.Context.init(a, &module, null), locator);
+    const result = if (storage != null) try passes.runCached(a, scratch, &module, .trusted, &context) else try passes.runWithScratch(a, scratch, &module, .trusted);
+    try support.verified(a, &module, result.plans);
+    var walks: usize = 0;
+    for (module.functions.items) |function| {
+        if (!std.mem.eql(u8, function.name, "walk") and !std.mem.eql(u8, function.name, "at_zero")) continue;
+        walks += 1;
+        for (function.insts.items) |inst| {
+            if (inst.op != .call) continue;
+            try std.testing.expect(!std.mem.eql(u8, module.functions.items[inst.a.index()].name, "myl_core_span_bytes_index_offset"));
+        }
+    }
+    try std.testing.expectEqual(@as(usize, 2), walks);
+    const llvm = try emitter.emitModule(a, &module, .{ .locator = locator, .source_path = span_fixture, .main = .{ .parameters = &.{ "args", "out" }, .capabilities = &.{ 0, 0 } }, .analysis = support.analysis(&result) });
+    return .{ .llvm = llvm, .statistics = if (storage != null) context.statistics else .{} };
+}
+
+// spec-case: NEW-CORE-STAGE-CACHE-8
+// spec-case: NEW-CORE-S1-VIEW-4
+test "span byte index forwarding agrees in uncached cold and warm final cache artifacts" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    var storage = try cache_store.Store.init(std.testing.allocator, std.testing.io, try dir.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const uncached = try compileSpan(a, std.testing.allocator, null);
+    const cold = try compileSpan(a, std.testing.allocator, &storage);
+    const warm = try compileSpan(a, std.testing.allocator, &storage);
+    try std.testing.expectEqualStrings(uncached.llvm, cold.llvm);
+    try std.testing.expectEqualStrings(cold.llvm, warm.llvm);
+    try std.testing.expect(warm.statistics.hits[@backingInt(optimizer_cache.Stage.final)] > 0);
+    try std.testing.expectEqual(@as(u64, 0), warm.statistics.misses[@backingInt(optimizer_cache.Stage.final)]);
+}
+
+fn nativeSpan(a: std.mem.Allocator, root: []const u8, mode: []const []const u8) !void {
+    const output = try std.fs.path.join(a, &.{ root, "span-index" });
+    const source = try std.fs.path.join(a, &.{ options.fixtures, span_fixture });
+    var argv: std.ArrayList([]const u8) = .empty;
+    try argv.appendSlice(a, &.{ options.core_path, "build", source, "-o", output, "--cache-dir", root, "--experimental-zero-rc" });
+    try argv.appendSlice(a, mode);
+    const built = try std.process.run(a, std.testing.io, .{ .argv = argv.items });
+    if (built.term != .exited or built.term.exited != 0) report("span build flags {any}, term {any}\nstdout:\n{s}\nstderr:\n{s}\n", .{ mode, built.term, built.stdout, built.stderr });
+    try std.testing.expect(built.term == .exited and built.term.exited == 0);
+    var environment = try std.testing.environ.createMap(a);
+    try environment.put("MYL_CORE_LEAKCHECK", "1");
+    const cases = [_]struct { index: []const u8, value: ?[]const u8, source: []const u8 = "aé🙂", length: u32 = 7, sum: []const u8 = "1143" }{
+        .{ .index = "0", .value = "97\n" },                                      .{ .index = "6", .value = "130\n" }, .{ .index = "-1", .value = "130\n" }, .{ .index = "-7", .value = "97\n" },
+        .{ .index = "0", .value = null, .source = "", .length = 0, .sum = "0" }, .{ .index = "7", .value = null },    .{ .index = "-8", .value = null },    .{ .index = signed_max_text, .value = null },
+        .{ .index = signed_min_text, .value = null },
+    };
+    for (cases) |case| {
+        const ran = try std.process.run(a, std.testing.io, .{ .argv = &.{ output, case.index, case.source }, .environ_map = &environment });
+        const wanted: u8 = if (case.value != null) 0 else 1;
+        if (ran.term != .exited or ran.term.exited != wanted) report("span run index {s}, flags {any}, term {any}\nstdout:\n{s}\nstderr:\n{s}\n", .{ case.index, mode, ran.term, ran.stdout, ran.stderr });
+        try std.testing.expect(ran.term == .exited);
+        const expected = try std.mem.concat(a, u8, &.{ "before ", case.sum, "\n", case.value orelse "" });
+        try std.testing.expectEqualStrings(expected, ran.stdout);
+        try std.testing.expectEqual(@as(u8, if (case.value != null) 0 else 1), ran.term.exited);
+        if (case.value != null) {
+            try std.testing.expectEqualStrings("", ran.stderr);
+        } else {
+            const bounds = try std.fmt.allocPrint(a, "index {s}, length {d}", .{ case.index, case.length });
+            try std.testing.expect(std.mem.indexOf(u8, ran.stderr, bounds) != null);
+            try std.testing.expect(std.mem.indexOf(u8, ran.stderr, "R_LIST_BOUNDS") != null);
+            try std.testing.expect(std.mem.indexOf(u8, ran.stderr, "leak") == null);
+        }
+    }
+}
+
+// spec-case: NEW-CORE-S1-VIEW-4
+test "span byte index cases preserve Unicode negative extreme and ordered bounds traps in seven native modes" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    for ([_][]const []const u8{ &.{}, &.{"--unoptimized"}, &.{"--optimize-debug"}, &.{"--release"}, &.{ "--release", "--no-facts" }, &.{"--verify-facts"}, &.{ "--release", "--verify-facts" } }) |mode| try nativeSpan(a, root, mode);
+}
+
+// spec-case: NEW-CORE-LLVM-1
+test "span byte index work cap preserves existing owned-byte forwarding for large bodies" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var span = try spanModule(a, 1, false, false, false);
+    const view = &span.functions.items[span.entry];
+    try view.insts.appendNTimes(a, .{ .op = .undef, .ty = .i64 }, 4097);
+    const view_known = try facts.analyze(a, view, .{ .fold = false });
+    try std.testing.expectEqual(@as(u32, 0), byte_index.forward(&span, view, &view_known));
+    var owned = try adapterModule(a, 1, false, .runtime_c);
+    const bytes = &owned.functions.items[owned.entry];
+    try bytes.insts.appendNTimes(a, .{ .op = .undef, .ty = .i64 }, 4097);
+    const owned_known = try facts.analyze(a, bytes, .{ .fold = false });
+    try std.testing.expectEqual(@as(u32, 1), byte_index.forward(&owned, bytes, &owned_known));
 }

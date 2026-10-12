@@ -1,0 +1,33 @@
+func walk(source: str) -> int:
+    mut raw = source.encode()
+    mut offset = 0
+    mut total = 0
+    while offset < len(raw):
+        total += raw[offset]
+        offset += 1
+    return total
+
+
+func at(source: str, index: int) -> int:
+    mut raw = source.encode()
+    return raw[index]
+
+
+func at_zero(source: str) -> int:
+    mut raw = source.encode()
+    return raw[0]
+
+
+func main(args: str[], out: Stream) -> int:
+    mut index = 0
+    match parse_int(args[0]):
+        case Some(value):
+            index = value
+        case None:
+            return 2
+    out.print("before", walk(args[1]))
+    if index == 0:
+        out.print(at_zero(args[1]))
+    else:
+        out.print(at(args[1], index))
+    return 0
