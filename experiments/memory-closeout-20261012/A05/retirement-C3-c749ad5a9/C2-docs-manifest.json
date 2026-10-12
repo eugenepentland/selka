@@ -1,0 +1,32 @@
+{
+  "status": "held for C2; not applied",
+  "integration_revision": "c749ad5a9d2dfef5d5c4d7b9de2a30f03029999f",
+  "files": [
+    {
+      "path": "docs/sets.md",
+      "before_sha256": "31290d8f85733085258c6c628ad68c3be4aec5a8422cb44147aea3df109aba43",
+      "after_sha256": "da8f4035f44f739e92e69d36c6428f41659977c56db288743a620348e5c7e7b7"
+    },
+    {
+      "path": "docs/value-semantics.md",
+      "before_sha256": "ac61a4a4baf91ed0e27fd760f8c413c8c7fc06333d324dd1b8b73559a5c09ad2",
+      "after_sha256": "ad06a2e08a3ae4bcca224a45118ca15c6d8721e2adc13256031367ae229e319a"
+    },
+    {
+      "path": "docs/records-and-unions.md",
+      "before_sha256": "03bbb3bc2ffe55b794477fee8b76ae34f6d545936eaf82656d22727e5338ac46",
+      "after_sha256": "99fb17098b9361f63c205ab9f6bf6e9bd03075f045b9fa46dad53a52a0c96348"
+    },
+    {
+      "path": "docs/standard-library.md",
+      "before_sha256": "499b7016b9723da73e6235297b1c2e6df01d969f855614215fcc747a13885813",
+      "after_sha256": "503460ab849c748bdf9aff62a8c024d364689ab861d4b6366afaee7435124ef5"
+    }
+  ],
+  "source_commits": [
+    "443478167",
+    "d4d6c50f2",
+    "6a0516d8e"
+  ],
+  "tests": "Support5 recorded doc migration receipts; rerun on common C1 and ordinary C2 required"
+}

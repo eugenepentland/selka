@@ -1,0 +1,673 @@
+--- a/docs/sets.md
++++ b/docs/sets.md
+@@ -2,11 +2,11 @@
+ 
+ `set[T]` holds each distinct value of a hashable type once. It keeps its elements in
+ the order they were first added, answers `in`, `add`, `remove` and `discard` in
+-expected constant time, and prints the way Python prints a set. Like a list or a
+-dictionary it is reference counted. Assignment gives the destination an
+-independent value; the implementation shares backing storage until a write
+-(copy-on-write). A function that changes its caller's set declares the parameter `mut`,
+-and the call site marks the argument with `mut`.
++expected constant time, and prints the way Python prints a set. A set owns its
++storage. Assignment can move that ownership; `copy()` creates independent storage
++when both values must remain usable. A function that changes its caller's set
++declares the parameter `mut`, and the call site marks the argument with `mut`.
++Ordinary parameters borrow their input for the call.
+ 
+ ## Set literals and construction
+ 
+@@ -45,7 +45,7 @@
+ when it is absent, exactly as `d[key]` does for a missing key, while `discard(x)`
+ leaves a missing element absent. `pop()` removes and returns the most recently added
+ element and traps with `R_MISSING_KEY` on an empty set. `clear()` empties the set,
+-`copy()` returns a fresh shallow copy, and `update(other)` adds every element of
++`copy()` returns an independent copy, including managed elements, and `update(other)` adds every element of
+ another set. `union`, `intersection`, `difference` and `symmetric_difference` return a
+ new set, and `issubset`, `issuperset` and `isdisjoint` answer a `bool`; each takes
+ another set of the same type. A set is not indexable and has none of the dictionary
+@@ -57,11 +57,11 @@
+ ```mylang
+ # doc: expect 42
+ func tag(mut names: set[str], name: str) -> Unit:
+-    names.add(name)
++    names.add(name.copy())
+ 
+ func main() -> int:
+     mut names = {"ada", "bob"}
+-    mut alias = names
++    mut alias = names.copy()
+     tag(mut alias, "cy")
+     if "cy" in names:
+         return 1
+@@ -108,9 +108,10 @@
+ A dictionary key and a set element are hashed and compared by value, so they must be
+ values whose contents cannot change once stored and whose equality is reflexive:
+ every integer kind, `bool`, `str`, `bytes`, and the value types built only from
+-those — tuples, records, unions, enums, domains, `Option` values and fixed arrays. A
+-key is copied into the table, so reassigning a field of the variable it came from
+-never changes what the table holds. Hashing is structural and deterministic: it reads
++those — tuples, records, unions, enums, domains, `Option` values and fixed arrays. An inserted managed key becomes owned by the table. Use `key.copy()` when the
++original must remain independently usable; scalar-only keys are ordinary copied
++values. Changing an independent value never changes the stored key. Hashing is
++structural and deterministic: it reads
+ exactly what `==` compares, field by field and case by case, with fixed constants and
+ no per-process seed, so a dictionary or set behaves the same on every run.
+ 
+@@ -152,10 +153,10 @@
+ ## Representation and cost
+ 
+ A set is a dictionary from its elements to unit: the same insertion-ordered entry
+-list and open-addressing hash index, and the same reference count and
+-copy-on-write. Membership, `add`, `remove` and `discard` probe the index
++list and open-addressing hash index, with uniquely owned storage and direct
++destruction. Membership, `add`, `remove` and `discard` probe the index
+ once. Removing an element from the middle takes its slot out of the index and leaves
+-its entry to be squeezed out the next time the entries are read in order, so a
+-removal moves nothing; `dict.pop(key)` shares that path. The combining operators
++a tombstone. A later index rebuild compacts live entries in their original order,
++so removal moves nothing; `dict.pop(key)` shares that path. The combining operators
+ and the subset tests walk one operand and probe the other, so they are linear in the
+ operands' sizes.
+--- a/docs/value-semantics.md
++++ b/docs/value-semantics.md
+@@ -1,42 +1,38 @@
+ # Value semantics
+ 
+-This is mylang's one value model ([D9](adr/D9-value-semantics-then-rc.md)). The
+-runtime implements it with reference counting and copy-on-write; there is no
+-other mode and no switch to select one.
+-
+-Under value semantics every `list`, `dict`, `set` and `byte_buffer` is an
+-independent value, like a record or an `int` already is. Assignment, argument
+-passing, storing into a field or element, and returning never make two names
+-reach the same collection. A function changes its caller's value only through a
+-`mut` parameter, marked `mut` at the call site.
++Managed values use checked ownership. A `list`, `dict`, `set`, `byte_buffer` or
++record with managed fields owns its storage. Assignment and returns can move an
++owner; using that old owner afterward is rejected. Ordinary parameters borrow
++values for the call. `.copy()` creates independent storage when both values are
++needed. A function changes its caller's value through a `mut` parameter, marked
++`mut` at the call site. See [ownership](tooling/ownership.md) for the checked
++boundaries and [D9](adr/D9-value-semantics-then-rc.md) for the historical RC design.
+ 
+ ```mylang
+ # doc: expect 12
+ func main() -> int:
+     mut a = [1]
+-    mut b = a
++    mut b = a.copy()
+     b.append(2)
+     return len(a) * 10 + len(b)
+ ```
+ 
+ This returns `12`: `b` is an independent value, so appending to `b` leaves `a`
+-with one element; Python would return `22`, because there both names reach one
+-list. The syntax resembles Python's; the value rule differs.
++with one element. The explicit copy keeps the two owners independent.
+ 
+ The retired flags `--value-semantics` and `--legacy-sharing` are refused with
+ status 2.
+ 
+ ## The rules
+ 
+-**A copy is your own value.** A local that received a value — from a
+-parameter, a field, an element, a call — owns it. Changing it needs no `mut`
+-and does not change the parameter it came from, and a returned value never
+-aliases an argument:
++**A copy is your own value.** A borrowed parameter, field or element does not
++become a second owner by assigning it to a local. Copy it explicitly before
++changing it or returning independent storage:
+ 
+ ```mylang
+ # doc: expect 21
+ func appended(xs: int[]) -> int[]:
+-    mut ys = xs
++    mut ys = xs.copy()
+     ys.append(9)
+     return ys
+ 
+@@ -48,7 +44,7 @@
+ 
+ A parameter itself stays read-only: `xs.append(9)` in `appended` is
+ `E_MUTATION_MARKER`, and the message says to declare `mut xs: int[]` or
+-to assign it to a local and change the copy.
++to make an explicit local copy.
+ 
+ **`mut` records are `inout`.** A `mut` parameter of a plain `record`
+ is the caller's variable: a field assignment, a nested field or collection
+@@ -86,17 +82,16 @@
+ 
+ A whole-local mut argument names the caller's current variable when the call
+ starts, after all arguments evaluate. An interior argument such as `mut rows[0]`
+-retains the collection selected when that argument evaluates. If a later
+-argument replaces that entry, the callee changes the held old collection and
+-leaves the replacement intact. If the entry is unchanged, whole rebinding by
+-the callee publishes its final value into that entry.
++borrows that selected place for the call. Do not replace its owning collection
++while the argument is live. Whole rebinding through the callee publishes its
++final value into that place.
+ 
+ ```mylang
+ # doc: expect 27
+ 
+ func replace(mut items: int[], source: int[], choose: bool):
+     if choose:
+-        items = source
++        items = source.copy()
+     items.append(7)
+ 
+ func main() -> int:
+@@ -106,11 +101,11 @@
+     return items[0] * 10 + items[1]
+ ```
+ 
+-**Loop variables and match bindings are copies, so writing through one is an
+-error.** `for row in grid: row.append(0)` would change a copy that is gone when
+-the iteration ends: it is `E_IMMUTABLE`. The same holds for
+-`enumerate`, `zip`, `reversed`, `d.values()`, `d.items()` and a named `match`
+-payload binding of a value another name holds.
++**Loop variables and borrowed match bindings are read-only.**
++`for row in grid: row.append(0)` is `E_IMMUTABLE`. The same restriction applies
++to `enumerate`, `zip`, `reversed`, dictionary views, and payloads borrowed from
++a value another owner holds. A fresh owned match result can transfer its payload;
++that transfer does not duplicate its storage.
+ 
+ ```mylang
+ # doc: expect-error E_IMMUTABLE
+@@ -134,7 +129,7 @@
+     return len(grid[0]) + len(grid[1]) * 10
+ ```
+ 
+-Match payloads are read-only too; make an explicit `mut` local copy to edit one.
++Make an explicit `mut` local `.copy()` to edit a borrowed match payload.
+ A `class` declaration is `E_VALUE_CLASS`: use a record or recursive union for
+ finite values, or a pool handle for stable graph identity.
+ 
+@@ -142,10 +137,8 @@
+ changes a temporary copy no name holds: `E_VALUE_TEMPORARY_WRITE`. Assign the
+ result to a local, change it, and store it back.
+ 
+-**No read-only/writable overlap errors.** `E_MUTATION_OVERLAP` is not
+-reported for a read-only argument, because it is a value of its own.
+-Where one could share storage with a `mut` argument of the same call, the
+-compiler passes a copy taken before the call:
++**Borrowed and mutable arguments must not overlap.** Make an explicit snapshot
++when a call needs both the original contents and permission to mutate the owner:
+ 
+ ```mylang
+ # doc: expect 23
+@@ -155,20 +148,21 @@
+ 
+ func main() -> int:
+     mut a = [1, 2]
+-    mut seen = touch(mut a, a)
++    const snapshot = a.copy()
++    mut seen = touch(mut a, snapshot)
+     return seen * 10 + len(a)
+ ```
+ 
+-The callee sees `source` as `[1, 2]` even though it appends to `target`, which
+-is the same variable. The natural recursive helper
+-`walk(adj, node, mut path, mut found)` is accepted.
++The callee borrows the independent `snapshot` as `[1, 2]` while it appends to
++`target`. Distinct inputs such as `walk(adj, node, mut path, mut found)` can borrow
++`adj` and mutate separate owners without a copy.
+ 
+ **Finish an overlapping `mut` call before updating its receiver.** A statement
+ such as `items[selected(mut items)] = 9` or
+ `rows[0].append(clear_rows(mut rows))` is `E_MUTATION_OVERLAP`: the update's
+ receiver overlaps a mutable argument evaluated in the same statement. The
+ same-root rule follows field and index paths until either path ends. Disjoint
+-fields or roots stay legal, and read-only arguments keep their snapshots.
++fields or roots stay legal. Explicit copies preserve earlier contents.
+ Save the call's result first, then select the receiver from its current value:
+ 
+ ```mylang
+@@ -193,13 +187,15 @@
+ place: a variable plus a path of fields, indices and dictionary keys. Two `mut`
+ arguments of one call may not name the same place, and one may not be part of
+ the other, so `f(mut b, mut b)`, `f(mut a, mut a[0])` and `f(mut r, mut r.rows)`
+-are `E_MUTATION_OVERLAP`. Different fields and distinct known indices or keys are disjoint. For dynamic
+-indices, keys or negative indices, the compiler captures each place once and
+-checks overlap before the function runs. `f(mut xs[i], mut xs[j])` is allowed
+-when the resolved elements differ and traps before the callee when they coincide:
+-
+-```mylang
+-# doc: expect 1 2 1 2 1 2
++are `E_MUTATION_OVERLAP`. Checked ownership also keeps mutable managed loans
++exclusive at the whole containing owner. Even known disjoint fields, indices or
++keys under one owner cannot be borrowed as two mutable arguments of the same call;
++that shape is `E_SINGLE_OWNER_OVERLAP`. Distinct owning locals are supported.
++Use independent child copies and ordered writeback when the callee does not
++observe their enclosing value, or redesign it to take the whole owner once.
++
++```mylang
++# doc: expect-error E_SINGLE_OWNER_OVERLAP
+ record Pair:
+     left: int[]
+     right: int[]
+@@ -219,6 +215,43 @@
+     return 0
+ ```
+ 
++This original call shape is refused. Here `fill` only reads and writes its two
++arguments; it cannot observe the enclosing record, list or dictionary. Explicit
++child copies followed by writeback in argument order preserve the same output:
++
++```mylang
++# doc: expect 1 2 1 2 1 2
++record Pair:
++    left: int[]
++    right: int[]
++
++func fill(mut a: int[], mut b: int[]) -> Unit:
++    a.append(1)
++    b.append(2)
++
++func main(out: Stream) -> int:
++    mut p = Pair(left=[], right=[])
++    mut left = p.left.copy()
++    mut right = p.right.copy()
++    fill(mut left, mut right)
++    p.left = left
++    p.right = right
++    mut rows = [[0], [0], [0]]
++    mut first = rows[0].copy()
++    mut last = rows[2].copy()
++    fill(mut first, mut last)
++    rows[0] = first
++    rows[2] = last
++    mut table = {"a": [0], "b": [0]}
++    mut a = table["a"].copy()
++    mut b = table["b"].copy()
++    fill(mut a, mut b)
++    table["a"] = a
++    table["b"] = b
++    out.print(p.left[0], p.right[0], rows[0][1], rows[2][1], table["a"][1], table["b"][1])
++    return 0
++```
++
+ ```mylang
+ # doc: expect-error E_MUTATION_OVERLAP
+ func fill(mut a: int[], mut b: int[][]) -> Unit:
+@@ -241,23 +274,23 @@
+ error[E_MUTATION_OVERLAP]: `fill` receives overlapping `mut` arguments
+ `mut rows[0]` and `mut rows`: `rows[0]` is part of `rows`, and two `mut`
+ arguments of one call must name disjoint places. Copy one into a local, pass
+-`mut` that local and store it back (`mut copy = rows[0]`, pass `mut copy`, then
++`mut` that local and store it back (`mut copy = rows[0].copy()`, pass `mut copy`, then
+ `rows[0] = copy`), or pass the enclosing value `mut rows` once
+ ```
+ 
+ The rule holds for every call that takes `mut` arguments, including keyword
+-arguments and calls through function values. It compares `mut` arguments only: a read-only argument next to a `mut` one
+-still gets its snapshot, and a `mut` call nested inside another argument
+-(`emit(mut p, make(mut p))`) finishes before the outer call starts. Because two
++arguments and calls through function values. Read-only arguments borrow their owners, so an overlapping mutable argument
++needs an explicit independent copy. A nested `mut` call finishes before the outer
++call starts; ownership checking still rejects invalidated borrows. Because two
+ `mut` parameters never name the same storage, a callee can read one while it
+ writes the other.
+ 
+ **A change through a copy stays local.** A `mut` parameter permits updates to
+-the caller but does not require them. If the function copies `rows[i]` into a
+-local `mut row`, changing `row` leaves `rows` unchanged. Store the result back
++the caller but does not require them. If the function uses
++`mut row = rows[i].copy()`, changing `row` leaves `rows` unchanged. Store the result back
+ with `rows[i] = row` when the update should reach the caller.
+ 
+-## Explicit identity and immutable sharing
++## Explicit identity and immutable values
+ 
+ - A `class` declaration is `E_VALUE_CLASS`, including an unused declaration.
+   A finite tree can use a recursive value type. A graph with cycles or
+@@ -266,7 +299,8 @@
+ - The builtin `Cell[T]` is `E_VALUE_CELL` in type positions and calls. A local
+   mutable slot is a record changed through `mut`; a shared slot uses a pool
+   handle. An ordinary user-defined record named `Cell` remains legal.
+-- `str` and `bytes` are immutable, so sharing them is invisible.
++- `str` and `bytes` are immutable owned values. Their views borrow storage and
++  cannot outlive or invalidate its owner; `.copy()` makes independent storage.
+ 
+ ```mylang
+ # doc: expect-error E_VALUE_CLASS
+@@ -287,39 +321,24 @@
+ 
+ ## How it is implemented
+ 
+-A `list`, `dict`, `set`, `byte_buffer` or recursive box keeps its contents in
+-heap storage with a single reference count. Assignment, argument passing, storing
+-and returning share that storage and add a reference; nothing is copied there. A write first tests the
+-count: storage with one owner is written in place, and shared storage is copied and
+-the copy written (copy-on-write). Nested writes repeat that step along their path,
+-including fixed-array elements and alternating list and dictionary lookups such
+-as `changed[0]["items"][0].append(2)`, so an earlier snapshot keeps its original
+-contents. Storage is freed when its last reference goes away; there is no
+-collector.
+-
+-A release build's ownership pass removes most of that work. It proves where a
+-value's old version is never read again, so a write needs neither the count test
+-nor the copy, and where a retain and a release cancel. `mylang build --release
+---stats` prints its counts: updates in place, writes left to a run-time count test,
+-copies, and the retains and releases it kept (see
+-[performance](performance.md#measure)).
+-
+-Receivers and keys evaluate once, in source order, and a read captures its
+-receiver before evaluating the key. For example, if `values` is `[7, 8]`, then
+-`values[change(mut values)]` reads the captured list even when `change` clears
+-`values`, appends `91` and returns `0`: the read returns `7`, and `values` is
+-`[91]` afterward. A negative index counts from the captured list's length. The
+-same rule applies to dictionary keys. A read-only argument sees its value as it
+-was when it was evaluated, so `both(xs, xs.pop())` passes `xs` before the pop.
+-A statement that updates a receiver while an evaluated `mut` call overlaps it is
+-rejected; call first, then perform the update in a separate statement.
++The compiler checks moves, borrows and cleanup before generating guest code.
++Managed storage has one owner and is destroyed directly when that owner ends.
++Container growth, explicit copies and independent results can allocate; ordinary
++borrowing does not create a reference count or copy-on-write snapshot. Scoped
++parallel work joins before borrowed owners are destroyed.
++
++Receivers and keys evaluate once, in source order. Avoid invalidating a borrowed
++receiver in a later argument or index expression. If the old contents are needed,
++copy the receiver first and read that independent copy; if the new contents are
++needed, finish the mutation before selecting the receiver. The same rule applies
++to dictionary keys and read-only arguments next to mutating calls.
+ 
+ ## Limits
+ 
+-- Copying a recursive value shares its boxes without walking their bodies, and a
+-  write through a box copies only the boxes on its path, so a deep chain can be
+-  copied and traversed.
+-- A copy is not reported as a `managed_allocation` effect.
++- An explicit copy of a recursive value copies its owned tree, including managed
++  children; it can allocate.
++- Stored or escaping views, arbitrary partial record moves and captured closures
++  remain unsupported. Ownership errors do not select a fallback memory mode.
+ - A function with a `mut` record parameter cannot be a function value, and a
+   callback type with one cannot take a lambda.
+ - A write to a local copy that is never read or stored back afterwards is not
+--- a/docs/records-and-unions.md
++++ b/docs/records-and-unions.md
+@@ -10,10 +10,10 @@
+ 
+ `record` declares a value record. Every field carries a type annotation, and the record
+ has no methods, no inheritance and no implicit `self` — a function that operates on a
+-record takes it as an ordinary parameter. Assignment and argument passing preserve
+-independent values, including managed fields such as `list` and `dict`. The runtime
+-can share backing storage until either value is written. Ordinary
+-field assignment updates a record local or a record held in a list slot.
++record takes it as an ordinary parameter. Scalar-only records copy as values.
++Records with managed fields own those fields: assignment can move the complete
++record, ordinary parameters borrow it, and `.copy()` makes independent storage.
++Ordinary field assignment updates a record local or a record held in a list slot.
+ 
+ ```mylang
+ # doc: expect 14
+@@ -40,7 +40,7 @@
+ This returns `14`. `shift` updates its own mutable local copy, so `origin.x` is still `1`
+ afterwards and only `moved.x` is `11`. A record that holds a list, dictionary or
+ string is a value too; see [value semantics](value-semantics.md) for how its
+-managed fields are shared until a write.
++managed fields move, borrow, and copy.
+ 
+ A rule every value of a record must satisfy is written as an invariant above it,
+ such as `@invariant(self.low <= self.high)`. It is checked at every
+@@ -72,7 +72,7 @@
+ 
+ This returns `2`: writing `b` leaves `a` at `1`, then the marked `mut` call
+ changes `a`. Recursive value fields that would be infinitely large are stored
+-in immutable boxes; writing a nested path copies its boxes. A record copy write
++in owned boxes. An explicit `.copy()` creates independent recursive storage. A record copy write
+ that nothing reads afterwards is `E_DEAD_RECORD_WRITE`.
+ 
+ ## Named constructors
+@@ -309,7 +309,8 @@
+ there is a way to finish the value. An optional field has `None`, and a union can
+ have a case with no recursive payload. The compiler puts the recursive field or
+ case in an immutable managed box; source code still reads and writes its value.
+-Copies share boxes until a nested write creates new boxes along that path.
++An explicit `.copy()` copies the owned recursive contents; ordinary assignment
++can transfer them without a second owner.
+ 
+ ```mylang
+ # doc: expect 42
+@@ -353,10 +354,10 @@
+     return 0
+ ```
+ 
+-Copying a recursive value shares its boxes by reference count without walking
+-their bodies, and a nested write copies only the boxes along the path it writes.
+-A million-node chain whose nodes each hold a list can be copied and have its outer
+-fields and lists changed independently.
++Copying a recursive value walks its owned contents and creates independent
++boxes and managed children. Its cost depends on the copied tree. Borrow recursive
++inputs for read-only traversal, and use `.copy()` when another independent tree
++is required.
+ 
+ ## Fixed arrays and enum tables
+ 
+@@ -413,7 +414,7 @@
+ 
+ func main() -> int:
+     mut counts: FixedArray[int, 4] = FixedArray[int, 4]([0, 0, 0, 0])
+-    mut before = counts
++    mut before = counts.copy()
+     for step in range(4):
+         counts[step] = step + 1
+     mut points: FixedArray[Point, 2] = FixedArray[Point, 2]([Point(x=0, y=0), Point(x=5, y=5)])
+@@ -511,5 +512,5 @@
+ - [Contracts](contracts.md#invariants) — an `@invariant` a record checks at every construction, `replace` and field write
+ - [Results and options](results-and-options.md) — `Result`, `Option` and their contextual constructors
+ - [Python-style application code](python-syntax.md) — the surrounding syntax
+-- [Value semantics](value-semantics.md) — how managed fields are shared and copied
++- [Value semantics](value-semantics.md) — how managed fields move, borrow and copy
+ - [Match expressions](match-expressions.md) — producing a value from a match
+--- a/docs/standard-library.md
++++ b/docs/standard-library.md
+@@ -13,7 +13,7 @@
+ | [`math`](#math) | binary64 classification, rounding, roots, powers, integer extrema and divisors |
+ | [`strings`](#strings) | the text operations `str` itself does not provide |
+ | [`sort`](#sort) | stable ordering, binary search, extrema and duplicate removal |
+-| [`parallel`](#parallel) | ordered, synchronous mapping with scoped workers in zero-RC mode |
++| [`parallel`](#parallel) | ordered, synchronous mapping with scoped workers |
+ | [`path`](#path) | pure POSIX-style path text algebra |
+ | [`hex`](#hex) | hexadecimal text for byte strings |
+ | [`base64`](#base64) | RFC 4648 standard and URL-safe transcoding |
+@@ -34,7 +34,7 @@
+ `time.simulated_clock`, `random.seeded_entropy`, `filesystem.memory`,
+ `environment.fixed` and `network.denied` build deterministic stand-ins for the
+ capabilities a program is otherwise handed by its entry point. Building one needs
+-no capability and is not an effect, and a stand-in never reaches a host resource,
++no external authority, and a stand-in never reaches a host resource,
+ so code that takes a `Clock` or a `Filesystem` can be tested by passing one; see
+ [deterministic stand-ins](effects.md#deterministic-stand-ins) and
+ [capability parameters in tests](tooling/guest-tests.md#capability-parameters).
+@@ -67,13 +67,12 @@
+ fragment's octets straight into that capacity and no fragment allocates a value
+ for itself: `append_text` builds no temporary encoded `bytes`, and `append_int`
+ and `append_float` no temporary text or byte value at all. `append_float` writes
+-the canonical spelling `str(value)` prints, built on the runtime's own stack. `finish` publishes the buffer as an immutable snapshot
+-with `bytes(buffer)`, which copies no octet: the snapshot reads the buffer's own
+-storage and the buffer's next write moves its octets into a private block first,
+-so `finish` contributes `managed_allocation` but does not mutate the builder;
+-when the assembled octets are only going to a stream,
+-`stream.write(builder.buffer)` writes the buffer's own storage instead and skips
+-that copy.
++the canonical spelling `str(value)` prints, built on the runtime's own stack.
++`finish` copies the completed octets once into independent immutable `bytes`,
++leaving the builder usable. It can allocate and does not mutate the builder.
++When the assembled octets are only going to a stream,
++`stream.write(builder.buffer)` borrows the buffer's storage for the synchronous
++write and avoids constructing that independent result.
+ 
+ The checked appends reject rather than trap, and they reject before writing
+ anything, so a refused call leaves the builder byte-for-byte unchanged:
+@@ -326,21 +325,25 @@
+ 
+ ```text
+ # doc: not-mylang
+-map[T: copy + storable, R: copy + storable](values: T[], function: func(T) -> R) -> R[]
++map[T: storable, R: storable](values: T[], function: func(T) -> R) -> R[]
+ ```
+ 
+ `map` applies a function to every element and returns a new list in input order.
+-The input remains available after the call. Ordinary builds execute the standard
+-function sequentially; experimental zero-RC builds borrow distinct input elements
+-for scoped workers and join all workers before returning their owned results.
+-See [scoped parallel work](managed-memory.md#explicit-values-and-scoped-parallel-work-experimental-closeout).
+-
+-The callback takes one read-only input and returns a storable value. In zero-RC
+-mode, a callback returning managed input data must explicitly `.copy()` it;
+-returning newly constructed data transfers it to the output. The prototype has
+-no closure captures, detached tasks or escaping handles, and does not support
+-Unit elements. Scheduling and per-element storage have a cost, so a parallel
+-speedup is not guaranteed for small callbacks.
++The input remains available after the call. Scoped workers borrow input elements,
++schedule bounded chunks and join before returning the ordered owned output.
++Output storage, temporary chunk result slots and independently owned callback
++results still grow with input size; bounded chunks limit scheduling wrappers.
++See [scoped parallel work](managed-memory.md).
++
++The callback takes one read-only input and returns a storable value; callbacks
++with mutable or owned parameters are unsupported. Returning
++managed input data requires an explicit `.copy()`; returning newly constructed
++data transfers it to the output. Ordinary `Result` outputs are supported; inputs and outputs keep their normal
++handling obligations. A result list stays pending until whole transfer/return or
++explicit `_ = results`; reading its length or iterating alone does not acknowledge
++all elements. Captured closures, detached tasks and escaping
++handles remain unsupported, as do Unit elements. Scheduling has a cost, so a
++parallel speedup is not guaranteed for small callbacks.
+ 
+ ```mylang
+ # doc: expect item-1! item-2!
+@@ -581,8 +584,10 @@
+ matching live slot. Keep a handle with the pool it came from, the way an index
+ belongs to its list.
+ 
+-`Pool` is a value record whose fields are managed lists, so assigning one refers
+-to the same store rather than to a snapshot. `count()` rather than `len()` reports
++`Pool` owns its managed lists. Assignment can move the pool; `store.copy()` makes
++an independent snapshot. Ordinary parameters borrow a pool, and a `mut` parameter
++updates the caller's store. Insert/set operations copy retained values, and `get`
++returns an independent value. `count()` rather than `len()` reports
+ the live population, because `len` is a reserved word.
+ 
+ ```mylang
+@@ -637,7 +642,8 @@
+ the computation and accepts an entry limit from zero through 65,536. An invalid
+ limit returns `Error.InvalidCapacity`; `message` supplies its explanatory text.
+ Zero disables retention, so every `call` computes and returns `reused=False`.
+-For positive limits, a hit returns the stored snapshot and `reused=True`.
++For positive limits, a hit returns an independent copy of the stored value and
++`reused=True`.
+ Misses fill the cache, then replace entries in insertion order. Hits do not
+ refresh that order. `count` reports retained entries, `capacity` reports the
+ configured limit, and `clear` releases the cache's entries and resets its order.
+@@ -743,11 +749,12 @@
+ 
+ func main(out: Stream) -> int:
+     mut net = network.denied()
+-    match network.connect(net.host("127.0.0.1:8000")):
+-        case network.Connected.ok(_):
+-            out.print("connected")
+-        case network.Connected.err(code):
+-            out.print(code, network.describe(code))
++    with net.host("127.0.0.1:8000") as scoped:
++        match network.connect(scoped):
++            case network.Connected.ok(_):
++                out.print("connected")
++            case network.Connected.err(code):
++                out.print(code, network.describe(code))
+     return 0
+ ```
+ 
+@@ -768,7 +775,7 @@
+ 
+ The stream is SplitMix64: deterministic simulation state, not a cryptographic
+ generator. Equal seeds give equal streams, and seed zero's first word is
+-`16294208416658607535`. Copying a `Random` snapshots its current position;
++`16294208416658607535`. `generator.copy()` snapshots its current position;
+ each copy advances independently through the same remaining sequence. Pass
+ `mut generator` to advance the caller's stream.
+ 
+@@ -850,8 +857,8 @@
+ 
+ `simulated_clock` builds a stand-in `Clock` that reads `start` until `advance`
+ moves it (backward for a negative duration, the way a wall clock may step).
+-Copies of it share one reading. A host-granted clock cannot be moved, and
+-`advance` answers it with `Err("only a simulated clock can be advanced")`.
++Borrowing the same clock observes the same reading; capabilities cannot be
++copied. A host-granted clock cannot be advanced, and `advance` answers it with `Err("only a simulated clock can be advanced")`.
+ 
+ ```mylang
+ # doc: expect 90
+@@ -964,7 +971,7 @@
+ func home(env: Environment) -> str:
+     match env.get("HOME"):
+         case Some(value):
+-            return value
++            return value.copy()
+         case None:
+             return "/"
+ 
+@@ -987,10 +994,12 @@
+ 
+ ## Contracts these modules share
+ 
+-Managed collections grow automatically and are released when their last owner
+-goes away; see [managed memory](managed-memory.md). A
+-module import grants no authority: clock and entropy functions take capability
+-parameters the host supplies, and every other module is pure. Runtime byte budgets
++Managed collections grow automatically and are destroyed directly when their
++owner ends; see [managed memory](managed-memory.md). Ordinary data parameters
++borrow, and explicit copies or independent results own their storage. A module
++import grants no authority: filesystem, network, clock and entropy operations
++require their explicit capabilities. Text, numeric and collection helpers do not
++gain ambient access. Runtime byte budgets
+ bound backing and bookkeeping allocation. Text indexes count Unicode scalar
+ values, there is no Unicode normalization, and case mapping is ASCII only.
+ 
+@@ -1012,7 +1021,7 @@
+ The `json` and `strings` modules follow this contract today; `math`, `time`,
+ `random`, `base64` and `hex` still return `Result[T, str]`.
+ 
+-`?` converts automatically at such a boundary: when the propagated result's
++`try` converts automatically at such a boundary: when the propagated result's
+ error type is the payload type of a case of the enclosing function's error
+ union, the error wraps in that case with no hand-written translation helper.
+ 
+@@ -1051,7 +1060,8 @@
+   integer key function.
+ - `pool.create` takes a seed list instead of an explicit type argument, and
+   `json`'s union variants are built through the module's constructor functions.
+-- No module reads or writes a file; `path` is text algebra only.
++- `path` is text algebra only. Filesystem-backed persistence requires an explicit
++  capability and a qualified native provider.
+ 
+ ## hashes
+ 
+@@ -1113,11 +1123,12 @@
+ func encoded(key: memo.Key) -> bytes:
+     match key:
+         case memo.Key.Number(value=value):
+-            return str(value).encode()
++            const text = str(value)
++            return text.encode()
+         case memo.Key.Text(value=value):
+             return value.encode()
+         case memo.Key.Data(value=value):
+-            return value
++            return value.copy()
+ 
+ func main() -> int:
+     const options = persistent_memo.Options(max_entries=0, max_bytes=1024)
+@@ -1154,7 +1165,7 @@
+ import filesystem
+ 
+ func copy_chunk(chunk: bytes, state: bytes) -> durable.Step:
+-    return durable.Step(output=chunk, state=state)
++    return durable.Step(output=chunk.copy(), state=state.copy())
+ 
+ func main() -> int:
+     # Reserved output names are rejected before any storage operation.

@@ -1,0 +1,233 @@
+--- a/src/core/runtime/core_dict.c
++++ b/src/core/runtime/core_dict.c
+@@ -197,11 +197,7 @@
+     for (int32_t r = 0; r < layout[1]; ++r) {
+         int32_t offset = layout[3 + 2 * r];
+         if ((offset < (int32_t)desc->value_offset && !key) || (offset >= (int32_t)desc->value_offset && !value)) continue;
+-#ifdef MYL_ZERO_RC
+         myl_core_drop_owned(reference_at(layout, entry, r));
+-#else
+-        myl_core_release(reference_at(layout, entry, r));
+-#endif
+     }
+ }
+ 
+@@ -217,9 +213,6 @@
+     core_dict_meta *meta = dict_meta(dict);
+     uint64_t hash = dict_hash(meta->desc, key);
+     if (verify && probe >= 0) abort();
+-#ifndef MYL_ZERO_RC
+-    if (verify && !count_is_unique(dict)) abort();
+-#endif
+     if (!meta->index && dict->len >= DICT_SMALL) {
+         /* Crossing the small-table boundary builds the first index after append. */
+     } else if (meta->index && meta->index->used * 2 >= meta->index->slots) {
+@@ -328,19 +321,10 @@
+ 
+ myl_block *myl_core_dict_copy(const myl_block *dict) {
+     core_dict_meta *meta = dict_meta(dict);
+-#ifdef MYL_ZERO_RC
+-    /* Compiler-directed deep copying uses the private storage helper. A COW
+-       copy with owned children has no valid zero-RC contract. */
++    /* Compiler-directed deep copying uses the private storage helper. This
++       scalar-only storage copy cannot duplicate managed children. */
+     if (meta->desc->layout && meta->desc->layout[1]) abort();
+-#endif
+     myl_block *copy = core_dict_copy_storage(dict);
+-#ifndef MYL_ZERO_RC
+-    if (meta->desc->layout) for (uint64_t i = 0; i < meta->elen; ++i) {
+-        if (!dict_live(meta, i)) continue;
+-        for (int32_t r = 0; r < meta->desc->layout[1]; ++r)
+-            count_retain(reference_at(meta->desc->layout, dict_entry(copy, i), r));
+-    }
+-#endif
+     return copy;
+ }
+ 
+@@ -360,18 +344,12 @@
+ }
+ 
+ /* Dictionary storage has tombstones and its own entry descriptor, but supplies
+-   children to the same visitor used for both sharing and destruction. */
++   children to the direct-destruction visitor. */
+ static void core_dict_children(myl_block *dict, core_child_visitor visit, void *context) {
+     core_dict_meta *meta = dict_meta(dict);
+     if (!meta->desc->layout || meta->desc->layout[1] == 0) return;
+-#ifndef MYL_ZERO_RC
+-    core_layout_release release = visit == core_release_child ? layout_release(meta->desc->layout, 0) : NULL;
+-#else
+-    core_layout_release release = NULL;
+-#endif
+     for (uint64_t i = 0; i < meta->elen; ++i) {
+         if (!dict_live(meta, i)) continue;
+-        if (release) { release(dict_entry(dict, i), context); continue; }
+         for (int32_t r = 0; r < meta->desc->layout[1]; ++r) {
+             myl_block *child = reference_at(meta->desc->layout, dict_entry(dict, i), r);
+             if (child) visit(child, context);
+--- a/src/core/runtime/core_sort.c
++++ b/src/core/runtime/core_sort.c
+@@ -823,31 +823,6 @@
+     return list;
+ }
+ 
+-/* Borrow source and keys, return one sorted owning copy. Never mutate borrowed keys. */
+-myl_block *myl_core_s2_sort_keyed(myl_block *source, myl_block *keys, uint64_t shape, uint64_t offsets, bool reverse, uint64_t strides) {
+-    size_t size=(size_t)(strides&UINT32_MAX), key_size=(size_t)(strides>>32);
+-    myl_block *values=myl_core_list_copy(source,(int64_t)size);
+-    myl_block *key_copy=myl_core_list_copy(keys,(int64_t)key_size);
+-    s2_sort_element element={size}, key_element={key_size};
+-    /* The clone already owns exactly the source's reference multiset. Gather
+-       its permutation straight from source; cycle moves would copy records
+-       repeatedly and needlessly reserve two element temporaries. */
+-    s2_sort_list v={ 0,(size_t)values->cap,0,block_data(values),&element };
+-    s2_sort_list s={ (size_t)source->len,(size_t)source->cap,0,block_data(source),&element };
+-    s2_sort_list k={ (size_t)key_copy->len,(size_t)key_copy->cap,0,block_data(key_copy),&key_element };
+-    int ok=s2_sort_list_sort_keyed(&v,&s,&k,shape,offsets,reverse);
+-    /* The numeric engine overwrites keys with packed words: release their
+-       original managed references only on the untouched text/tuple path. */
+-#ifdef MYL_ZERO_RC
+-    myl_core_drop_owned(key_copy);
+-#else
+-    myl_core_release(key_copy);
+-#endif
+-    if (!ok) _Exit(1);
+-    return values;
+-}
+-
+-#ifdef MYL_ZERO_RC
+ /* Both arguments are independent compiler-created owners. Move elements along
+    permutation cycles; numeric scratch may overwrite keys, which have no managed
+    children on that path. Text/tuple keys stay intact until their direct drop. */
+@@ -862,4 +837,3 @@
+     if (!ok) _Exit(1);
+     return values;
+ }
+-#endif
+--- a/src/core/runtime/core_io.c
++++ b/src/core/runtime/core_io.c
+@@ -17,7 +17,7 @@
+ static int core_io_utf8(const unsigned char *p,size_t n);
+ /* Core capability/provider/resource runtime. Algorithms ported from
+  * native_scoped.c and qbe_stand_ins.c; no old runtime object or header is linked.
+- * Authority and provider state use Core counted blocks; handles stay weakly
++ * Authority and provider state use directly owned blocks; handles stay weakly
+  * registered until closed, dropped or fatal process cleanup. */
+ #include <time.h>
+ typedef enum {
+@@ -989,34 +989,11 @@
+     return value;
+ }
+ static void core_io_drop(myl_block *block) {
+-#ifdef MYL_ZERO_RC
+     myl_core_drop_owned(block);
+-#else
+-    myl_core_release(block);
+-#endif
+-}
+-static void core_io_retain(myl_block *block) {
+-#ifndef MYL_ZERO_RC
+-    count_retain(block);
+-#else
+-    (void)block; /* Caller-checked dependencies borrow; root providers transfer. */
+-#endif
+-}
+-static void core_io_root_transferred(myl_block *provider) {
+-#ifndef MYL_ZERO_RC
+-    myl_core_release(provider);
+-#else
+-    (void)provider;
+-#endif
+-}
+-#ifdef MYL_ZERO_RC
++}
+ static const int32_t core_io_cap_layout[]={32,2,0,8,0,24,0};
+ static const int32_t core_io_dependent_layout[]={32,1,0,24,0};
+ static const int32_t core_io_resource_layout[]={64,0,0};
+-#else
+-static const int32_t core_io_cap_layout[]={32,3,0,8,0,16,0,24,0};
+-static const int32_t core_io_resource_layout[]={64,1,0,0,0};
+-#endif
+ static const int32_t core_io_result_pointer_layout[]={24,2,0,8,0,16,0};
+ static const int32_t core_io_result_scalar_layout[]={24,1,0,16,0};
+ static const int32_t core_io_list_layout[]={8,1,0,0,0};
+@@ -1037,12 +1014,10 @@
+ static void core_io_fail(const char *code) { core_io_failure(code); }
+ 
+ static myl_block *core_io_provider(unsigned family,int test,int64_t value,myl_block *pairs) {
+-#ifdef MYL_ZERO_RC
+     if (pairs) pairs = myl_core_owned_octets_copy(pairs);
+-#endif
+     myl_block *block=block_new(8,(int64_t)sizeof(CoreIoState),1);block->len=1;block->reserved=(int64_t)(intptr_t)core_io_provider_layout;
+     CoreIoState *state=(CoreIoState *)block_data(block);memset(state,0,sizeof *state);
+-    state->family=family;state->test=(unsigned)test;state->value=value;state->pairs=pairs;core_io_retain(pairs);
++    state->family=family;state->test=(unsigned)test;state->value=value;state->pairs=pairs;
+     if(family==2){
+         if(!test&&core_io_embedding)state->adapter=core_io_native.filesystem;
+         else if(test){state->memory=calloc(1,sizeof(MemoryFs));if(!state->memory)out_of_memory();state->adapter=(CoreIoResourceProvider){state->memory,7,core_io_memory_acquire,core_io_memory_complete,core_io_memory_release,core_io_memory_read,core_io_memory_write};}
+@@ -1052,17 +1027,13 @@
+ }
+ static myl_block *core_io_cap_new(unsigned family,unsigned rights,myl_block *provider,myl_block *parent,myl_block *scope) {
+     myl_block *block=block_new(6,sizeof(CoreIoAuthority),1);block->len=1;block->reserved=(int64_t)(intptr_t)core_io_cap_layout;
+-#ifdef MYL_ZERO_RC
+     if (parent) block->reserved=(int64_t)(intptr_t)core_io_dependent_layout;
+-#endif
+     *(CoreIoAuthority *)block_data(block)=(CoreIoAuthority){family,rights,provider,parent,scope};
+-    core_io_retain(provider);core_io_retain(parent);core_io_retain(scope);return block;
++    return block;
+ }
+ /* Borrowed scope input: publish an independent scope in the owned ABI. */
+ static myl_block *core_io_cap(unsigned family,unsigned rights,myl_block *provider,myl_block *parent,myl_block *scope) {
+-#ifdef MYL_ZERO_RC
+     if (scope) scope=myl_core_owned_octets_copy(scope);
+-#endif
+     return core_io_cap_new(family,rights,provider,parent,scope);
+ }
+ typedef struct CoreIoScratch {struct CoreIoScratch *next;unsigned char data[];} CoreIoScratch;
+@@ -1157,25 +1128,18 @@
+     int available=core_io_embedding?(family==0?core_io_native.clock_now!=NULL:family==1?core_io_native.random_u64!=NULL:family==2?(core_io_native.filesystem.acquire&&core_io_native.filesystem.complete&&core_io_native.filesystem.release):family==3?(core_io_native.network.acquire&&core_io_native.network.complete&&core_io_native.network.release):core_io_native.environment_get!=NULL):family==0?core_io_clock:family==1?core_io_entropy:family==2?core_io_real.count!=0:family==3?core_io_real.endpoint_count!=0:core_io_environment;
+     if(!available){const char *flag=family==0?"--allow-clock":family==1?"--allow-random":family==2?"--allow-read=DIR":family==3?"--allow-endpoint=IP:PORT":"--allow-env";core_io_missing_grant(flag);}
+     unsigned rights=7;if(family==2&&core_io_restricted){rights=5;for(size_t i=0;i<core_io_real.count;++i)if(core_io_real.roots[i].writable)rights=7;}
+-    myl_block *provider=core_io_provider(family,0,(int64_t)core_io_seed,NULL);if(family==2||family==3){unsigned permissions=((CoreIoState *)block_data(provider))->adapter.permissions;if(permissions&~7u)core_io_fail("InvalidCapability");rights&=permissions;}myl_block *cap=core_io_cap(family,rights,provider,NULL,NULL);core_io_root_transferred(provider);return cap;
++    myl_block *provider=core_io_provider(family,0,(int64_t)core_io_seed,NULL);if(family==2||family==3){unsigned permissions=((CoreIoState *)block_data(provider))->adapter.permissions;if(permissions&~7u)core_io_fail("InvalidCapability");rights&=permissions;}myl_block *cap=core_io_cap(family,rights,provider,NULL,NULL);return cap;
+ }
+ int64_t myl_core_host_grant(void){CORE_IO_GUARD;core_io_initialize();if(!core_io_host)core_io_missing_grant("--allow-host");return -6;}
+ void myl_core_host_check(int64_t token){CORE_IO_GUARD;core_io_initialize();if(token!=-6||!core_io_host)core_io_fail("R_CAPABILITY");}
+-myl_block *myl_core_stand_in(uint32_t family,int64_t value){CORE_IO_GUARD;myl_block *state=core_io_provider(family,1,value,NULL);myl_block *cap=core_io_cap(family,7,state,NULL,NULL);core_io_root_transferred(state);return cap;}
+-myl_block *myl_core_environment_fixed(myl_block *pairs){CORE_IO_GUARD;if(!core_io_memory_valid_pairs(block_data(pairs),(size_t)pairs->len))core_io_fail("R_ENVIRONMENT");myl_block *state=core_io_provider(4,1,0,pairs);myl_block *cap=core_io_cap(4,7,state,NULL,NULL);core_io_root_transferred(state);return cap;}
++myl_block *myl_core_stand_in(uint32_t family,int64_t value){CORE_IO_GUARD;myl_block *state=core_io_provider(family,1,value,NULL);myl_block *cap=core_io_cap(family,7,state,NULL,NULL);return cap;}
++myl_block *myl_core_environment_fixed(myl_block *pairs){CORE_IO_GUARD;if(!core_io_memory_valid_pairs(block_data(pairs),(size_t)pairs->len))core_io_fail("R_ENVIRONMENT");myl_block *state=core_io_provider(4,1,0,pairs);myl_block *cap=core_io_cap(4,7,state,NULL,NULL);return cap;}
+ int64_t myl_core_clock_advance(myl_block *clock,int64_t delta){CORE_IO_GUARD;CoreIoState *state=core_io_state(clock);if(state->family!=0)core_io_fail("InvalidCapability");if(!state->test)return 1;if((delta>0&&state->value>INT64_MAX-delta)||(delta<0&&state->value<INT64_MIN-delta))return 2;state->value+=delta;return 0;}
+ myl_block *myl_core_external_read(myl_block *cap,uint32_t family){CORE_IO_GUARD;CoreIoState *state=core_io_state(cap);if(state->family!=family||family>1)core_io_fail("InvalidCapability");uint64_t value=0;int status=0;if(family==0){if(state->test)value=(uint64_t)state->value;else if(core_io_embedding){CoreIoClockResult result=core_io_native.clock_now(core_io_native.clock_context);status=(int)result.status;value=(uint64_t)result.value;}else{struct timespec now={0};status=clock_gettime(CLOCK_REALTIME,&now)||now.tv_sec>(INT64_MAX-now.tv_nsec)/1000000000?3:0;value=status?0:(uint64_t)now.tv_sec*1000000000+(uint64_t)now.tv_nsec;}}else if(!state->test&&core_io_embedding){CoreIoRandomResult result=core_io_native.random_u64(core_io_native.random_context);status=(int)result.status;value=result.value;}else{state->value=(int64_t)((uint64_t)state->value+UINT64_C(0x9e3779b97f4a7c15));value=(uint64_t)state->value;value=(value^(value>>30))*UINT64_C(0xbf58476d1ce4e5b9);value=(value^(value>>27))*UINT64_C(0x94d049bb133111eb);value^=value>>31;}if(status==4)out_of_memory();if(status<0||status>3)core_io_fail("InvalidProviderResult");return core_io_result(status,status?0:value,NULL,0);}
+ myl_block *myl_core_cap_restrict(myl_block *cap,uint32_t rights){CORE_IO_GUARD;CoreIoAuthority *a=core_io_authority(cap);return core_io_cap(a->family,a->rights&rights,a->provider,cap,a->scope);}
+ static myl_block *core_io_scope(myl_block *cap,myl_block *scope,unsigned family,int append){CoreIoAuthority *a=core_io_authority(cap);if(a->family!=family)core_io_fail("InvalidCapability");myl_block *joined=scope;if(append&&a->scope&&a->scope->len){size_t length=(size_t)(a->scope->len+scope->len+(scope->len!=0));unsigned char *bytes=malloc(length);if(!bytes)out_of_memory();memcpy(bytes,block_data(a->scope),(size_t)a->scope->len);if(scope->len){bytes[a->scope->len]='/';memcpy(bytes+a->scope->len+1,block_data(scope),(size_t)scope->len);}joined=core_io_string(bytes,length,1);free(bytes);}else {
+-#ifdef MYL_ZERO_RC
+     joined=myl_core_owned_octets_copy(scope);
+-#else
+-    core_io_retain(joined);
+-#endif
+ }myl_block *out=core_io_cap_new(family,a->rights,a->provider,cap,joined);
+-#ifndef MYL_ZERO_RC
+-core_io_drop(joined);
+-#endif
+ return out;}
+ myl_block *myl_core_cap_dir(myl_block *cap,myl_block *path){CORE_IO_GUARD;if(path->len&&!core_io_memory_valid_path(block_data(path),(size_t)path->len,'m'))core_io_fail("InvalidCapability");return core_io_scope(cap,path,2,1);}
+ myl_block *myl_core_cap_host(myl_block *cap,myl_block *name){CORE_IO_GUARD;CoreIoAuthority *a=core_io_authority(cap);if(!name->len||name->len>4096||memchr(block_data(name),0,(size_t)name->len))core_io_fail("InvalidCapability");if(a->scope&&!myl_core_str_eq(a->scope,name))core_io_fail("InvalidCapability");return core_io_scope(cap,name,3,0);}
+@@ -1196,7 +1160,7 @@
+     if(result.status==CORE_IO_PROVIDER_OUT_OF_MEMORY){block->reserved=0;block_free(block);out_of_memory();}
+     if(result.status>3){block->reserved=0;block_free(block);core_io_fail("InvalidProvider");}
+     if(result.status){block->reserved=0;block_free(block);return (int)result.status;}
+-    CoreIoResource *resource=(CoreIoResource *)block_data(block);*resource=(CoreIoResource){cap,result.handle,authority->family,authority->rights&state->adapter.permissions,1,0,core_io_tail,NULL,block};core_io_retain(cap);
++    CoreIoResource *resource=(CoreIoResource *)block_data(block);*resource=(CoreIoResource){cap,result.handle,authority->family,authority->rights&state->adapter.permissions,1,0,core_io_tail,NULL,block};
+     if(core_io_tail)core_io_tail->next=resource;core_io_tail=resource;++core_io_open_count;++core_io_family_open[authority->family-2];*output=block;return 0;
+ }
+ static CoreIoResource *core_io_resource(myl_block *owner){if(!owner||kind_of(owner)!=7)core_io_fail("InvalidOwner");return (CoreIoResource *)block_data(owner);}
+--- a/src/core/runtime/core_durable.c
++++ b/src/core/runtime/core_durable.c
+@@ -245,7 +245,6 @@
+     CoreIoResource *resource = (CoreIoResource *)block_data(block);
+     *resource = (CoreIoResource){cap, slot, 2, authority->rights & state->adapter.permissions,
+                                1, 0, core_io_tail, NULL, block};
+-    core_io_retain(cap);
+     if (core_io_tail) core_io_tail->next = resource;
+     core_io_tail = resource;
+     ++core_io_open_count;

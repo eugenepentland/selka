@@ -464,3 +464,13 @@ source overlays. Final export qualification additionally requires a full
 integrated commit SHA, rejecting the private overlay raw receipt even before
 considering missing export coverage. The explicit negative control is retained
 in `evidence/private-compiler-export-rejection.json`.
+
+C3 preparation refreshed against integration c749ad5a9 in
+`retirement-C3-c749ad5a9/`: exact five-runtime and durable-fixture identities,
+held C2 four-document patch, source/direct-destruction audit, and fresh durable
+native reruns both alone and combined with A02's nested-extension retirement
+patch. All scenarios pass with no leak stderr or legacy RC symbols. Thirteen
+owned stdlib modules already match integration. The preview still defines the
+owned macro for unretired peer files; no active production retirement or C2
+promotion was applied. A07 received the remaining owned keyed-sort symbol
+selection contract; A02's direct layout callbacks remain required.

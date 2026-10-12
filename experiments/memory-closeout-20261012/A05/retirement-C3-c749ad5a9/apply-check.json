@@ -1,0 +1,26 @@
+{
+  "integration_revision": "c749ad5a9d2dfef5d5c4d7b9de2a30f03029999f",
+  "results": [
+    {
+      "patch": "runtime-retirement.patch",
+      "sha256": "6274f607aed08ed84c421b8d9ecf5a476a05f6711679a458f04e4be4fe2c02ba",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "patch": "fixture-retirement.patch",
+      "sha256": "b87f771d112eaa21a318fb58017d85cd4e09f3d451b5ac0af9380597c5f32cec",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "patch": "C2-held-docs.patch",
+      "sha256": "08a9053e26ffec476dc19851e273d157138312077fc8b148a439963fe6572fce",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

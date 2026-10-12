@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Create a reviewed retirement preview without modifying runtime sources."""
 # spec: NEW-CORE-ZERO-RC-ABI-1 NEW-CORE-ZERO-RC-RESOURCES-1
+import argparse
 import difflib
 import hashlib
 import json
@@ -73,6 +74,14 @@ def fixture_preview():
     (HERE/'fixture-manifest.json').write_text(json.dumps({'status':'prepared only; coordinator reservation/apply required for durable_fixture.c, coupled to unconditional owned root runtime','files':[{'path':str(path.relative_to(ROOT)),'before_sha256':hashlib.sha256(before.encode()).hexdigest(),'after_sha256':hashlib.sha256(after.encode()).hexdigest()} for path,before,after in items]},indent=2)+'\n')
 
 def main():
+    global ROOT, HERE, DEST
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--source-root',type=Path,default=ROOT)
+    parser.add_argument('--output',type=Path,default=HERE)
+    parser.add_argument('--preview',type=Path,default=DEST)
+    args=parser.parse_args()
+    ROOT=args.source_root.resolve();HERE=args.output.resolve();DEST=args.preview.resolve()
+    HERE.mkdir(parents=True,exist_ok=True)
     DEST.mkdir(parents=True,exist_ok=True)
     patch=[];manifest=[]
     for name in FILES:
@@ -103,7 +112,7 @@ def main():
         patch.extend(difflib.unified_diff(before.splitlines(True),after.splitlines(True),'a/'+relative,'b/'+relative))
         manifest.append({'path':relative,'before_sha256':hashlib.sha256(before.encode()).hexdigest(),'after_sha256':hashlib.sha256(after.encode()).hexdigest(),'changed':before!=after,'preview':str(dest)})
     (HERE/'runtime-retirement.patch').write_text(''.join(patch))
-    (HERE/'manifest.json').write_text(json.dumps({'status':'prepared only; not applied to integration or worker sources','worker_revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'files':manifest},indent=2)+'\n')
+    (HERE/'manifest.json').write_text(json.dumps({'status':'prepared only; not applied to integration or worker sources','source_root':str(ROOT),'source_revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'files':manifest},indent=2)+'\n')
     fixture_preview()
     print('Prepared',sum(x['changed'] for x in manifest),'runtime changes; production files unchanged')
 
