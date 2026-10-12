@@ -1,0 +1,61 @@
+{
+  "C0": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "integration_branch": "codex/memory-closeout-20261012",
+  "milestones": {
+    "qualified_implementation": "pending",
+    "zero_rc_default": "pending",
+    "legacy_rc_retirement": "pending"
+  },
+  "items": [
+    {
+      "owner": "A01",
+      "assignment": "Parallel-map scheduling/storage",
+      "status": "in_progress"
+    },
+    {
+      "owner": "A02",
+      "assignment": "Capacity and peak live memory",
+      "status": "in_progress"
+    },
+    {
+      "owner": "A03",
+      "assignment": "Allocation and RC census",
+      "status": "in_progress"
+    },
+    {
+      "owner": "A04",
+      "assignment": "Text/JSON/codec/path public exports",
+      "status": "in_progress"
+    },
+    {
+      "owner": "A05",
+      "assignment": "Remaining libraries and resources",
+      "status": "in_progress"
+    },
+    {
+      "owner": "A06",
+      "assignment": "Applications and migration",
+      "status": "in_progress"
+    },
+    {
+      "owner": "A07",
+      "assignment": "Ownership, cleanup and ABI",
+      "status": "in_progress"
+    },
+    {
+      "owner": "A08",
+      "assignment": "Compile scaling and cache safety",
+      "status": "in_progress"
+    },
+    {
+      "owner": "A09",
+      "assignment": "Baseline, timings and RSS",
+      "status": "in_progress"
+    },
+    {
+      "owner": "A10",
+      "assignment": "CLI paths, default and RC retirement",
+      "status": "in_progress"
+    }
+  ]
+}
