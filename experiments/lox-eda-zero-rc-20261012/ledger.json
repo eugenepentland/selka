@@ -10,9 +10,10 @@
     },
     {
       "id": "clock_borrow",
-      "state": "in_progress",
-      "owner": "lox_provider",
-      "requirement": "Bounded read-only optional provider argument contract and Lox source threading; cleanup and refusal regressions"
+      "state": "integrated_focused_checks_pass",
+      "owner": "root",
+      "requirement": "Bounded read-only optional provider argument contract and Lox source threading; cleanup and refusal regressions",
+      "evidence": "provider/qualification.json"
     },
     {
       "id": "correctness",
@@ -44,5 +45,6 @@
       "owner": "root",
       "requirement": "Focused ownership/native checks then complete registered gate on frozen integrated compiler"
     }
-  ]
+  ],
+  "compiler_implementation_commit": "466a1a5b7"
 }

@@ -118,6 +118,13 @@ while `build` also checks backend and runtime support. Unsupported operations
 fail compilation without an RC fallback. See the
 [supported features and measurements](../../experiments/zero-rc-final-20261011/README.md).
 
+Optional providers such as `Clock?` can be borrowed through read-only parameters.
+Pass `None`, an existing optional parameter, or `Some(clock)` directly to a call;
+the last form borrows an immutable provider parameter or one of its fields.
+Matching an optional parameter borrows its payload. Optional provider locals,
+aggregate fields and returns are rejected. Keep these providers outside returned
+application state and pass them through the calls that need them.
+
 The runtime ABI is separate from ordinary RC builds: `kind` is at offset zero,
 there is no count member, and emitted LLVM starts with `mylang-zero-rc-v2`.
 Lowering, optimization and emission cache identities include ownership mode.
