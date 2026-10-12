@@ -111,3 +111,14 @@ inheritance, 175 additional Core sources and 44 additional fixture sources,
 inline-source drivers and direct-IR retirement obligations. The first ten paired
 source admissions took 1.31 seconds; the remaining paired source inventory is
 independent of production fixes and remains distinct from the 356 denominator.
+
+Additional source admission completed: all 219 files (175 `test/core`, 44
+`test/fixtures`) retain original hashes and paired ordinary/owned outcomes in
+`additional-admission.json`. Results: 106 admitted by both, 86 new owned refusals,
+27 refused by both. They are a separate denominator, not added silently to or
+substituted for the original 356. Total admitted-lease work was 8.94 seconds.
+The compiler is C0 plus A10 command support, so these outcomes deliberately
+precede A07 production fixes and integrated source migrations. Recheck C1 before
+classifying a remaining in-scope failure as a release blocker. Exact first
+refusals and sorted source paths are in `additional-admission-summary.json`
+and `additional-owned-refused.txt`.

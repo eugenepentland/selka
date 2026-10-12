@@ -8,7 +8,8 @@ This is a source inventory, not passed qualification.
 | build/build --run | core cli_args + pipeline; explicit ownership flags | all five build configurations, negative moves, ABI |
 | developer build options | separate core main.buildCommand parser | same flags and mode |
 | run/run-project | core cli_run delegates cli_args/pipeline | arguments, projects, Result entry |
-| check with ownership flag | core cli dispatch -> check_command | typed ownership check, source diagnostics |
+| check with ownership flag | C0 core cli dispatch -> check_command; command-support uses full frontend | source ownership plus library, diagnostics and report behavior |
+| developer check --typed/--stats | dedicated core profiling parser remains separate | executable entry required by its frontend; this developer path is not the library check interface |
 | ordinary check | src/main.zig old front-end/navigation parser | default must validate ownership without losing diagnostic/report/library behavior |
 | check-session | persistent frontend check-project loop | followup admits explicit ownership flags, validates on every cold/warm request |
 | dump-ir | core main.developer | explicit source check and mode-aware lowering |
@@ -17,7 +18,7 @@ This is a source inventory, not passed qualification.
 | cached/local/portable/indexed test | receipt settings + test keys | mode isolation and source changes must prevent stale success |
 | affected tests | test_runner_affected reachable lowering | retain unsupported tests in selection |
 | doctest/examples | doctest_command spawns same installed compiler run/check | C0 had no ownership opt-in forwarding; followup adds explicit zero-RC selection; ordinary defaults are inherited |
-| cost/interface cost | cost_command invokes pipeline | defaults must match source checks, not silently use old mode |
+| cost/interface cost | direct lowering preceded emission options in C0 | fixed eager validation and shared lowering/emission mode; explicit cost opt-in and future inherited defaults |
 | installed mylang | installed bin plus libexec components and tools | preserve complete layout; compiler alone is incomplete |
 | installed test-index/cache-plan | selfhost/components.zig builds both with separate pinned seed | installed components are guest binaries and need separate zero-RC qualification |
 
