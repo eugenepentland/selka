@@ -99,12 +99,22 @@ It was still noisy: current-policy range 65.1–1,136.2 ms, start-one range
 warmup; the timing binaries themselves were uninstrumented. No ratio is used
 to justify the decision.
 
+A09 subsequently reported that Guardian commit `4a700cb52` finished at
+00:46:58 UTC, inside that 00:46:43–00:47:10 window. The hook's admission was
+not established in the retained metadata; possible interference is therefore
+an additional limitation, without changing the no-speedup conclusion.
+
 Raw RSS is GNU `time` maximum RSS for each native process, in KiB; it excludes
 compilation and child-process build memory. These small-list variants retain
 the allocator's 64-KiB chunk and showed similar roughly 1.9–2.1-MiB process RSS
 in the preliminary singleton samples despite different managed peaks. That is
 not evidence for an RSS saving. All samples, ranges, artifact hashes, complete
 allocation counters, and exact commands are retained under [raw](raw/).
+The [capacity archive](capacity-archive.json) pins all 60 raw files, verifies
+the available 16 plain/counted binary identities and reconstructs their runtime
+source hashes from C0 plus the recorded policy. Historical build-time harness
+hashes are preserved separately from the later checkpoint-enabled harness;
+their exact earlier Python source was not separately archived.
 
 Runtime/RSS completion for the remaining native cases and final guest-path
 requalification belong to the coordinated A09 schedule; no C0 native timing

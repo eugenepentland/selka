@@ -1,0 +1,59 @@
+public record Packet:
+    tag: int
+    body: byte_buffer
+
+
+public func test_buffer_copy_appends_alone(buffer: byte_buffer) -> bool:
+    mut before = len(buffer)
+    mut copy = buffer.copy()
+    _ = copy.append_byte(7)
+    return len(buffer) == before and len(copy) == before + 1 and copy[before] == 7
+
+
+public func test_buffers_inside_records_lists_and_options(packet: Packet, items: byte_buffer[], frame: byte_buffer?) -> bool:
+    mut total = len(packet.body)
+    for item in items:
+        total = total + len(item)
+    match frame:
+        case Some(body):
+            total = total + len(body)
+        case None:
+            total = total + 0
+    return total >= 0
+
+
+public func test_short_buffer(buffer: byte_buffer) -> bool:
+    return len(buffer) < 3
+
+
+public func test_buffer_error_result(buffer: byte_buffer) -> Result[bool, byte_buffer]:
+    if len(buffer) > 2:
+        return Err(buffer.copy())
+    return Ok(True)
+
+
+func main(out: Stream) -> int:
+    if not test_buffer_copy_appends_alone(byte_buffer([])):
+        return 1
+    if not test_buffer_copy_appends_alone(byte_buffer([97, 98, 99])):
+        return 2
+    if not test_buffers_inside_records_lists_and_options(Packet(7, byte_buffer([120])), [byte_buffer([97, 98]), byte_buffer([])], Some(byte_buffer([122]))):
+        return 3
+    if not test_buffers_inside_records_lists_and_options(Packet(0, byte_buffer([])), [], None):
+        return 4
+    if not test_short_buffer(byte_buffer([97, 98])) or test_short_buffer(byte_buffer([97, 98, 99])):
+        return 5
+    match test_buffer_error_result(byte_buffer([97, 98])):
+        case Ok(value):
+            if not value:
+                return 6
+        case Err(error):
+            return 7
+    match test_buffer_error_result(byte_buffer([97, 98, 99])):
+        case Ok(value):
+            return 8
+        case Err(error):
+            if len(error) != 3:
+                return 9
+    out.print("contracts passed")
+    return 0

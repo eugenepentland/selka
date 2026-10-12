@@ -1,0 +1,22 @@
+{
+  "scope": "Working-tree hashes only; these files are deliberately excluded from the evidence commit. No native qualification claimed.",
+  "head": "156bd089d894d346d2c57c2ccb97ef65949e5a07",
+  "files": {
+    "src/core/a02_list_methods_fixture.my": "378f3e1070e4cc11d227ab271b94dd87b9b6793d0c2a0ac5f33cd4e8fa2e1302",
+    "src/core/a02_list_methods_test.zig": "8a4f5a7df433c318079dba439202f92553f0896f35bcb7684ba7fa8ffe4daf29",
+    "src/core/build_list_methods.zig": "a99c97682478f32812d1fa4c44a42520c43062f26cd77f783ebeaccda2023225",
+    "src/core/driver.zig": "8b990d67466be745c04313e77f9fa21291e5b0d5b4def7e91a2a844df45df766",
+    "src/core/runtime/core_rt.c": "83449a8fdd78d5f4c23147b709b848929ae1e6ae4c3e0dcdfe6f806a70adc361",
+    "src/core/zero_rc.zig": "9f1b884a733e8af1f39f0390c586e8c969d98ef39bd4e83f35858d38b2a3f18e"
+  },
+  "validation_only_dependency": {
+    "file": "src/core/driver.zig",
+    "integrated_commit": "632726724"
+  },
+  "owners": {
+    "nested_extension_abort": "A07 with A01 read-only review",
+    "ancestor_overlap_boundary": "A07",
+    "runtime_helper_contract": "A02+A07",
+    "final_qualification": "coordinator"
+  }
+}

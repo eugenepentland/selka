@@ -74,3 +74,68 @@ Pending-result and resource slices remain rejected. This worker compiler refuses
 A separate source migration preserves 72 reserved fixtures, all 358 original test functions and every explicit assertion statement, with original source/hash pairs in `migrations/originals/` and `additional/originals/`. The combined ledger records changed lines and explicit-copy burden. Support4 source checks admit the additional 21 Core fixtures; Support3 admits 43/51 original fixtures. Native validation is partial and its exact compiler identity, counters, diagnostics and artifact hashes are retained in `migrations/interim/`. Pending compiler fixes and remaining batches are detailed in the migration README. These fixtures still require qualification on the frozen final compiler.
 
 The only outstanding test-registration request from this source migration is the coordinator-owned `ce_lists_test.zig` expected budget-trap line adjustment from 60 to 62 (column 17 unchanged), caused by explicit self-append input snapshots. Tuple `.copy()` in `stores` requires the newly integrated A01 tuple-copy API, so Support4's earlier refusal must not be relabeled as a result for Support5.
+
+## Coordinator continuation: unqualified nested-extension patch
+
+Status on 2026-10-12: the coordinator requested a handoff and no additional investigation in this worker turn. Preserve the current uncommitted edits; the nested-extension fix has **not** passed native qualification.
+
+Completed checks:
+
+- Support4 nested self-extension (`rows[0].extend(rows[0])`, 16 managed children) passed source/Core/native compilation and then aborted with SIGABRT. Original source, full Core IR, command lines and compiler hash: `.tmp/memory-closeout/A02/nested-self-extend/{main.my,results.json}`.
+- The proposed fix adds borrowed scalar pointer identity (`myl_core_owned_same_block`) and branches before composition into self/current-owner and distinct/source-owner loops. A07 reviewed the exact implementation and ownership contract. The coordinator authored its `zero_rc.zig` contract hunk.
+- First registered five-mode test attempt failed at the already-known native object lifetime bug. The coordinator applied the approved `driver.zig` dependency from integrated commit `632726724` solely for validation; **exclude that file from the A02 feature commit**. Initial failure log: `nested-self-extend/fixed-test.log`.
+- With that dependency, the registered test compiled its guest but aborted during the first native mode. It did not complete the five-mode matrix. Log: `nested-self-extend/fixed-test-driver.log`; exact tested source hashes: `nested-self-extend/fixed-source.json`.
+- Reduced validation against the updated private compiler repeats the runtime abort for nested self-extension. A control extending the nested destination from a fresh independent source prints `passed` and exits 0. `nested-self-extend/trace-results.json` includes compiler hash and an `abort` backtrace shim; `self-trace.ll` preserves emitted LLVM. The shim converts the abort to exit 134 for diagnostics. The underlying cleanup/parent-writeback problem remains unresolved; no successful fix or final ABI claim is made.
+- Recursive ancestor-source controls use `tree.children[1].children.extend(tree.children)` and the explicit `.copy()` form. Both ordinary controls print `2 0`; Support4 rejects both zero-RC builds with `E_ZERO_RC_LOWERING`. Typed dumps and results are in `.tmp/memory-closeout/A02/ancestor-extend/`. The destination path is `[field 1, index 1, field 1]`, while source path `[field 1]` is a strict ancestor. A07 owns the approved source ancestry refusal and explicit-copy positive boundary.
+
+Current changed production/test files are `src/core/build_list_methods.zig`, `src/core/runtime/core_rt.c`, coordinator-authored `src/core/zero_rc.zig`, `src/core/a02_list_methods_fixture.my`, and `src/core/a02_list_methods_test.zig`. The tests add empty nested self-extension, dynamic same/distinct sibling sources, forced growth, source independence and stronger RC counter checks. `src/core/driver.zig` is the validation-only approved dependency described above.
+
+Also uncommitted are `qualify_migrations.py` and `qualify_additional.py` changes adding explicit `default` qualification without a prototype flag, fuller RC event checks, and LLVM audits. Their `--help` parsing passes; no fresh native campaign has used these revisions. Preserve them separately from the production alias fix as appropriate.
+
+The broad Support4 migration sweep stopped after four complete batches at the coordinator's request. All 12 ordinary controls pass; eight checked-ownership runs pass and four hit known compiler defects (two providerStore unit panics, two nested-array lowering refusals). Batch 4 never acquired admission and was cancelled while pending. Existing committed interim evidence contains batches 0–2; the additional complete batch 3 is preserved at `.tmp/memory-closeout/A02/migration-runs-support4/batch-3/results.json`. No native jobs from this worker remain running.
+
+Next required work: resolve the remaining nested-extension native abort with A07, add the ancestor-overlap rejection and explicit-copy positive regression, rerun the five-mode matrix and structural/count/cleanup checks, regenerate the unapplied runtime retirement preview after the helper change, then commit the tested feature without the already integrated driver dependency. The helper's separate allocation-free cost qualification is A10 commit `685012b24158e723abb300948f3d36ed1ac3ad2d`; it does not qualify the alias behavior. Resume all 72 fixture migrations on the next integrated compiler and qualify default/retired modes only on their actual later artifacts.
+
+
+## Evidence-only continuation for C2/C3
+
+The runtime, Core lowering, registered fixture/test and validation-only driver
+changes listed above remain uncommitted and unchanged. A01's later read-only
+diagnosis attributes the observed abort to parent preparation: a shallow outer
+list copy precedes destruction of the old parent, freeing the child before the
+extension uses it. A07 is reviewing the narrow place-copy identity path; this
+is a diagnosis, not a shipped fix or successful native result.
+
+`QUALIFICATION.md` describes explicit default-mode harnesses for all 72 fixture
+migrations and the five-mode list matrix. Default mode supplies no prototype
+flag and still requires normal-return RC0/live0 and LLVM/symbol checks. Fresh
+output and nonzero aggregate failure checks prevent partial/old evidence from
+appearing qualified. Guest command/property/trap evidence is distinguished from
+supplemental counted normal-return contracts. C2/C3 execution remains pending.
+
+The audit helper was validated against preserved artifacts: all 12 ordinary
+controls fail the owned audit and all eight successful Support4 zero-RC runs
+pass. Historical `release_unique` means direct destruction in owned mode and
+is reported separately from RC events, as confirmed by A09. The previous
+derived migration summary incorrectly included that telemetry in its RC sum;
+`migrations/interim/support4-native-summary-v2.json` corrects the classification
+and adds the fourth complete batch. Original raw records remain unchanged.
+The preserved unqualified `a02_list_methods_test.zig` diff also adds
+`release_unique` to its zero-event loop. Omit that single label when resuming
+the patch; retain the new `unique_test` and native RC-total checks. The file is
+unchanged during this evidence-only continuation, and A07/coordinator were
+notified before qualification resumes.
+
+`capacity-archive.json` hashes all 60 raw policy evidence files and verifies all
+16 binary/runtime identities, including reconstructing runtime sources from C0.
+Earlier harness hashes remain distinct from the current harness. The later A09
+Guardian-interference caveat is now explicit. The growth policy remains a
+measured tradeoff; remaining native timings belong to A09, and no final-compiler
+qualification or runtime/RSS saving is claimed.
+
+All six supplemental wrappers now source-admit on exact Support4. The two
+intermediate constructor syntax failures are preserved alongside the corrected
+final wrappers in `raw/harness-preparation/`; they are harness authoring errors,
+not new compiler defects. Four Python AST checks, all three CLI help parsers,
+the 20 historical artifact controls, missing-counter/output-reuse guards and
+`git diff --check` pass. These checks do not replace native execution under C2/C3.

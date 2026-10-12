@@ -1,0 +1,12 @@
+import json, os, subprocess
+from pathlib import Path
+base=Path(__file__).parent
+compiler=Path('/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang')
+results=[]
+for source in sorted(base.glob('*.my')):
+    argv=[str(compiler),'check',str(source),'--experimental-zero-rc']
+    p=subprocess.run(argv,capture_output=True,text=True,timeout=4)
+    results.append(dict(argv=argv,status=p.returncode,stdout=p.stdout,stderr=p.stderr))
+(base/'source-checks.json').write_text(json.dumps(dict(compiler=str(compiler),scope='supplemental wrapper source admission only on Support4',cases=results),indent=2)+'\n')
+print([(Path(r['argv'][2]).name,r['status']) for r in results],flush=True)
+raise SystemExit(any(r['status'] for r in results))

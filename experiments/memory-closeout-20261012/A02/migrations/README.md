@@ -13,3 +13,16 @@ The combined migration now includes the additional 21 reserved Core fixtures. `c
 `interim/` captures the Support3 source sweep (43 of 51 admitted) and the first three Support4 native batches. Ordinary controls pass all nine files. Six zero-RC files pass every original Boolean test, have zero RC events, zero managed exit-live bytes and clean symbols. Three remain blocked: `collections` exposes a `providerStore` unit-value panic; `nested_arrays` and `nested_array_callbacks` refuse nested managed-array writeback. The coordinator and A07 own those compiler fixes. Remaining native batches continue separately and cannot be inferred from these nine files.
 
 Other source boundaries are explicitly retained: optional-payload narrowing (`pure_box`, `recursive`, `option_niche`, `rc_box_writeback`), a borrowed dictionary-items iteration binding (`bindings`), borrowed `setdefault` results (`rc_collection_builtins`), and a field mutation following a read-only scan (`rc_interval_anchors`). `stores` uses the forthcoming explicit tuple-copy operation; Support4 predates that API and its recorded refusal is not qualification of the next compiler. No test was removed to make the source sweep pass.
+
+The subsequently archived fourth Support4 batch brings the completed partial
+sweep to 12 ordinary passes and eight zero-RC passes. `nested_collections` adds
+a second providerStore unit panic; `packed_calls` and
+`pending_receiver_arguments` pass both modes. Work stopped at the coordinator's
+request before batch 4 admission, awaiting integrated compiler fixes.
+`interim/support4-native-summary-v2.json` records these exact artifacts and
+corrects the earlier derived summary's RC classification: `release_unique`
+means direct destruction in owned mode and is not an RC event. Native
+retain/release/share totals are included in the corrected zero/nonzero guard.
+Original raw reports and the earlier summary are preserved. No Support4 result
+is promoted to C2/C3 evidence; use the explicit default mode documented in
+`../QUALIFICATION.md` for those future artifacts.
