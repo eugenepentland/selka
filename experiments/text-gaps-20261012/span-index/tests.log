@@ -1,0 +1,8 @@
+build-slot: FIFO ticket 2391, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 2391 after 5s
+guardian/test: 8 test(s) selected
+All 8 tests passed.
+guardian/test: test wall 0.56s; slowest over 50ms:
+guardian/test:   0.48s  byte_index_test.test.span byte index cases preserve Unicode negative extreme and ordered bounds traps in seven native modes
+guardian/test: PASS — 8 passed
+guardian/test: RESULT {"passed":8,"failed":0,"skipped":0}
