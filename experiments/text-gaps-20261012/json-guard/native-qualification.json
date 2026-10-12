@@ -1,0 +1,62 @@
+{
+  "modes": [
+    [
+      "--unoptimized"
+    ],
+    [],
+    [
+      "--release",
+      "--verify-facts"
+    ],
+    [
+      "--experimental-zero-rc",
+      "--unoptimized"
+    ],
+    [
+      "--experimental-zero-rc",
+      "--release",
+      "--verify-facts"
+    ],
+    [
+      "--experimental-zero-rc",
+      "--release"
+    ],
+    [
+      "--experimental-zero-rc",
+      "--optimize-debug"
+    ],
+    [
+      "--experimental-zero-rc",
+      "--release",
+      "--no-facts"
+    ]
+  ],
+  "results": {
+    "baseline": {
+      "reports": 8,
+      "passed": 16,
+      "failed": 0,
+      "cached": 0,
+      "unsupported": 0
+    },
+    "candidate": {
+      "reports": 40,
+      "passed": 160,
+      "failed": 0,
+      "cached": 0,
+      "unsupported": 0
+    }
+  },
+  "leakcheck": true,
+  "formatter": "passed; no output",
+  "compilers": {
+    "baseline": {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/install/bin/mylang",
+      "sha256": "0ba1684ea76140b07675bf01b39baafe8a7253ea675bfba8057186f1f9f16a3b"
+    },
+    "candidate": {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/install/bin/mylang",
+      "sha256": "887583f8ad93eb58cababe756b31364435155f32b1a39077ade947c7080c55f5"
+    }
+  }
+}

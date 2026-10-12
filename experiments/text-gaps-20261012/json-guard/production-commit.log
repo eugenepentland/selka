@@ -1,0 +1,11 @@
+build-slot: FIFO ticket 2341, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 2341 after 5s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10555 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/text-gaps-json-final-20261012 207053908] Guard private JSON peek against negative cursor offsets
+ 1 file changed, 1 insertion(+), 1 deletion(-)

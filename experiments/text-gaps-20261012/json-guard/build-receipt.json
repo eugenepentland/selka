@@ -1,0 +1,165 @@
+{
+  "base_commit": "1994cb76e266080d971be6f41e98fba5707234dd",
+  "source_commit": "207053908abe44f572fba3d846403340b5a73899",
+  "source_patch": "",
+  "library_source": {
+    "path": "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/src/stdlib/json.my",
+    "sha256": "f9adac86925b7359c52e8cd31aed550c9999c35c1674bf5b3cf57f27e811cfed"
+  },
+  "compiler": "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/install/bin/mylang",
+  "compiler_sha256": "887583f8ad93eb58cababe756b31364435155f32b1a39077ade947c7080c55f5",
+  "baseline_installation": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install",
+  "installation": "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/install",
+  "installation_files": [
+    {
+      "path": "bin/mylang",
+      "sha256": "887583f8ad93eb58cababe756b31364435155f32b1a39077ade947c7080c55f5",
+      "bytes": 241282957
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan-a3433084f84ddfce28db22e7bb3e1b10bc7d5610bfff9abad0503b24de9b68a9",
+      "sha256": "a3433084f84ddfce28db22e7bb3e1b10bc7d5610bfff9abad0503b24de9b68a9",
+      "bytes": 373808
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan-b2b1e9bf74b637d8dbbf5db4242d633ac1d1a9757772c572c2cd2f8099137460",
+      "sha256": "b2b1e9bf74b637d8dbbf5db4242d633ac1d1a9757772c572c2cd2f8099137460",
+      "bytes": 373640
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan-d69b536c904f109ef2d292ac376ce3ecb811da91db6e051b2a49a176a1c31840",
+      "sha256": "d69b536c904f109ef2d292ac376ce3ecb811da91db6e051b2a49a176a1c31840",
+      "bytes": 606248
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan-f670f2a1520a585015eabc7b1481badb9b2317c6c2a264b533177e82a5e11929",
+      "sha256": "f670f2a1520a585015eabc7b1481badb9b2317c6c2a264b533177e82a5e11929",
+      "bytes": 613624
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan.json",
+      "sha256": "7bf104161b19a4ed8abd758c04b2a27818e7e00bf79365f8641c83857350da80",
+      "bytes": 327
+    },
+    {
+      "path": "libexec/mylang/components/test-index-421c25cd90ec028fefd5f3f428bb7f8811428ee0ab8196839350fcb1d69e67a6",
+      "sha256": "421c25cd90ec028fefd5f3f428bb7f8811428ee0ab8196839350fcb1d69e67a6",
+      "bytes": 323608
+    },
+    {
+      "path": "libexec/mylang/components/test-index-aad4a3ec908f250f5cd68a365bc88d0d2efdab41bbf0c830c915c042828ed83b",
+      "sha256": "aad4a3ec908f250f5cd68a365bc88d0d2efdab41bbf0c830c915c042828ed83b",
+      "bytes": 308464
+    },
+    {
+      "path": "libexec/mylang/components/test-index-dbd9fea31ee72550200d6f21c4a42dcfadf00321e9697eb9d4cc21cdbfa99a27",
+      "sha256": "dbd9fea31ee72550200d6f21c4a42dcfadf00321e9697eb9d4cc21cdbfa99a27",
+      "bytes": 323608
+    },
+    {
+      "path": "libexec/mylang/components/test-index-ef88467eb96afbcc96d75273450c02b05cfb5e626a60dfa770b8499af934f29c",
+      "sha256": "ef88467eb96afbcc96d75273450c02b05cfb5e626a60dfa770b8499af934f29c",
+      "bytes": 308304
+    },
+    {
+      "path": "libexec/mylang/components/test-index.json",
+      "sha256": "2dd5b614deac9d6602de5a9b9aa9c2f8773e3668d953bfe5d3e7ea0de7309161",
+      "bytes": 327
+    },
+    {
+      "path": "tools/selka-components",
+      "sha256": "7861f4fba7df070b86f0c03dcc42c8231c609035a3f3c29f8df31c41792fa01b",
+      "bytes": 4526400
+    }
+  ],
+  "entries": [
+    {
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/text-runtime",
+      "sha256": "f7eef5db66041492897a77b5fd982a4482b4f4177b5028c35646fa583d49ed0f",
+      "source": "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+      "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/cache-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/text-runtime",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/runtime.ll"
+      ],
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/cache-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/text-runtime",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/runtime.ll"
+      ],
+      "status": "ok"
+    },
+    {
+      "kind": "counted",
+      "binary": "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/text-counted",
+      "sha256": "e4fca1f4629a1dcedcc3351d29c48d28b47ced08236c5eef15d2074f05990999",
+      "source": "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+      "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/cache-counted",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/text-counted",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/counted.ll",
+        "--counters"
+      ],
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/cache-counted",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/text-counted",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/counted.ll",
+        "--counters"
+      ],
+      "status": "ok"
+    }
+  ],
+  "qualification": "160 native contracts in three RC/five checked modes; 100 independent oracle probes; no timing claim",
+  "host_build_command": [
+    "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "build",
+    "seed-compiler",
+    "-p",
+    "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/host",
+    "-j4",
+    "--maxrss",
+    "8589934592"
+  ],
+  "native_qualification": "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/experiments/text-gaps-20261012/json-guard/native-qualification.json",
+  "component_provenance": "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/experiments/micro-gaps-20261012/coordinator/installation.json",
+  "compile_time_note": "Build logs include admission; no paired compiler performance or runtime timing claim."
+}

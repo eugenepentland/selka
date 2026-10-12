@@ -1,0 +1,32 @@
+import json
+
+func guard_error(source: str) -> str:
+    match json.loads(source):
+        case Ok(_):
+            return "!accepted"
+        case Err(error):
+            return json.message(error)
+
+
+# spec-case: STANDARD-JSON-1
+public func test_textgap_json_guard_eof_whitespace_and_number_offsets() -> bool:
+    mut documents = ["", " \t\r\n", "-", "1.", "1e", "1e+", "01", "true x", "{\"a\": }"]
+    mut expected = ["unexpected end of JSON input at byte 0", "unexpected end of JSON input at byte 4", "JSON number needs a digit at byte 1", "JSON fraction needs a digit at byte 2", "JSON exponent needs a digit at byte 2", "JSON exponent needs a digit at byte 3", "JSON number has a leading zero at byte 1", "trailing characters after a JSON value at byte 5", "unexpected character in JSON input at byte 6"]
+    for index in range(90):
+        mut slot = index % len(documents)
+        if guard_error(documents[slot]) != expected[slot]:
+            return False
+    return True
+
+
+# spec-case: STANDARD-JSON-1
+public func test_textgap_json_guard_whitespace_unicode_and_valid_sentinels() -> bool:
+    for index in range(30):
+        mut body = "[\"λ😀-" + str(index) + "\",true,false,null,-0.0]"
+        match json.loads(" \t\r\n" + body + "\n\t "):
+            case Ok(value):
+                if json.dumps(value) != body:
+                    return False
+            case Err(_):
+                return False
+    return True

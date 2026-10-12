@@ -1,0 +1,30 @@
+{
+  "common": {
+    "binary": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+    "sha256": "429854488c74f3bc0a39aa0e0a8216e81bb21362bfad58e573a7fb1a96bc7994",
+    "command": [
+      "objdump",
+      "-d",
+      "--disassemble=my.json::read_value",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime"
+    ],
+    "symbol": [
+      "0000000001050880 00000000000014f5 t my.json::read_value"
+    ],
+    "note": "Assembly evidence; no runtime timing inference."
+  },
+  "guard": {
+    "binary": "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/text-runtime",
+    "sha256": "f7eef5db66041492897a77b5fd982a4482b4f4177b5028c35646fa583d49ed0f",
+    "command": [
+      "objdump",
+      "-d",
+      "--disassemble=my.json::read_value",
+      "/home/epentland/ai/canopy/mylang-text-gaps-json-final-20261012/.tmp/text-gaps/json-guard/text-runtime"
+    ],
+    "symbol": [
+      "00000000010507c0 0000000000000ff6 t my.json::read_value"
+    ],
+    "note": "Assembly evidence; no runtime timing inference."
+  }
+}
