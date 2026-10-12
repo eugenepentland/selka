@@ -1,0 +1,4 @@
+build-slot: FIFO ticket 476, position 1; waiting for memory-accounting settle delay or another measurement; waiting (0s so far)
+build-slot: FIFO ticket 476, position 1; draining active work (build1.lock); waiting (60s so far)
+build-slot: timing slot 1, FIFO ticket 476 after 65s
+text-gaps/split-screen-004/string_split/large {'checked-baseline': True, 'checked-candidate': True, 'rust': True}
