@@ -384,10 +384,12 @@ pub fn retainUnit(arena: std.mem.Allocator, module: *ir.Module, given: Unit) std
 }
 
 /// The back half of `build`: run the selected passes on `module`, emit LLVM IR, and
-/// link the executable. `mylang-core test` reaches it with a module of its own making.
-pub fn finish(init: std.process.Init, module: *ir.Module, unit: Unit, options: Options, report: *std.ArrayList(u8)) Error!u8 {
-    _ = try linkEmitted(init, module, unit, options, report);
-    return 0;
+/// link the executable. `mylang-core test` reaches it with a module of its own making
+/// and keys its execution receipts by the answer, the linked program's exact key
+/// (`driver.Outcome.program_key`, EXEC-RECEIPT-1).
+pub fn finish(init: std.process.Init, module: *ir.Module, unit: Unit, options: Options, report: *std.ArrayList(u8)) Error!?[32]u8 {
+    const outcome = try linkEmitted(init, module, unit, options, report);
+    return outcome.program_key;
 }
 
 fn linkEmitted(init: std.process.Init, module: *ir.Module, unit: Unit, options: Options, report: *std.ArrayList(u8)) Error!driver.Outcome {

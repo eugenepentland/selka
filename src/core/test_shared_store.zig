@@ -23,7 +23,7 @@ pub const Saved = enum {
     /// kept, nothing is written, and the pair is appended to `mismatches.log`.
     mismatch,
 };
-const format = "selka-native-test-store-v2\n";
+const format = "selka-native-test-store-v3\n";
 const maximum_record = 512;
 
 /// A dedicated namespace beneath the caller's shared cache directory.
@@ -37,7 +37,7 @@ pub const Store = struct {
     /// follows only tries its exclusive admission, so no open waits on a sweep.
     pub fn open(a: std.mem.Allocator, io: std.Io, directory: []const u8) Error!Store {
         if (directory.len == 0) return error.WriteFailed;
-        const self: Store = .{ .arena = a, .io = io, .root = try std.fs.path.join(a, &.{ directory, "native-tests-v2" }) };
+        const self: Store = .{ .arena = a, .io = io, .root = try std.fs.path.join(a, &.{ directory, "native-tests-v3" }) };
         std.Io.Dir.cwd().createDirPath(io, self.root) catch return error.WriteFailed;
         try self.initialize();
         self.retentionContext().automatic();

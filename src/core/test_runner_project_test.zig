@@ -144,7 +144,7 @@ const whole_source =
 const Saved = struct { name: []const u8, bytes: []const u8 };
 
 fn receiptDirectory(context: Context) ![]const u8 {
-    return std.fs.path.join(context.arena, &.{ context.root, "cache", "tests", "receipts-v2" });
+    return std.fs.path.join(context.arena, &.{ context.root, "cache", "tests", "receipts-v3" });
 }
 
 /// Every receipt the run's cache holds, with its bytes.
@@ -165,7 +165,7 @@ fn receipts(context: Context) ![]const Saved {
 fn keepOnly(context: Context, kept: []const Saved) !void {
     const directory = try receiptDirectory(context);
     try std.Io.Dir.cwd().deleteTree(std.testing.io, directory);
-    try std.Io.Dir.cwd().deleteTree(std.testing.io, try std.fs.path.join(context.arena, &.{ context.root, "cache", "tests", "manifests-v2" }));
+    try std.Io.Dir.cwd().deleteTree(std.testing.io, try std.fs.path.join(context.arena, &.{ context.root, "cache", "tests", "manifests-v3" }));
     try std.Io.Dir.cwd().createDirPath(std.testing.io, directory);
     for (kept) |item| try std.Io.Dir.cwd().writeFile(std.testing.io, .{ .sub_path = try std.fs.path.join(context.arena, &.{ directory, item.name }), .data = item.bytes });
 }
@@ -194,9 +194,11 @@ test "sharedKeys: a program's whole-file receipt alone replays every test, and a
     const cold = try context.run("app.my", &.{});
     try expectStatus(context, cold, 0);
     try std.testing.expectEqual(@as(u64, 2), v.number(v.get(cold.report, "passed")));
+    // Each tier keeps two per-test receipts and one for the whole program
+    // (EXEC-RECEIPT-3); either whole-program receipt alone answers both tests.
     const saved = try receipts(context);
-    try std.testing.expectEqual(@as(usize, 3), saved.len);
-    try std.testing.expectEqual(@as(usize, 1), try aloneSufficient(context, "app.my", saved));
+    try std.testing.expectEqual(@as(usize, 6), saved.len);
+    try std.testing.expectEqual(@as(usize, 2), try aloneSufficient(context, "app.my", saved));
     try context.write("dep.my", dependency_four);
     const changed = try context.run("app.my", &.{});
     try expectStatus(context, changed, 1);

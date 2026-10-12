@@ -16,14 +16,14 @@ pub const Kind = enum {
     pub fn namespace(self: Kind) []const u8 {
         return switch (self) {
             .compiler => "compiler-artifacts-v2",
-            .tests => "native-tests-v2",
+            .tests => "native-tests-v3",
         };
     }
     /// Return the exact namespace marker accepted by retention.
     pub fn format(self: Kind) []const u8 {
         return switch (self) {
             .compiler => "selka-compiler-artifact-store-v2\n",
-            .tests => "selka-native-test-store-v2\n",
+            .tests => "selka-native-test-store-v3\n",
         };
     }
 };

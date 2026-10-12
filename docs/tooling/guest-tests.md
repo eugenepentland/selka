@@ -531,11 +531,14 @@ error: --cases requires a single test entry
 
 ## Reusing unaffected results
 
-A passing test leaves a receipt under `<cache>/tests/receipts-v2`, where
+A passing test leaves receipts under `<cache>/tests/receipts-v3`, where
 `<cache>` is `--cache-dir DIR` or `.mylang-cache/core` relative to the current
 directory. A later run that computes the same identity reports `cached` instead
 of building and executing the test. Failures, traps and timeouts never become
-receipts, so they always run again.
+receipts, so they always run again. Receipts come in two tiers, described
+below: an IR receipt, looked up before anything is built, and an execution
+receipt, looked up after the test program is linked and before its first trial.
+Records from the `receipts-v2` and `manifests-v2` namespaces are never read.
 
 `--shared-cache-dir DIR` opts into a second receipt store for ordinary project
 tests across compatible worktrees. `MYLANG_TEST_SHARED_CACHE` supplies the same
@@ -545,16 +548,18 @@ Directory runs forward the setting to their workers. With neither setting,
 receipts stay private. This option does not change build or run caches.
 
 Use a dedicated shared root, preferably outside the worktrees. Native test
-receipts live under `DIR/native-tests-v2`; `--cache-dir` still holds the private
-frontend, graph, executable and whole-report caches. Shared reuse requires a
-compatible compiler, toolchain, execution settings and the test's complete
-validated dependency closure. A different checkout location alone need not
-rerun an otherwise identical eligible test. Unknown or unsupported identities
+receipts live under `DIR/native-tests-v3`; `--cache-dir` still holds the private
+frontend, graph, executable and whole-report caches. The shared store is a
+second location for the private store's own IR-tier keys, which name every path
+relative to the project root (RECEIPT-PATHS-1), so shared reuse requires the
+same compiler, toolchain, execution settings and reachable program as a private
+hit would. A different checkout location alone need not rerun an otherwise
+identical eligible test. Unknown or unsupported identities
 run normally, and missing or corrupt receipts are misses. A well-formed receipt
 for the same identity with different contents is a mismatch: it is a miss, the
 test runs, the existing receipt is kept, no receipt is published for it, and
 the store appends one `mismatch receipt …` line to
-`DIR/native-tests-v2/mismatches.log`. The cache location does not change a
+`DIR/native-tests-v3/mismatches.log`. The cache location does not change a
 test's execution identity. An explicitly selected unusable store reports an
 error. With neither the flag nor the variable, a per-user default
 (`~/.cache/mylang/native-tests`) applies only when the compiler's
@@ -572,35 +577,43 @@ mylang test examples/testing/main.my --cache-dir "$test_cache/private-a" --share
 mylang test examples/testing/main.my --cache-dir "$test_cache/private-b" --shared-cache-dir "$test_cache/shared"
 ```
 
-Shared receipts currently cover zero-argument `bool` tests under the legacy
-property policy, with effects limited to managed allocation and mutation.
-External providers, native links, provider overlays, `function_digest` and
-error traces remain private. Project sources, configuration, cases and embedded
-assets must stay inside the project root. Configuration and cases bytes, embedded
-values and literal strings remain part of the identity. Fact verification, leak
-checks and loader overrides also run without shared receipts. The `native-tests-v2`
-namespace has its own format, separate from developer verification and fuzz
-evidence stores. Native [retention policies](cache-retention.md#native-cache-retention)
+Shared receipts cover every test without live effects (no `Host` calls, the
+same rule that lets a test keep a private receipt) under the legacy property
+policy, including property tests and tests with capability stand-ins. Source
+externs, native links, provider overlays, `function_digest` and error traces
+remain private. Project sources, configuration, cases and embedded assets must
+stay inside the project root. Configuration and cases bytes, embedded values and
+literal strings remain part of the identity. Fact-verification and leak-checked
+runs share under their own keys; loader overrides run without receipts. The
+`native-tests-v3` namespace has its own format, separate from developer
+verification and fuzz evidence stores. Native [retention policies](cache-retention.md#native-cache-retention)
 bound its disk use with LRU eviction and protect storage operations with leases.
 The JSON test report remains `native-tests-v1`.
 
-A receipt's identity (NEW-CORE-S4-TEST-3) is:
+An IR receipt's identity (NEW-CORE-S4-TEST-3, domains `core-test-settings-v3`
+and `core-test-ir-v3`) is:
 
 - **the test's program** (NEW-CORE-S4-TEST-6): the Core IR of the functions the
   test reaches, before any pass, hashed field by field with every source span
-  replaced by its file, line and column, and the entry path. Passes and LLVM
-  emission are pure functions of that IR and the settings below, so looking up
-  a receipt emits no code. An edit to a function the test does not reach, or
-  one that only moves code in another file, keeps the key; whitespace edits that
-  move a reached function's lines do not;
-- **the settings**: `--release`/`--unoptimized`/`--optimize-debug`, `--no-facts`/`--verify-facts`, the seed, the
-  property runs, the step, frame, memory and time budgets, the test's own
-  cases-file entry and the cases file's bytes;
+  replaced by its file, line and column, and the entry's path relative to the
+  project root. Passes and LLVM emission are pure functions of that IR and the
+  settings below, so looking up a receipt emits no code. An edit to a function
+  the test does not reach, or one that only moves code in another file, keeps
+  the key; whitespace edits that move a reached function's lines do not;
+- **the settings**: `--release`/`--unoptimized`/`--optimize-debug`,
+  `--no-facts`/`--verify-facts`, `--generic-vectors`, `--trap-frames`,
+  `--counters`, the seed, the property runs, the step, frame, memory and time
+  budgets, the `MYL_CORE_LEAKCHECK` mode, the test's own cases-file entry and the
+  cases file's bytes;
+- **the paths, relative to the project root** (RECEIPT-PATHS-1): the entry (a
+  single-file entry by its basename), the cases file, `mylang.json` and its
+  import policy. The same project checked out at two absolute paths keys alike,
+  and the path a failing test's trap report prints is unchanged;
 - **the compiler, runtime and toolchain identity**, including the `zig` the run
-  uses, and the bytes of `mylang.json` and its import policy. The build also
-  publishes a narrower `runner_identity` over the test runner, driver and
-  pipeline sources (RUNNER-IDENTITY-1), which the planned execution receipts
-  will bind; it is not yet part of any receipt key;
+  uses and the cache planner, and the bytes of `mylang.json` and its import
+  policy. The compiler identity stays here because predicting "same IR, same
+  program" is sound only while lowering, passes, emission and the runtime are
+  unchanged;
 - **the environment variables that can change an outcome**
   (NEW-CORE-S4-TEST-5): the keyed class of the
   [environment identity contract](environment-identity.md) in
@@ -614,6 +627,36 @@ A receipt's identity (NEW-CORE-S4-TEST-3) is:
   `TZ`) is keyed only by host tooling, never by a receipt. A shell's `_` or
   `OLDPWD`, a terminal's variables or a wrapper such as `time` leave receipts
   valid.
+
+An execution receipt (EXEC-RECEIPT-1, domain `core-test-exec-v3`) keys what
+actually ran instead of how it was produced:
+
+- **the linked program's exact key** (`driver.Outcome.program_key`): the link
+  sanitizer, object format, optimize level, target and CPU, the toolchain digest,
+  the digest of every linked object in order (the runtime object and `--link`
+  objects included), `-lm` and the linker environment. It names no path and no
+  compiler identity;
+- **the runner identity** (RUNNER-IDENTITY-1): the build's `runner_identity`,
+  covering the sources that build a test executable's driver, fork trials, apply
+  budgets and judge outcomes. An edit to one of them misses every execution
+  receipt (EXEC-RECEIPT-2);
+- **the settings** listed above, the test's name, the cases, configuration and
+  policy bytes, and the keyed environment.
+
+After a compiler edit that leaves a test program's bytes unchanged (a comment in
+`src/parser.zig`, say), the IR tier misses, the program is lowered, emitted and
+linked from cached objects, and the execution tier answers the test without a
+trial. The program also keeps one execution key over all its consulted tests'
+sorted names (EXEC-RECEIPT-3, `core-test-whole-exec-v3`), looked up first. A hit
+is `cached` with `cache.reason` `whole-exec-receipt-hit` or `exec-receipt-hit`,
+and also saves the test's IR receipt, so the next run with that compiler hits at
+the first tier. A pass saves both tiers' receipts, and the whole-program key
+when every test it covers succeeded. `--json` reports the tier's work as
+`"exec_receipts": {"hits": N, "saves": N}` (hits are tests it answered, saves
+are passes that saved an execution receipt; a test's `cache.execution_key` names
+its key), and the text summary appends `, N exec-receipt hits` when there are
+any. The report stays `native-tests-v1`. The execution tier does not need the
+cache planner; it refuses what the IR tier refuses otherwise.
 
 A program discovers the functions needed by all its ready tests together and
 derives each test's key from their canonical facts (NEW-CORE-TEST-KEYS-1,
@@ -654,21 +697,26 @@ a pass; a test that takes a `Clock`, `Entropy`, `Filesystem`, `Environment` or
 receipt binds.
 
 A run whose every selected test passed or replayed also records the whole
-report in `<cache>/tests/manifests-v2`, with the digest of every source,
+report in `<cache>/tests/manifests-v3`, with the digest of every source,
 embedded file, cases file and configuration file it loaded. An unchanged rerun
 replays that report without checking the project; any changed byte falls back
-to the ordinary run, which still replays each test's own receipt. A project
+to the ordinary run, which still replays each test's own receipt. A manifest is
+named by the root-relative entry but replays only in the root that wrote it. A project
 with `"interface_files": true` in `mylang.json` never replays a whole report,
 so its interface files are checked on every run.
 
+Fact verification and leak checking are keyed modes, not refusals
+(EXEC-RECEIPT-4): `--verify-facts` and a non-zero `MYL_CORE_LEAKCHECK` enter the
+settings of both tiers, so a second identical fact-verification or leak-checked
+run is `cached`, and neither mode ever hits a plain run's receipts or each
+other's. A gate that must observe both checks fresh passes `--force`.
+
 What runs every test again:
 
-- `--force` and `--verify-facts` execute every selected test; a pass still
-  records its receipt;
+- `--force` executes every selected test; a pass still records its receipts;
 - a run with `--link FILE.c` never reads receipts, because the runner does not
   yet capture the headers a C input includes;
-- a run with `MYL_CORE_LEAKCHECK` set to anything but `0`, or with a non-empty
-  `LD_*` variable, never reads receipts;
+- a run with a non-empty `LD_*` variable never reads receipts;
 - `--no-cache` builds and runs through an empty private cache under the cache
   directory, removed when the command ends (NEW-CORE-S5-NO-CACHE-1): nothing is
   read from or published to the receipt, manifest, program or front-end

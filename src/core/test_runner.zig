@@ -61,9 +61,10 @@ const options_module = @import("test_runner_options.zig");
 
 const Selected = run_tests.Selected;
 const case_expectation = run_tests.expectation;
-/// A test's identity work: `scratch` is an arena it may leave allocations in, and
-/// `prebuilt` the test's reachable functions when `classify` already built them.
-const IdentityResources = struct { scratch: std.mem.Allocator, io: std.Io, prebuilt: ?@import("ir.zig").Module = null };
+/// A test's identity work: `scratch` is an arena it may leave allocations in,
+/// `prebuilt` the test's reachable functions when `classify` already built them, and
+/// `source_path` the entry's root-relative path its key names (RECEIPT-PATHS-1).
+const IdentityResources = struct { scratch: std.mem.Allocator, io: std.Io, prebuilt: ?@import("ir.zig").Module = null, source_path: []const u8 = "" };
 /// What selection and execution share: the receipts, their base key, and a directory
 /// run's test process permits when the entry runs in its process.
 const SelectionContext = struct { receipt: receipt.Context, base: [32]u8, permits: ?*root_share.Permits = null, catalog: ?*const lowering_cache.Catalog = null };
@@ -279,9 +280,8 @@ fn finish(init: std.process.Init, ready: Ready, setup: Setup) Error!u8 {
         verdict.* = item.verdict;
         verdict.cache = try cacheExplanation(allocator, item, context);
         successful = successful and item.identity != null and (item.verdict.status == .passed or item.verdict.status == .cached);
-        if (options.properties.policy == .legacy and unchanged and item.verdict.status == .passed) if (item.identity) |identity| try receipt.save(context, identity);
     }
-    for (collected.wholes.items) |range| if (options.properties.policy == .legacy and unchanged and wholePassed(range.whole, chosen.items[range.start..][0..range.len])) try receipt.save(context, range.whole.key);
+    if (options.properties.policy == .legacy) try saveReceipts(context, collected, verdicts);
     attachWork(verdicts, collected.works.items);
     const json = try report.jsonSources(allocator, verdicts, sources.items);
     if (options.properties.policy == .legacy and successful and unchanged and options.controls.against == null) try receipt.remember(context, base, before.items, json, collected.warnings.items);
@@ -314,7 +314,53 @@ const Collected = struct {
     /// Each provider group's whole-file key and the range of `chosen` it covers.
     wholes: std.ArrayList(WholeRange) = .empty,
     works: std.ArrayList(WorkRange) = .empty,
+    /// Each built program's execution-tier keys, positions into `chosen`.
+    executions: std.ArrayList(run_tests.Executed) = .empty,
 };
+
+/// Save what a run's inputs, unchanged since checking, let it vouch for: a pass saves
+/// both tiers' receipts and an execution hit the IR tier's, so the next run with this
+/// compiler hits before lowering anything; a program's whole-file and whole-program
+/// keys are saved when every test they cover succeeded. Each verdict's explanation
+/// names its execution key.
+fn saveReceipts(context: receipt.Context, collected: Collected, verdicts: []report.Verdict) Error!void {
+    const a = context.arena;
+    const chosen = collected.chosen.items;
+    const executions = try executionKeys(a, chosen.len, collected.executions.items);
+    for (chosen, verdicts, executions) |item, *verdict, execution| {
+        if (execution) |key| verdict.cache.?.execution_key = try std.fmt.allocPrint(a, "{s}", .{std.fmt.bytesToHex(key, .lower)});
+        const succeeded = item.verdict.status == .passed or run_tests.executionHit(item.cache_reason);
+        if (succeeded) if (item.identity) |identity| try receipt.save(context, identity);
+        if (item.verdict.status == .passed) if (execution) |key| try receipt.save(context, key);
+    }
+    for (collected.wholes.items) |range| if (wholePassed(range.whole, chosen[range.start..][0..range.len])) try receipt.save(context, range.whole.key);
+    for (collected.executions.items) |executed| if (everyPassed(chosen, executed.positions)) try receipt.save(context, executed.whole);
+}
+
+/// Each chosen test's execution key, or null when the execution tier was not consulted.
+fn executionKeys(a: std.mem.Allocator, count: usize, executions: []const run_tests.Executed) Error![]const ?[32]u8 {
+    const keys = try a.alloc(?[32]u8, count);
+    @memset(keys, null);
+    for (executions) |executed| for (executed.positions, executed.keys) |position, key| {
+        keys[position] = key;
+    };
+    return keys;
+}
+
+/// Whether every test at `positions` passed or was reused: a whole-program execution
+/// receipt then holds for all of them.
+fn everyPassed(chosen: []const Selected, positions: []const usize) bool {
+    for (positions) |position| if (chosen[position].verdict.status != .passed and chosen[position].verdict.status != .cached) return false;
+    return positions.len != 0;
+}
+
+/// `executed` with its positions moved `offset` places on, where its group's
+/// tests start in the run's selection.
+fn shifted(a: std.mem.Allocator, executed: run_tests.Executed, offset: usize) Error!run_tests.Executed {
+    const positions = try a.alloc(usize, executed.positions.len);
+    for (executed.positions, positions) |position, *moved| moved.* = position + offset;
+    return .{ .positions = positions, .keys = executed.keys, .whole = executed.whole };
+}
 const WorkRange = struct { first: usize, work: *const key_work.Work };
 /// A whole-file key and the slice of a run's chosen tests it was computed for.
 const WholeRange = struct { whole: Whole, start: usize, len: usize };
@@ -374,7 +420,8 @@ const GroupRun = struct {
         };
         const claims = try sharing.restore(items);
         defer claims.deinit();
-        try execute(init, context.options, program, items, self.selection.permits, .{ .context = context, .inputs = out.before.items, .backing = init.gpa });
+        const executed = try execute(init, context.options, program, items, self.selection.permits, .{ .context = context, .inputs = out.before.items, .backing = init.gpa });
+        if (executed) |found| try out.executions.append(a, try shifted(a, found, out.chosen.items.len));
         try sharing.publish(items);
         if (identity) |known| for (items) |*item| {
             item.verdict.identity = known;
@@ -422,10 +469,13 @@ const PortableRun = struct {
         return shared;
     }
 
-    fn key(self: PortableRun, a: std.mem.Allocator, case: discover.Case) Error!?[32]u8 {
+    /// The shared store's key for `item`: its own IR-tier key, the same one the
+    /// private store holds (RECEIPT-PATHS-1), when the test may share it.
+    fn key(self: PortableRun, a: std.mem.Allocator, item: Selected) Error!?[32]u8 {
+        const identity = item.identity orelse return null;
         var context = self.context;
         context.arena = a;
-        return portable.key(context, self.checked, case);
+        return if (try portable.shareable(context, self.checked, item.case)) identity else null;
     }
 
     fn restore(self: PortableRun, items: []Selected) Error!PortableClaims {
@@ -436,7 +486,7 @@ const PortableRun = struct {
             if (!item.ready) continue;
             var scratch = std.heap.ArenaAllocator.init(self.guard.backing);
             defer scratch.deinit();
-            const identity = try self.key(scratch.allocator(), item.case) orelse continue;
+            const identity = try self.key(scratch.allocator(), item) orelse continue;
             try keys.append(a, .{ .key = identity, .position = index });
         }
         std.mem.sort(PortablePosition, keys.items, {}, portableBefore);
@@ -462,8 +512,6 @@ const PortableRun = struct {
             const item = &items[position.position];
             item.verdict = .{ .name = item.case.name, .status = .cached };
             item.ready = false;
-            item.identity = position.key;
-            item.key_method = "portable-reachable-ir";
             item.cache_reason = "shared-receipt-hit";
         }
         if (!try self.guard.unchanged()) return error.SourceChanged;
@@ -477,8 +525,8 @@ const PortableRun = struct {
         const a = scratch.allocator();
         var identities: std.ArrayList([32]u8) = .empty;
         for (items) |item| {
-            if (item.verdict.status != .passed) continue;
-            if (try self.key(a, item.case)) |identity| try identities.append(a, identity);
+            if (item.verdict.status != .passed and !run_tests.executionHit(item.cache_reason)) continue;
+            if (try self.key(a, item)) |identity| try identities.append(a, identity);
         }
         if (identities.items.len == 0) return;
         if (!try self.guard.unchanged()) return error.SourceChanged;
@@ -823,8 +871,7 @@ fn programIdentity(resources: IdentityResources, options: Options, checked: fron
     // Identity queries observe final live-module membership and conservative
     // indirect candidates, beyond this pre-finalization receipt closure.
     if (callable_digest.needed(&module)) return null;
-    const source_path = std.Io.Dir.cwd().realPathFileAlloc(resources.io, options.path, a) catch options.path;
-    const identity = receipt.programKey(base, case.name, .{ .module = &module, .source_path = source_path, .locator = pipeline.locator(&checked.src) });
+    const identity = receipt.programKey(base, case.name, .{ .module = &module, .source_path = resources.source_path, .locator = pipeline.locator(&checked.src) });
     return identity;
 }
 
@@ -838,6 +885,7 @@ fn select(init: std.process.Init, options: Options, checked: frontend.Checked, c
     const a = init.arena.allocator();
     const chosen = try a.alloc(Selected, cases.len);
     const context = selection.receipt;
+    const source_path = try receipt.entryPath(context);
     for (cases, chosen) |case, *item| {
         const configured = v.get(settings.document, case.name);
         const skip = v.get(configured, "skip");
@@ -850,7 +898,7 @@ fn select(init: std.process.Init, options: Options, checked: frontend.Checked, c
             .settings = configured,
         };
     }
-    if (!perTestKeys(init.environ_map)) if (try sharedKeys(init, options, checked, chosen, selection.base, .{ .planner = context.identity.cache_plan.?, .catalog = selection.catalog })) |keys| {
+    if (!perTestKeys(init.environ_map)) if (try sharedKeys(init, options, checked, chosen, selection.base, .{ .planner = context.identity.cache_plan.?, .catalog = selection.catalog, .source_path = source_path })) |keys| {
         if (options.properties.policy == .legacy and try receipt.hit(context, keys.whole.key)) {
             for (chosen, keys.tests) |*item, key| if (item.ready) {
                 item.* = .{ .case = item.case, .verdict = .{ .name = item.case.name, .status = .cached }, .ready = false, .identity = key, .cache_reason = "whole-receipt-hit", .settings = item.settings, .key_method = keys.method };
@@ -878,7 +926,7 @@ fn select(init: std.process.Init, options: Options, checked: frontend.Checked, c
             item.ready = false;
             continue;
         }
-        if (try programIdentity(.{ .scratch = scratch.allocator(), .io = init.io, .prebuilt = built }, options, checked, item.case, selection.base)) |identity| {
+        if (try programIdentity(.{ .scratch = scratch.allocator(), .io = init.io, .prebuilt = built, .source_path = source_path }, options, checked, item.case, selection.base)) |identity| {
             item.identity = receipt.configuredKey(identity, try std.json.Stringify.valueAlloc(a, item.settings, .{}));
             if (options.properties.policy == .legacy and try receipt.hit(context, item.identity.?)) {
                 item.verdict = .{ .name = item.case.name, .status = .cached };
@@ -898,7 +946,9 @@ fn perTestKeys(environment: *const std.process.Environ.Map) bool {
 
 /// Every ready test's configured key (null for the others), and the whole-file key.
 const Keys = struct { tests: []const ?[32]u8, whole: Whole, work: *const key_work.Work, method: []const u8 };
-const KeyPlanning = struct { planner: planner.Bound, catalog: ?*const lowering_cache.Catalog = null };
+/// How `sharedKeys` plans: the bound planner, a borrowed declaration catalog, and the
+/// entry's root-relative path every key names (RECEIPT-PATHS-1).
+const KeyPlanning = struct { planner: planner.Bound, catalog: ?*const lowering_cache.Catalog = null, source_path: []const u8 };
 
 /// NEW-CORE-TEST-KEYS-1 and NEW-CORE-TEST-WHOLE-1: lower every ready test of the
 /// program once, digest each function canonically, and key each test on the functions
@@ -921,9 +971,11 @@ fn sharedKeys(init: std.process.Init, options: Options, checked: frontend.Checke
     const started = stage_metrics.now(init.io);
     const work = try a.create(key_work.Work);
     work.* = .{ .scope = try workScope(a, options.path, cases.items) };
-    const source_path = std.Io.Dir.cwd().realPathFileAlloc(init.io, options.path, s) catch options.path;
+    // The store's place stays per absolute entry; the keys name the relative one.
+    const located_path = std.Io.Dir.cwd().realPathFileAlloc(init.io, options.path, s) catch options.path;
+    const source_path = planning_input.source_path;
     var source_scope: test_keys.Digest = undefined;
-    std.crypto.hash.Blake3.hash(source_path, &source_scope, .{});
+    std.crypto.hash.Blake3.hash(located_path, &source_scope, .{});
     // Each directory root opens its own store, including child processes. Bound
     // catalog scans to that root instead of indexing every other root's facts.
     const cache_root = try std.fs.path.join(s, &.{ options.build.cache, "test-keys", &std.fmt.bytesToHex(source_scope, .lower) });
@@ -1368,12 +1420,14 @@ fn definesMain(bytes: []const u8) bool {
     return false;
 }
 
-/// Build the pending tests together (isolating any the backend rejects) and run each.
-fn execute(init: std.process.Init, requested: Options, checked: frontend.Checked, chosen: []Selected, permits: ?*root_share.Permits, campaign: run_tests.Campaign) Error!void {
+/// Build the pending tests together (isolating any the backend rejects) and run each,
+/// after the execution tier answered what it could (EXEC-RECEIPT-1). The built
+/// program's execution keys, or null when nothing was built or the tier refused.
+fn execute(init: std.process.Init, requested: Options, checked: frontend.Checked, chosen: []Selected, permits: ?*root_share.Permits, campaign: run_tests.Campaign) Error!?run_tests.Executed {
     const allocator = init.arena.allocator();
     var live: std.ArrayList(usize) = .empty;
     for (chosen, 0..) |item, position| if (item.ready) try live.append(allocator, position);
-    if (live.items.len == 0) return;
+    if (live.items.len == 0) return null;
     var options = requested;
     var nonce: [16]u8 = undefined;
     std.Io.random(init.io, &nonce);
@@ -1392,24 +1446,36 @@ fn execute(init: std.process.Init, requested: Options, checked: frontend.Checked
             }
         }
         live = good;
-        if (live.items.len == 0) return;
+        if (live.items.len == 0) return null;
         attempt = try buildExecutable(init, options, checked, chosen, live.items, "");
     }
     switch (attempt) {
-        .failed => |failure| for (live.items) |position| {
-            chosen[position].verdict = .{ .name = chosen[position].case.name, .status = failure.status, .reason = failure.reason };
+        .failed => |failure| {
+            for (live.items) |position| chosen[position].verdict = .{ .name = chosen[position].case.name, .status = failure.status, .reason = failure.reason };
+            return null;
         },
         .built => |executable| {
+            const executed = if (executable.program_key) |program_key| try run_tests.reuse(.{ .context = campaign.context, .program_key = program_key }, chosen, try publishing(allocator, checked, chosen, live.items)) else null;
             const width = options_module.width(options.controls, init.environ_map, live.items.len, @import("memory_budget").available(init.io));
             // The pinned Zig arena is thread-safe with Init's thread-safe backing.
             const resources: run_tests.Resources = .{ .arena = allocator, .backing = init.gpa, .io = init.io, .environment = .{ .block = init.minimal.environ.block }, .campaign = &campaign };
             const workers: run_tests.Workers = .{ .width = width, .batch = if (run_tests.isolated(init.environ_map)) 1 else std.math.maxInt(usize), .permits = permits };
-            try run_tests.run(resources, options, .{ .path = executable, .program = checked.program }, chosen, live.items, workers);
+            try run_tests.run(resources, options, .{ .path = executable.path, .program = checked.program }, chosen, live.items, workers);
+            return executed;
         },
     }
 }
 
-const Built = union(enum) { built: []const u8, failed: report.Verdict };
+/// The positions of `live` whose tests may publish receipts (no live effects).
+fn publishing(a: std.mem.Allocator, checked: frontend.Checked, chosen: []const Selected, live: []const usize) Error![]const usize {
+    var found: std.ArrayList(usize) = .empty;
+    for (live) |position| if (publishes(checked, chosen[position].case)) try found.append(a, position);
+    return found.items;
+}
+
+/// A built test executable and its linked program's exact key.
+const Executable = struct { path: []const u8, program_key: ?[32]u8 };
+const Built = union(enum) { built: Executable, failed: report.Verdict };
 
 /// Build the executable for `chosen[positions]`; its dispatch table lists them in order.
 fn buildExecutable(init: std.process.Init, options: Options, checked: frontend.Checked, chosen: []const Selected, positions: []const usize, tag: []const u8) Error!Built {
@@ -1431,12 +1497,12 @@ fn buildExecutable(init: std.process.Init, options: Options, checked: frontend.C
     request.output = try std.fmt.allocPrint(allocator, "{s}/{s}-{x}-{s}{s}", .{ directory, frontend.entryOf(options.path).module, digest, flavor, tag });
     var log: std.ArrayList(u8) = .empty;
     const unit: pipeline.Unit = .{ .src = checked.src, .source_path = absolute, .main = .{} };
-    _ = pipeline.finish(init, &module, unit, request, &log) catch |err| switch (err) {
+    const program_key = pipeline.finish(init, &module, unit, request, &log) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.Unsupported => return .{ .failed = .{ .name = name, .status = .unsupported, .reason = try firstLine(allocator, log.items) } },
         else => return .{ .failed = .{ .name = name, .status = .failed, .reason = try std.fmt.allocPrint(allocator, "build error ({s}): {s}", .{ @errorName(err), try firstLine(allocator, log.items) }) } },
     };
-    return .{ .built = request.output };
+    return .{ .built = .{ .path = request.output, .program_key = program_key } };
 }
 
 fn programFor(allocator: std.mem.Allocator, options: Options, checked: frontend.Checked, cases: []const discover.Case, why: *build.Refusal) (Error || build.Error || batch_entry.Error)!@import("ir.zig").Module {

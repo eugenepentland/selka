@@ -15,11 +15,11 @@ const Fixture = struct {
         var temp = testing.tmpDir(.{});
         errdefer temp.cleanup();
         try temp.dir.createDirPath(testing.io, "shared/compiler-artifacts-v2/syntax");
-        try temp.dir.createDirPath(testing.io, "shared/native-tests-v2/receipts");
+        try temp.dir.createDirPath(testing.io, "shared/native-tests-v3/receipts");
         try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/compiler-artifacts-v2/.retention.lock", .data = "" });
-        try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/native-tests-v2/.retention.lock", .data = "" });
+        try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/native-tests-v3/.retention.lock", .data = "" });
         try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/compiler-artifacts-v2/format", .data = "selka-compiler-artifact-store-v2\n" });
-        try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/native-tests-v2/format", .data = "selka-native-test-store-v2\n" });
+        try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/native-tests-v3/format", .data = "selka-native-test-store-v3\n" });
         try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/compiler-artifacts-v2/syntax/" ++ key ++ ".blob", .data = "disposable artifact" });
         return .{ .temp = temp, .arena = std.heap.ArenaAllocator.init(testing.allocator) };
     }
@@ -95,10 +95,10 @@ test "native retention CLI invalid limits and missing namespaces are explicit re
     const invalid = try fixture.run("gc", "compiler", &.{ "--max-bytes", "-1" });
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, invalid.term);
     try testing.expect(contains(invalid.stderr, "usage: mylang cache"));
-    try fixture.temp.dir.deleteTree(testing.io, "shared/native-tests-v2");
+    try fixture.temp.dir.deleteTree(testing.io, "shared/native-tests-v3");
     const missing = try fixture.run("gc", "tests", &.{});
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, missing.term);
-    try testing.expect(!fixture.exists("shared/native-tests-v2"));
+    try testing.expect(!fixture.exists("shared/native-tests-v3"));
 }
 
 // spec-case: NATIVE-CACHE-RETENTION-1

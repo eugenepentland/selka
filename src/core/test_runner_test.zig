@@ -148,7 +148,7 @@ test "the JSON report keys tests by name, status and reason, and the exit status
     const text = try report.json(arena.allocator(), &verdicts);
     try std.testing.expect(std.mem.indexOf(u8, text, "{\"name\":\"m::test_c\",\"status\":\"unsupported\",\"reason\":\"dict type\",\"at\":\"17:13\"}") != null);
     try std.testing.expect(std.mem.indexOf(u8, text, "\"reason\":\"R_LIST_BOUNDS (index 7, length 3)\\n  in get at m.my:2:12\\n\"") != null);
-    try std.testing.expect(std.mem.endsWith(u8, text, "\"passed\":1,\"failed\":1,\"skipped\":0,\"cached\":0,\"unsupported\":1}\n"));
+    try std.testing.expect(std.mem.endsWith(u8, text, "\"passed\":1,\"failed\":1,\"skipped\":0,\"cached\":0,\"unsupported\":1,\"exec_receipts\":{\"hits\":0,\"saves\":0}}\n"));
     try std.testing.expectEqual(@as(u8, 1), report.exitStatus(&verdicts));
     try std.testing.expectEqual(@as(u8, 0), report.exitStatus(verdicts[0..1]));
     try std.testing.expectEqual(@as(u8, 0), report.exitStatus(verdicts[2..3]));
@@ -397,6 +397,7 @@ fn qualifyDirectoryNamespaces(project: *CacheProject, directory: std.Io.Dir) !vo
 
 // spec: SELFHOST-CACHE-IDENTITY-1
 // spec-case: SELFHOST-CACHE-REPORT-1
+// spec-case: EXEC-RECEIPT-1
 test "bindPlan and sharedKeys ComponentUnavailable prevent warm file and directory replay with changed missing or corrupt cache planner" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
@@ -412,8 +413,11 @@ test "bindPlan and sharedKeys ComponentUnavailable prevent warm file and directo
     const binary = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, try project.path("components/cache-plan"), a, .limited(64 << 20));
     // ELF permits trailing bytes: same behavior, independently changed implementation identity.
     try project.deploy(try std.mem.concat(a, u8, &.{ binary, "\nidentity-only-qualification\n" }));
+    // The IR keys miss; the linked program is unchanged, so its execution receipts
+    // answer both tests (EXEC-RECEIPT-1).
     const changed = try cacheReport(a, try project.run("tests", &.{}));
-    try std.testing.expectEqual(@as(i64, 2), changed.object.get("passed").?.integer);
+    try std.testing.expectEqual(@as(i64, 2), changed.object.get("cached").?.integer);
+    try std.testing.expectEqual(@as(i64, 2), changed.object.get("exec_receipts").?.object.get("hits").?.integer);
     const before = (try cacheExplanation(warm, "test_dependent")).object.get("component").?.string;
     const after = (try cacheExplanation(changed, "test_dependent")).object.get("component").?.string;
     try std.testing.expect(!std.mem.eql(u8, before, after));
@@ -471,7 +475,9 @@ test "allocation warnings survive cold file and directory replay with a planner-
     const binary = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, try project.path("components/cache-plan"), a, .limited(64 << 20));
     // Trailing ELF bytes preserve behavior while changing only the planner artifact.
     try project.deploy(try std.mem.concat(a, u8, &.{ binary, "\nallocation-warning-identity-only\n" }));
-    const changed = try allocationWarningReport(&project, "tests/app.my", &.{}, false);
+    // A planner-only change misses the IR tier; the unchanged program's execution
+    // receipt answers the test (EXEC-RECEIPT-1), and checking still warns.
+    const changed = try allocationWarningReport(&project, "tests/app.my", &.{}, true);
     const changed_file_replay = try allocationWarningReport(&project, "tests/app.my", &.{}, true);
     const changed_directory_replay = try allocationWarningReport(&project, "tests", &.{"--jobs=1"}, true);
     const changed_directory_cold = try allocationWarningReport(&project, "tests", &.{ "--jobs=1", "--force" }, false);
@@ -555,6 +561,8 @@ fn qualifyCallbacks(project: *CacheProject, directory: std.Io.Dir) ![]const u8 {
 }
 
 const digest_receipt_path = "identity.my";
+const digest_test_name = "identity::test_digest";
+const digest_test = "test_digest";
 const digest_receipt_source =
     \\func compatible(value: int) -> int effects(managed_allocation):
     \\    _ = str(value)
@@ -580,10 +588,21 @@ fn digestReceiptReport(project: *CacheProject, extra: []const []const u8, status
 }
 
 fn expectDigestFresh(value: std.json.Value, status: []const u8) !void {
-    try expectVerdict(value, "identity::test_digest", status, "");
-    const explanation = try cacheExplanation(value, "test_digest");
+    try expectVerdict(value, digest_test_name, status, "");
+    const explanation = try cacheExplanation(value, digest_test);
     try std.testing.expectEqualStrings("execute", explanation.object.get("action").?.string);
     try std.testing.expectEqualStrings("uncacheable-metadata", explanation.object.get("reason").?.string);
+    try std.testing.expect(explanation.object.get("key").? == .null);
+}
+
+/// The digest test has no IR key, but its linked program's bytes carry the digest
+/// itself, so an identical program answers it from its execution receipt
+/// (EXEC-RECEIPT-1).
+fn expectDigestExecutionReuse(value: std.json.Value) !void {
+    try expectVerdict(value, digest_test_name, "cached", "");
+    const explanation = try cacheExplanation(value, digest_test);
+    try std.testing.expectEqualStrings("reuse", explanation.object.get("action").?.string);
+    try std.testing.expectEqualStrings("whole-exec-receipt-hit", explanation.object.get("reason").?.string);
     try std.testing.expect(explanation.object.get("key").? == .null);
 }
 
@@ -600,18 +619,19 @@ fn qualifyDigestReceipts(a: std.mem.Allocator, mode: []const u8) !void {
     try expectVerdict(warm, "identity::test_member", "cached", "");
     try expectVerdict(warm, "identity::test_ordinary", "cached", "");
     const repeated = try digestReceiptReport(&project, &.{}, 0);
-    try expectDigestFresh(repeated, "passed");
+    try expectDigestExecutionReuse(repeated);
     const changed = try std.mem.replaceOwned(u8, a, digest_receipt_source, "_ = str(value)", "_ = function_digest(compatible)");
     try temporary.dir.writeFile(std.testing.io, .{ .sub_path = digest_receipt_path, .data = changed });
     const edited = try digestReceiptReport(&project, &.{}, 1);
     try expectDigestFresh(edited, "failed");
     try expectVerdict(edited, "identity::test_ordinary", "cached", "");
     const forced = try digestReceiptReport(&project, &.{"--force"}, 1);
-    try expectVerdict(forced, "identity::test_digest", "failed", "");
+    try expectVerdict(forced, digest_test_name, "failed", "");
     // This root excludes the compatible target that introduced the self-digest
-    // dependency. A narrower live module therefore has a qualified identity.
-    const isolated = try digestReceiptReport(&project, &.{ "--filter", "test_digest" }, 0);
-    try expectDigestFresh(isolated, "passed");
+    // dependency, so its narrower live module links to the same bytes as before
+    // the edit and the execution receipt answers it.
+    const isolated = try digestReceiptReport(&project, &.{ "--filter", digest_test }, 0);
+    try expectDigestExecutionReuse(isolated);
     const combined = try digestReceiptReport(&project, &.{}, 1);
     try expectDigestFresh(combined, "failed");
 }
