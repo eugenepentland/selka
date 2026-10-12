@@ -29,8 +29,9 @@ after default promotion/retirement. These scripts never select compatibility RC.
   helper borrowing, nested directory/read-only/file scopes, early error cleanup,
   whole-root move after scopes join, and retained provider state afterward.
 - `provider_tuple`: two independent filesystem owners in a returned tuple,
-  simultaneous field/index-based open scopes, distinct file contents, and a
-  whole-root move after both scopes join.
+  a whole-root move and complete tuple unpack, simultaneous open scopes with
+  distinct file contents, and independent providers after both scopes join.
+  Tuple indexing is not part of the source language.
 - `guest_capability_fields`: every existing field-method and value assertion;
   scoped narrowing and ordinary borrowed-helper alias observation preserve the
   original behavior. No provider fields are flattened away.

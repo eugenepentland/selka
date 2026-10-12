@@ -1,0 +1,26 @@
+# spec-case: NEW-CORE-DICT-1
+func fallback(mut calls: int[], marker: int) -> int[]:
+    calls.append(marker)
+    return [marker]
+
+func scenario(size: int, prune: bool) -> bool:
+    mut values: dict[str, int[]] = {}
+    for index in range(size):
+        values["key-" + str(index)] = [index]
+    if prune:
+        for index in range(size):
+            if index % 3 == 0:
+                _ = values.pop("key-" + str(index))
+    values["kept"] = [777]
+    mut calls: int[] = []
+    const hit = values.setdefault("kept", fallback(mut calls, 900)).copy()
+    const inserted = values.setdefault("new", fallback(mut calls, 901)).copy()
+    values["new"] = [902]
+    values.clear()
+    return hit == [777] and inserted == [901] and calls == [900, 901]
+
+func main() -> int:
+    for size in [0, 7, 8, 32, 128]:
+        assert scenario(size, False)
+        assert scenario(size, True)
+    return 0

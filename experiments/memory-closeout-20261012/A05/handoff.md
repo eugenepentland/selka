@@ -294,3 +294,13 @@ six source-only negatives cover root invalidation, copying, partial moves,
 aggregate-parameter resource origin, and the exact original capability array.
 They have not yet qualified on that implementation. The harness records expected
 refusals separately from guest execution.
+
+The prepared aggregate positives now pass ordinary frontend syntax/type checks on
+support4 (`evidence/aggregate-input-syntax.json`); this is not checked-ownership
+qualification or execution. That preparation caught and corrected a shadowed
+constructor name and replaced unsupported tuple indexing with complete tuple
+unpack. `dictionary_setdefault.my` also passes that frontend check: it exercises
+managed hit/miss copies, eager fallback effects, independent results after clear,
+and five sizes with and without deleted entries. Native qualification awaits
+A07's integrated setdefault lowering. The get-default view regression is wired
+into the source-only harness with its intended `E_ZERO_RC_VIEW_ESCAPE` diagnostic.

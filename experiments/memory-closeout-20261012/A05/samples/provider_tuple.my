@@ -6,11 +6,12 @@ func providers() -> tuple[Filesystem, Filesystem]:
 
 func main() -> int:
     const pair = providers()
-    _ = pair[0].write_text("note", "first")
-    _ = pair[1].write_text("note", "second")
-    with pair[0].open("note", "r") as first:
-        with pair[1].open("note", "r") as second:
-            assert first.read() == "first" and second.read() == "second"
     const moved = pair
-    assert moved[0].exists("note") and moved[1].exists("note")
+    const first_fs, second_fs = moved
+    _ = first_fs.write_text("note", "first")
+    _ = second_fs.write_text("note", "second")
+    with first_fs.open("note", "r") as first:
+        with second_fs.open("note", "r") as second:
+            assert first.read() == "first" and second.read() == "second"
+    assert first_fs.exists("note") and second_fs.exists("note")
     return 0

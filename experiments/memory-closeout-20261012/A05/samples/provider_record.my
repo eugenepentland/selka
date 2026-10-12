@@ -10,7 +10,7 @@ record App:
     ports: Ports
     label: str
 
-func app() -> App:
+func make_app() -> App:
     return App(ports=Ports(fs=filesystem.memory(), env=environment.fixed({"KEEP": "yes"})), label="root")
 
 func borrowed(app: App) -> Result[str, str]:
@@ -27,7 +27,7 @@ func early(app: App) -> Result[bool, str]:
         return Err("expected")
 
 func main() -> int:
-    const original = app()
+    const original = make_app()
     match borrowed(original):
         case Ok(text):
             assert text == "root"
