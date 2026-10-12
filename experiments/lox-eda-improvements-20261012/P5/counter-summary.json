@@ -1,0 +1,264 @@
+{
+  "baseline": {
+    "64": {
+      "total_traffic": 830304,
+      "peak_live_bytes": 21816,
+      "live_bytes_at_exit": 0,
+      "buffer_copies": 5951,
+      "functions": {
+        "kicad_sch_textbox::overlaps_of": {
+          "alloc_bytes": 574688,
+          "realloc_added_bytes": 95232,
+          "buffer_copies": 4207,
+          "buffer_copy_bytes": 46120,
+          "list_copies": 8,
+          "list_copy_bytes": 6960
+        },
+        "support_sort::sort_by[kicad_sch_textbox::Item]": {
+          "alloc_bytes": 16336,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 144,
+          "buffer_copy_bytes": 1548,
+          "list_copies": 6,
+          "list_copy_bytes": 6912
+        },
+        "support_sort::lower": {
+          "alloc_bytes": 0,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0
+        },
+        "support_sort::merge_run[kicad_sch_textbox::Item]": {
+          "alloc_bytes": 102400,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 1600,
+          "buffer_copy_bytes": 17296,
+          "list_copies": 0,
+          "list_copy_bytes": 0
+        }
+      }
+    },
+    "128": {
+      "total_traffic": 2748352,
+      "peak_live_bytes": 43384,
+      "live_bytes_at_exit": 0,
+      "buffer_copies": 20479,
+      "functions": {
+        "kicad_sch_textbox::overlaps_of": {
+          "alloc_bytes": 1732832,
+          "realloc_added_bytes": 678912,
+          "buffer_copies": 16559,
+          "buffer_copy_bytes": 188404,
+          "list_copies": 8,
+          "list_copy_bytes": 13104
+        },
+        "support_sort::sort_by[kicad_sch_textbox::Item]": {
+          "alloc_bytes": 30672,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 272,
+          "buffer_copy_bytes": 3012,
+          "list_copies": 6,
+          "list_copy_bytes": 13056
+        },
+        "support_sort::lower": {
+          "alloc_bytes": 0,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0
+        },
+        "support_sort::merge_run[kicad_sch_textbox::Item]": {
+          "alloc_bytes": 233472,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 3648,
+          "buffer_copy_bytes": 40568,
+          "list_copies": 0,
+          "list_copy_bytes": 0
+        }
+      }
+    }
+  },
+  "indexed": {
+    "64": {
+      "total_traffic": 177296,
+      "peak_live_bytes": 21816,
+      "live_bytes_at_exit": 0,
+      "buffer_copies": 1895,
+      "functions": {
+        "kicad_sch_textbox::overlaps_of": {
+          "alloc_bytes": 16912,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 151,
+          "buffer_copy_bytes": 1618,
+          "list_copies": 8,
+          "list_copy_bytes": 6960
+        },
+        "support_sort::sort_by[kicad_sch_textbox::Item]": {
+          "alloc_bytes": 16336,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 144,
+          "buffer_copy_bytes": 1548,
+          "list_copies": 6,
+          "list_copy_bytes": 6912
+        },
+        "support_sort::lower": {
+          "alloc_bytes": 0,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0
+        },
+        "support_sort::merge_run[kicad_sch_textbox::Item]": {
+          "alloc_bytes": 102400,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 1600,
+          "buffer_copy_bytes": 17296,
+          "list_copies": 0,
+          "list_copy_bytes": 0
+        }
+      }
+    },
+    "128": {
+      "total_traffic": 367856,
+      "peak_live_bytes": 43384,
+      "live_bytes_at_exit": 0,
+      "buffer_copies": 4199,
+      "functions": {
+        "kicad_sch_textbox::overlaps_of": {
+          "alloc_bytes": 31248,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 279,
+          "buffer_copy_bytes": 3082,
+          "list_copies": 8,
+          "list_copy_bytes": 13104
+        },
+        "support_sort::sort_by[kicad_sch_textbox::Item]": {
+          "alloc_bytes": 30672,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 272,
+          "buffer_copy_bytes": 3012,
+          "list_copies": 6,
+          "list_copy_bytes": 13056
+        },
+        "support_sort::lower": {
+          "alloc_bytes": 0,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0
+        },
+        "support_sort::merge_run[kicad_sch_textbox::Item]": {
+          "alloc_bytes": 233472,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 3648,
+          "buffer_copy_bytes": 40568,
+          "list_copies": 0,
+          "list_copy_bytes": 0
+        }
+      }
+    }
+  },
+  "indices": {
+    "64": {
+      "total_traffic": 47888,
+      "peak_live_bytes": 9576,
+      "live_bytes_at_exit": 0,
+      "buffer_copies": 6,
+      "functions": {
+        "kicad_sch_textbox::overlaps_of": {
+          "alloc_bytes": 1824,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 6,
+          "buffer_copy_bytes": 60,
+          "list_copies": 0,
+          "list_copy_bytes": 0
+        },
+        "support_sort::sort_by_ctx[i64,List<kicad_sch_textbox::Item>]": {
+          "alloc_bytes": 2880,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "list_copies": 6,
+          "list_copy_bytes": 1152
+        },
+        "support_sort::sort_indexes[i64,List<kicad_sch_textbox::Item>]": {
+          "alloc_bytes": 1536,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "list_copies": 6,
+          "list_copy_bytes": 1152
+        },
+        "support_sort::lower": {
+          "alloc_bytes": 0,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0
+        },
+        "support_sort::merge_index_run[i64,List<kicad_sch_textbox::Item>]": {
+          "alloc_bytes": 0,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0
+        }
+      }
+    },
+    "128": {
+      "total_traffic": 82864,
+      "peak_live_bytes": 18888,
+      "live_bytes_at_exit": 0,
+      "buffer_copies": 6,
+      "functions": {
+        "kicad_sch_textbox::overlaps_of": {
+          "alloc_bytes": 2864,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 6,
+          "buffer_copy_bytes": 60,
+          "list_copies": 0,
+          "list_copy_bytes": 0
+        },
+        "support_sort::sort_by_ctx[i64,List<kicad_sch_textbox::Item>]": {
+          "alloc_bytes": 4960,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "list_copies": 6,
+          "list_copy_bytes": 2176
+        },
+        "support_sort::sort_indexes[i64,List<kicad_sch_textbox::Item>]": {
+          "alloc_bytes": 2576,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "list_copies": 6,
+          "list_copy_bytes": 2176
+        },
+        "support_sort::lower": {
+          "alloc_bytes": 0,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0
+        },
+        "support_sort::merge_index_run[i64,List<kicad_sch_textbox::Item>]": {
+          "alloc_bytes": 0,
+          "realloc_added_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0
+        }
+      }
+    }
+  }
+}

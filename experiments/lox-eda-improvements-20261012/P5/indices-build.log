@@ -1,0 +1,41 @@
+build-slot: FIFO ticket 2488, position 18; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2488, position 17; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 2488, position 17; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 2488, position 17; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 2488, position 17; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 2488, position 17; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 2488, position 17; earlier build tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 2488, position 17; earlier build tickets must run first; waiting (421s so far)
+build-slot: FIFO ticket 2488, position 17; earlier build tickets must run first; waiting (482s so far)
+build-slot: FIFO ticket 2488, position 17; earlier build tickets must run first; waiting (542s so far)
+build-slot: FIFO ticket 2488, position 17; earlier build tickets must run first; waiting (602s so far)
+build-slot: FIFO ticket 2488, position 17; earlier build tickets must run first; waiting (662s so far)
+build-slot: FIFO ticket 2488, position 17; earlier build tickets must run first; waiting (723s so far)
+build-slot: FIFO ticket 2488, position 17; earlier build tickets must run first; waiting (783s so far)
+build-slot: FIFO ticket 2488, position 17; earlier build tickets must run first; waiting (843s so far)
+build-slot: FIFO ticket 2488, position 17; earlier build tickets must run first; waiting (903s so far)
+build-slot: FIFO ticket 2488, position 17; earlier build tickets must run first; waiting (964s so far)
+build-slot: FIFO ticket 2488, position 17; earlier build tickets must run first; waiting (1024s so far)
+build-slot: FIFO ticket 2488, position 17; earlier build tickets must run first; waiting (1084s so far)
+build-slot: FIFO ticket 2488, position 17; earlier build tickets must run first; waiting (1144s so far)
+build-slot: FIFO ticket 2488, position 16; earlier build tickets must run first; waiting (1204s so far)
+build-slot: FIFO ticket 2488, position 16; earlier build tickets must run first; waiting (1260s so far)
+build-slot: FIFO ticket 2488, position 16; earlier build tickets must run first; waiting (1320s so far)
+build-slot: FIFO ticket 2488, position 16; earlier build tickets must run first; waiting (1380s so far)
+build-slot: FIFO ticket 2488, position 16; earlier build tickets must run first; waiting (1440s so far)
+build-slot: FIFO ticket 2488, position 16; earlier build tickets must run first; waiting (1501s so far)
+build-slot: FIFO ticket 2488, position 16; earlier build tickets must run first; waiting (1561s so far)
+build-slot: FIFO ticket 2488, position 16; earlier build tickets must run first; waiting (1621s so far)
+build-slot: FIFO ticket 2488, position 16; earlier build tickets must run first; waiting (1681s so far)
+build-slot: FIFO ticket 2488, position 16; earlier build tickets must run first; waiting (1741s so far)
+build-slot: FIFO ticket 2488, position 16; earlier build tickets must run first; waiting (1802s so far)
+build-slot: FIFO ticket 2488, position 16; earlier build tickets must run first; waiting (1862s so far)
+build-slot: FIFO ticket 2488, position 15; earlier build tickets must run first; waiting (1922s so far)
+build-slot: FIFO ticket 2488, position 7; earlier build tickets must run first; waiting (1982s so far)
+build-slot: build slot 2, FIFO ticket 2488 after 2028s
+kicad_sch_textbox.my:620:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      mut a = -1
+          ^
+kicad_sch_textbox.my:621:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+      mut b = -1
+          ^
