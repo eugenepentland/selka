@@ -12,7 +12,7 @@ public enum Error:
 
 
 # The human-readable reason a cache could not be created.
-public func message(error: Error) -> str effects(managed_allocation):
+public func message(error: Error) -> str:
     match error:
         case Error.InvalidCapacity(value=detail):
             return detail.copy()

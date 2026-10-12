@@ -2,7 +2,7 @@
   "scope": "C0 and interim/overlay fixture evidence, not final integrated export qualification",
   "public_declarations": 120,
   "public_functions": 95,
-  "declarations_with_at_least_one_passing_fixture_reference": 88,
+  "declarations_with_at_least_one_passing_fixture_reference": 92,
   "items": [
     {
       "module": "cache_record",
@@ -129,7 +129,53 @@
       "name": "Error",
       "kind": "enum",
       "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "release",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "52c82d59ea8b22a388440588ee315a5ea6aad12d67dfbf024b42cc1457568e61"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "debug",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "2c976649d808ff98261a1e26d03e39bad475d88d902972cae18a97371cdbceb4"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "verified",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "eb5df12339376948099c909e743fe6de8d648daa8eb3475d7184da9590b73690"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "optimized-debug",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "0c229eda55db60e682de46fc15638c00a15e0b1b16b57e513fed7a1eebc98d90"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "no-facts",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "52c82d59ea8b22a388440588ee315a5ea6aad12d67dfbf024b42cc1457568e61"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -138,7 +184,53 @@
       "name": "message",
       "kind": "func",
       "contract": "Borrows error; returns immutable static reason or an independent copy of dynamic detail.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "release",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "52c82d59ea8b22a388440588ee315a5ea6aad12d67dfbf024b42cc1457568e61"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "debug",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "2c976649d808ff98261a1e26d03e39bad475d88d902972cae18a97371cdbceb4"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "verified",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "eb5df12339376948099c909e743fe6de8d648daa8eb3475d7184da9590b73690"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "optimized-debug",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "0c229eda55db60e682de46fc15638c00a15e0b1b16b57e513fed7a1eebc98d90"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "no-facts",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "52c82d59ea8b22a388440588ee315a5ea6aad12d67dfbf024b42cc1457568e61"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -789,6 +881,51 @@
           "source_sha256": "28074a03530fda44404c885eaf79a2484723ea9193a76c0a76ed5445ec4da64e",
           "overlay": true,
           "binary_sha256": "8023a325c32c5fd0a5a300030a7ac5cbe881594f3d5251a231dda3127fda3f42"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "release",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "52c82d59ea8b22a388440588ee315a5ea6aad12d67dfbf024b42cc1457568e61"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "debug",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "2c976649d808ff98261a1e26d03e39bad475d88d902972cae18a97371cdbceb4"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "verified",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "eb5df12339376948099c909e743fe6de8d648daa8eb3475d7184da9590b73690"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "optimized-debug",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "0c229eda55db60e682de46fc15638c00a15e0b1b16b57e513fed7a1eebc98d90"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "no-facts",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "52c82d59ea8b22a388440588ee315a5ea6aad12d67dfbf024b42cc1457568e61"
         }
       ],
       "final_C1_qualification": "pending",
@@ -808,6 +945,51 @@
           "source_sha256": "28074a03530fda44404c885eaf79a2484723ea9193a76c0a76ed5445ec4da64e",
           "overlay": true,
           "binary_sha256": "8023a325c32c5fd0a5a300030a7ac5cbe881594f3d5251a231dda3127fda3f42"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "release",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "52c82d59ea8b22a388440588ee315a5ea6aad12d67dfbf024b42cc1457568e61"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "debug",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "2c976649d808ff98261a1e26d03e39bad475d88d902972cae18a97371cdbceb4"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "verified",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "eb5df12339376948099c909e743fe6de8d648daa8eb3475d7184da9590b73690"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "optimized-debug",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "0c229eda55db60e682de46fc15638c00a15e0b1b16b57e513fed7a1eebc98d90"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "no-facts",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "52c82d59ea8b22a388440588ee315a5ea6aad12d67dfbf024b42cc1457568e61"
         }
       ],
       "final_C1_qualification": "pending",
@@ -1084,7 +1266,53 @@
       "name": "Error",
       "kind": "enum",
       "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "release",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "52c82d59ea8b22a388440588ee315a5ea6aad12d67dfbf024b42cc1457568e61"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "debug",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "2c976649d808ff98261a1e26d03e39bad475d88d902972cae18a97371cdbceb4"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "verified",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "eb5df12339376948099c909e743fe6de8d648daa8eb3475d7184da9590b73690"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "optimized-debug",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "0c229eda55db60e682de46fc15638c00a15e0b1b16b57e513fed7a1eebc98d90"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "no-facts",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "52c82d59ea8b22a388440588ee315a5ea6aad12d67dfbf024b42cc1457568e61"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1093,7 +1321,53 @@
       "name": "message",
       "kind": "func",
       "contract": "Borrows error; returns immutable static reason or an independent copy of dynamic detail.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "release",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "52c82d59ea8b22a388440588ee315a5ea6aad12d67dfbf024b42cc1457568e61"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "debug",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "2c976649d808ff98261a1e26d03e39bad475d88d902972cae18a97371cdbceb4"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "verified",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "eb5df12339376948099c909e743fe6de8d648daa8eb3475d7184da9590b73690"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "optimized-debug",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "0c229eda55db60e682de46fc15638c00a15e0b1b16b57e513fed7a1eebc98d90"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
+          "case": "errors",
+          "mode": "no-facts",
+          "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+          "source_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+          "overlay": true,
+          "binary_sha256": "52c82d59ea8b22a388440588ee315a5ea6aad12d67dfbf024b42cc1457568e61"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },

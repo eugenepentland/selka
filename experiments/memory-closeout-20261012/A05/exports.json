@@ -117,7 +117,9 @@
       "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
       "qualification": "pending executable coverage",
       "evidence": [],
-      "source_coverage": []
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/errors.my"
+      ]
     },
     {
       "module": "durable",
@@ -131,7 +133,8 @@
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
-        "experiments/memory-closeout-20261012/A05/samples/storage.my"
+        "experiments/memory-closeout-20261012/A05/samples/storage.my",
+        "experiments/memory-closeout-20261012/A05/samples/errors.my"
       ]
     },
     {
@@ -618,7 +621,8 @@
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
-        "experiments/memory-closeout-20261012/A05/samples/memo.my"
+        "experiments/memory-closeout-20261012/A05/samples/memo.my",
+        "experiments/memory-closeout-20261012/A05/samples/errors.my"
       ]
     },
     {
@@ -633,7 +637,8 @@
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
-        "experiments/memory-closeout-20261012/A05/samples/memo.my"
+        "experiments/memory-closeout-20261012/A05/samples/memo.my",
+        "experiments/memory-closeout-20261012/A05/samples/errors.my"
       ]
     },
     {
@@ -995,7 +1000,9 @@
       "ownership_contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
       "qualification": "pending executable coverage",
       "evidence": [],
-      "source_coverage": []
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/errors.my"
+      ]
     },
     {
       "module": "persistent_memo",
@@ -1009,7 +1016,8 @@
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
-        "experiments/memory-closeout-20261012/A05/samples/storage.my"
+        "experiments/memory-closeout-20261012/A05/samples/storage.my",
+        "experiments/memory-closeout-20261012/A05/samples/errors.my"
       ]
     },
     {

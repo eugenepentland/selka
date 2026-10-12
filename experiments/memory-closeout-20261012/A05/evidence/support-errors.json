@@ -1,0 +1,371 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+  "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+  "overlay": true,
+  "check_only": false,
+  "harness_sha256": "c1d95cd5ebafebeef8f59d2d17821e48c1a19133427086d88895ecdf33424c66",
+  "cases": {
+    "errors": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/errors.my",
+        "original_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+        "source_sha256": "aa2990a12ef9baa8fc56f2be8ae7cebc8dc10715f044d6d52830d5cde0dd9bca",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/errors/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/errors/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/errors/release/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "a05_durable.my:40:42: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public func message(error: Error) -> str effects(managed_allocation):\n                                           ^\na05_memo.my:15:42: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public func message(error: Error) -> str effects(managed_allocation):\n                                           ^\na05_persistent_memo.my:25:42: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public func message(error: Error) -> str effects(managed_allocation):\n                                           ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "a9ccf8dae16c35d21d00f2a58106b53b8b48ed342920676fee1b2a20a2c1c048",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "aa2990a12ef9baa8fc56f2be8ae7cebc8dc10715f044d6d52830d5cde0dd9bca"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "52c82d59ea8b22a388440588ee315a5ea6aad12d67dfbf024b42cc1457568e61",
+        "llvm_sha256": "0b66530377a16f66b8aff0d09346719687049ba56f97263334d0884c0aa0713c",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support-errors/errors/release/counts.json",
+          "counter_sha256": "0863ae5c5497c0d582011f5827a5316b06bdaa881922ef89a4e1da0d7949ae36",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 16,
+          "memory": {
+            "allocs": 13,
+            "alloc_bytes": 832,
+            "frees": 13,
+            "reallocs": 0,
+            "peak_live_bytes": 192,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      },
+      "debug": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/errors.my",
+        "original_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+        "source_sha256": "aa2990a12ef9baa8fc56f2be8ae7cebc8dc10715f044d6d52830d5cde0dd9bca",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/errors/debug/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--unoptimized",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/errors/debug/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/errors/debug/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "a05_durable.my:40:42: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public func message(error: Error) -> str effects(managed_allocation):\n                                           ^\na05_memo.my:15:42: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public func message(error: Error) -> str effects(managed_allocation):\n                                           ^\na05_persistent_memo.my:25:42: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public func message(error: Error) -> str effects(managed_allocation):\n                                           ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "a9ccf8dae16c35d21d00f2a58106b53b8b48ed342920676fee1b2a20a2c1c048",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "aa2990a12ef9baa8fc56f2be8ae7cebc8dc10715f044d6d52830d5cde0dd9bca"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "2c976649d808ff98261a1e26d03e39bad475d88d902972cae18a97371cdbceb4",
+        "llvm_sha256": "0b66530377a16f66b8aff0d09346719687049ba56f97263334d0884c0aa0713c",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support-errors/errors/debug/counts.json",
+          "counter_sha256": "0863ae5c5497c0d582011f5827a5316b06bdaa881922ef89a4e1da0d7949ae36",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 16,
+          "memory": {
+            "allocs": 13,
+            "alloc_bytes": 832,
+            "frees": 13,
+            "reallocs": 0,
+            "peak_live_bytes": 192,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      },
+      "verified": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/errors.my",
+        "original_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+        "source_sha256": "aa2990a12ef9baa8fc56f2be8ae7cebc8dc10715f044d6d52830d5cde0dd9bca",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/errors/verified/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--verify-facts",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/errors/verified/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/errors/verified/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "a05_durable.my:40:42: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public func message(error: Error) -> str effects(managed_allocation):\n                                           ^\na05_memo.my:15:42: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public func message(error: Error) -> str effects(managed_allocation):\n                                           ^\na05_persistent_memo.my:25:42: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public func message(error: Error) -> str effects(managed_allocation):\n                                           ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "a9ccf8dae16c35d21d00f2a58106b53b8b48ed342920676fee1b2a20a2c1c048",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "aa2990a12ef9baa8fc56f2be8ae7cebc8dc10715f044d6d52830d5cde0dd9bca"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "eb5df12339376948099c909e743fe6de8d648daa8eb3475d7184da9590b73690",
+        "llvm_sha256": "4005096031b1cadb362ca4b9df8b07850924add84686ef04433cb824c3d27d40",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support-errors/errors/verified/counts.json",
+          "counter_sha256": "f7276934f76dedc3e6e02eaf59dec5aa6d63516a7c8a20547e1af9777020e9b3",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 16,
+          "memory": {
+            "allocs": 13,
+            "alloc_bytes": 832,
+            "frees": 13,
+            "reallocs": 0,
+            "peak_live_bytes": 192,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      },
+      "optimized-debug": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/errors.my",
+        "original_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+        "source_sha256": "aa2990a12ef9baa8fc56f2be8ae7cebc8dc10715f044d6d52830d5cde0dd9bca",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/errors/optimized-debug/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--optimize-debug",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/errors/optimized-debug/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/errors/optimized-debug/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "a05_durable.my:40:42: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public func message(error: Error) -> str effects(managed_allocation):\n                                           ^\na05_memo.my:15:42: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public func message(error: Error) -> str effects(managed_allocation):\n                                           ^\na05_persistent_memo.my:25:42: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public func message(error: Error) -> str effects(managed_allocation):\n                                           ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "a9ccf8dae16c35d21d00f2a58106b53b8b48ed342920676fee1b2a20a2c1c048",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "aa2990a12ef9baa8fc56f2be8ae7cebc8dc10715f044d6d52830d5cde0dd9bca"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "0c229eda55db60e682de46fc15638c00a15e0b1b16b57e513fed7a1eebc98d90",
+        "llvm_sha256": "0b66530377a16f66b8aff0d09346719687049ba56f97263334d0884c0aa0713c",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support-errors/errors/optimized-debug/counts.json",
+          "counter_sha256": "0863ae5c5497c0d582011f5827a5316b06bdaa881922ef89a4e1da0d7949ae36",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 16,
+          "memory": {
+            "allocs": 13,
+            "alloc_bytes": 832,
+            "frees": 13,
+            "reallocs": 0,
+            "peak_live_bytes": 192,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      },
+      "no-facts": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/errors.my",
+        "original_sha256": "c99d200b7ac00881c2a60f0a60faa0212d3349f00706fc52b4c21d4c4c89929e",
+        "source_sha256": "aa2990a12ef9baa8fc56f2be8ae7cebc8dc10715f044d6d52830d5cde0dd9bca",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/errors/no-facts/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--no-facts",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/errors/no-facts/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-errors/errors/no-facts/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "a05_durable.my:40:42: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public func message(error: Error) -> str effects(managed_allocation):\n                                           ^\na05_memo.my:15:42: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public func message(error: Error) -> str effects(managed_allocation):\n                                           ^\na05_persistent_memo.my:25:42: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public func message(error: Error) -> str effects(managed_allocation):\n                                           ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "a9ccf8dae16c35d21d00f2a58106b53b8b48ed342920676fee1b2a20a2c1c048",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "aa2990a12ef9baa8fc56f2be8ae7cebc8dc10715f044d6d52830d5cde0dd9bca"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "52c82d59ea8b22a388440588ee315a5ea6aad12d67dfbf024b42cc1457568e61",
+        "llvm_sha256": "0b66530377a16f66b8aff0d09346719687049ba56f97263334d0884c0aa0713c",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support-errors/errors/no-facts/counts.json",
+          "counter_sha256": "0863ae5c5497c0d582011f5827a5316b06bdaa881922ef89a4e1da0d7949ae36",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 16,
+          "memory": {
+            "allocs": 13,
+            "alloc_bytes": 832,
+            "frees": 13,
+            "reallocs": 0,
+            "peak_live_bytes": 192,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      }
+    }
+  },
+  "compiler_source_revision": "4c4c1663680fa4c290691867107eee24b504604d",
+  "failures": 0
+}

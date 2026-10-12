@@ -22,7 +22,7 @@ public enum Error:
 
 
 # Describe a rejected request or failed provider operation.
-public func message(error: Error) -> str effects(managed_allocation):
+public func message(error: Error) -> str:
     match error:
         case Error.Invalid:
             return "invalid persistent memo bounds"
