@@ -925,6 +925,13 @@ void myl_core_release(myl_block *block) {
    The pending chain reuses dying headers and requires no allocation or count. */
 static void core_owned_child(myl_block *child, void *context) {
     if (!child || (child->kind & MYL_STATIC_STORAGE)) return;
+    /* Leaves have no provider cleanup or children. Reclaim them directly,
+       without writing a pending-chain link into their capacity word. */
+    unsigned kind = kind_of(child);
+    if (kind == MYL_KIND_STR || kind == MYL_KIND_BYTES) {
+        block_free(child);
+        return;
+    }
     myl_block **pending = context;
     child->cap = (int64_t)(intptr_t)*pending;
     *pending = child;
