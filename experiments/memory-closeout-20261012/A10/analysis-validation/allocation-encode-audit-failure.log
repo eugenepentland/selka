@@ -1,0 +1,26 @@
+build-slot: FIFO ticket 353, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 353, position 1; all 2 build slot(s) busy; waiting (60s so far)
+build-slot: FIFO ticket 353, position 1; waiting for measurement or memory-accounting settle delay; waiting (121s so far)
+build-slot: build slot 2, FIFO ticket 353 after 126s
+38ced348098c4d5ed18e0d3b8dd9d51067bd78f28cc0b051e0ff197e97c04fb7
+667f956fdcd7282a1b631413ec3974377bec0c68fc291f9fadb8bb743b569f03
+test-core
++- verification action core member 0 2 pass, 1 fail (3 total)
+guardian/test: test wall 0.43s; slowest over 50ms:
+guardian/test:   0.41s  cost_command.test.zero RC allocation contracts count independent encode and buffer reverse copies
+guardian/test: FAIL — 1 failed of 3
+guardian/test: RESULT {"passed":2,"failed":1,"skipped":0}
+error: 'cost_command.test.zero RC allocation contracts count independent encode and buffer reverse copies' failed:
+       guardian/test: 3 test(s) selected by filter: "zero RC allocation contracts", "zero RC portable receipts"
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x13c2f29 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A10/src/core/cost_command.zig:319:5: 0x2409fe4 in test.zero RC allocation contracts count independent encode and buffer reverse copies (root_test.zig)
+           try std.testing.expect(owned[0].unsupported == null and !owned[0].unresolved);
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-install/libexec/mylang/components ./.zig-cache/o/ffeedfee24b1bc9d27c62b317e261290/test "--guardian-filter=zero RC allocation contracts" "--guardian-filter=zero RC portable receipts" --cache-dir=./.zig-cache --seed=0xa85f5b54 --listen=-
+
+Build Summary: 12/14 steps succeeded (1 failed); 2/3 tests passed (1 failed)
+test-core transitive failure
++- verification action core member 0 2 pass, 1 fail (3 total)
+

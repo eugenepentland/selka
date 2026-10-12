@@ -122,3 +122,60 @@ precede A07 production fixes and integrated source migrations. Recheck C1 before
 classifying a remaining in-scope failure as a release blocker. Exact first
 refusals and sorted source paths are in `additional-admission-summary.json`
 and `additional-owned-refused.txt`.
+
+Support3 recheck (source `0d17e4e130706639c0f49e78b60502bfb2151ebc`, binary
+`7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7`): all
+219 paired source checks completed in one 5.66-second admitted lease. Results are
+113 admitted by both, 79 new owned refusals, 27 refused by both. Source hashes are
+unchanged. Seven earlier refusals now admit due to integrated production fixes.
+`additional-migration-support3.json` and the five `additional-migrations-Axx.md`
+files give nonoverlapping proposed owner assignments and first diagnostics. The
+coordinator owns dispatch. No additional fixture source is edited by A10.
+
+Admission correction: inspection of the shared Git pre-commit hook showed it
+executes Guardian directly and does not acquire build-slot admission. A10's earlier
+commits ran that hook directly; their final Guardian outcomes remain correctness
+evidence, but their resource/timing admission was not compliant. Successful hook
+end times on 2026-10-12 UTC were 01:02:36, 01:08:23, 01:16:01, 01:23:37 and
+01:27:30, with failed attempts before some of those times. Coordinator and A09
+were notified so overlapping timing samples can be reviewed. All subsequent A10
+commits use `scripts/build-slot.sh gate git commit ...`. No historical measurement
+is silently relabeled as admitted, and no Guardian FEEDBACK entry is written.
+
+Unapplied C2/C3 preparation is under `rollout/`: frontend default promotion and
+CLI-selector retirement patches, source/patch hashes, exact internal API call-site
+inventory and owner obligations. Both patches pass apply checks on their specified
+stages and scratch Zig format checks. Neither is applied or compiled; no milestone
+is claimed. Current docs and many internal legacy test assertions remain rollout
+obligations and are explicitly listed.
+
+Allocation/portable followup: selected ownership mode now reaches frontend
+allocation warnings, lint, profiling checks, dump-IR, cost, provider/union test
+sessions, coverage and portable test-key lowering. Before lowering for allocation
+analysis, the frontend eagerly rejects invalid source ownership; coordinator
+approved retaining later validation until an explicit validated-state contract
+can safely replace the duplicate work. A08 reviewed portable canonical lowering
+and whole-source validation. Coordinator/A07 authored/approved `coverageInput`.
+Borrowed view helpers are audited allocation-free; owned text encoding and buffer
+reversal are independent allocations, and explicit copies still warn under noalloc.
+Coverage returns a failure status for owned frontend refusals while preserving
+its ordinary legacy inspection control until rollout.
+
+`analysis-validation/validation.json` identifies all changed production hashes and
+compiler SHA256 `1e4d0146212d053a10c6c0a984c220ccb01de7069a7d32ef347745ec5f17c5c9`.
+Three focused regressions pass. The final command matrix passes15/15, including
+actual portable shared-receipt reuse across relocated roots with separate private
+caches, eager refusal after an invalid move added to an unused helper, and emitted
+owned ABI/absence of retain/count-release symbols. Receipt tests disable leak
+instrumentation for eligibility; these rows are not a new counted corpus claim.
+Early failed matrix evidence remains preserved. It exposed coverage status0 on
+frontend refusal and the separately fixed uncacheable native-link object lifetime.
+Approved dependencies38dc781a8 and a2160955e were consumed locally as6ac27ce04 and
+a9dc0edfe. External timing/FIFO queue delays are logged and excluded from any
+compilation or runtime comparison.
+
+Reviewable rollout preparation now also includes full ownership/managed-memory
+page drafts, an unexecuted65-row selector/guest-separator matrix, and an ordered
+retirement dependency plan. Production docs/defaults and legacy retirement remain
+unchanged. Actual integrated documentation tests, component qualification and
+C1/C2/C3 gates are still required; drafts are not implementation milestones.

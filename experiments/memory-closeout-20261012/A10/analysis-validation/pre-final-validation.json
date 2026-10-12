@@ -1,0 +1,34 @@
+{
+  "base_commit": "2577c45768be0f865ddb8d1e506e3b829a5a9672",
+  "source_file_hashes": {
+    "src/core/allocation_contract.zig": "739c9914c36c0d84d63b634b2842d1b631b65691501d0a1dfe99a9e0d5af7af5",
+    "src/core/build.zig": "691ca2b18c0c9d8b49602e28ca32b42e8fdfe11dd9e1710e2c6ea519d8ea9bbe",
+    "src/core/check_command.zig": "3408609f5797b0bd0f003dcd9df88c98f8bf0b8eadaa6903df0aa87e18a795c5",
+    "src/core/cli.zig": "40fd4413a21c9d5ac3be15fa960100e70417d4e699803bf17da08f35495c5a79",
+    "src/core/cost.zig": "f9dc3e1a662e2f96902037d42b9d7c404ad50f385d6013a0cbb0da8ba5e583c3",
+    "src/core/cost_command.zig": "55f6889a739d909c41d48ee4f7651eb726fe2d66be49a4e9c7c0a99e4dd4bc8a",
+    "src/core/frontend.zig": "fe6b4b3a3bc508393d93144da2033fc2317a56a74b272e3ad25d17826a90175d",
+    "src/core/main.zig": "ce9c7c7acb837bd4a5b54f6259ebdfcb6eef9c052dc5a79cf45202ee79a4c47a",
+    "src/core/pipeline.zig": "55465985b025f6e671db9c95444df52ca75bd6704109b4fef5a1d80e6e8dbc7c",
+    "src/core/test_runner.zig": "cfe1eec9fd3806d70a7163d622d558335427caae17574d50f5cc0c84e0c8037c",
+    "src/core/test_runner_portable.zig": "86ea1fb1c0ce5bbcde32c18943cb3df76df1baa3d2f061cdd456573239b97942",
+    "src/core/test_runner_union.zig": "f9beec114944ea80c94c629c022f805b809224ea84658146fe1dd70780730535",
+    "src/main.zig": "0e1a63bfbfea6872b854f5067dee490b8a6aed0e69ae41092ff1a071d279f796"
+  },
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-install/focus/mylang",
+  "compiler_sha256": "972735adadee4a4d44bfbc11a4a971bd4fe03126cc8c370314074aee547a8536",
+  "focused": {
+    "command": "scripts/build-slot.sh build \"$ZIG\" build test-core affected-compiler --prefix .tmp/memory-closeout/A10/analysis-install -Dtest-filter=\"zero RC allocation contracts\" -Dtest-filter=\"zero RC portable receipts\" -j\"$MYLANG_DEV_JOBS\" --maxrss \"$MYLANG_DEV_MAXRSS\"",
+    "exit_status": 0,
+    "passed": 3,
+    "failed": 0,
+    "log": "focused-passed.log"
+  },
+  "earlier_attempts": [
+    "allocation-unregistered.log: zero selected tests; failure, not pass",
+    "allocation-import-failure.log: missing local import in regression",
+    "allocation-view-audit-failure.log: exposed missing view allocation allowlist",
+    "allocation-encode-audit-failure.log: exposed compiler helper treated as unresolved extern; audited exact synthetic helper now may-allocate"
+  ],
+  "command_matrix": "pending"
+}

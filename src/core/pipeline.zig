@@ -159,6 +159,7 @@ fn buildAttempt(init: std.process.Init, path: []const u8, options: Options, budg
         const report_start = report.items.len;
         var session = frontend.Session.init(init.gpa, init.io, entry.root);
         defer session.deinit();
+        session.setOwnership(options.show.codegen.single_owner, options.show.codegen.zero_rc);
         entry.configure(&session);
         if (options.show.diagnostics != .errors) session.setFormat(if (options.show.diagnostics == .json) .json else .text);
         const drop_debug = options.mode == .release and budget == null;

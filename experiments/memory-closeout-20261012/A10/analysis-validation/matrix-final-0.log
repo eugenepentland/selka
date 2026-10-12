@@ -1,0 +1,18 @@
+build-slot: FIFO ticket 452, position 19; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 452, position 12; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 452, position 10; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 452, position 10; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 452, position 10; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 452, position 9; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 452, position 3; earlier build tickets must run first; waiting (362s so far)
+build-slot: build slot 2, FIFO ticket 452 after 382s
+coverage-owned 0 PASS
+coverage-negative 1 PASS
+check-stats 0 PASS
+check-stats-warm 0 PASS
+dump-ir 0 PASS
+build-owned 0 PASS
+run-owned 0 PASS
+test-shared-first 0 PASS
+test-shared-relocated 0 PASS
+test-shared-unreachable-invalid 1 PASS

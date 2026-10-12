@@ -1,0 +1,13 @@
+build-slot: FIFO ticket 454, position 19; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 454, position 12; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 454, position 12; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 454, position 12; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 454, position 11; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 454, position 10; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 454, position 2; earlier build tickets must run first; waiting (361s so far)
+build-slot: build slot 1, FIFO ticket 454 after 392s
+lint-owned 0 PASS
+noalloc-invalid-check 1 PASS
+noalloc-invalid-build 1 PASS
+noalloc-invalid-lint 1 PASS
+coverage-ordinary-control 0 PASS

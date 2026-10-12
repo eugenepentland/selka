@@ -215,6 +215,7 @@ fn together(context: Context, checks: *Checks, eligible: []const ?Root, members:
     const text = try entryText(a, names);
     const session = try a.create(frontend.Session);
     session.* = frontend.Session.init(init.gpa, init.io, first.root);
+    session.setOwnership(context.controls.build.show.codegen.single_owner, context.controls.build.show.codegen.zero_rc);
     first.configure(session);
     session.configureProject(first.limits(), entry_name);
     session.setProviders(try a.dupe(frontend.Provider, &.{.{ .path = relative, .text = text }}));

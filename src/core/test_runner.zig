@@ -207,6 +207,7 @@ fn finish(init: std.process.Init, ready: Ready, setup: Setup) Error!u8 {
     const view = setup.view();
     var session = frontend.Session.init(init.gpa, init.io, located.root);
     defer session.deinit();
+    session.setOwnership(options.build.show.codegen.single_owner, options.build.show.codegen.zero_rc);
     located.configure(&session);
     if (view == null) {
         try session.enableCache(init.gpa, options.build.cache);
@@ -338,6 +339,7 @@ const GroupRun = struct {
         const located = context.entry;
         var provider_session = frontend.Session.init(init.gpa, init.io, located.root);
         defer provider_session.deinit();
+        provider_session.setOwnership(context.options.build.show.codegen.single_owner, context.options.build.show.codegen.zero_rc);
         var program = self.base_checked orelse self.discovery;
         var cases = group.cases;
         var identity: ?report.Identity = null;
@@ -565,6 +567,7 @@ fn checkEntry(session: *frontend.Session, allocator: std.mem.Allocator, located:
 fn providerGraph(init: std.process.Init, options: Options, located: project_entry.Entry, entry_text: EntryText, set: []const frontend.Provider, session: *frontend.Session) Error!?frontend.Checked {
     const a = init.arena.allocator();
     var problems: std.ArrayList(u8) = .empty;
+    session.setOwnership(options.build.show.codegen.single_owner, options.build.show.codegen.zero_rc);
     located.configure(session);
     try session.enableCache(init.gpa, options.build.cache);
     try session.enableSharedCache(init.environ_map);

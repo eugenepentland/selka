@@ -5,6 +5,7 @@
 //! (NEW-CORE-S5-RETIRED-1). `src/main.zig` asks `dispatch` first; null hands the
 //! command to the front-end commands it still owns.
 const std = @import("std");
+const allocation_contract = @import("allocation_contract.zig");
 const core_main = @import("main.zig");
 const cli_args = @import("cli_args.zig");
 const cli_run = @import("cli_run.zig");
@@ -225,8 +226,14 @@ fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
 }
 
 /// Append Core allocation warnings for lint; validation-only commands do not call this.
-pub fn checkAllocationContracts(a: std.mem.Allocator, program: @import("mylang").typed.Program, source: @import("mylang").source.Source, sink: *@import("mylang").diagnostic.Sink) std.mem.Allocator.Error!void {
-    for (try @import("allocation_contract.zig").collectProgram(a, program, source)) |failure| {
-        try sink.items.append(sink.allocator, try @import("allocation_contract.zig").diagnostic(a, failure));
+pub fn checkAllocationContracts(
+    a: std.mem.Allocator,
+    program: @import("mylang").typed.Program,
+    source: @import("mylang").source.Source,
+    sink: *@import("mylang").diagnostic.Sink,
+    ownership: allocation_contract.Ownership,
+) std.mem.Allocator.Error!void {
+    for (try allocation_contract.collectProgramWithOwnership(a, program, source, ownership)) |failure| {
+        try sink.items.append(sink.allocator, try allocation_contract.diagnostic(a, failure));
     }
 }

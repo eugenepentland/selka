@@ -134,6 +134,7 @@ pub fn outputWithQuery(given: std.process.Init, request: Request, policy: QueryO
     const entry = project_entry.resolve(a, init.io, request.path, &diagnostics) catch |err| return failure(init, diagnostics.items, err);
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
     defer session.deinit();
+    session.setOwnership(policy.codegen.single_owner, policy.codegen.zero_rc);
     entry.configure(&session);
     if (policy.enabled and !policy.verify) {
         try session.enableCache(init.gpa, policy.cache);
@@ -279,4 +280,55 @@ test "zero RC cost lowering and emission select the count-free ABI" {
     }, &report);
     try std.testing.expect(std.mem.indexOf(u8, emission.whole.?, "; mylang-zero-rc-v2") != null);
     try std.testing.expect(@import("zero_rc.zig").emittedClean(emission.whole.?));
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "zero RC allocation contracts inspect borrowed views without legacy lowering" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const contracts = @import("allocation_contract.zig");
+    var compilation = try @import("mylang").Compilation.init(a, "view.my",
+        \\func prefix_length(text: str) -> int noalloc:
+        \\    const part = text.borrow(0, 2)
+        \\    return len(part)
+    );
+    const program = try compilation.checkLibraryProgram();
+    const legacy = try contracts.collectProgram(a, program, compilation.src);
+    try std.testing.expectEqual(@as(usize, 1), legacy.len);
+    try std.testing.expect(legacy[0].unsupported != null);
+    const owned = try contracts.collectProgramWithOwnership(a, program, compilation.src, .{ .single_owner = true, .zero_rc = true });
+    try std.testing.expectEqual(@as(usize, 0), owned.len);
+}
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "zero RC allocation contracts count independent encode and buffer reverse copies" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const contracts = @import("allocation_contract.zig");
+    var compilation = try @import("mylang").Compilation.init(a, "encode.my",
+        \\func encoded(text: str) -> bytes noalloc:
+        \\    return text.encode()
+    );
+    const program = try compilation.checkLibraryProgram();
+    const legacy = try contracts.collectProgram(a, program, compilation.src);
+    try std.testing.expectEqual(@as(usize, 0), legacy.len);
+    const owned = try contracts.collectProgramWithOwnership(a, program, compilation.src, .{ .single_owner = true, .zero_rc = true });
+    try std.testing.expectEqual(@as(usize, 1), owned.len);
+    try std.testing.expect(owned[0].unsupported == null and !owned[0].unresolved);
+    var copying = try @import("mylang").Compilation.init(a, "copy.my",
+        \\func copied(text: str) -> str noalloc:
+        \\    return text.copy()
+    );
+    const copied_program = try copying.checkLibraryProgram();
+    const copies = try contracts.collectProgramWithOwnership(a, copied_program, copying.src, .{ .single_owner = true, .zero_rc = true });
+    try std.testing.expectEqual(@as(usize, 1), copies.len);
+    const ir = @import("ir.zig");
+    for ([_]bool{ false, true }) |zero_rc| {
+        var module: ir.Module = .{ .single_owner = zero_rc, .zero_rc = zero_rc };
+        try module.functions.append(a, .{ .name = "myl_core_buffer_reverse", .signature = .{ .params = &.{.byte_buffer}, .ret = .byte_buffer, .linkage = .runtime_c } });
+        const function: ir.Function = .{ .name = "caller", .signature = .{ .params = &.{}, .ret = .void } };
+        try std.testing.expectEqual(cost.Allocation.may, cost.allocation(&module, &function, .{ .op = .call, .a = @fromBackingInt(0), .ty = .byte_buffer }));
+    }
 }

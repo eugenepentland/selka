@@ -1,0 +1,806 @@
+{
+  "status": "proposed nonoverlapping reservations for coordinator dispatch; A10 edits none of these sources",
+  "compiler_source_revision": "0d17e4e130706639c0f49e78b60502bfb2151ebc",
+  "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7",
+  "denominator": 219,
+  "owned_refusals": 79,
+  "counts": {
+    "A02": 21,
+    "A05": 13,
+    "A06": 23,
+    "A03": 8,
+    "A04": 14
+  },
+  "items": [
+    {
+      "owner": "A02",
+      "source": "test/core/b_buffer_values.my",
+      "sha256": "4bc9302b966705c8c62e9583ab21afd5f12bc50df713df1963a7bf58f3e71ace",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "b_buffer_values.my:10:26: error[E_SINGLE_OWNER_MOVED]: 'buffer' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      mut snapshot = bytes(buffer)\n                           ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A05",
+      "source": "test/core/c_grants.my",
+      "sha256": "e5b41232dd814d719a0faee2f2e4eb8f5f7f30c9a2569bf82666663f9f075586",
+      "code": "E_ZERO_RC_UNSUPPORTED",
+      "first_diagnostic": "c_grants.my:21:17: error[E_ZERO_RC_UNSUPPORTED]: dependent capabilities require a with scope in zero-RC mode",
+      "source_excerpt": "      for name in env.only(\"KEEP\", \"MISSING\", \"KEEP\").names():\n                  ^",
+      "followup": "pending resource scope contract; use named with scope if semantics equivalent, otherwise A07 reproducer",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/c_runner_byte_buffer.my",
+      "sha256": "0d7f50f4a91975cac741a3437f3dd0abd8f3fd89d997074b6c75d69f5a613167",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "c_runner_byte_buffer.my:8:16: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      mut copy = buffer\n                 ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A05",
+      "source": "test/core/c_stack_handles.my",
+      "sha256": "2183b9980f2e939618fea4bd776545f899f927f02f67d556bd8ae9c6266ae291",
+      "code": "E_ZERO_RC_UNSUPPORTED",
+      "first_diagnostic": "c_stack_handles.my:20:19: error[E_ZERO_RC_UNSUPPORTED]: dependent capabilities require a with scope in zero-RC mode",
+      "source_excerpt": "      if not nested(net.host(\"127.0.0.1:1234\"), 300):\n                    ^",
+      "followup": "pending resource scope contract; use named with scope if semantics equivalent, otherwise A07 reproducer",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A05",
+      "source": "test/core/c_trap_handles.my",
+      "sha256": "6bd1ec61ef835e7559b594212b5efaed764f807ff2f946662acdf5ec8592d93c",
+      "code": "E_ZERO_RC_UNSUPPORTED",
+      "first_diagnostic": "c_trap_handles.my:7:27: error[E_ZERO_RC_UNSUPPORTED]: dependent capabilities require a with scope in zero-RC mode",
+      "source_excerpt": "      match network.connect(net.host(\"127.0.0.1:1234\")):\n                            ^",
+      "followup": "pending resource scope contract; use named with scope if semantics equivalent, otherwise A07 reproducer",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/ce2_effects.my",
+      "sha256": "2950d850ba8ff2a15b7be3b1b456f05a105622a12c8b58db0df9718475b55e16",
+      "code": "E_SINGLE_OWNER_OVERLAP",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce2_effects.my:48:38: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it",
+      "source_excerpt": "      return frame.code.consts[next_op(mut frame)]\n                                       ^",
+      "followup": "evaluation-order or lifetime review; extract local result before mutation, preserve observed order, escalate false refusal to A07",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/ce2_results.my",
+      "sha256": "8b672a3a706e6c8332a4b181908a5a62d1e0f5fd4326b383eb311419dd930b3f",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce2_results.my:87:15: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper",
+      "source_excerpt": "      mut src = t.source\n                ^",
+      "followup": "borrowed field extraction; explicit copy for retained independent owner; retry pending whole-field fixes first",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/ce_appends.my",
+      "sha256": "9b3d4291265e08c81430bc2979346eb80d0c601b82c832fb05ac04550b537e52",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_appends.my:43:9: error[E_SINGLE_OWNER_MOVED]: 'buffer' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      _ = buffer.append_range(snapshot, 0, 5)\n          ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/ce_cow.my",
+      "sha256": "b0f1a86b886b609ba870ecb5d5248a5327e76851f87a1235ffefa5f6eec858b3",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_cow.my:35:9: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "          rt.objects[slot] = obj\n          ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": true
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/ce_elements.my",
+      "sha256": "7b04e1b5a271158db44e78b556b5affe8ea092b437b014a02bd3a4ffd6f1368a",
+      "code": "E_SINGLE_OWNER_OVERLAP",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_elements.my:70:9: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it",
+      "source_excerpt": "          xs[i].name = xs[i].name + \"!\"\n          ^",
+      "followup": "evaluation-order or lifetime review; extract local result before mutation, preserve observed order, escalate false refusal to A07",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/ce_records.my",
+      "sha256": "9e96ce61618bd5c18b09225d60abe9ae4aa1cdedbcc006ddae535322e04d467e",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_records.my:125:14: error[E_SINGLE_OWNER_MOVED]: 'b' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      push_all(mut b, 5)\n               ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A03",
+      "source": "test/core/counters.my",
+      "sha256": "a2ce0c71dce95433aed04294c153ff8da1f29abc999d1d37b1f1c83655e5cb4f",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/counters.my:14:13: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      mut q = p\n              ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": true
+    },
+    {
+      "owner": "A05",
+      "source": "test/core/d_basic.my",
+      "sha256": "467210e6eab505704de656650ac5b61d888500f79866cdebce2d7d4a3713bfc6",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/d_basic.my:5:5: error[E_SINGLE_OWNER_MOVED]: 'd' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      d[2] = 11\n      ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A05",
+      "source": "test/core/d_collections.my",
+      "sha256": "84834fca4e5116bdfa343d833b793a079e4a11a67c0c21dd1431f96367128ff0",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "d_collections.my:13:5: error[E_SINGLE_OWNER_MOVED]: 'd' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      d[2] = 13\n      ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A05",
+      "source": "test/core/d_fact_inputs.my",
+      "sha256": "2904498a93f98a88b501d3a60d27ad536f80bda4196e0eb2bc74d7549f53ab32",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "d_fact_inputs.my:55:12: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      counts[key] = counts.get(key, 0) + 1\n             ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A05",
+      "source": "test/core/d_scalar_stores.my",
+      "sha256": "7a1bc5ad6aa8af39155f280f63e46e6bacd4c60447a4452d62a67362f1da38fc",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "d_scalar_stores.my:4:5: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      values[\"3\"] = 90\n      ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/f1_storeback.my",
+      "sha256": "d4090d769e5ecf106a2be635daad9c910002b4c74b81eb120ed3e32ed63a74d2",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/f1_storeback.my:25:16: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value",
+      "source_excerpt": "      mut keep = c[1]\n                 ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A03",
+      "source": "test/core/f1_tbaa.my",
+      "sha256": "065c187358ae8a9d7b5c4d101873baea20d04ef5cf5955738ab9e93e40ccf325",
+      "code": "E_SINGLE_OWNER_OVERLAP",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/f1_tbaa.my:42:17: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it",
+      "source_excerpt": "                  xs[i] = Num.f(value=float(v) * 0.5)\n                  ^",
+      "followup": "evaluation-order or lifetime review; extract local result before mutation, preserve observed order, escalate false refusal to A07",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/f2_index.my",
+      "sha256": "73d7f7e1abc917d9e8186af01998c14beadef72a4cf333e6990427f731826c70",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/f2_index.my:125:14: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      mut ys = xs\n               ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A04",
+      "source": "test/core/f_features.my",
+      "sha256": "6edbc9f2f4056a37dc4c6c280992fedb0952f131b1ea916a15fd2ce88e8e17ee",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "f_features.my:20:17: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      words[-1] = word\n                  ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A03",
+      "source": "test/core/i_live_place.my",
+      "sha256": "c18ac8fe2ac528e63baa38532cc0a65ca3820d664db8ba75471f5f33ac252c8d",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "i_live_place.my:13:5: error[E_SINGLE_OWNER_MOVED]: 'items' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      for value in items:\n      ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/list_alias.my",
+      "sha256": "bd3f40772f562ffe788eb164ecb16522ce6dcb404e359f19e73f06473a216f9d",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/list_alias.my:2:16: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      mut copy = xs\n                 ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/m_list_methods.my",
+      "sha256": "0796bcc93b1765c6bf507b72cc9ee851ba11e96fe091cd9e4be2126ab38bb258",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "m_list_methods.my:19:8: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      if values.index(1) != 1:\n         ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A05",
+      "source": "test/core/m_none_keys.my",
+      "sha256": "da1a2f0f40b79e557cde167c027b5a72f705d9f402c6005d060e30dcb5eb587c",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "m_none_keys.my:29:19: error[E_SINGLE_OWNER_MOVED]: 'mapping' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      mut removed = mapping.pop(())\n                    ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/m_recursive_values.my",
+      "sha256": "314e5f4ffad8cb3abc1608f49ed8353fe32aa968567212d9c9143a8fe0f29944",
+      "code": "E_SINGLE_OWNER_OVERLAP",
+      "first_diagnostic": "m_recursive_values.my:59:51: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it",
+      "source_excerpt": "      add(mut cursor.rows[-1], if (flag) then (tick(mut cursor)) else (0))\n                                                    ^",
+      "followup": "evaluation-order or lifetime review; extract local result before mutation, preserve observed order, escalate false refusal to A07",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A03",
+      "source": "test/core/rc_alias_paths.my",
+      "sha256": "6ddfcfac6bfa2f4ab1a2af000e4ac25e0e641626b57319025e47b0de7bddb656",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_alias_paths.my:11:14: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      mut ys = xs\n               ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": true
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/rc_field_take.my",
+      "sha256": "9ab03db93ba902bc9ad00c9b722aee53886c70d8183ee0421284c8bba9e5005d",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_field_take.my:30:18: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper",
+      "source_excerpt": "      mut before = rt.objects\n                   ^",
+      "followup": "borrowed field extraction; explicit copy for retained independent owner; retry pending whole-field fixes first",
+      "legacy_native_oracle_review": true
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/rc_lists.my",
+      "sha256": "50a0c3423c131ac88c8b6397cf62de85419295a1ca65dbae98408d5661ff53cd",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_lists.my:2:14: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      mut ys = xs\n               ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": true
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/rc_mut.my",
+      "sha256": "e62557cd2f309793913581736715d7dd739d63e8e7aa898ac98227656c88672e",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_mut.my:38:9: error[E_SINGLE_OWNER_MOVED]: 'a' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      add(mut a, 3)\n          ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": true
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/rc_phi_fields.my",
+      "sha256": "c1b324eb245227a33010c66f859f9ef6bb447870d8c43b57eca0d72cd3f99214",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_phi_fields.my:17:35: error[E_SINGLE_OWNER_MOVED]: 'xs' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "          acc = acc + len(ys) * 3 + xs[0]\n                                    ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": true
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/rc_promote_order.my",
+      "sha256": "4532c278888bc3409173dc6f21a0ba4f4ca824520607b42761716e15519f4aa6",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_promote_order.my:25:5: error[E_SINGLE_OWNER_MOVED]: 'xs' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      xs.append(4)\n      ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": true
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/rc_shared_loops.my",
+      "sha256": "0ebf0412311e8ee8f39998916749039f8cd20f433ee3b9f0837a7f4f7289da04",
+      "code": "E_SINGLE_OWNER_LOOP",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_shared_loops.my:4:5: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit",
+      "source_excerpt": "      for outer in range(3):\n      ^",
+      "followup": "loop owner transfer; explicit copy/reinitialization preserving each iteration",
+      "legacy_native_oracle_review": true
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/row_cow.my",
+      "sha256": "1a6cfa9f401c9cb272272e8663292718e3aa2064bce165d5c44dd6d5e01637ae",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_cow.my:13:17: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value",
+      "source_excerpt": "      mut keep3 = rows3[1]\n                  ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": true
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/row_csv_aggregate.my",
+      "sha256": "65f86d527f48a01d6fa005862c214a6d29d1dc7d46291136400864593add1f24",
+      "code": "E_SINGLE_OWNER_OVERLAP",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_csv_aggregate.my:84:21: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it",
+      "source_excerpt": "                      groups[row[2]] += amount\n                      ^",
+      "followup": "evaluation-order or lifetime review; extract local result before mutation, preserve observed order, escalate false refusal to A07",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A05",
+      "source": "test/core/row_dict_lookup_str.my",
+      "sha256": "7e08d43510abb33d31dd5d12befb522be02e1ca758680f7a5e467fb042a3de21",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_dict_lookup_str.my:34:20: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value",
+      "source_excerpt": "          lookup_str[keys[j]] = values[j]\n                     ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A05",
+      "source": "test/core/row_dict_update_str.my",
+      "sha256": "2a889bffcb00003d82a4a5f816d0c36d69073c32abf1bc072f2d354c6f6cf123",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_dict_update_str.my:8:22: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value",
+      "source_excerpt": "          text_mapping[keys[j]] = values[j]\n                       ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/row_mutate_nested.my",
+      "sha256": "3c9c921f4ec3f1dfa6422c998e2b4586e44047b3efd69ac495bda7fc907713bc",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_mutate_nested.my:9:20: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      mut snapshot = nested\n                     ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/row_mutate_shared.my",
+      "sha256": "5efc0bd4694858c148d4c0b69f21fc92aa79a8cdf53a0839dbe923fa5c7d3437",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_mutate_shared.my:29:26: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "          values[index] = (values[index] + batch + 1) % 1000003\n                           ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/row_record_reads.my",
+      "sha256": "6b478a3eaa3019c28875f43a73da2b1a90f830b183c69b9165bbc3b23ed57177",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_record_reads.my:40:20: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value",
+      "source_excerpt": "          mut item = records[index]\n                     ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A04",
+      "source": "test/core/row_string_join.my",
+      "sha256": "fbc884596e2884d63766eb12a883e2a0e69ec2a37b5a8a6252a0553f2b3f2964",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_string_join.my:43:45: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value",
+      "source_excerpt": "      fragments = [for j in range(size) yield options[(seed + j) % 5]]\n                                              ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A04",
+      "source": "test/core/row_string_split.my",
+      "sha256": "3abcd95f46ef2e20f2a554cc1ea50292d459504f5046c4d519ebcc3d0d7d968e",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_string_split.my:51:45: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value",
+      "source_excerpt": "      fragments = [for j in range(size) yield options[(seed + j) % 5]]\n                                              ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/row_word_count.my",
+      "sha256": "84a7eebdd8900e79480a8faa8795f948c7492b902ca641998d7d6b80ea41447d",
+      "code": "E_SINGLE_OWNER_OVERLAP",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_word_count.my:32:16: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it",
+      "source_excerpt": "          counts[word] = if (word in counts) then (counts[word] + 1) else (1)\n                 ^",
+      "followup": "evaluation-order or lifetime review; extract local result before mutation, preserve observed order, escalate false refusal to A07",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A04",
+      "source": "test/core/s1_ascii.my",
+      "sha256": "ef966f7f75891080a7dc0b78ed397b30662b1903044f62ad569f90ccc9101b58",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/s1_ascii.my:31:19: error[E_SINGLE_OWNER_MOVED]: 's' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      out.print(len(s), len(u), u[1], len(v), v[11], len(a))\n                    ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A04",
+      "source": "test/core/s1_bytes.my",
+      "sha256": "5576c6c7e20e64456e520c0871a2cb00e7e62f738bcd315aa9f4826fbdbd38d1",
+      "code": "E_ZERO_RC_UNSUPPORTED",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/s1_bytes.my:15:58: error[E_ZERO_RC_UNSUPPORTED]: shared snapshots and retained views are unsupported; use .borrow() for a checked view or .copy() for ownership",
+      "source_excerpt": "      mut parts = [t[0:3], t[1:3], t[1:2], t[2:2], a[1:4], a.view(6, 11), t.view(7, 10), t[-4:], t[0:99], a[-100:3]]\n                                                           ^",
+      "followup": "retired retained-view boundary; migrate to independent slice/copy preserving output; update native allocation oracle",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A04",
+      "source": "test/core/s1_collisions.my",
+      "sha256": "e4cb39b87fc3d31506cf04e2696ece5161015a65f50769e846aa87f41eaa8821",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/s1_collisions.my:63:17: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value",
+      "source_excerpt": "          mut a = keys[2 * p]\n                  ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A04",
+      "source": "test/core/s1_reads.my",
+      "sha256": "754c854a3b1a744f877fe23ed9463d9ec5b69b9d617cabefb5bca037977b8d1e",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/s1_reads.my:31:13: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      mut t = s\n              ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A04",
+      "source": "test/core/s1_views.my",
+      "sha256": "4499e2e9b6eaabf7003be4de59501c5fb203088d41b362833e7403693fc0ba85",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/s1_views.my:48:12: error[E_SINGLE_OWNER_MOVED]: 'key' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "          if key not in b:\n             ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A04",
+      "source": "test/core/t_methods.my",
+      "sha256": "ea6ad0bdec8d3bb4e53984d47205d0207b921f7acc18330ca8967a45cdd08172",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "t_methods.my:5:12: error[E_SINGLE_OWNER_MOVED]: 'text' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      return text.upper() == \"AB\u00e9\ud83d\ude42AB\" and text.lower() == \"ab\u00e9\ud83d\ude42ab\" and text.count(\"aB\") == 2 and text.count(\"\") == 7 and text.replace(\"aB\", \"x\") == \"x\u00e9\ud83d\ude42x\" and saved == text and \"a\\r\\nb\\rc\\n\".splitlines() == [\"a\", \"b\", \"c\"] and len(\"\".splitlines()) == 0 and \"19\".isdigit() and \"aB\".isalpha() and \" \\t\".isspace() and not \"\u00e9\".isalpha()\n             ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A04",
+      "source": "test/core/t_scalar_fusion.my",
+      "sha256": "6c827a089aa6bc21b58f68a5fee84110595c76485912c2baea0fae2889a76bf2",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "t_scalar_fusion.my:38:16: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      mut text = source\n                 ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A04",
+      "source": "test/core/t_text.my",
+      "sha256": "1fead4a9adc3567f8d18786b10fd14a88830addf37bb7b0c8f8b67da77bb325e",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "t_text.my:27:12: error[E_SINGLE_OWNER_MOVED]: 'original' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      return original == \"caf\u00e9\" and len(changed) == 14\n             ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/u1_growth.my",
+      "sha256": "db3a32e8c7903db94113b18045ff6aebbf05537a4669151ae730a3fbb2687262",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/u1_growth.my:40:13: error[E_SINGLE_OWNER_MOVED]: 'b' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "          _ = b.append_range(b\"xyz\", 0, 3)\n              ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/u1_hoist.my",
+      "sha256": "087a5a54dd751c673bf969b3b9d1a66fa77f7b75918f024f4e906c37593bd816",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/u1_hoist.my:19:13: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      return [xs]\n              ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/u1_sink.my",
+      "sha256": "0568c2428132b9ad345c15f52e8783da10501968e98cbed991e4d22902e2dc54",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/u1_sink.my:33:32: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      m.frames.append(Frame(code=code, ip=0, base=m.acc))\n                                 ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/u1_state.my",
+      "sha256": "d0a14567ec8556b5a654ed2bb4a8d022b12f272eff586f8968d1babbafc0d911",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/u1_state.my:63:28: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      mut frame = Frame(code=code, ip=0, base=0, name=\"main\", hits=0, seen=[])\n                             ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A04",
+      "source": "test/core/v_buffer_format.my",
+      "sha256": "62b308c773d20b55d697c035479c0d2836840b596a794f90a9284db7d06520bc",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "v_buffer_format.my:5:12: error[E_SINGLE_OWNER_MOVED]: 'buffer' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      if not buffer.append_int(-9223372036854775808) or not buffer.append_int(9223372036854775807) or not buffer.append_float(-0.0) or not buffer.append_float(1.5):\n             ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A04",
+      "source": "test/core/v_buffer_mut.my",
+      "sha256": "15c0e86ec4f31a49a4ba146fdd87d87bacd93738853a0f2713a2391dcef3f358",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "v_buffer_mut.my:41:13: error[E_SINGLE_OWNER_MOVED]: 'sink' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      _ = put(mut sink, b\"abc\", 0, 3)\n              ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A05",
+      "source": "test/core/v_capability_arrays.my",
+      "sha256": "abb0dd17341301a450de9b05989568a3a908b721250e4520be194de36d636e2a",
+      "code": "E_ZERO_RC_UNSUPPORTED",
+      "first_diagnostic": "v_capability_arrays.my:47:9: error[E_ZERO_RC_UNSUPPORTED]: store resource owners in named local scopes in the zero-RC prototype",
+      "source_excerpt": "      mut fss: FixedArray[Filesystem, 2] = FixedArray[Filesystem, 2]([filesystem.memory(), filesystem.memory()])\n          ^",
+      "followup": "resource container boundary; A07/design review required, not an automatic .copy migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/v_dynamic_repeat.my",
+      "sha256": "308d0a775bdb7a7ecbac44aac8b237ed1b056d31013464ea2c2341c787a6db24",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "v_dynamic_repeat.my:13:5: error[E_SINGLE_OWNER_MOVED]: 'rows' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      rows[1][2] = 7\n      ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A03",
+      "source": "test/core/v_inline_loops.my",
+      "sha256": "aa72b2bef873044660980f926cc15af9342c82682c4d04c0685d724724377b91",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "v_inline_loops.my:24:21: error[E_SINGLE_OWNER_MOVED]: 'parent' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      mut root = find(mut parent, 2)\n                      ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/v_lists.my",
+      "sha256": "c58a859115792ea7baf822380d054fe2a2a78692a67608d7837a69b336716d83",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_lists.my:18:14: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      mut xs = xs0\n               ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/v_loops.my",
+      "sha256": "fca2e3160e5d2d113898e450cd4533d3e08198d2c8feedde3f0bfaf741bac1a3",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_loops.my:37:17: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      mut names = values\n                  ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/v_methods.my",
+      "sha256": "78a07384e1301fa07bcc76e510554e8934f20eaf9379f650292b8576fd1ce59d",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_methods.my:38:20: error[E_SINGLE_OWNER_MOVED]: 'zs' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      out.print(fill(mut zs), len(snapshot), len(zs))\n                     ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/v_mut.my",
+      "sha256": "bbf13966efb1aee82b0a4314b8e3ff1dd0db64e7282ff720a3b2c196d03d85b8",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_mut.my:67:43: error[E_SINGLE_OWNER_MOVED]: 'st' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      out.print(n2, len(h.state.items), len(st.items), h.tag)\n                                            ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/v_mut_rebind.my",
+      "sha256": "20761f7d4a8570a6f8e62780be5562ca10d0b4c42d2ac69059a01281cb653fc5",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_mut_rebind.my:3:13: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      items = other\n              ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/v_mut_window.my",
+      "sha256": "4eaa45609ab758c8d99e763eea232f49ec0afcd20824f717b9b2f0f7d7314f01",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_mut_window.my:28:15: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value",
+      "source_excerpt": "      mut box = state.boxes[0]\n                ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A03",
+      "source": "test/core/v_narrow.my",
+      "sha256": "f0a41855714a7a2c6719f160719a5e0cd0dcfbe6f87d71cfec2a79018d3d2c23",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_narrow.my:4:5: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      candidate.append(item)\n      ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/v_nested.my",
+      "sha256": "546721e18c02e755f5d9a9220c375287dd878e5a5a07f7bb9c002c7f09a05b58",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_nested.my:11:16: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      mut rows = rows0\n                 ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/v_nested_lengths.my",
+      "sha256": "e6ca1a8a792de3f089aad3d00830534be316175f1b5ef3d21f34d92f2002406e",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "v_nested_lengths.my:4:17: error[E_SINGLE_OWNER_MOVED]: 'grid' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      mut inner = grid[0]\n                  ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/v_nested_places.my",
+      "sha256": "6d19d13aa76d47936ca706795d8845cbc7552780637e6e75f48b97a5085cb165",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "v_nested_places.my:10:5: error[E_SINGLE_OWNER_MOVED]: 'a' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      a[1][0] = 9\n      ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/v_row_cow.my",
+      "sha256": "d00e354d343dae3886da6cfe75ef661dddbb195838ae61206b7a7c07bf79353e",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "v_row_cow.my:17:12: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value",
+      "source_excerpt": "      return xs[i]\n             ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": true
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/v_snapshot.my",
+      "sha256": "60f359dad2ebd828de8ed2ecd8170258b80fbf720178a57a1d07450c03906640",
+      "code": "E_SINGLE_OWNER_OVERLAP",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_snapshot.my:28:36: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it",
+      "source_excerpt": "      return frame.code[replace_code(mut frame)]\n                                     ^",
+      "followup": "evaluation-order or lifetime review; extract local result before mutation, preserve observed order, escalate false refusal to A07",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/v_sort.my",
+      "sha256": "c80835365551fcb68bd7fc035349d931ada8b744bc2b1ba7969d201347e208aa",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_sort.my:57:5: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      values.sort()\n      ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A04",
+      "source": "test/core/v_text.my",
+      "sha256": "74dae6ff0f0853efbddfa542c824ea7e0b23b881bd58c99c9cdcefed850c8d96",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_text.my:19:19: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper",
+      "source_excerpt": "      mut current = item.next\n                    ^",
+      "followup": "borrowed field extraction; explicit copy for retained independent owner; retry pending whole-field fixes first",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A03",
+      "source": "test/core/v_trace.my",
+      "sha256": "695f20bdb1ef22efa47c527d973500e0f524966c3a166f5fed9a1760dc40a81f",
+      "code": "E_SINGLE_OWNER_OVERLAP",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_trace.my:31:20: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it",
+      "source_excerpt": "              return t\n                     ^",
+      "followup": "evaluation-order or lifetime review; extract local result before mutation, preserve observed order, escalate false refusal to A07",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A03",
+      "source": "test/core/v_trap_set.my",
+      "sha256": "7976c63e3a3544987d39f8f63b9bf70f28e70b1117aa3f46bd0228659cd15411",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_trap_set.my:7:17: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      mut cells = cells0\n                  ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A02",
+      "source": "test/core/v_units.my",
+      "sha256": "8fda0ae568eca67885c1a1a98e3778695ac20ff83d96e9383390d27402893bc0",
+      "code": "E_SINGLE_OWNER_MOVED",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_units.my:13:16: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed",
+      "source_excerpt": "      return len(values) * 100 + len(copy) * 10 + seen + (if (values == copy) then (1) else (0))\n                 ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A06",
+      "source": "test/core/v_wide_managed.my",
+      "sha256": "7179bc569fd928cd949f12ba6ecb459f4a7325c1d667620917aaea81d3fe4e89",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_wide_managed.my:21:13: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "source_excerpt": "      mut b = b0\n              ^",
+      "followup": "explicit independent copy/local source migration",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A05",
+      "source": "test/fixtures/application-cache/application.my",
+      "sha256": "aa94c91bc1c0948330948d57c88e624328b21b3775158c31f351a5e279a4821e",
+      "code": "E_SINGLE_OWNER_BORROW",
+      "first_diagnostic": "application.my:68:32: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper",
+      "source_excerpt": "      return durable.Step(output=value.output, state=value.state)\n                                 ^",
+      "followup": "borrowed field extraction; explicit copy for retained independent owner; retry pending whole-field fixes first",
+      "legacy_native_oracle_review": false
+    },
+    {
+      "owner": "A05",
+      "source": "test/fixtures/attenuation.my",
+      "sha256": "671fa2694449bcc50510f8cf5e536faebf16f37abce8eb171dab3efab043e2e1",
+      "code": "E_ZERO_RC_UNSUPPORTED",
+      "first_diagnostic": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/fixtures/attenuation.my:21:18: error[E_ZERO_RC_UNSUPPORTED]: dependent capabilities require a with scope in zero-RC mode",
+      "source_excerpt": "      mut scoped = fs.dir(\"nested\")\n                   ^",
+      "followup": "pending resource scope contract; use named with scope if semantics equivalent, otherwise A07 reproducer",
+      "legacy_native_oracle_review": false
+    }
+  ]
+}

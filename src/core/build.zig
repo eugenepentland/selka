@@ -173,6 +173,12 @@ pub fn coverage(allocator: std.mem.Allocator, program: typed.Program) Error![]Ou
 
 /// Coverage checks with optional resolved embedded-asset content.
 pub fn coverageSource(allocator: std.mem.Allocator, program: typed.Program, source: ?Source) Error![]Outcome {
+    return coverageInput(allocator, .{ .program = program, .source = source });
+}
+
+/// Coverage checks under the caller's selected source ownership and runtime ABI.
+pub fn coverageInput(allocator: std.mem.Allocator, input: Input) Error![]Outcome {
+    const program = input.program;
     const outcomes = try allocator.alloc(Outcome, program.functions.len);
     for (program.functions, outcomes) |function, *outcome| {
         outcome.* = .{ .name = function.name, .refusal = null };
@@ -181,7 +187,9 @@ pub fn coverageSource(allocator: std.mem.Allocator, program: typed.Program, sour
             continue;
         }
         var refusal: Refusal = .{};
-        var mb: ModuleBuilder = .{ .allocator = allocator, .input = .{ .program = program, .source = source }, .refusal = &refusal };
+        var mb: ModuleBuilder = .{ .allocator = allocator, .input = input, .refusal = &refusal };
+        mb.module.single_owner = input.single_owner or input.zero_rc;
+        mb.module.zero_rc = input.zero_rc;
         const index = mb.functionIndex(function.id) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             error.Unsupported => {

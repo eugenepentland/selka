@@ -19,6 +19,8 @@ This is a source inventory, not passed qualification.
 | affected tests | test_runner_affected reachable lowering | retain unsupported tests in selection |
 | doctest/examples | doctest_command spawns same installed compiler run/check | C0 had no ownership opt-in forwarding; followup adds explicit zero-RC selection; ordinary defaults are inherited |
 | cost/interface cost | direct lowering preceded emission options in C0 | fixed eager validation and shared lowering/emission mode; explicit cost opt-in and future inherited defaults |
+| coverage | per-function developer sweep used implicit legacy Input | followup propagates explicit selected ABI and rejects invalid source ownership before the sweep |
+| allocation warnings | frontend Sessions and lint lowered noalloc roots with implicit legacy Input | followup selects caller ABI, preserves historical controls until C2, classifies owned encode/reverse copies accurately |
 | installed mylang | installed bin plus libexec components and tools | preserve complete layout; compiler alone is incomplete |
 | installed test-index/cache-plan | selfhost/components.zig builds both with separate pinned seed | installed components are guest binaries and need separate zero-RC qualification |
 
@@ -40,5 +42,6 @@ cycle. Build/install dependencies need coordinator and self-hosting-owner review
 Do not merely add a flag the old seed cannot accept, alter its historical pin, or
 reuse an RC component cache manifest under a zero-RC claim.
 
-This worker will submit command support separately. Default promotion and active
-RC removal wait for coordinator qualification approval.
+Command support commits are recorded in `handoff.md`. Default promotion and active
+RC removal wait for coordinator qualification approval; unapplied patches are
+under `rollout/`.

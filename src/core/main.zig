@@ -18,6 +18,7 @@ const cli_run = @import("cli_run.zig");
 
 /// The flag naming the build cache directory.
 const cache_dir_flag = "--cache-dir";
+const single_owner_flag = "--experimental-single-owner";
 const zero_rc_flag = @import("mylang").zero_rc_flag;
 const shared_cache_dir_flag = "--shared-cache-dir";
 
@@ -79,7 +80,7 @@ pub fn developer(init: std.process.Init, args: []const []const u8) Error!u8 {
         for (args[3..]) |arg| {
             if (std.mem.eql(u8, arg, "--facts")) {
                 with_facts = true;
-            } else if (std.mem.eql(u8, arg, "--experimental-single-owner")) {
+            } else if (std.mem.eql(u8, arg, single_owner_flag)) {
                 single_owner = true;
             } else if (std.mem.eql(u8, arg, zero_rc_flag)) {
                 single_owner = true;
@@ -122,6 +123,7 @@ fn dumpIr(init: std.process.Init, path: []const u8, with_facts: bool, single_own
     const entry = project_entry.resolve(allocator, init.io, path, &report) catch |err| return developerFailure(init, report.items, err);
     var session = frontend.Session.init(init.gpa, init.io, entry.root);
     defer session.deinit();
+    session.setOwnership(single_owner, zero_rc);
     const checked = entry.check(allocator, &session, &report) catch |err| return developerFailure(init, report.items, err);
     if (single_owner and !try single_owner_contract.validateMode(allocator, checked.program, checked.src, .text, &report, zero_rc)) {
         try std.Io.File.stderr().writeStreamingAll(init.io, report.items);
@@ -208,7 +210,7 @@ pub fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
         const has_value = index + 1 < args.len;
         if (std.mem.eql(u8, arg, "--release")) {
             options.mode.select(&explicit_mode, .release) catch return 2;
-        } else if (std.mem.eql(u8, arg, "--experimental-single-owner")) {
+        } else if (std.mem.eql(u8, arg, single_owner_flag)) {
             options.show.codegen.single_owner = true;
         } else if (std.mem.eql(u8, arg, zero_rc_flag)) {
             options.show.codegen.single_owner = true;
@@ -478,8 +480,21 @@ fn flagValue(args: []const []const u8, index: *usize, comptime name: []const u8)
 /// the stack), `refused REASON\tNAME` or
 /// `frontend FILE` per line.
 fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
+    var codegen: pipeline.Codegen = .{};
+    var paths: usize = 0;
+    for (arguments) |arg| {
+        if (std.mem.eql(u8, arg, zero_rc_flag)) {
+            codegen.single_owner = true;
+            codegen.zero_rc = true;
+        } else if (std.mem.eql(u8, arg, single_owner_flag)) {
+            codegen.single_owner = true;
+        } else if (std.mem.startsWith(u8, arg, "--")) return 2 else paths += 1;
+    }
+    if (paths == 0) return 2;
+    var refused = false;
     var out: std.ArrayList(u8) = .empty;
     for (arguments) |path| {
+        if (std.mem.startsWith(u8, path, "--")) continue;
         var scratch = std.heap.ArenaAllocator.init(init.gpa);
         defer scratch.deinit();
         const allocator = scratch.allocator();
@@ -487,19 +502,27 @@ fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
         const entry = project_entry.resolve(allocator, init.io, path, &report) catch |err| {
             if (err == error.OutOfMemory) return err;
             try out.print(init.arena.allocator(), "frontend {s}\t{s}\n", .{ path, std.mem.sliceTo(report.items, '\n') });
+            if (codegen.single_owner) refused = true;
             continue;
         };
         var session = frontend.Session.init(init.gpa, init.io, entry.root);
         defer session.deinit();
+        session.setOwnership(codegen.single_owner, codegen.zero_rc);
         const checked = entry.check(allocator, &session, &report) catch |err| switch (err) {
             error.OutOfMemory => return err,
             else => {
                 const first = std.mem.sliceTo(report.items, '\n');
                 try out.print(init.arena.allocator(), "frontend {s}\t{s}\n", .{ path, first });
+                if (codegen.single_owner) refused = true;
                 continue;
             },
         };
-        for (try build.coverageSource(allocator, checked.program, checked.src)) |outcome| {
+        if (codegen.single_owner and !try single_owner_contract.validateMode(allocator, checked.program, checked.src, .text, &report, codegen.zero_rc)) {
+            try out.appendSlice(init.arena.allocator(), report.items);
+            refused = true;
+            continue;
+        }
+        for (try build.coverageInput(allocator, .{ .program = checked.program, .source = checked.src, .single_owner = codegen.single_owner, .zero_rc = codegen.zero_rc })) |outcome| {
             const keep = init.arena.allocator();
             if (outcome.refusal) |reason| {
                 try out.print(keep, "refused {s}\t{s}\n", .{ reason, outcome.name });
@@ -519,7 +542,7 @@ fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
         }
     }
     try std.Io.File.stdout().writeStreamingAll(init.io, out.items);
-    return 0;
+    return @intFromBool(refused);
 }
 
 /// The mechanism `--trap-frames=NAME` names (a `target.Traps`), or null for any other argument.

@@ -846,7 +846,7 @@ fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Pa
         const arg = args[index];
         if (std.mem.eql(u8, arg, "--experimental-single-owner") or std.mem.eql(u8, arg, "--experimental-zero-rc")) {
             switch (command) {
-                .check, .@"check-project", .@"check-module", .@"check-session" => {},
+                .check, .@"check-project", .@"check-module", .@"check-session", .lint => {},
                 else => return error.Usage,
             }
             parser.single_owner = true;
@@ -1995,7 +1995,8 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
             else => return err,
         };
         if (unchecked_reason == null and parsed.command == .lint) {
-            try mylang_core.checkAllocationContracts(compilation.diagnostics.allocator, compilation.program.?, compilation.src, &compilation.diagnostics);
+            if (!try ownershipCheck(init, parsed, compilation.program.?, compilation.src)) return 1;
+            try mylang_core.checkAllocationContracts(compilation.diagnostics.allocator, compilation.program.?, compilation.src, &compilation.diagnostics, .{ .single_owner = parsed.single_owner, .zero_rc = parsed.zero_rc });
         }
         recordCheckWork(init, functions, semantic_before, compilation.program);
         try rememberSummaries(init, frontend, &project, &summaries);
