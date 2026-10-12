@@ -11,7 +11,7 @@ from contextlib import ExitStack
 import hashlib
 import json
 import math
-import marshal
+import verification_code_identity as code_identity
 import os
 from pathlib import Path
 import re
@@ -30,8 +30,9 @@ from verification_snapshot import Snapshot, SnapshotError
 import verify_cache as verification
 
 ROOT = Path(__file__).resolve().parents[1]
-LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
-IMPLEMENTATION_INPUTS = ["scripts/juice_cache.py", "scripts/juice_evidence.py",
+_LOADED_CODE_OBJECT = sys._getframe().f_code
+LOADED_CODE_SHA256 = code_identity.loaded_code_sha256(_LOADED_CODE_OBJECT)
+IMPLEMENTATION_INPUTS = [*verification.COORDINATOR_INPUTS, "scripts/juice_cache.py", "scripts/juice_evidence.py",
     "scripts/juice_worker.py", "scripts/juice_provider.py",
     "scripts/fuzz_campaign_identity.py", "scripts/fuzz_campaign_store.py",
     "scripts/verification_snapshot.py", "scripts/cache_session.py", "scripts/verify_cache.py", "scripts/build-slot.sh",
@@ -231,11 +232,12 @@ def artifact_paths(record: dict, native: dict) -> dict[str, Path]:
 
 
 def action_key(spec, native, common, target, host, env, *, execution_limits=None) -> str:
-    return verification.key({"domain": "juice-measurement-v1", "workload": spec,
+    return verification.key({"domain": "juice-measurement-v2", "workload": spec,
         "plan": native, "common": common.identity, "dependencies": target.identity,
         "host": host.identity, "environment": verification.key(env),
         "execution_limits": execution_limits,
-        "implementation": [LOADED_CODE_SHA256, identity.LOADED_CODE_SHA256,
+        "loaded_code_format": [code_identity.FORMAT_VERSION, code_identity.LOADED_CODE_SHA256],
+            "implementation": [LOADED_CODE_SHA256, identity.LOADED_CODE_SHA256,
                            verification.LOADED_CODE_SHA256, verification_snapshot.LOADED_CODE_SHA256,
                            fuzz_campaign_store.LOADED_CODE_SHA256,
                            juice_evidence.LOADED_CODE_SHA256, juice_evidence.PARSER_CODE_SHA256,
@@ -306,6 +308,8 @@ def run_target(store, spec, native, args, env, bound, snapshots, bound_snapshots
             fresh_reasons.append("runtime provider resolution is unsupported or not fully guarded before capture")
         row.update(success=True, record_sha256=retained.record_digest,
                    artifacts={kind: str(path) for kind, path in artifacts.items()})
+        if not juice_evidence.reusable_artifacts(retained):
+            fresh_reasons.append("executable exceeds reusable evidence blob ceiling; fresh capture only")
         if not fresh_reasons:
             row["qualified"] = store.publish(bound, path, artifacts, want, lambda: require_stable(snapshots))
             if not row["qualified"]:
@@ -387,6 +391,8 @@ def execute(args) -> int:
             recipes.append("/etc/*.so.preload")
             common = stack.enter_context(Snapshot(ROOT, IMPLEMENTATION_INPUTS + recipes, files,
                                                   digest_session=session))
+            snapshots = [declaration, common]
+            verification.authenticate_code_identity(ROOT, common, snapshots, stack, session)
             host = verification.HostContext()
             targets = []
             scopes = []
@@ -400,7 +406,7 @@ def execute(args) -> int:
                                                             directory_membership=search or [], digest_session=session)))
                 if tools is not None and juice_provider.search_scopes(juice_provider.environment(native), env, tools) != search:
                     raise fuzz_campaign_store.InputsChanged("runtime provider search paths changed during planning")
-            snapshots = [declaration, common, host, *targets]
+            snapshots.extend([host, *targets])
             protect_outputs(args, snapshots)
             (args.cache_dir / "runs").mkdir(parents=True, exist_ok=True)
             save_report(args, state)
@@ -478,6 +484,7 @@ def compare(args) -> int:
         runtime = stack.enter_context(Snapshot(ROOT, IMPLEMENTATION_INPUTS + recipes, declarations + tools,
                                                digest_session=session))
         inputs = [runtime]
+        verification.authenticate_code_identity(ROOT, runtime, inputs, stack, session)
         before, after = comparison_rows(args.baseline), comparison_rows(args.candidate)
         if before.keys() != after.keys():
             raise ValueError("comparison reports select different workloads")

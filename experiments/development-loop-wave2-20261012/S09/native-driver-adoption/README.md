@@ -1,8 +1,8 @@
 # Reviewable owner-authored native-link repair
 
-Proposed source patch: `adoption.patch`. **Not applied. Authorization remains
-pending**: root requires the user's explicit joint-ownership approval as coordinator
-of both workstreams before this shared native-driver change is adopted.
+Source patch: `adoption.patch`. **Approved and applied by the coordinator.**
+The user explicitly replied “Adopt the existing fix” to the joint-ownership
+request. Candidate qualification remains pending; the owner checkout is untouched.
 
 Exact memory owner commit:
 `6327267249fdfbedab4093a5787033a5485a442d`.
@@ -71,10 +71,9 @@ receipts. Final complete verification remains root/S10 work on the frozen result
 
 ## Remaining boundary and blocker
 
-The blocking authorization is the explicit joint-ownership condition, not a
-technical merge conflict. The ready patch provides the exact owner delta and
-current-root registration for the user's review. No source adoption occurs until
-root records that approval.
+The joint-ownership condition is satisfied by the recorded user approval. The
+coordinator applied the exact owner delta and current-root registration. Normal
+focused and complete qualification of this integrated candidate remains required.
 
 The owner's separate native-platform audit found changed `/etc/ld.so.cache`
 while the five reviewed loader/runtime libraries remained identical. This patch

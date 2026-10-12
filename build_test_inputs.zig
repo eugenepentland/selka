@@ -31,17 +31,17 @@ pub const tooling_unit = [_][]const u8{
     "src/input_probe_test.zig",  "src/input_probe.zig",       "src/fix_plan_test.zig",
     "src/fix_plan.zig",          "src/timings_test.zig",      "src/timings.zig",
     "src/invalidation_test.zig", "src/invalidation.zig",
-};
+} ++ [_][]const u8{ "scripts/verification_native_telemetry.py", "scripts/verification_telemetry.py" };
 
 /// Complete scalar-text implementation and embedded oracle closure.
 pub const text_scalar_unit = [_][]const u8{
     "src/text_scalar_root_test.zig", "src/number_text.zig", "src/number_text_test.zig",
     "src/number_grammar.txt",        "src/format_spec.zig", "src/format_spec_test.zig",
     "src/format_spec_cases.tsv",
-};
+} ++ [_][]const u8{ "scripts/verification_native_telemetry.py", "scripts/verification_telemetry.py" };
 
 /// The independently gated named byte-ceiling module.
-pub const memory_budget = [_][]const u8{"src/memory_budget.zig"};
+pub const memory_budget = [_][]const u8{"src/memory_budget.zig"} ++ [_][]const u8{ "scripts/verification_native_telemetry.py", "scripts/verification_telemetry.py" };
 
 /// `src/root_test.zig`, the unit root. Its guest programs also read the
 /// runtime sources the compiler embeds, which `src/` covers.
@@ -71,7 +71,7 @@ pub const unit = [_][]const u8{
     "docs/reference.md",
     "docs/standard-library.md",
     "velocity/friction/",
-};
+} ++ [_][]const u8{ "scripts/verification_native_telemetry.py", "scripts/verification_telemetry.py" };
 
 /// `test/integration.zig`, the CLI root: project examples, the guest suite
 /// fixture and the compiler's own sources.
@@ -83,7 +83,7 @@ pub const cli = [_][]const u8{
     "examples/",
     "tests/guest/",
     "test/fixtures/",
-};
+} ++ [_][]const u8{ "scripts/verification_native_telemetry.py", "scripts/verification_telemetry.py" };
 
 /// Conservative fixtures and embedded runtime inputs for the complete Core root.
 pub const core = unit ++ [_][]const u8{
@@ -101,7 +101,7 @@ pub const zig_format = [_][]const u8{
 
 /// `test/golden_parity.zig` (`test-golden`): the golden corpora and the
 /// repository fixtures their entries name.
-pub const golden = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-seed.json", "src/", "tests/goldens/", "examples/", "test/fixtures/" };
+pub const golden = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-seed.json", "src/", "tests/goldens/", "examples/", "test/fixtures/" } ++ [_][]const u8{ "scripts/verification_native_telemetry.py", "scripts/verification_telemetry.py" };
 
 /// `tests/idiom_probes.py --compiler`: the probe corpus and its manifest.
 pub const idioms = [_][]const u8{ "tests/idiom_probes.py", "tests/fixtures/idioms/" };
@@ -138,13 +138,13 @@ pub const friction = [_][]const u8{ "tests/test_friction_harvest.py", "velocity/
 
 /// Synthetic contracts, parsers, reports and calibration; retain the complete
 /// imported package closure and its membership, including CLI/engine imports.
-pub const juice_pure = [_][]const u8{ "tests/test_juice.py", "scripts/juice_tool/" };
+pub const juice_pure = [_][]const u8{ "scripts/verification_code_identity.py", "tests/test_juice.py", "scripts/juice_tool/" };
 
 /// Juice's live runner and native collector integration tests.
-pub const juice = [_][]const u8{ "tests/test_juice.py", "tests/test_juice_native.py", "scripts/juice", "scripts/juice_tool/", "scripts/juice_validate.py", "examples/juice/" };
+pub const juice = [_][]const u8{ "scripts/verification_code_identity.py", "tests/test_juice.py", "tests/test_juice_native.py", "scripts/juice", "scripts/juice_tool/", "scripts/juice_validate.py", "examples/juice/" };
 
 /// Runtime collector experiments observe CPU, scheduler and current host state.
-pub const juice_runtime = [_][]const u8{ "tests/test_juice_runtime_bench.py", "scripts/juice_tool/", "scripts/juice_runtime_bench.py", "scripts/build_admission.py", "scripts/build-slot.sh" };
+pub const juice_runtime = [_][]const u8{ "scripts/verification_code_identity.py", "tests/test_juice_runtime_bench.py", "scripts/juice_tool/", "scripts/juice_runtime_bench.py", "scripts/build_admission.py", "scripts/build-slot.sh" };
 
 /// `mylang doctest .`: every page it walks.
 pub const doctest = [_][]const u8{ "README.md", "SPEC.md", "docs/**/*.md" };
@@ -172,6 +172,7 @@ pub const coverage_self = [_][]const u8{"tests/test_inputs_coverage.py"};
 
 /// Receipt admission and immutable-snapshot adversarial tests use fake actions.
 pub const verification_cache = [_][]const u8{
+    "scripts/verification_code_identity.py",
     "build_test_inputs.zig",
     // Producer tests copy these real closures into isolated mutation fixtures.
     "src/doc_coverage.zig",
@@ -193,6 +194,8 @@ pub const verification_cache = [_][]const u8{
     "src/timings_test.zig",
     "src/tooling_root_test.zig",
     "scripts/verification_profiles_test.py",
+    "scripts/verification_qualification_test.py",
+    "test/fixtures/long-qualification/",
     "scripts/development_loop_workloads_test.py",
     "experiments/development-loop-closeout-20261012/S05/C0-inventory.json",
     "experiments/development-loop-closeout-20261012/S05/workloads/oracle.py",
@@ -200,6 +203,7 @@ pub const verification_cache = [_][]const u8{
     "scripts/fuzz_campaign_store.py",
     "scripts/verify_cache.py",
     "scripts/verification_profiles.py",
+    "scripts/verification_qualification.py",
     "scripts/verification_producers.py",
     "scripts/verification_telemetry.py",
     "scripts/verification_snapshot.py",
@@ -221,6 +225,13 @@ pub const verification_cache = [_][]const u8{
     "scripts/build_admission.py",
     "scripts/build_slot_test.py",
     "tests/test_inputs_coverage.py",
+    "scripts/verification_native_telemetry.py",
+    "scripts/verification_native_telemetry_test.py",
+    "scripts/verification_guest_telemetry.py",
+    "scripts/verification_guest_telemetry_test.py",
+    "scripts/verification_measurement.py",
+    "scripts/verification_measurement_test.py",
+    "scripts/verification_code_identity_test.py",
 };
 
 /// Persistent coordinator startup watches the complete developer implementation.
@@ -228,6 +239,7 @@ pub const verification_session = [_][]const u8{"scripts/"};
 
 /// Independent fuzz shards, concrete replay, evidence and native-worker lifecycle.
 pub const fuzz_campaign = [_][]const u8{
+    "scripts/verification_code_identity.py",
     "scripts/cache_session.py",
     "scripts/fuzz_campaign.py",
     "scripts/fuzz_campaign_identity.py",
@@ -241,6 +253,7 @@ pub const fuzz_campaign = [_][]const u8{
     "scripts/fuzz_coverage_test.py",
     "scripts/verify_cache.py",
     "scripts/verification_profiles.py",
+    "scripts/verification_qualification.py",
     "scripts/verification_producers.py",
     "scripts/verification_telemetry.py",
     "scripts/verification_snapshot.py",
@@ -254,6 +267,9 @@ pub const fuzz_campaign = [_][]const u8{
     "tests/incremental_diff.py",
     "tests/interface_diff.py",
     "test/fixtures/fuzz-campaign/",
+    "scripts/verification_measurement.py",
+    "scripts/build_admission.py",
+    "scripts/verification_guest_telemetry.py",
 };
 
 /// `tests/input_manifest.py --self-test`.
@@ -261,6 +277,7 @@ pub const manifest_self = [_][]const u8{"tests/input_manifest.py"};
 
 /// Qualified Juice evidence and admission tests use isolated simulated collectors.
 pub const juice_cache = [_][]const u8{
+    "scripts/verification_code_identity.py",
     "scripts/cache_session.py",
     "scripts/juice_cache.py",
     "scripts/juice_cache_test.py",
@@ -275,6 +292,7 @@ pub const juice_cache = [_][]const u8{
     "scripts/fuzz_campaign_store.py",
     "scripts/verify_cache.py",
     "scripts/verification_profiles.py",
+    "scripts/verification_qualification.py",
     "scripts/verification_producers.py",
     "scripts/verification_telemetry.py",
     "scripts/verification_snapshot.py",
@@ -283,6 +301,9 @@ pub const juice_cache = [_][]const u8{
     "scripts/verification_budgets.py",
     "scripts/verification_policy.py",
     "scripts/build-slot.sh",
+    "scripts/verification_measurement.py",
+    "scripts/build_admission.py",
+    "scripts/verification_guest_telemetry.py",
 };
 
 /// Isolated CLI cache, frame-diagnostic and guest-address-space probes.
@@ -292,7 +313,7 @@ pub const tooling_isolation = [_][]const u8{"tests/tooling_cache_isolation.py"};
 pub const selfhost_numeric = [_][]const u8{"selfhost/"};
 
 /// The independent component cache and qualification builder.
-pub const component_builder = [_][]const u8{ "selfhost/*.zig", "selfhost/test_components.py", "selfhost/component-seed.json" };
+pub const component_builder = [_][]const u8{ "selfhost/*.zig", "selfhost/test_components.py", "selfhost/component-seed.json" } ++ [_][]const u8{ "scripts/verification_native_telemetry.py", "scripts/verification_telemetry.py" };
 
 /// Qualified-seed pure tests and native protocol oracle.
 pub const component_native = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-seed.json", "selfhost/test_component_native.py", "selfhost/tests/run_test_index_component.py", "selfhost/tests/run_cache_plan_component.py" };

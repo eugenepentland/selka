@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-import marshal
+import verification_code_identity as code_identity
 from pathlib import Path
 import re
 import sys
@@ -144,4 +144,5 @@ build code, Guardian runner/diagnostic source and pinned Zig tools/library bytes
         return None
 
 
-LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
+_LOADED_CODE_OBJECT = sys._getframe().f_code
+LOADED_CODE_SHA256 = code_identity.loaded_code_sha256(_LOADED_CODE_OBJECT)

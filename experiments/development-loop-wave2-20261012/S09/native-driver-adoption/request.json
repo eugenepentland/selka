@@ -1,7 +1,7 @@
 {
   "abi_or_tool_trust_changes": false,
   "apply_check": "passed on S09 and integration; no source changes",
-  "authorization": "pending explicit user/coordinator joint-ownership approval; patch not applied",
+  "authorization": "User explicitly approved: Adopt the existing fix",
   "candidate_commit_observed": "9245b2f90606c6e7cac70db6f9ffb69271b14084",
   "owner_commit": "6327267249fdfbedab4093a5787033a5485a442d",
   "owner_driver_delta_sha256": "4eb4f5055a47655013faf90409f6fd81088df2011ae097a791984eaccc40c384",
@@ -10,5 +10,6 @@
     "src/core/driver.zig": "56a8781c82157354f06d4eaa3d1a234e680d918d7ba6a48cdc5f513478f9fe27",
     "src/core/root_test.zig": "8302fafc1c31d929b7daa82a6058139069d99dcbd4718fca988b2ff77a217847"
   },
-  "worker_commit": "38dc781a897182ffbf1fff0906ec319a007a9154"
+  "worker_commit": "38dc781a897182ffbf1fff0906ec319a007a9154",
+  "integration": "Exact patch applied by coordinator; integrated qualification pending"
 }

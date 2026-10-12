@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import hashlib
-import marshal
+import verification_code_identity as code_identity
 import os
 from pathlib import Path
 import shutil
@@ -12,9 +12,10 @@ import sysconfig
 import verification_snapshot
 import verify_cache as verification
 
-LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
+_LOADED_CODE_OBJECT = sys._getframe().f_code
+LOADED_CODE_SHA256 = code_identity.loaded_code_sha256(_LOADED_CODE_OBJECT)
 
-COMMON_INPUTS = ["scripts/fuzz_campaign.py", "scripts/fuzz_campaign_identity.py",
+COMMON_INPUTS = [*verification.COORDINATOR_INPUTS, "scripts/fuzz_campaign.py", "scripts/fuzz_campaign_identity.py",
                  "scripts/fuzz_campaign_store.py", "scripts/verify_cache.py",
                  "scripts/verification_snapshot.py", "scripts/cache_session.py", "scripts/build-slot.sh"]
 
@@ -93,5 +94,5 @@ def family(root: Path, kind: str, name: str) -> str:
 
 def action(contract: dict, operation: str, value: object) -> str:
     """Separate exploration shards and concrete-corpus replay evidence."""
-    return verification.key({"domain": "fuzz-action-v1", "contract": contract,
+    return verification.key({"domain": "fuzz-action-v2", "contract": contract,
                              "operation": operation, "value": value})

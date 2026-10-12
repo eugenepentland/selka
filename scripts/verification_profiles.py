@@ -6,7 +6,7 @@ dependency model. This module ranks that work; it cannot authorize evidence.
 """
 import math
 import hashlib
-import marshal
+import verification_code_identity as code_identity
 import re
 import sys
 
@@ -113,4 +113,5 @@ uses separately qualified results; timing telemetry is never such a result.
             "inputs_stable": inputs_stable}
 
 
-LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
+_LOADED_CODE_OBJECT = sys._getframe().f_code
+LOADED_CODE_SHA256 = code_identity.loaded_code_sha256(_LOADED_CODE_OBJECT)

@@ -20,7 +20,7 @@ from collections.abc import Iterable
 import ctypes
 from dataclasses import dataclass, field
 import hashlib
-import marshal
+import verification_code_identity as code_identity
 import os
 from pathlib import Path
 import stat
@@ -31,7 +31,7 @@ import sys
 # Bind the code Python actually compiled, including its function bodies and
 # constants, rather than later source bytes read after module initialization.
 _LOADED_CODE_OBJECT = sys._getframe().f_code
-LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
+LOADED_CODE_SHA256 = code_identity.loaded_code_sha256(_LOADED_CODE_OBJECT)
 
 
 class SnapshotError(RuntimeError):

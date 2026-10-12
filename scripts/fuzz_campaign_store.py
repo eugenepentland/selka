@@ -10,7 +10,7 @@ import fcntl
 import hashlib
 import json
 import math
-import marshal
+import verification_code_identity as code_identity
 import os
 from pathlib import Path
 import re
@@ -22,7 +22,8 @@ import time
 from typing import Callable
 import uuid
 
-LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
+_LOADED_CODE_OBJECT = sys._getframe().f_code
+LOADED_CODE_SHA256 = code_identity.loaded_code_sha256(_LOADED_CODE_OBJECT)
 
 BLOB_MAX_BYTES = 64 * 1024 * 1024
 METADATA_MAX_BYTES = 1024 * 1024

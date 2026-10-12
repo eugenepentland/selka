@@ -178,6 +178,72 @@ class VerificationCoordinator(unittest.TestCase):
         self.assertEqual(self.admissions, [])
         self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
 
+    def test_measurement_expiry_during_reporting_revokes_new_publications(self):
+        slots = self.root / 'measurement-slots'
+        environment = dict(os.environ, MYLANG_SLOT_DIR=str(slots), MYLANG_SLOT_SETTLE='0',
+                           MYLANG_SLOT_POLL='1', MYLANG_TIMING_MEM='0')
+        environment.pop('MYLANG_ADMISSION_DIR', None)
+        environment.pop('MYLANG_ADMISSION_KIND', None)
+        def slow_report(*_args, **_kwargs):
+            self.assertEqual(len(self.receipts()), 2)
+            window.started_at = time.monotonic() - window.seconds
+            raise coordinator.verification_measurement.WindowExpired('injected reporting deadline')
+        with patch.dict(os.environ, environment, clear=True):
+            with patch.object(coordinator.verification_budgets, 'calibrate', side_effect=slow_report):
+                with self.assertRaises(coordinator.verification_measurement.WindowExpired):
+                    with coordinator.verification_measurement.timing_window(20) as window:
+                        self.execute()
+        self.assertEqual(self.receipts(), [])
+        self.assertFalse(coordinator.read_record(self.cache / 'last-run.json')['success'])
+        self.assertEqual(self.execute(), 0)
+
+    def test_measurement_expiry_during_publication_revokes_local_and_shared_receipts(self):
+        slots = self.root / 'measurement-slots'
+        environment = dict(os.environ, MYLANG_SLOT_DIR=str(slots), MYLANG_SLOT_SETTLE='0',
+                           MYLANG_SLOT_POLL='1', MYLANG_TIMING_MEM='0')
+        environment.pop('MYLANG_ADMISSION_DIR', None)
+        environment.pop('MYLANG_ADMISSION_KIND', None)
+        original = coordinator.fuzz_campaign_store.Store.publish_success
+        published = []
+        def delayed(store, action_key, *args):
+            result = original(store, action_key, *args)
+            published.append(action_key)
+            self.assertTrue(result)
+            window.started_at = time.monotonic() - window.seconds
+            raise coordinator.verification_measurement.WindowExpired('injected publication deadline')
+        shared = self.root / 'shared'
+        with patch.dict(os.environ, environment, clear=True):
+            with patch.object(coordinator.fuzz_campaign_store.Store, 'publish_success', delayed):
+                with self.assertRaises(coordinator.verification_measurement.WindowExpired):
+                    with coordinator.verification_measurement.timing_window(20) as window:
+                        self.execute(shared=shared)
+        self.assertEqual(self.receipts(), [])
+        self.assertEqual(len(published), 1)
+        self.assertIsNone(coordinator.fuzz_campaign_store.Store(shared).load_success(published[0]))
+
+    def test_deferred_metadata_only_tool_change_is_rejected_without_events(self):
+        with RetainedSession() as retained, retained.activate():
+            self.assertEqual(self.execute(), 0)
+            self.admissions.clear()
+            calls = []
+
+            def resolve(_zig, _environment):
+                calls.append(True)
+                if len(calls) == 2:
+                    original = self.tool.read_bytes()
+                    self.tool.write_bytes(b'tool mutation during second resolution')
+                    self.tool.write_bytes(original)
+                return [], [self.zig, self.tool]
+
+            watcher_type = coordinator.verification_snapshot._Inotify
+            with patch.object(coordinator, 'tool_contract', side_effect=resolve), \
+                 patch.object(watcher_type, '_drain', lambda watcher: not watcher.dirty):
+                with self.assertRaises(coordinator.VerificationError) as caught:
+                    self.execute()
+            self.assertEqual(caught.exception.status, coordinator.RETRY)
+            self.assertEqual(self.admissions, [])
+            self.assertFalse(coordinator.read_record(self.cache / 'last-run.json')['success'])
+
     def test_retained_session_warm_request_avoids_hashing_discovery_and_admission(self):
         with RetainedSession() as session, session.activate():
             self.assertEqual(self.execute(), 0)
@@ -314,11 +380,44 @@ class VerificationCoordinator(unittest.TestCase):
         self.assertEqual(len(self.receipts()), 2)
 
     def test_long_profile_cannot_certify_missing_qualification(self):
-        self.assertEqual(self.execute(profile='long-qualification'), 3)
+        def qualification(root, cache, compiler, zig, context, snapshots, **controls):
+            self.assertEqual(root, self.root)
+            self.assertEqual(compiler, self.root / 'zig-out/bin/mylang')
+            self.assertEqual(controls['max_actions'], 4)
+            self.assertEqual(controls['targets'], list(coordinator.verification_qualification.OBLIGATIONS))
+            return coordinator.verification_qualification.QualificationRun(context, cache, contextlib.ExitStack(), snapshots)
+        with patch.object(coordinator.verification_qualification, 'qualify', side_effect=qualification) as run:
+            self.assertEqual(self.execute(profile='long-qualification'), 3)
+            self.assertEqual(run.call_count, 1)
         coverage = coordinator.read_record(self.cache / 'last-run.json')['profile_coverage']
         self.assertTrue(coverage['complete_verification'])
         self.assertFalse(coverage['complete_qualification'])
-        self.assertEqual(coverage['qualification_outstanding'], ['fuzz', 'wall-clock-performance'])
+        self.assertEqual(coverage['qualification_outstanding'], list(coordinator.verification_qualification.OBLIGATIONS))
+
+    def test_long_qualification_mutation_revokes_new_local_and_shared_gate_successes(self):
+        shared = self.root / 'shared'
+        published = []
+        def qualification(root, cache, compiler, zig, context, snapshots, **controls):
+            published.extend(path.stem for path in self.receipts())
+            self.assertEqual(len(published), 2)
+            self.input.write_text('changed during long qualification')
+            return coordinator.verification_qualification.QualificationRun(context, cache, contextlib.ExitStack(), snapshots)
+        with patch.object(coordinator.verification_qualification, 'qualify', side_effect=qualification):
+            self.assertEqual(self.execute(profile='long-qualification', shared=shared), coordinator.RETRY)
+        self.assertEqual(self.receipts(), [])
+        store = coordinator.fuzz_campaign_store.Store(shared)
+        self.assertTrue(all(store.load_success(key) is None for key in published))
+        self.assertFalse(coordinator.read_record(self.cache / 'last-run.json')['success'])
+
+    def test_long_qualification_exception_revokes_new_successes(self):
+        def interrupted(*_args, **_kwargs):
+            self.assertEqual(len(self.receipts()), 2)
+            raise SnapshotError('qualification input disappeared')
+        with patch.object(coordinator.verification_qualification, 'qualify', side_effect=interrupted):
+            with self.assertRaises(SnapshotError):
+                self.execute(profile='long-qualification')
+        self.assertEqual(self.receipts(), [])
+        self.assertFalse(coordinator.read_record(self.cache / 'last-run.json')['success'])
 
     def test_invalid_profile_controls_fail_before_preparation(self):
         with self.assertRaises(ValueError):
@@ -377,6 +476,9 @@ class VerificationCoordinator(unittest.TestCase):
             providers = {label: artifact.identity['files']}
             accepted = coordinator.action_payload(pure, sources, common, self.root, providers, producer_manifest=record)
             self.assertIn('producer', accepted['common']['artifacts'][label])
+            incomplete = dict(pure, inputs=pure['inputs'][:-1])
+            fallback = coordinator.action_payload(incomplete, sources, common, self.root, providers, producer_manifest=record)
+            self.assertEqual(fallback['common']['artifacts'], 'whole-artifact-fallback')
             fallback = coordinator.action_payload(pure, sources, common, self.root, providers)
             self.assertEqual(fallback['common']['artifacts'], 'whole-artifact-fallback')
             incompatible = copy.deepcopy(record)
@@ -940,6 +1042,35 @@ class VerificationCoordinator(unittest.TestCase):
         self.assertTrue(any('fixture.txt' in reason['name'] for reason in diagnostic['reasons']))
         self.assertTrue(any(reason['role'] == 'action_inputs' for reason in diagnostic['reasons']))
 
+    def change_tool_during_resolution(self):
+        calls = []
+        def resolve(_zig, _environment):
+            calls.append(True)
+            if len(calls) == 2:
+                original = self.tool.read_bytes()
+                self.tool.write_bytes(b'changed during provider resolution')
+                self.tool.write_bytes(original)
+            return [], [self.zig, self.tool]
+        self.stack.enter_context(patch.object(coordinator, 'tool_contract', side_effect=resolve))
+
+    def test_tool_aba_during_warm_resolution_rejects_before_execution_or_reuse(self):
+        with RetainedSession() as retained, retained.activate():
+            self.assertEqual(self.execute(), 0)
+            self.admissions.clear()
+            self.change_tool_during_resolution()
+            with self.assertRaises(coordinator.VerificationError) as caught:
+                self.execute()
+            self.assertEqual(caught.exception.status, coordinator.RETRY)
+            self.assertEqual(self.admissions, [])
+            self.assertFalse(coordinator.read_record(self.cache / 'last-run.json')['success'])
+
+    def test_tool_aba_during_cold_resolution_rejects_before_native_work(self):
+        self.change_tool_during_resolution()
+        with self.assertRaises(coordinator.VerificationError):
+            self.execute()
+        self.assertEqual(self.events('plan'), [])
+        self.assertEqual(self.receipts(), [])
+
     def test_failed_gate_preserves_failure_and_stability_diagnostics(self):
         self.write('.failure', '17')
         self.after_gate = lambda: self.input.write_text('changed during failed execution')
@@ -1128,6 +1259,101 @@ class VerificationCoordinator(unittest.TestCase):
         self.assertGreater(timings[0]['admission_wait_seconds'], 0)
         self.assertEqual(list((slots / 'queue-gate').glob('*.wait')), [])
 
+
+
+class CallerAuthentication(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix='helper-auth-', dir=REPOSITORY / '.tmp')
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.source = self.root / 'helper.py'
+        self.source.write_bytes(Path(coordinator.code_identity.__file__).read_bytes())
+        spec = importlib.util.spec_from_file_location('helper_auth_fixture', self.source)
+        self.helper = importlib.util.module_from_spec(spec)
+        sys.modules[spec.name] = self.helper
+        spec.loader.exec_module(self.helper)
+        self.addCleanup(sys.modules.pop, spec.name, None)
+        for name, value in [('code_identity', self.helper), ('_CODE_HELPER_SOURCE_PROOF', None)]:
+            replacement = patch.object(coordinator, name, value)
+            replacement.start()
+            self.addCleanup(replacement.stop)
+        self.authenticate = coordinator.authenticate_code_identity
+
+    def test_current_source_proof_is_cached_without_warm_file_reads(self):
+        with contextlib.ExitStack() as stack:
+            watched = stack.enter_context(Snapshot(self.root, [], [self.source]))
+            snapshots = [watched]
+            self.authenticate(self.root, watched, snapshots, stack)
+            with patch.object(Path, 'open', side_effect=AssertionError('warm read')):
+                self.authenticate(self.root, watched, snapshots, stack)
+            self.assertIs(coordinator._CODE_HELPER_SOURCE_PROOF[0], self.helper._LOADED_CODE_OBJECT)
+            self.assertTrue(watched.unchanged())
+
+    def test_fake_root_attaches_actual_provider_authority_until_request_exit(self):
+        fake = self.root / 'fake'
+        fake.mkdir()
+        with contextlib.ExitStack() as stack:
+            watched = stack.enter_context(Snapshot(fake, []))
+            snapshots = [watched]
+            self.authenticate(fake, watched, snapshots, stack)
+            self.assertEqual(len(snapshots), 2)
+            provider = snapshots[-1]
+            self.assertTrue(provider.unchanged())
+            self.source.write_bytes(self.source.read_bytes().replace(b'_TEXT_CHUNK = 8192', b'_TEXT_CHUNK = 8193'))
+            self.assertFalse(provider.unchanged())
+        self.assertRaises(SnapshotError, provider.unchanged)
+
+    def test_stale_helper_before_watch_is_rejected_even_with_fresh_source_capture(self):
+        self.source.write_bytes(self.source.read_bytes().replace(b'_TEXT_CHUNK = 8192', b'_TEXT_CHUNK = 8193'))
+        with contextlib.ExitStack() as stack:
+            watched = stack.enter_context(Snapshot(self.root, [], [self.source]))
+            self.assertTrue(watched.unchanged())
+            self.assertRaisesRegex(self.helper.CodeIdentityError, 'does not match',
+                                   self.authenticate, self.root, watched, [watched], stack)
+            self.assertIsNone(coordinator._CODE_HELPER_SOURCE_PROOF)
+
+    def test_proof_cache_compares_code_object_by_identity(self):
+        with contextlib.ExitStack() as stack:
+            watched = stack.enter_context(Snapshot(self.root, [], [self.source]))
+            self.authenticate(self.root, watched, [watched], stack)
+            original = self.helper._LOADED_CODE_OBJECT
+            self.helper._LOADED_CODE_OBJECT = original.replace()
+            self.assertEqual(self.helper._LOADED_CODE_OBJECT, original)
+            self.assertIsNot(self.helper._LOADED_CODE_OBJECT, original)
+            with patch.object(self.helper, 'authenticate_code_source', wraps=self.helper.authenticate_code_source) as authenticate:
+                self.authenticate(self.root, watched, [watched], stack)
+            self.assertEqual(authenticate.call_count, 1)
+            self.assertIs(coordinator._CODE_HELPER_SOURCE_PROOF[0], self.helper._LOADED_CODE_OBJECT)
+
+    def test_mismatched_watched_bytes_fail_even_when_current_code_would_match(self):
+        with contextlib.ExitStack() as stack:
+            watched = stack.enter_context(Snapshot(self.root, [], [self.source]))
+            record = watched.identity['files'][0]
+            record['sha256'] = '0' * 64
+            with patch.object(watched, '_identity', {'files': [record]}):
+                self.assertRaisesRegex(SnapshotError, 'during', self.authenticate,
+                                       self.root, watched, [watched], stack)
+            self.assertIsNone(coordinator._CODE_HELPER_SOURCE_PROOF)
+
+    def test_missing_metadata_cannot_use_an_earlier_content_proof(self):
+        with contextlib.ExitStack() as stack:
+            watched = stack.enter_context(Snapshot(self.root, [], [self.source]))
+            self.authenticate(self.root, watched, [watched], stack)
+            record = watched.identity['files'][0]
+            del record['size']
+            with patch.object(watched, '_identity', {'files': [record]}):
+                self.assertRaisesRegex(self.helper.CodeIdentityError, 'metadata', self.authenticate,
+                                       self.root, watched, [watched], stack)
+
+    def test_cache_never_authorizes_a_closed_or_dirty_request_snapshot(self):
+        with contextlib.ExitStack() as stack:
+            watched = stack.enter_context(Snapshot(self.root, [], [self.source]))
+            self.authenticate(self.root, watched, [watched], stack)
+            self.source.write_bytes(self.source.read_bytes() + b'\n')
+            # A cached code/source relation cannot make this watch pass.
+            self.authenticate(self.root, watched, [watched], stack)
+            self.assertFalse(watched.unchanged())
+        self.assertRaises(SnapshotError, self.authenticate, self.root, watched, [watched], contextlib.ExitStack())
 
 REAL_ADMISSION = coordinator.run_admitted
 

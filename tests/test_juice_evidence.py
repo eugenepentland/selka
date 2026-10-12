@@ -342,6 +342,56 @@ class EvidenceTests(unittest.TestCase):
         with self.assertRaises(evidence.EvidenceError):
             evidence.validate_record(alias / 'record.json', self.artifacts, self.expected)
 
+    def large_executable(self, size):
+        data = b"x" * size
+        self.artifacts["plain"].write_bytes(data)
+        self.mutate_record(lambda record: record["build"]["artifacts"].update(plain=sha(data)))
+        return data
+
+    def test_larger_compiler_validates_fresh_but_cannot_expand_reuse_store(self):
+        data = self.large_executable(128)
+        with patch.object(evidence, "FILE_MAX_BYTES", 64), patch.object(evidence, "EXECUTABLE_MAX_BYTES", 256), \
+                patch.object(evidence, "BLOB_MAX_BYTES", 64):
+            captured = evidence.validate_record(self.path, self.artifacts, self.expected)
+            self.assertEqual(data, captured.read_artifact("plain"))
+            self.assertFalse(evidence.reusable_artifacts(captured))
+            self.assertFalse(self.publish())
+            self.assertIsNone(self.store.lookup(self.key, self.expected))
+            self.assertIsNone(self.store.backend.load_success(self.key))
+
+    def test_executable_and_raw_limits_are_distinct_and_both_fail_closed(self):
+        self.large_executable(257)
+        with patch.object(evidence, "FILE_MAX_BYTES", 64), patch.object(evidence, "EXECUTABLE_MAX_BYTES", 256):
+            with self.assertRaisesRegex(evidence.EvidenceError, "executable"):
+                evidence.validate_record(self.path, self.artifacts, self.expected)
+        self.large_executable(128)
+        raw = b"x" * 65
+        (self.path.parent / "w-0-sample.stdout").write_bytes(raw)
+        self.mutate_record(lambda record: record["evidence"].update({"w-0-sample.stdout": sha(raw)}))
+        with patch.object(evidence, "FILE_MAX_BYTES", 64), patch.object(evidence, "EXECUTABLE_MAX_BYTES", 256):
+            with self.assertRaisesRegex(evidence.EvidenceError, "raw file"):
+                evidence.validate_record(self.path, self.artifacts, self.expected)
+
+    def test_digest_shared_by_raw_and_executable_keeps_stricter_raw_limit(self):
+        data = self.large_executable(128)
+        (self.path.parent / "w-0-sample.stdout").write_bytes(data)
+        self.mutate_record(lambda record: record["evidence"].update({"w-0-sample.stdout": sha(data)}))
+        record = json.loads(self.path.read_bytes())
+        payloads = {digest: (self.path.parent / name).read_bytes() for name, digest in record["evidence"].items()}
+        payloads[sha(data)] = data
+        with patch.object(evidence, "FILE_MAX_BYTES", 64), patch.object(evidence, "EXECUTABLE_MAX_BYTES", 256):
+            with self.assertRaisesRegex(evidence.EvidenceError, "raw file"):
+                evidence.validate_record(self.path, self.artifacts, self.expected)
+            with self.assertRaisesRegex(evidence.EvidenceError, "missing or corrupt artifact"):
+                evidence._evidence(self.path.read_bytes(), record["evidence"], record["build"]["artifacts"],
+                                   self.expected, payloads.get)
+
+    def test_larger_fresh_executable_still_honors_aggregate_bound(self):
+        self.large_executable(128)
+        with patch.object(evidence, "EXECUTABLE_MAX_BYTES", 256), patch.object(evidence, "TOTAL_MAX_BYTES", 64):
+            with self.assertRaises(evidence.EvidenceError):
+                evidence.validate_record(self.path, self.artifacts, self.expected)
+
     def test_metadata_blob_and_aggregate_bounds_are_enforced(self):
         with patch.object(evidence, 'RECORD_MAX_BYTES', 32):
             with self.assertRaises(evidence.EvidenceError):

@@ -9,12 +9,13 @@ from contextlib import ExitStack, redirect_stdout, redirect_stderr
 import hashlib
 import io
 import json
-import marshal
 from pathlib import Path
 import re
 import shutil
 import sys
 import tempfile
+
+import verification_code_identity as code_identity
 
 from verification_snapshot import Snapshot, SnapshotError
 import verify_cache as verification
@@ -23,7 +24,7 @@ OBLIGATIONS = ("fuzz", "scaling", "work-counters", "juice-instructions", "wall-c
 SUPPORTED = ("fuzz", "scaling", "work-counters", "juice-instructions")
 INPUTS = ("scripts/verification_qualification.py", "scripts/verification_profiles.py",
           "scripts/fuzz_campaign.py", "scripts/fuzz_campaign_identity.py", "scripts/fuzz_campaign_store.py",
-          "scripts/verification_process.py", "scripts/verification_snapshot.py", "scripts/verify_cache.py",
+          "scripts/verification_code_identity.py", "scripts/verification_process.py", "scripts/verification_snapshot.py", "scripts/verify_cache.py",
           "tests/duplicate_scaling.py", "tests/incremental_diff.py", "tests/differential_corpus.py",
           "tests/fixtures/incremental/", "test/fixtures/long-qualification/", "src/",
           "scripts/juice_cache.py", "scripts/juice_evidence.py", "scripts/juice_provider.py", "scripts/juice_worker.py",
@@ -395,4 +396,4 @@ def qualify(root, cache, compiler, zig, context, snapshots, *, targets=None, max
         raise
 
 
-LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(_LOADED_CODE_OBJECT)).hexdigest()
+LOADED_CODE_SHA256 = code_identity.loaded_code_sha256(_LOADED_CODE_OBJECT)

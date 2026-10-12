@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import glob
 import hashlib
-import marshal
+import verification_code_identity as code_identity
 import math
 import os
 from pathlib import Path
@@ -15,7 +15,8 @@ import sys
 from .common import JuiceError, digest, executable, file_hash, run, tool_identity
 
 
-LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
+_LOADED_CODE_OBJECT = sys._getframe().f_code
+LOADED_CODE_SHA256 = code_identity.loaded_code_sha256(_LOADED_CODE_OBJECT)
 
 
 def cpu_set(text):

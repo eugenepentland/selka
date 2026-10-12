@@ -12,7 +12,7 @@ import math
 from contextlib import ExitStack
 import hashlib
 import json
-import marshal
+import verification_code_identity as code_identity
 import os
 from pathlib import Path
 import re
@@ -29,7 +29,8 @@ from verification_snapshot import Snapshot, SnapshotError
 import verify_cache as verification
 
 ROOT = Path(__file__).resolve().parents[1]
-LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
+_LOADED_CODE_OBJECT = sys._getframe().f_code
+LOADED_CODE_SHA256 = code_identity.loaded_code_sha256(_LOADED_CODE_OBJECT)
 DIFFERENTIAL = {
     "incremental": ("tests/incremental_diff.py", "tests/fixtures/incremental", "incremental-v1", "main.my"),
     "module-projects": ("tests/incremental_diff.py", "tests/fixtures/module_projects", "incremental-v1", "main.my"),
@@ -185,6 +186,7 @@ def contract(common: Snapshot, target: Snapshot, host, environment: dict, spec: 
             "execution_limits": verification.ProcessLimits(getattr(args, "action_timeout", None)).execution_identity(),
             "inputs": target.identity, "tools": common.identity, "host": host.identity,
             "environment": verification.key(environment),
+            "loaded_code_format": [code_identity.FORMAT_VERSION, code_identity.LOADED_CODE_SHA256],
             "implementation": [LOADED_CODE_SHA256, identity.LOADED_CODE_SHA256,
                                evidence.LOADED_CODE_SHA256, verification.LOADED_CODE_SHA256,
                                verification_snapshot.LOADED_CODE_SHA256]}
@@ -491,13 +493,15 @@ def execute(args) -> int:
             session = verification_snapshot.DigestSession()
             common = stack.enter_context(Snapshot(ROOT, identity.COMMON_INPUTS + recipes, files + provider_files,
                                                   digest_session=session))
+            snapshots = [common]
+            verification.authenticate_code_identity(ROOT, common, snapshots, stack, session)
             host = verification.HostContext()
             if identity.tools(environment, binaries, zig) != (recipes, files):
                 raise evidence.InputsChanged("tool resolution changed during input capture")
             if args.kind == "differential" and identity.components(args.components) != (provider_files, provider_binaries):
                 raise evidence.InputsChanged("component resolution changed during input capture")
             targets_snapshots = [stack.enter_context(Snapshot(ROOT, spec["inputs"], digest_session=session)) for spec in specs]
-            snapshots = [common, host, *targets_snapshots]
+            snapshots.extend([host, *targets_snapshots])
             success = all(run_target(store, spec, common, host, environment, args, state, snapshot, snapshots)
                           for spec, snapshot in zip(specs, targets_snapshots))
             require_stable(snapshots)

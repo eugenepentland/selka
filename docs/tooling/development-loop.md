@@ -14,12 +14,23 @@ complete request reuses qualified completed work and executes the remainder.
 Cold preparation still builds the required native artifacts; quick selection
 does not promise a five-second cold build.
 
-`--profile long-qualification` runs the complete gate and reports the separate
-fuzz and wall-clock qualification obligations. It returns 3 while those results
-are outstanding; this profile does not itself run an external benchmark campaign
-or establish self-hosting acceptance. The retained session accepts all profile
-options in the existing `verify` request arguments. No additional scheduler or
-scheduled job is installed.
+`--profile long-qualification` completes the gate and then executes bounded,
+fixed qualification recipes. Its six obligations are fuzz, scaling, work counters,
+Juice instructions, wall-clock performance and bootstrap. It runs up to four
+supported obligations by default; `--qualification-target NAME` selects explicit
+obligations without removing the others from required coverage.
+`--qualification-max-actions N` bounds obligations, `--qualification-timeout N`
+bounds each admitted command (default 300 seconds), and
+`--qualification-fuzz-steps N` bounds differential steps (default 8, one shard).
+
+Actual compiler work reports, exact completed-test inventories and authenticated
+raw captures are retained. Instruction samples remain report-only until provider
+coverage and repeatability qualify them. Wall-clock and bootstrap acceptance still
+require their separate workstreams. Missing, failed, unsupported or unselected
+obligations stay visible and yield partial status 3. Serialized success flags
+cannot authorize completion; qualification authority belongs to the current guarded
+request. The retained session accepts these options through its existing `verify`
+request. No scheduled job is installed.
 
 The first development-loop pass adds optional limits and diagnostic reports:
 
@@ -28,7 +39,8 @@ The first development-loop pass adds optional limits and diagnostic reports:
 | `--build-timeout-seconds N` | Deadline for each admitted inventory/preparation command |
 | `--gate-timeout-seconds N` | Deadline for the admitted selected gate as a whole |
 | `--warn-after-seconds N` | Advisory target for coordinator elapsed time excluding admission queues |
-| `--budget-policy PATH` | Version 1 report-only policy with separate expected, regression, deadline, memory and work observations |
+| `--timing-window-seconds N` | Exclusive bounded coordinator request; queue and session startup excluded |
+| `--budget-policy PATH` | Version 1 or 2 report-only policy with separate expected, regression, deadline, memory and work observations |
 
 Values must be positive finite seconds. No new deadline is enabled by default.
 Hard deadlines begin after admission and source revalidation, when the worker is
@@ -39,6 +51,17 @@ Scoped policies distinguish admitted action, setup/build and individual-test
 clocks. Missing or incompatible measurements remain unknown. Policy loading errors
 are reported without changing the test verdict. Automatic per-action enforcement
 remains unqualified; a report-only deadline value never installs a watchdog.
+
+For isolated request measurements, run the coordinator directly with
+`--timing-window-seconds N`. It obtains shared timing admission before validation
+and retains it through execution, publication and reporting. Checkout-lock and
+admission waits are reported separately. The report's elapsed scope ends at final
+report assembly; an external harness must measure report writing, final output
+and session startup for end-to-end latency. Deadline expiry or holder failure
+revokes new receipts and reports failure. This explicit bound changes execution
+identity; the 5-second feedback and 15-second p95 targets never become implicit
+deadlines. Long qualification owns separate phase admissions and cannot be
+combined with this request-wide measurement option.
 
 A timed-out command returns 124. Its isolated Linux supervisor terminates and reaps
 owned descendants, including helpers that start new process sessions. After normal
@@ -52,7 +75,7 @@ descriptors used by admission and child tooling. Admission's memory-settle helpe
 has separate ownership and retains its original delay after a worker finishes or
 is cancelled.
 
-`.mylang-cache/verification-v1/last-run.json` records admission wait, input validation,
+`.mylang-cache/verification-v2/last-run.json` records admission wait, input validation,
 worker duration, final validation, publication, selected/reused actions and the
 advisory loop target. Preparation failures also record their stage and status.
 Per-action `invalidation` compares exact selected file identities and common
@@ -85,9 +108,12 @@ reported as skips, not unexecuted required coverage. Summary precision is whatev
 the build tool printed, including rounded minute durations. The verification
 self-tests use a supported unittest collector that records every selected test,
 its outcome and duration, and runner-process CPU/RSS. Each request uses fresh
-temporary sidecars; reused results receive no invented fresh timings. Unsupported
-native and guest per-test timings, full group durations, and aggregate concurrent
-memory remain explicitly unknown. `action_coverage` includes every current action.
+temporary sidecars; reused results receive no invented fresh timings. Registered native test members use a transparent proxy for the pinned Zig runner
+protocol. Each actual dispatched test has a stable root/name identity, outcome and
+start-message-to-result-message interval, including scheduling and reporting.
+Skipped tests have no fabricated duration. This interval is not pure test-body
+time. Supported guest JSON inventories supply outcomes while guest timing stays
+unknown. Full group durations and aggregate concurrent memory also remain unknown. `action_coverage` includes every current action.
 The parser bounds bytes, lines and observation count separately from log capture.
 
 The first dependency split introduces `juice_pure`: 29 reviewed synthetic
@@ -133,9 +159,15 @@ cannot establish a calibrated target. Failures, reused results, incomplete logs
 and ambiguous timing rows do not become fresh samples. Hard limits remain opt-in
 command controls, and no per-action deadline is enabled by calibration.
 
-Remaining work includes native/guest individual timing, calibrated action limits,
+Remaining work includes precise guest individual timing, calibrated action limits,
 qualified ordinary-edit latency, broader useful boundaries and full self-hosting. The
 [DL1–DL8 plan](../audits/selka-development-loop-plan-2026-10-11.md) and
 [bootstrap handoff](../audits/selka-development-loop-bootstrap-handoff-2026-10-11.md)
 define the larger work and ownership. The active self-hosting branch owns compiler
 porting; this tooling pass preserves its completion and performance requirements.
+
+Receipt schema 2 and the `verification-v2` directory separate canonical loaded-code
+identities from older marshal-based identities. Report schema remains 1. The
+canonical encoder binds actual loaded code, typed constants and source locations;
+retained bootstrap guards separately authenticate its source. This migration does
+not change deterministic fuzz seed derivation or rewrite existing content stores.

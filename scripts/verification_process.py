@@ -4,7 +4,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 import math
 import hashlib
-import marshal
+if __package__:
+    from . import verification_code_identity as code_identity
+else:
+    import verification_code_identity as code_identity
 import sys
 import os
 from pathlib import Path
@@ -517,4 +520,5 @@ def run_supervised(argv: list[str], env: dict[str, str]) -> int:
             signal.signal(sig, handler)
 
 
-LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
+_LOADED_CODE_OBJECT = sys._getframe().f_code
+LOADED_CODE_SHA256 = code_identity.loaded_code_sha256(_LOADED_CODE_OBJECT)

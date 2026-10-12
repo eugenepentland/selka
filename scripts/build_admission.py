@@ -6,10 +6,15 @@ from pathlib import Path
 import signal
 import subprocess
 import sys
+import verification_code_identity as code_identity
 
 
 SLOT = Path(__file__).with_name("build-slot.sh")
 MARKERS = ("MYLANG_ADMISSION_DIR", "MYLANG_ADMISSION_KIND")
+
+
+class AdmissionLost(RuntimeError):
+    """The real slot holder failed to acquire or preserve admission."""
 
 
 def slot_directory():
@@ -52,12 +57,12 @@ def admission(kind):
     try:
         line = process.stdout.readline()
         if not line:
-            raise RuntimeError(f"{kind} admission failed (exit {process.wait()})")
+            raise AdmissionLost(f"{kind} admission failed (exit {process.wait()})")
         identity = json.loads(line)
         os.sched_setaffinity(0, identity["cpus"])
         os.environ.update(identity["markers"])
         ready = True
-        yield
+        yield process
     finally:
         os.sched_setaffinity(0, original)
         for key, value in markers.items():
@@ -76,7 +81,11 @@ def admission(kind):
         finally:
             process.stdout.close()
         if ready and status != 0 and sys.exc_info()[0] is None:
-            raise RuntimeError(f"{kind} admission holder failed (exit {status})")
+            raise AdmissionLost(f"{kind} admission holder failed (exit {status})")
+
+
+_LOADED_CODE_OBJECT = sys._getframe().f_code
+LOADED_CODE_SHA256 = code_identity.loaded_code_sha256(_LOADED_CODE_OBJECT)
 
 
 if __name__ == "__main__":

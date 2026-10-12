@@ -9,7 +9,7 @@ Subreaping keeps separate process groups/sessions owned until cleanup finishes.
 import ctypes
 import errno
 import hashlib
-import marshal
+import verification_code_identity as code_identity
 import os
 from pathlib import Path
 import signal
@@ -17,7 +17,8 @@ import subprocess
 import sys
 import time
 
-LOADED_CODE_SHA256 = hashlib.sha256(marshal.dumps(sys._getframe().f_code)).hexdigest()
+_LOADED_CODE_OBJECT = sys._getframe().f_code
+LOADED_CODE_SHA256 = code_identity.loaded_code_sha256(_LOADED_CODE_OBJECT)
 CLEANUP_SECONDS = 5.0
 TERM_SECONDS = 0.35
 POLL_SECONDS = 0.02

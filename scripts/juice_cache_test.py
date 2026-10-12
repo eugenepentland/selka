@@ -216,6 +216,18 @@ class Coordinator(unittest.TestCase):
             self.assertEqual(2, failure.exception.code)
         self.assertEqual([], self.calls)
 
+    def test_large_valid_artifact_is_fresh_only_without_expanding_blob_store(self):
+        with patch.object(evidence, "BLOB_MAX_BYTES", 1):
+            status, captured = self.capture("--target", "alpha")
+        self.assertEqual(0, status)
+        self.assertTrue(captured["complete"])
+        self.assertFalse(captured["actions"][0]["qualified"])
+        self.assertIn("executable exceeds reusable evidence blob ceiling; fresh capture only",
+                      captured["actions"][0]["freshness_reasons"])
+        self.calls.clear()
+        self.capture("--target", "alpha")
+        self.assertEqual(["alpha"], self.calls)
+
     def test_work_cap_reports_partial_resumes_and_does_not_charge_reuse(self):
         status, partial = self.capture("--max-actions", "1")
         self.assertEqual(3, status)

@@ -109,6 +109,8 @@ pub const Registry = struct {
                 if (!reachable.contains(step)) continue;
                 var member = registered_member;
                 member.original_label = step.name;
+                member.label = self.build.fmt("verification action {s} member {d}", .{ entry.group.id, members.items.len });
+                self.observeNative(step, entry.group.id, members.items.len);
                 step.name = member.label;
                 members.append(a, member) catch @panic("verification allocation");
             }
@@ -149,6 +151,24 @@ pub const Registry = struct {
         self.build.step("verification-plan", "Export authoritative test and format action inventory without executing gates").dependOn(&install.step);
     }
 
+    fn observeNative(self: *Registry, step: *std.Build.Step, id: []const u8, member: usize) void {
+        const run = step.cast(std.Build.Step.Run) orelse return;
+        if (!run.test_runner_mode) return;
+        const producer = run.producer orelse return;
+        const root = producer.root_module.root_source_file orelse return;
+        const b = self.build;
+        const prefix = [_][]const u8{
+            "python3",  "scripts/verification_native_telemetry.py", "--action-id", id,
+            "--member", b.fmt("{d}", .{member}),                    "--root-id",   b.fmt("{f}", .{root}),
+            "--",
+        };
+        const args = b.graph.arena.alloc(std.Build.Step.Run.Arg, prefix.len) catch @panic("verification allocation");
+        for (args, prefix) |*arg, word| arg.* = .{ .bytes = b.graph.dupeString(word) };
+        run.argv.insertSlice(b.graph.arena, 0, args) catch @panic("verification allocation");
+        run.addFileInput(b.path("scripts/verification_native_telemetry.py"));
+        run.addFileInput(b.path("scripts/verification_telemetry.py"));
+    }
+
     fn exportGroup(self: *Registry, entry: Entry, reachable: std.AutoHashMapUnmanaged(*std.Build.Step, void), covered: *std.AutoHashMapUnmanaged(*std.Build.Step, void), groups: *std.ArrayList(Group)) void {
         var target: ?*std.Build.Step = null;
         for (entry.steps.items) |step| {
@@ -187,6 +207,7 @@ pub fn prepare(b: *std.Build, artifacts: []const Artifact, known_outputs: []cons
     run.addFileArg(b.path("scripts/verification_artifacts.py"));
     run.addFileInput(b.path("scripts/verification_producers.py"));
     run.addFileInput(b.path("scripts/verification_snapshot.py"));
+    run.addFileInput(b.path("scripts/verification_code_identity.py"));
     run.setCwd(b.path("."));
     const paths = run.addOutputFileArg("artifacts.json");
     for (artifacts) |artifact| {

@@ -64,3 +64,11 @@ archive entries. Excessive or malformed inputs fail diagnostic evaluation rather
 than executing work or altering verification status. Rejection reasons are capped
 at 64. The standalone CLI returns 2 when evaluation is unavailable; the coordinator
 must treat that diagnostic failure as unknown while preserving its real verdict.
+
+Scoped policy version 2 additionally names the observation clock, including native
+runner-protocol intervals. Calibration keeps operational and isolated samples in
+separate compatible cohorts and rejects duplicate or conflicting run evidence.
+Independent validation samples can describe candidate headroom; neither that
+report nor the older five-sample suggestion enables hard enforcement. Expected
+cost, regression threshold, hard deadline, memory ceiling and work ceiling remain
+separate fields, with unavailable measurements explicitly unknown.
