@@ -114,7 +114,9 @@ pub fn marker(module: *const ir.Module, function: *const ir.Function) error{Unsu
     const ty = markerType(function.name) orelse return error.UnsupportedInstruction;
     if (@backingInt(ty) - ir.Type.first_compound >= module.compounds.items.len) return error.UnsupportedInstruction;
     const signature = function.signature;
-    if (module.kind(ty) != .record or signature.linkage != .runtime_c or signature.ret != .void) return error.UnsupportedInstruction;
+    const optional_provider = module.kind(ty) == .@"union" and std.mem.eql(ir.Type, module.compound(ty).@"union", &.{ .void, .capability });
+    if (module.kind(ty) != .record and !optional_provider) return error.UnsupportedInstruction;
+    if (signature.linkage != .runtime_c or signature.ret != .void) return error.UnsupportedInstruction;
     if (signature.params.len != 1 or signature.params[0] != ty) return error.UnsupportedInstruction;
     if (signature.owned != 0 or signature.consumes != 0 or signature.views != 0) return error.UnsupportedInstruction;
     if (function.blocks.items.len != 0 or function.insts.items.len != 0) return error.UnsupportedInstruction;

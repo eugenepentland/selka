@@ -3838,11 +3838,18 @@ const FunctionEmitter = struct {
 
     /// Emit a direct or indirect call under the internal aggregate ABI.
     pub fn call(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!void {
-        if ((try @import("borrowed_provider.zig").call(self.state.module, self.function, inst)) != null) {
+        if (try @import("borrowed_provider.zig").call(self.state.module, self.function, inst)) |args| {
             var construction = inst;
-            construction.op = .record_make;
-            construction.a = .none;
-            try self.recordMake(out, name, construction);
+            if (self.state.module.kind(inst.ty) == .@"union") {
+                construction.op = .union_make;
+                construction.a = args[0];
+                construction.data = 1;
+                try self.unionMake(out, name, construction);
+            } else {
+                construction.op = .record_make;
+                construction.a = .none;
+                try self.recordMake(out, name, construction);
+            }
             return;
         }
         if (try self.borrowedSelection(out, name, inst)) return;

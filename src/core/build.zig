@@ -30,6 +30,7 @@ const single_owner_copy = @import("single_owner_copy.zig");
 const build_capture = @import("build_capture.zig");
 const lowering_cache = @import("lowering_cache.zig");
 const aggregate_provider = @import("aggregate_provider.zig");
+const borrowed_provider = @import("borrowed_provider.zig");
 const borrow_selection = @import("borrow_selection.zig");
 
 /// Refusal reasons several constructs share.
@@ -786,7 +787,7 @@ const FnBuilder = struct {
         try self.guardViewRebind(self.local(store.slot), span);
         if (assign and self.module().zero_rc) try self.prepareOptionalWriteback(store, span);
         var place: ?Place = null;
-        const borrowed_context = self.module().zero_rc and !assign and @import("borrowed_provider.zig").initializer(self.mb.input.program, self.checked, store.value);
+        const borrowed_context = self.module().zero_rc and !assign and borrowed_provider.initializer(self.mb.input.program, self.checked, store.value);
         const value = if (borrowed_context) try self.borrowedProvider(store.value, span) else try self.expressionPlace(store.value, &place);
         const block = self.current orelse return;
         try self.providerStore(store, place, value, assign, span);
@@ -1730,6 +1731,13 @@ const FnBuilder = struct {
             else => return self.mb.refuse("variant type", span),
         };
         if (tag >= cases.len) return self.mb.refuse("variant tag", span);
+        if (self.module().zero_rc and borrowed_provider.optionalArgument(self.mb.input.program, self.checked, id)) {
+            const callee = borrowed_provider.declare(self.allocator(), self.module(), ty) catch |err| switch (err) {
+                error.OutOfMemory => return error.OutOfMemory,
+                error.UnsupportedInstruction => return self.mb.refuse("invalid borrowed optional provider", span),
+            };
+            return self.emit(.{ .op = .call, .ty = ty, .a = @fromBackingInt(callee), .data = try self.extraSlice(&.{payload}), .span = span });
+        }
         if (payload != .none) payload = try self.boxFor(cases[tag], payload, span);
         const made = try self.emit(.{ .op = .union_make, .ty = ty, .a = payload, .data = tag, .span = span });
         if (typed.resultShape(self.nodeOf(id).ty, self.mb.input.program.records)) |shape| {
@@ -1749,7 +1757,7 @@ const FnBuilder = struct {
             if (self.current == null) return .none;
             values[field.index] = try self.boxFor(stored[field.index], value, span);
         }
-        const callee = @import("borrowed_provider.zig").declare(self.allocator(), self.module(), ty) catch |err| switch (err) {
+        const callee = borrowed_provider.declare(self.allocator(), self.module(), ty) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             error.UnsupportedInstruction => return self.mb.refuse("invalid borrowed provider context", span),
         };

@@ -7,6 +7,7 @@ const typed = language.typed;
 const ir = @import("ir.zig");
 const resources = @import("single_owner_resource.zig");
 const providers = @import("aggregate_provider.zig");
+const borrowed_provider = @import("borrowed_provider.zig");
 const Span = language.source.Span;
 const none = std.math.maxInt(usize);
 const zero_unsupported = "E_ZERO_RC_UNSUPPORTED";
@@ -121,6 +122,7 @@ pub fn checkMode(a: std.mem.Allocator, program: typed.Program, failure: *Failure
         @memset(c.state, .{});
         for (function.scope.locals, 0..) |local, index| {
             try c.supported(local.ty, local.declaration, 0);
+            if (zero_rc and borrowed_provider.optional(program, local.ty) and local.mutable) return c.reject(local.declaration, borrow_error, "optional provider parameters are read-only");
             if (index < function.signature.parameter_count and c.view(local.ty) and local.mutable) return c.reject(local.declaration, view_signature, "view parameters are read-only");
             if (index < function.signature.parameter_count) c.state[index] = .{
                 .available = true,
@@ -130,6 +132,7 @@ pub fn checkMode(a: std.mem.Allocator, program: typed.Program, failure: *Failure
             };
         }
         try c.supported(function.signature.return_type, function.declaration, 0);
+        if (zero_rc and borrowed_provider.optional(program, function.signature.return_type)) return c.reject(function.declaration, borrow_error, "optional providers cannot be returned");
         if (zero_rc and resources.dependent(program, function.signature.return_type)) _ = try c.resourceParameter(function, function.declaration);
         if (typed.isBorrowedView(program.records, function.signature.return_type)) {
             _ = try c.returnSource(function, function.declaration);
@@ -191,6 +194,7 @@ const Checker = struct {
     failure: *Failure,
     state: []State,
     type_path: std.ArrayList(typed.Type) = .empty,
+    optional_argument: ?typed.NodeId = null,
     loans: std.ArrayList(Loan) = .empty,
     loops: std.ArrayList(Loop) = .empty,
 
@@ -221,7 +225,8 @@ const Checker = struct {
         if (c.zero_rc and depth != 0) {
             if (ty.isFile()) return c.reject(span, zero_unsupported, "store file owners in named local scopes");
             if (owningCapability(ty)) for (c.type_path.items) |parent| {
-                if (!providers.plainRecord(c.program.records[parent.recordIndex()]))
+                const optional_root = c.type_path.items.len == 1 and borrowed_provider.optional(c.program, parent);
+                if (!providers.plainRecord(c.program.records[parent.recordIndex()]) and !optional_root)
                     return c.reject(span, zero_unsupported, "owning providers can be stored only in ordinary records or tuples");
             };
         }
@@ -332,6 +337,7 @@ const Checker = struct {
         return switch (node.data) {
             .local => |slot| c.rootOf(@backingInt(slot)),
             .field => |field| c.origin(field.base),
+            .variant => |variant| if (c.zero_rc and borrowed_provider.optionalArgument(c.program, c.function, id)) c.origin(variant.value.?) else null,
             .record => |fields| if (c.borrowedItem(fields)) |owner| c.rootOf(@backingInt(owner)) else null,
             .index => |index| if (c.freshCharacter(index.base)) null else c.origin(index.base),
             .cast => |value| if (c.zero_rc and c.program.nodes[@backingInt(value)].ty != node.ty) null else c.origin(value),
@@ -498,7 +504,8 @@ const Checker = struct {
         if (store.unpack != null) return c.checkUnpack(store, initializing, span);
         const slot = @backingInt(store.slot);
         const local = c.function.scope.locals[slot];
-        if (c.zero_rc and initializing and @import("borrowed_provider.zig").initializer(c.program, c.function, store.value)) {
+        if (c.zero_rc and borrowed_provider.optional(c.program, local.ty)) return c.reject(span, borrow_error, "optional providers cannot be stored in owning locals");
+        if (c.zero_rc and initializing and borrowed_provider.initializer(c.program, c.function, store.value)) {
             for (c.program.nodes[@backingInt(store.value)].data.record) |field| try c.expression(field.value, .read);
             c.state[slot] = .{ .available = true, .borrowed = true, .provider_context = true };
             return;
@@ -717,8 +724,17 @@ const Checker = struct {
             .resource_io,
             => try c.resourceExpression(node),
             .propagate => |value| try c.propagateResource(value.value, node.span),
-            .variant => |variant| if (variant.value) |value| try c.expression(value, .move),
+            .variant => |variant| try c.variantExpression(id, variant.value, access),
         }
+    }
+
+    fn variantExpression(c: *Checker, id: typed.NodeId, payload: ?typed.NodeId, access: Access) Error!void {
+        const value = payload orelse return;
+        const node = c.program.nodes[@backingInt(id)];
+        if (!c.zero_rc or !borrowed_provider.optional(c.program, node.ty)) return c.expression(value, .move);
+        if (access != .read or c.optional_argument != id or !borrowed_provider.optionalArgument(c.program, c.function, id))
+            return c.reject(node.span, borrow_error, "Some(provider) may only borrow an immutable parameter in a read-only call argument");
+        try c.expression(value, .read);
     }
 
     /// A generated dictionary item is a pair of borrows from one entry. Source
@@ -982,7 +998,10 @@ const Checker = struct {
             const write = std.mem.indexOfScalar(u16, mutates, @intCast(index)) != null;
             const arg = args[index];
             const affine = c.zero_rc and resources.affine(c.program, c.program.nodes[@backingInt(arg)].ty);
+            const optional_argument = c.optional_argument;
+            c.optional_argument = if (!write and !affine) arg else null;
             try c.expression(arg, if (write) .mutate else if (affine) .move else .read);
+            c.optional_argument = optional_argument;
             if (affine) if (try c.resourceOrigin(arg)) |provider| try c.loans.append(c.a, .{ .root = provider, .write = false });
             if (c.tracked(c.program.nodes[@backingInt(arg)].ty)) {
                 try c.loanExpression(arg, write);

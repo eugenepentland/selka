@@ -4,6 +4,7 @@ const typed = @import("mylang").typed;
 const ir = @import("ir.zig");
 
 pub const prefix = "myl_core_borrowed_provider_v1_";
+pub const optional_prefix = "myl_core_borrowed_optional_provider_v1_";
 pub const Error = error{UnsupportedInstruction};
 // The first contract uses bounded flat records and bounded parameter projections.
 pub const max_fields = 64;
@@ -11,6 +12,42 @@ pub const max_projection_depth = 64;
 
 fn provider(ty: typed.Type) bool {
     return ty.capabilityIndex() != null and !ty.isStream() and ty != .host_cap;
+}
+
+/// Only the native Option envelope may borrow a provider, never nested storage.
+pub fn optional(program: typed.Program, ty: typed.Type) bool {
+    if (!ty.isAggregate() or ty.recordIndex() >= program.records.len) return false;
+    const record = program.records[ty.recordIndex()];
+    if (record.managed or record.isCollection() or record.collection.box or record.fields.len != 0) return false;
+    if (record.shape.array != null or record.shape.resource != null or record.shape.domain != null or record.contract.callback != null) return false;
+    const variants = record.shape.variants orelse return false;
+    if (!variants.is_union or variants.fallible or variants.cases.len != 2) return false;
+    const option_name = std.mem.startsWith(u8, record.name, "Option<") or std.mem.startsWith(u8, record.name, "std_result::Option<");
+    if (!option_name) return false;
+    if (!std.mem.eql(u8, variants.cases[0].name, "none") or !std.mem.eql(u8, variants.cases[1].name, "some")) return false;
+    if (variants.cases[0].payload != null or variants.cases[0].boxed or variants.cases[1].boxed) return false;
+    return provider(variants.cases[1].payload orelse return false);
+}
+
+/// A Some argument borrows exactly one immutable parameter projection for a call.
+pub fn optionalArgument(program: typed.Program, function: typed.Function, id: typed.NodeId) bool {
+    if (@backingInt(id) >= program.nodes.len) return false;
+    const node = program.nodes[@backingInt(id)];
+    if (!optional(program, node.ty)) return false;
+    const variant = switch (node.data) {
+        .variant => |value| value,
+        else => return false,
+    };
+    if (variant.tag != 1) return false;
+    const payload = variant.value orelse return false;
+    if (@backingInt(payload) >= program.nodes.len) return false;
+    if (program.nodes[@backingInt(payload)].ty != program.records[node.ty.recordIndex()].shape.variants.?.cases[1].payload.?) return false;
+    return sourceParameter(program, function, payload);
+}
+
+fn physicalOptional(module: *const ir.Module, ty: ir.Type) bool {
+    return module.valid(ty) and module.kind(ty) == .@"union" and
+        std.mem.eql(ir.Type, module.compound(ty).@"union", &.{ .void, .capability });
 }
 
 fn scalar(program: typed.Program, ty: typed.Type) bool {
@@ -86,8 +123,8 @@ pub fn initializer(program: typed.Program, function: typed.Function, id: typed.N
 
 /// Canonical physical identity; parsing a name never admits its declaration alone.
 pub fn markerType(symbol: []const u8) ?ir.Type {
-    if (!std.mem.startsWith(u8, symbol, prefix)) return null;
-    const digits = symbol[prefix.len..];
+    const selected = if (std.mem.startsWith(u8, symbol, prefix)) prefix else if (std.mem.startsWith(u8, symbol, optional_prefix)) optional_prefix else return null;
+    const digits = symbol[selected.len..];
     if (digits.len == 0 or digits[0] == '0') return null;
     for (digits) |digit| if (digit < '0' or digit > '9') return null;
     const ty: ir.Type = @fromBackingInt(std.fmt.parseInt(u32, digits, 10) catch return null);
@@ -101,11 +138,13 @@ fn physicalScalar(ty: ir.Type) bool {
 
 /// Validate every field and all ABI bits, including a declaration with no body.
 pub fn declaration(module: *const ir.Module, function: *const ir.Function) Error!bool {
-    if (!std.mem.startsWith(u8, function.name, prefix)) return false;
+    const is_optional = std.mem.startsWith(u8, function.name, optional_prefix);
+    if (!is_optional and !std.mem.startsWith(u8, function.name, prefix)) return false;
     const ty = markerType(function.name) orelse return error.UnsupportedInstruction;
     if (!module.zero_rc or !module.valid(ty)) return error.UnsupportedInstruction;
-    if (module.kind(ty) != .record) return error.UnsupportedInstruction;
-    const fields = module.compound(ty).record;
+    if (is_optional and !physicalOptional(module, ty)) return error.UnsupportedInstruction;
+    if (!is_optional and module.kind(ty) != .record) return error.UnsupportedInstruction;
+    const fields: []const ir.Type = if (is_optional) &.{.capability} else module.compound(ty).record;
     if (fields.len == 0 or fields.len > max_fields) return error.UnsupportedInstruction;
     var has_provider = false;
     for (fields) |field| {
@@ -191,7 +230,8 @@ pub fn call(module: *const ir.Module, function: *const ir.Function, inst: ir.Ins
 pub fn contains(module: *const ir.Module, function: *const ir.Function) bool {
     for (function.insts.items) |inst| {
         if (inst.op != .call or inst.a == .none or inst.a.index() >= module.functions.items.len) continue;
-        if (std.mem.startsWith(u8, module.functions.items[inst.a.index()].name, prefix)) return true;
+        const name = module.functions.items[inst.a.index()].name;
+        if (std.mem.startsWith(u8, name, prefix) or std.mem.startsWith(u8, name, optional_prefix)) return true;
     }
     return false;
 }
@@ -199,8 +239,11 @@ pub fn contains(module: *const ir.Module, function: *const ir.Function) bool {
 // twin-drift-ok: Provider contexts have variable field signatures; selections have three operands. Each marker must validate its own complete ABI.
 /// A declaration is compiler-created; source extern declarations cannot select it.
 pub fn declare(a: std.mem.Allocator, module: *ir.Module, ty: ir.Type) (Error || std.mem.Allocator.Error)!u32 {
-    if (!module.valid(ty) or module.kind(ty) != .record) return error.UnsupportedInstruction;
-    const symbol = try std.fmt.allocPrint(a, "{s}{d}", .{ prefix, @backingInt(ty) });
+    const is_optional = physicalOptional(module, ty);
+    if (!is_optional) {
+        if (!module.valid(ty) or module.kind(ty) != .record) return error.UnsupportedInstruction;
+    }
+    const symbol = try std.fmt.allocPrint(a, "{s}{d}", .{ if (is_optional) optional_prefix else prefix, @backingInt(ty) });
     for (module.functions.items, 0..) |*function, index| {
         if (!std.mem.eql(u8, function.name, symbol)) continue;
         if (!try declaration(module, function)) return error.UnsupportedInstruction;
@@ -208,7 +251,7 @@ pub fn declare(a: std.mem.Allocator, module: *ir.Module, ty: ir.Type) (Error || 
     }
     const index: u32 = @intCast(module.functions.items.len);
     const function: ir.Function = .{ .name = symbol, .signature = .{
-        .params = try a.dupe(ir.Type, module.compound(ty).record),
+        .params = try a.dupe(ir.Type, if (is_optional) &.{.capability} else module.compound(ty).record),
         .ret = ty,
         .linkage = .runtime_c,
     } };
@@ -235,7 +278,7 @@ pub fn validate(a: std.mem.Allocator, module: *const ir.Module, function: *const
     var queue: std.ArrayList(usize) = .empty;
     defer queue.deinit(a);
     for (function.insts.items, 0..) |inst, index| {
-        if (inst.op == .copy or inst.op == .record_get) {
+        if (inst.op == .copy or inst.op == .record_get or inst.op == .union_payload) {
             _ = try checkedInst(function, inst.a);
             next[index] = heads[inst.a.index()];
             heads[inst.a.index()] = index;

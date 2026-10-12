@@ -1,0 +1,5 @@
+guardian/test: 4 test(s) selected
+All 4 tests passed.
+guardian/test: test wall 0.00s
+guardian/test: PASS — 4 passed
+guardian/test: RESULT {"passed":4,"failed":0,"skipped":0}

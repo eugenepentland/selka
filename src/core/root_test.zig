@@ -2,6 +2,7 @@
 //! each stage, then the end-to-end slice programs under `test/core`.
 comptime {
     _ = @import("borrowed_provider_test.zig");
+    _ = @import("optional_provider_20261012_test.zig");
     _ = @import("borrowed_provider_cache_test.zig");
     _ = @import("a02_public_constructors_test.zig");
     _ = @import("a02_field_augmented_test.zig");

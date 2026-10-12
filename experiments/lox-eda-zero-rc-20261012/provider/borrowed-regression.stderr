@@ -1,0 +1,6 @@
+build-slot: build slot 1, FIFO ticket 1449 after 0s
+guardian/test: 8 test(s) selected
+All 8 tests passed.
+guardian/test: test wall 0.00s
+guardian/test: PASS — 8 passed
+guardian/test: RESULT {"passed":8,"failed":0,"skipped":0}
