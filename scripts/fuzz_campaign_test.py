@@ -64,6 +64,7 @@ class CampaignTests(unittest.TestCase):
         (self.initial / "seed").write_bytes(b"seed")
         self.environment = {"PATH": os.environ["PATH"], "HOME": str(self.root)}
         self.calls = []
+        self.limits = []
         self.failure = False
         self.interrupt_at = None
         self.before = None
@@ -78,8 +79,9 @@ class CampaignTests(unittest.TestCase):
         self.stack.enter_context(patch.object(campaign.verification, "run_admitted", side_effect=self.admitted))
         self.store = evidence.Store(self.root / "cache/evidence-v2")
 
-    def admitted(self, root, kind, command, environment, unchanged, timings):
+    def admitted(self, root, kind, command, environment, unchanged, timings, limits=None):
         self.assertEqual("gate", kind)
+        self.limits.append(limits)
         request_path = Path(command[-2])
         request = campaign.worker_request(request_path, command[-1])
         if self.before:
@@ -119,6 +121,50 @@ class CampaignTests(unittest.TestCase):
             args = campaign.options(argv)
             status = campaign.execute(args)
         return status, json.loads((args.cache_dir / "last-run.json").read_text())
+
+    def test_invalid_work_controls_are_rejected_before_admission(self):
+        for flag, value in (("--max-actions", "0"), ("--action-timeout", "nan"), ("--action-timeout", "-1")):
+            with self.assertRaises(SystemExit) as failure, patch("sys.stderr", io.StringIO()):
+                self.run_campaign(flag, value)
+            self.assertEqual(2, failure.exception.code)
+        self.assertEqual([], self.calls)
+
+    def test_work_cap_reports_partial_and_preserves_completed_shard_for_resume(self):
+        status, partial = self.run_campaign("--target", "incremental", "--shards", "3", "--max-actions", "1")
+        self.assertEqual(3, status)
+        self.assertFalse(partial["complete"])
+        self.assertTrue(partial["work_budget"]["exhausted"])
+        self.assertEqual(1, partial["counts"]["executed_shards"])
+        self.assertEqual(2, len(partial["outstanding"]))
+        self.calls.clear()
+        status, resumed = self.run_campaign("--target", "incremental", "--shards", "3")
+        self.assertEqual(0, status)
+        self.assertEqual(1, resumed["counts"]["reused_shards"])
+        self.assertEqual([], resumed["outstanding"])
+        self.calls.clear()
+        status, warm = self.run_campaign("--target", "incremental", "--shards", "3", "--max-actions", "1")
+        self.assertEqual((0, []), (status, self.calls))
+        self.assertTrue(warm["complete"])
+
+    def test_cap_names_targets_not_yet_expanded(self):
+        status, report = self.run_campaign("--max-actions", "1")
+        self.assertEqual(3, status)
+        self.assertEqual(["interfaces", "interfaces-generic"], report["unvisited_targets"])
+        self.assertEqual("module-projects", report["outstanding"][0]["target"])
+
+    def test_explicit_deadline_is_admitted_and_changes_evidence_identity(self):
+        self.run_campaign("--target", "incremental", "--action-timeout", "7")
+        self.assertEqual(7, self.limits[-1].timeout_seconds)
+        self.calls.clear()
+        self.run_campaign("--target", "incremental", "--action-timeout", "8")
+        self.assertTrue(self.calls)
+        self.assertEqual(8, self.limits[-1].timeout_seconds)
+
+    def test_coverage_whole_action_deadline_uses_same_supervisor(self):
+        status, report = self.run_campaign("--hermetic", "--action-timeout", "2", coverage=True)
+        self.assertEqual(0, status)
+        self.assertEqual(2, self.limits[-1].timeout_seconds)
+        self.assertTrue(report["complete"])
 
     def test_shared_success_reuses_across_private_caches_with_private_corpus_copies(self):
         shared = self.root / "shared-evidence"

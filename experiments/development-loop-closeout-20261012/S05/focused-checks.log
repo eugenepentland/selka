@@ -1,0 +1,60 @@
+python3 scripts/verification_profiles_test.py
+.............
+Ran 13 tests in 0.009s
+OK
+exit 0
+
+python3 scripts/development_loop_workloads_test.py
+...
+Ran 3 tests in 0.000s
+OK
+exit 0
+
+python3 scripts/fuzz_campaign_test.py
+........................................
+Ran 40 tests in 3.143s
+OK
+exit 0
+
+python3 scripts/juice_cache_test.py
+..........................................
+Ran 42 tests in 4.245s
+OK
+exit 0
+
+python3 tests/test_juice_evidence.py
+...........................
+Ran 27 tests in 0.361s
+OK
+exit 0
+
+These are operational concurrent test-suite observations, not isolated comparisons.
+
+git diff --check
+exit 0
+git apply --check experiments/development-loop-closeout-20261012/S05/coordinator-profile.patch
+exit 0
+git apply --check experiments/development-loop-closeout-20261012/S05/build-registration.patch
+exit 0
+
+python3 experiments/development-loop-closeout-20261012/S05/profile_matrix.py experiments/development-loop-closeout-20261012/S05/C0-inventory.json
+exit 0; profile-matrix.json records 12 adapter-accounting scenarios, no execution evidence
+
+TMPDIR=$PWD/.tmp-s05 ZIG_LOCAL_CACHE_DIR=$PWD/.zig-cache-s05 ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache scripts/build-slot.sh build /home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/zig-out/bin/mylang check experiments/development-loop-closeout-20261012/S05/workloads/cases.my --no-cache
+build-slot: build slot 3, FIFO ticket 3566 after 0s
+exit 0; stdout and compiler stderr empty
+
+TMPDIR=$PWD/.tmp-s05 ZIG_LOCAL_CACHE_DIR=$PWD/.zig-cache-s05 ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache MYLANG_ZIG=/home/epentland/.local/bin/zig scripts/build-slot.sh build /home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/zig-out/bin/mylang test experiments/development-loop-closeout-20261012/S05/workloads/cases.my --force --json --cache-dir $PWD/.tmp-s05/guest-cache
+build-slot: FIFO ticket 3568, position 1; all 3 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 3568 after 35s
+exit 0; stdout archived in driver-smoke.json
+
+python3 experiments/development-loop-closeout-20261012/S05/workloads/oracle.py .tmp-s05/driver.json
+exit 0
+
+python3 experiments/development-loop-closeout-20261012/S05/workloads/prepare.py --compiler /home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.tmp-s10/frozen-release/bin/mylang --zig /home/epentland/.local/bin/zig --output .tmp-s05/juice-workloads-rf
+exit 0
+
+/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.tmp-s10/frozen-release/bin/mylang juice plan .tmp-s05/juice-workloads-rf/juice.json --workload compiler-check --tier all --collector callgrind --repeats 2
+mylang juice: InvalidExperiment: executable unavailable: valgrind
+exit 2; no capture or performance qualification; no tool installation requested

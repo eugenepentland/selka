@@ -46,6 +46,7 @@ class Coordinator(unittest.TestCase):
         self.contract.write_text(json.dumps({"version": "juice-suite-v1", "workloads": rows}))
         self.env = {"PATH": os.environ["PATH"], "HOME": str(self.root)}
         self.calls = []
+        self.limits = []
         self.before = self.after = None
         self.fail = False
         self.interrupt = None
@@ -88,8 +89,9 @@ class Coordinator(unittest.TestCase):
                 "paths": {"cache": str(native_cache), "run": str(native_cache / "workspace/run")},
                 "input_scopes": {"files": [str(manifest), str(root / "input")], "directories": []}}
 
-    def admitted(self, _root, kind, argv, env, unchanged, timings):
+    def admitted(self, _root, kind, argv, env, unchanged, timings, limits=None):
         self.assertEqual(kind, "gate")
+        self.limits.append(limits)
         self.assertEqual(Path(argv[1]).name, "juice_worker.py")
         argv = argv[2:]
         manifest = Path(argv[3])
@@ -206,6 +208,37 @@ class Coordinator(unittest.TestCase):
         for row in value["workloads"]:
             row.update(fields)
         self.contract.write_text(json.dumps(value))
+
+    def test_invalid_work_controls_are_rejected_before_admission(self):
+        for flag, value in (("--max-actions", "0"), ("--action-timeout", "nan"), ("--action-timeout", "-1")):
+            with self.assertRaises(SystemExit) as failure, patch("sys.stderr", io.StringIO()):
+                self.capture(flag, value)
+            self.assertEqual(2, failure.exception.code)
+        self.assertEqual([], self.calls)
+
+    def test_work_cap_reports_partial_resumes_and_does_not_charge_reuse(self):
+        status, partial = self.capture("--max-actions", "1")
+        self.assertEqual(3, status)
+        self.assertFalse(partial["complete"])
+        self.assertTrue(partial["work_budget"]["exhausted"])
+        self.assertEqual(["beta", "gamma"], partial["outstanding"])
+        self.calls.clear()
+        status, resumed = self.capture()
+        self.assertEqual((0, ["beta", "gamma"]), (status, self.calls))
+        self.assertEqual(1, resumed["counts"]["reused"])
+        self.calls.clear()
+        status, warm = self.capture("--max-actions", "1")
+        self.assertEqual((0, []), (status, self.calls))
+        self.assertTrue(warm["complete"])
+        self.assertEqual([], warm["outstanding"])
+
+    def test_action_deadline_is_explicit_and_identity_bound(self):
+        self.capture("--target", "alpha", "--action-timeout", "7")
+        self.assertEqual(7, self.limits[-1].timeout_seconds)
+        self.calls.clear()
+        self.capture("--target", "alpha", "--action-timeout", "8")
+        self.assertEqual(["alpha"], self.calls)
+        self.assertEqual(8, self.limits[-1].timeout_seconds)
 
     def test_warm_reuses_before_admission_and_labels_historical_evidence(self):
         status, cold = self.capture()

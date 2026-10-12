@@ -1,0 +1,56 @@
+{
+  "C0": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "zig_version": "0.17.0-dev.1683+5ceec001b",
+  "source_sha256": {
+    "scripts/verification_profiles.py": "9a956c6fc6b51b8e3ef12f378b02bc4bbcb292d5aaf6d7dc5c9d3ce66a65bd44",
+    "scripts/verification_profiles_test.py": "3c2eda11c72e161711b93dc2104eabcec75db63a2d4d094aa2f2102b71f096fe",
+    "scripts/development_loop_workloads_test.py": "f54795d21f40218e7bac3aeb1c333282e0cd9ca7b36e44d9bd35d51d7aaa4a43",
+    "scripts/fuzz_campaign.py": "52c29934287ef79aca5f4355bb1bb0a463f2fe012530d11047a91e353ecc34e4",
+    "scripts/fuzz_campaign_test.py": "98324a656514685b3121f806aa5594dcf3cf985bc6fc55752a70e4fd9d6bf055",
+    "scripts/juice_cache.py": "c37f6ecb5f00070b8e868f3f426bd4a1de76e42a0a2133d0c9c96331ec2cb183",
+    "scripts/juice_cache_test.py": "6204fbe39793a2ea55f50dcb7acd21fa87858bedd51ff53f08667eb9d129949d",
+    "experiments/development-loop-closeout-20261012/S05/workloads/cases.my": "ab588660f625daed0012fe9a4037bde08f832747223ab52fa001971f0658b74f",
+    "experiments/development-loop-closeout-20261012/S05/workloads/oracle.py": "b5e77079258229b618ea163c3e0a2f1b97dc68f0578d22c2fd5b9fbe7e94f496",
+    "experiments/development-loop-closeout-20261012/S05/workloads/prepare.py": "774febd718d97e7a6162be3e0ffc4001a61efa9f464896b7cd558d35a40aa71e"
+  },
+  "tool_artifact_sha256": {
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+    "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/zig-out/bin/mylang": "7755a47e1e3f3eae11073effa41f4716fa7a99c818a4d836b8965c549fd0b57f",
+    "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.tmp-s10/frozen-release/bin/mylang": "fef6fc25c6452099e2e2f443a706676b5c39c7a2546bcdf686b1b2507b79eb8f"
+  },
+  "focused_tests": {
+    "verification_profiles": 13,
+    "development_loop_workloads": 3,
+    "fuzz_campaign": 40,
+    "juice_cache": 42,
+    "juice_evidence": 27
+  },
+  "all_focused_exit_statuses": 0,
+  "C0_inventory": {
+    "groups": 45,
+    "registered_members": 95,
+    "required_members": 95,
+    "unknown": [],
+    "sha256": "a0fe8ff69c900552da9bf6b8ba662c9478915044e6d7c5f68a7d7cc7664b185c"
+  },
+  "profile_matrix": {
+    "scenarios": 12,
+    "scope": "adapter accounting; not real execution"
+  },
+  "native_smoke": {
+    "compiler_mode": "Debug",
+    "check_exit": 0,
+    "forced_driver_exit": 0,
+    "oracle_exit": 0,
+    "executed_tests": 2,
+    "cached_tests": 0
+  },
+  "software_counter_qualification": {
+    "status": "unavailable",
+    "reason": "valgrind executable absent",
+    "plan_exit": 2
+  },
+  "isolated_latency": null,
+  "peak_rss": null,
+  "complete_integrated_gate": "S10 only; not run by S05"
+}

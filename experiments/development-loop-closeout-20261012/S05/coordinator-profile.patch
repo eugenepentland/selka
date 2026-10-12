@@ -1,0 +1,119 @@
+--- a/scripts/verify_cache.py
++++ b/scripts/verify_cache.py
+@@ -35,6 +35,7 @@
+ import fuzz_campaign_store
+ import verification_report
+ import verification_budgets
++import verification_profiles
+ import verification_process
+ from verification_process import BoundedProcessLogs, ProcessLimits, terminate_owned, wait_owned
+ 
+@@ -52,7 +53,7 @@
+                  "../guardian-zig/build.zig.zon", "../guardian-zig/src/"]
+ PREPARE_INPUTS = ["src/", "test/", "tests/", "selfhost/",
+                   "docs/", "README.md", "SPEC.md", "benchmarks/runtime/ports/native_clock.c"]
+-COORDINATOR_INPUTS = ["scripts/verify_cache.py", "scripts/verification_snapshot.py",
++COORDINATOR_INPUTS = ["scripts/verification_profiles.py", "scripts/verify_cache.py", "scripts/verification_snapshot.py",
+                       "scripts/verification_process.py",
+                       "scripts/cache_session.py",
+                       "scripts/verification_artifacts.py", "scripts/fuzz_campaign_store.py", "scripts/build-slot.sh"]
+@@ -699,7 +700,9 @@
+ 
+ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool = False,
+             shared_cache_dir: Path | None = None, *, build_timeout: float | None = None,
+-            gate_timeout: float | None = None, warn_after: float | None = None) -> int:
++            gate_timeout: float | None = None, warn_after: float | None = None,
++            profile: str = "complete", quick_actions: int = 3) -> int:
++    verification_profiles.validate_request(profile, quick_actions)
+     build_limits, gate_limits = ProcessLimits(build_timeout), ProcessLimits(gate_timeout)
+     if warn_after is not None:
+         ProcessLimits(warn_after)  # Same positive, finite validation; advisory only.
+@@ -729,7 +732,7 @@
+                                        "gate": gate_limits.execution_identity()},
+                   "implementation": [LOADED_CODE_SHA256, verification_snapshot.LOADED_CODE_SHA256,
+                                      fuzz_campaign_store.LOADED_CODE_SHA256,
+-                                     verification_process.LOADED_CODE_SHA256]}
++                                     verification_process.LOADED_CODE_SHA256, verification_profiles.LOADED_CODE_SHA256]}
+         try:
+             plan, artifacts, build_seconds = prepare(root, cache, zig, options, env, common, snapshots, stack,
+                                                     admissions, phases, session, build_limits)
+@@ -786,6 +789,16 @@
+                 if shared is not None:
+                     shared.invalidate_success(action_key)
+                 selected.append(group)
++        profile_plan = verification_profiles.schedule(plan, results, profile, quick_actions=quick_actions)
++        selected_ids = set(profile_plan["selected"])
++        by_id = {group["id"]: group for group in groups}
++        selected = [by_id[name] for name in profile_plan["selected"]]
++        for row in results:
++            if row["state"] != "reused" and row["id"] not in selected_ids:
++                row.update(state="skipped", reason="deferred by partial feedback profile")
++        print("verification: profile %s; %d pending, %d selected, %d deferred%s" %
++              (profile, len(profile_plan["pending"]), len(selected), len(profile_plan["deferred"]),
++               "; heuristic partial selection" if profile_plan["heuristic"] else ""), flush=True)
+         if not check_all(snapshots):
+             raise VerificationError("inputs changed during cache lookup; rerun verification")
+         phases["prepare_lookup_outside_admission_seconds"] = (time.monotonic() - started
+@@ -845,7 +858,12 @@
+                          "observed_seconds": observed_work, "warn_after_seconds": warn_after,
+                          "exceeded": warn_after is not None and observed_work > warn_after,
+                          "enforced": False}
+-        report = {"version": VERSION, "success": status == 0, "status": status,
++        profile_coverage = verification_profiles.coverage(plan, results, profile_plan["selected"], profile,
++            status=status, inputs_stable=stable,
++            qualification_required=["fuzz", "wall-clock-performance"] if profile == "long-qualification" else [])
++        report_status = status if status != 0 else 0 if profile_coverage["status"] == "complete" else 3
++        report = {"version": VERSION, "success": report_status == 0, "status": report_status,
++                  "selected_success": status == 0, "profile_plan": profile_plan, "profile_coverage": profile_coverage,
+                   "actions": results, "inputs_stable": stable,
+                   "action_metadata": plan["action_metadata"],
+                   "budget_context": key({name: value for name, value in common.items() if name != "inventory"}),
+@@ -868,13 +886,17 @@
+                                        "reason": str(error)[:512]}
+         diagnostic_record(cache / "last-run.json", report)
+         print("verification: %s; %d reused, %d selected; build admitted %.3fs, gate admitted %.3fs" %
+-              ("PASS" if status == 0 else "FAIL", len(groups) - len(selected), len(selected), build_seconds, gate_seconds), flush=True)
++              ("PASS" if report_status == 0 else "PARTIAL" if report_status == 3 else "FAIL", sum(row["state"] == "reused" for row in results), len(selected), build_seconds, gate_seconds), flush=True)
++        if profile_coverage["outstanding"]:
++            print("verification: required work outstanding: " + ", ".join(profile_coverage["outstanding"]), flush=True)
++        if profile_coverage["qualification_outstanding"]:
++            print("verification: qualification work outstanding: " + ", ".join(profile_coverage["qualification_outstanding"]), flush=True)
+         if status == RETRY:
+             print("verification: inputs changed while queued or running; no new success receipts retained", file=sys.stderr)
+         if budget_report["exceeded"]:
+             print("verification: advisory loop budget exceeded: %.3fs > %.3fs (queue excluded)" %
+                   (observed_work, warn_after), file=sys.stderr)
+-        return status if status >= 0 else 128 - status
++        return report_status if report_status >= 0 else 128 - report_status
+ 
+ 
+ def parse_options(options: list[str]) -> list[str]:
+@@ -910,6 +932,8 @@
+         return admitted_child(int(argv[1]))
+     parser = argparse.ArgumentParser(description=__doc__)
+     parser.add_argument("--zig", default=os.environ.get("MYLANG_ZIG") or os.environ.get("ZIG") or "zig")
++    parser.add_argument("--profile", choices=verification_profiles.PROFILES, default="complete")
++    parser.add_argument("--quick-actions", type=int, default=3, help="Maximum quick-profile pending actions; heuristic and partial")
+     parser.add_argument("--force", action="store_true", help="execute every required action, retaining fresh successful evidence")
+     parser.add_argument("--shared-cache-dir", type=Path, help="Explicit local shared success evidence; inventory and runs stay private")
+     parser.add_argument("--build-timeout-seconds", type=float, help="Optional deadline per admitted preparation command; excludes queue time")
+@@ -935,7 +959,7 @@
+             fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
+             return execute(ROOT, cache, Path(resolved).absolute(), parse_options(args.options), args.force, args.shared_cache_dir,
+                            build_timeout=args.build_timeout_seconds, gate_timeout=args.gate_timeout_seconds,
+-                           warn_after=args.warn_after_seconds)
++                           warn_after=args.warn_after_seconds, profile=args.profile, quick_actions=args.quick_actions)
+     except (VerificationError, SnapshotError, OSError, ValueError,
+             fuzz_campaign_store.FormatError, fuzz_campaign_store.DeterminismError) as error:
+         print("verification: FAIL: " + str(error), file=sys.stderr)
+--- a/scripts/cache_session.py
++++ b/scripts/cache_session.py
+@@ -37,7 +37,7 @@
+ COMMANDS = {"verify": "verify_cache", "fuzz": "fuzz_campaign", "perf": "juice_cache"}
+ DISPATCH_MODULES = frozenset((*COMMANDS.values(), "fuzz_campaign_identity",
+                             "fuzz_campaign_store", "verification_artifacts",
+-                            "verification_process", "verification_report", "verification_budgets",
++                            "verification_process", "verification_report", "verification_budgets", "verification_profiles",
+                             "juice_evidence", "juice_provider", "juice_worker", "juice_tool"))
+ 
+ 

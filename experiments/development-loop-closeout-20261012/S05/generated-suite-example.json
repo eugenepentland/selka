@@ -1,0 +1,19 @@
+{
+  "version": "juice-suite-v1",
+  "workloads": [
+    {
+      "id": "compiler-check",
+      "manifest": "juice.json",
+      "workload": "compiler-check",
+      "complete": false,
+      "reuse": "fresh"
+    },
+    {
+      "id": "forced-test-driver",
+      "manifest": "juice.json",
+      "workload": "forced-test-driver",
+      "complete": false,
+      "reuse": "fresh"
+    }
+  ]
+}
