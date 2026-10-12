@@ -1,0 +1,9 @@
+build-slot: FIFO ticket 95, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 95 after 20s
+{
+  "zig-safe": {},
+  "mylang-original-rc": {},
+  "mylang-migrated-rc": {},
+  "mylang-zero-rc": {}
+}
+counted lox/tree/invocation /home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/experiments/lox-eda-zero-rc-20261012/lox/full-size-counters/tree-invocation.counted.spec.summary.json

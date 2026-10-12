@@ -1,0 +1,23 @@
+var N = 3000000;
+// String concatenation, interning hits and misses, and string equality.
+var s = "";
+var len = 0;
+var words = 0;
+var hits = 0;
+var a = "alpha";
+var b = "beta";
+for (var i = 0; i < N; i = i + 1) {
+  s = s + "ab";
+  len = len + 1;
+  if (s == "abababababababab") hits = hits + 1;
+  var t = a + b;
+  if (t == "alphabeta") hits = hits + 1;
+  if (len == 32) {
+    s = "";
+    len = 0;
+    words = words + 1;
+  }
+}
+
+print words;
+print hits;

@@ -1,0 +1,42 @@
+{
+  "cell": "lox/vm/zoo_batch",
+  "arms": {
+    "zig-safe": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-safe",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/zoo_batch.vm.400.lox"
+    ],
+    "mylang-original-rc": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-original-rc-counted",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/zoo_batch.vm.400.lox"
+    ],
+    "mylang-migrated-rc": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-migrated-rc-counted",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/zoo_batch.vm.400.lox"
+    ],
+    "mylang-zero-rc": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero-counted",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/zoo_batch.vm.400.lox"
+    ]
+  },
+  "oracle": "zig-safe",
+  "files": [
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/zoo_batch.vm.400.lox",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/zoo_batch.vm.out"
+  ],
+  "expected_stdout": "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/zoo_batch.vm.out",
+  "env_by_arm": {
+    "mylang-original-rc": {
+      "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/experiments/lox-eda-zero-rc-20261012/lox/full-size-counters/vm-zoo_batch.mylang-original-rc.counters.json"
+    },
+    "mylang-migrated-rc": {
+      "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/experiments/lox-eda-zero-rc-20261012/lox/full-size-counters/vm-zoo_batch.mylang-migrated-rc.counters.json"
+    },
+    "mylang-zero-rc": {
+      "MYLANG_COUNTERS": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/experiments/lox-eda-zero-rc-20261012/lox/full-size-counters/vm-zoo_batch.mylang-zero-rc.counters.json"
+    }
+  }
+}

@@ -1,0 +1,8 @@
+build-slot: timing slot 1, FIFO ticket 104 after 0s
+{
+  "zig-safe": {},
+  "mylang-original-rc": {},
+  "mylang-migrated-rc": {},
+  "mylang-zero-rc": {}
+}
+counted lox/tree/trees /home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/experiments/lox-eda-zero-rc-20261012/lox/full-size-counters/tree-trees.counted.spec.summary.json

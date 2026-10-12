@@ -1,0 +1,9 @@
+build-slot: FIFO ticket 87, position 1; waiting for memory-accounting settle delay or another measurement; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 87 after 25s
+{
+  "zig-safe": {},
+  "mylang-original-rc": {},
+  "mylang-migrated-rc": {},
+  "mylang-zero-rc": {}
+}
+counted lox/tree/closures /home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/experiments/lox-eda-zero-rc-20261012/lox/full-size-counters/tree-closures.counted.spec.summary.json
