@@ -15,3 +15,7 @@ Add current original-source ordinary RC controls and ownership candidates only a
 Wall samples measure the whole CLI invocation, including process launch and startup. This is material for millisecond EDA cells; their spread is reported and isolated tiny-cell changes should not establish a speedup claim. A progress JSONL file persists each successful oracle/warmup/runtime/RSS child before subsequent children run, preserving completed work if a later child fails.
 
 The final aggregator requires the exact 60-cell manifest (13 tree, 13 VM, 34 EDA), the same complete arm set in every cell, and all four competitor names. The extra historical VM step workload is a separate receipt and excluded from the full-matrix aggregation.
+
+Each guest has a recorded configurable deadline (default 120 seconds). Timeout kills its isolated process group, including any GNU-time wrapper child, and records a censored failure in the progress journal. The exact-coverage aggregator refuses to silently omit such cells.
+
+run-counted.py executes one separately counted run per named mylang arm per cell, validates its output against the same oracle, and preserves the complete counters-v1 JSON. Its summary exposes allocations/reallocations, cumulative allocated bytes (allocation bytes plus realloc added bytes), managed peak/exit-live bytes, and separate compiler/runtime retain/release events. Those instrumented invocations supply no runtime or RSS comparison samples.

@@ -12,6 +12,7 @@ p.add_argument('--rounds',type=int,default=9)
 p.add_argument('--round-start',type=int,default=0)
 p.add_argument('--warmups',type=int,default=2)
 p.add_argument('--rss-rounds',type=int,default=3)
+p.add_argument('--guest-timeout',type=float,default=120)
 p.add_argument('specs',nargs='+',type=pathlib.Path)
 a=p.parse_args();a.output.mkdir(parents=True,exist_ok=True)
 for source in a.specs:
@@ -26,5 +27,5 @@ for source in a.specs:
  generated.write_text(json.dumps(spec,indent=2)+'\n')
  subprocess.run([sys.executable,str(pathlib.Path(__file__).with_name('measure.py')),str(generated),str(result),
                  '--cpu',str(a.cpu),'--rounds',str(a.rounds),'--round-start',str(a.round_start),
-                 '--warmups',str(a.warmups),'--rss-rounds',str(a.rss_rounds)],check=True)
+                 '--warmups',str(a.warmups),'--rss-rounds',str(a.rss_rounds),'--guest-timeout',str(a.guest_timeout)],check=True)
  print('completed',spec['cell'],result,flush=True)

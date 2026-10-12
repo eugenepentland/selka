@@ -3,7 +3,7 @@
 Spec: {arms:{name:[argv...]}, oracle:name, files:[input paths], artifacts:[paths]}.
 Invoke via scripts/build-slot.sh timing; do not nest admission.
 """
-import argparse, datetime, hashlib, json, os, pathlib, shutil, statistics, subprocess, tempfile, time
+import argparse, datetime, hashlib, json, os, pathlib, shutil, signal, statistics, subprocess, tempfile, time
 
 def digest(p):
     return hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
@@ -14,6 +14,7 @@ def main():
     p.add_argument('--cpu',type=int,default=8);p.add_argument('--rounds',type=int,default=9)
     p.add_argument('--round-start',type=int,default=0);p.add_argument('--warmups',type=int,default=2)
     p.add_argument('--rss-rounds',type=int,default=3)
+    p.add_argument('--guest-timeout',type=float,default=120)
     a=p.parse_args();assert not a.output.exists()
     journal=a.output.with_suffix(a.output.suffix+'.progress.jsonl')
     assert not journal.exists()
@@ -34,9 +35,19 @@ def main():
     doc={'started_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
          'host':os.uname()._asdict() if hasattr(os.uname(),'_asdict') else list(os.uname()),
          'loadavg_start':os.getloadavg(),'spec':spec,'spec_sha256':digest(a.spec),'cpu':a.cpu,'identities':identities,
-         'warmups':a.warmups,'round_start':a.round_start,'rounds':a.rounds,'wall_samples':[],'rss_samples':[]}
+         'guest_timeout_seconds':a.guest_timeout,'warmups':a.warmups,'round_start':a.round_start,'rounds':a.rounds,'wall_samples':[],'rss_samples':[]}
     checkpoint('header',{k:v for k,v in doc.items() if k not in ['wall_samples','rss_samples']})
     oracle=None
+    def execute(argv,name):
+        child=subprocess.Popen(argv,stdout=subprocess.PIPE,stderr=subprocess.PIPE,cwd=spec.get('cwd'),start_new_session=True,env={**os.environ,**spec.get('env_by_arm',{}).get(name,{})})
+        try:
+            stdout,stderr=child.communicate(timeout=a.guest_timeout)
+        except subprocess.TimeoutExpired:
+            os.killpg(child.pid,signal.SIGKILL)
+            stdout,stderr=child.communicate()
+            checkpoint('timeout',{'argv':argv,'timeout_seconds':a.guest_timeout,'censored':True,'stderr':stderr.decode(errors='replace')})
+            raise
+        return subprocess.CompletedProcess(argv,child.returncode,stdout,stderr)
     def run(name,rss=False):
         nonlocal oracle
         argv=arms[name];measurement=None
@@ -44,12 +55,14 @@ def main():
             shutil.rmtree(spec['out_dir'],ignore_errors=True)
         if rss:
             with tempfile.NamedTemporaryFile() as f:
-                r=subprocess.run(['/usr/bin/time','-f','%M','-o',f.name,*argv],capture_output=True,cwd=spec.get('cwd'))
+                r=execute(['/usr/bin/time','-f','%M','-o',f.name,*argv],name)
                 measurement=int(pathlib.Path(f.name).read_text().strip())
         else:
-            start=time.perf_counter_ns();r=subprocess.run(argv,capture_output=True,cwd=spec.get('cwd'))
+            start=time.perf_counter_ns();r=execute(argv,name)
             measurement=(time.perf_counter_ns()-start)/1e9
-        if r.returncode:raise RuntimeError((name,r.returncode,r.stderr[-2000:]))
+        if r.returncode:
+            checkpoint('failure',{'arm':name,'argv':argv,'status':r.returncode,'stderr':r.stderr.decode(errors='replace')})
+            raise RuntimeError((name,r.returncode,r.stderr[-2000:]))
         result={'stdout_sha256':hashlib.sha256(r.stdout).hexdigest(),
                 'artifacts':{f:digest(f) for f in spec.get('artifacts',[])}}
         if spec.get('golden_dir'):
