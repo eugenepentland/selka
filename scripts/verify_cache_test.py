@@ -105,9 +105,8 @@ class VerificationCoordinator(unittest.TestCase):
         self.stack.enter_context(patch.object(coordinator, 'run_admitted', side_effect=self.admit))
         with Snapshot(self.root, coordinator.CONFIG_INPUTS) as configuration:
             self.qualified_configuration = copy.deepcopy(configuration.identity)
-        candidate = dict(self.qualified_configuration, files=[item for item in self.qualified_configuration['files']
-                                                              if item['path'] != 'build_test_inputs.zig'])
-        self.stack.enter_context(patch.object(coordinator, 'DECLARATIVE_CONFIG_SHA256', coordinator.key(candidate)))
+        # The fixture configuration consumes the lists nowhere: no reviewed sites.
+        self.stack.enter_context(patch.object(coordinator, 'DECLARATIVE_CONSUMERS', ()))
 
     def write(self, relative, data):
         path = self.root / relative
@@ -630,12 +629,45 @@ class VerificationCoordinator(unittest.TestCase):
 
     def test_consumer_qualification_is_explicit_and_complete(self):
         identity = {'files': [{'path': 'build_test_inputs.zig', 'sha256': 'lists'}]}
-        changed = copy.deepcopy(self.qualified_configuration)
-        changed['files'].append({'path': 'new-consumer.zig', 'sha256': 'changed'})
-        self.assertEqual(coordinator.action_configuration(identity, self.plan, self.root, changed), identity)
-        with patch.object(coordinator, 'DECLARATIVE_CONFIG_SHA256', None):
+        notes = {}
+        self.assertEqual(coordinator.action_configuration(identity, self.plan, self.root, self.qualified_configuration, notes),
+                         {'files': []})
+        self.assertEqual(notes, {'declarative_configuration': 'excluded'})
+        # A new consumer, wrapped across lines, is one unreviewed site.
+        self.write('consumer.zig', 'const lists = @import("build_test_inputs.zig"); // the lists\n'
+                                   'const unit = pick(\n    &lists.unit, // wrapped\n    "(",\n);\nconst other = 1;\n')
+        with Snapshot(self.root, ['config.zig', 'build_test_inputs.zig', 'consumer.zig']) as configuration:
+            changed = copy.deepcopy(configuration.identity)
+        sites = [('consumer.zig', 'const lists = @import("build_test_inputs.zig");'),
+                 ('consumer.zig', 'const unit = pick( &lists.unit, "(", );')]
+        self.assertEqual(coordinator.declarative_consumers(self.root, changed), sites)
+        self.assertEqual(coordinator.action_configuration(identity, self.plan, self.root, changed, notes), identity)
+        self.assertEqual(notes, {'declarative_configuration': 'unreviewed consumer sites of build_test_inputs.zig'})
+        with patch.object(coordinator, 'DECLARATIVE_CONSUMERS', tuple(sites)):
+            self.assertEqual(coordinator.action_configuration(identity, self.plan, self.root, changed), {'files': []})
+            # An edited reviewed site, and bytes that changed since the snapshot, stay broad.
+            self.write('consumer.zig', 'const lists = @import("build_test_inputs.zig");\nconst unit = pick(&lists.docs, "(");\n')
+            self.assertEqual(coordinator.action_configuration(identity, self.plan, self.root, changed, notes), identity)
+            self.assertEqual(notes, {'declarative_configuration': 'configuration changed while its consumers were read'})
+            with Snapshot(self.root, ['config.zig', 'build_test_inputs.zig', 'consumer.zig']) as configuration:
+                self.assertEqual(coordinator.action_configuration(identity, self.plan, self.root, configuration.identity), identity)
+        with patch.object(coordinator, 'DECLARATIVE_CONSUMERS', None):
             self.assertEqual(coordinator.action_configuration(identity, self.plan, self.root, self.qualified_configuration), identity)
         self.assertEqual(coordinator.action_configuration(identity, self.plan, self.root), identity)
+
+    def test_declarative_exclusion_is_reported_and_keeps_unrelated_actions_reused(self):
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(coordinator.read_record(self.cache / 'last-run.json')['declarative_configuration'], 'excluded')
+        self.write('inputs/more/fixture.txt', 'more')
+        self.plan['groups'][0]['inputs'].append('inputs/more/')
+        self.save_plan()
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'reused'})
+        self.write('config.zig', 'const lists = @import("build_test_inputs.zig");\n')
+        self.assertEqual(self.execute(), 0)
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertEqual(report['declarative_configuration'], 'unreviewed consumer sites of build_test_inputs.zig')
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'execute'})
 
     def test_configuration_controls_remain_identity_inputs(self):
         self.assertEqual(self.execute(), 0)
@@ -1537,6 +1569,47 @@ class VerificationCoordinator(unittest.TestCase):
         self.assertEqual({row['id']: row['path_free'] for row in first['actions']},
                          {'unit': True, 'docs': True, 'pure': True, 'native': True})
 
+    def test_relocated_loaded_code_digests_make_every_action_location_dependent(self):
+        # Format 1 bound each code object's absolute file name. The root search
+        # cannot see that inside a digest; the relocation probe does.
+        self.write('.component-producer', '')
+        with patch.object(coordinator.code_identity, '_relocatable_filename', lambda filename: filename):
+            self.assertIn('verify_cache', coordinator.location_dependent_code())
+            first, _ = self.two_roots(self.producer())
+        self.assertEqual(first['relocation_dependent_code'],
+                         [name for name, _, _ in coordinator.implementation_code()] + ['verification_code_identity'])
+        self.assertEqual({row['id']: row['path_free'] for row in first['actions']},
+                         {'unit': False, 'docs': False, 'pure': False, 'native': False})
+        self.assertEqual(coordinator.location_dependent_code(), [])
+
+    def test_unclassified_common_facet_or_located_inventory_is_not_path_free(self):
+        self.write('.component-producer', '')
+        with patch.dict(coordinator.COMMON_FACETS):
+            del coordinator.COMMON_FACETS['action_controls']
+            first, _ = self.two_roots(self.producer())
+        self.assertFalse(any(row['path_free'] for row in first['actions']))
+        contract = json.loads((self.root / 'gate-contract.json').read_text())
+        contract['input_lists'].append({'name': 'located', 'inputs': [str(self.root) + '/fixture']})
+        self.write('gate-contract.json', json.dumps(contract))
+        self.assertEqual(self.execute(), 0)
+        self.assertFalse(any(row['path_free'] for row in coordinator.read_record(self.cache / 'last-run.json')['actions']))
+
+    def test_dry_run_exports_keys_without_gate_or_publication(self):
+        self.assertEqual(self.execute(dry_run=True), 0)
+        self.assertEqual([kind for kind, _ in self.admissions], ['build', 'build'])
+        export = coordinator.read_record(self.cache / 'dry-run.json')
+        self.assertFalse((self.cache / 'last-run.json').exists())
+        self.assertEqual(list((self.cache / 'actions').glob('*.json')) if (self.cache / 'actions').exists() else [], [])
+        self.assertEqual({row['state'] for row in export['actions']}, {'execute'})
+        self.assertEqual(export['declarative_configuration'], 'excluded')
+        self.assertEqual(set(export['common']) - set(coordinator.COMMON_FACETS), set())
+        self.assertEqual(self.execute(), 0)
+        keys = {row['id']: row['action_key'] for row in coordinator.read_record(self.cache / 'last-run.json')['actions']}
+        self.assertEqual({row['id']: row['action_key'] for row in export['actions']}, keys)
+        self.assertEqual(self.execute(dry_run=True), 0)
+        self.assertEqual({row['state'] for row in coordinator.read_record(self.cache / 'dry-run.json')['actions']}, {'reused'})
+        self.assertRaises(ValueError, self.execute, force=True, dry_run=True)
+
     def test_missing_producer_falls_back_to_reported_byte_identity(self):
         first, second = self.two_roots(None)
         first_keys = {row['id']: row['action_key'] for row in first['actions']}
@@ -1845,25 +1918,106 @@ REAL_ADMISSION = coordinator.run_admitted
 
 
 class BuildToolIdentity(unittest.TestCase):
-    """The build graph's `build-env` tool is prepared infrastructure, not an
-    action, so no action key holds its bytes; the coordinator's configuration
-    identity must cover every file the tool compiles from instead."""
+    """The build runner and the tools it compiles for the graph (`build-env`,
+    the build identity) are prepared infrastructure, not actions, so no action
+    key holds their bytes; the coordinator's configuration identity must cover
+    every file `build.zig` compiles from, transitively, instead."""
 
-    def test_build_env_tool_closure_is_in_every_action_configuration(self):
-        recipes = coordinator.CONFIG_INPUTS + coordinator.COORDINATOR_INPUTS
-        pending, closure = ['build_env.zig'], set()
+    # Package imports `build.zig` may name: the toolchain's own and the
+    # `build.zig.zon` dependency whose sources CONFIG_INPUTS lists.
+    PACKAGES = {'std', 'builtin', 'guardian'}
+
+    @staticmethod
+    def closure(start):
+        pending, files, packages = [start], set(), set()
         while pending:
             path = pending.pop()
-            if path in closure:
+            if path in files:
                 continue
-            closure.add(path)
+            files.add(path)
             text = (REPOSITORY / path).read_text()
-            for name in re.findall(r'@import\("([^"]+\.zig|[^"]+\.zon)"\)', text):
-                pending.append(os.path.normpath(os.path.join(os.path.dirname(path), name)))
-        self.assertIn('src/build_env_rules.zig', closure)
-        uncovered = sorted(path for path in closure
+            for name in re.findall(r'@(?:import|embedFile)\(\s*"([^"]+)"\s*\)', text):
+                if name.endswith(('.zig', '.zon')) or '/' in name or name.startswith('.'):
+                    pending.append(os.path.normpath(os.path.join(os.path.dirname(path), name)))
+                else:
+                    packages.add((path, name))
+        return files, packages
+
+    def test_build_runner_import_closure_is_in_every_action_configuration(self):
+        recipes = coordinator.CONFIG_INPUTS + coordinator.COORDINATOR_INPUTS
+        files, packages = self.closure('build.zig')
+        for expected in ('build_env.zig', 'src/build_env_rules.zig', 'build_identity.zig',
+                         'src/build_identity_rules.zig', 'src/semantic_cache_format.zig'):
+            self.assertIn(expected, files)
+        uncovered = sorted(path for path in files
                            if not any(coordinator.matches_recipe(path, recipe, REPOSITORY) for recipe in recipes))
-        self.assertEqual(uncovered, [], 'build-env sources outside the coordinator configuration identity')
+        self.assertEqual(uncovered, [], 'build.zig compiles these files, which no action configuration identity '
+                                        'covers; add them to CONFIG_INPUTS in scripts/verify_cache.py')
+        unknown = sorted(entry for entry in packages if entry[1] not in self.PACKAGES)
+        self.assertEqual(unknown, [], 'unreviewed package imports in the build runner closure')
+
+    def test_build_runner_closure_stays_out_of_the_compiler_sources(self):
+        # Every file here re-keys every action when it changes. Pulling a
+        # compiler module into build.zig would make each edit of its closure do so.
+        files, _ = self.closure('build.zig')
+        self.assertLess(len([path for path in files if path.startswith('src/')]), 12, sorted(files))
+
+
+class DeclarativeConsumers(unittest.TestCase):
+    """The declarative list exclusion (F12) must hold on the real tree, and any
+    change to how the build consumes `build_test_inputs.zig` must be reviewed."""
+
+    def configuration(self):
+        with Snapshot(REPOSITORY, coordinator.CONFIG_INPUTS) as configuration:
+            return copy.deepcopy(configuration.identity)
+
+    def test_reviewed_consumer_sites_are_exactly_the_build_configuration_uses(self):
+        found = coordinator.declarative_consumers(REPOSITORY, self.configuration())
+        self.assertIsNotNone(found)
+        reviewed = list(coordinator.DECLARATIVE_CONSUMERS)
+        added = [site for site in found if site not in reviewed]
+        removed = [site for site in reviewed if site not in found]
+        self.assertEqual((added, removed), ([], []),
+                         'review these build_test_inputs.zig consumer sites and update DECLARATIVE_CONSUMERS')
+        self.assertEqual(sorted(found), sorted(reviewed))
+
+    def test_exclusion_applies_to_the_real_configuration(self):
+        configuration = self.configuration()
+        lists = coordinator.declared_input_lists(REPOSITORY / coordinator.DECLARATIVE_INPUTS)
+        self.assertIsNotNone(lists, 'build_test_inputs.zig is no longer data-only')
+        plan = {'input_lists': [{'name': name, 'inputs': inputs} for name, inputs in lists.items()]}
+        notes = {}
+        narrowed = coordinator.action_configuration(configuration, plan, REPOSITORY, configuration, notes)
+        self.assertEqual(notes, {'declarative_configuration': 'excluded'})
+        self.assertNotIn(coordinator.DECLARATIVE_INPUTS, [item['path'] for item in narrowed['files']])
+        self.assertEqual(len(narrowed['files']), len(configuration['files']) - 1)
+
+
+class CoordinatorRelocation(unittest.TestCase):
+    """F3: one commit checked out twice binds one coordinator implementation."""
+
+    def test_two_copies_of_the_coordinator_bind_identical_loaded_code(self):
+        scratch = REPOSITORY / '.tmp'
+        scratch.mkdir(exist_ok=True)
+        base = Path(self.enterContext(tempfile.TemporaryDirectory(prefix='relocation-', dir=scratch)))
+        program = ('import json,verify_cache as c\n'
+                   'print(json.dumps([[d for _,d,_ in c.implementation_code()],'
+                   'c.code_identity.LOADED_CODE_SHA256,c.location_dependent_code()]))')
+        results = []
+        for copy_root in (base / 'one', base / 'a' / 'much' / 'longer' / 'two'):
+            shutil.copytree(REPOSITORY / 'scripts', copy_root / 'scripts',
+                            ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
+            (copy_root / 'src').mkdir()
+            shutil.copy2(REPOSITORY / 'src/environment_identity.zon', copy_root / 'src/environment_identity.zon')
+            environment = dict(os.environ, PYTHONPATH=str(copy_root / 'scripts'),
+                               PYTHONDONTWRITEBYTECODE='1', PYTHONPYCACHEPREFIX='/dev/null')
+            process = subprocess.run([sys.executable, '-B', '-c', program], cwd=copy_root, env=environment,
+                                     capture_output=True, text=True, timeout=60)
+            self.assertEqual(process.returncode, 0, process.stderr)
+            results.append(json.loads(process.stdout))
+        self.assertEqual(results[0], results[1])
+        self.assertEqual(results[0][2], [])
+        self.assertEqual(len(results[0][0]), 9)
 
 
 if __name__ == '__main__':

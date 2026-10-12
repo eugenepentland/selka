@@ -418,6 +418,11 @@ test "managed constant edits invalidate dependent bodies while unrelated constan
     try t.expectEqual(@as(usize, 2), cache.statistics.stored);
     try t.expectEqual(@as(usize, 0), cache.statistics.bypassed);
 }
+// spec: SEMANTIC-CACHE-17
+test "the store's format version is the leaf declaration the build runner reads" {
+    try t.expectEqualStrings(@import("semantic_cache_format.zig").version, semantic_store.format_version);
+    try t.expect(std.mem.startsWith(u8, semantic_store.format_version, "semantic-cache-v"));
+}
 // spec: SEMANTIC-CACHE-16
 test "a same-length body edit misses the retained body and reuses its neighbours" {
     const original = "func tweak(n: i64) -> i64:\n    return n + 1\n\n\nfunc keep(n: i64) -> i64:\n    return n * 2\n\n\nfunc main() -> i64:\n    return keep(tweak(20))\n";
