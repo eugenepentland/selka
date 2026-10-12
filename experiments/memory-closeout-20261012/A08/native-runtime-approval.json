@@ -1,0 +1,50 @@
+[
+  {
+    "path": "/lib64/ld-linux-x86-64.so.2",
+    "resolved": "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
+    "expected_resolved": "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
+    "sha256": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+    "expected_sha256": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+    "match": true
+  },
+  {
+    "path": "/lib/x86_64-linux-gnu/libc.so.6",
+    "resolved": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+    "expected_resolved": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+    "sha256": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+    "expected_sha256": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+    "match": true
+  },
+  {
+    "path": "/lib/x86_64-linux-gnu/libm.so.6",
+    "resolved": "/usr/lib/x86_64-linux-gnu/libm.so.6",
+    "expected_resolved": "/usr/lib/x86_64-linux-gnu/libm.so.6",
+    "sha256": "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+    "expected_sha256": "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+    "match": true
+  },
+  {
+    "path": "/lib/x86_64-linux-gnu/libgcc_s.so.1",
+    "resolved": "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1",
+    "expected_resolved": "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1",
+    "sha256": "9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee",
+    "expected_sha256": "9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee",
+    "match": true
+  },
+  {
+    "path": "/lib/x86_64-linux-gnu/libpthread.so.0",
+    "resolved": "/usr/lib/x86_64-linux-gnu/libpthread.so.0",
+    "expected_resolved": "/usr/lib/x86_64-linux-gnu/libpthread.so.0",
+    "sha256": "1327fc40710691dbd94e88b6cf4efce27fefe8fbb93f7d1164a75b4dccaea696",
+    "expected_sha256": "1327fc40710691dbd94e88b6cf4efce27fefe8fbb93f7d1164a75b4dccaea696",
+    "match": true
+  },
+  {
+    "path": "/etc/ld.so.cache",
+    "resolved": "/etc/ld.so.cache",
+    "expected_resolved": "/etc/ld.so.cache",
+    "sha256": "d519185506fec90f5efbdc206f606f4c259891e83c4e98e48b9fa4694b64fbe6",
+    "expected_sha256": "fe063c1bee92cacf27776b62c04e35a2c71e7ed111ec3eaa542ba339410fcde3",
+    "match": false
+  }
+]

@@ -1,0 +1,5 @@
+build-slot: build slot 2, FIFO ticket 290 after 0s
+result_list.my:15:35: error[E_GENERIC_REQUIREMENT]: type argument does not guarantee the nominal template's required operations
+  func nested(value: int) -> Result[Result[str, str], str]:
+                                    ^
+  note: result_list.my:1:1: type parameter requirements are declared here

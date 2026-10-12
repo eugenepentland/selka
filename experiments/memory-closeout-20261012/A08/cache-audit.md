@@ -38,3 +38,8 @@ retirement production edit changes the compiler namespace automatically. A final
 compiler must nevertheless execute against populated C0 caches and reject old mode
 selectors after A10 retires them. That final-artifact test remains pending until
 C3 exists. No RC retirement change has been applied by A08.
+
+The A08 frontend metadata fix uses the existing `LocalOrigin.iteration` enum value,
+so it needs no wire-format change. Production `sema_collections.zig` participates
+in compiler identity, isolating old cached semantic/lowered artifacts. Final ABI
+qualification must still run against the changed integrated compiler.

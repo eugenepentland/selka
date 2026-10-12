@@ -1,0 +1,29 @@
+{
+  "note": "Original C0 is immutable. No full-build timing ratio is valid for these failed cases. Host loader-cache change exposed an existing fallback bug; A01 fixes the candidate driver.",
+  "observations": [
+    {
+      "family": "modules",
+      "size": 16,
+      "source_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+      "compiler_sha256": "78ac31605c7505c7cb330d41bdf2d3a232043e032f487e599f454b3bc6f2bd37",
+      "cases": 5,
+      "passed": 0,
+      "classification": "compiler failure: uncacheable native-link staging files deleted before linking",
+      "deliberate_language_refusal": false,
+      "raw_report": "experiments/memory-closeout-20261012/A08/c0-rf-modules-16/results.json",
+      "raw_sha256": "3f31cdc997b21e827c884e1b5aa821418ec3bda476c99a3aae0abd816ca9b54c"
+    },
+    {
+      "family": "modules",
+      "size": 64,
+      "source_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+      "compiler_sha256": "78ac31605c7505c7cb330d41bdf2d3a232043e032f487e599f454b3bc6f2bd37",
+      "cases": 5,
+      "passed": 0,
+      "classification": "compiler failure: uncacheable native-link staging files deleted before linking",
+      "deliberate_language_refusal": false,
+      "raw_report": "experiments/memory-closeout-20261012/A08/c0-rf-modules-64/results.json",
+      "raw_sha256": "2ddf5a86300c0e5e2e5793ca5e38d1b646fdf556a87bedc222b29a1959ef1f49"
+    }
+  ]
+}

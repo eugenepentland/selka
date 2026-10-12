@@ -245,20 +245,23 @@ func close_group(mut closures: Closures, group: int, mut work: Work) fails str:
         mut current = pending[next]
         next += 1
         if closures.state[current] == 2:
-            for node in closures.values[current]:
+            for offset in range(len(closures.values[current])):
+                const node = closures.values[current][offset]
                 work.closure_nodes += 1
                 try check_work(work)
                 if closures.seen[node] != generation:
                     closures.seen[node] = generation
                     reached.append(node)
         else:
-            for node in closures.members[current]:
+            for offset in range(len(closures.members[current])):
+                const node = closures.members[current][offset]
                 work.closure_nodes += 1
                 try check_work(work)
                 if closures.seen[node] != generation:
                     closures.seen[node] = generation
                     reached.append(node)
-            for target in closures.successors[current]:
+            for offset in range(len(closures.successors[current])):
+                const target = closures.successors[current][offset]
                 work.closure_edges += 1
                 try check_work(work)
                 if closures.group_seen[target] != generation:

@@ -1,0 +1,7 @@
+build-slot: FIFO ticket 22, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 22 after 40s
+{"name": "modules-16-cold", "status": 2, "passed": false, "elapsed_ns": 5814244594, "max_rss_kib": "121596"}
+{"name": "modules-16-warm", "status": 2, "passed": false, "elapsed_ns": 5408162223, "max_rss_kib": "121596"}
+{"name": "modules-16-receipt", "status": 2, "passed": false, "elapsed_ns": 6309421181, "max_rss_kib": "121608"}
+{"name": "modules-16-replay", "status": 2, "passed": false, "elapsed_ns": 6211349724, "max_rss_kib": "121616"}
+{"name": "modules-16-edit", "status": 2, "passed": false, "elapsed_ns": 5310958764, "max_rss_kib": "121612"}

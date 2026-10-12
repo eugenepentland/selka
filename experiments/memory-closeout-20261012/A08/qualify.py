@@ -95,10 +95,14 @@ class Run:
         clean = None
         if status == 0 and mode == 'zero' and emit:
             clean = not any(token in llvm.read_text() for token in RC_TOKENS)
-        ok = status != 0 and 'E_SINGLE_OWNER_MOVED' in stderr if refuse else status == 0 and execution['status'] == 0 and execution['stdout'] == expected and clean is not False
+        refusal_code = refuse if isinstance(refuse, str) else 'E_SINGLE_OWNER_MOVED' if refuse else None
+        ok = status != 0 and refusal_code in stderr if refusal_code else status == 0 and execution['status'] == 0 and execution['stdout'] == expected and clean is not False
         if retired_flag:
-            ok = status == 2 and retired_flag in stderr and 'retired' in stderr.lower()
-        row = dict(name=name, mode=mode, arguments=arguments, status=status, expected_refusal=refuse, passed=ok, report=report, execution=execution, llvm_rc_clean=clean, elapsed_ns=elapsed, elapsed_includes_admission_wait=self.args.admission != 'held', max_rss_kib=rss.read_text().strip().splitlines()[-1] if rss.exists() else None, compiler_sha256=digest(compiler or self.args.compiler), compiler_source_revision=self.args.candidate_revision if compiler else self.args.source_revision, sources={str(p.relative_to(project)):digest(p) for p in project.rglob('*.my')}, binary_sha256=digest(target) if status == 0 else None, llvm_sha256=digest(llvm) if status == 0 and emit else None)
+            diagnostic = stderr.lower()
+            ok = status == 2 and retired_flag in stderr and ('retired' in diagnostic or 'checked ownership is the default; drop the flag' in diagnostic)
+        row = dict(name=name, mode=mode, arguments=arguments, status=status, expected_refusal=bool(refuse or retired_flag), passed=ok, report=report, execution=execution, llvm_rc_clean=clean, elapsed_ns=elapsed, elapsed_includes_admission_wait=self.args.admission != 'held', max_rss_kib=rss.read_text().strip().splitlines()[-1] if rss.exists() else None, compiler_sha256=digest(compiler or self.args.compiler), compiler_source_revision=self.args.candidate_revision if compiler else self.args.source_revision, sources={str(p.relative_to(project)):digest(p) for p in project.rglob('*.my')}, binary_sha256=digest(target) if status == 0 else None, llvm_sha256=digest(llvm) if status == 0 and emit else None)
+        row['expected_refusal_code'] = refusal_code
+        row['outcome'] = ('completed' if execution and execution['status'] == 0 else 'guest_failure') if status == 0 else 'compile_timeout' if status == 124 else 'source_refusal' if 'error[E_' in stderr else 'compiler_failure'
         if status == 0 and (name.endswith('-replay') or name == 'whole-build-replay'):
             row['passed'] &= report is not None and report['program'] == 'replayed'
         row['memory_instrumented'] = self.args.memory_wrapper is not None
@@ -153,6 +157,15 @@ class Run:
         if self.args.candidate:
             self.build('candidate-over-old-artifacts', project, compiler=self.args.candidate)
             self.build('candidate-over-old-artifacts-warm', project, compiler=self.args.candidate)
+            if not self.args.default_zero:
+                invalid = self.work / 'candidate-over-old-rc-receipt'
+                write(invalid / 'main.my', INVALID)
+                write(invalid / 'dep.my', DEP)
+                self.build('old-rc-invalid-owner-receipt', invalid, mode='rc', emit=False)
+                self.build('candidate-refuses-old-rc-receipt', invalid, compiler=self.args.candidate, refuse=True, emit=False)
+                self.build('candidate-refuses-old-rc-receipt-warm', invalid, compiler=self.args.candidate, refuse=True, emit=False)
+                write(invalid / 'main.my', VALID)
+                self.build('candidate-old-rc-receipt-source-fixed', invalid, compiler=self.args.candidate, emit=False)
 
     def abi(self):
         project = self.work / 'map-abi'
@@ -181,6 +194,50 @@ class Run:
                 source = (project / 'main.my').read_text()
                 write(project / 'main.my', source.replace('out.print(', 'out.print(1 + ', 1))
                 self.build(f'{family}-{size}-edit', project, expected=str(int(expected.strip())+1)+'\n', emit=False)
+
+    def render_abi(self):
+        project = self.work / 'render-abi'
+        source = '''record RenderLabel:
+    number: int
+    word: str
+func main(out: Stream) -> int:
+    const value = RenderLabel(number=7, word="word-" + str(7))
+    out.print(f"{value}")
+    return 0
+'''
+        expected = "RenderLabel(number=7, word='word-7')\n"
+        write(project / 'main.my', source)
+        mode = 'zero' if self.args.default_zero else 'rc'
+        self.build('render-abi-baseline', project, mode=mode, expected=expected)
+        self.build('render-abi-receipt', project, mode=mode, expected=expected, emit=False)
+        self.build('render-abi-replay', project, mode=mode, expected=expected, emit=False)
+        if self.args.candidate:
+            row = self.build('render-abi-candidate-old-artifacts', project, expected=expected, compiler=self.args.candidate)
+            if row['status'] == 0 and digest(self.args.compiler) != digest(self.args.candidate):
+                row['passed'] &= row['report']['stages']['lowering']['reused'] == 0
+                self.save()
+            self.build('render-abi-candidate-receipt', project, expected=expected, compiler=self.args.candidate, emit=False)
+            self.build('render-abi-candidate-replay', project, expected=expected, compiler=self.args.candidate, emit=False)
+
+    def result_cache(self):
+        """Keep old source refusals and new Result obligations in the same cache."""
+        project = self.work / 'result-cache'
+        valid = self.args.result_source.read_text()
+        invalid = self.args.result_negative.read_text()
+        expected = self.args.result_output.read_text()
+        write(project / 'main.my', valid)
+        self.build('result-old-compiler-refusal', project, refuse=self.args.result_baseline_refusal, emit=False)
+        row = self.build('result-candidate-old-refusal', project, compiler=self.args.candidate, expected=expected)
+        if row['status'] == 0:
+            row['passed'] &= row['report']['stages']['lowering']['reused'] == 0
+            self.save()
+        self.build('result-candidate-receipt', project, compiler=self.args.candidate, expected=expected, emit=False)
+        self.build('result-candidate-replay', project, compiler=self.args.candidate, expected=expected, emit=False)
+        write(project / 'main.my', invalid)
+        self.build('result-candidate-unhandled-edit', project, compiler=self.args.candidate, refuse='E_RESULT_UNHANDLED', emit=False)
+        self.build('result-candidate-unhandled-edit-warm', project, compiler=self.args.candidate, refuse='E_RESULT_UNHANDLED', emit=False)
+        write(project / 'main.my', valid)
+        self.build('result-candidate-handling-restored', project, compiler=self.args.candidate, expected=expected, emit=False)
 
 
 def generate(family, size):
@@ -227,6 +284,12 @@ def main():
     parser.add_argument('--scaling', action='store_true')
     parser.add_argument('--scaling-only', action='store_true')
     parser.add_argument('--abi-only', action='store_true')
+    parser.add_argument('--result-only', action='store_true')
+    parser.add_argument('--render-only', action='store_true')
+    parser.add_argument('--result-source', type=Path)
+    parser.add_argument('--result-negative', type=Path)
+    parser.add_argument('--result-output', type=Path)
+    parser.add_argument('--result-baseline-refusal', default='E_COLLECTION_ELEMENT')
     parser.add_argument('--families', nargs='+', choices=('matches','fields','recursive','modules','generics'), default=['matches','fields','recursive','modules','generics'])
     parser.add_argument('--source-revision', default=BASE)
     parser.add_argument('--memory-wrapper', type=Path)
@@ -245,9 +308,15 @@ def main():
         if not args.candidate_revision: parser.error('--candidate requires --candidate-revision')
     if args.retired_flags and not (args.default_zero or (args.candidate and args.candidate_default_zero)):
         parser.error('--retired-flags requires default checked ownership for the selected final compiler')
+    if args.result_only and not args.result_source:
+        parser.error('--result-only requires --result-source')
+    if args.result_source and not (args.candidate and args.result_negative and args.result_output):
+        parser.error('--result-source requires --candidate, --result-negative and --result-output')
     run = Run(args)
-    if not args.scaling_only and not args.abi_only: run.caches()
-    if not args.scaling_only: run.abi()
+    if not args.scaling_only and not args.abi_only and not args.result_only and not args.render_only: run.caches()
+    if not args.scaling_only and not args.result_only and not args.render_only: run.abi()
+    if args.render_only: run.render_abi()
+    if args.result_source: run.result_cache()
     if args.scaling or args.scaling_only: run.scaling()
     if args.retired_flags: run.retired()
     raise SystemExit(0 if all(row['passed'] for row in run.rows) else 1)

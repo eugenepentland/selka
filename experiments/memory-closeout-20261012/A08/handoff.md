@@ -170,3 +170,68 @@ peaks and summed process RSS double-counts shared pages. Replay finished before
 the sampler observed its compiler and its sampled peak is invalid; GNU time's
 individual-child high-water remains separate. These instrumented durations are
 not compile timing measurements and no candidate comparison exists yet.
+
+## Component field iteration and native protocol qualification
+
+The additional cache-plan migration changes three field-row loops into captured-
+length range loops with immediate scalar reads. Order, work accounting and failure
+propagation are preserved without copying rows. Current checked ownership borrows
+an entire record; reading one field through a live iterator while updating another
+is an explicit unsupported boundary. The coordinator and A07 approved this local
+source migration. `component-field-iteration-migration.json` records original and
+migrated hashes; `component-migrations/incremental-before-field-iteration.my`
+preserves the original source. Support3 source checking passes. Support4 still
+refuses lowering at `incremental.my:241`, `closures.group_seen[group] = generation`,
+with `E_ZERO_RC_LOWERING`; A07 owns the remaining production fix. Rerun the real
+protocol after integration of the phi cleanup and its ownership-pass invocation.
+
+`components-support4-test_index.json` passes the complete actual test-index
+protocol under zero-RC using support4 source
+`66890fbc5135a771e6a423724d13c30018ab717f`, compiler SHA-256
+`4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375`.
+The counted binary is
+`28b9ed1b8007ef700013eee67ff45c35fcb2df39a58f43e1b24565b1d2b6a906`.
+All 128 observed runs have zero RC events: 106 succeed, 21 return handled errors,
+and one is the expected output-failure trap. All normal/error returns have zero
+managed exit-live bytes and no handle leak diagnostic. The output trap is reported
+separately, with observed exit-live zero. LLVM and linked symbols are RC-clean.
+The oracle includes malformed requests, reply limits, missing input, output
+failure, 100 independent random graphs and larger graph cases. Raw compressed
+counters and per-run exit status/request hashes are retained in
+`components-support4-test_index-counts/`. Instrumented oracle elapsed output is
+incidental and is not a performance measurement. This interim result qualifies
+that component/compiler pair, not the final installed package.
+
+The immutable seed accepts the latest migrated source but now fails native linking
+on this host (`component-field-iteration-seed.json`). Earlier seed protocol results
+remain valid only for the earlier source/host state. `/etc/ld.so.cache` changed
+while the session was running; `native-runtime-approval.json` records the exact
+old/new hashes while all five reviewed runtime ELF files and resolved paths stayed
+unchanged. This correctly disables native cache reuse and exposed an existing
+uncached staging-file lifetime bug. A01 fixed the candidate driver in
+`38dc781a897182ffbf1fff0906ec319a007a9154`; coordinator authorized this worker's
+corresponding dependency cherry-pick `7005ad4a37c4ba3d1ef3927ebc81951bcb699714`.
+The immutable C0 compiler and seed remain untouched. The coordinator owns reviewed
+host closure refresh and the independent component compiler packaging decision.
+
+C0 ReleaseFast modules16 and modules64 consequently fail all five build states
+with missing native objects. `c0-native-link-failures.json` classifies all ten as
+compiler failures rather than language refusals. No successful whole-build timing
+ratio can be computed for those C0 cases. Raw failures and partial stage timings
+are retained; remaining scaling work is paused pending the integrated candidate.
+
+## Phi identity cleanup dependency
+
+`5b4245c7d2bc7fa927dfe1101001e25c15908c16` adds a bounded iterative phi-only SCC
+cleanup helper and four registered regressions. `phi-cleanup.md` and
+`phi-cleanup-validation.json` give the contract, operation-count scaling through
+16,384 phis, exact native test binary identity and raw logs. All four focused tests
+pass, including an irreducible managed-value graph, native output, LLVM checks and
+leak checks; Guardian passes 88 checks. A07 reviewed the algorithm. The helper
+requires A07's separate ownership-pass invocation before it fixes production
+lowering; the helper commit alone is not completion of that defect.
+
+Final C1/C2/C3 cache ABI, application, component and performance qualification
+remain pending. `qualify.py` now prepares old-receipt source rejection, Result-list
+and rendering ABI transitions with explicit outcomes, but these new candidate
+cases have not yet run and are not reported as passing evidence.
