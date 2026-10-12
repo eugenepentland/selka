@@ -165,7 +165,7 @@ public func test_cache_copy_has_independent_entries_and_clear() -> bool:
         case Ok(initial):
             mut cache = initial
             _ = memo.call(mut cache, memo.Key.Number(value=42))
-            mut copy = cache
+            mut copy = cache.copy()
             copy.compute = alternate_nested
             _ = memo.call(mut copy, memo.Key.Number(value=42))
             mut original = memo.call(mut cache, memo.Key.Number(value=42))

@@ -46,11 +46,12 @@ public func test_record_rejects_noncanonical_and_nonstring_payloads() -> bool:
 func compute(key: memo.Key) -> bytes:
     match key:
         case memo.Key.Number(value=value):
-            return str(value).encode()
+            const decimal = str(value)
+            return decimal.encode()
         case memo.Key.Text(value=value):
             return value.encode()
         case memo.Key.Data(value=value):
-            return value
+            return value.copy()
 
 
 # spec: STANDARD-PERSISTENT-MEMO-1
@@ -72,7 +73,7 @@ public func test_persistent_bounds_reject_before_storage() -> bool:
 
 
 func step(chunk: bytes, state: bytes) -> durable.Step:
-    return durable.Step(output=chunk, state=state)
+    return durable.Step(output=chunk.copy(), state=state.copy())
 
 
 # spec: STANDARD-DURABLE-1
