@@ -1,0 +1,1024 @@
+{
+ "actions": [
+  {
+   "action_key": "5b67d403ec8f8c29663be11df0116d1c12ca60ab89231aff98d8e8fcdc42fccc",
+   "id": "component-preparation",
+   "reason": "component manifests and installed outputs require validation",
+   "state": "fresh",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "f1cfd779afbd663213d9a68f5fcedda934c48635d96291eb0b9e952a441d3c29",
+   "id": "input-discovery",
+   "reason": "directory membership must be discovered at execution time",
+   "state": "fresh",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "27c92a095814ed863dbcf49f20026349308bd039a095737ea496c4272a7612dc",
+   "id": "environment-discovery",
+   "reason": "live inherited environment must be discovered at execution time",
+   "state": "fresh",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "21776094bb62e1c760e97be39af237896c9a77cbf500f5b60dc203f5c800ce55",
+   "id": "core",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "702a148674e6905ac940b381d4d96d803f902b20c2d52a1ba94a8c3c6ad745c9",
+   "id": "tooling_unit",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "75f083b9c53d7972b9ac885e25f9ad39624d60b453534719a35889e09e8e51f3",
+   "id": "text_scalar_unit",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "ec48616b3a40278c7f929553e029820be0f37dad013d922994d263a535e58c23",
+   "id": "memory_budget",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "313fc8e8c7788f0bd83cab17ab1296c3b26a3caee767cb6c43f686b16e01ab61",
+   "id": "unit",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "057b159c7368b47b5cab4cecbfbb8e854a5d5e948e962416c21a9ee4912d4b53",
+   "id": "cli",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "e0d7d09260f177b75d3f1ad839b4d939e447e32d30a38be516902b01a0782595",
+   "id": "golden",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "6f8c0fb074e1661d182ece83aceaaa6af411d4d03574440519a8a0959082558f",
+   "id": "idioms_self",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "f5fca3932d29369a63f7ecee2f1ca1837ee7f8b4c074239e478c2b3f4e5e1ca2",
+   "id": "idioms",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "2a34c5cd0fd7f0a6f291f7cacf4603e729704869a563f79f8bd2683481798e1e",
+   "id": "incremental",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "e6b8650903049e10aa03a661a1fb6b1c16dd3de9b2bd8d7fe1e000cbf4f244fa",
+   "id": "interfaces",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "b328e7c1785749fef558fb9ffa4374957b457780c89c24e6ba08887b392f2981",
+   "id": "interface_oracle",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "af9b375281595db0014f6125014b4f51b40027d24b1c86f7665103e8174e1c60",
+   "id": "parser_hints",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "f69ef3b98107c6a3e70d7627ba306eb286c633da974c34a4aea9fc8d0239f591",
+   "id": "friction",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "4d3d0ea0245a41696f0200f7d3910ccd3ca378ba3f4ddd70fb1819bb49b7ef4b",
+   "id": "tooling_isolation",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "f0b303a665aef95df6186543b9cafab9d009afc736594e64c9e93f3b7195ee5e",
+   "id": "application_cache",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "cdfed50d574b038fbfdace3fff3f7351e761126d6b249c06f8a766bb6bbf7ea0",
+   "id": "component_builder",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "7bac0f624a4e58d67139168eb82976a6015eabd9bb6f3f6c43a94978524f09dc",
+   "id": "component_native",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "02d4db62c37f99f1935834a2da4273b3202f8f85fc5c0d486bd5efec0ab88ac3",
+   "id": "component-support",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "5e2fcbe0a37f44cd8a344db8a98d693332328dddcddb23c75a9005b4ac86aa91",
+   "id": "selfhost_numeric",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "a7ec9b903fa36b202e7744b2f02cfbdaa5268fd373dcd1bdec945719bfdb4eb9",
+   "id": "spec-history",
+   "reason": "SPEC replay reads git history and creates repositories",
+   "state": "fresh",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "adc3f3e8b894e4db4f5051bc379e6bb911d236021dcbfc4cdf4758d87d23673a",
+   "id": "juice_pure",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "830b22c8b8b1a8297fc5a6e543ff014a315bc775d282052c2db0d62dc23a602c",
+   "id": "juice",
+   "reason": "native performance collectors and host state require fresh execution",
+   "state": "fresh",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "73f2264833651ba4de97c13f454e05dba300e0ce57dcc5f20d245953fce6cc59",
+   "id": "juice-runtime",
+   "reason": "runtime collectors observe CPU, scheduler and current host state",
+   "state": "fresh",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "f523ca76203f0254b9588318ebe4890dc81305bbbe78c684d6fe3fa5efc084b9",
+   "id": "identity-qualification",
+   "reason": "compiler identity qualification produces temporary compiler artifacts",
+   "state": "fresh",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "d43836077b0a0960d67120d15953c3bae8e83e98823601808620f5c0ee71e24c",
+   "id": "affected",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "50aaae87b149f8ced7f53720f4c9a12cab68a48b060d46d388f86ef66348088d",
+   "id": "coverage_self",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "b77ccfb428dc938da88ad4c077b9f95286816f35bfcbe40efb2b95c4aff60473",
+   "id": "coverage",
+   "reason": "fixture membership and negative path lookups outside source recipes require freshness",
+   "state": "fresh",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "f00a65f96099f6248aeae7f8ff25c7583be484bd4b0c6ed3dfa16247c8bb27b5",
+   "id": "manifest_self",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "d28f1a1e65911957d3abeceddc52cfcb863b25081099931d7707931e2d68f30a",
+   "id": "verification_cache",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "298dd484edc1a634d062b3932356303a87544a9ecebffbe47c9d6d9fe5b01b0e",
+   "id": "verification_session",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "38cfde5da592bd42dd650b101a48fb3cfb4245ee15a7006b849a67a94b5057ec",
+   "id": "fuzz_campaign",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "02c7760288ca906cfcbc1e40cdba66bd9b077f184dd42c32fe410fe70a4d15d0",
+   "id": "juice_cache",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "af402956b05c453d3609b5594b8cbb45855a0154d38de437d43e2c9468a4f89a",
+   "id": "doc-coverage",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "de79af1b6d1fa66ad537acff84a026ee96f6a60bd5ed66109e9d7e8a81e3c88e",
+   "id": "guest",
+   "reason": "guest Host and external-effect eligibility remains compiler-authoritative",
+   "state": "fresh",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "7a5fc49b7db7d382a93f7724c2b6349b16640512ee865a3eb5a218a1b4ce1633",
+   "id": "language",
+   "reason": "guest Host and external-effect eligibility requires execution-time admission",
+   "state": "fresh",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "e36774cfec63d2fa7a06da5f8ca9790e780e745e3d690268f976e6f585131a2e",
+   "id": "doctest",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "c79554a05ea6ad9abbdc670188dd0004fe024b43480dbb6c504e9c4858f5757e",
+   "id": "zig-format",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "59fd4214b5d9adf60871e60d45174a2e289e106dfb61dfd6c454f635cf9e5d33",
+   "id": "my_format",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "011fea054d073c28dbe91ab596e30360432380457e86fc49839d36553e6030a6",
+   "id": "my_format_self",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "43927add2ab965d7ff62549b0445d955b02b5d001152d0ca8ff08c6113b96fd0",
+   "id": "noalloc_lint",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "bfd0353f613688c21f691645c502e3e85681c17b29cadcc77cc311ba79de6e07",
+   "id": "embedded_migration",
+   "reason": "valid prior success",
+   "state": "reused",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  },
+  {
+   "action_key": "e0d372686166331016e9d10f57632fc925a29d3c2d11eadb7de4d797418f153a",
+   "id": "guardian",
+   "reason": "Guardian source, git scope and mutable policy validation require freshness",
+   "state": "fresh",
+   "test_telemetry": [
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    },
+    {
+     "executed": null,
+     "reused": null,
+     "selected": null,
+     "status": "unknown"
+    }
+   ]
+  }
+ ],
+ "budget_context": "2d94af3726ecc339c6f3f6d4b17507b1df5b964452bc9fe60268ac82da766f46",
+ "status": 0,
+ "success": true,
+ "version": 1
+}

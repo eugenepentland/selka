@@ -1,0 +1,7 @@
+# Row 8 projection probe: exit 0 when CODEX_THREAD_ID is absent, 1 when present.
+func main(env: Environment) -> int:
+    match env.get("CODEX_THREAD_ID"):
+        case Some(_):
+            return 1
+        case None:
+            return 0
