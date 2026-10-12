@@ -1,0 +1,75 @@
+# SPEC §11.2 tests 37-42. Each test takes the runner's `out` stream only as
+# the authority its captured Output stands in for; nothing is written to it.
+import chunk
+import compiler
+import heap
+import output
+import value
+
+record Compiled:
+    function: value.ObjRef
+    code: int[]
+    constants: value.Value[]
+    errors: bytes
+
+
+func compile(source: bytes, out: Stream) -> Compiled:
+    mut rt = heap.new_runtime(False)
+    mut o = output.capture(out)
+    mut function = compiler.compile(mut rt, mut o, source)
+    if function == value.NO_OBJ:
+        return Compiled(function=function, code=[], constants=[], errors=bytes(o.stderr))
+    mut code = heap.function_obj(rt, function).code.copy()
+    return Compiled(function=function, code=code.code.copy(), constants=code.constants.copy(), errors=bytes(o.stderr))
+
+
+func number(n: float) -> value.Value:
+    return value.Value.number(value=n)
+
+
+public func test_compile_print_addition(out: Stream) -> bool:
+    mut compiled = compile(b"print 1 + 2;", out)
+    mut expected = [chunk.OP_CONSTANT, 0, chunk.OP_CONSTANT, 1, chunk.OP_ADD, chunk.OP_PRINT, chunk.OP_NIL, chunk.OP_RETURN]
+    return compiled.code == expected and compiled.constants == [number(1.0), number(2.0)]
+
+
+public func test_compile_global_definition(out: Stream) -> bool:
+    mut rt = heap.new_runtime(False)
+    mut o = output.capture(out)
+    mut function = compiler.compile(mut rt, mut o, b"var a = 1;")
+    mut code = heap.function_obj(rt, function).code.copy()
+    mut expected = [chunk.OP_CONSTANT, 1, chunk.OP_DEFINE_GLOBAL, 0, chunk.OP_NIL, chunk.OP_RETURN]
+    mut name_is_a = False
+    match code.constants[0]:
+        case value.Value.obj(value=ref):
+            name_is_a = heap.string_obj(rt, ref).chars == b"a"
+        case _:
+            pass
+    return code.code == expected and len(code.constants) == 2 and name_is_a and code.constants[1] == number(1.0)
+
+
+public func test_compile_local_slots(out: Stream) -> bool:
+    mut compiled = compile(b"{ var a = 1; print a; }", out)
+    mut expected = [chunk.OP_CONSTANT, 0, chunk.OP_GET_LOCAL, 1, chunk.OP_PRINT, chunk.OP_POP, chunk.OP_NIL, chunk.OP_RETURN]
+    return compiled.code == expected
+
+
+public func test_compile_if_jumps(out: Stream) -> bool:
+    mut compiled = compile(b"if (true) print 1;", out)
+    mut expected = [chunk.OP_TRUE, chunk.OP_JUMP_IF_FALSE, 0, 7, chunk.OP_POP, chunk.OP_CONSTANT, 0, chunk.OP_PRINT, chunk.OP_JUMP, 0, 1, chunk.OP_POP, chunk.OP_NIL, chunk.OP_RETURN]
+    return compiled.code == expected
+
+
+public func test_compile_error_message(out: Stream) -> bool:
+    mut compiled = compile(b"print ;", out)
+    return compiled.function == value.NO_OBJ and compiled.errors == b"[line 1] Error at ';': Expect expression.\n"
+
+
+public func test_compile_too_many_constants(out: Stream) -> bool:
+    mut source = b""
+    mut i = 0
+    while i < 257:
+        source = source + b"print " + str(i).encode() + b";\n"
+        i += 1
+    mut compiled = compile(source, out)
+    return compiled.function == value.NO_OBJ and b"Too many constants in one chunk." in compiled.errors

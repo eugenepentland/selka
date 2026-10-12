@@ -1,0 +1,28 @@
+
+import byte_builder
+
+# Read caps belong to each lib/ file class. Raise these, never lower them:
+# most callers swallow a failed read and quietly omit the missing part.
+public const max_footprint_bytes: int = 1048576
+
+
+public const max_lib_file_bytes: int = 1048576
+
+
+public const retired_lib_file_cap_bytes: int = 262144
+
+
+public func synth_pinout_source(name: bytes, min_bytes: int) -> bytes:
+    mut w = byte_builder.create()
+    byte_builder.append(mut w, b"(pinout \"")
+    byte_builder.append(mut w, name)
+    byte_builder.append(mut w, b"\"\n")
+    mut size = len(name) + 11
+    mut i = 1
+    while size < min_bytes:
+        mut line = ("  (pin " + str(i) + " \"PIN" + str(i) + "\" (alt \"ALT" + str(i) + "\" io))\n").encode()
+        byte_builder.append(mut w, line)
+        size += len(line)
+        i += 1
+    byte_builder.append(mut w, b"  (pin LAST \"LASTFN\" (alt \"SENTINEL\" io))\n)\n")
+    return byte_builder.finish(w)

@@ -1,0 +1,237 @@
+
+import eval_env as env_mod
+import eval_net_analysis as na
+import support_strs as strs
+import support_sort as srt
+
+const gnd_name: bytes = b"GND"
+
+
+const sub_path_buf_len: int = 256
+
+
+# Derive sources, union ferrite-connected DC rails, then resolve voltage from
+# sub-block nominal, section voltage, and top-level nominal/rated midpoint.
+# Higher source capacity wins independently of declaration order.
+public func build(block: env_mod.DesignBlock) -> env_mod.PowerRail[]:
+    # A ferrite is a DC conductor; downstream loads belong to the upstream rail.
+    mut net_parent = na.build_ferrite_bridges(block)
+    mut by_root: dict[str, env_mod.PowerRail] = {}
+    for sb in block.sub_blocks:
+        for port in sb.block.ports:
+            if port.direction != b"out":
+                continue
+            mut path_temp = sb.name + b"/" + port.name
+            if len(path_temp) > sub_path_buf_len:
+                continue
+            mut top_net = find_top_net(block, path_temp)
+            if top_net is None:
+                continue
+            mut base = na.base_net_name(top_net)
+            if base == gnd_name:
+                continue
+            mut root = na.find_root(net_parent, base)
+            if root == gnd_name:
+                continue
+            # Bare regulator VOUT is a source when its tied net reads as power;
+            # declared specs enrich the budget but do not gate recognition.
+            if not env_mod.port_is_power_source(port) and not looks_like_rail(base):
+                continue
+            mut nominal = port.nominal
+            if nominal is None:
+                nominal = resolve_rail_voltage(block, base)
+            mut root_key = strs.text(root)
+            mut existing_cap = -1.0
+            if root_key in by_root:
+                existing_cap = by_root[root_key].capacity_max.unwrap_or(by_root[root_key].capacity_typ.unwrap_or(0.0))
+            mut incoming_cap = port.current_max.unwrap_or(port.current_typ.unwrap_or(0.0))
+            if incoming_cap <= existing_cap:
+                continue
+            mut incoming = env_mod.PowerRail(name=base.copy(), aliases=[], nominal=nominal, rated_voltage=resolve_rail_rated_voltage(block, base, port), source_ref_des=sb.name.copy(), source_port=port.name.copy(), source_path=path_temp, capacity_typ=port.current_typ, capacity_max=port.current_max, enable_net=port.enable_net.copy())
+            by_root[root_key] = incoming
+    # External board-edge inputs are sources when no on-board source won root.
+    for port2 in block.ports:
+        if port2.direction != b"in":
+            continue
+        if env_mod.port_is_declared_non_power(port2) or not env_mod.port_is_power_source(port2):
+            continue
+        mut port_name = port2.name.copy()
+        if len(port2.net) > 0:
+            port_name = port2.net.copy()
+        mut base2 = na.base_net_name(port_name)
+        if base2 == gnd_name:
+            continue
+        mut root2 = na.find_root(net_parent, base2)
+        mut root_key2 = strs.text(root2)
+        if root_key2 in by_root:
+            continue
+        mut nominal2 = port2.nominal
+        if nominal2 is None:
+            nominal2 = midpoint(port2.rated_min, port2.rated_max)
+        by_root[root_key2] = env_mod.PowerRail(name=base2, aliases=[], nominal=nominal2, rated_voltage=env_mod.PowerRailRatedVoltage(min=port2.rated_min, max=port2.rated_max), source_ref_des=b"", source_port=port2.name.copy(), source_path=b"@external/" + port2.name, capacity_typ=port2.current_typ, capacity_max=port2.current_max, enable_net=b"")
+    # Group ferrite child names by root, then attach the aliases to that source.
+    mut aliases_by_root: dict[str, bytes[]] = {}
+    for child in net_parent:
+        mut child_name = child.encode()
+        mut child_root = na.find_root(net_parent, child_name)
+        if child_name == child_root:
+            continue
+        mut key = strs.text(child_root)
+        if key not in aliases_by_root:
+            aliases_by_root[key.copy()] = []
+        aliases_by_root[key].append(child_name)
+    # Replace owned rail snapshots; indexed records remain borrowed for reads.
+    mut rail_keys = list(by_root.keys()).copy()
+    mut rail_idx = 0
+    while rail_idx < len(rail_keys):
+        mut key2 = rail_keys[rail_idx].copy()
+        if key2 in aliases_by_root:
+            mut aliases = aliases_by_root[key2].copy()
+            mut rail = by_root[key2].copy()
+            rail.aliases = aliases
+            by_root[key2] = rail
+        rail_idx += 1
+    # Stable bytewise name sorting makes builds deterministic.
+    mut out = list(by_root.values())
+    srt.sort_by(mut out, less_than_rail)
+    return out
+
+
+func less_than_rail(a: env_mod.PowerRail, b: env_mod.PowerRail) -> bool:
+    return strs.bytes_order(a.name, b.name) == -1
+
+
+# Narrow V+prefix or V+digit heuristic excludes signal outputs like VSYNC.
+public func looks_like_rail(name: bytes) -> bool:
+    if len(name) >= 2 and name[0] == 86 and name[1] >= 48 and name[1] <= 57:
+        return True
+    for p in rail_prefixes():
+        if name.startswith(p):
+            return True
+    return False
+
+
+# Separate authoritative vocabularies preserve their consumers' different
+# questions: only diagram lists VLX, module lists VEXT/VANA, schematic lists VSS.
+public const analog_supply: bytes = b"AVDD"
+
+
+public const digital_supply: bytes = b"DVDD"
+
+
+public const system_rail: bytes = b"VSYS"
+
+
+const power_stage_supply: bytes = b"PVDD"
+
+
+const regulated_rail: bytes = b"VREG"
+
+
+const bulk_rail: bytes = b"VPWR"
+
+
+const raw_rail: bytes = b"VRAW"
+
+
+const power_stage_input: bytes = b"PVIN"
+
+
+const dc_input_rail: bytes = b"VDCIN"
+
+
+const high_voltage_input: bytes = b"HVIN"
+
+
+# private in Zig; public for its independent vocabulary test.
+public func rail_prefixes() -> bytes[]:
+    return [b"VDD", b"VCC", b"VOUT", b"VBUS", bulk_rail, regulated_rail, b"VBAT", system_rail, raw_rail, b"V_"]
+
+
+public func input_rail_prefixes() -> bytes[]:
+    return [b"VIN", power_stage_input, b"VBUS", b"VBAT", system_rail, dc_input_rail, high_voltage_input]
+
+
+public func supply_pad_prefixes() -> bytes[]:
+    return [b"VCC", b"VDD", analog_supply, digital_supply, power_stage_supply, b"VBAT", b"VBUS", b"VIN", b"VOUT", b"VEE", b"VPP", b"VREF"]
+
+
+# VSS is ground but answers yes to "power-ish rather than functional signal".
+public func schematic_supply_prefixes() -> bytes[]:
+    return [b"VDD", b"VCC", b"VSS", b"VIN", b"VBAT", analog_supply, digital_supply, power_stage_supply, b"V_"]
+
+
+public func diagram_supply_prefixes() -> bytes[]:
+    return [b"VDD", b"VCC", analog_supply, digital_supply, b"VBAT", regulated_rail, b"VPOS", b"VBUS", b"VLX", b"V_"]
+
+
+public func module_supply_prefixes() -> bytes[]:
+    return [b"VDD", b"VCC", analog_supply, digital_supply, regulated_rail, b"VPOS", b"VOUT", b"VEXT", b"VANA", b"VREF", b"VPP", b"V_"]
+
+
+# Find the first top-level net tied to this sub-block path.
+func find_top_net(block: env_mod.DesignBlock, path: bytes) -> bytes?:
+    for nt in block.net_ties:
+        if nt.a == path:
+            return Some(nt.b.copy())
+        if nt.b == path:
+            return Some(nt.a.copy())
+    return None
+
+
+func resolve_rail_voltage(block: env_mod.DesignBlock, rail_name: bytes) -> float?:
+    # Second tier: section-level port (sub-block nominal is handled by build).
+    for sec in block.sections:
+        mut v = section_voltage(sec, rail_name)
+        if v is not None:
+            return Some(v)
+    # Third tier: top-level nominal, then the midpoint of a complete rating.
+    for p in block.ports:
+        if not port_matches_rail(p, rail_name):
+            continue
+        mut nominal = p.nominal
+        if nominal is not None:
+            return Some(nominal)
+        mut min_v = p.rated_min
+        mut max_v = p.rated_max
+        if min_v is not None and max_v is not None:
+            return Some((min_v + max_v) * 0.5)
+    return None
+
+
+func midpoint(min_: float?, max_: float?) -> float?:
+    if min_ is not None and max_ is not None:
+        return Some((min_ + max_) * 0.5)
+    if max_ is not None:
+        return Some(max_)
+    return min_
+
+
+func resolve_rail_rated_voltage(block: env_mod.DesignBlock, rail_name: bytes, source: env_mod.Port) -> env_mod.PowerRailRatedVoltage:
+    if source.rated_min is not None or source.rated_max is not None:
+        return env_mod.PowerRailRatedVoltage(min=source.rated_min, max=source.rated_max)
+    for port in block.ports:
+        if port_matches_rail(port, rail_name):
+            return env_mod.PowerRailRatedVoltage(min=port.rated_min, max=port.rated_max)
+    return env_mod.PowerRailRatedVoltage()
+
+
+# The selected port name is only compared; borrow the fields without a snapshot.
+func port_matches_rail(port: env_mod.Port, rail_name: bytes) -> bool:
+    if len(port.net) > 0:
+        return port.net == rail_name
+    return port.name == rail_name
+
+
+func section_voltage(sec: env_mod.Section, rail_name: bytes) -> float?:
+    for sp in sec.ports:
+        if sp.name != rail_name:
+            continue
+        mut voltage = sp.voltage
+        if voltage is not None:
+            return Some(voltage)
+    for sub in sec.sub_sections:
+        mut v = section_voltage(sub, rail_name)
+        if v is not None:
+            return Some(v)
+    return None

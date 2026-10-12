@@ -1,0 +1,271 @@
+
+
+# Hand-maintained byte data table corresponding to zig/stdlib/embed.zig.
+# D5: literals contain at most 256 bytes and preserve each source file exactly.
+public record Entry:
+    path: str
+    bytes: bytes
+
+
+func data_0() -> bytes:
+    mut parts: bytes[] = [b"(component-family \"cap-0201\"\n  (description \"0201 (0603 metric) MLCC capacitor, generic\")\n  (symbol generic-cap)\n  (footprint c-0201)\n  (parameter \"value\" capacitance))\n"]
+    return b"".join(parts)
+
+
+func data_1() -> bytes:
+    mut parts: bytes[] = [b"(component-family \"cap-0402\"\n  (description \"0402 (1005 metric) MLCC capacitor, generic\")\n  (symbol generic-cap)\n  (footprint c-0402)\n  (parameter \"value\" capacitance))\n"]
+    return b"".join(parts)
+
+
+func data_2() -> bytes:
+    mut parts: bytes[] = [b"(component-family \"cap-0603\"\n  (description \"0603 (1608 metric) MLCC capacitor, generic\")\n  (symbol generic-cap)\n  (footprint c-0603)\n  (parameter \"value\" capacitance))\n"]
+    return b"".join(parts)
+
+
+func data_3() -> bytes:
+    mut parts: bytes[] = [b"(component-family \"cap-0805\"\n  (description \"0805 (2012 metric) MLCC capacitor, generic\")\n  (symbol generic-cap)\n  (footprint c-0805)\n  (parameter \"value\" capacitance))\n"]
+    return b"".join(parts)
+
+
+func data_4() -> bytes:
+    mut parts: bytes[] = [b"(component-family \"ferrite-0402\"\n  (description \"0402 (1005 metric) ferrite bead, generic; value is the impedance at the rated frequency\")\n  (symbol generic-ind)\n  (footprint fb-0402)\n  (parameter \"value\" impedance))\n"]
+    return b"".join(parts)
+
+
+func data_5() -> bytes:
+    mut parts: bytes[] = [b"(component-family \"ind-0201\"\n  (description \"0201 (0603 metric) chip inductor, generic\")\n  (symbol generic-ind)\n  (footprint l-0201)\n  (parameter \"value\" inductance))\n"]
+    return b"".join(parts)
+
+
+func data_6() -> bytes:
+    mut parts: bytes[] = [b"(component-family \"ind-0402\"\n  (description \"0402 (1005 metric) chip inductor, generic\")\n  (symbol generic-ind)\n  (footprint l-0402)\n  (parameter \"value\" inductance))\n"]
+    return b"".join(parts)
+
+
+func data_7() -> bytes:
+    mut parts: bytes[] = [b"(component-family \"ind-0603\"\n  (description \"0603 (1608 metric) chip inductor, generic\")\n  (symbol generic-ind)\n  (footprint l-0603)\n  (parameter \"value\" inductance))\n"]
+    return b"".join(parts)
+
+
+func data_8() -> bytes:
+    mut parts: bytes[] = [b"(component-family \"ind-0805\"\n  (description \"0805 (2012 metric) chip inductor, generic\")\n  (symbol generic-ind)\n  (footprint l-0805)\n  (parameter \"value\" inductance))\n"]
+    return b"".join(parts)
+
+
+func data_9() -> bytes:
+    mut parts: bytes[] = [b"(component-family \"ind-1616\"\n  (description \"1616 (4040 metric) shielded power inductor, 4.0 x 4.0 mm, generic\")\n  (symbol generic-ind)\n  (footprint l-1616)\n  (parameter \"value\" inductance))\n"]
+    return b"".join(parts)
+
+
+func data_10() -> bytes:
+    mut parts: bytes[] = [b"(component-family \"ind-2016\"\n  (description \"2016 metric (2.0 x 1.6 mm) shielded power inductor, generic\")\n  (symbol generic-ind)\n  (footprint l-2016)\n  (parameter \"value\" inductance))\n"]
+    return b"".join(parts)
+
+
+func data_11() -> bytes:
+    mut parts: bytes[] = [b"(component-family \"led-0402\"\n  (description \"0402 (1005 metric) LED, generic; pad 1 = anode, pad 2 = cathode\")\n  (symbol led)\n  (footprint led-0402)\n  (parameter \"color\" string))\n"]
+    return b"".join(parts)
+
+
+func data_12() -> bytes:
+    mut parts: bytes[] = [b";; M2 clearance hole with a plated, ground-bonded pad on both outer layers.\n;; A board feature, not a purchased part \xe2\x80\x94 the screw, washer and standoff are\n;; assembly hardware and belong on a mechanical BOM. Use a bare NPTH footprint\n", b";; instead when the hole must NOT carry copper to the chassis.\n(component \"mounting-hole-m2\"\n  (description \"M2 plated mounting hole, 2.2 mm drill, 3.8 mm pad on both outer layers, bonded to GND\")\n  (pinout mounting-hole-m2)\n  (footprint mounting-hole-m2)\n", b"  (refdes \"H\")\n  (ignore-requirements))\n"]
+    return b"".join(parts)
+
+
+func data_13() -> bytes:
+    mut parts: bytes[] = [b"(component \"pin-header-1x2\"\n  (description \"2-pin 2.54 mm (0.1 in) through-hole pin header, single row\")\n  (pinout pin-header-1x2)\n  (footprint pin-header-1x2-2-54mm)\n  (refdes \"J\")\n  (ignore-requirements))\n"]
+    return b"".join(parts)
+
+
+func data_14() -> bytes:
+    mut parts: bytes[] = [b"(component \"pin-header-1x4\"\n  (description \"4-pin 2.54 mm (0.1 in) through-hole pin header, single row\")\n  (pinout pin-header-1x4)\n  (footprint pin-header-1x4-2-54mm)\n  (refdes \"J\")\n  (ignore-requirements))\n"]
+    return b"".join(parts)
+
+
+func data_15() -> bytes:
+    mut parts: bytes[] = [b";; Odd pins in column 1 (x = 0), even pins in column 2 (x = 2.54 mm),\n;; incrementing away from pin 1 \xe2\x80\x94 the usual dual-row numbering.\n(component \"pin-header-2x5\"\n  (description \"2x5 (10-pin) 2.54 mm (0.1 in) through-hole pin header, dual row\")\n", b"  (pinout pin-header-2x5)\n  (footprint pin-header-2x5-2-54mm)\n  (refdes \"J\")\n  (ignore-requirements))\n"]
+    return b"".join(parts)
+
+
+func data_16() -> bytes:
+    mut parts: bytes[] = [b"(component-family \"res-0201\"\n  (description \"0201 (0603 metric) chip resistor, generic\")\n  (symbol generic-res)\n  (footprint r-0201)\n  (parameter \"value\" resistance))\n"]
+    return b"".join(parts)
+
+
+func data_17() -> bytes:
+    mut parts: bytes[] = [b"(component-family \"res-0402\"\n  (description \"0402 (1005 metric) chip resistor, generic\")\n  (symbol generic-res)\n  (footprint r-0402)\n  (parameter \"value\" resistance))\n"]
+    return b"".join(parts)
+
+
+func data_18() -> bytes:
+    mut parts: bytes[] = [b"(component-family \"res-0603\"\n  (description \"0603 (1608 metric) chip resistor, generic\")\n  (symbol generic-res)\n  (footprint r-0603)\n  (parameter \"value\" resistance))\n"]
+    return b"".join(parts)
+
+
+func data_19() -> bytes:
+    mut parts: bytes[] = [b"(component-family \"res-0805\"\n  (description \"0805 (2012 metric) chip resistor, generic\")\n  (symbol generic-res)\n  (footprint r-0805)\n  (parameter \"value\" resistance))\n"]
+    return b"".join(parts)
+
+
+func data_20() -> bytes:
+    mut parts: bytes[] = [b";; Bare 1 mm probe pad. A board feature rather than a purchased part, so it\n;; carries no manufacturer, MPN or datasheet.\n(component \"testpoint\"\n  (description \"1 mm SMD test point / probe pad\")\n  (pinout testpoint)\n  (footprint testpoint-1mm)\n", b"  (refdes \"TP\")\n  (ignore-requirements))\n"]
+    return b"".join(parts)
+
+
+func data_21() -> bytes:
+    mut parts: bytes[] = [b";; Land pattern computed from the IPC-7351B density-level-B (nominal) equations\n;; over the 0201 (0603 metric) chip package's published nominal dimensions:\n;;   body 0.60 +/-0.03 x 0.30 +/-0.03 mm, end terminal 0.15 +/-0.05 mm, toe goal J_T = 0.20 mm,\n", b";;   heel goal J_H = 0.00 mm, side goal J_S = 0.00 mm,\n;;   fabrication allowance F = 0.05 mm, placement accuracy P = 0.025 mm.\n;; Z_max = L_min + 2*J_T + rss(L_tol,F,P); G_min = S_max - rss(S_tol,F,P);\n", b";; X_max = W_min + rss(W_tol,F,P); pad = ((Z-G)/2) x X centred at (Z+G)/4.\n;; Courtyard = the greater of the pad and body extent plus 0.10 mm.\n;; No silkscreen: a symmetric two-terminal chip has nothing to orient, and\n", b";; the courtyard already carries the placement keep-out.\n(footprint \"c-0201\"\n  (description \"MLCC capacitor, 0201 (0603 metric), IPC-7351B density level B (nominal) land\")\n\n  (pad 1 smd roundrect (pos -0.30 0.00) (size 0.44 0.35))\n", b"  (pad 2 smd roundrect (pos 0.30 0.00) (size 0.44 0.35))\n  (courtyard (rect -0.650 -0.300 0.650 0.300))\n)\n"]
+    return b"".join(parts)
+
+
+func data_22() -> bytes:
+    mut parts: bytes[] = [b";; Land pattern computed from the IPC-7351B density-level-B (nominal) equations\n;; over the 0402 (1005 metric) chip package's published nominal dimensions:\n;;   body 1.00 +/-0.05 x 0.50 +/-0.05 mm, end terminal 0.25 +/-0.05 mm, toe goal J_T = 0.20 mm,\n", b";;   heel goal J_H = 0.00 mm, side goal J_S = 0.00 mm,\n;;   fabrication allowance F = 0.05 mm, placement accuracy P = 0.025 mm.\n;; Z_max = L_min + 2*J_T + rss(L_tol,F,P); G_min = S_max - rss(S_tol,F,P);\n", b";; X_max = W_min + rss(W_tol,F,P); pad = ((Z-G)/2) x X centred at (Z+G)/4.\n;; Courtyard = the greater of the pad and body extent plus 0.10 mm.\n;; No silkscreen: a symmetric two-terminal chip has nothing to orient, and\n", b";; the courtyard already carries the placement keep-out.\n(footprint \"c-0402\"\n  (description \"MLCC capacitor, 0402 (1005 metric), IPC-7351B density level B (nominal) land\")\n\n  (pad 1 smd roundrect (pos -0.45 0.00) (size 0.56 0.56))\n", b"  (pad 2 smd roundrect (pos 0.45 0.00) (size 0.56 0.56))\n  (courtyard (rect -0.850 -0.400 0.850 0.400))\n)\n"]
+    return b"".join(parts)
+
+
+func data_23() -> bytes:
+    mut parts: bytes[] = [b";; Land pattern computed from the IPC-7351B density-level-B (nominal) equations\n;; over the 0603 (1608 metric) chip package's published nominal dimensions:\n;;   body 1.60 +/-0.10 x 0.80 +/-0.10 mm, end terminal 0.35 +/-0.10 mm, toe goal J_T = 0.35 mm,\n", b";;   heel goal J_H = 0.00 mm, side goal J_S = 0.00 mm,\n;;   fabrication allowance F = 0.05 mm, placement accuracy P = 0.025 mm.\n;; Z_max = L_min + 2*J_T + rss(L_tol,F,P); G_min = S_max - rss(S_tol,F,P);\n", b";; X_max = W_min + rss(W_tol,F,P); pad = ((Z-G)/2) x X centred at (Z+G)/4.\n;; Courtyard = the greater of the pad and body extent plus 0.10 mm.\n;; No silkscreen: a symmetric two-terminal chip has nothing to orient, and\n", b";; the courtyard already carries the placement keep-out.\n(footprint \"c-0603\"\n  (description \"MLCC capacitor, 0603 (1608 metric), IPC-7351B density level B (nominal) land\")\n\n  (pad 1 smd roundrect (pos -0.75 0.00) (size 0.91 0.91))\n", b"  (pad 2 smd roundrect (pos 0.75 0.00) (size 0.91 0.91))\n  (courtyard (rect -1.350 -0.600 1.350 0.600))\n)\n"]
+    return b"".join(parts)
+
+
+func data_24() -> bytes:
+    mut parts: bytes[] = [b";; Land pattern computed from the IPC-7351B density-level-B (nominal) equations\n;; over the 0805 (2012 metric) chip package's published nominal dimensions:\n;;   body 2.00 +/-0.10 x 1.25 +/-0.10 mm, end terminal 0.40 +/-0.10 mm, toe goal J_T = 0.35 mm,\n", b";;   heel goal J_H = 0.00 mm, side goal J_S = 0.00 mm,\n;;   fabrication allowance F = 0.05 mm, placement accuracy P = 0.025 mm.\n;; Z_max = L_min + 2*J_T + rss(L_tol,F,P); G_min = S_max - rss(S_tol,F,P);\n", b";; X_max = W_min + rss(W_tol,F,P); pad = ((Z-G)/2) x X centred at (Z+G)/4.\n;; Courtyard = the greater of the pad and body extent plus 0.10 mm.\n;; No silkscreen: a symmetric two-terminal chip has nothing to orient, and\n", b";; the courtyard already carries the placement keep-out.\n(footprint \"c-0805\"\n  (description \"MLCC capacitor, 0805 (2012 metric), IPC-7351B density level B (nominal) land\")\n\n  (pad 1 smd roundrect (pos -0.93 0.00) (size 0.96 1.36))\n", b"  (pad 2 smd roundrect (pos 0.93 0.00) (size 0.96 1.36))\n  (courtyard (rect -1.550 -0.800 1.550 0.800))\n)\n"]
+    return b"".join(parts)
+
+
+func data_25() -> bytes:
+    mut parts: bytes[] = [b";; Land pattern computed from the IPC-7351B density-level-B (nominal) equations\n;; over the 0402 (1005 metric) chip package's published nominal dimensions:\n;;   body 1.00 +/-0.05 x 0.50 +/-0.05 mm, end terminal 0.25 +/-0.05 mm, toe goal J_T = 0.20 mm,\n", b";;   heel goal J_H = 0.00 mm, side goal J_S = 0.00 mm,\n;;   fabrication allowance F = 0.05 mm, placement accuracy P = 0.025 mm.\n;; Z_max = L_min + 2*J_T + rss(L_tol,F,P); G_min = S_max - rss(S_tol,F,P);\n", b";; X_max = W_min + rss(W_tol,F,P); pad = ((Z-G)/2) x X centred at (Z+G)/4.\n;; Courtyard = the greater of the pad and body extent plus 0.10 mm.\n;; No silkscreen: a symmetric two-terminal chip has nothing to orient, and\n", b";; the courtyard already carries the placement keep-out.\n(footprint \"fb-0402\"\n  (description \"Ferrite bead, 0402 (1005 metric), IPC-7351B density level B (nominal) land\")\n\n  (pad 1 smd roundrect (pos -0.45 0.00) (size 0.56 0.56))\n", b"  (pad 2 smd roundrect (pos 0.45 0.00) (size 0.56 0.56))\n  (courtyard (rect -0.850 -0.400 0.850 0.400))\n)\n"]
+    return b"".join(parts)
+
+
+func data_26() -> bytes:
+    mut parts: bytes[] = [b";; Land pattern computed from the IPC-7351B density-level-B (nominal) equations\n;; over the 0201 (0603 metric) chip package's published nominal dimensions:\n;;   body 0.60 +/-0.03 x 0.30 +/-0.03 mm, end terminal 0.15 +/-0.05 mm, toe goal J_T = 0.20 mm,\n", b";;   heel goal J_H = 0.00 mm, side goal J_S = 0.00 mm,\n;;   fabrication allowance F = 0.05 mm, placement accuracy P = 0.025 mm.\n;; Z_max = L_min + 2*J_T + rss(L_tol,F,P); G_min = S_max - rss(S_tol,F,P);\n", b";; X_max = W_min + rss(W_tol,F,P); pad = ((Z-G)/2) x X centred at (Z+G)/4.\n;; Courtyard = the greater of the pad and body extent plus 0.10 mm.\n;; No silkscreen: a symmetric two-terminal chip has nothing to orient, and\n", b";; the courtyard already carries the placement keep-out.\n(footprint \"l-0201\"\n  (description \"Chip inductor, 0201 (0603 metric), IPC-7351B density level B (nominal) land\")\n\n  (pad 1 smd roundrect (pos -0.30 0.00) (size 0.44 0.35))\n", b"  (pad 2 smd roundrect (pos 0.30 0.00) (size 0.44 0.35))\n  (courtyard (rect -0.650 -0.300 0.650 0.300))\n)\n"]
+    return b"".join(parts)
+
+
+func data_27() -> bytes:
+    mut parts: bytes[] = [b";; Land pattern computed from the IPC-7351B density-level-B (nominal) equations\n;; over the 0402 (1005 metric) chip package's published nominal dimensions:\n;;   body 1.00 +/-0.05 x 0.50 +/-0.05 mm, end terminal 0.25 +/-0.05 mm, toe goal J_T = 0.20 mm,\n", b";;   heel goal J_H = 0.00 mm, side goal J_S = 0.00 mm,\n;;   fabrication allowance F = 0.05 mm, placement accuracy P = 0.025 mm.\n;; Z_max = L_min + 2*J_T + rss(L_tol,F,P); G_min = S_max - rss(S_tol,F,P);\n", b";; X_max = W_min + rss(W_tol,F,P); pad = ((Z-G)/2) x X centred at (Z+G)/4.\n;; Courtyard = the greater of the pad and body extent plus 0.10 mm.\n;; No silkscreen: a symmetric two-terminal chip has nothing to orient, and\n", b";; the courtyard already carries the placement keep-out.\n(footprint \"l-0402\"\n  (description \"Chip inductor, 0402 (1005 metric), IPC-7351B density level B (nominal) land\")\n\n  (pad 1 smd roundrect (pos -0.45 0.00) (size 0.56 0.56))\n", b"  (pad 2 smd roundrect (pos 0.45 0.00) (size 0.56 0.56))\n  (courtyard (rect -0.850 -0.400 0.850 0.400))\n)\n"]
+    return b"".join(parts)
+
+
+func data_28() -> bytes:
+    mut parts: bytes[] = [b";; Land pattern computed from the IPC-7351B density-level-B (nominal) equations\n;; over the 0603 (1608 metric) chip package's published nominal dimensions:\n;;   body 1.60 +/-0.10 x 0.80 +/-0.10 mm, end terminal 0.35 +/-0.10 mm, toe goal J_T = 0.35 mm,\n", b";;   heel goal J_H = 0.00 mm, side goal J_S = 0.00 mm,\n;;   fabrication allowance F = 0.05 mm, placement accuracy P = 0.025 mm.\n;; Z_max = L_min + 2*J_T + rss(L_tol,F,P); G_min = S_max - rss(S_tol,F,P);\n", b";; X_max = W_min + rss(W_tol,F,P); pad = ((Z-G)/2) x X centred at (Z+G)/4.\n;; Courtyard = the greater of the pad and body extent plus 0.10 mm.\n;; No silkscreen: a symmetric two-terminal chip has nothing to orient, and\n", b";; the courtyard already carries the placement keep-out.\n(footprint \"l-0603\"\n  (description \"Chip inductor, 0603 (1608 metric), IPC-7351B density level B (nominal) land\")\n\n  (pad 1 smd roundrect (pos -0.75 0.00) (size 0.91 0.91))\n", b"  (pad 2 smd roundrect (pos 0.75 0.00) (size 0.91 0.91))\n  (courtyard (rect -1.350 -0.600 1.350 0.600))\n)\n"]
+    return b"".join(parts)
+
+
+func data_29() -> bytes:
+    mut parts: bytes[] = [b";; Land pattern computed from the IPC-7351B density-level-B (nominal) equations\n;; over the 0805 (2012 metric) chip package's published nominal dimensions:\n;;   body 2.00 +/-0.10 x 1.25 +/-0.10 mm, end terminal 0.40 +/-0.10 mm, toe goal J_T = 0.35 mm,\n", b";;   heel goal J_H = 0.00 mm, side goal J_S = 0.00 mm,\n;;   fabrication allowance F = 0.05 mm, placement accuracy P = 0.025 mm.\n;; Z_max = L_min + 2*J_T + rss(L_tol,F,P); G_min = S_max - rss(S_tol,F,P);\n", b";; X_max = W_min + rss(W_tol,F,P); pad = ((Z-G)/2) x X centred at (Z+G)/4.\n;; Courtyard = the greater of the pad and body extent plus 0.10 mm.\n;; No silkscreen: a symmetric two-terminal chip has nothing to orient, and\n", b";; the courtyard already carries the placement keep-out.\n(footprint \"l-0805\"\n  (description \"Chip inductor, 0805 (2012 metric), IPC-7351B density level B (nominal) land\")\n\n  (pad 1 smd roundrect (pos -0.93 0.00) (size 0.96 1.36))\n", b"  (pad 2 smd roundrect (pos 0.93 0.00) (size 0.96 1.36))\n  (courtyard (rect -1.550 -0.800 1.550 0.800))\n)\n"]
+    return b"".join(parts)
+
+
+func data_30() -> bytes:
+    mut parts: bytes[] = [b";; Generic 1616 (4040 metric) shielded power inductor: 4.0 +/-0.2 mm square\n;; body with two bottom terminations 1.0 mm long by 3.4 mm wide, the common\n;; footprint of that package class. No vendor part is assumed \xe2\x80\x94 check the\n", b";; inductor you actually buy against these numbers before fabricating.\n;;\n;; Land = terminal + 0.20 mm toe + 0.20 mm heel in length and + 0.10 mm total\n;; in width, so the outer span is the body length plus 0.40 mm and the solder\n", b";; fillet is inspectable from the side. Courtyard = the greater of the pad and\n;; the maximum body extent plus 0.25 mm.\n(footprint \"l-1616\"\n  (description \"Shielded power inductor, 1616 (4040 metric), 4.0 x 4.0 mm, generic\")\n\n", b"  (pad 1 smd rect (pos -1.50 0.00) (size 1.40 3.50))\n  (pad 2 smd rect (pos 1.50 0.00) (size 1.40 3.50))\n  (courtyard (rect -2.450 -2.350 2.450 2.350))\n)\n"]
+    return b"".join(parts)
+
+
+func data_31() -> bytes:
+    mut parts: bytes[] = [b";; Generic 2016 metric shielded power inductor: 2.0 x 1.6 mm body, 1.0 mm\n;; tall, with two bottom terminations 0.5 mm long spanning the full 1.6 mm\n;; width. No vendor part is assumed \xe2\x80\x94 check the inductor you actually buy\n", b";; against these numbers before fabricating.\n;;\n;; Land = terminal + 0.20 mm toe + 0.20 mm heel in length, full body width,\n;; so the outer span is the body length plus 0.40 mm. Courtyard = the greater\n", b";; of the pad and the maximum body extent plus 0.25 mm.\n(footprint \"l-2016\"\n  (description \"Shielded power inductor, 2016 metric (2.0 x 1.6 mm), generic\")\n\n  (pad 1 smd rect (pos -0.75 0.00) (size 0.90 1.60))\n", b"  (pad 2 smd rect (pos 0.75 0.00) (size 0.90 1.60))\n  (courtyard (rect -1.450 -1.100 1.450 1.100))\n)\n"]
+    return b"".join(parts)
+
+
+func data_32() -> bytes:
+    mut parts: bytes[] = [b";; Same IPC-7351B density-level-B land as the 0402 chip resistor (body\n;; 1.00 +/-0.05 x 0.50 +/-0.05 mm, end terminal 0.25 +/-0.05 mm, toe goal\n;; J_T = 0.20 mm), plus a polarity bar. The courtyard is widened in X to\n;; contain that bar.\n;;\n", b";; Pad 1 = anode (A), pad 2 = cathode (K). The silkscreen bar marks the\n;; cathode end, so the part reads the same way as its schematic symbol.\n(footprint \"led-0402\"\n", b"  (description \"LED, 0402 (1005 metric), IPC-7351B density level B (nominal) land; pad 1 = anode, pad 2 = cathode\")\n\n  (pad 1 smd roundrect (pos -0.45 0.00) (size 0.56 0.56))\n  (pad 2 smd roundrect (pos 0.45 0.00) (size 0.56 0.56))\n", b"  (courtyard (rect -0.850 -0.400 1.100 0.400))\n  (silkscreen\n    (line (0.95 -0.30) (0.95 0.30))\n  )\n)\n"]
+    return b"".join(parts)
+
+
+func data_33() -> bytes:
+    mut parts: bytes[] = [b";; M2 clearance hole, plated, with a ground-bonded pad on both outer layers.\n;;\n;;   drill 2.20 mm  = M2 (2.0 mm major diameter) screw shank plus clearance\n;;   pad   3.80 mm  = 0.80 mm annular ring, and wide enough for a DIN 965\n", b";;                    countersunk M2 head (3.8 mm) to sit entirely on copper\n;;   courtyard r = 2.15 mm, i.e. 0.25 mm outside the pad. That suits a flush\n;;   countersunk head; widen it for a pan head or for driver access.\n(footprint \"mounting-hole-m2\"\n", b"  (description \"M2 plated mounting hole, 2.2 mm drill, 3.8 mm pad on both outer layers\")\n\n  (pad 1 thru circle (pos 0.00 0.00) (size 3.80 3.80) (drill 2.20))\n  (courtyard (circle (0.00 0.00) 2.15))\n)\n"]
+    return b"".join(parts)
+
+
+func data_34() -> bytes:
+    mut parts: bytes[] = [b";; Through-hole pin header on a 2.54 mm (0.100 in) grid \xe2\x80\x94 the de facto\n;; 0.1-inch header land:\n;;\n;;   drill 1.00 mm = a 0.64 mm square post (0.90 mm across the diagonal) plus\n;;                   fabrication clearance\n", b";;   pad   1.70 mm = 0.35 mm annular ring around that drill\n;;   pin 1 is rectangular, the rest round, so orientation survives assembly\n;;\n;; Body outline = 2.54 mm per row/column centred on the pin grid; the\n", b";; silkscreen traces it and the courtyard is that outline.\n(footprint \"pin-header-1x2-2-54mm\"\n  (description \"Through-hole 1x2 pin header, 2.54 mm (0.1 in) pitch, single row\")\n\n  (pad 1  thru rect   (pos 0.00 0.00) (size 1.70 1.70) (drill 1.00))\n", b"  (pad 2  thru circle (pos 0.00 2.54) (size 1.70 1.70) (drill 1.00))\n  (courtyard (rect -1.270 -1.270 1.270 3.810))\n  (silkscreen\n    (line (-1.27 -1.27) (1.27 -1.27))\n    (line (1.27 -1.27) (1.27 3.81))\n    (line (1.27 3.81) (-1.27 3.81))\n", b"    (line (-1.27 3.81) (-1.27 -1.27))\n  )\n)\n"]
+    return b"".join(parts)
+
+
+func data_35() -> bytes:
+    mut parts: bytes[] = [b";; Through-hole pin header on a 2.54 mm (0.100 in) grid \xe2\x80\x94 the de facto\n;; 0.1-inch header land:\n;;\n;;   drill 1.00 mm = a 0.64 mm square post (0.90 mm across the diagonal) plus\n;;                   fabrication clearance\n", b";;   pad   1.70 mm = 0.35 mm annular ring around that drill\n;;   pin 1 is rectangular, the rest round, so orientation survives assembly\n;;\n;; Body outline = 2.54 mm per row/column centred on the pin grid; the\n", b";; silkscreen traces it and the courtyard is that outline.\n(footprint \"pin-header-1x4-2-54mm\"\n  (description \"Through-hole 1x4 pin header, 2.54 mm (0.1 in) pitch, single row\")\n\n  (pad 1  thru rect   (pos 0.00 0.00) (size 1.70 1.70) (drill 1.00))\n", b"  (pad 2  thru circle (pos 0.00 2.54) (size 1.70 1.70) (drill 1.00))\n  (pad 3  thru circle (pos 0.00 5.08) (size 1.70 1.70) (drill 1.00))\n  (pad 4  thru circle (pos 0.00 7.62) (size 1.70 1.70) (drill 1.00))\n  (courtyard (rect -1.270 -1.270 1.270 8.890))\n", b"  (silkscreen\n    (line (-1.27 -1.27) (1.27 -1.27))\n    (line (1.27 -1.27) (1.27 8.89))\n    (line (1.27 8.89) (-1.27 8.89))\n    (line (-1.27 8.89) (-1.27 -1.27))\n  )\n)\n"]
+    return b"".join(parts)
+
+
+func data_36() -> bytes:
+    mut parts: bytes[] = [b";; Through-hole pin header on a 2.54 mm (0.100 in) grid \xe2\x80\x94 the de facto\n;; 0.1-inch header land:\n;;\n;;   drill 1.00 mm = a 0.64 mm square post (0.90 mm across the diagonal) plus\n;;                   fabrication clearance\n", b";;   pad   1.70 mm = 0.35 mm annular ring around that drill\n;;   pin 1 is rectangular, the rest round, so orientation survives assembly\n;;\n;; Body outline = 2.54 mm per row/column centred on the pin grid; the\n", b";; silkscreen traces it and the courtyard is that outline.\n(footprint \"pin-header-2x5-2-54mm\"\n  (description \"Through-hole 2x5 (10-pin) pin header, 2.54 mm (0.1 in) pitch, dual row; odd pins in column 1, even pins in column 2\")\n\n", b"  (pad 1  thru rect   (pos 0.00 0.00) (size 1.70 1.70) (drill 1.00))\n  (pad 2  thru circle (pos 2.54 0.00) (size 1.70 1.70) (drill 1.00))\n  (pad 3  thru circle (pos 0.00 2.54) (size 1.70 1.70) (drill 1.00))\n", b"  (pad 4  thru circle (pos 2.54 2.54) (size 1.70 1.70) (drill 1.00))\n  (pad 5  thru circle (pos 0.00 5.08) (size 1.70 1.70) (drill 1.00))\n  (pad 6  thru circle (pos 2.54 5.08) (size 1.70 1.70) (drill 1.00))\n", b"  (pad 7  thru circle (pos 0.00 7.62) (size 1.70 1.70) (drill 1.00))\n  (pad 8  thru circle (pos 2.54 7.62) (size 1.70 1.70) (drill 1.00))\n  (pad 9  thru circle (pos 0.00 10.16) (size 1.70 1.70) (drill 1.00))\n", b"  (pad 10 thru circle (pos 2.54 10.16) (size 1.70 1.70) (drill 1.00))\n  (courtyard (rect -1.270 -1.270 3.810 11.430))\n  (silkscreen\n    (line (-1.27 -1.27) (3.81 -1.27))\n    (line (3.81 -1.27) (3.81 11.43))\n    (line (3.81 11.43) (-1.27 11.43))\n", b"    (line (-1.27 11.43) (-1.27 -1.27))\n  )\n)\n"]
+    return b"".join(parts)
+
+
+func data_37() -> bytes:
+    mut parts: bytes[] = [b";; Land pattern computed from the IPC-7351B density-level-B (nominal) equations\n;; over the 0201 (0603 metric) chip package's published nominal dimensions:\n;;   body 0.60 +/-0.03 x 0.30 +/-0.03 mm, end terminal 0.15 +/-0.05 mm, toe goal J_T = 0.20 mm,\n", b";;   heel goal J_H = 0.00 mm, side goal J_S = 0.00 mm,\n;;   fabrication allowance F = 0.05 mm, placement accuracy P = 0.025 mm.\n;; Z_max = L_min + 2*J_T + rss(L_tol,F,P); G_min = S_max - rss(S_tol,F,P);\n", b";; X_max = W_min + rss(W_tol,F,P); pad = ((Z-G)/2) x X centred at (Z+G)/4.\n;; Courtyard = the greater of the pad and body extent plus 0.10 mm.\n;; No silkscreen: a symmetric two-terminal chip has nothing to orient, and\n", b";; the courtyard already carries the placement keep-out.\n(footprint \"r-0201\"\n  (description \"Chip resistor, 0201 (0603 metric), IPC-7351B density level B (nominal) land\")\n\n  (pad 1 smd roundrect (pos -0.30 0.00) (size 0.44 0.35))\n", b"  (pad 2 smd roundrect (pos 0.30 0.00) (size 0.44 0.35))\n  (courtyard (rect -0.650 -0.300 0.650 0.300))\n)\n"]
+    return b"".join(parts)
+
+
+func data_38() -> bytes:
+    mut parts: bytes[] = [b";; Land pattern computed from the IPC-7351B density-level-B (nominal) equations\n;; over the 0402 (1005 metric) chip package's published nominal dimensions:\n;;   body 1.00 +/-0.05 x 0.50 +/-0.05 mm, end terminal 0.25 +/-0.05 mm, toe goal J_T = 0.20 mm,\n", b";;   heel goal J_H = 0.00 mm, side goal J_S = 0.00 mm,\n;;   fabrication allowance F = 0.05 mm, placement accuracy P = 0.025 mm.\n;; Z_max = L_min + 2*J_T + rss(L_tol,F,P); G_min = S_max - rss(S_tol,F,P);\n", b";; X_max = W_min + rss(W_tol,F,P); pad = ((Z-G)/2) x X centred at (Z+G)/4.\n;; Courtyard = the greater of the pad and body extent plus 0.10 mm.\n;; No silkscreen: a symmetric two-terminal chip has nothing to orient, and\n", b";; the courtyard already carries the placement keep-out.\n(footprint \"r-0402\"\n  (description \"Chip resistor, 0402 (1005 metric), IPC-7351B density level B (nominal) land\")\n\n  (pad 1 smd roundrect (pos -0.45 0.00) (size 0.56 0.56))\n", b"  (pad 2 smd roundrect (pos 0.45 0.00) (size 0.56 0.56))\n  (courtyard (rect -0.850 -0.400 0.850 0.400))\n)\n"]
+    return b"".join(parts)
+
+
+func data_39() -> bytes:
+    mut parts: bytes[] = [b";; Land pattern computed from the IPC-7351B density-level-B (nominal) equations\n;; over the 0603 (1608 metric) chip package's published nominal dimensions:\n;;   body 1.60 +/-0.10 x 0.80 +/-0.10 mm, end terminal 0.35 +/-0.10 mm, toe goal J_T = 0.35 mm,\n", b";;   heel goal J_H = 0.00 mm, side goal J_S = 0.00 mm,\n;;   fabrication allowance F = 0.05 mm, placement accuracy P = 0.025 mm.\n;; Z_max = L_min + 2*J_T + rss(L_tol,F,P); G_min = S_max - rss(S_tol,F,P);\n", b";; X_max = W_min + rss(W_tol,F,P); pad = ((Z-G)/2) x X centred at (Z+G)/4.\n;; Courtyard = the greater of the pad and body extent plus 0.10 mm.\n;; No silkscreen: a symmetric two-terminal chip has nothing to orient, and\n", b";; the courtyard already carries the placement keep-out.\n(footprint \"r-0603\"\n  (description \"Chip resistor, 0603 (1608 metric), IPC-7351B density level B (nominal) land\")\n\n  (pad 1 smd roundrect (pos -0.75 0.00) (size 0.91 0.91))\n", b"  (pad 2 smd roundrect (pos 0.75 0.00) (size 0.91 0.91))\n  (courtyard (rect -1.350 -0.600 1.350 0.600))\n)\n"]
+    return b"".join(parts)
+
+
+func data_40() -> bytes:
+    mut parts: bytes[] = [b";; Land pattern computed from the IPC-7351B density-level-B (nominal) equations\n;; over the 0805 (2012 metric) chip package's published nominal dimensions:\n;;   body 2.00 +/-0.10 x 1.25 +/-0.10 mm, end terminal 0.40 +/-0.10 mm, toe goal J_T = 0.35 mm,\n", b";;   heel goal J_H = 0.00 mm, side goal J_S = 0.00 mm,\n;;   fabrication allowance F = 0.05 mm, placement accuracy P = 0.025 mm.\n;; Z_max = L_min + 2*J_T + rss(L_tol,F,P); G_min = S_max - rss(S_tol,F,P);\n", b";; X_max = W_min + rss(W_tol,F,P); pad = ((Z-G)/2) x X centred at (Z+G)/4.\n;; Courtyard = the greater of the pad and body extent plus 0.10 mm.\n;; No silkscreen: a symmetric two-terminal chip has nothing to orient, and\n", b";; the courtyard already carries the placement keep-out.\n(footprint \"r-0805\"\n  (description \"Chip resistor, 0805 (2012 metric), IPC-7351B density level B (nominal) land\")\n\n  (pad 1 smd roundrect (pos -0.93 0.00) (size 0.96 1.36))\n", b"  (pad 2 smd roundrect (pos 0.93 0.00) (size 0.96 1.36))\n  (courtyard (rect -1.550 -0.800 1.550 0.800))\n)\n"]
+    return b"".join(parts)
+
+
+func data_41() -> bytes:
+    mut parts: bytes[] = [b";; Bare 1 mm round probe pad: one SMD land, no paste (nothing is soldered to\n;; it), and a silk ring 0.2 mm outside the copper so the pad is findable on a\n;; populated board.\n(footprint \"testpoint-1mm\"\n", b"  (description \"1 mm diameter SMD test point / probe pad\")\n\n  (pad 1 smd circle (pos 0.00 0.00) (size 1.00 1.00) no-paste)\n  (courtyard (rect -0.800 -0.800 0.800 0.800))\n  (silkscreen\n    (circle (0.00 0.00) 0.70)\n  )\n)\n"]
+    return b"".join(parts)
+
+
+func data_42() -> bytes:
+    mut parts: bytes[] = [b";; Two-wire I\xc2\xb2C. Both lines are open-drain and driven from either end, so both\n;; are `bidi` whichever role a block plays \xe2\x80\x94 an I\xc2\xb2C bundle is unchanged by\n;; `(role controller)`.\n(interface i2c \"Two-wire I\xc2\xb2C, open-drain, target perspective\"\n", b"  (signal SDA bidi data)\n  (signal SCL bidi clock))\n"]
+    return b"".join(parts)
+
+
+func data_43() -> bytes:
+    mut parts: bytes[] = [b";; IEEE 1149.1 JTAG, stated from the TARGET's point of view: the probe clocks\n;; TCK, walks the state machine with TMS, shifts in on TDI and reads back TDO.\n(interface jtag \"IEEE 1149.1 JTAG, target perspective\"\n  (signal TCK  in  clock)\n", b"  (signal TMS  in)\n  (signal TDI  in  data)\n  (signal TDO  out data)\n  (signal TRST in  optional))\n"]
+    return b"".join(parts)
+
+
+func data_44() -> bytes:
+    mut parts: bytes[] = [b";; Four-wire SPI, stated from the PERIPHERAL's point of view: a peripheral is\n;; clocked and selected by the controller, receives on MOSI and answers on\n;; MISO. A controller declares the same bundle with `(role controller)`, which\n", b";; flips every direction.\n(interface spi \"Four-wire SPI (controller/peripheral), peripheral perspective\"\n  (signal SCK  in  clock)\n  (signal MOSI in  data)\n  (signal MISO out data)\n  (signal CS   in))\n"]
+    return b"".join(parts)
+
+
+func data_45() -> bytes:
+    mut parts: bytes[] = [b";; Arm Serial Wire Debug, stated from the TARGET's point of view: the debug\n;; probe drives the clock and the reset, and the data line is bidirectional.\n(interface swd \"Arm Serial Wire Debug, target perspective\"\n  (signal SWCLK in   clock)\n", b"  (signal SWDIO bidi data)\n  (signal NRST  in   optional)\n  (signal SWO   out  optional))\n"]
+    return b"".join(parts)
+
+
+func data_46() -> bytes:
+    mut parts: bytes[] = [b";; Asynchronous serial, stated from the PERIPHERAL (DCE) side: RX is what the\n;; peripheral receives, TX what it drives. The hardware-handshake pair is\n;; optional \xe2\x80\x94 most links leave CTS/RTS unwired.\n", b"(interface uart \"Asynchronous serial, peripheral (device) perspective\"\n  (signal RX  in  data)\n  (signal TX  out data)\n  (signal CTS in  optional)\n  (signal RTS out optional))\n"]
+    return b"".join(parts)
+
+
+func data_47() -> bytes:
+    mut parts: bytes[] = [b";; One plated barrel, bonded to board/chassis ground.\n(pinout \"mounting-hole-m2\"\n  (pin 1 \"1\"))\n"]
+    return b"".join(parts)
+
+
+func data_48() -> bytes:
+    mut parts: bytes[] = [b"(pinout \"pin-header-1x2\"\n  (pin 1 \"1\")\n  (pin 2 \"2\"))\n"]
+    return b"".join(parts)
+
+
+func data_49() -> bytes:
+    mut parts: bytes[] = [b"(pinout \"pin-header-1x4\"\n  (pin 1 \"1\")\n  (pin 2 \"2\")\n  (pin 3 \"3\")\n  (pin 4 \"4\"))\n"]
+    return b"".join(parts)
+
+
+func data_50() -> bytes:
+    mut parts: bytes[] = [b"(pinout \"pin-header-2x5\"\n  (pin 1 \"1\")\n  (pin 2 \"2\")\n  (pin 3 \"3\")\n  (pin 4 \"4\")\n  (pin 5 \"5\")\n  (pin 6 \"6\")\n  (pin 7 \"7\")\n  (pin 8 \"8\")\n  (pin 9 \"9\")\n  (pin 10 \"10\"))\n"]
+    return b"".join(parts)
+
+
+func data_51() -> bytes:
+    mut parts: bytes[] = [b"(pinout \"testpoint\"\n  (pin 1 \"1\"))\n"]
+    return b"".join(parts)
+
+
+public func entries() -> Entry[]:
+    return [Entry(path="lib/components/cap-0201.sexp", bytes=data_0()), Entry(path="lib/components/cap-0402.sexp", bytes=data_1()), Entry(path="lib/components/cap-0603.sexp", bytes=data_2()), Entry(path="lib/components/cap-0805.sexp", bytes=data_3()), Entry(path="lib/components/ferrite-0402.sexp", bytes=data_4()), Entry(path="lib/components/ind-0201.sexp", bytes=data_5()), Entry(path="lib/components/ind-0402.sexp", bytes=data_6()), Entry(path="lib/components/ind-0603.sexp", bytes=data_7()), Entry(path="lib/components/ind-0805.sexp", bytes=data_8()), Entry(path="lib/components/ind-1616.sexp", bytes=data_9()), Entry(path="lib/components/ind-2016.sexp", bytes=data_10()), Entry(path="lib/components/led-0402.sexp", bytes=data_11()), Entry(path="lib/components/mounting-hole-m2.sexp", bytes=data_12()), Entry(path="lib/components/pin-header-1x2.sexp", bytes=data_13()), Entry(path="lib/components/pin-header-1x4.sexp", bytes=data_14()), Entry(path="lib/components/pin-header-2x5.sexp", bytes=data_15()), Entry(path="lib/components/res-0201.sexp", bytes=data_16()), Entry(path="lib/components/res-0402.sexp", bytes=data_17()), Entry(path="lib/components/res-0603.sexp", bytes=data_18()), Entry(path="lib/components/res-0805.sexp", bytes=data_19()), Entry(path="lib/components/testpoint.sexp", bytes=data_20()), Entry(path="lib/footprints/c-0201.sexp", bytes=data_21()), Entry(path="lib/footprints/c-0402.sexp", bytes=data_22()), Entry(path="lib/footprints/c-0603.sexp", bytes=data_23()), Entry(path="lib/footprints/c-0805.sexp", bytes=data_24()), Entry(path="lib/footprints/fb-0402.sexp", bytes=data_25()), Entry(path="lib/footprints/l-0201.sexp", bytes=data_26()), Entry(path="lib/footprints/l-0402.sexp", bytes=data_27()), Entry(path="lib/footprints/l-0603.sexp", bytes=data_28()), Entry(path="lib/footprints/l-0805.sexp", bytes=data_29()), Entry(path="lib/footprints/l-1616.sexp", bytes=data_30()), Entry(path="lib/footprints/l-2016.sexp", bytes=data_31()), Entry(path="lib/footprints/led-0402.sexp", bytes=data_32()), Entry(path="lib/footprints/mounting-hole-m2.sexp", bytes=data_33()), Entry(path="lib/footprints/pin-header-1x2-2-54mm.sexp", bytes=data_34()), Entry(path="lib/footprints/pin-header-1x4-2-54mm.sexp", bytes=data_35()), Entry(path="lib/footprints/pin-header-2x5-2-54mm.sexp", bytes=data_36()), Entry(path="lib/footprints/r-0201.sexp", bytes=data_37()), Entry(path="lib/footprints/r-0402.sexp", bytes=data_38()), Entry(path="lib/footprints/r-0603.sexp", bytes=data_39()), Entry(path="lib/footprints/r-0805.sexp", bytes=data_40()), Entry(path="lib/footprints/testpoint-1mm.sexp", bytes=data_41()), Entry(path="lib/interfaces/i2c.sexp", bytes=data_42()), Entry(path="lib/interfaces/jtag.sexp", bytes=data_43()), Entry(path="lib/interfaces/spi.sexp", bytes=data_44()), Entry(path="lib/interfaces/swd.sexp", bytes=data_45()), Entry(path="lib/interfaces/uart.sexp", bytes=data_46()), Entry(path="lib/pinouts/mounting-hole-m2.sexp", bytes=data_47()), Entry(path="lib/pinouts/pin-header-1x2.sexp", bytes=data_48()), Entry(path="lib/pinouts/pin-header-1x4.sexp", bytes=data_49()), Entry(path="lib/pinouts/pin-header-2x5.sexp", bytes=data_50()), Entry(path="lib/pinouts/testpoint.sexp", bytes=data_51())]

@@ -1,0 +1,49 @@
+
+
+# Zig-compatible number parsing: `std.fmt.parseInt(T, s, 10)` and
+# `std.fmt.parseFloat(f64, s)`, each as an Option (Zig's `catch null`).
+#
+# mylang's `int(s)` and `float(s)` agree with Zig on everything the exporter
+# feeds them (sign, leading zeros, `_` between digits, `.5`, `5.`, exponents,
+# `inf`/`nan`, out-of-range -> None for int and +-inf for float), with two
+# differences that these wrappers remove:
+#
+#   * `int(" 5")`, `int("5 ")` and `float(" 1")` succeed (surrounding whitespace is
+#     trimmed, as in Python); Zig rejects them with InvalidCharacter.
+#   * `float("0x1p3")` / `float("0x10")` (hex floats) are None; Zig accepts them.
+#     Nothing in the slice can reach a hex float (the tokenizer classifies
+#     numbers first), so they stay None.
+#
+# Verified against `zig run` (0.17.0-dev.1683) on 23 integer and 39 float spellings.
+# True when the first or last character could only be trimmed whitespace (or any
+# non-printable/non-ASCII character), which no valid Zig number has at its edges.
+func has_edge_junk(s: str) -> bool:
+    if len(s) == 0:
+        return False
+    mut first = ord(s[0])
+    mut last = ord(s[len(s) - 1])
+    return first <= 32 or first > 126 or last <= 32 or last > 126
+
+
+# Zig `std.fmt.parseInt(i64, s, 10) catch null`.
+public func parse_int(s: str) -> int?:
+    if has_edge_junk(s):
+        return None
+    return s.parse_int()
+
+
+# Zig `std.fmt.parseInt(u32, s, 10) catch null` (a value outside 0..4294967295 is None).
+public func parse_u32(s: str) -> int?:
+    mut v = parse_int(s)
+    if v is None:
+        return None
+    if v < 0 or v > 4294967295:
+        return None
+    return Some(v)
+
+
+# Zig `std.fmt.parseFloat(f64, s) catch null` (hex floats excepted, see above).
+public func parse_float(s: str) -> float?:
+    if has_edge_junk(s):
+        return None
+    return s.parse_float()

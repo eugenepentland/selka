@@ -1,0 +1,163 @@
+
+import kicad_sch_shape as m
+import infra_fs
+import support_expect as ex
+import support_strs as strs
+
+func write_pinout(fs: Filesystem, name: str, text: bytes) -> bool:
+    match infra_fs.make_path(fs, "p/lib/pinouts"):
+        case Err(_):
+            return False
+        case Ok(_):
+            pass
+    match fs.write_file("p/lib/pinouts/" + name + ".sexp", text):
+        case Err(_):
+            return False
+        case Ok(_):
+            return True
+
+
+func req(component: bytes) -> m.Request:
+    return m.request_default(m.names_default(component), "/nonexistent")
+
+
+func all_named(u: m.ShapeUnit) -> bool:
+    for p in u.pins:
+        if not p.show_name:
+            return False
+    return True
+
+
+# test "kicad-sch: synth places supply pins up, ground pins down, signals left and right"
+public func test_kicad_sch_synth_places_supply_pins_up_ground_pins_down_signals_left_and_right(fs: Filesystem, out: Stream) -> bool:
+    if not write_pinout(fs, "reg", b"(pinout \"reg\" (pin 1 \"VDD\") (pin 2 \"GND\") (pin 3 \"SDA\") (pin 4 \"SCL\") (pin 5 \"INT\"))"):
+        return ex.ok(out, "write pinout", False)
+    mut request = m.request_default(m.Names(component=b"reg", pinout=b"reg", symbol=b""), "p")
+    mut shape = m.synth(fs, request)
+    if not ex.eq_int(out, "units", len(shape.units), 1):
+        return False
+    mut u = shape.units[0].copy()
+    if not ex.eq_int(out, "pins", len(u.pins), 5):
+        return False
+    if not ex.ok(out, "edge assignment", u.pins[0].side == m.Side.top and u.pins[1].side == m.Side.bottom and u.pins[2].side == m.Side.left and u.pins[3].side == m.Side.left and u.pins[4].side == m.Side.right):
+        return False
+    for p in u.pins:
+        if not ex.ok(out, "pin grid", p.x % m.grid == 0 and p.y % m.grid == 0):
+            return False
+    return ex.ok(out, "body grid", u.half_w % m.grid == 0 and u.half_h % m.grid == 0)
+
+
+# test "kicad-sch: synth splits pads into units and keeps every pad drawn once"
+public func test_kicad_sch_synth_splits_pads_into_units_and_keeps_every_pad_drawn_once(fs: Filesystem, out: Stream) -> bool:
+    mut request = req(b"dual")
+    request.fp_pads = [b"1", b"2", b"3", b"4", b"5"]
+    request.parts = [m.PartSpec(title=b"Power", pads=[b"1", b"2"]), m.PartSpec(title=b"IO", pads=[b"4"])]
+    mut shape = m.synth(fs, request)
+    if not ex.eq_int(out, "three units", len(shape.units), 3) or not ex.eq_int(out, "first number", shape.units[0].number, 1):
+        return False
+    if not ex.ok(out, "titles", shape.units[0].title == b"Power" and shape.units[1].title == b"IO" and shape.units[2].title == b"") or not ex.ok(out, "pin counts", len(shape.units[0].pins) == 2 and len(shape.units[1].pins) == 1 and len(shape.units[2].pins) == 2):
+        return False
+    mut seen: set[str] = set()
+    mut total = 0
+    for u in shape.units:
+        for p in u.pins:
+            mut key = strs.text(p.pad)
+            if not ex.ok(out, "unique global pad", key not in seen):
+                return False
+            seen.add(key)
+            total += 1
+    return ex.eq_int(out, "all pads", total, 5)
+
+
+# test "kicad-sch: synth drops empty units so unit numbers stay contiguous"
+public func test_kicad_sch_synth_drops_empty_units_so_unit_numbers_stay_contiguous(fs: Filesystem, out: Stream) -> bool:
+    mut request = req(b"solo")
+    request.fp_pads = [b"1", b"2"]
+    request.parts = [m.PartSpec(title=b"Ghost", pads=[b"99"]), m.PartSpec(title=b"Real", pads=[b"1", b"2"])]
+    mut shape = m.synth(fs, request)
+    if not ex.eq_int(out, "one real unit", len(shape.units), 1):
+        return False
+    return ex.eq_int(out, "contiguous unit", shape.units[0].number, 1) and ex.eq_bytes(out, "real title", shape.units[0].title, b"Real")
+
+
+# test "kicad-sch: synth unions pinout, footprint, and net-referenced pads without repeats"
+public func test_kicad_sch_synth_unions_pinout_footprint_and_net_referenced_pads_without_repeats(fs: Filesystem, out: Stream) -> bool:
+    mut request = req(b"unknown-part")
+    request.fp_pads = [b"1", b"2", b"EP"]
+    request.used = [b"2", b"9"]
+    mut shape = m.synth(fs, request)
+    mut pins = shape.units[0].pins.copy()
+    if not ex.eq_int(out, "union size", len(pins), 4) or not ex.ok(out, "ordered union", pins[0].pad == b"1" and pins[2].pad == b"EP" and pins[3].pad == b"9"):
+        return False
+    mut seen: set[str] = set()
+    for p in pins:
+        mut key = strs.text(p.pad)
+        if not ex.ok(out, "unique pad", key not in seen):
+            return False
+        seen.add(key)
+    return True
+
+
+# test "kicad-sch: synth draws the glyph for two pads and falls back to a box beyond that"
+public func test_kicad_sch_synth_draws_the_glyph_for_two_pads_and_falls_back_to_a_box_beyond_that(fs: Filesystem, out: Stream) -> bool:
+    mut request = req(b"cap-0402")
+    request.fp_pads = [b"1", b"2"]
+    request.glyph = m.Class.capacitor
+    mut small = m.synth(fs, request)
+    if not ex.ok(out, "stock body and hidden text", len(small.units[0].graphics) > 0 and small.hide_pin_text and small.units[0].pins[0].side == m.Side.left and small.units[0].pins[1].side == m.Side.right):
+        return False
+    request.names.component = b"trio"
+    request.fp_pads = [b"1", b"2", b"3"]
+    mut big = m.synth(fs, request)
+    return ex.ok(out, "full-size box fallback", len(big.units[0].graphics) == 0 and not big.hide_pin_text and big.units[0].half_w > 635)
+
+
+# test "kicad-sch: synth orders an edge by net and mutes the names it gangs"
+public func test_kicad_sch_synth_orders_an_edge_by_net_and_mutes_the_names_it_gangs(fs: Filesystem, out: Stream) -> bool:
+    if not write_pinout(fs, "hub", b"(pinout \"hub\" (pin 1 \"VSS_1\") (pin 2 \"VSS_2\") (pin 3 \"VSSA\") (pin 4 \"VSS_3\") (pin 5 \"PA0\"))"):
+        return ex.ok(out, "write pinout", False)
+    mut request = m.request_default(m.Names(component=b"hub", pinout=b"hub", symbol=b""), "p")
+    mut map_: dict[str, bytes] = {"1": b"GND", "2": b"GND", "3": b"VSSA_REF", "4": b"GND", "5": b"SIG"}
+    request.nets = Some(map_)
+    mut shape = m.synth(fs, request)
+    mut pins = shape.units[0].pins.copy()
+    if not ex.eq_int(out, "same bottom edge", pins[0].y - pins[1].y, 0):
+        return False
+    for i in [0, 1, 3]:
+        if not ex.ok(out, "ganged name muted", not pins[i].show_name and pins[i].side == m.Side.bottom):
+            return False
+    if not ex.ok(out, "lone names kept", pins[2].show_name and pins[4].show_name):
+        return False
+    mut step = abs(pins[0].x - pins[1].x)
+    if not ex.ok(out, "adjacent gang and odd rail", abs(pins[1].x - pins[3].x) == step and abs(pins[3].x - pins[2].x) == step):
+        return False
+    request.nets = None
+    mut plain = m.synth(fs, request)
+    return ex.ok(out, "plain names", all_named(plain.units[0]))
+
+
+# test "kicad-sch: a pin named after its own pad does not draw the name as well"
+public func test_kicad_sch_a_pin_named_after_its_own_pad_does_not_draw_the_name_as_well(fs: Filesystem, out: Stream) -> bool:
+    if not write_pinout(fs, "conn", b"(pinout \"conn\" (pin 1 \"1\") (pin 2 \"2\") (pin 3 \"SHIELD\"))"):
+        return ex.ok(out, "write pinout", False)
+    mut shape = m.synth(fs, m.request_default(m.Names(component=b"conn", pinout=b"conn", symbol=b""), "p"))
+    mut pins = shape.units[0].pins.copy()
+    return ex.ok(out, "only real name shown", not pins[0].show_name and not pins[1].show_name and pins[2].show_name) and ex.eq_bytes(out, "function retained", pins[0].name, b"1") and ex.ok(out, "names-pad classification", m.names_pad(m.PadName(pad=b"A7", name=b"A7")) and not m.names_pad(m.PadName(pad=b"7", name=b"VDD")))
+
+
+# test "kicad-sch: a wide pad id lengthens its pin so the number clears the body"
+public func test_kicad_sch_a_wide_pad_id_lengthens_its_pin_so_the_number_clears_the_body(fs: Filesystem, out: Stream) -> bool:
+    mut request = req(b"s")
+    request.fp_pads = [b"1", b"2", b"3"]
+    mut small = m.synth(fs, request)
+    if not ex.eq_int(out, "short length", small.units[0].pins[0].len, m.pin_len):
+        return False
+    request.names.component = b"b"
+    request.fp_pads = [b"A11", b"H14", b"P3"]
+    mut big = m.synth(fs, request)
+    return ex.eq_int(out, "three-char pin", big.units[0].pins[0].len, 3 * m.grid) and ex.eq_int(out, "wide reach", m.max_reach(big.units[0]), 3 * m.grid) and ex.eq_int(out, "short reach", m.max_reach(small.units[0]), m.pin_len)
+
+
+# test "kicad-sch: sanitizeLibName replaces separator characters"
+public func test_kicad_sch_sanitizelibname_replaces_separator_characters(out: Stream) -> bool:
+    return ex.eq_bytes(out, "legal name", m.sanitize_lib_name(b"res-0402"), b"res-0402") and ex.eq_bytes(out, "separators", m.sanitize_lib_name(b"a:b/c"), b"a_b_c") and ex.eq_bytes(out, "empty", m.sanitize_lib_name(b""), b"UNNAMED")

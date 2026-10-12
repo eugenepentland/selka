@@ -1,0 +1,38 @@
+
+import footprint_paste as m
+import sexpr_parser as parser
+import support_expect as ex
+
+# test "IC package paste parsing empty and malformed"
+public func test_ic_package_paste_parsing_empty_and_malformed(out: Stream) -> bool:
+    match parser.parse(b"(pad 1 smd rect)"):
+        case Err(_):
+            return False
+        case Ok(ordinary):
+            match m.parse(ordinary[0]):
+                case Err(_):
+                    return False
+                case Ok(windows):
+                    if not ex.ok(out, "ordinary preserves full paste", windows.is_none()):
+                        return False
+    match parser.parse(b"(pad 1 smd rect (paste))"):
+        case Err(_):
+            return False
+        case Ok(empty):
+            match m.parse(empty[0]):
+                case Err(_):
+                    return False
+                case Ok(windows2):
+                    if windows2 is None:
+                        return False
+                    if not ex.eq_int(out, "authored empty suppresses paste", len(windows2), 0):
+                        return False
+    match parser.parse(b"(pad 1 smd rect (paste (rect 0 0 -1 1)))"):
+        case Err(_):
+            return False
+        case Ok(malformed):
+            match m.parse(malformed[0]):
+                case Ok(_):
+                    return ex.ok(out, "malformed rejected", False)
+                case Err(e):
+                    return ex.eq_str(out, "specific error", e, m.err_invalid_paste)

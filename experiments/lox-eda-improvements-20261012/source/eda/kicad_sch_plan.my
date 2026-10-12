@@ -1,0 +1,129 @@
+
+import net_name
+import support_strs as strs
+import support_sort as srt
+
+public const max_slug_len: int = 40
+
+
+public record Member:
+    hub: bool
+    ref: bytes
+    bound_ref: bytes
+    order: bytes
+    nets: bytes[]
+
+
+public record Placement:
+    order: int[]
+    cluster: int[]
+
+
+public func is_passive_ref(ref: bytes) -> bool:
+    mut leaf = net_name.leaf(ref)
+    if len(leaf) == 0:
+        return False
+    mut prefix = strs.to_upper(leaf[0])
+    return prefix == 82 or prefix == 67 or prefix == 76 or prefix == 68 or prefix == 70
+
+
+public func cluster(members: Member[]) -> Placement:
+    mut heads: int[] = []
+    mut head_of_ref: dict[str, int] = {}
+    mut i = 0
+    for m in members:
+        if m.hub:
+            mut key = strs.text(m.ref)
+            if key not in head_of_ref:
+                head_of_ref[key] = len(heads)
+            heads.append(i)
+        i += 1
+    mut buckets: int[][] = []
+    for bucket_index in range(len(heads) + 1):
+        buckets.append([])
+    mut j = 0
+    for m2 in members:
+        if not m2.hub:
+            mut home = pick(m2, members, heads, head_of_ref).unwrap_or(len(heads))
+            buckets[home].append(j)
+        j += 1
+    mut k = 0
+    while k < len(buckets):
+        srt.sort_by_ctx(mut buckets[k], members, less_member)
+        k += 1
+    mut order: int[] = []
+    mut of: int[] = []
+    mut c = 0
+    for bucket in buckets:
+        if c < len(heads):
+            order.append(heads[c])
+            of.append(c)
+        for index in bucket:
+            order.append(index)
+            of.append(c)
+        c += 1
+    return Placement(order=order, cluster=of)
+
+
+# Declared binding wins; otherwise choose the first hub with the highest
+# count of shared locality-bearing nets. Zero affinity has no home.
+func pick(m: Member, members: Member[], heads: int[], head_of_ref: dict[str, int]) -> int?:
+    mut bound = strs.text(m.bound_ref)
+    if len(m.bound_ref) > 0 and bound in head_of_ref:
+        return Some(head_of_ref[bound])
+    mut best = 0
+    mut best_score = 0
+    mut c = 0
+    for hi in heads:
+        mut score = shared(m.nets, members[hi].nets)
+        if score > best_score:
+            best_score = score
+            best = c
+        c += 1
+    if best_score == 0:
+        return None
+    return Some(best)
+
+
+# Linear scans win for the short passive/hub lists and count each name once.
+func shared(a: bytes[], b: bytes[]) -> int:
+    mut n = 0
+    for x in a:
+        for y in b:
+            if x == y:
+                n += 1
+                break
+    return n
+
+
+func less_member(members: Member[], x: int, y: int) -> bool:
+    mut ord_ = strs.bytes_order(members[x].order, members[y].order)
+    if ord_ != 0:
+        return ord_ < 0
+    return x < y
+
+
+public func slugify(name: bytes, fallback: bytes) -> bytes:
+    mut out: int[] = []
+    for c in name:
+        if strs.is_alphanumeric(c):
+            out.append(strs.to_lower(c))
+        elif len(out) > 0 and out[len(out) - 1] != 45:
+            out.append(45)
+        if len(out) >= max_slug_len:
+            break
+    while len(out) > 0 and out[len(out) - 1] == 45:
+        _ = out.pop()
+    if len(out) == 0:
+        return fallback.copy()
+    return bytes(out)
+
+
+public func unique_name(base: bytes, mut seen: set[str]) -> bytes:
+    mut candidate = base.copy()
+    mut n = 2
+    while strs.text(candidate) in seen:
+        candidate = base + b"-" + str(n).encode()
+        n += 1
+    seen.add(strs.text(candidate))
+    return candidate

@@ -1,0 +1,33 @@
+
+
+public func widest_interval(poly: FixedArray[float, 2][], y: float) -> FixedArray[float, 2]?:
+    if len(poly) < 2:
+        return None
+    mut intersections: float[] = []
+    mut previous = poly[len(poly) - 1]
+    for point in poly:
+        if (previous[1] > y) != (point[1] > y):
+            if len(intersections) == 512:
+                return None
+            intersections.append(previous[0] + (y - previous[1]) / (point[1] - previous[1]) * (point[0] - previous[0]))
+        previous = point
+    if len(intersections) < 2:
+        return None
+    intersections.sort()
+    mut best: FixedArray[float, 2]? = None
+    mut i = 0
+    while i + 1 < len(intersections):
+        mut candidate: FixedArray[float, 2] = FixedArray[float, 2]([intersections[i], intersections[i + 1]])
+        mut old = best
+        if old is None:
+            best = Some(candidate)
+        elif candidate[1] - candidate[0] > old[1] - old[0]:
+            best = Some(candidate)
+        i += 2
+    return best
+
+
+public func widest_midpoint(poly: FixedArray[float, 2][], y: float) -> FixedArray[float, 2]?:
+    mut span = try widest_interval(poly, y)
+    mut point: FixedArray[float, 2] = FixedArray[float, 2]([(span[0] + span[1]) / 2.0, y])
+    return Some(point)
