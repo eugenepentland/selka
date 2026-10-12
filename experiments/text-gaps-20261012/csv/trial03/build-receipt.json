@@ -1,0 +1,75 @@
+{
+  "C0": "78b4bb5934748d5942389b12dfe66cb0031cafdc",
+  "compiler": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/.tmp/text-gaps/csv/trial03/install/bin/mylang",
+  "compiler_sha256": "429f3173919e7825880c4a37252be197b683028177e7b81cdee630d7267d7756",
+  "qualification": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/experiments/text-gaps-20261012/csv/trial03/qualification.json",
+  "source_patch_sha256": "84e546280b25cd7f71db8bc4098f9a1d2fcf22d9acaa98f926ab77115dcd03d3",
+  "entries": [
+    {
+      "group": "text",
+      "arm": "csv-candidate-zero-rc",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/.tmp/text-gaps/csv/trial03/text-runtime",
+      "sha256": "149ed19a8975671fea60e5593c872638297b8de8ff6b292a1c7180390b932a78",
+      "source": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+      "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/.tmp/text-gaps/csv/guest-cache03"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/.tmp/text-gaps/csv/trial03/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/.tmp/text-gaps/csv/trial03/text-runtime",
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/.tmp/text-gaps/csv/guest-cache03"
+      ],
+      "status": "ok",
+      "returncode": 0
+    },
+    {
+      "group": "text",
+      "arm": "csv-candidate-zero-rc",
+      "kind": "counted",
+      "binary": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/.tmp/text-gaps/csv/trial03/text-counted",
+      "sha256": "457c02d801369dee143d9d5c11f4c332232f484b1bacffc4a69240079305ae8f",
+      "source": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+      "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/.tmp/text-gaps/csv/guest-cache03",
+        "--counters"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/.tmp/text-gaps/csv/trial03/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/.tmp/text-gaps/csv/trial03/text-counted",
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-20261012-csv/.tmp/text-gaps/csv/guest-cache03",
+        "--counters"
+      ],
+      "status": "ok",
+      "returncode": 0
+    }
+  ]
+}
