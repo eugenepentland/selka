@@ -1,0 +1,32 @@
+{
+  "status": "invalid_rss_preserved_raw",
+  "files": [
+    {
+      "path": "raw/workload-pilot.json",
+      "sha256": "d49bfbd4909a9e1614032955ddb941c25fa963c548d2b1249188059408000e3d",
+      "invalid_fields": [
+        "maxrss_kib"
+      ],
+      "reason": "Outer wait4 high-water includes launcher pre-exec memory; no valid guest RSS claim.",
+      "preserved_fields": "Exact outputs and wall observations remain workload-sizing controls, not paired performance evidence."
+    },
+    {
+      "path": "raw/workload-pilot-fixed-topology.json",
+      "sha256": "ad4a65c3a13084d3cc22bc8911cac63fba7f7110df008a5ef9c5f809cce4e7d6",
+      "invalid_fields": [
+        "maxrss_kib"
+      ],
+      "reason": "Outer wait4 high-water includes launcher pre-exec memory; no valid guest RSS claim.",
+      "preserved_fields": "Exact outputs and wall observations remain workload-sizing controls, not paired performance evidence."
+    },
+    {
+      "path": "raw/workload-pilot-final-inputs.json",
+      "sha256": "f5c1419bbf1e5cf2096718003902b1de9abe0c14594a081bd1763345f46f8d5e",
+      "invalid_fields": [
+        "maxrss_kib"
+      ],
+      "reason": "Outer wait4 high-water includes launcher pre-exec memory; no valid guest RSS claim.",
+      "preserved_fields": "Exact outputs and wall observations remain workload-sizing controls, not paired performance evidence."
+    }
+  ]
+}

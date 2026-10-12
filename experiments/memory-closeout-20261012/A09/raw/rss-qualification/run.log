@@ -1,0 +1,123 @@
+build-slot: build slot 1, FIFO ticket 815 after 0s
+{
+  "scope": "Native RSS metrology controls; correctness only, never timing evidence.",
+  "status": "pass",
+  "observations": [
+    {
+      "parent_mib": 0,
+      "rows": [
+        {
+          "child_mib": 1,
+          "legacy_outer_wait4_rss_kib": 23340,
+          "corrected": [
+            {
+              "status": 0,
+              "stdout_sha256": "31c0dec19b6b3dd176bef4232badb12267cc7c7beaf91de8bd59f357a851b2f9",
+              "stderr": "",
+              "maxrss_kib": 2840
+            },
+            {
+              "status": 0,
+              "stdout_sha256": "31c0dec19b6b3dd176bef4232badb12267cc7c7beaf91de8bd59f357a851b2f9",
+              "stderr": "",
+              "maxrss_kib": 2840
+            },
+            {
+              "status": 0,
+              "stdout_sha256": "31c0dec19b6b3dd176bef4232badb12267cc7c7beaf91de8bd59f357a851b2f9",
+              "stderr": "",
+              "maxrss_kib": 2840
+            }
+          ]
+        },
+        {
+          "child_mib": 64,
+          "legacy_outer_wait4_rss_kib": 67320,
+          "corrected": [
+            {
+              "status": 0,
+              "stdout_sha256": "ce938934fc14b5774a05c69d9c3b26008b3d171cd6c0a01ca707ce0705e96965",
+              "stderr": "",
+              "maxrss_kib": 67320
+            },
+            {
+              "status": 0,
+              "stdout_sha256": "ce938934fc14b5774a05c69d9c3b26008b3d171cd6c0a01ca707ce0705e96965",
+              "stderr": "",
+              "maxrss_kib": 67320
+            },
+            {
+              "status": 0,
+              "stdout_sha256": "ce938934fc14b5774a05c69d9c3b26008b3d171cd6c0a01ca707ce0705e96965",
+              "stderr": "",
+              "maxrss_kib": 67320
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "parent_mib": 256,
+      "rows": [
+        {
+          "child_mib": 1,
+          "legacy_outer_wait4_rss_kib": 285264,
+          "corrected": [
+            {
+              "status": 0,
+              "stdout_sha256": "31c0dec19b6b3dd176bef4232badb12267cc7c7beaf91de8bd59f357a851b2f9",
+              "stderr": "",
+              "maxrss_kib": 2840
+            },
+            {
+              "status": 0,
+              "stdout_sha256": "31c0dec19b6b3dd176bef4232badb12267cc7c7beaf91de8bd59f357a851b2f9",
+              "stderr": "",
+              "maxrss_kib": 2840
+            },
+            {
+              "status": 0,
+              "stdout_sha256": "31c0dec19b6b3dd176bef4232badb12267cc7c7beaf91de8bd59f357a851b2f9",
+              "stderr": "",
+              "maxrss_kib": 2840
+            }
+          ]
+        },
+        {
+          "child_mib": 64,
+          "legacy_outer_wait4_rss_kib": 285660,
+          "corrected": [
+            {
+              "status": 0,
+              "stdout_sha256": "ce938934fc14b5774a05c69d9c3b26008b3d171cd6c0a01ca707ce0705e96965",
+              "stderr": "",
+              "maxrss_kib": 67320
+            },
+            {
+              "status": 0,
+              "stdout_sha256": "ce938934fc14b5774a05c69d9c3b26008b3d171cd6c0a01ca707ce0705e96965",
+              "stderr": "",
+              "maxrss_kib": 67320
+            },
+            {
+              "status": 0,
+              "stdout_sha256": "ce938934fc14b5774a05c69d9c3b26008b3d171cd6c0a01ca707ce0705e96965",
+              "stderr": "",
+              "maxrss_kib": 67320
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "stream_hash_python_peak_bytes": 2229377,
+  "runtime_rss_absent": true,
+  "wrong_output_rejected": true,
+  "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/rss-qualification/program",
+  "binary_sha256": "9b75fc3ae7b78b082662a566cd9f80676a2de82a5d0ec30d2c69870305eca375",
+  "gnu_time_sha256": "34ba90f8199989d88f2f02d40ddcee60be27a7f361db9fb7c100578cc8d7bf1e",
+  "source_sha256": "f5b540f24a13a8442436f59af18cec8a6bc24da250445b4f1e931db8883a4e64",
+  "harness_sha256": "4bec9df0eba605cd7f5258016e4c3b311a5bbab9604074481311b9c86fe9634d",
+  "legacy_contamination_reproduced": true
+}

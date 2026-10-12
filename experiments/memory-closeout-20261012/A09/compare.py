@@ -15,6 +15,7 @@ def main():
     parser.add_argument("--after", type=lambda p: Path(p).resolve(), required=True)
     parser.add_argument("--output", type=lambda p: Path(p).resolve(), required=True)
     parser.add_argument("--cases", nargs="+")
+    parser.add_argument("--metric", choices=("runtime", "rss"), default="runtime")
     args = parser.parse_args()
     before, after = (json.loads(p.read_text()) for p in (args.before, args.after))
     for record in (before, after):
@@ -34,8 +35,8 @@ def main():
     completed = {}
     if result.exists():
         previous = json.loads(result.read_text())
-        if previous["builds"] != {"before": before, "after": after}:
-            parser.error("existing results refer to different artifacts")
+        if previous["builds"] != {"before": before, "after": after} or previous.get("metric") != args.metric:
+            parser.error("existing results refer to different artifacts or measurement methods")
         completed = previous["cases"]
     slot = str(measure.ROOT / "scripts/build-slot.sh")
     harness = str(Path(__file__).with_name("measure.py"))
@@ -48,7 +49,7 @@ def main():
         subprocess.run([slot, "build", "true"], cwd=measure.ROOT, check=True)
         command = [slot, "timing", sys.executable, "-B", harness, "run",
                    "--before", str(args.before), "--after", str(args.after),
-                   "--output", str(result), "--cases", name]
+                   "--output", str(result), "--cases", name, "--metric", args.metric]
         with (args.output / f"{name}.log").open("x") as log:
             subprocess.run(command, cwd=measure.ROOT, stdout=log,
                            stderr=subprocess.STDOUT, check=True)

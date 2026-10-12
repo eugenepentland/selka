@@ -159,3 +159,10 @@ C0 artifact identities through checked reuse, rejected an experimental selector
 under default-command preparation before invoking the compiler, and rejected a
 missing enclosing lease. No new runtime sample or candidate qualification was
 produced by these harness checks.
+# RSS correction before final qualification
+
+The three historical guest pilot files retain invalid `maxrss_kib` columns:
+outer `wait4` included the Python launcher's high-water mark before exec.
+See [the preserved reproducer and corrected controls](raw/rss-qualification/README.md).
+Final runtime samples and GNU-time guest RSS samples now run separately.
+No final candidate performance result exists yet.

@@ -267,5 +267,11 @@
     "guardian_passed": 88,
     "details": "raw/version/results.json",
     "final_integrated_qualification": false
+  },
+  "guest_pilot_rss": {
+    "status": "invalid",
+    "manifest": "raw/rss-qualification/invalid-pilots.json",
+    "repair_qualification": "raw/rss-qualification/results.json",
+    "final_method": "Separate GNU-time guest-child RSS executions; outer launcher RSS and their elapsed times excluded."
   }
 }

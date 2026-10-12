@@ -13,7 +13,7 @@ runtime. `measure.py run` requires an enclosing `scripts/build-slot.sh timing`
 lease and accepts only prepared binaries. Queue wait is excluded from samples.
 Do not wrap `build` in admission again.
 
-Each comparison has two warmup pairs and nine measured pairs, alternating arm
+Each runtime comparison has two warmup pairs and nine measured pairs, alternating arm
 order. Both warmup and measured samples are retained. Each sample must return
 the independently specified output with exit status zero and empty stderr.
 The harness verifies source/compiler/binary identities instead of reusing an
@@ -37,10 +37,21 @@ below 100 ms must be lengthened before interpreting ratios. Ranges and paired
 samples remain visible. A repeatable candidate slowdown above 5% requires
 review; overlapping noisy samples do not establish a speedup.
 
-Linux `wait4` records each invocation's maximum resident set in KiB, user time
-and system time without cumulative-child contamination. RSS includes guest
-threads. If a workload spawns child processes, this measurement is not the
-simultaneous summed process-tree peak. Dedicated cgroup measurement is not
+Runtime samples discard `wait4` resource usage: the child high-water mark can
+include the Python launcher's memory before exec. The original three guest
+pilot files retain invalid RSS values; `raw/rss-qualification/invalid-pilots.json`
+identifies them without rewriting historical raw data. Their successful outputs
+and workload-sizing wall observations remain useful, but their RSS does not.
+
+`compare.py --metric rss` uses a separate output directory and three alternating
+pairs per case. These memory-only executions place GNU time between the launcher
+and the guest and read GNU time's child-rusage report. Outer launcher/time-process
+RSS and elapsed time are discarded. The result pins GNU time's binary hash and
+includes guest threads. If the workload spawns child processes, this measurement
+is not the simultaneous summed process-tree peak. The native metrology controls
+in `raw/rss-qualification` demonstrate stable small/large guest RSS despite a
+256 MiB change in parent memory. Compiler/binary hashes are streamed, avoiding
+an unnecessary large parent allocation. Dedicated cgroup measurement is not
 available to this session (the cgroup filesystem is not writable); compiler
 RSS reported by A08's GNU time method is explicitly a child high-water metric,
 not a process-tree aggregate. `tree_rss.py` adds separate memory-only executions

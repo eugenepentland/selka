@@ -81,6 +81,13 @@ sample was 158.1 ms. `raw/workload-pilot-final-inputs.json` retains every observ
 A01's prototype is solely a sizing control, not C1 or final performance evidence.
 Earlier all-CPU and fixed-topology pilots also remain preserved.
 
+The later RSS audit invalidated the RSS columns in all three guest pilot files:
+outer `wait4` usage included launcher high-water memory. Raw files remain intact.
+`raw/rss-qualification` reproduces the error and qualifies the corrected GNU-time
+guest-child RSS path with 1/64 MiB native children and 0/256 MiB parent memory.
+Final wall timing and RSS now use separate executions/results; no old pilot RSS
+is evidence of guest memory use. Native capacity GNU-time reports are unaffected.
+
 ## Running final qualification
 
 Use an exact frozen integrated Debug installation to build candidate timing

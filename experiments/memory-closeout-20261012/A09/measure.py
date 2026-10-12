@@ -23,7 +23,11 @@ UNSET = ("MYLANG_COUNTERS", "MYLANG_OPTIONS", "MYLANG_CORE_SANITIZE", "MYL_CORE_
 
 
 def digest(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    value = hashlib.sha256()
+    with Path(path).open("rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            value.update(chunk)
+    return value.hexdigest()
 
 
 def source_inputs(source):
@@ -68,21 +72,22 @@ def host():
 
 
 def run_once(argv, cwd, env, cpus, expected, timeout):
-    # Files prevent pipe deadlocks and allow wait4 to return this exact child's
-    # usage rather than resource.getrusage's cumulative high-water mark.
+    # Files prevent pipe deadlocks. wait4 synchronizes this child, but its RSS
+    # can include the Python launcher's pre-exec high-water mark: discard it.
     with tempfile.TemporaryFile() as stdout, tempfile.TemporaryFile() as stderr:
         start = time.perf_counter_ns()
         child = subprocess.Popen(["taskset", "-c", ",".join(map(str, cpus)), *argv],
-                                 cwd=cwd, env=env, stdout=stdout, stderr=stderr)
+                                 cwd=cwd, env=env, stdout=stdout, stderr=stderr,
+                                 start_new_session=True)
         def expired(signum, frame):
             raise TimeoutError(argv)
         previous_handler = signal.signal(signal.SIGALRM, expired)
         signal.setitimer(signal.ITIMER_REAL, timeout)
         try:
-            _, status, usage = os.wait4(child.pid, 0)
+            _, status, _ = os.wait4(child.pid, 0)
         except BaseException:
-            child.kill()
-            _, status, usage = os.wait4(child.pid, 0)
+            os.killpg(child.pid, signal.SIGKILL)
+            _, status, _ = os.wait4(child.pid, 0)
             child.returncode = os.waitstatus_to_exitcode(status)
             raise
         finally:
@@ -93,13 +98,27 @@ def run_once(argv, cwd, env, cpus, expected, timeout):
         stdout.seek(0)
         stderr.seek(0)
         out, err = stdout.read(), stderr.read()
-        row = {"wall_ns": elapsed, "maxrss_kib": usage.ru_maxrss,
-               "user_s": usage.ru_utime, "system_s": usage.ru_stime,
+        row = {"wall_ns": elapsed,
                "status": child.returncode, "stdout_sha256": hashlib.sha256(out).hexdigest(),
                "stderr": err.decode(errors="replace")}
         if child.returncode or out != expected.encode() or err:
             raise RuntimeError({"argv": argv, "record": row, "stdout": out.decode(errors="replace")})
         return row
+
+
+def run_rss_once(argv, cwd, env, cpus, expected, timeout):
+    # GNU time execs with a fresh address space, then forks the measured guest.
+    # Read its child's rusage, never the outer time/taskset process's wait4 RSS.
+    with tempfile.TemporaryDirectory(prefix="mylang-guest-rss-") as directory:
+        usage = Path(directory) / "usage.json"
+        row = run_once(["/usr/bin/time", "-f", '{"maxrss_kib":%M}',
+                        "-o", str(usage), "--", *argv], cwd, env, cpus,
+                       expected, timeout)
+        row.pop("wall_ns")  # This separate memory run is not runtime evidence.
+        memory = json.loads(usage.read_text())
+        if not isinstance(memory.get("maxrss_kib"), int) or memory["maxrss_kib"] < 0:
+            raise ValueError("invalid GNU time guest RSS")
+        return {**row, **memory}
 
 
 def build(args):
@@ -186,16 +205,21 @@ def run(args):
     for record in records.values():
         if digest(record["compiler"]) != record["compiler_sha256"]:
             raise ValueError("compiler changed since builds")
+    memory_only = args.metric == "rss"
     result = {"started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-              "method": "2 warmup pairs; 9 measured pairs; alternating before/after order; process wall time",
+              "metric": args.metric,
+              "method": ("3 alternating pairs; separate GNU time guest RSS runs" if memory_only else
+                         "2 warmup pairs; 9 measured pairs; alternating before/after order; process wall time"),
               "wall_resolution_note": "monotonic perf_counter_ns around spawn and blocking wait4; medians below 100ms need a longer workload",
-              "rss_note": "Linux wait4 ru_maxrss KiB for each guest; includes its threads. Child process peaks are not simultaneous process-tree RSS. No process-tree or cgroup RSS claim.",
+              "rss_note": "Separate RSS-only runs use GNU time's child rusage in KiB, including guest threads. Outer launcher RSS is discarded. Descendant peaks are not simultaneous process-tree RSS; no cgroup claim.",
               "managed_memory_note": "Separate counted executions measure managed traffic and live bytes; these are not RSS.",
               "host": host(), "builds": records, "cases": {}}
+    if memory_only:
+        result["memory_tool"] = {"path": "/usr/bin/time", "sha256": digest("/usr/bin/time")}
     if args.output.exists():
         previous = json.loads(args.output.read_text())
-        if previous["builds"] != records:
-            raise ValueError("refusing to append samples from different artifacts")
+        if previous["builds"] != records or previous.get("metric") != args.metric:
+            raise ValueError("refusing to append samples from different artifacts or measurement methods")
         result["cases"] = previous["cases"]
         result["previous_window_started_utc"] = previous["started_utc"]
     allowed = set(os.sched_getaffinity(0))
@@ -228,18 +252,24 @@ def run(args):
             if digest(case["binary"]) != case["binary_sha256"]:
                 raise ValueError(f"{name}: binary changed")
         observations = {"before": [], "after": []}
-        for pair in range(11):
+        sample = run_rss_once if memory_only else run_once
+        for pair in range(3 if memory_only else 11):
             for arm in (("before", "after") if pair % 2 == 0 else ("after", "before")):
                 case = cases[arm][name]
-                row = run_once([case["binary"], *case.get("args", [])], case.get("cwd", str(ROOT)),
-                               clean_env(case.get("env")), cpus, case["expected"], case.get("timeout_s", 120))
-                observations[arm].append({"pair": pair, "warmup": pair < 2, **row})
+                row = sample([case["binary"], *case.get("args", [])], case.get("cwd", str(ROOT)),
+                             clean_env(case.get("env")), cpus, case["expected"], case.get("timeout_s", 120))
+                observations[arm].append({"pair": pair, "warmup": not memory_only and pair < 2, **row})
         summary = {}
         for arm in observations:
             measured = [r for r in observations[arm] if not r["warmup"]]
-            for metric in ("wall_ns", "maxrss_kib"):
+            for metric in (("maxrss_kib",) if memory_only else ("wall_ns",)):
                 values = [r[metric] for r in measured]
                 summary[f"{arm}_{metric}"] = {"median": statistics.median(values), "min": min(values), "max": max(values)}
+        if memory_only:
+            result["cases"][name] = {"cpus": cpus, "samples": observations, "summary": summary}
+            save(args.output, result)
+            print(name, summary, flush=True)
+            continue
         ratio = summary["after_wall_ns"]["median"] / summary["before_wall_ns"]["median"]
         summary["candidate_baseline_wall_ratio"] = ratio
         paired = [a["wall_ns"] / b["wall_ns"] for a, b in
@@ -283,6 +313,7 @@ def main():
     r.add_argument("--after", type=Path, required=True)
     r.add_argument("--output", type=Path, required=True)
     r.add_argument("--cases", nargs="+")
+    r.add_argument("--metric", choices=("runtime", "rss"), default="runtime")
     r.add_argument("--cpu", type=int, help="override both arms' serial affinity after checking allowed topology")
     r.set_defaults(handler=run)
     args = parser.parse_args()
