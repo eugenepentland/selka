@@ -191,3 +191,18 @@ measured RC-event claim. `Support7-guest-blockers/` contains frozen source/funct
 exact commands and native controls for equality helper, mutable writeback and
 indirect mutable-call defects. Root/A07/A10/A02 own their dispatched fixes.
 This is intermediate evidence: C1/C2/C3, final gates and affected reruns remain open.
+
+
+`Support7-core-contracts/` completes additional native coverage on that compiler:
+110 counted builds/225runs pass, including195 normal/validation exits with RC0/live0
+and30 intentional fatal traps with RC0 and explicitly retained exit-live storage.
+The two public core-test modules total75passed/15unsupported contracts acrossfive
+modes; unresolved helpers are generated equality and saturating integer (A10).
+Five benchmark-shaped fixtures use documented independent checksum references
+and a deterministic scalar clock provider, not timings or C0 native observations.
+The private `rc_nonheld_captures` main passes; imported `surface_statements_case_2`
+is exercised by its passing parent module. `Support7-contract-ledger.json` preserves
+all87migration sources:81pass allfive-mode contracts,2source-refuse,4have native/helper
+failures. The454public contracts per mode divide427passed/5failed/6unsupported/
+16source-blocked; none is silently omitted. This separate source inventory does
+not change the pinned81+6 census or original30 denominator.
