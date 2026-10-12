@@ -1,0 +1,12 @@
+build-slot: FIFO ticket 561, position 11; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 561, position 9; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 561, position 9; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 561, position 5; earlier build tickets must run first; waiting (181s so far)
+build-slot: build slot 2, FIFO ticket 561 after 226s
+guardian/test: 2 test(s) selected
+All 2 tests passed.
+guardian/test: test wall 0.23s; slowest over 50ms:
+guardian/test:   0.12s  a01_native_driver_test.test.A01 uncached native multiunit objects survive link and clean after success and failure
+guardian/test:   0.11s  driver_native_cache_test.test.linkNative refuses unproved tool native reuse and cleans private caches after ToolFailed
+guardian/test: PASS — 2 passed
+guardian/test: RESULT {"passed":2,"failed":0,"skipped":0}

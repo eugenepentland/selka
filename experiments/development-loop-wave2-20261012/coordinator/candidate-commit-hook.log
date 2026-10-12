@@ -1,0 +1,25 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10005 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/dl-wave2-20261012-integration 5e6180689] Integrate canonical verification identities, native telemetry and bounded qualification
+ 47 files changed, 1332 insertions(+), 116 deletions(-)
+ create mode 100644 experiments/development-loop-wave2-20261012/S05/evidence-tests.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S05/juice-adapter-tests.log
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/coordinator-tests.log
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/focused-scope.md
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/fuzz-tests.log
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/input-coverage.log
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/juice-tests.log
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/measurement-tests.log
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/native-telemetry-build.log
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/session-tests.log
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/text_scalar_unit.member.0.json
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/tooling_unit.member.0.json
+ create mode 100644 experiments/development-loop-wave2-20261012/status.md
+ create mode 100644 scripts/verification_measurement.py
+ create mode 100644 scripts/verification_measurement_test.py
+ create mode 100644 src/core/a01_native_driver_test.zig

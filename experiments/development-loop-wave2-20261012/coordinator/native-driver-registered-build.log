@@ -1,0 +1,35 @@
+build-slot: FIFO ticket 532, position 19; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 532, position 14; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 532, position 14; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 532, position 9; earlier build tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 532, position 1; waiting for measurement or memory-accounting settle delay; waiting (240s so far)
+build-slot: FIFO ticket 532, position 1; waiting for measurement or memory-accounting settle delay; waiting (301s so far)
+build-slot: build slot 1, FIFO ticket 532 after 311s
+error: failed to open object /home/epentland/.cache/mylang/components/artifacts/df596fe7fe7b551e2b5ae91bef35111896962b1d8eb826f486e275c80c576ad6.build/cache/native-link-bf4ccd5b21f686bc88a5cb6023e6ae8e/4292805a27bc2ec4837a2b5df9b60cdd2bd59c198054ac95594ef020a66ef11b.o: FileNotFound
+components: command failed (exit 2): /home/epentland/.cache/mylang/components/seeds/99a0c5875f1543cbb9c55694eb744328012fd1454b83a451ea11c6b2f96963fc/source/zig-out/focus/mylang
+test-core
++- verification action core member 0
+   +- verification action component-preparation member 0 failure
+error: process exited with code 1
+failed command: cd . && ./.zig-cache/o/2ecd722ce01240aa65d48334d1933c23/selka-components --root /home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/. --zig /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --install-dir /home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/zig-out/libexec/mylang/components
+
+Build Summary: 9/12 steps succeeded (1 failed)
+test-core transitive failure
++- verification action core member 0 transitive failure
+   +- compile test debug native success 1s MaxRSS:259M
+   |  +- WriteFile success
+   |  +- compile obj juice_bytes_hash fast native success 97ms MaxRSS:110M
+   |  +- compile obj juice_bytes_hash fast native (reused)
+   |  +- run exe build-identity (build_identity) success 167ms
+   |  |  +- compile exe build-identity debug native success 258ms MaxRSS:150M
+   |  +- options success
+   |  |  +- compile exe mylang debug native success 4s MaxRSS:594M
+   |  |     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+   |  |     +- WriteFile (reused)
+   |  |     +- compile obj juice_bytes_hash fast native (reused)
+   |  |     +- compile obj juice_bytes_hash fast native (reused)
+   |  |     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 success 923ms MaxRSS:150M
+   |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
+   +- verification action component-preparation member 0 failure
+      +- compile exe selka-components safe native success 14s MaxRSS:537M
+
