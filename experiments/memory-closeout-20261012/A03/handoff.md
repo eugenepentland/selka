@@ -206,3 +206,16 @@ all87migration sources:81pass allfive-mode contracts,2source-refuse,4have native
 failures. The454public contracts per mode divide427passed/5failed/6unsupported/
 16source-blocked; none is silently omitted. This separate source inventory does
 not change the pinned81+6 census or original30 denominator.
+
+
+`Support7-allocation-classification/` separates all five modes and workload versus
+whole-program allocation counts. Original30 workload23allocating/7free applies to
+release, verified release and optimized debug; unoptimized debug and release
+without facts have28allocating/2free. All30 allocate somewhere when entry/setup is
+included. Pinned81 workload70/11free in release-like modes and76/5free otherwise;
+whole-program78/3free and79/2free respectively. Allsix supplemental cases allocate.
+The classifications preserve every case ID; no timing/RSS conclusion is inferred.
+The common guest harness can now run generated properties itself on a fresh
+artifact and checks seed/run/pass counts; optional property reuse requires matching
+compiler/source/ownership. Core qualification also accepts an explicit default
+request for C2. These are prepared harness capabilities, not a default rollout claim.

@@ -133,6 +133,7 @@ def main():
     for key in ('compiler', 'zig', 'source-report', 'output'):
         parser.add_argument('--' + key, type=Path, required=True)
     parser.add_argument('--modes', nargs='+', choices=census.MODES, default=list(census.MODES))
+    parser.add_argument('--ownership', choices=('opt-in', 'default'), default='opt-in')
     args = parser.parse_args()
     for key in ('compiler', 'zig', 'source_report', 'output'):
         setattr(args, key, getattr(args, key).resolve())
@@ -152,6 +153,7 @@ def main():
               'harness_sha256': census.digest(__file__), 'census_helper_sha256': census.digest(census.__file__),
               'manifest': cases, 'oracles': expected, 'oracle_source_revision': C0,
               'oracle_source_hashes': ORACLE_FILES, 'modes': args.modes, 'cases': {}, 'failures': [],
+              'ownership': args.ownership,
               'benchmark_reference': 'Independent Python checksums from original input/kernel contracts; no C0 native execution or timing claim.',
               'trap_cleanup': 'Fatal traps retain reported managed live bytes; cleanup is not claimed at abort.'}
     (args.output / 'harness.py.snapshot').write_bytes(Path(__file__).read_bytes())
@@ -170,7 +172,8 @@ def main():
                 row = report['cases'].setdefault(case['source'], {'source_sha256': case['sha256'], 'modes': {}})
                 directory = args.output / 'raw' / name / mode
                 directory.mkdir(parents=True, exist_ok=True)
-                flags = ['--experimental-zero-rc', *census.MODES[mode], '--zig', args.zig,
+                ownership = ['--experimental-zero-rc'] if args.ownership == 'opt-in' else []
+                flags = [*ownership, *census.MODES[mode], '--zig', args.zig,
                          '--cache-dir', args.output / 'cache']
                 public = re.findall(r'^public func (test_\w+)\(', source.read_text(), re.M)
                 if public:

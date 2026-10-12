@@ -17,18 +17,28 @@ import census
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    for key in ('compiler', 'zig', 'source-report', 'property-report', 'output'):
+    for key in ('compiler', 'zig', 'source-report', 'output'):
         parser.add_argument('--' + key, type=Path, required=True)
+    parser.add_argument('--property-report', type=Path,
+                        help='Optional earlier property results from the identical source/compiler/mode.')
     parser.add_argument('--modes', nargs='+', choices=census.MODES, default=list(census.MODES))
     parser.add_argument('--ownership', choices=('opt-in', 'default'), default='opt-in')
     args = parser.parse_args()
-    for key in ('compiler', 'zig', 'source_report', 'property_report', 'output'):
+    for key in ('compiler', 'zig', 'source_report', 'output'):
         setattr(args, key, getattr(args, key).resolve())
+    if args.property_report:
+        args.property_report = args.property_report.resolve()
     source_report = json.loads(args.source_report.read_text())
-    prior_properties = json.loads(args.property_report.read_text())
+    prior_properties = json.loads(args.property_report.read_text()) if args.property_report else None
     tree = Path(source_report['fixture_root'])
     compiler_hash = census.digest(args.compiler)
-    assert compiler_hash == source_report['compiler_sha256'] == prior_properties['compiler_sha256']
+    assert compiler_hash == source_report['compiler_sha256']
+    if prior_properties:
+        assert compiler_hash == prior_properties['compiler_sha256']
+        assert set(args.modes) <= set(prior_properties['modes'])
+        requested_flag = args.ownership == 'opt-in'
+        assert all(('--experimental-zero-rc' in lane['argv']) == requested_flag
+                   for lane in prior_properties['modes'].values()), 'property ownership request differs'
     args.output.mkdir(parents=True, exist_ok=False)
     env = dict(os.environ, MYL_CORE_LEAKCHECK='1', ZIG=str(args.zig), MYLANG_ZIG=str(args.zig))
     for key in ('MYLANG_COUNTERS', 'MYLANG_OPTIONS', 'MYLANG_CORE_SANITIZE'):
@@ -39,7 +49,7 @@ def main():
     report = {'schema': 'a03-common-guest-tests-v1', 'compiler': str(args.compiler),
               'compiler_sha256': compiler_hash, 'fixture_commit': source_report['fixture_commit'],
               'fixture_root': str(tree), 'source_report_sha256': census.digest(args.source_report),
-              'property_report_sha256': census.digest(args.property_report),
+              'property_report_sha256': census.digest(args.property_report) if args.property_report else None,
               'harness_sha256': census.digest(__file__), 'census_helper_sha256': census.digest(census.__file__),
               'ownership': args.ownership, 'modes': args.modes, 'seed': 7, 'property_runs': 12,
               'scope': 'Real guest test command with leakcheck; uninstrumented, no measured RC-event claim.',
@@ -60,7 +70,7 @@ def main():
             row['source_diagnostic'] = case['check']['stderr']
         elif not names:
             row['status'] = 'separate_main_or_importer_contract_required'
-        elif case['source'] == 'tests/lang/properties.my':
+        elif case['source'] == 'tests/lang/properties.my' and prior_properties:
             assert case['sha256'] == prior_properties['source_sha256']
             row['reused_evidence'] = str(args.property_report)
             row['modes'] = prior_properties['modes']
@@ -100,6 +110,13 @@ def main():
                         and all(test.get('status') == 'passed'
                                 and test.get('cache', {}).get('action') == 'execute'
                                 for test in parsed['tests']))
+                    for test in parsed['tests']:
+                        prop = test.get('property')
+                        if prop is not None:
+                            lane['passed'] &= (prop.get('seed') == 7
+                                               and prop.get('counts', {}).get('runs') == 12
+                                               and prop.get('counts', {}).get('passed') == 12
+                                               and prop.get('failure') is None)
                 row['modes'][mode] = lane
                 row['status'] = 'executed'
                 if not lane['passed']:
