@@ -169,14 +169,21 @@ pub fn snapshot(comptime Checker: type, checker: *Checker, span: Span, view: typ
 
 fn copiedItem(comptime Checker: type, checker: *Checker, span: Span, mapping: typed.LocalId, position: typed.NodeId) Error!typed.NodeId {
     const b: collections.Builder(Checker) = .{ .checker = checker, .span = span };
-    const key = try b.access(try b.operation(mapping, .key_at, &.{position}), .copy, &.{}, false);
-    const value = try b.access(try b.operation(mapping, .value_at, &.{position}), .copy, &.{}, false);
+    const key = try copiedProjection(Checker, b, try b.operation(mapping, .key_at, &.{position}));
+    const value = try copiedProjection(Checker, b, try b.operation(mapping, .value_at, &.{position}));
     const item = try element(&checker.catalog, checker.locals.items[@backingInt(mapping)].ty, .items, span);
     const fields = try checker.allocator.dupe(typed.FieldInit, &.{
-        .{ .index = 0, .value = try b.node(key.ty, key.data) },
-        .{ .index = 1, .value = try b.node(value.ty, value.data) },
+        .{ .index = 0, .value = key },
+        .{ .index = 1, .value = value },
     });
     return b.node(item, .{ .record = fields });
+}
+
+/// Scalar projections already are independent values; only aggregates need copy lowering.
+fn copiedProjection(comptime Checker: type, b: collections.Builder(Checker), input: typed.NodeId) Error!typed.NodeId {
+    if (!b.checker.nodes.items[@backingInt(input)].ty.isAggregate()) return input;
+    const copied = try b.access(input, .copy, &.{}, false);
+    return b.node(copied.ty, copied.data);
 }
 
 /// Test membership in a directly consumed projection without allocating a snapshot.

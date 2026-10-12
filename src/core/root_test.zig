@@ -4,6 +4,7 @@ comptime {
     _ = @import("a01_parallel_map_test.zig");
     _ = @import("a02_capacity_test.zig");
     _ = @import("a02_list_methods_test.zig");
+    _ = @import("a06_nested_write_test.zig");
     _ = @import("single_owner_test.zig");
     _ = @import("zero_rc_test.zig");
     _ = @import("a08_zero_rc_test.zig");

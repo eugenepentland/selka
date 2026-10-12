@@ -464,8 +464,17 @@ test "zero RC immediate dictionary snapshots own keys values and item children" 
         \\    const items = list(source.items())
         \\    source.clear()
         \\    out.print(keys[0], values[0][0], items[0].key, items[0].value[0])
+        \\    mut scalar_keys = {7: ["saved-" + str(2)]}
+        \\    const first = list(scalar_keys.items())
+        \\    scalar_keys.clear()
+        \\    mut scalar_values = {"saved-" + str(3): 9}
+        \\    const second = list(scalar_values.items())
+        \\    scalar_values.clear()
+        \\    const scalars = list({4: 5}.items())
+        \\    out.print(first[0].key, first[0].value[0], second[0].key, second[0].value)
+        \\    out.print(scalars[0].key, scalars[0].value)
         \\    return 0
-    , "key-1 value-1 key-1 value-1\n");
+    , "key-1 value-1 key-1 value-1\n7 saved-2 saved-3 9\n4 5\n");
 }
 
 // spec-case: NEW-CORE-ZERO-RC-RESOURCE-SCOPES-1

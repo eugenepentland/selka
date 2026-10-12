@@ -1,0 +1,17 @@
+{
+  "base": "8d368126f",
+  "fix": "Snapshot item construction copies aggregate projections only; scalar key/value reads already are independent values.",
+  "regression": "zero RC immediate dictionary snapshots own keys values and item children",
+  "coverage": [
+    "managed key and managed value",
+    "scalar key and nested managed value",
+    "managed key and scalar value",
+    "scalar key and scalar value",
+    "input destruction before snapshot use",
+    "debug and verified release",
+    "managed leak checking and emitted RC symbol rejection"
+  ],
+  "command": "scripts/build-slot.sh build \"$ZIG\" build test-core -Dtest-filter=\"zero RC immediate dictionary snapshots\" -j4 --maxrss 8589934592 --summary all",
+  "exit_code": 0,
+  "passed_tests": 1
+}
