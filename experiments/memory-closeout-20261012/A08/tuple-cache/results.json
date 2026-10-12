@@ -1,0 +1,20 @@
+{
+  "base_commit": "746f4ff8b1539a1101ce84df1535837dfc4e7833",
+  "status": "four_focused_tests_passed",
+  "source_hashes": {
+    "src/semantic_store.zig": "69477125738a37b139619d126ccb570a9f0a6b6496d0571e9dd29db6ee936c97",
+    "src/semantic_copy.zig": "5ee9b3f376e678e738bf1ea701e690d5d2963bc839b745e40fd37e643aaba3ba",
+    "src/typed.zig": "ee26fe7d48ee2a8569058124e65dfab4118d08e3ac78ea30105b8930a496f189"
+  },
+  "command": "scripts/build-slot.sh build \"$ZIG\" test src/semantic_store.zig --test-filter \"A08 unpack\"",
+  "zig_version": "0.17.0-dev.1683+5ceec001b",
+  "tests": 4,
+  "malformed_storage_cases": 14,
+  "schema_before": "semantic-cache-v7",
+  "schema_after": "semantic-cache-v8",
+  "storage_validation": "O(local count + total unpack fields); one lazily allocated seen-slot array, clears only actual fields. This is an algorithmic bound, not a measured compile-time claim.",
+  "source_contract_dependency": "Coordinator-owned typed.Store overlay; A01 source producer and A07 live-catalog arity/type validation are separate changes. Source-generated cold/warm/native tuple qualification remains pending integration.",
+  "first_attempt": "Fixture used Core spelling str in typed.Type; failed to compile. Corrected fixture uses checked i64 type. Both logs retained.",
+  "registration": "Tests live in existing semantic_store/semantic_copy modules already reached by compiler root. Focused direct test avoids unrelated historical seed provisioning; full registered final gate remains coordinator-owned.",
+  "guardian_first_attempt": "Two overlong fixture lines and repeated hidden-name literal; corrected, focused4tests rerun passed; Guardian rerun pending."
+}

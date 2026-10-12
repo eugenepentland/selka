@@ -1,0 +1,12 @@
+build-slot: FIFO ticket 767, position 4; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 767, position 4; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 767, position 4; earlier build tickets must run first; waiting (120s so far)
+build-slot: build slot 1, FIFO ticket 767 after 175s
+src/semantic_store.zig:947:64: error: enum 'type_identity.Type' has no member named 'str'
+        .{ .name = "<collection>", .declaration = span, .ty = .str, .mutable = false, .usage = .{ .temporary = true } },
+                                                              ~^~~
+src/type_identity.zig:8:18: note: enum declared here
+pub const Type = enum(usize) {
+                 ^~~~
+referenced by:
+    test.A08 unpack durable malformed slot contracts are cache misses: src/semantic_store.zig:1001:24

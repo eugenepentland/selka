@@ -1,0 +1,9 @@
+build-slot: FIFO ticket 781, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: FIFO ticket 781, position 1; waiting for measurement or memory-accounting settle delay; waiting (60s so far)
+build-slot: FIFO ticket 781, position 1; waiting for measurement or memory-accounting settle delay; waiting (120s so far)
+build-slot: build slot 1, FIFO ticket 781 after 145s
+1/4 semantic_store.test.A08 unpack durable malformed slot contracts are cache misses...OK
+2/4 semantic_store.test.A08 unpack prior semantic wire version refuses even with a valid checksum...OK
+3/4 semantic_store.test.A08 unpack specialization decode and publication enforce the same slot contract...OK
+4/4 semantic_copy.test.A08 unpack semantic relocation preserves local IDs and independently owns field slots...OK
+All 4 tests passed.

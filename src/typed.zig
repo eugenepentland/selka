@@ -630,7 +630,14 @@ fn nameLessThan(_: void, left: []const u8, right: []const u8) bool {
 /// `element` marks the store an element write such as `a[i] = v` lowers to:
 /// the value rebuilds the local from its own current value with one element
 /// changed, so the write is a mutation of the binding rather than a rebinding.
-pub const Store = struct { slot: LocalId, value: NodeId, element: bool = false };
+pub const Store = struct {
+    slot: LocalId,
+    value: NodeId,
+    element: bool = false,
+    /// Initialize-only complete tuple staging: consume the hidden whole slot,
+    /// bind every non-null field slot, and destroy explicitly ignored fields.
+    unpack: ?[]const ?LocalId = null,
+};
 /// A checked source range keeps its endpoints and binding together. The
 /// normalized loop plan preserves the checked direction, overflow and exits.
 pub const RangeParts = struct {

@@ -1,0 +1,19 @@
+build-slot: FIFO ticket 236, position 3; earlier gate tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 236, position 2; earlier gate tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 236, position 1; waiting for measurement or memory-accounting settle delay; waiting (120s so far)
+build-slot: FIFO ticket 236, position 1; waiting for measurement or memory-accounting settle delay; waiting (181s so far)
+build-slot: gate slot 1, FIFO ticket 236 after 196s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 2/88 failed (line-length, repeated-string-literal)
+guardian: failures grouped by check (2):
+  line-length (2 findings)
+    - src/semantic_store.zig:971: line is 284 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+    - src/semantic_store.zig:978: line is 282 chars (hard limit 240)
+  repeated-string-literal (1 finding)
+    - src/semantic_store.zig: string literal <collection> appears 3 times (lines 946, 947, 948) — extract a const
+      fix: extract the literal/const into a shared file-scope const and import it.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

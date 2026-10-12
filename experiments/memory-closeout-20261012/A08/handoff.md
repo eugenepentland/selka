@@ -9,8 +9,9 @@ No final candidate has been measured. The latest Support6 cache-plan qualificati
 resolves the earlier Support5 component blocker; historical failures remain intact.
 
 Owned production files: `src/core/{lowering_cache,optimization_cache,emission_cache}.zig`,
-`src/{semantic_store,semantic_copy}.zig`. No production cache changes required by
-source audit so far. Coordinator additionally reserved `src/sema_collections.zig`
+`src/{semantic_store,semantic_copy}.zig`. The tuple staging addition now changes
+the semantic cache wire version and validates persisted unpack storage.
+Coordinator additionally reserved `src/sema_collections.zig`
 for the concrete managed-comprehension metadata defect; a source element must
 retain `LocalOrigin.iteration` after receiving its user-visible name. Coordinator additionally reserved
 `selfhost/components/{test_index,cache_plan}/` source directories for minimal
@@ -80,9 +81,32 @@ candidate invalidation/repair, not old C0 execution of the Unicode fixture.
 
 `pending-contract-reviews.md` separately records A07's borrowed-selection marker
 review and A01's complete tuple-unpack cache review. They remain proposals under
-implementation; no semantic-cache schema change is included in this evidence
-commit. A07 has addressed the reported bounded traversal and always-on marker
+implementation. A07 has addressed the reported bounded traversal and always-on marker
 validation concerns in its working draft, with tests still pending.
+
+## Complete-unpack persisted storage
+
+The coordinator-authored optional `typed.Store.unpack` field and the semantic
+wire change to **semantic-cache-v8** are included atomically. Both local and
+portable shared typed-body keys inherit the new version. The codec/copy/hash
+reflection already carries optional field-slot slices; copied scopes preserve
+their function-local IDs.
+
+Ordinary and specialization load/publication now reject metadata outside an
+initialization, element stores, nonhidden or still-available original slots,
+out-of-range RHS/local IDs, mismatched whole-value types, duplicate/aliased fields,
+and visible field destinations. Validation allocates one lazy seen-slot array and
+clears only actual bound fields: O(locals + total unpack fields), with no claimed
+measured compile-time improvement.
+
+Four focused tests pass in the existing semantic-store/copy modules, including
+14 malformed metadata cases, a prior-version image with a valid checksum,
+specialization publication/load, and independent relocated field-slot storage.
+`tuple-cache/results.json` pins source hashes and commands; both the corrected
+passing log and the initial fixture type-spelling compilation failure are kept.
+These tests validate storage, not a complete guest program. A07 must additionally
+validate exact tuple arity/types against the live catalog before Core unpacking;
+A01's source producer and combined cold/warm/native tests remain dependencies.
 
 The command is `scripts/build-slot.sh build python3 -B
 experiments/memory-closeout-20261012/A08/component_qualify.py --compiler COMPILER

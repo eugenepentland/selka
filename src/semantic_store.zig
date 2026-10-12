@@ -28,7 +28,7 @@ const cache_key = @import("cache_key.zig");
 const shared_artifacts = @import("shared_artifact_store.zig");
 
 /// On-disk format version. Bump for any layout, tag or validation change.
-pub const format_version = "semantic-cache-v7";
+pub const format_version = "semantic-cache-v8";
 /// Default root for ordinary one-shot commands; `--cache-dir=DIR` maps to
 /// `DIR/semantic` through the same shared cache-root option.
 pub const default_directory = ".mylang-cache/semantic";
@@ -220,6 +220,7 @@ pub const Store = struct {
         };
         if (!payload_reader.done()) return self.reject();
         if (!self.valid(body)) return self.reject();
+        if (!try validUnpackStorage(self.allocator, body.function, body.nodes, body.statements, body.range)) return self.reject();
         if (!std.mem.eql(u8, body.meta.identity.key, stable_key)) return self.reject();
         if (!std.mem.eql(u8, &body.meta.identity.context, &context)) return self.reject();
         if (from_shared and !portableBody(body)) return self.reject();
@@ -300,6 +301,7 @@ pub const Store = struct {
         };
         if (!payload_reader.done()) return self.rejectSpecialization();
         if (!owned.validSpecialization(payload, max_declarations, self.limits.max_entry_bytes)) return self.rejectSpecialization();
+        if (!try validUnpackStorage(self.allocator, payload.body.function, payload.body.nodes, payload.body.statements, payload.body.range)) return self.rejectSpecialization();
         if (!std.mem.eql(u8, payload.identity.key, stable_key)) return self.rejectSpecialization();
         if (!std.mem.eql(u8, &payload.identity.context, &context)) return self.rejectSpecialization();
 
@@ -436,7 +438,7 @@ pub const Store = struct {
     /// Publish one entry atomically. Private write failures bypass retention;
     /// configured shared-store failures are reported and fail the request.
     pub fn put(self: *Store, entry: *const owned.Entry) error{ OutOfMemory, InternalError }!bool {
-        if (!self.validOwned(entry)) {
+        if (!self.validOwned(entry) or !try validUnpackStorage(self.allocator, entry.function, entry.nodes, entry.statements, entry.range)) {
             self.statistics.bypassed += 1;
             return false;
         }
@@ -477,7 +479,8 @@ pub const Store = struct {
 
     /// Publish one checked concrete-specialization entry under its own kind.
     pub fn putSpecialization(self: *Store, entry: *const owned.SpecializationEntry) error{OutOfMemory}!bool {
-        if (!owned.validSpecialization(entry.payload, max_declarations, self.limits.max_entry_bytes)) {
+        const body = entry.payload.body;
+        if (!owned.validSpecialization(entry.payload, max_declarations, self.limits.max_entry_bytes) or !try validUnpackStorage(self.allocator, body.function, body.nodes, body.statements, body.range)) {
             self.statistics.bypassed += 1;
             return false;
         }
@@ -797,6 +800,49 @@ fn pathFree(name: []const u8) bool {
     return std.mem.indexOfAny(u8, name, "/\\") == null;
 }
 
+/// Validate unpack storage before catalog relocation. The restored checker/Core
+/// must additionally prove tuple arity and field types against the live catalog.
+/// Local IDs stay local when the complete function scope is restored.
+fn validUnpackStorage(allocator: std.mem.Allocator, function: typed.Function, nodes: []const typed.Node, statements: []const typed.Statement, range: @import("semantic_copy.zig").Range) error{OutOfMemory}!bool {
+    const locals = function.scope.locals;
+    var seen: []bool = &.{};
+    defer allocator.free(seen);
+    for (statements) |statement| switch (statement.data) {
+        .assign => |store| if (store.unpack != null) return false,
+        .range_loop => |loop| for (loop.parts) |part| {
+            if (part.start.unpack != null or part.end.unpack != null) return false;
+        },
+        .initialize => |store| {
+            const fields = store.unpack orelse continue;
+            const whole = @backingInt(store.slot);
+            const value = @backingInt(store.value);
+            if (store.element or whole >= locals.len) return false;
+            if (!locals[whole].usage.temporary or locals[whole].ownership.transfer_available) return false;
+            if (value < range.nodes.start or value >= range.nodes.end) return false;
+            if (value - range.nodes.start >= nodes.len) return false;
+            const ty = nodes[value - range.nodes.start].ty;
+            if (!ty.isAggregate() or locals[whole].ty != ty) return false;
+            if (seen.len == 0) {
+                seen = try allocator.alloc(bool, locals.len);
+                @memset(seen, false);
+            }
+            for (fields) |field| if (field) |id| {
+                const slot = @backingInt(id);
+                if (slot >= locals.len or slot == whole or seen[slot]) return false;
+                if (!locals[slot].usage.temporary) return false;
+                seen[slot] = true;
+            };
+            // Clear only touched slots: many small unpacks after a wide one
+            // remain O(locals + total field bindings), without repeated scans.
+            for (fields) |field| if (field) |id| {
+                seen[@backingInt(id)] = false;
+            };
+        },
+        else => {},
+    };
+    return true;
+}
+
 fn portableBody(body: StoredBody) bool {
     if (!portableFunctionKey(body.meta.identity.key) or body.source_bytes.modules.len != 0) return false;
     for (body.meta.function_refs) |reference| {
@@ -889,4 +935,151 @@ test "durable range header corruption is a miss for empty and multiple owned hea
     var entry = (try store.lookup(t.allocator, "range-header", @splat(0))).?;
     defer entry.deinit();
     try t.expectEqual(@as(usize, 1), entry.statements[0].data.range_loop.parts.len);
+}
+
+const UnpackDamage = enum { none, duplicate, outside, whole, node_before, node_after, element, assignment, range_start, range_end, visible_whole, available_whole, visible_field, mismatched_type, scalar };
+const unpack_test_temporary = "<collection>";
+
+fn unpackImage(allocator: std.mem.Allocator, store: *Store, damage: UnpackDamage) !void {
+    const tuple: typed.Type = @fromBackingInt(typed.Type.record_base);
+    const span: source.Span = .{ .start = 0, .end = 1 };
+    var locals = [_]typed.Local{
+        .{ .name = unpack_test_temporary, .declaration = span, .ty = tuple, .mutable = false, .usage = .{ .temporary = true } },
+        .{ .name = unpack_test_temporary, .declaration = span, .ty = .i64, .mutable = false, .usage = .{ .temporary = true } },
+        .{ .name = unpack_test_temporary, .declaration = span, .ty = .i64, .mutable = false, .usage = .{ .temporary = true } },
+    };
+    var nodes = [_]typed.Node{.{ .span = span, .ty = tuple, .data = .{ .record = &.{} } }};
+    var fields = [_]?typed.LocalId{ @fromBackingInt(1), null, @fromBackingInt(2) };
+    var binding: typed.Store = .{ .slot = @fromBackingInt(0), .value = @fromBackingInt(7), .unpack = &fields };
+    switch (damage) {
+        .duplicate => fields[2] = fields[0],
+        .outside => fields[2] = @fromBackingInt(locals.len),
+        .whole => fields[2] = binding.slot,
+        .node_before => binding.value = @fromBackingInt(6),
+        .node_after => binding.value = @fromBackingInt(8),
+        .element => binding.element = true,
+        .visible_whole => locals[0].usage.temporary = false,
+        .available_whole => locals[0].ownership.transfer_available = true,
+        .visible_field => locals[1].usage.temporary = false,
+        .mismatched_type => locals[0].ty = .i64,
+        .scalar => {
+            nodes[0].ty = .i64;
+            locals[0].ty = .i64;
+        },
+        else => {},
+    }
+    var statements = [_]typed.Statement{.{ .span = span, .terminates = false, .data = .{ .initialize = binding } }};
+    var part: typed.RangeParts = .{
+        .binding = span,
+        .start = .{ .slot = @fromBackingInt(0), .value = @fromBackingInt(7) },
+        .end = .{ .slot = @fromBackingInt(0), .value = @fromBackingInt(7) },
+        .setup = &.{},
+        .loop = .{ .condition = @fromBackingInt(7), .body = @fromBackingInt(11) },
+    };
+    if (damage == .assignment) statements[0].data = .{ .assign = binding };
+    if (damage == .range_start or damage == .range_end) {
+        if (damage == .range_start) part.start = binding else part.end = binding;
+        statements[0].data = .{ .range_loop = .{ .parts = (&part)[0..1] } };
+    }
+    const body: StoredBody = .{
+        .meta = .{
+            .identity = .{ .key = "unpack", .context = @splat(0), .body = span, .region = span },
+            .old_function_count = 1,
+            .old_record_count = 1,
+            .function_refs = &.{},
+            .record_refs = &.{.{ .index = 0, .key = "tuple", .recipes = &.{.{ .tuple = &.{ .i64, .i64, .i64 } }} }},
+        },
+        .function = .{ .id = @fromBackingInt(0), .name = "main", .declaration = span, .scope = .{ .body = @fromBackingInt(11), .locals = &locals } },
+        .nodes = &nodes,
+        .statements = &statements,
+        .range = .{ .nodes = .{ .start = 7, .end = 8 }, .statements = .{ .start = 11, .end = 12 } },
+        .source_bytes = .{ .old_len = 1, .body = "x", .region = "x" },
+    };
+    var payload = codec.Writer.init(allocator);
+    defer payload.deinit();
+    try payload.write(StoredBody, body);
+    try std.testing.expect(try store.publishPayload("unpack", @splat(0), payload.bytes.items));
+}
+
+// spec-case: SEMANTIC-CACHE-1
+test "A08 unpack durable malformed slot contracts are cache misses" {
+    const t = std.testing;
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    var store = Store.init(t.allocator, t.io, root, cache_key.Contract.default, "unpack-test");
+    defer store.deinit();
+    for (std.meta.tags(UnpackDamage)[1..]) |damage| {
+        try unpackImage(t.allocator, &store, damage);
+        try t.expect((try store.lookup(t.allocator, "unpack", @splat(0))) == null);
+    }
+    try t.expectEqual(std.meta.tags(UnpackDamage).len - 1, store.statistics.damaged);
+    try unpackImage(t.allocator, &store, .none);
+    var entry = (try store.lookup(t.allocator, "unpack", @splat(0))).?;
+    defer entry.deinit();
+    const fields = entry.statements[0].data.initialize.unpack.?;
+    try t.expectEqualSlices(?typed.LocalId, &.{ @fromBackingInt(1), null, @fromBackingInt(2) }, fields);
+    try t.expect(try store.put(&entry));
+    @constCast(entry.statements)[0].data.initialize.unpack = &.{ @fromBackingInt(1), @fromBackingInt(1) };
+    try t.expect(!try store.put(&entry));
+}
+
+// spec-case: SEMANTIC-CACHE-1
+test "A08 unpack prior semantic wire version refuses even with a valid checksum" {
+    const t = std.testing;
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    var store = Store.init(t.allocator, t.io, root, cache_key.Contract.default, "unpack-version-test");
+    defer store.deinit();
+    try unpackImage(t.allocator, &store, .none);
+    const path = try store.entryPath("unpack", @splat(0));
+    defer t.allocator.free(path);
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(t.io, path, t.allocator, .limited(max_entry_bytes));
+    defer t.allocator.free(bytes);
+    const old = "semantic-cache-v7";
+    try t.expectEqual(old.len, format_version.len);
+    @memcpy(bytes[12..][0..old.len], old);
+    std.mem.writeInt(u64, bytes[bytes.len - 8 ..][0..8], codec.checksum(bytes[0 .. bytes.len - 8]), .little);
+    try std.Io.Dir.cwd().writeFile(t.io, .{ .sub_path = path, .data = bytes });
+    try t.expect((try store.lookup(t.allocator, "unpack", @splat(0))) == null);
+    try t.expectEqual(@as(usize, 1), store.statistics.damaged);
+}
+
+// spec-case: SEMANTIC-CACHE-1
+test "A08 unpack specialization decode and publication enforce the same slot contract" {
+    const t = std.testing;
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    var store = Store.init(t.allocator, t.io, root, cache_key.Contract.default, "unpack-specialization-test");
+    defer store.deinit();
+    try unpackImage(t.allocator, &store, .none);
+    var entry = (try store.lookup(t.allocator, "unpack", @splat(0))).?;
+    defer entry.deinit();
+    var specialization: owned.SpecializationEntry = .{
+        .arena = std.heap.ArenaAllocator.init(t.allocator),
+        .payload = .{
+            .identity = .{ .key = "unpack-specialization", .context = @splat(0), .fingerprint = "fixture", .template = "tuple", .arguments = &.{}, .lengths = &.{} },
+            .source = .{ .old_len = 1, .region = entry.meta.identity.region, .body = entry.meta.identity.body, .region_bytes = "x", .body_bytes = "x" },
+            .body = .{ .function = entry.function, .nodes = entry.nodes, .statements = entry.statements, .range = entry.range },
+            .refs = .{ .function_refs = &.{}, .record_refs = entry.meta.record_refs },
+            .counts = .{ .old_function_count = 1, .old_record_count = 1 },
+        },
+    };
+    defer specialization.deinit();
+    try t.expect(try store.putSpecialization(&specialization));
+    var restored = (try store.lookupSpecialization(t.allocator, "unpack-specialization", @splat(0))).?;
+    defer restored.deinit();
+    @constCast(entry.statements)[0].data.initialize.unpack = &.{ @fromBackingInt(1), @fromBackingInt(1) };
+    try t.expect(!try store.putSpecialization(&specialization));
+    try t.expectEqual(@as(usize, 3), restored.payload.body.statements[0].data.initialize.unpack.?.len);
+    var encoded = codec.Writer.init(t.allocator);
+    defer encoded.deinit();
+    try encoded.write(owned.StoredSpecialization, specialization.payload);
+    try t.expect(try store.publishPayload("unpack-specialization", @splat(0), encoded.bytes.items));
+    try t.expect((try store.lookupSpecialization(t.allocator, "unpack-specialization", @splat(0))) == null);
 }

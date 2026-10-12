@@ -1,8 +1,9 @@
 # Pending ownership contract reviews
 
-These are source reviews of proposals under implementation. They are not guest
-qualification or approval to promote the default. Support6 component execution
-remains independent of both proposals.
+These are source reviews of proposals under implementation, followed by the
+focused tuple-storage implementation below. They are not guest qualification or
+approval to promote the default. Support6 component execution remains independent
+of both proposals.
 
 ## Borrowed dictionary selection
 
@@ -67,5 +68,15 @@ checks require the restored catalog or equivalent recorded recipes.
 
 Required evidence includes malformed metadata, independent copied slice storage,
 relocated source and earlier declaration edits, specialization reuse, and
-rejection of prior-format stored bodies. The shared declaration and implementation
-are not yet present in A08, and no schema bump has been applied here.
+rejection of prior-format stored bodies.
+
+The coordinator has now applied the shared `typed.Store` declaration, and A08 has
+implemented semantic-cache-v8 plus bounded structural checks for both ordinary
+and specialized load/publication. Four focused tests pass, including 14 malformed
+storage cases, old-version rejection with a valid checksum, specialization
+corruption, and deep-copy/source relocation of field slots. See
+`tuple-cache/results.json` and `tuple-cache/validation.log`.
+
+Exact tuple arity and field types still require A07's always-on live-catalog check;
+source-generated cold/warm/native tuple tests require A01's producer integration.
+Neither dependency is claimed complete by these storage-only tests.

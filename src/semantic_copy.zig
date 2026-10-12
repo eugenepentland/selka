@@ -259,3 +259,30 @@ pub fn segments(allocator: std.mem.Allocator, before: []const u8, old: []const s
 fn less(bodies: []const source.Span, a: usize, b: usize) bool {
     return bodies[a].start < bodies[b].start;
 }
+
+// spec-case: SEMANTIC-CACHE-3
+test "A08 unpack semantic relocation preserves local IDs and independently owns field slots" {
+    const t = std.testing;
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    var fields = [_]?typed.LocalId{ @fromBackingInt(3), null, @fromBackingInt(7) };
+    const before: typed.Statement = .{
+        .span = .{ .start = 10, .end = 20 },
+        .terminates = false,
+        .data = .{ .initialize = .{ .slot = @fromBackingInt(2), .value = @fromBackingInt(5), .unpack = &fields } },
+    };
+    const mapper: Mapper = .{
+        .segments = &.{.{ .before = .{ .start = 10, .end = 20 }, .after = 100 }},
+        .before = .{ .nodes = .{ .start = 5, .end = 6 }, .statements = .{ .start = 0, .end = 1 } },
+        .after = .{ .nodes = .{ .start = 35, .end = 36 }, .statements = .{ .start = 40, .end = 41 } },
+    };
+    const after = try mapper.copy(arena.allocator(), typed.Statement, before);
+    try t.expectEqual(@as(usize, 100), after.span.start);
+    try t.expectEqual(@as(usize, 110), after.span.end);
+    try t.expectEqual(@as(usize, 35), @backingInt(after.data.initialize.value));
+    try t.expectEqual(@as(usize, 2), @backingInt(after.data.initialize.slot));
+    try t.expectEqualSlices(?typed.LocalId, &fields, after.data.initialize.unpack.?);
+    fields[0] = null;
+    fields[2] = @fromBackingInt(8);
+    try t.expectEqualSlices(?typed.LocalId, &.{ @fromBackingInt(3), null, @fromBackingInt(7) }, after.data.initialize.unpack.?);
+}
