@@ -580,6 +580,8 @@ pub fn build(b: *std.Build) void {
     const affected_compiler = b.step("affected-compiler", "Install only mylang to zig-out/focus, for scripts/affected_tests.py");
     affected_compiler.dependOn(&focus_exe_step.step);
     affected_compiler.dependOn(&component_build.step);
+    const seed_compiler = b.step("seed-compiler", "Install only mylang to zig-out/focus without provisioning components");
+    seed_compiler.dependOn(&focus_exe_step.step);
     install_all = b.getInstallStep();
     const guardian_dep = b.dependency("guardian", .{ .target = target, .optimize = optimize });
     const guardian_exe = guardian_dep.artifact("guardian-check");

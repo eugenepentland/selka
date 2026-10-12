@@ -1,0 +1,15 @@
+build-slot: FIFO ticket 92, position 17; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 92, position 14; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 92, position 6; earlier build tickets must run first; waiting (120s so far)
+build-slot: build slot 1, FIFO ticket 92 after 175s
+Build Summary: 8/8 steps succeeded
+seed-compiler success
++- install generated to mylang success
+   +- compile exe mylang debug native success 6s MaxRSS:593M
+      +- run exe build-identity (build_identity) success 70ms
+      |  +- compile exe build-identity debug native success 385ms MaxRSS:147M
+      +- WriteFile success
+      +- compile obj juice_bytes_hash fast native success 108ms MaxRSS:112M
+      +- compile obj juice_bytes_hash fast native (reused)
+      +- compile obj core_number_text fast x86_64-linux-gnu.2.31 success 1s MaxRSS:153M
+
