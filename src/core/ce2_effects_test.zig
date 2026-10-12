@@ -438,10 +438,10 @@ test "an element store a later store of the same element overwrites before anyth
         const read_trap = try fixture(a, root, flags, &.{"x"});
         try std.testing.expectEqual(@as(u8, 1), read_trap.status);
         try std.testing.expectEqualStrings(fields_expected ++ takes_expected ++ stores_expected, read_trap.stdout);
-        try std.testing.expect(contains(read_trap.stderr, "ce2_effects.my:238:30: error[R_LIST_BOUNDS]: native execution failed (index 7, length 1)\n"));
+        try std.testing.expect(contains(read_trap.stderr, "ce2_effects.my:239:30: error[R_LIST_BOUNDS]: native execution failed (index 7, length 1)\n"));
         const store_trap = try fixture(a, root, flags, &.{"y"});
         try std.testing.expectEqual(@as(u8, 1), store_trap.status);
-        try std.testing.expect(contains(store_trap.stderr, "ce2_effects.my:246:9: error[R_LIST_BOUNDS]: native execution failed (index 10, length 4)\n"));
+        try std.testing.expect(contains(store_trap.stderr, "ce2_effects.my:247:9: error[R_LIST_BOUNDS]: native execution failed (index 10, length 4)\n"));
     }
 }
 
