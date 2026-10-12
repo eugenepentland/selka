@@ -247,13 +247,22 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--action-id', required=True)
     parser.add_argument('--member', type=int, default=0)
-    parser.add_argument('--output', required=True)
+    destination = parser.add_mutually_exclusive_group(required=True)
+    destination.add_argument('--output')
+    destination.add_argument('--output-directory-env', help='optional per-request sidecar directory from inherited environment')
     parser.add_argument('tests', nargs='+', help='unittest module or qualified test names')
     args = parser.parse_args(argv)
     member_id(args.action_id, args.member)
     suite = unittest.defaultTestLoader.loadTestsFromNames(args.tests)
     result = TelemetryRunner(verbosity=2).run(suite)
-    write_document(args.output, document(result, args.action_id, args.member))
+    output = args.output
+    if args.output_directory_env:
+        directory = os.environ.get(args.output_directory_env)
+        # Canonical action IDs are path components in this directory mode.
+        safe_id = args.action_id.replace('/', '_').replace('\\', '_')
+        output = str(Path(directory) / f'{safe_id}.member.{args.member}.json') if directory else None
+    if output is not None:
+        write_document(output, document(result, args.action_id, args.member))
     return 0 if result.wasSuccessful() else 1
 
 

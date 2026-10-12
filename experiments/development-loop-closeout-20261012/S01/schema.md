@@ -66,3 +66,17 @@ missing_path_changed, authority_unavailable, watch_overflow, fork, reset, unknow
 truncation remains visible. This helper only detaches observations: it does not
 read inputs, poll watchers, hash files, clear dirty state or decide stability.
 Byte-restored ABA remains dirty when the authority provider observes the event.
+
+Build integration uses static argv with an optional inherited per-request path:
+
+```bash
+python3 scripts/verification_telemetry.py --action-id verification-cache --member 3 --output-directory-env MYLANG_TEST_TELEMETRY_DIR verification_report_test
+```
+
+If the environment variable is absent, ordinary build tests run with no sidecar.
+If present, the filename is `verification-cache.member.3.json` under that directory.
+Use a fresh directory for every actual gate request. Do not inspect prior-request
+files or treat build-cache reuse as fresh execution. Native step caching can
+produce no file for an unchanged member: report unknown or explicitly qualified
+reused coverage, never manufacture new test durations. Action/member path tokens
+sanitize slash/backslash; expected IDs remain the original registered IDs.

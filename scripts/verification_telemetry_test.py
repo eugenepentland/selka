@@ -3,6 +3,7 @@
 import contextlib
 import io
 import json
+import os
 from pathlib import Path
 import tempfile
 import subprocess
@@ -78,6 +79,22 @@ class TelemetryTests(unittest.TestCase):
             self.assertEqual(completed.returncode, 0)
             self.assertIn('Ran 12 tests', completed.stderr)
             self.assertTrue(blocked.is_dir())
+
+    def test_optional_request_directory_environment_produces_supported_document(self):
+        with tempfile.TemporaryDirectory() as directory:
+            env = dict(os.environ, MYLANG_TEST_TELEMETRY_DIR=directory)
+            command = [sys.executable, telemetry.__file__, '--action-id', 'verification-cache',
+                       '--member', '3', '--output-directory-env', 'MYLANG_TEST_TELEMETRY_DIR',
+                       'verification_report_test']
+            completed = subprocess.run(command, env=env, capture_output=True, text=True)
+            self.assertEqual(completed.returncode, 0)
+            output = Path(directory) / 'verification-cache.member.3.json'
+            observed = report.test_timings(output, action_id='verification-cache', member='verification-cache/member/3')
+            self.assertEqual(observed['selected'], 12)
+            self.assertEqual(observed['timing_coverage'], 'complete')
+            env.pop('MYLANG_TEST_TELEMETRY_DIR')
+            completed = subprocess.run(command, env=env, capture_output=True, text=True)
+            self.assertEqual(completed.returncode, 0)
 
     def test_process_measurement_scope_and_malformed_observations(self):
         observed = dict(scope='runner-process', rss_scope='process-lifetime-high-water',

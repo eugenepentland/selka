@@ -42,3 +42,21 @@
    Keep receipt reuse null-timed. Discovery/startup/frontend/native-build/link/
    execution boundaries must come from explicit runner events; S06 currently
    reports unsupported phases honestly. No guest runner files changed in S01.
+
+Exact additive build argv for report module member3, after confirming the action
+ID/member index in the final registered inventory:
+
+```zig
+verification_run.addArgs(&.{ "python3", "scripts/verification_telemetry.py", "--action-id", "verification-cache", "--member", "3", "--output-directory-env", "MYLANG_TEST_TELEMETRY_DIR", "verification_report_test" });
+```
+
+For the newly registered telemetry test use its actual inventory member index
+and module `verification_telemetry_test`. The driver function currently derives
+`verification-cache` from input-list `verification_cache`; review this ID rather
+than using a new parallel group. Set the directory in the admitted live command
+environment; do not use Step.Run.setEnvironmentVariable. Keep a per-request
+fresh directory and attach validated sidecars only for that actual execution.
+On each report action attach a list `test_telemetry`, one row per registered
+member. Each row holds member_id and report.test_timings(path,action_id=group_id,
+member=member_id); unsupported/absent/reused rows use report.test_timings() unknown.
+Saved measurements may be historical descriptive data, never fresh observations.

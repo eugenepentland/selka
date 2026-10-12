@@ -83,3 +83,11 @@ Integrate implementation first, then coordinator registration/report wiring and
 S08 diagnostics; budget consumers can use validated passed fresh rows only.
 The conservative rejection of inference from Zig summary/slow-test messages is
 intentional: summary counts and timings cannot prove every individual case ran.
+
+Integration follow-up adds static build-compatible
+`--output-directory-env MYLANG_TEST_TELEMETRY_DIR`. A new adversarial subprocess
+test proves actual environment-enabled sidecar and environment-absent ordinary
+verdict; final telemetry suite now has 10 selected/executed/timed tests, all pass.
+Combined final supported coverage is 22 tests. The refreshed JSON/log/source
+hashes supersede telemetry-tests.json hash and its 9-test count above. Exact build
+argv and per-member attachment instructions are in shared-patch-requests.md.
