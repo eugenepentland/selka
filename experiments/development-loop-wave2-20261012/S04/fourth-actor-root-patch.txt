@@ -1,0 +1,22 @@
+    def test_deferred_metadata_only_tool_change_is_rejected_without_events(self):
+        with RetainedSession() as retained, retained.activate():
+            self.assertEqual(self.execute(), 0)
+            self.admissions.clear()
+            calls = []
+
+            def resolve(_zig, _environment):
+                calls.append(True)
+                if len(calls) == 2:
+                    original = self.tool.read_bytes()
+                    self.tool.write_bytes(b'tool mutation during second resolution')
+                    self.tool.write_bytes(original)
+                return [], [self.zig, self.tool]
+
+            watcher_type = coordinator.verification_snapshot._Inotify
+            with patch.object(coordinator, 'tool_contract', side_effect=resolve), \
+                 patch.object(watcher_type, '_drain', lambda watcher: not watcher.dirty):
+                with self.assertRaises(coordinator.VerificationError) as caught:
+                    self.execute()
+            self.assertEqual(caught.exception.status, coordinator.RETRY)
+            self.assertEqual(self.admissions, [])
+            self.assertFalse(coordinator.read_record(self.cache / 'last-run.json')['success'])
