@@ -1,0 +1,70 @@
+thread 2883663 panic: index out of bounds: index 4294967295, len 2
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/ir.zig:544:32: 0x1a49a17 in inst (cli.zig)
+        return self.insts.items[ref.index()];
+                               ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:1076:34: 0x1a93269 in typeOfRef (cli.zig)
+        return self.function.inst(self.function.resolve(ref)).ty;
+                                 ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:775:53: 0x1b6e40b in providerStore (cli.zig)
+        if (!self.module().zero_rc or self.function.resolve(value) == .none or self.typeOfRef(value) != .capability) return;
+                                                    ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:767:31: 0x1b6d8bd in storeStatement (cli.zig)
+        try self.providerStore(store, place, value, assign, span);
+                              ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:807:68: 0x1aa0d1e in statement (cli.zig)
+            .initialize, .assign => |store| try self.storeStatement(store, span, s.data == .assign),
+                                                                   ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:798:54: 0x1a9f053 in statement (cli.zig)
+                for (items) |item| try self.statement(item);
+                                                     ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:1405:35: 0x1ac1b45 in expressionPlace (cli.zig)
+                try self.statement(block.body);
+                                  ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:1390:36: 0x1b6bee5 in expression (cli.zig)
+        return self.expressionPlace(id, null);
+                                   ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:816:56: 0x1a9fbef in statement (cli.zig)
+            .discard => |value| _ = try self.expression(value),
+                                                       ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:798:54: 0x1a9f053 in statement (cli.zig)
+                for (items) |item| try self.statement(item);
+                                                     ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:2547:20: 0x1a8b21f in buildFunction (cli.zig)
+    try b.statement(checked.scope.body);
+                   ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:144:37: 0x1a4dbf0 in buildRootsCached (cli.zig)
+            } else try buildFunction(&mb, function, mb.module.functions.items[index]);
+                                    ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:88:28: 0x1a4ac3f in buildRootsInput (cli.zig)
+    return buildRootsCached(allocator, roots, input, refusal, null) catch |err| switch (err) {
+                           ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build.zig:74:27: 0x2b88090 in buildExecutable (cli.zig)
+    return buildRootsInput(allocator, &.{input.program.main}, input, refusal);
+                          ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/main.zig:131:39: 0x32414ef in dumpIr (cli.zig)
+    var module = build.buildExecutable(allocator, .{ .program = checked.program, .source = checked.src, .single_owner = single_owner, .zero_rc = zero_rc }, &refusal) catch |err| switch (err) {
+                                      ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/main.zig:89:22: 0x3247167 in developer (cli.zig)
+        return dumpIr(init, args[2], with_facts, single_owner, zero_rc);
+                     ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/cli.zig:115:148: 0x323ee72 in dispatch (cli.zig)
+        for ([_][]const u8{ "dump-ir", "dump-typed", "coverage" }) |name| if (std.mem.eql(u8, command, name)) break :status try core_main.developer(init, args);
+                                                                                                                                                   ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/main.zig:263:33: 0x1475088 in dispatch (main.zig)
+    if (try mylang_core.dispatch(process, args)) |status| return status;
+                                ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/main.zig:159:28: 0x1477e98 in dispatchCommandLine (main.zig)
+    const status = dispatch(init) catch |err| status: {
+                           ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/wiring/process_start.zig:41:9: 0x14342fa in run__anon_32059 (main.zig)
+    body(.{ .minimal = minimal, .arena = &arena, .gpa = gpa, .io = threaded.io(), .environ_map = &environ_map, .preopens = preopens });
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/main.zig:148:22: 0x1433f11 in main (main.zig)
+    process_start.run(minimal, dispatchCommandLine);
+                     ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x143380f in callMain (std.zig)
+    if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x14331e1 in _start (std.zig)
+    asm volatile (switch (native_arch) {
+    ^

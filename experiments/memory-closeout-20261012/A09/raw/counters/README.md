@@ -44,5 +44,10 @@ debug/release recursive-copy regression), with build exit status 0. `focused.log
 contains its full output; the Zig runner also prints a `failed command` diagnostic
 after its explicit 2/2 PASS, while the encompassing build exits successfully.
 `hook-build.json` pins the tested compiler and exact modified source hashes.
-A separate raw post-hook counter archive is still being collected; final C1 must
-rerun the registered tests on the integrated compiler.
+`recursive-after-hook.json.gz` now records the two post-hook runs. In both modes,
+only `list_copies` (1 to 2) and `list_copy_bytes` (24 to 40) change; all other totals,
+including allocations, bytes, frees, managed peak, exit-live and RC events, are
+identical. The compiler binary is SHA256
+`2c18c6240e744495507075f59f6724bda4c7964f76ce946c6790d72048d5ad8e`.
+This is an interim compiler comparison with exact source hashes, not a final
+C1 measurement; final C1 must rerun the registered tests on the integrated compiler.

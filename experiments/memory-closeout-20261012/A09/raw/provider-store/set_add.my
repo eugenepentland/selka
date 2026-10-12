@@ -1,0 +1,4 @@
+func main() -> int:
+    mut values: set[str] = set()
+    values.add("x")
+    return len(values)

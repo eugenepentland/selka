@@ -1,0 +1,61 @@
+{
+  "set_add": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/provider-repro/set_add.my",
+      "--experimental-zero-rc"
+    ],
+    "status": -6,
+    "source_sha256": "e92a9925af55440079265424f9bc15d439d5948dd6b56c75e14a47aadc63814b",
+    "panic": [
+      "thread 2883663 panic: index out of bounds: index 4294967295, len 2"
+    ]
+  },
+  "dict_set": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/provider-repro/dict_set.my",
+      "--experimental-zero-rc"
+    ],
+    "status": 0,
+    "source_sha256": "29afda4ee0103c919a90ce993f52aa0e285ff39d444c81f30aecf67898300129",
+    "panic": []
+  },
+  "unit_call": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/provider-repro/unit_call.my",
+      "--experimental-zero-rc"
+    ],
+    "status": 0,
+    "source_sha256": "23177f3ec17526f8872d2004b7ab5411c358cb6a1b9d8d2a98586884ba97d30f",
+    "panic": []
+  },
+  "list_append": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/provider-repro/list_append.my",
+      "--experimental-zero-rc"
+    ],
+    "status": 0,
+    "source_sha256": "0b55596d3b309f94c12db801aff81d8960ed3dc7246f55b36079fd873bed07ae",
+    "panic": []
+  },
+  "record_set": {
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/provider-repro/record_set.my",
+      "--experimental-zero-rc"
+    ],
+    "status": -6,
+    "source_sha256": "6deb672cb84a6937753fc82beda1ea20805a0a68087669f153a830781791036c",
+    "panic": [
+      "thread 2883766 panic: index out of bounds: index 4294967295, len 3"
+    ]
+  }
+}

@@ -154,3 +154,16 @@ instrumentation and retains zero-valued historical telemetry fields. A03 knows
 the v1 schema remains strict. `retirement/ce-lists-review.md` records necessary
 optimization oracle migrations; A06 source hashes and exact checked IR must guide
 that work. A prepared patch/review is not completed retirement.
+
+
+Post-hook raw confirmation is complete in `raw/counters/recursive-after-hook.json.gz`:
+checked debug/release have exactly two copies/40 bytes, with every other total
+unchanged from the Support4 reproducer (including mode-specific allocations and
+peak608). No runtime/RSS claim is attached to these instrumented runs.
+
+Host admission monitoring: `raw/three-slot-sample.json` observed at least18.70GB
+MemAvailable over31seconds, but that interval covered light/drained work and is
+not a heavy-build peak. The coordinator separately approved3 build slots with an
+8GiB available-memory admission threshold. An external cooperating development-loop
+session held timing admission for several minutes with all build slots idle;
+its delay is queue time, not compiler/guest time. It was not interrupted.
