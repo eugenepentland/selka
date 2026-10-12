@@ -1,0 +1,5 @@
+oracle zero verify True
+reduced zero verify True
+control zero verify True
+build-slot: FIFO ticket 857, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 857 after 5s

@@ -1,0 +1,5 @@
+oracle zero no_facts True
+reduced zero no_facts True
+control zero no_facts True
+build-slot: FIFO ticket 859, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 859 after 5s

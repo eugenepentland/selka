@@ -156,6 +156,9 @@ pub fn functionWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator,
         stats.promoted = promoted.lists;
         reserveFills(f, known);
     }
+    // Resolve duplicate record roots before matching an exact element-field round trip.
+    // Keep the later merge too: borrow forwarding can introduce fresh field reads.
+    if (module.zero_rc) try mergeFieldReads(scratch, f);
     // Element-field stores in place, before any update gets its copy-on-write form.
     _ = try elements.fieldStores(arena, module, f);
     // Byte-buffer appends become updates the emitter does inline.

@@ -1,0 +1,59 @@
+{
+  "base": "07f16c65415819c36c46eb0657530abce734e395",
+  "source_sha256": {
+    "src/core/own.zig": "2ac64cacf087060d42db24f55c7335a444f16111b3582cfb0a3ebbe2d286dbca",
+    "src/core/a02_scalar_child_test.zig": "f172d84f9f3fa2e8d52fe160a9f666de7a51700f9ed9bc98c701aafd6a4ea92e",
+    "src/core/a02_scalar_child_fixture.my": "d76cdd501472e7a458e274765f147dd59ee193fb2e08a39f493a3c49d05e6b5c",
+    "src/core/a02_scalar_child_reduced.my": "184b7ee584526ef9fcea0d4fb8bd965a6160b92ac0af481ab168a95a538ca355",
+    "src/core/a02_scalar_child_control.my": "b2c75f3a48cfb044909f5bccab2abc54effbb081fc6d6c0231a5d1ba4d492450",
+    "src/core/elements.zig": "74bca5b877f42ae46a657a8929a2d20fc81245e401e8c51429a195fc3460da50",
+    "src/core/stores.zig": "c50ca6b74d7bdb2cfa885be6f61d4007a738930b54a78ca7a2ed84d8c7f75730",
+    "src/core/borrow_fields.zig": "9f17cbf8b5ec8afbaeebad374ac4f2aeb73e1136b13ea252ee53b739db8cc81c",
+    "src/core/root_test.zig": "ff776db5b8bc327a56b601ffdee8ebcc5d02308b7ce1567addc6272e435d7c55"
+  },
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "components": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/install/libexec/mylang/components",
+  "component_boundary": "Support6 independent owned pin supplies components; final default/retirement package qualification is separate",
+  "steps": [
+    {
+      "name": "build",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build",
+        "core-test-binary",
+        "-Dtest-filter=zero RC A02 scalar child writes",
+        "-j4",
+        "--maxrss",
+        "8589934592",
+        "--prefix",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/scalar-child-validation/install",
+        "-Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+        "-Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 0.586190250935033,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "test",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/scalar-child-validation/install/focus/core-tests",
+        "--guardian-filter=zero RC A02 scalar child writes"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 2.299104357836768,
+      "stdout": "",
+      "stderr": "guardian/test: 1 test(s) selected by filter: \"zero RC A02 scalar child writes\"\nAll 1 tests passed.\nguardian/test: test wall 2.29s; slowest over 50ms:\nguardian/test:   2.29s  a02_scalar_child_test.test.zero RC A02 scalar child writes preserve nested owned fields\nguardian/test: PASS \u2014 1 passed\nguardian/test: RESULT {\"passed\":1,\"failed\":0,\"skipped\":0}\n"
+    }
+  ],
+  "complete": true,
+  "compiler": {
+    "path": ".zig-cache/o/246c5d773299b5a4dd2c645e0df22ad5/mylang",
+    "sha256": "9cf63dcedfc4a12a7224d64b8ed03c8f6836fbefb04978f0c48dbd514836838c",
+    "options": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/af436739710405f32441de09e867a9cf/options.zig"
+  },
+  "test_binary_sha256": "2fae8a162ddcea835f602fdb25de887859b8dd5520adee2e4a501c5986bf92e4",
+  "pass": true
+}
