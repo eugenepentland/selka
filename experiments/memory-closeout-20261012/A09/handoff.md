@@ -1,5 +1,15 @@
 # A09 handoff — prepared runtime matrix, frozen baselines and versioning fix
 
+Current endpoint (2026-10-12): the user deferred further benchmarks and asked the
+coordinator to stop at a green full verification gate. A09 has no active or queued
+measurement. [Final performance handoff](final-performance-handoff.md) and its
+[JSON](final-performance-handoff.json) supersede the earlier measurement schedule:
+three paired Support7 runtime cases are complete (66 launches), all fifteen
+exact-sized counter comparisons are complete, and twelve runtime cases, all guest
+RSS comparisons and matched final compile scaling are deferred. These are C0 to
+Support7 observations only; later fixes and the eventual gate revision are not
+performance-qualified. No historical raw evidence was rewritten.
+
 Support7 checkpoint: source `bed11cf3bf3102ffec44487e431a1573fdf02ad5`, complete
 ReleaseFast compiler SHA-256 `540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef`.
 Eight uncounted Release binaries cover all fifteen unchanged timing inputs;
