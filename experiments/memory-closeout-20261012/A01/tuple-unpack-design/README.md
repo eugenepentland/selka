@@ -90,3 +90,17 @@ Shared `typed.Store` is a validation overlay matching A08 prerequisite commit
 `8f5206e4e`). The A01 feature commit intentionally excludes that shared declaration.
 `dictionary_views.zig` is an unrelated authorized validation overlay, also excluded.
 The exact root-authored frontend/Core test imports belong to this checkpoint.
+
+The follow-up fixture correction renames only the evaluation-order helper to
+`evaluated_pair`, avoiding shadowing the unchanged provider fixture local `pair`.
+`frontend-followup.json` records updated source hashes, the preserved original
+E_SHADOWING, and successful combined frontend admission. All four pending-Result
+frontend refusal controls also pass. `generic-manifest.json` pins the additional
+three-instantiation cache probe. Native and integrated cache qualification remain
+pending. Initial `manifest.json` hashes describe the original checkpoint revision.
+
+The registered native oracle now requires `tuple-providers 56`, computed from the
+lengths of the actual independent provider file contents after complete tuple
+unpack. The unchanged standalone A05 fixture remains preserved separately. The
+extended combined source passes ordinary frontend checking; its native three-line
+output is still an expected oracle, not an observed native result.

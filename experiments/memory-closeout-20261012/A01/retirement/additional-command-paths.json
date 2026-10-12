@@ -1,0 +1,29 @@
+{
+  "status": "unapplied inventory only; not legacy retirement",
+  "active_worker_commit": "10f5e21aff4d49b2a92916003bee28e3555d4eff",
+  "tests": [
+    {
+      "path": "src/core/a01_dict_items_test.zig",
+      "sha256": "cc8862f912192fa05776243ebcbf3f10d44fe80816f10cce68f193bd824f0a57",
+      "selector_occurrences": 1,
+      "required_action": "after C2 authorization remove prototype selector; retain all source/output/counter/refusal/structural assertions"
+    },
+    {
+      "path": "src/core/a01_fresh_field_test.zig",
+      "sha256": "86878db384e4120d9a64be402f1922db7d391f6fa04a888a7f12bd774ab2a17e",
+      "selector_occurrences": 1,
+      "required_action": "after C2 authorization remove prototype selector; retain all source/output/counter/refusal/structural assertions"
+    },
+    {
+      "path": "src/core/a01_tuple_unpack_test.zig",
+      "sha256": "5521f6c951f5603db0e2cc349c7e79165abc66e52c7f1ea8c787c24ee14b504c",
+      "selector_occurrences": 1,
+      "required_action": "after C2 authorization remove prototype selector; retain all source/output/counter/refusal/structural assertions"
+    }
+  ],
+  "harness": "A01/qualify.py --ordinary selects no prototype flag; final C2/C3 rerun mandatory",
+  "notes": [
+    "New tuple test requires atomic A07 Core and A08 v8 dependency integration before qualification.",
+    "Existing retirement.patch remains pinned to original file identities; reconcile later runtime owner edits when applying."
+  ]
+}

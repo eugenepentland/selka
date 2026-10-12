@@ -1,4 +1,4 @@
-func pair(mut events: int[]) -> tuple[str, str]:
+func evaluated_pair(mut events: int[]) -> tuple[str, str]:
     events.append(1)
     return "first-" + str(1), "second-" + str(2)
 func index(mut events: int[], value: int) -> int:
@@ -30,7 +30,7 @@ func main(out: Stream) -> int:
     words[0], words[1] = words[1].copy(), words[0].copy()
     assert words == ["b2", "a1"]
     mut events: int[] = []
-    words[index(mut events, 2)], words[index(mut events, 3)] = pair(mut events)
+    words[index(mut events, 2)], words[index(mut events, 3)] = evaluated_pair(mut events)
     assert events == [1, 2, 3] and words == ["second-2", "a1"]
     const original = owned()
     const duplicate = clone(original)

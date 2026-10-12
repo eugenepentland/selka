@@ -9,7 +9,7 @@ const report = std.debug.print;
 const source =
     \\import filesystem
     \\
-    \\func pair(mut events: int[]) -> tuple[str, str]:
+    \\func evaluated_pair(mut events: int[]) -> tuple[str, str]:
     \\    events.append(1)
     \\    return "first-" + str(1), "second-" + str(2)
     \\func index(mut events: int[], value: int) -> int:
@@ -41,7 +41,7 @@ const source =
     \\    words[0], words[1] = words[1].copy(), words[0].copy()
     \\    assert words == ["b2", "a1"]
     \\    mut events: int[] = []
-    \\    words[index(mut events, 2)], words[index(mut events, 3)] = pair(mut events)
+    \\    words[index(mut events, 2)], words[index(mut events, 3)] = evaluated_pair(mut events)
     \\    assert events == [1, 2, 3] and words == ["second-2", "a1"]
     \\    const original = owned()
     \\    const duplicate = clone(original)
@@ -102,11 +102,15 @@ const source =
     \\    const first_fs, second_fs = moved
     \\    _ = first_fs.write_text("note", "first")
     \\    _ = second_fs.write_text("note", "second")
+    \\    mut checksum = 0
     \\    with first_fs.open("note", "r") as first:
     \\        with second_fs.open("note", "r") as second:
-    \\            assert first.read() == "first" and second.read() == "second"
+    \\            const first_text = first.read()
+    \\            const second_text = second.read()
+    \\            assert first_text == "first" and second_text == "second"
+    \\            checksum = len(first_text) * 10 + len(second_text)
     \\    assert first_fs.exists("note") and second_fs.exists("note")
-    \\    return 0
+    \\    return checksum
     \\
     \\func chosen_provider() -> Filesystem:
     \\    const chosen, _ = providers()
@@ -129,8 +133,10 @@ const source =
     \\func main(out: Stream) -> int:
     \\    assert managed_test(out) == 0
     \\    assert result_test(out) == 0
-    \\    assert provider_test() == 0
+    \\    const provider_checksum = provider_test()
+    \\    assert provider_checksum == 56
     \\    assert provider_extra() == 0
+    \\    out.print("tuple-providers", provider_checksum)
     \\    return 0
 ;
 
@@ -263,14 +269,14 @@ fn field(value: std.json.Value, path: []const []const u8) i64 {
     return at.integer;
 }
 
-fn inspect(a: std.mem.Allocator, binary: []const u8, llvm_path: []const u8) !void {
+fn inspect(a: std.mem.Allocator, binary: []const u8, llvm_path: []const u8, expected: []const u8) !void {
     const path = try std.fmt.allocPrint(a, "{s}.json", .{binary});
     var environment = std.process.Environ.Map.init(a);
     try environment.put("MYLANG_COUNTERS", path);
     const ran = try std.process.run(a, std.testing.io, .{ .argv = &.{binary}, .environ_map = &environment });
     if (ran.term != .exited or ran.term.exited != 0) report("tuple unpack run: {s}{s}\n", .{ ran.stdout, ran.stderr });
     try std.testing.expect(ran.term == .exited and ran.term.exited == 0);
-    try std.testing.expectEqualStrings("tuple-unpack 3\ntuple-results 28\n", ran.stdout);
+    try std.testing.expectEqualStrings(expected, ran.stdout);
     try std.testing.expectEqualStrings("", ran.stderr);
     const counts = try std.json.parseFromSliceLeaky(std.json.Value, a, try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(16 << 20)), .{});
     for ([_][]const u8{ "runtime_retains", "runtime_releases", "shared_retains", "shared_releases", "share_marks", "live_bytes_at_exit" }) |name|
@@ -307,6 +313,6 @@ test "A01 zero RC complete tuple staging transfers managed and provider fields" 
         const built = try std.process.run(a, std.testing.io, .{ .argv = argv.items });
         if (built.term != .exited or built.term.exited != 0) report("tuple unpack build: {s}{s}\n", .{ built.stdout, built.stderr });
         try std.testing.expect(built.term == .exited and built.term.exited == 0);
-        try inspect(a, binary, llvm_path);
+        try inspect(a, binary, llvm_path, "tuple-unpack 3\ntuple-results 28\ntuple-providers 56\n");
     }
 }

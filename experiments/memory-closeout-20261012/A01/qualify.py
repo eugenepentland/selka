@@ -24,6 +24,8 @@ EXPECTED = {'wide': '2145\n', 'managed': '2016 item-0! 16\n', 'outcome': '416\n'
 EXPECTED['result_list']='27 4 5 4 5\n3889\n'
 EXPECTED['dict_items']='passed 38\n'
 EXPECTED['fresh_field']='fresh-field 23\n'
+EXPECTED['tuple_unpack']='tuple-unpack 3\ntuple-results 28\ntuple-providers 56\n'
+EXPECTED['tuple_generic']='tuple-generic generic-9 3 2 8\n'
 
 EXPECTED['result_direct']=EXPECTED['result']
 
@@ -70,6 +72,20 @@ def main():
     results['refusals']['pending_result_list']=rejection
     if not rejection['passed']: results['failures'].append('pending_result_list/refusal')
     save()
+    if any(case in ('tuple_unpack','tuple_generic') for case in a.cases):
+        negative_dir=HERE/'tuple-unpack-design/sources'
+        controls={'borrowed_unpack':'E_SINGLE_OWNER_BORROW','use_whole_after':'E_SINGLE_OWNER_MOVED',
+                  'partial_field':'E_SINGLE_OWNER_BORROW','unhandled_field':'E_RESULT_UNHANDLED',
+                  'overwrite_field':'E_RESULT_OVERWRITE','copied_obligation':'E_RESULT_UNHANDLED',
+                  'duplicate_result_destination':'E_RESULT_OVERWRITE'}
+        for case,code in controls.items():
+            source=negative_dir/(case+'.my')
+            rejection=run([a.compiler,'check',source,*selector,'--cache-dir',a.output/'cache'],env)
+            rejection['source_sha256']=digest(source)
+            rejection['passed']=rejection['status']==1 and ('error['+code+']') in rejection['stderr']
+            results['refusals']['tuple_'+case]=rejection
+            if not rejection['passed']: results['failures'].append('tuple_'+case+'/refusal')
+            save()
     for case in a.cases:
         source=HERE/'samples'/(case+'.my')
         for mode in a.modes:
@@ -98,6 +114,9 @@ def main():
                         record['counts_path']=str(counts.relative_to(a.output))
                         record['audit']=_audit.audit(counts)
                         if case!='trap': record['passed'] &= record['audit']['managed_leak_free'] and record['audit']['observed_rc_free']
+                    elif case!='trap' and mode!='tsan':
+                        record['passed']=False
+                        record['missing_counts']=True
                     if not record['passed']: results['failures'].append(case+'/'+mode+'/'+threads+'/'+str(repetition))
                     item['runs'].append(record)
             print(case,mode,'pass' if all(x['passed'] for x in item['runs']) else 'FAIL',flush=True); save()
