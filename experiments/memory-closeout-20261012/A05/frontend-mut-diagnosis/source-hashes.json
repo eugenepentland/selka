@@ -1,0 +1,7 @@
+{
+  "src/core/build.zig": "127fbf16b5076f65d8c41bcb09a1b27f231d0d83094cb905a94656197d88a715",
+  "src/core/a05_scalar_mut_test.zig": "9ac722b42b46e95b09d805f3f5f4a02c9eb434885762c816bcbd77a15b390793",
+  "src/core/a05_scalar_mut_fixture.my": "f992a4984dd748f01dd7eaaf6545e1c34384e3e8cd47b2cf6c58bfab58aeb0e7",
+  "src/core/root_test.zig": "be6b561e821bda6b11af8afe683a710e36b66b2f1a78dedcbb04208b78a0b862",
+  "tests/lang/frontend_mut.my": "63f4c3fe8c95224fd28e5949e413efc43aa01550a2300bfc16be945fb23594e6"
+}

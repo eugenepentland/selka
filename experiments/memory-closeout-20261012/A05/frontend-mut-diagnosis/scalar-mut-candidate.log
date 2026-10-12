@@ -1,0 +1,10 @@
+build-slot: FIFO ticket 1248, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1248 after 11s
+release 0 {'passed': 10, 'failed': 0, 'unsupported': 0}
+debug 0 {'passed': 10, 'failed': 0, 'unsupported': 0}
+verified 0 {'passed': 10, 'failed': 0, 'unsupported': 0}
+optimized-debug 0 {'passed': 10, 'failed': 0, 'unsupported': 0}
+no-facts 0 {'passed': 10, 'failed': 0, 'unsupported': 0}
+dynamic 0 0
+named 0 0
+dynamic-values 0 132

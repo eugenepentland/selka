@@ -1,0 +1,253 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "cases": [
+    {
+      "name": "dynamic-ordinary-test",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/dynamic-ordinary-test-cache",
+        "--filter",
+        "test_",
+        "--force",
+        "--json",
+        "--jobs",
+        "1"
+      ],
+      "source_sha256": "ef6036ea03a49bd72265d67afb1babcc6b808a17d9695272311cf8c171e31b22",
+      "status": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"dynamic::test_dynamic_mut_disjoint_targets\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"b3c714fbf3c39babf13b9aaba95e799aa2de5ec4e52cbbea383625e64535ae74\",\"component\":\"361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my#8c13377baa49a142fd1cd40844ec18c70ef50e8692228dd4814026be191988c8\",\"producer\":{\"facts\":{\"fresh\":2,\"reused\":0,\"fallback\":2,\"decoded\":0},\"lowering\":{\"fresh\":2,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":2,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":8,\"index_edges\":5,\"affected_nodes\":2,\"closure_nodes\":4,\"closure_edges\":1,\"reused_tests\":0,\"planned_tests\":1},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":3637,\"save_bytes_prepared\":4966,\"sequence_locks\":12}},\"nanoseconds\":{\"lowering\":485847,\"facts\":108818,\"graph\":10205,\"planner\":5321571,\"keys\":4994,\"publication\":588369,\"total\":6556718},\"transport\":{\"request_bytes\":220,\"reply_bytes\":160,\"startups\":1}}}}],\"passed\":1,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my\"]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "dynamic-ordinary-build",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/dynamic-ordinary-build-cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/dynamic-ordinary-build",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/dynamic-ordinary-build.ll"
+      ],
+      "source_sha256": "ef6036ea03a49bd72265d67afb1babcc6b808a17d9695272311cf8c171e31b22",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "run": {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "dynamic-owned-test",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/dynamic-owned-test-cache",
+        "--experimental-zero-rc",
+        "--filter",
+        "test_",
+        "--force",
+        "--json",
+        "--jobs",
+        "1"
+      ],
+      "source_sha256": "ef6036ea03a49bd72265d67afb1babcc6b808a17d9695272311cf8c171e31b22",
+      "status": 1,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"dynamic::test_dynamic_mut_disjoint_targets\",\"status\":\"failed\",\"reason\":\"expected true, got false\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"8fc9a8d47c9aaa85c7bc046b51930c0c0a7056c5bd7917c123945cc32368b348\",\"component\":\"361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my#8c13377baa49a142fd1cd40844ec18c70ef50e8692228dd4814026be191988c8\",\"producer\":{\"facts\":{\"fresh\":2,\"reused\":0,\"fallback\":2,\"decoded\":0},\"lowering\":{\"fresh\":2,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":2,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":8,\"index_edges\":5,\"affected_nodes\":2,\"closure_nodes\":4,\"closure_edges\":1,\"reused_tests\":0,\"planned_tests\":1},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":3635,\"save_bytes_prepared\":4966,\"sequence_locks\":12}},\"nanoseconds\":{\"lowering\":240346,\"facts\":51769,\"graph\":7257,\"planner\":1999597,\"keys\":2431,\"publication\":342222,\"total\":2675973},\"transport\":{\"request_bytes\":220,\"reply_bytes\":160,\"startups\":1}}}}],\"passed\":0,\"failed\":1,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my\"]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "dynamic-owned-build",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/dynamic-owned-build-cache",
+        "--experimental-zero-rc",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/dynamic-owned-build",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/dynamic-owned-build.ll"
+      ],
+      "source_sha256": "ef6036ea03a49bd72265d67afb1babcc6b808a17d9695272311cf8c171e31b22",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "run": {
+        "status": 1,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "named-ordinary-test",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/named-ordinary-test-cache",
+        "--filter",
+        "test_",
+        "--force",
+        "--json",
+        "--jobs",
+        "1"
+      ],
+      "source_sha256": "c0aa01f024522aae0849a45531a02abd16cea4b51f9388b2aec5c878054a037d",
+      "status": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"named::test_named_mut_interior_places_preserve_storage_and_written_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"56bbb66937ff958a8b38ff822b6eb60f166bd2e7470398c3c2d7e5e420d72a8f\",\"component\":\"361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my#6876cbcec8cb5bb6fc63efc3d3ae200a87c2ee9f52bceea5cb274f4e7b470d44\",\"producer\":{\"facts\":{\"fresh\":3,\"reused\":0,\"fallback\":3,\"decoded\":0},\"lowering\":{\"fresh\":3,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":3,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":12,\"index_edges\":10,\"affected_nodes\":3,\"closure_nodes\":6,\"closure_edges\":2,\"reused_tests\":0,\"planned_tests\":1},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":5822,\"save_bytes_prepared\":9940,\"sequence_locks\":15}},\"nanoseconds\":{\"lowering\":518835,\"facts\":153201,\"graph\":9185,\"planner\":2118765,\"keys\":3673,\"publication\":857031,\"total\":3696101},\"transport\":{\"request_bytes\":264,\"reply_bytes\":176,\"startups\":1}}}}],\"passed\":1,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my\"]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "named-ordinary-build",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/named-ordinary-build-cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/named-ordinary-build",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/named-ordinary-build.ll"
+      ],
+      "source_sha256": "c0aa01f024522aae0849a45531a02abd16cea4b51f9388b2aec5c878054a037d",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "run": {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "named-owned-test",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/named-owned-test-cache",
+        "--experimental-zero-rc",
+        "--filter",
+        "test_",
+        "--force",
+        "--json",
+        "--jobs",
+        "1"
+      ],
+      "source_sha256": "c0aa01f024522aae0849a45531a02abd16cea4b51f9388b2aec5c878054a037d",
+      "status": 1,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"named::test_named_mut_interior_places_preserve_storage_and_written_order\",\"status\":\"failed\",\"reason\":\"build error (SourceError): named.my:20:17: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"992ff8b6cb8d9f58d3db602fc21fef6cf72d0cd108f25dabd8d805bfc5fa6627\",\"component\":\"361ed85cdeee5efe267bb29357c30a460a9915dedc4aa1f30a2115c2c8828b11\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my#6876cbcec8cb5bb6fc63efc3d3ae200a87c2ee9f52bceea5cb274f4e7b470d44\",\"producer\":{\"facts\":{\"fresh\":3,\"reused\":0,\"fallback\":3,\"decoded\":0},\"lowering\":{\"fresh\":3,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":3,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":12,\"index_edges\":10,\"affected_nodes\":3,\"closure_nodes\":6,\"closure_edges\":2,\"reused_tests\":0,\"planned_tests\":1},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":5811,\"save_bytes_prepared\":9905,\"sequence_locks\":15}},\"nanoseconds\":{\"lowering\":556638,\"facts\":176587,\"graph\":10189,\"planner\":2528288,\"keys\":3827,\"publication\":855310,\"total\":4169521},\"transport\":{\"request_bytes\":264,\"reply_bytes\":176,\"startups\":1}}}}],\"passed\":0,\"failed\":1,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my\"]}\n",
+      "stderr": ""
+    },
+    {
+      "name": "named-owned-build",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/named-owned-build-cache",
+        "--experimental-zero-rc",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/named-owned-build",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/named-owned-build.ll"
+      ],
+      "source_sha256": "c0aa01f024522aae0849a45531a02abd16cea4b51f9388b2aec5c878054a037d",
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my:20:17: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression\n      mut point = Point(x=2, values=[3])\n                  ^\n"
+    },
+    {
+      "name": "values-ordinary",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic-values.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/values-ordinary-cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/values-ordinary",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/values-ordinary.ll"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "run": {
+        "status": 132,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "values-owned",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic-values.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/values-owned-cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/values-owned",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/values-owned.ll",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "run": {
+        "status": 32,
+        "stdout": "",
+        "stderr": ""
+      }
+    }
+  ]
+}

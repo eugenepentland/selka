@@ -1,0 +1,2132 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.zig-cache/o/da8bf6c48a0939c468662b025bb4ba64/mylang",
+  "compiler_sha256": "679c9d9622237a4a2293160e06cfed43b9c7a6ec2734caead40272e070cf963c",
+  "base": "d01f772cd0cfa823a9ec6a8838aaf5c4856710b4",
+  "production_overlay": {
+    "src/core/build.zig": "127fbf16b5076f65d8c41bcb09a1b27f231d0d83094cb905a94656197d88a715"
+  },
+  "cases": [
+    {
+      "name": "release",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.zig-cache/o/da8bf6c48a0939c468662b025bb4ba64/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--force",
+        "--json",
+        "--jobs",
+        "1",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.tmp/memory-closeout/A05/scalar-mut/candidate/cache"
+      ],
+      "status": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"frontend_mut::test_block_scope_allows_separate_siblings\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"503e1e4d21586e754eea63a74db3426c4407543152a3bcf98ba3ea36d1b833ad\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my#3b3227491da875bd7a4b296a6128939f355fb3fb1783925b2eff64736bfc3bce\",\"producer\":{\"facts\":{\"fresh\":18,\"reused\":0,\"fallback\":18,\"decoded\":0},\"lowering\":{\"fresh\":18,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":18,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":72,\"index_edges\":50,\"affected_nodes\":18,\"closure_nodes\":40,\"closure_edges\":10,\"reused_tests\":0,\"planned_tests\":10},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":23039,\"save_bytes_prepared\":39935,\"sequence_locks\":60}},\"nanoseconds\":{\"lowering\":6361208,\"facts\":2932571,\"graph\":176502,\"planner\":80284564,\"keys\":105511,\"publication\":6332813,\"total\":96433139},\"transport\":{\"request_bytes\":1004,\"reply_bytes\":432,\"startups\":1}}}},{\"name\":\"frontend_mut::test_dynamic_mut_disjoint_targets\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"b20c8f2cc71a5ee9a48c7224426bb3c34cd08cbe49f315c9e7b2746ba81e2475\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_mut_callback_updates_caller_scalar\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"b0353beb8655ce568ffc827e6cf2aa28fe0b569dd437e6e2f8a46de4d0dc0fa6\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_mut_snapshot_independence\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"b45f68297046bdf1c1e2c31b20ccb37a406fdb58cf73efac6338bbde539112bc\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_named_callback_evaluates_in_written_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"6311118b75fcdab66c257b7f103e5d9a2294f6813244e6af836d112b58dce0ad\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_named_mut_interior_places_preserve_storage_and_written_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"c17d8ae9a4d80236e77260b757456d560463eb5374c1b1ecbb35f08e1a662ab7\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_readonly_input_is_independent_of_mut_input\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"0483b158535e04df051c3df2680f350db6081feeac2b2869f5de627c5b0b6818\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_scalar_and_nested_mut_writeback\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"f192eb26a52bd9d54c29530221736fe344507167853716777ce27d8c5427d0c2\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_snapshot_survives_whole_mut_rebinding\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"24e09e0945af4ef07c2da6bf06656b08e188d222bae8a2877a57c50dd79a49da\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_whole_collection_rebinding\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"41fd1d04ebadb6265528a9e1ba532aa970db353dab508dcc904d866a8dddd1cd\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":10,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my\"]}\n",
+      "stderr": "",
+      "json": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "frontend_mut::test_block_scope_allows_separate_siblings",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "503e1e4d21586e754eea63a74db3426c4407543152a3bcf98ba3ea36d1b833ad",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": {
+                "scope": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my#3b3227491da875bd7a4b296a6128939f355fb3fb1783925b2eff64736bfc3bce",
+                "producer": {
+                  "facts": {
+                    "fresh": 18,
+                    "reused": 0,
+                    "fallback": 18,
+                    "decoded": 0
+                  },
+                  "lowering": {
+                    "fresh": 18,
+                    "reused": 0,
+                    "materialized": 0
+                  }
+                },
+                "graph": {
+                  "nodes_read": 0,
+                  "nodes_unchanged": 0,
+                  "changed_nodes": 18,
+                  "candidate_tests": 0,
+                  "shards_read": 0,
+                  "shards_written": 3
+                },
+                "planner": {
+                  "index_nodes": 72,
+                  "index_edges": 50,
+                  "affected_nodes": 18,
+                  "closure_nodes": 40,
+                  "closure_edges": 10,
+                  "reused_tests": 0,
+                  "planned_tests": 10
+                },
+                "storage": {
+                  "packed_bytes_read": 0,
+                  "decoded_bytes": 0,
+                  "blocks_decoded": 0,
+                  "payload_bytes_returned": 0,
+                  "block_cache_hits": 0,
+                  "publication": {
+                    "filename_lookups": 2,
+                    "refreshes": 3,
+                    "packs_prepared": 1,
+                    "pack_bytes_prepared": 23039,
+                    "save_bytes_prepared": 39935,
+                    "sequence_locks": 60
+                  }
+                },
+                "nanoseconds": {
+                  "lowering": 6361208,
+                  "facts": 2932571,
+                  "graph": 176502,
+                  "planner": 80284564,
+                  "keys": 105511,
+                  "publication": 6332813,
+                  "total": 96433139
+                },
+                "transport": {
+                  "request_bytes": 1004,
+                  "reply_bytes": 432,
+                  "startups": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "frontend_mut::test_dynamic_mut_disjoint_targets",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "b20c8f2cc71a5ee9a48c7224426bb3c34cd08cbe49f315c9e7b2746ba81e2475",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_mut_callback_updates_caller_scalar",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "b0353beb8655ce568ffc827e6cf2aa28fe0b569dd437e6e2f8a46de4d0dc0fa6",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_mut_snapshot_independence",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "b45f68297046bdf1c1e2c31b20ccb37a406fdb58cf73efac6338bbde539112bc",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_named_callback_evaluates_in_written_order",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "6311118b75fcdab66c257b7f103e5d9a2294f6813244e6af836d112b58dce0ad",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_named_mut_interior_places_preserve_storage_and_written_order",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "c17d8ae9a4d80236e77260b757456d560463eb5374c1b1ecbb35f08e1a662ab7",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_readonly_input_is_independent_of_mut_input",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "0483b158535e04df051c3df2680f350db6081feeac2b2869f5de627c5b0b6818",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_scalar_and_nested_mut_writeback",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "f192eb26a52bd9d54c29530221736fe344507167853716777ce27d8c5427d0c2",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_snapshot_survives_whole_mut_rebinding",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "24e09e0945af4ef07c2da6bf06656b08e188d222bae8a2877a57c50dd79a49da",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_whole_collection_rebinding",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "41fd1d04ebadb6265528a9e1ba532aa970db353dab508dcc904d866a8dddd1cd",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          }
+        ],
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "unsupported": 0,
+        "sources": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my"
+        ]
+      }
+    },
+    {
+      "name": "debug",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.zig-cache/o/da8bf6c48a0939c468662b025bb4ba64/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my",
+        "--experimental-zero-rc",
+        "--unoptimized",
+        "--force",
+        "--json",
+        "--jobs",
+        "1",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.tmp/memory-closeout/A05/scalar-mut/candidate/cache"
+      ],
+      "status": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"frontend_mut::test_block_scope_allows_separate_siblings\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"93efb2e6b3cb7384dccf028c390740c5c2b6a12881f98fa00c8f6e3a61652d6e\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my#3b3227491da875bd7a4b296a6128939f355fb3fb1783925b2eff64736bfc3bce\",\"producer\":{\"facts\":{\"fresh\":0,\"reused\":18,\"fallback\":0,\"decoded\":18},\"lowering\":{\"fresh\":0,\"reused\":18,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":18,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":1},\"planner\":{\"index_nodes\":72,\"index_edges\":50,\"affected_nodes\":18,\"closure_nodes\":40,\"closure_edges\":10,\"reused_tests\":0,\"planned_tests\":10},\"storage\":{\"packed_bytes_read\":15564,\"decoded_bytes\":39421,\"blocks_decoded\":1,\"payload_bytes_returned\":9066,\"block_cache_hits\":37,\"publication\":{\"filename_lookups\":3,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":1364,\"save_bytes_prepared\":818,\"sequence_locks\":4}},\"nanoseconds\":{\"lowering\":8782713,\"facts\":663793,\"graph\":168632,\"planner\":72163041,\"keys\":88445,\"publication\":1071199,\"total\":83203081},\"transport\":{\"request_bytes\":1004,\"reply_bytes\":432,\"startups\":1}}}},{\"name\":\"frontend_mut::test_dynamic_mut_disjoint_targets\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"37f8d35c7e2a8fc4ce87b1f68a66b83e64dadfc4e064d031fd4e32c29ca32dc1\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_mut_callback_updates_caller_scalar\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"9029ff701176a4dfaa888a86fcd11b4e56b059c87be8b87068fcbcb71bc7e160\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_mut_snapshot_independence\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ed851e7450525a99b6ba6ae56015961f59381466cd1c0c5f0b49684a2ccc706e\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_named_callback_evaluates_in_written_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"1792ac6641e2303038d754d02ab98d4877351f4bc776f05835ea9cd186d2a226\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_named_mut_interior_places_preserve_storage_and_written_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"66e04c7476deb73c7784d039595cba1a80cf333565a1acba34558a330bf6e1e9\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_readonly_input_is_independent_of_mut_input\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"4bcb5f5cbe72429546ea7581f166b0bfa02a109f9406d2d9fbaf0f48fa5048d3\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_scalar_and_nested_mut_writeback\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"db47fdb131276e6a0bf7cce7823e0764057a5ad0e1f55dedd7a1d4033bd680aa\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_snapshot_survives_whole_mut_rebinding\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"0e0a459c68d2f3531e6c38515bbfc34e3909354a7dbb93e8a64195313c2f7799\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_whole_collection_rebinding\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"1741d9efbc5170062ecab597e2ad5817ad5c5af1adfd48882d19805a54f150e7\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":10,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my\"]}\n",
+      "stderr": "",
+      "json": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "frontend_mut::test_block_scope_allows_separate_siblings",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "93efb2e6b3cb7384dccf028c390740c5c2b6a12881f98fa00c8f6e3a61652d6e",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": {
+                "scope": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my#3b3227491da875bd7a4b296a6128939f355fb3fb1783925b2eff64736bfc3bce",
+                "producer": {
+                  "facts": {
+                    "fresh": 0,
+                    "reused": 18,
+                    "fallback": 0,
+                    "decoded": 18
+                  },
+                  "lowering": {
+                    "fresh": 0,
+                    "reused": 18,
+                    "materialized": 0
+                  }
+                },
+                "graph": {
+                  "nodes_read": 0,
+                  "nodes_unchanged": 0,
+                  "changed_nodes": 18,
+                  "candidate_tests": 0,
+                  "shards_read": 0,
+                  "shards_written": 1
+                },
+                "planner": {
+                  "index_nodes": 72,
+                  "index_edges": 50,
+                  "affected_nodes": 18,
+                  "closure_nodes": 40,
+                  "closure_edges": 10,
+                  "reused_tests": 0,
+                  "planned_tests": 10
+                },
+                "storage": {
+                  "packed_bytes_read": 15564,
+                  "decoded_bytes": 39421,
+                  "blocks_decoded": 1,
+                  "payload_bytes_returned": 9066,
+                  "block_cache_hits": 37,
+                  "publication": {
+                    "filename_lookups": 3,
+                    "refreshes": 1,
+                    "packs_prepared": 1,
+                    "pack_bytes_prepared": 1364,
+                    "save_bytes_prepared": 818,
+                    "sequence_locks": 4
+                  }
+                },
+                "nanoseconds": {
+                  "lowering": 8782713,
+                  "facts": 663793,
+                  "graph": 168632,
+                  "planner": 72163041,
+                  "keys": 88445,
+                  "publication": 1071199,
+                  "total": 83203081
+                },
+                "transport": {
+                  "request_bytes": 1004,
+                  "reply_bytes": 432,
+                  "startups": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "frontend_mut::test_dynamic_mut_disjoint_targets",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "37f8d35c7e2a8fc4ce87b1f68a66b83e64dadfc4e064d031fd4e32c29ca32dc1",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_mut_callback_updates_caller_scalar",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "9029ff701176a4dfaa888a86fcd11b4e56b059c87be8b87068fcbcb71bc7e160",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_mut_snapshot_independence",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "ed851e7450525a99b6ba6ae56015961f59381466cd1c0c5f0b49684a2ccc706e",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_named_callback_evaluates_in_written_order",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "1792ac6641e2303038d754d02ab98d4877351f4bc776f05835ea9cd186d2a226",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_named_mut_interior_places_preserve_storage_and_written_order",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "66e04c7476deb73c7784d039595cba1a80cf333565a1acba34558a330bf6e1e9",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_readonly_input_is_independent_of_mut_input",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "4bcb5f5cbe72429546ea7581f166b0bfa02a109f9406d2d9fbaf0f48fa5048d3",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_scalar_and_nested_mut_writeback",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "db47fdb131276e6a0bf7cce7823e0764057a5ad0e1f55dedd7a1d4033bd680aa",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_snapshot_survives_whole_mut_rebinding",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "0e0a459c68d2f3531e6c38515bbfc34e3909354a7dbb93e8a64195313c2f7799",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_whole_collection_rebinding",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "1741d9efbc5170062ecab597e2ad5817ad5c5af1adfd48882d19805a54f150e7",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          }
+        ],
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "unsupported": 0,
+        "sources": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my"
+        ]
+      }
+    },
+    {
+      "name": "verified",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.zig-cache/o/da8bf6c48a0939c468662b025bb4ba64/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--verify-facts",
+        "--force",
+        "--json",
+        "--jobs",
+        "1",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.tmp/memory-closeout/A05/scalar-mut/candidate/cache"
+      ],
+      "status": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"frontend_mut::test_block_scope_allows_separate_siblings\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3b1eb8ad8f62aaf29db78ec558225f1609b9cb1908c8273dbe2ac97b346af50c\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my#3b3227491da875bd7a4b296a6128939f355fb3fb1783925b2eff64736bfc3bce\",\"producer\":{\"facts\":{\"fresh\":0,\"reused\":18,\"fallback\":0,\"decoded\":18},\"lowering\":{\"fresh\":0,\"reused\":18,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":18,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":1},\"planner\":{\"index_nodes\":72,\"index_edges\":50,\"affected_nodes\":18,\"closure_nodes\":40,\"closure_edges\":10,\"reused_tests\":0,\"planned_tests\":10},\"storage\":{\"packed_bytes_read\":15564,\"decoded_bytes\":39421,\"blocks_decoded\":1,\"payload_bytes_returned\":9066,\"block_cache_hits\":37,\"publication\":{\"filename_lookups\":4,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":1364,\"save_bytes_prepared\":818,\"sequence_locks\":4}},\"nanoseconds\":{\"lowering\":4766772,\"facts\":604687,\"graph\":153536,\"planner\":69295502,\"keys\":85171,\"publication\":1064243,\"total\":76179994},\"transport\":{\"request_bytes\":1004,\"reply_bytes\":432,\"startups\":1}}}},{\"name\":\"frontend_mut::test_dynamic_mut_disjoint_targets\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"4f6cd6d45558e71fbd6d267e6c35d3d39746417f68f6bc5e98f6968797a62768\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_mut_callback_updates_caller_scalar\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"01da5282bbcc8d60b8228babaab2009a6ed2e47e466c67e3cb838db6f8a7fac5\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_mut_snapshot_independence\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"925eb65bdaf20a5df92e9e12b346fe42c4f2e32b21f282af562be59e76cb7806\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_named_callback_evaluates_in_written_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"da9b8cc2125bcaa77bea27a9d01d1023d03c6c9063f3704253b872472fa4c05e\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_named_mut_interior_places_preserve_storage_and_written_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"04678f8dda5b158352ff70bb2d2e201354e7851665cad153b5c1d5c707ad211f\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_readonly_input_is_independent_of_mut_input\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"509111156d5caabef6e476813647a49ca8a612b4750fa85be3ab391c26c7501c\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_scalar_and_nested_mut_writeback\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"eca3875fa27ae77037a403049e9632c6c86f7ae89f9a7bf8d4a73b841db23185\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_snapshot_survives_whole_mut_rebinding\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"5b587309e34442e2c22cad806bf0dfa5df8edcacbb5fe89e062d70937a2c67c7\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_whole_collection_rebinding\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"7f7d4ead9f014379e6a8ba264cdb9ac1ab468f43bc0dc6b803e0b440df550e6f\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":10,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my\"]}\n",
+      "stderr": "",
+      "json": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "frontend_mut::test_block_scope_allows_separate_siblings",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "3b1eb8ad8f62aaf29db78ec558225f1609b9cb1908c8273dbe2ac97b346af50c",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": {
+                "scope": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my#3b3227491da875bd7a4b296a6128939f355fb3fb1783925b2eff64736bfc3bce",
+                "producer": {
+                  "facts": {
+                    "fresh": 0,
+                    "reused": 18,
+                    "fallback": 0,
+                    "decoded": 18
+                  },
+                  "lowering": {
+                    "fresh": 0,
+                    "reused": 18,
+                    "materialized": 0
+                  }
+                },
+                "graph": {
+                  "nodes_read": 0,
+                  "nodes_unchanged": 0,
+                  "changed_nodes": 18,
+                  "candidate_tests": 0,
+                  "shards_read": 0,
+                  "shards_written": 1
+                },
+                "planner": {
+                  "index_nodes": 72,
+                  "index_edges": 50,
+                  "affected_nodes": 18,
+                  "closure_nodes": 40,
+                  "closure_edges": 10,
+                  "reused_tests": 0,
+                  "planned_tests": 10
+                },
+                "storage": {
+                  "packed_bytes_read": 15564,
+                  "decoded_bytes": 39421,
+                  "blocks_decoded": 1,
+                  "payload_bytes_returned": 9066,
+                  "block_cache_hits": 37,
+                  "publication": {
+                    "filename_lookups": 4,
+                    "refreshes": 1,
+                    "packs_prepared": 1,
+                    "pack_bytes_prepared": 1364,
+                    "save_bytes_prepared": 818,
+                    "sequence_locks": 4
+                  }
+                },
+                "nanoseconds": {
+                  "lowering": 4766772,
+                  "facts": 604687,
+                  "graph": 153536,
+                  "planner": 69295502,
+                  "keys": 85171,
+                  "publication": 1064243,
+                  "total": 76179994
+                },
+                "transport": {
+                  "request_bytes": 1004,
+                  "reply_bytes": 432,
+                  "startups": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "frontend_mut::test_dynamic_mut_disjoint_targets",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "4f6cd6d45558e71fbd6d267e6c35d3d39746417f68f6bc5e98f6968797a62768",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_mut_callback_updates_caller_scalar",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "01da5282bbcc8d60b8228babaab2009a6ed2e47e466c67e3cb838db6f8a7fac5",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_mut_snapshot_independence",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "925eb65bdaf20a5df92e9e12b346fe42c4f2e32b21f282af562be59e76cb7806",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_named_callback_evaluates_in_written_order",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "da9b8cc2125bcaa77bea27a9d01d1023d03c6c9063f3704253b872472fa4c05e",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_named_mut_interior_places_preserve_storage_and_written_order",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "04678f8dda5b158352ff70bb2d2e201354e7851665cad153b5c1d5c707ad211f",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_readonly_input_is_independent_of_mut_input",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "509111156d5caabef6e476813647a49ca8a612b4750fa85be3ab391c26c7501c",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_scalar_and_nested_mut_writeback",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "eca3875fa27ae77037a403049e9632c6c86f7ae89f9a7bf8d4a73b841db23185",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_snapshot_survives_whole_mut_rebinding",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "5b587309e34442e2c22cad806bf0dfa5df8edcacbb5fe89e062d70937a2c67c7",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_whole_collection_rebinding",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "7f7d4ead9f014379e6a8ba264cdb9ac1ab468f43bc0dc6b803e0b440df550e6f",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          }
+        ],
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "unsupported": 0,
+        "sources": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my"
+        ]
+      }
+    },
+    {
+      "name": "optimized-debug",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.zig-cache/o/da8bf6c48a0939c468662b025bb4ba64/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my",
+        "--experimental-zero-rc",
+        "--optimize-debug",
+        "--force",
+        "--json",
+        "--jobs",
+        "1",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.tmp/memory-closeout/A05/scalar-mut/candidate/cache"
+      ],
+      "status": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"frontend_mut::test_block_scope_allows_separate_siblings\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"84d3f364b4a289669d2a52c36f929eff1aaad63a6099636d625f6fa79a0a3b6f\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my#3b3227491da875bd7a4b296a6128939f355fb3fb1783925b2eff64736bfc3bce\",\"producer\":{\"facts\":{\"fresh\":0,\"reused\":18,\"fallback\":0,\"decoded\":18},\"lowering\":{\"fresh\":0,\"reused\":18,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":18,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":1},\"planner\":{\"index_nodes\":72,\"index_edges\":50,\"affected_nodes\":18,\"closure_nodes\":40,\"closure_edges\":10,\"reused_tests\":0,\"planned_tests\":10},\"storage\":{\"packed_bytes_read\":15564,\"decoded_bytes\":39421,\"blocks_decoded\":1,\"payload_bytes_returned\":9066,\"block_cache_hits\":37,\"publication\":{\"filename_lookups\":5,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":1367,\"save_bytes_prepared\":818,\"sequence_locks\":4}},\"nanoseconds\":{\"lowering\":4807690,\"facts\":588478,\"graph\":166352,\"planner\":69010200,\"keys\":88018,\"publication\":1096612,\"total\":75962458},\"transport\":{\"request_bytes\":1004,\"reply_bytes\":432,\"startups\":1}}}},{\"name\":\"frontend_mut::test_dynamic_mut_disjoint_targets\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"b1ffbba0c784b3676819b38aa379592c7ee15ec571765a5df10e4886439f0201\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_mut_callback_updates_caller_scalar\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"89346ddef7c4738deffd04117c335f6b419843bfb8b228a54af4be0761c5cee2\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_mut_snapshot_independence\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"4236997ade1736b2e23007b5acb3c40583c5ca5f00c1e76c77db7e7df346e2b7\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_named_callback_evaluates_in_written_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"80509a797dbe4764692f4b629669f17554a2893ce04ebcb40994588f6503f819\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_named_mut_interior_places_preserve_storage_and_written_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"7e01ffa1fc99935689ae486e334834651f2c4407625c1bc5c9ff4bf2f810c608\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_readonly_input_is_independent_of_mut_input\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"d1b6f163cd9e8473dfe7304b23cbb8c89ecf7b4f5ea5cfaa5c66f700f66411db\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_scalar_and_nested_mut_writeback\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3c9932fadeb74d3f56ac1c6dba0ea78000a13f961b6281599e337a3b28456ceb\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_snapshot_survives_whole_mut_rebinding\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"05aa6522df179620e278e61396f681eb734125bb81134dab04c19f3e2559d948\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_whole_collection_rebinding\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"c61416d3820b244c86a48ba72ee26c8f2d28f3ddcf1bb11e8f38ff04212f9d90\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":10,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my\"]}\n",
+      "stderr": "",
+      "json": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "frontend_mut::test_block_scope_allows_separate_siblings",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "84d3f364b4a289669d2a52c36f929eff1aaad63a6099636d625f6fa79a0a3b6f",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": {
+                "scope": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my#3b3227491da875bd7a4b296a6128939f355fb3fb1783925b2eff64736bfc3bce",
+                "producer": {
+                  "facts": {
+                    "fresh": 0,
+                    "reused": 18,
+                    "fallback": 0,
+                    "decoded": 18
+                  },
+                  "lowering": {
+                    "fresh": 0,
+                    "reused": 18,
+                    "materialized": 0
+                  }
+                },
+                "graph": {
+                  "nodes_read": 0,
+                  "nodes_unchanged": 0,
+                  "changed_nodes": 18,
+                  "candidate_tests": 0,
+                  "shards_read": 0,
+                  "shards_written": 1
+                },
+                "planner": {
+                  "index_nodes": 72,
+                  "index_edges": 50,
+                  "affected_nodes": 18,
+                  "closure_nodes": 40,
+                  "closure_edges": 10,
+                  "reused_tests": 0,
+                  "planned_tests": 10
+                },
+                "storage": {
+                  "packed_bytes_read": 15564,
+                  "decoded_bytes": 39421,
+                  "blocks_decoded": 1,
+                  "payload_bytes_returned": 9066,
+                  "block_cache_hits": 37,
+                  "publication": {
+                    "filename_lookups": 5,
+                    "refreshes": 1,
+                    "packs_prepared": 1,
+                    "pack_bytes_prepared": 1367,
+                    "save_bytes_prepared": 818,
+                    "sequence_locks": 4
+                  }
+                },
+                "nanoseconds": {
+                  "lowering": 4807690,
+                  "facts": 588478,
+                  "graph": 166352,
+                  "planner": 69010200,
+                  "keys": 88018,
+                  "publication": 1096612,
+                  "total": 75962458
+                },
+                "transport": {
+                  "request_bytes": 1004,
+                  "reply_bytes": 432,
+                  "startups": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "frontend_mut::test_dynamic_mut_disjoint_targets",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "b1ffbba0c784b3676819b38aa379592c7ee15ec571765a5df10e4886439f0201",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_mut_callback_updates_caller_scalar",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "89346ddef7c4738deffd04117c335f6b419843bfb8b228a54af4be0761c5cee2",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_mut_snapshot_independence",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "4236997ade1736b2e23007b5acb3c40583c5ca5f00c1e76c77db7e7df346e2b7",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_named_callback_evaluates_in_written_order",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "80509a797dbe4764692f4b629669f17554a2893ce04ebcb40994588f6503f819",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_named_mut_interior_places_preserve_storage_and_written_order",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "7e01ffa1fc99935689ae486e334834651f2c4407625c1bc5c9ff4bf2f810c608",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_readonly_input_is_independent_of_mut_input",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "d1b6f163cd9e8473dfe7304b23cbb8c89ecf7b4f5ea5cfaa5c66f700f66411db",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_scalar_and_nested_mut_writeback",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "3c9932fadeb74d3f56ac1c6dba0ea78000a13f961b6281599e337a3b28456ceb",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_snapshot_survives_whole_mut_rebinding",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "05aa6522df179620e278e61396f681eb734125bb81134dab04c19f3e2559d948",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_whole_collection_rebinding",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "c61416d3820b244c86a48ba72ee26c8f2d28f3ddcf1bb11e8f38ff04212f9d90",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          }
+        ],
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "unsupported": 0,
+        "sources": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my"
+        ]
+      }
+    },
+    {
+      "name": "no-facts",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.zig-cache/o/da8bf6c48a0939c468662b025bb4ba64/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--no-facts",
+        "--force",
+        "--json",
+        "--jobs",
+        "1",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.tmp/memory-closeout/A05/scalar-mut/candidate/cache"
+      ],
+      "status": 0,
+      "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"frontend_mut::test_block_scope_allows_separate_siblings\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"50bb4dd2b98e45f890056a6951c75e10628987f794930e803ec922b9b149ca88\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my#3b3227491da875bd7a4b296a6128939f355fb3fb1783925b2eff64736bfc3bce\",\"producer\":{\"facts\":{\"fresh\":0,\"reused\":18,\"fallback\":0,\"decoded\":18},\"lowering\":{\"fresh\":0,\"reused\":18,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":18,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":1},\"planner\":{\"index_nodes\":72,\"index_edges\":50,\"affected_nodes\":18,\"closure_nodes\":40,\"closure_edges\":10,\"reused_tests\":0,\"planned_tests\":10},\"storage\":{\"packed_bytes_read\":15564,\"decoded_bytes\":39421,\"blocks_decoded\":1,\"payload_bytes_returned\":9066,\"block_cache_hits\":37,\"publication\":{\"filename_lookups\":6,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":1365,\"save_bytes_prepared\":818,\"sequence_locks\":4}},\"nanoseconds\":{\"lowering\":4961777,\"facts\":650565,\"graph\":168492,\"planner\":65424157,\"keys\":81506,\"publication\":1020787,\"total\":72515446},\"transport\":{\"request_bytes\":1004,\"reply_bytes\":432,\"startups\":1}}}},{\"name\":\"frontend_mut::test_dynamic_mut_disjoint_targets\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"33b14ea7d7b3ddd59914da02558ac821acf4d938094f75c3924618d75154a08a\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_mut_callback_updates_caller_scalar\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"26b09c4f7f61f72c6903e34661f2408577b91280166398f78149650d944707fe\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_mut_snapshot_independence\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"dfaa46c1a9b5c0006e4b5eadf74a86e831bc76aa626a7c363a36c5e3a3781700\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_named_callback_evaluates_in_written_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"7fb3f22667196b4611cf2905f308d69ca2032623333efcbba3cc898e6c5bba0b\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_named_mut_interior_places_preserve_storage_and_written_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"189d65285d39ce09409d2c0d45fab52fbffe2e0f6dad57ff95ee99c04a22bbe9\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_readonly_input_is_independent_of_mut_input\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"c7fe40be15976216bb68db601ac85b064d094a37361df66d4599b46ccb7d2ad4\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_scalar_and_nested_mut_writeback\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3252004f831304e9d48838b1782698f2c23f9f7aed0aa22d543bac8f82a182c5\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_snapshot_survives_whole_mut_rebinding\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"8c2ef3fd4de09da17c4c383808fc499670c2140f2a0e9c03e93a6ca7a55cf803\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"frontend_mut::test_whole_collection_rebinding\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"c03a6b3da94d07591777c5a59cb8260ce8536e788876c254d153546f1eb853ae\",\"component\":\"aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":10,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my\"]}\n",
+      "stderr": "",
+      "json": {
+        "version": "native-tests-v1",
+        "tests": [
+          {
+            "name": "frontend_mut::test_block_scope_allows_separate_siblings",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "50bb4dd2b98e45f890056a6951c75e10628987f794930e803ec922b9b149ca88",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": {
+                "scope": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my#3b3227491da875bd7a4b296a6128939f355fb3fb1783925b2eff64736bfc3bce",
+                "producer": {
+                  "facts": {
+                    "fresh": 0,
+                    "reused": 18,
+                    "fallback": 0,
+                    "decoded": 18
+                  },
+                  "lowering": {
+                    "fresh": 0,
+                    "reused": 18,
+                    "materialized": 0
+                  }
+                },
+                "graph": {
+                  "nodes_read": 0,
+                  "nodes_unchanged": 0,
+                  "changed_nodes": 18,
+                  "candidate_tests": 0,
+                  "shards_read": 0,
+                  "shards_written": 1
+                },
+                "planner": {
+                  "index_nodes": 72,
+                  "index_edges": 50,
+                  "affected_nodes": 18,
+                  "closure_nodes": 40,
+                  "closure_edges": 10,
+                  "reused_tests": 0,
+                  "planned_tests": 10
+                },
+                "storage": {
+                  "packed_bytes_read": 15564,
+                  "decoded_bytes": 39421,
+                  "blocks_decoded": 1,
+                  "payload_bytes_returned": 9066,
+                  "block_cache_hits": 37,
+                  "publication": {
+                    "filename_lookups": 6,
+                    "refreshes": 1,
+                    "packs_prepared": 1,
+                    "pack_bytes_prepared": 1365,
+                    "save_bytes_prepared": 818,
+                    "sequence_locks": 4
+                  }
+                },
+                "nanoseconds": {
+                  "lowering": 4961777,
+                  "facts": 650565,
+                  "graph": 168492,
+                  "planner": 65424157,
+                  "keys": 81506,
+                  "publication": 1020787,
+                  "total": 72515446
+                },
+                "transport": {
+                  "request_bytes": 1004,
+                  "reply_bytes": 432,
+                  "startups": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "frontend_mut::test_dynamic_mut_disjoint_targets",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "33b14ea7d7b3ddd59914da02558ac821acf4d938094f75c3924618d75154a08a",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_mut_callback_updates_caller_scalar",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "26b09c4f7f61f72c6903e34661f2408577b91280166398f78149650d944707fe",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_mut_snapshot_independence",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "dfaa46c1a9b5c0006e4b5eadf74a86e831bc76aa626a7c363a36c5e3a3781700",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_named_callback_evaluates_in_written_order",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "7fb3f22667196b4611cf2905f308d69ca2032623333efcbba3cc898e6c5bba0b",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_named_mut_interior_places_preserve_storage_and_written_order",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "189d65285d39ce09409d2c0d45fab52fbffe2e0f6dad57ff95ee99c04a22bbe9",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_readonly_input_is_independent_of_mut_input",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "c7fe40be15976216bb68db601ac85b064d094a37361df66d4599b46ccb7d2ad4",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_scalar_and_nested_mut_writeback",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "3252004f831304e9d48838b1782698f2c23f9f7aed0aa22d543bac8f82a182c5",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_snapshot_survives_whole_mut_rebinding",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "8c2ef3fd4de09da17c4c383808fc499670c2140f2a0e9c03e93a6ca7a55cf803",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          },
+          {
+            "name": "frontend_mut::test_whole_collection_rebinding",
+            "status": "passed",
+            "reason": "",
+            "at": "",
+            "cache": {
+              "action": "execute",
+              "reason": "force",
+              "key": "c03a6b3da94d07591777c5a59cb8260ce8536e788876c254d153546f1eb853ae",
+              "component": "aa9293cfdd88c39919328f76e06457843f37456474aca5d889daf81acc350f70",
+              "key_method": "canonical-facts",
+              "work": null
+            }
+          }
+        ],
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "cached": 0,
+        "unsupported": 0,
+        "sources": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/tests/lang/frontend_mut.my"
+        ]
+      }
+    },
+    {
+      "name": "dynamic",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.zig-cache/o/da8bf6c48a0939c468662b025bb4ba64/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--counters",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.tmp/memory-closeout/A05/scalar-mut/candidate/cache",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.tmp/memory-closeout/A05/scalar-mut/candidate/dynamic.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.tmp/memory-closeout/A05/scalar-mut/candidate/dynamic"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "run": {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "counts": {
+        "version": "mylang-counters-v1",
+        "totals": {
+          "calls": 2,
+          "allocs": 1,
+          "alloc_bytes": 64,
+          "frees": 1,
+          "free_bytes": 64,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0,
+          "realloc_moves": 0,
+          "realloc_moved_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "dict_copies": 0,
+          "dict_copy_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "text_copies": 0,
+          "text_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "dict_grows": 0,
+          "dict_grow_bytes": 0,
+          "buffer_grows": 0,
+          "buffer_grow_bytes": 0,
+          "text_grows": 0,
+          "text_grow_bytes": 0,
+          "text_appends": 0,
+          "text_append_bytes": 0,
+          "buffer_pushes": 0,
+          "buffer_appends": 0,
+          "buffer_append_bytes": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0,
+          "share_bytes": 0,
+          "peak_live_bytes": 64,
+          "live_bytes_at_exit": 0
+        },
+        "kinds": {
+          "retain": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "release": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "release_unique": {
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          "unique_test": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "list_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "dict_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "buffer_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "text_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "record_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "list_push": {
+            "count": 4,
+            "bytes": 32,
+            "extra": 0
+          },
+          "element_load": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "element_store": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "bounds_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "overflow_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "division_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "shift_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "other_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          }
+        },
+        "functions": [
+          {
+            "name": "main",
+            "calls": 1,
+            "allocs": 0,
+            "alloc_bytes": 0,
+            "frees": 0,
+            "free_bytes": 0,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0
+          },
+          {
+            "name": "test_dynamic_mut_disjoint_targets",
+            "calls": 1,
+            "allocs": 1,
+            "alloc_bytes": 64,
+            "frees": 1,
+            "free_bytes": 64,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0
+          }
+        ],
+        "sites": [
+          {
+            "function": "test_dynamic_mut_disjoint_targets",
+            "origin": "test_dynamic_mut_disjoint_targets",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my",
+            "line": 7,
+            "column": 18,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 8,
+            "extra": 0
+          },
+          {
+            "function": "test_dynamic_mut_disjoint_targets",
+            "origin": "test_dynamic_mut_disjoint_targets",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my",
+            "line": 7,
+            "column": 18,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 8,
+            "extra": 0
+          },
+          {
+            "function": "test_dynamic_mut_disjoint_targets",
+            "origin": "test_dynamic_mut_disjoint_targets",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my",
+            "line": 11,
+            "column": 22,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 8,
+            "extra": 0
+          },
+          {
+            "function": "test_dynamic_mut_disjoint_targets",
+            "origin": "test_dynamic_mut_disjoint_targets",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my",
+            "line": 11,
+            "column": 22,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 8,
+            "extra": 0
+          },
+          {
+            "function": "test_dynamic_mut_disjoint_targets",
+            "origin": "test_dynamic_mut_disjoint_targets",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my",
+            "line": 10,
+            "column": 5,
+            "kind": "release_unique",
+            "detail": "release",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "named",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.zig-cache/o/da8bf6c48a0939c468662b025bb4ba64/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--counters",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.tmp/memory-closeout/A05/scalar-mut/candidate/cache",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.tmp/memory-closeout/A05/scalar-mut/candidate/named.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.tmp/memory-closeout/A05/scalar-mut/candidate/named"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "run": {
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "counts": {
+        "version": "mylang-counters-v1",
+        "totals": {
+          "calls": 3,
+          "allocs": 2,
+          "alloc_bytes": 128,
+          "frees": 2,
+          "free_bytes": 128,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0,
+          "realloc_moves": 0,
+          "realloc_moved_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "dict_copies": 0,
+          "dict_copy_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "text_copies": 0,
+          "text_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "dict_grows": 0,
+          "dict_grow_bytes": 0,
+          "buffer_grows": 0,
+          "buffer_grow_bytes": 0,
+          "text_grows": 0,
+          "text_grow_bytes": 0,
+          "text_appends": 0,
+          "text_append_bytes": 0,
+          "buffer_pushes": 0,
+          "buffer_appends": 0,
+          "buffer_append_bytes": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0,
+          "share_bytes": 0,
+          "peak_live_bytes": 128,
+          "live_bytes_at_exit": 0
+        },
+        "kinds": {
+          "retain": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "release": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "release_unique": {
+            "count": 2,
+            "bytes": 0,
+            "extra": 0
+          },
+          "unique_test": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "list_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "dict_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "buffer_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "text_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "record_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "list_push": {
+            "count": 6,
+            "bytes": 48,
+            "extra": 0
+          },
+          "element_load": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "element_store": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "bounds_check": {
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          "overflow_check": {
+            "count": 2,
+            "bytes": 0,
+            "extra": 0
+          },
+          "division_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "shift_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "other_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          }
+        },
+        "functions": [
+          {
+            "name": "main",
+            "calls": 1,
+            "allocs": 0,
+            "alloc_bytes": 0,
+            "frees": 0,
+            "free_bytes": 0,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0
+          },
+          {
+            "name": "test_named_mut_interior_places_preserve_storage_and_written_order",
+            "calls": 1,
+            "allocs": 2,
+            "alloc_bytes": 128,
+            "frees": 2,
+            "free_bytes": 128,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0
+          },
+          {
+            "name": "change_named",
+            "calls": 1,
+            "allocs": 0,
+            "alloc_bytes": 0,
+            "frees": 0,
+            "free_bytes": 0,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0
+          }
+        ],
+        "sites": [
+          {
+            "function": "test_named_mut_interior_places_preserve_storage_and_written_order",
+            "origin": "test_named_mut_interior_places_preserve_storage_and_written_order",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+            "line": 17,
+            "column": 18,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 8,
+            "extra": 0
+          },
+          {
+            "function": "test_named_mut_interior_places_preserve_storage_and_written_order",
+            "origin": "test_named_mut_interior_places_preserve_storage_and_written_order",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+            "line": 17,
+            "column": 18,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 8,
+            "extra": 0
+          },
+          {
+            "function": "test_named_mut_interior_places_preserve_storage_and_written_order",
+            "origin": "test_named_mut_interior_places_preserve_storage_and_written_order",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+            "line": 20,
+            "column": 35,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 8,
+            "extra": 0
+          },
+          {
+            "function": "test_named_mut_interior_places_preserve_storage_and_written_order",
+            "origin": "test_named_mut_interior_places_preserve_storage_and_written_order",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+            "line": 21,
+            "column": 46,
+            "kind": "bounds_check",
+            "detail": "list_get",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "test_named_mut_interior_places_preserve_storage_and_written_order",
+            "origin": "test_named_mut_interior_places_preserve_storage_and_written_order",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+            "line": 22,
+            "column": 22,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 8,
+            "extra": 0
+          },
+          {
+            "function": "test_named_mut_interior_places_preserve_storage_and_written_order",
+            "origin": "test_named_mut_interior_places_preserve_storage_and_written_order",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+            "line": 22,
+            "column": 22,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 8,
+            "extra": 0
+          },
+          {
+            "function": "test_named_mut_interior_places_preserve_storage_and_written_order",
+            "origin": "test_named_mut_interior_places_preserve_storage_and_written_order",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+            "line": 19,
+            "column": 5,
+            "kind": "release_unique",
+            "detail": "release",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "test_named_mut_interior_places_preserve_storage_and_written_order",
+            "origin": "test_named_mut_interior_places_preserve_storage_and_written_order",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+            "line": 22,
+            "column": 86,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 8,
+            "extra": 0
+          },
+          {
+            "function": "test_named_mut_interior_places_preserve_storage_and_written_order",
+            "origin": "test_named_mut_interior_places_preserve_storage_and_written_order",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+            "line": 21,
+            "column": 5,
+            "kind": "release_unique",
+            "detail": "release",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "change_named",
+            "origin": "change_named",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+            "line": 11,
+            "column": 10,
+            "kind": "overflow_check",
+            "detail": "add",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          {
+            "function": "change_named",
+            "origin": "change_named",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+            "line": 12,
+            "column": 11,
+            "kind": "overflow_check",
+            "detail": "add",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "dynamic-values",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.zig-cache/o/da8bf6c48a0939c468662b025bb4ba64/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic-values.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--counters",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.tmp/memory-closeout/A05/scalar-mut/candidate/cache",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.tmp/memory-closeout/A05/scalar-mut/candidate/dynamic-values.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/.tmp/memory-closeout/A05/scalar-mut/candidate/dynamic-values"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "run": {
+        "status": 132,
+        "stdout": "",
+        "stderr": ""
+      },
+      "counts": {
+        "version": "mylang-counters-v1",
+        "totals": {
+          "calls": 1,
+          "allocs": 1,
+          "alloc_bytes": 64,
+          "frees": 1,
+          "free_bytes": 64,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0,
+          "realloc_moves": 0,
+          "realloc_moved_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "dict_copies": 0,
+          "dict_copy_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "text_copies": 0,
+          "text_copy_bytes": 0,
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "dict_grows": 0,
+          "dict_grow_bytes": 0,
+          "buffer_grows": 0,
+          "buffer_grow_bytes": 0,
+          "text_grows": 0,
+          "text_grow_bytes": 0,
+          "text_appends": 0,
+          "text_append_bytes": 0,
+          "buffer_pushes": 0,
+          "buffer_appends": 0,
+          "buffer_append_bytes": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0,
+          "share_bytes": 0,
+          "peak_live_bytes": 64,
+          "live_bytes_at_exit": 0
+        },
+        "kinds": {
+          "retain": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "release": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "release_unique": {
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          },
+          "unique_test": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "list_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "dict_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "buffer_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "text_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "record_copy": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "list_push": {
+            "count": 2,
+            "bytes": 16,
+            "extra": 0
+          },
+          "element_load": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "element_store": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "bounds_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "overflow_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "division_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "shift_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          },
+          "other_check": {
+            "count": 0,
+            "bytes": 0,
+            "extra": 0
+          }
+        },
+        "functions": [
+          {
+            "name": "main",
+            "calls": 1,
+            "allocs": 1,
+            "alloc_bytes": 64,
+            "frees": 1,
+            "free_bytes": 64,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0
+          }
+        ],
+        "sites": [
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic-values.my",
+            "line": 8,
+            "column": 18,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 8,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic-values.my",
+            "line": 8,
+            "column": 18,
+            "kind": "list_push",
+            "detail": "list_push",
+            "count": 1,
+            "bytes": 8,
+            "extra": 0
+          },
+          {
+            "function": "main",
+            "origin": "main",
+            "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A05-mut-validation/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic-values.my",
+            "line": 11,
+            "column": 5,
+            "kind": "release_unique",
+            "detail": "release",
+            "count": 1,
+            "bytes": 0,
+            "extra": 0
+          }
+        ]
+      }
+    }
+  ]
+}

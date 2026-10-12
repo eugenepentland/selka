@@ -20,6 +20,7 @@ comptime {
     _ = @import("phi_cleanup_test.zig");
     _ = @import("single_owner_test.zig");
     _ = @import("zero_rc_test.zig");
+    _ = @import("a05_scalar_mut_test.zig");
     _ = @import("a01_native_driver_test.zig");
     _ = @import("a08_zero_rc_test.zig");
     _ = @import("a03_migration_boundaries_test.zig");

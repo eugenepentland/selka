@@ -1,0 +1,18 @@
+func change_pair(mut left: int, mut right: int) -> Unit:
+    left += 10
+    right += 20
+
+
+public func test_dynamic_mut_disjoint_targets() -> bool:
+    mut values = [1, 2]
+    const left = 0
+    const right = 1
+    change_pair(mut values[left], mut values[right])
+    return values == [11, 22]
+
+
+
+func main() -> int:
+    if test_dynamic_mut_disjoint_targets():
+        return 0
+    return 1

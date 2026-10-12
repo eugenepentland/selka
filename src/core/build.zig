@@ -2336,10 +2336,12 @@ const FnBuilder = struct {
         if (target.op == .call and self.mb.module.functions.items[target.a.index()].signature.linkage == .extern_c and values.len != 0 and self.typeOfRef(values[0]) == .cap) {
             _ = try self.effectCall("myl_core_host_check", &.{.cap}, .void, &.{values[0]}, span);
         }
+        // A managed leaf transfers its owner through a saved path. Scalar writebacks
+        // rebuild from the current root so an earlier sibling write is preserved.
         for (mutated, places, prepared) |position, *place, *path| {
             if (place.steps.len > 0 and self.version(place.root) != place.root_version) {
                 values[position] = try build_capture.refresh(@TypeOf(self), self, place, values[position], span);
-            } else if (self.module().zero_rc and place.steps.len > 0) {
+            } else if (self.module().zero_rc and place.steps.len > 0 and self.module().managed(try self.typeOf(argument_nodes[position]))) {
                 path.* = try self.prepareMutPlace(place.*, span);
                 values[position] = path.*.?.children[place.steps.len - 1];
             } else values[position] = try self.readPlace(place.*, span);

@@ -1,0 +1,238 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "cases": [
+    {
+      "name": "dynamic-ordinary-test",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/dynamic-ordinary-test-cache",
+        "--filter",
+        "test_",
+        "--force",
+        "--json",
+        "--jobs",
+        "1"
+      ],
+      "source_sha256": "b97e701490115d2055be5caa0060113f96afba846ddadcfcc7b91218b5778cf6",
+      "status": 1,
+      "stdout": "",
+      "stderr": "dynamic.my:16:12: error[E_FRONTEND_SYNTAX]: write a conditional in reading order: 'if condition then value else value'\n      return 0 if test_dynamic_mut_disjoint_targets() else 1\n             ^\n"
+    },
+    {
+      "name": "dynamic-ordinary-build",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/dynamic-ordinary-build-cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/dynamic-ordinary-build",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/dynamic-ordinary-build.ll"
+      ],
+      "source_sha256": "b97e701490115d2055be5caa0060113f96afba846ddadcfcc7b91218b5778cf6",
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my:16:12: error[E_FRONTEND_SYNTAX]: write a conditional in reading order: 'if condition then value else value'\n      return 0 if test_dynamic_mut_disjoint_targets() else 1\n             ^\n"
+    },
+    {
+      "name": "dynamic-owned-test",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/dynamic-owned-test-cache",
+        "--experimental-zero-rc",
+        "--filter",
+        "test_",
+        "--force",
+        "--json",
+        "--jobs",
+        "1"
+      ],
+      "source_sha256": "b97e701490115d2055be5caa0060113f96afba846ddadcfcc7b91218b5778cf6",
+      "status": 1,
+      "stdout": "",
+      "stderr": "dynamic.my:16:12: error[E_FRONTEND_SYNTAX]: write a conditional in reading order: 'if condition then value else value'\n      return 0 if test_dynamic_mut_disjoint_targets() else 1\n             ^\n"
+    },
+    {
+      "name": "dynamic-owned-build",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/dynamic-owned-build-cache",
+        "--experimental-zero-rc",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/dynamic-owned-build",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/dynamic-owned-build.ll"
+      ],
+      "source_sha256": "b97e701490115d2055be5caa0060113f96afba846ddadcfcc7b91218b5778cf6",
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic.my:16:12: error[E_FRONTEND_SYNTAX]: write a conditional in reading order: 'if condition then value else value'\n      return 0 if test_dynamic_mut_disjoint_targets() else 1\n             ^\n"
+    },
+    {
+      "name": "named-ordinary-test",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/named-ordinary-test-cache",
+        "--filter",
+        "test_",
+        "--force",
+        "--json",
+        "--jobs",
+        "1"
+      ],
+      "source_sha256": "7e0c95f68bdf63d370896ad6810e84ac10d819ae640f2d4f67e4a16ad3d46c69",
+      "status": 1,
+      "stdout": "",
+      "stderr": "named.my:26:12: error[E_FRONTEND_SYNTAX]: write a conditional in reading order: 'if condition then value else value'\n      return 0 if test_named_mut_interior_places_preserve_storage_and_written_order() else 1\n             ^\n"
+    },
+    {
+      "name": "named-ordinary-build",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/named-ordinary-build-cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/named-ordinary-build",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/named-ordinary-build.ll"
+      ],
+      "source_sha256": "7e0c95f68bdf63d370896ad6810e84ac10d819ae640f2d4f67e4a16ad3d46c69",
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my:26:12: error[E_FRONTEND_SYNTAX]: write a conditional in reading order: 'if condition then value else value'\n      return 0 if test_named_mut_interior_places_preserve_storage_and_written_order() else 1\n             ^\n"
+    },
+    {
+      "name": "named-owned-test",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/named-owned-test-cache",
+        "--experimental-zero-rc",
+        "--filter",
+        "test_",
+        "--force",
+        "--json",
+        "--jobs",
+        "1"
+      ],
+      "source_sha256": "7e0c95f68bdf63d370896ad6810e84ac10d819ae640f2d4f67e4a16ad3d46c69",
+      "status": 1,
+      "stdout": "",
+      "stderr": "named.my:26:12: error[E_FRONTEND_SYNTAX]: write a conditional in reading order: 'if condition then value else value'\n      return 0 if test_named_mut_interior_places_preserve_storage_and_written_order() else 1\n             ^\n"
+    },
+    {
+      "name": "named-owned-build",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/named-owned-build-cache",
+        "--experimental-zero-rc",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/named-owned-build",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/named-owned-build.ll"
+      ],
+      "source_sha256": "7e0c95f68bdf63d370896ad6810e84ac10d819ae640f2d4f67e4a16ad3d46c69",
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/named.my:26:12: error[E_FRONTEND_SYNTAX]: write a conditional in reading order: 'if condition then value else value'\n      return 0 if test_named_mut_interior_places_preserve_storage_and_written_order() else 1\n             ^\n"
+    },
+    {
+      "name": "values-ordinary",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic-values.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/values-ordinary-cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/values-ordinary",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/values-ordinary.ll"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "run": {
+        "status": 132,
+        "stdout": "",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "values-owned",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/frontend-mut-diagnosis/dynamic-values.my",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/values-owned-cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/values-owned",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/frontend-mut-diagnosis/values-owned.ll",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "run": {
+        "status": 32,
+        "stdout": "",
+        "stderr": ""
+      }
+    }
+  ]
+}
