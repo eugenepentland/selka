@@ -1,0 +1,17 @@
+{
+  "production_files": [
+    "src/sema_expressions.zig"
+  ],
+  "test_file": "src/tuples_test.zig",
+  "final_exit": 0,
+  "passed": 11,
+  "failed": 0,
+  "named_matches": 4,
+  "unconditional_root_blocks": 7,
+  "source_hashes": {
+    "src/sema_expressions.zig": "3b01f3fcaa69a1dda49a237f7aab182ff0cf4961a975851c15ca86cb0cea5a7f",
+    "src/tuples_test.zig": "9a31f5f6f0e99c416b7534772afab661760a69e77a0a1fbe5e213972433897fd"
+  },
+  "test_binary_sha256": "25f07c903c2fa3a8b751b43dc351086eeb167d132c768cb2866276bf4b9a009f",
+  "command": "scripts/build-slot.sh build \"$ZIG\" build test-units -Dtest-filter=\"tuple copy\" -Dtest-filter=\"managed Result lists preserve\" -Dtest-filter=\"A01 recursive generic Result\" -j\"$MYLANG_DEV_JOBS\" --maxrss \"$MYLANG_DEV_MAXRSS\""
+}

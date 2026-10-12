@@ -22,6 +22,39 @@ fn rejects(source: []const u8, code: []const u8) !void {
     try t.expectEqualStrings(code, compilation.diagnostics.items[0].code);
 }
 
+// spec-case: TUPLE-3
+test "tuple copy bypasses collection element hints before managed unpacking" {
+    try accepts(
+        \\func unpack(pair: tuple[int[], str]) -> int:
+        \\    const values, text = pair.copy()
+        \\    return len(values) + len(text)
+        \\func main() -> int:
+        \\    const pair: tuple[int[], str] = ([1, 2], "value")
+        \\    return unpack(pair)
+    );
+}
+
+// spec-case: NEW-CORE-ZERO-RC-RESULT-LISTS-1
+test "tuple copy preserves independent pending Result obligations" {
+    try accepts(
+        \\func main() -> int:
+        \\    const pending: Result[str, str] = Ok("value")
+        \\    const pair = (pending, 7)
+        \\    const copied = pair.copy()
+        \\    _ = pair
+        \\    _ = copied
+        \\    return 0
+    );
+    try rejects(
+        \\func main() -> int:
+        \\    const pending: Result[str, str] = Ok("value")
+        \\    const pair = (pending, 7)
+        \\    const copied = pair.copy()
+        \\    _ = pair
+        \\    return 0
+    , "E_RESULT_UNHANDLED");
+}
+
 /// Check one unit and return an owned copy of its first diagnostic message.
 fn message(source: []const u8) ![]u8 {
     var compilation = try language.Compilation.init(t.allocator, unit_name, source);

@@ -69,6 +69,9 @@ pub fn Checks(comptime Checker: type) type {
 fn hintBufferArguments(comptime Checker: type, self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation)) Error!void {
     if (self.active.get(self.src.text(operation.owner))) |slot| {
         const owner_type = self.locals.items[@backingInt(slot)].ty;
+        // Tuples and ordinary records also support copy(), but have no element
+        // buffer. Their default collection kind does not make them lists.
+        if (!owner_type.isAggregate() or !self.catalog.records[owner_type.recordIndex()].isCollection()) return;
         // A list method's operands take the list's element type before they are
         // checked, so `rows.append([])` and `rows.insert(0, [])` infer the empty
         // literal exactly as `row: list[int] = []` does.
