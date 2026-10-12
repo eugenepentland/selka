@@ -6,6 +6,21 @@ const contract = @import("single_owner.zig");
 const zero = @import("zero_rc.zig");
 const report = std.debug.print;
 
+fn legacySymbols(symbols: []const u8) bool {
+    for ([_][]const u8{ "myl_core_retain", "myl_core_release", "myl_core_share", "count_retain", "count_release", "count_is_unique" }) |legacy| {
+        if (std.mem.indexOf(u8, symbols, legacy) != null) return true;
+    }
+    return false;
+}
+
+// spec-case: NEW-CORE-ZERO-RC-ABI-1
+test "zero RC linked symbol audit distinguishes direct destruction from counting" {
+    try std.testing.expect(!legacySymbols("0001 T myl_core_drop\n0002 T myl_core_free_owned\n"));
+    for ([_][]const u8{ "myl_core_retain_slow", "myl_core_release", "myl_core_share", "count_is_unique", "count_retain", "count_release_shared" }) |symbol| {
+        try std.testing.expect(legacySymbols(symbol));
+    }
+}
+
 const records =
     \\record Inner:
     \\    scalar: int
@@ -132,6 +147,9 @@ fn counted(parent: std.mem.Allocator, guest_source: []const u8, expected: []cons
         try std.testing.expect(field(counts, &.{ "kinds", "release_unique", "count" }) > 0);
         const llvm = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, llvm_path, a, .limited(16 << 20));
         try std.testing.expect(zero.emittedClean(llvm));
+        const symbols = try std.process.run(a, std.testing.io, .{ .argv = &.{ "nm", binary } });
+        try std.testing.expect(symbols.term == .exited and symbols.term.exited == 0);
+        try std.testing.expect(!legacySymbols(symbols.stdout));
     }
 }
 

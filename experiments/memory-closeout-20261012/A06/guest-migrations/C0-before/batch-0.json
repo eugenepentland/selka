@@ -1,0 +1,75 @@
+{
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "cases": [
+    {
+      "source": "tests/lang/rc_journal_types.my",
+      "source_sha256": "a9795862ccf226ada4c2a7a31f91bad0e63ce85628dd10fe1d45b8cfd27fc98f",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_journal_types.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main\n  record Mixed:\n  ^\n"
+    },
+    {
+      "source": "tests/lang/rc_loop_operand_isolation.my",
+      "source_sha256": "c922747e002979addf7eaa14e39efa57d3c8591831c17ea6e2f5e9941c2f2fe9",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_loop_operand_isolation.my:16:28: error[E_SINGLE_OWNER_MOVED]: 'data' was moved or is unavailable on this path; use .copy() when both values are needed\n      for index in range(len(data)):\n                             ^\n"
+    },
+    {
+      "source": "tests/lang/rc_loop_uniqueness.my",
+      "source_sha256": "b5e2bb1396b4a0955b484220cf56344dc553433a684d173749b809ad93287a1c",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_loop_uniqueness.my:16:9: error[E_SINGLE_OWNER_MOVED]: 'items' was moved or is unavailable on this path; use .copy() when both values are needed\n          items[-1] = index\n          ^\n"
+    },
+    {
+      "source": "tests/lang/rc_loop_versions.my",
+      "source_sha256": "08c9448c7d57ac87435a28595c8437c37f06a65837a1604aa1341be2980f9438",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_loop_versions.my:4:28: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed\n      for index in range(len(values)):\n                             ^\n"
+    },
+    {
+      "source": "tests/lang/rc_mut_list_aliases.my",
+      "source_sha256": "4fd93570b1aced775125d524763cf3cacc493bc4c93164edb17e343847725256",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_mut_list_aliases.my:26:24: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      return Span(source=text, start=0, end=len(text))\n                         ^\n"
+    },
+    {
+      "source": "tests/lang/rc_mut_payload_snapshots.my",
+      "source_sha256": "4d5f26dcfdecc3c9378303a67f5a3f0666f7f533904d14b5adaf3c3451571054",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_mut_payload_snapshots.my:7:20: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      mut snapshot = table\n                     ^\n"
+    },
+    {
+      "source": "tests/lang/rc_mut_uniqueness.my",
+      "source_sha256": "393d9d588fc9b1c1c48cef09f76298ed978add481ee82dc87321661551841646",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_mut_uniqueness.my:6:18: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      mut before = items\n                   ^\n"
+    },
+    {
+      "source": "tests/lang/rc_named_record_writes.my",
+      "source_sha256": "d8f534748d6e5f6af515a1e56e522a194fc130c4088661fe790cabd5e15e4590",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_named_record_writes.my:22:17: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      mut saved = state\n                  ^\n"
+    },
+    {
+      "source": "tests/lang/rc_owned_values.my",
+      "source_sha256": "f3537acb654c4dd86eeb48b81c93f16fe7350a0cfa1f92bc237d91a11abe29b1",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_owned_values.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main\n  # Physical RC ownership shares these value semantics with the default collector.\n  ^\n"
+    },
+    {
+      "source": "tests/lang/rc_owning_element_borrows.my",
+      "source_sha256": "69d382d4c61c654fcc9998578673ca7dc556004cf30492a1c3770644fba9abf9",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_owning_element_borrows.my:1:1: error[E_MAIN]: the program requires an entry point: func main() -> int; `mylang check FILE` type-checks a library that has no main\n  # RC-ELEMENT-BORROW-3: an element of a read-only list parameter may be read in\n  ^\n"
+    }
+  ]
+}

@@ -33,18 +33,21 @@ func span(pair: Pair, extra: int) -> int:
 
 
 func moved_corner(mut shape: Shape) -> int:
-    return weigh(shape.corner.a, move(mut shape))
+    const point_snapshot = shape.corner.a.copy()
+    return weigh(point_snapshot, move(mut shape))
 
 
 public func test_a_field_argument_keeps_its_value_across_a_later_mut_call() -> bool:
     mut shape = Shape(corner=Pair(a=Point(x=1, y=2), b=Point(x=3, y=4), items=[1]), count=0)
-    mut first = weigh(shape.corner.a, move(mut shape))
+    const point_snapshot = shape.corner.a.copy()
+    mut first = weigh(point_snapshot, move(mut shape))
     return first == 1025 and shape.corner.a.x == 100 and shape.count == 50
 
 
 public func test_a_nested_record_argument_keeps_its_value_across_a_later_mut_call() -> bool:
     mut shape = Shape(corner=Pair(a=Point(x=1, y=2), b=Point(x=3, y=4), items=[1]), count=0)
-    mut seen = span(shape.corner, move(mut shape))
+    const corner_snapshot = shape.corner.copy()
+    mut seen = span(corner_snapshot, move(mut shape))
     return seen == 10405 and shape.corner.b.y == 7
 
 

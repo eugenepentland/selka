@@ -1,0 +1,314 @@
+[
+  {
+    "source": "tests/lang/immutable_equal.my",
+    "function": "retained_bytes",
+    "before": "return source.view(7, 26)",
+    "after": "return source[7:26]"
+  },
+  {
+    "source": "tests/lang/rc_pin_elide.my",
+    "function": "walk",
+    "before": "    for x in xs:",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(xs):\n        const x = xs[iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/rc_nonheld_captures.my",
+    "function": "test_named_source_iteration_sees_element_changes",
+    "before": "    for flag in flags:",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(flags):\n        const flag = flags[iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/root_liveness.my",
+    "function": "test_a_borrowed_element_handed_to_a_plain_call_reads_its_own_values",
+    "before": "    for k, ball in enumerate(balls):",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(balls):\n        const k = iteration_at\n        const ball = balls[iteration_at].copy()\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/iteration_identity.my",
+    "function": "test_nonstructural_dictionary_writes_remain_visible",
+    "before": "    for key in values:",
+    "after": "    const iteration_keys = list(values.keys())\n    for key in iteration_keys:"
+  },
+  {
+    "source": "tests/lang/iteration_identity.my",
+    "function": "test_list_iteration_observes_later_element_writes",
+    "before": "    for value in values:",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(values):\n        const value = values[iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/iteration_identity.my",
+    "function": "test_named_snapshot_remains_independent_of_iteration_writes",
+    "before": "    for value in values:",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(values):\n        const value = values[iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/iteration_identity.my",
+    "function": "test_fixed_array_iteration_reads_the_place_and_preserves_a_copy",
+    "before": "    for value in values:",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(values):\n        const value = values[iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/iteration_identity.my",
+    "function": "test_rebinding_source_preserves_original_iteration_storage",
+    "before": "    for value in values:",
+    "after": "    const iteration_values = values.copy()\n    for value in iteration_values:"
+  },
+  {
+    "source": "tests/lang/iteration_identity.my",
+    "function": "test_rebinding_source_preserves_original_iteration_storage",
+    "before": "    for key in mapping:",
+    "after": "    const iteration_keys = list(mapping.keys())\n    for key in iteration_keys:"
+  },
+  {
+    "source": "tests/lang/iteration_identity.my",
+    "function": "test_write_back_through_a_field_preserves_live_iteration",
+    "before": "    for x in it.rt.objects:",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(it.rt.objects):\n        const x = it.rt.objects[iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/iteration_identity.my",
+    "function": "test_write_back_through_a_field_preserves_live_iteration",
+    "before": "mut wb = it.rt",
+    "after": "mut wb = it.rt.copy()"
+  },
+  {
+    "source": "tests/lang/iteration_identity.my",
+    "function": "test_last_field_transfer_preserves_live_iteration",
+    "before": "    for value in state.items:",
+    "after": "    const iteration_items = state.items.copy()\n    for value in iteration_items:"
+  },
+  {
+    "source": "tests/lang/iteration_identity.my",
+    "function": "test_last_field_transfer_preserves_live_iteration",
+    "before": "mut moved = state.items",
+    "after": "mut moved = state.items.copy()"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_element_writes_remain_live_with_a_named_copy",
+    "before": "    for value in items:",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(items):\n        const value = items[iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_append_growth_is_visible_through_continue",
+    "before": "    for value in items:",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(items):\n        const value = items[iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_mut_callee_element_writes_remain_live",
+    "before": "    for value in items:",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(items):\n        const value = items[iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_byte_buffer_append_growth_is_visible",
+    "before": "    for value in items:",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(items):\n        const value = items[iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_fixed_array_mut_callee_writes_remain_live",
+    "before": "    for value in items:",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(items):\n        const value = items[iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_multiple_clauses_refresh_the_outer_shared_source",
+    "before": "    for value in items:",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(items):\n        const value = items[iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_field_writeback_refreshes_the_place",
+    "before": "    for value in holder.items:",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(holder.items):\n        const value = holder.items[iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_fixed_array_field_writes_remain_live",
+    "before": "    for value in holder.items:",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(holder.items):\n        const value = holder.items[iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_field_writeback_refreshes_the_place",
+    "before": "mut working = holder",
+    "after": "mut working = holder.copy()"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_field_writeback_refreshes_the_place",
+    "before": "holder.items = working.items",
+    "after": "holder.items = working.items.copy()"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_root_rebinding_takes_an_entry_snapshot",
+    "before": "    for value in items:",
+    "after": "    const iteration_source = items.copy()\n    for value in iteration_source:"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_record_root_rebinding_takes_an_entry_snapshot",
+    "before": "    for value in holder.items:",
+    "after": "    const iteration_source = holder.items.copy()\n    for value in iteration_source:"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_fixed_array_root_assignment_selects_an_entry_snapshot",
+    "before": "    for value in items:",
+    "after": "    const iteration_source = items.copy()\n    for value in iteration_source:"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_managed_array_root_snapshot_preserves_child_values",
+    "before": "    for row in items:",
+    "after": "    const iteration_source = items.copy()\n    for row in iteration_source:"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_immutable_source_root_rebinding_keeps_entry_text",
+    "before": "    for letter in text:",
+    "after": "    const iteration_source = text.copy()\n    for letter in iteration_source:"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_immutable_child_root_rebinding_keeps_an_entry_snapshot",
+    "before": "    for letter in rows[0]:",
+    "after": "    const iteration_source = rows[0].copy()\n    for letter in iteration_source:"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_immutable_augmented_root_rebinding_keeps_entry_text",
+    "before": "    for letter in text:",
+    "after": "    const iteration_source = text.copy()\n    for letter in iteration_source:"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_indexed_place_keeps_its_entry_index",
+    "before": "    for value in rows[at]:",
+    "after": "    const requested_index = at\n    const iteration_place = if (requested_index < 0) then (len(rows) + requested_index) else (requested_index)\n    mut iteration_at = 0\n    while iteration_at < len(rows[iteration_place]):\n        const value = rows[iteration_place][iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_index_expression_is_evaluated_once",
+    "before": "    for value in rows[select(mut counter)]:",
+    "after": "    const requested_index = select(mut counter)\n    const iteration_place = if (requested_index < 0) then (len(rows) + requested_index) else (requested_index)\n    mut iteration_at = 0\n    while iteration_at < len(rows[iteration_place]):\n        const value = rows[iteration_place][iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_compound_index_expression_keeps_its_setup",
+    "before": "    for value in rows[select(mut counter) + 1]:",
+    "after": "    const requested_index = select(mut counter) + 1\n    const iteration_place = if (requested_index < 0) then (len(rows) + requested_index) else (requested_index)\n    mut iteration_at = 0\n    while iteration_at < len(rows[iteration_place]):\n        const value = rows[iteration_place][iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_negative_index_is_normalized_once_at_entry",
+    "before": "    for value in rows[select_last(mut counter)]:",
+    "after": "    const requested_index = select_last(mut counter)\n    const iteration_place = if (requested_index < 0) then (len(rows) + requested_index) else (requested_index)\n    mut iteration_at = 0\n    while iteration_at < len(rows[iteration_place]):\n        const value = rows[iteration_place][iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_fixed_array_indexed_place_reads_the_same_entry_index",
+    "before": "    for value in rows[at]:",
+    "after": "    const requested_index = at\n    const iteration_place = if (requested_index < 0) then (len(rows) + requested_index) else (requested_index)\n    mut iteration_at = 0\n    while iteration_at < len(rows[iteration_place]):\n        const value = rows[iteration_place][iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_enumerate_refreshes_elements_and_growth",
+    "before": "    for at, value in enumerate(items):",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(items):\n        const at = iteration_at\n        const value = items[iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_zip_refreshes_each_place_and_shorter_length",
+    "before": "    for a, b in zip(left, right):",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(left) and iteration_at < len(right):\n        const a = left[iteration_at]\n        const b = right[iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_zip_sees_shared_element_writes",
+    "before": "    for a, b in zip(left, right):",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(left) and iteration_at < len(right):\n        const a = left[iteration_at]\n        const b = right[iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_dictionary_values_refresh_through_a_shared_payload",
+    "before": "    for value in mapping.values():",
+    "after": "    const iteration_keys = list(mapping.keys())\n    for key in iteration_keys:\n        const value = mapping[key]"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_non_ascii_text_field_replacement_uses_current_scalars",
+    "before": "    for letter in holder.text:",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(holder.text):\n        const letter = holder.text[iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_immutable_bytes_field_replacement_reads_current_octets",
+    "before": "    for octet in holder.data:",
+    "after": "    mut iteration_at = 0\n    while iteration_at < len(holder.data):\n        const octet = holder.data[iteration_at]\n        iteration_at += 1"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_unfiltered_comprehension_refreshes_a_shared_source",
+    "before": "mut visited = [for value in items yield keep_changed(mut items, value)]",
+    "after": "mut visited: int[] = []\n    mut iteration_at = 0\n    while iteration_at < len(items):\n        const value = items[iteration_at]\n        iteration_at += 1\n        visited.append(keep_changed(mut items, value))"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_unfiltered_comprehension_visits_growth",
+    "before": "mut visited = [for value in items yield keep_growing(mut items, value)]",
+    "after": "mut visited: int[] = []\n    mut iteration_at = 0\n    while iteration_at < len(items):\n        const value = items[iteration_at]\n        iteration_at += 1\n        visited.append(keep_growing(mut items, value))"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_unfiltered_set_comprehension_refreshes_its_source",
+    "before": "mut visited = {keep_changed(mut items, value) for value in items}",
+    "after": "mut visited: set[int] = set()\n    mut iteration_at = 0\n    while iteration_at < len(items):\n        const value = items[iteration_at]\n        iteration_at += 1\n        visited.add(keep_changed(mut items, value))"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_filtered_comprehension_sees_produced_value_writes",
+    "before": "mut visited = [for value in items if True yield keep_changed(mut items, value)]",
+    "after": "mut visited: int[] = []\n    mut iteration_at = 0\n    while iteration_at < len(items):\n        const value = items[iteration_at]\n        iteration_at += 1\n        visited.append(keep_changed(mut items, value))"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_filtered_comprehension_sees_filter_writes",
+    "before": "mut visited = [for value in items if changed_filter(mut items, value) yield value]",
+    "after": "mut visited: int[] = []\n    mut iteration_at = 0\n    while iteration_at < len(items):\n        const value = items[iteration_at]\n        iteration_at += 1\n        if changed_filter(mut items, value):\n            visited.append(value)"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_fixed_array_comprehension_refreshes_after_mut_writes",
+    "before": "mut visited = [for value in items yield keep_changed_array(mut items, value)]",
+    "after": "mut visited: int[] = []\n    mut iteration_at = 0\n    while iteration_at < len(items):\n        const value = items[iteration_at]\n        iteration_at += 1\n        visited.append(keep_changed_array(mut items, value))"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_managed_array_comprehension_preserves_copy_and_live_children",
+    "before": "mut visited = [for row in items yield keep_changed_child(mut items, row)]",
+    "after": "mut visited: int[] = []\n    mut iteration_at = 0\n    while iteration_at < len(items):\n        const row = items[iteration_at].copy()\n        iteration_at += 1\n        visited.append(keep_changed_child(mut items, row))"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_sum_generator_refreshes_after_produced_value_writes",
+    "before": "mut total = sum(keep_changed(mut items, value) for value in items if True)",
+    "after": "mut total = 0\n    mut iteration_at = 0\n    while iteration_at < len(items):\n        const value = items[iteration_at]\n        iteration_at += 1\n        total += keep_changed(mut items, value)"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_any_generator_refreshes_after_produced_value_writes",
+    "before": "mut result = any(keep_true(mut flags, value) for value in flags if True)",
+    "after": "mut result = False\n    mut iteration_at = 0\n    while iteration_at < len(flags):\n        const value = flags[iteration_at]\n        iteration_at += 1\n        const tested = keep_true(mut flags, value)\n        if tested:\n            result = True\n            break"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "function": "test_all_generator_refreshes_after_produced_value_writes",
+    "before": "mut result = all(keep_false(mut flags, value) for value in flags if True)",
+    "after": "mut result = True\n    mut iteration_at = 0\n    while iteration_at < len(flags):\n        const value = flags[iteration_at]\n        iteration_at += 1\n        const tested = keep_false(mut flags, value)\n        if not tested:\n            result = False\n            break"
+  }
+]

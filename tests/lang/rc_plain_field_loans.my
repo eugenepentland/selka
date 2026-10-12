@@ -23,7 +23,7 @@ func total(rows: Row[]) -> int:
     mut i = 0
     mut answer = 0
     while i < len(rows):
-        mut row = rows[i]
+        mut row = rows[i].copy()
         answer += row.label.number
         i += 1
     return answer
@@ -35,11 +35,12 @@ func replace(mut rows: Row[]) -> int:
 
 
 func callback(mut rows: Row[]) -> int:
-    return rows[replace(mut rows)].label.number
+    const receiver_snapshot = rows.copy()
+    return receiver_snapshot[replace(mut rows)].label.number
 
 
 func materialize(rows: Row[], at: int, mut output: int[]) -> Row:
-    mut row = rows[at]
+    mut row = rows[at].copy()
     output.append(row.other)
     return row
 

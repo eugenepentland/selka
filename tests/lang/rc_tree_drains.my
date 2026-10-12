@@ -12,8 +12,8 @@ func make(depth: int) -> Node:
 
 
 func check(node: Node) -> int:
-    mut left = node.left
-    mut right = node.right
+    mut left = node.left.copy()
+    mut right = node.right.copy()
     if left is None or right is None:
         return 1
     return 1 + check(left) + check(right)
@@ -30,7 +30,7 @@ public func test_shared_subtrees_outlive_their_first_parent() -> bool:
     mut shared = make(3)
     mut kept: Node[] = []
     for index in range(10):
-        mut pair = Node(left=Some(shared), right=Some(make(2)))
+        mut pair = Node(left=Some(shared.copy()), right=Some(make(2)))
         if index % 3 == 0:
             kept.append(pair)
     return check(shared) == 15 and len(kept) == 4 and check(kept[3]) == 1 + 15 + 7

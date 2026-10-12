@@ -11,7 +11,7 @@ func scan(count: int, repeats: int) -> int:
 
 func real_iterator() -> int:
     mut data = b"mylang micro benchmark kernel payload 0123456789 abcdefghijklmno" + bytes([109])
-    mut saved = data
+    mut saved = data.copy()
     mut hits = 0
     for index in range(len(data)):
         if data[index] == 109:

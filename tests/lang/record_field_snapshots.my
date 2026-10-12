@@ -12,29 +12,29 @@ func push(mut values: int[]):
 
 public func test_heap_record_field_mutation_preserves_snapshot() -> bool:
     mut state = State(values=[12])
-    mut saved = state
+    mut saved = state.copy()
     state.values.append(14)
     return saved.values == [12] and state.values == [12, 14]
 
 
 public func test_nested_heap_field_mut_argument_preserves_snapshot() -> bool:
     mut state = Outer(state=State(values=[12]))
-    mut saved = state
+    mut saved = state.copy()
     push(mut state.state.values)
     return saved.state.values == [12] and state.state.values == [12, 14]
 
 
 public func test_named_field_copy_is_independent_of_its_source() -> bool:
     mut state = State(values=[12])
-    mut saved = state
-    mut copied = state.values
+    mut saved = state.copy()
+    mut copied = state.values.copy()
     copied.append(14)
     return saved.values == [12] and state.values == [12] and copied == [12, 14]
 
 
 public func test_list_element_and_record_field_path_preserves_snapshot() -> bool:
     mut states = [Outer(state=State(values=[12]))]
-    mut saved = states
+    mut saved = states.copy()
     states[0].state.values.append(14)
     return saved[0].state.values == [12] and states[0].state.values == [12, 14]
 
@@ -45,14 +45,14 @@ record Mapping:
 
 public func test_dictionary_and_record_field_path_preserves_snapshot() -> bool:
     mut state = Mapping(values={1: [12]})
-    mut saved = state
+    mut saved = state.copy()
     state.values[1].append(14)
     return saved.values[1] == [12] and state.values[1] == [12, 14]
 
 
 public func test_loop_field_receivers_preserve_prior_snapshots() -> bool:
     mut state = State(values=[12])
-    mut saved = state
+    mut saved = state.copy()
     mut i = 0
     while i < 4:
         state.values.append(i)
@@ -83,22 +83,22 @@ func append_wrapped(mut wrapped: Wrapped, value: int):
 
 public func test_mut_record_argument_preserves_a_record_snapshot() -> bool:
     mut output = Output(buffer=[1], count=0)
-    mut before = output
+    mut before = output.copy()
     append_output(mut output, 2)
     return before.buffer == [1] and output.buffer == [1, 2]
 
 
 public func test_mut_record_argument_preserves_a_field_snapshot() -> bool:
     mut output = Output(buffer=[1], count=0)
-    mut before = output.buffer
+    mut before = output.buffer.copy()
     append_through(mut output, 2)
     return before == [1] and output.buffer == [1, 2]
 
 
 public func test_mut_record_argument_preserves_nested_snapshots() -> bool:
     mut wrapped = Wrapped(inner=Output(buffer=[1], count=0))
-    mut whole = wrapped
-    mut inner = wrapped.inner
+    mut whole = wrapped.copy()
+    mut inner = wrapped.inner.copy()
     append_wrapped(mut wrapped, 2)
     return whole.inner.buffer == [1] and inner.buffer == [1] and wrapped.inner.buffer == [1, 2]
 
@@ -107,7 +107,7 @@ public func test_mut_record_argument_preserves_a_byte_buffer_snapshot() -> bool:
     mut values: int[] = []
     mut sink = Sink(buffer=byte_buffer(values))
     fill_sink(mut sink, b"xy")
-    mut before = sink
+    mut before = sink.copy()
     fill_sink(mut sink, b"z")
     return bytes(before.buffer) == b"xy" and bytes(sink.buffer) == b"xyz"
 
@@ -126,12 +126,12 @@ record Table:
 
 
 func store_row(mut table: Table, index: int, row: int[]):
-    table.rows[index] = row
+    table.rows[index] = row.copy()
 
 
 public func test_mut_record_element_store_preserves_a_field_snapshot() -> bool:
     mut table = Table(rows=[[1], [2, 3]], count=0)
-    mut before = table.rows
+    mut before = table.rows.copy()
     store_row(mut table, 1, [4])
     return before == [[1], [2, 3]] and table.rows == [[1], [4]]
 

@@ -9,7 +9,7 @@ func operand(mut log: int[], value: int) -> float:
 
 func receiver(mut log: int[], values: int[]) -> int[]:
     log.append(2)
-    return values
+    return values.copy()
 
 
 func log_index(mut log: int[]) -> int:
@@ -71,7 +71,7 @@ record Pair:
 
 
 func bump(counter: Counter) -> Counter:
-    mut changed = counter
+    mut changed = counter.copy()
     changed.n = changed.n + 1
     return changed
 

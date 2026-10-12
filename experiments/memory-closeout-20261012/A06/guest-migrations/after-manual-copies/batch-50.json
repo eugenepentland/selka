@@ -1,0 +1,105 @@
+{
+  "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9",
+  "cases": [
+    {
+      "source": "tests/lang/rc_fresh_returns.my",
+      "source_sha256": "84198bc937033d5042394c55d185669df90bfbf609d41f8de4fd7cc03232e70a",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_named_releases.my",
+      "source_sha256": "9ac0926bd848932b26d9b8449d502b7edb11931dffc8b9c030acdf181792775d",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_nested_read_loans.my",
+      "source_sha256": "7eb51f5eb6a8d8bc42f75e31a8385f248b34cd1ed4b424ec63cc1a991c57dd9c",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_nested_read_loans.my:47:16: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut view = list(mapping.values())\n                 ^\n",
+      "copy_changes": [
+        {
+          "line": 33,
+          "before": "    mut selected = rows[0]",
+          "after": "    mut selected = rows[0].copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/rc_nonheld_captures.my",
+      "source_sha256": "5113659d1dda0af2d35bf3d9e9ca85d1cc5f014aa12e7b7dbff0c8cd983b687f",
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_nonheld_captures.my:95:9: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n          flags[1] = False\n          ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_pin_elide.my",
+      "source_sha256": "7175994a16b522b786fd28e94feeffca28ef37aba9168f0b7ff6ef6b97f0128e",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_pin_elide.my:114:9: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n          xs[0] = x + 1\n          ^\n",
+      "copy_changes": [
+        {
+          "line": 91,
+          "before": "    return xs",
+          "after": "    return xs.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 95,
+          "before": "    return Holder(items=xs)",
+          "after": "    return Holder(items=xs.copy())",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/rc_plain_appends.my",
+      "source_sha256": "420bf54c85d6fb6ebc662aa71ef080becdf8d9f05e82ddad01ee3d2c60ff8380",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_plain_replacements.my",
+      "source_sha256": "905ee61e37a2302570fa9e5e81d21429a28b744c654079b32be2f0f179bd3e54",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_read_loans.my",
+      "source_sha256": "c6fe0492c1e6c5967ad7ab4a051baf308c12b427f931dd1336d08fc602927bab",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_readonly_body.my",
+      "source_sha256": "f3681fd2b7a0cc555ce220f06f42e1a39e4f98f7e4c594a994d027b7f7b41955",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_readonly_body.my:37:23: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed\n      return 1 + length(tail)\n                        ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_scalar_replacements.my",
+      "source_sha256": "ed3e72d4e6e69d53e469580debf52c75815ab9d163268e8290a1adf66ff11bfa",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_scalar_replacements.my:44:5: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      values[0].scalar = 7\n      ^\n",
+      "copy_changes": []
+    }
+  ]
+}

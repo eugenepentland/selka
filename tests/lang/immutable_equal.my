@@ -5,7 +5,7 @@ func retained_text() -> str:
 
 func retained_bytes() -> bytes:
     mut source = b"prefix-\x00\xff-abcdefghijklmnop-suffix" + b"!"
-    return source.view(7, 26)
+    return source[7:26]
 
 
 # spec-case: UTF8-TEXT-1

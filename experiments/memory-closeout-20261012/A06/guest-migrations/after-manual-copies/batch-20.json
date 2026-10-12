@@ -1,0 +1,135 @@
+{
+  "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9",
+  "cases": [
+    {
+      "source": "tests/lang/rc_semantic_publication.my",
+      "source_sha256": "39b1f3f52140749b7c3ea2b398b3f5bf58e6a4ac460288d58f718eaecc9516c5",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_semantic_publication.my:5:27: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed\n          joined = joined + word.unwrap_or(\".\")\n                            ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_tree_drains.my",
+      "source_sha256": "436d1cabb9da464fa91ef74b2cec0527f79a7646075e0c517adceb1da6947e60",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_tree_drains.my:19:22: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed\n      return 1 + check(left) + check(right)\n                       ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_variant_reads.my",
+      "source_sha256": "b5220110bfe0c91237f2c844d637fd7f6ff9fccade16ae0d150e8dffad52076f",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_variant_reads.my:112:37: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      match pool.items[changing_index(mut pool)]:\n                                      ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_view_receivers.my",
+      "source_sha256": "e06c0325b188b3719d5be2137a9f85b3e8a2ffb1a3b974c7abf3da175492d869",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_view_receivers.my:4:17: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut saved = list(mapping.values())\n                  ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/rc_writeback_moves.my",
+      "source_sha256": "c9d2930cddb14289a344273275fb7d775cad287b2ecac8f0f6d0a8d10915ea7b",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_writeback_moves.my:99:176: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed\n      return len(it.rt.objects) == 20 and it.rt.objects[0] == 4 and it.rt.names[\"it\"] == 19 and len(saved.rt.objects) == 0 and note.words == [\"a\", \"b\"] and last is not None and last.words == [\"it\"]\n                                                                                                                                                                                 ^\n",
+      "copy_changes": [
+        {
+          "line": 62,
+          "before": "        mut wb = it.rt",
+          "after": "        mut wb = it.rt.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 71,
+          "before": "    mut first = it.rt",
+          "after": "    mut first = it.rt.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 75,
+          "before": "    mut saved_rt = it.rt",
+          "after": "    mut saved_rt = it.rt.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 77,
+          "before": "        mut wb = it.rt",
+          "after": "        mut wb = it.rt.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 84,
+          "before": "    mut wb = it.rt",
+          "after": "    mut wb = it.rt.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 87,
+          "before": "    mut names = it.rt",
+          "after": "    mut names = it.rt.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 98,
+          "before": "    mut last = it.rt.last",
+          "after": "    mut last = it.rt.last.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/record_field_snapshots.my",
+      "source_sha256": "396209e77b2f9e8aba0dc91020c12e102029bf5df05a27fbe43ed5c2feb52531",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": [
+        {
+          "line": 134,
+          "before": "    mut before = table.rows",
+          "after": "    mut before = table.rows.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/recursive_values.my",
+      "source_sha256": "3ba89960ac71da5fa0a55326b1dfd2266998906453b08d93543dd6e98e50a5dd",
+      "status": 1,
+      "stdout": "",
+      "stderr": "recursive_values.my:88:38: error[E_TYPE]: a tuple has no methods; take it apart with `head, rest = value`\n              const value, rest = pair.copy()\n                                       ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/root_liveness.my",
+      "source_sha256": "16e453f6a71600a06359cf83ec221f9ceabe477bf412c54d384deb453e3c5232",
+      "status": 1,
+      "stdout": "",
+      "stderr": "root_liveness.my:127:9: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n          balls[k] = Ball(x=ball.x + 1.0, y=ball.y, radius=ball.radius)\n          ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/scalable_sorting.my",
+      "source_sha256": "b8770c247c9f99d10f3f797a8642c79b31eeca540ae093937ea813503eecf83d",
+      "status": 1,
+      "stdout": "",
+      "stderr": "scalable_sorting.my:16:19: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut ordered = sorted(source)\n                    ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/scalar_dictionary_publication.my",
+      "source_sha256": "f0f560f71e42fbdb4414ee713d82a2ed635fbf9e274a7653c6c37e50f5adfac8",
+      "status": 1,
+      "stdout": "",
+      "stderr": "scalar_dictionary_publication.my:56:12: error[E_SINGLE_OWNER_MOVED]: '<membership>' was moved or is unavailable on this path; use .copy() when both values are needed\n          if str(i) not in mapping or mapping.get(str(i), -1) != i:\n             ^\n",
+      "copy_changes": []
+    }
+  ]
+}

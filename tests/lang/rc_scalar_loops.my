@@ -22,7 +22,7 @@ public func test_negative_and_large_initial_values_keep_checked_fallback() -> bo
 
 public func test_ownership_outside_numeric_loop_remains_live() -> bool:
     mut items = [3, 9]
-    mut saved = items
+    mut saved = items.copy()
     mut result = with_owner(items, 64)
     items[0] = 12
     return result == 14124 and saved == [3, 9] and items == [12, 9]

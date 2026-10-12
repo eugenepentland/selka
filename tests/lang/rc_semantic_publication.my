@@ -38,21 +38,21 @@ func selected(mut indices: int[]) -> int:
 
 public func test_augmented_field_detaches_an_owned_edge_from_a_private_capture() -> bool:
     mut receiver = fields()
-    mut before = receiver
+    mut before = receiver.copy()
     receiver.items += [2]
     return receiver.items == [1, 2] and before.items == [1]
 
 
 public func test_dictionary_field_detachment_preserves_the_captured_snapshot() -> bool:
     mut receiver = fields()
-    mut before = receiver
+    mut before = receiver.copy()
     receiver.mapping[0].append(6)
     return receiver.mapping[0] == [5, 6] and before.mapping[0] == [5]
 
 
 public func test_scoped_field_path_keeps_the_original_snapshot_during_a_callback() -> bool:
     mut receiver = fields()
-    mut before = receiver
+    mut before = receiver.copy()
     mut indices = [0]
     receiver.rows[selected(mut indices)].append(4)
     return receiver.rows[0] == [3, 4] and before.rows[0] == [3] and len(indices) == 0

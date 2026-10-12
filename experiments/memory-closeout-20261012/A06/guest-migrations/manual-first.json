@@ -1,0 +1,206 @@
+[
+  {
+    "source": "tests/lang/rc_loop_uniqueness.my",
+    "before": "mut rows = [row, row]",
+    "after": "mut rows = [row.copy(), row.copy()]",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_loop_uniqueness.my",
+    "before": "before = items\n",
+    "after": "before = items.copy()\n",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_loop_versions.my",
+    "before": "mut values = [row, row]",
+    "after": "mut values = [row.copy(), row.copy()]",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_named_record_writes.my",
+    "before": "mut published = [state]",
+    "after": "mut published = [state.copy()]",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_owned_values.my",
+    "before": "retained = values\n",
+    "after": "retained = values.copy()\n",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_owning_element_borrows.my",
+    "before": "net=span, nc=nc, display=span",
+    "after": "net=span.copy(), nc=nc, display=span",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_plain_list_writes.my",
+    "before": "rows[-1] = row\n",
+    "after": "rows[-1] = row.copy()\n",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_plain_record_writes.my",
+    "before": "mut first = with_snapshot(mut state, state)",
+    "after": "const input_snapshot = state.copy()\n    mut first = with_snapshot(mut state, input_snapshot)",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_plain_record_writes.my",
+    "before": "mut states = [state]",
+    "after": "mut states = [state.copy()]",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_range_key_anchors.my",
+    "before": "counts[probe] = 0",
+    "after": "counts[probe.copy()] = 0",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_variant_reads.my",
+    "before": "return payload\n",
+    "after": "return payload.copy()\n",
+    "count": 3
+  },
+  {
+    "source": "tests/lang/rc_variant_reads.my",
+    "before": "match pool.items[at]:\n        case Item.value(value=payload):\n            replace_and_grow(mut pool)\n            mut result = payload",
+    "after": "const selected_item = pool.items[at].copy()\n    match selected_item:\n        case Item.value(value=payload):\n            replace_and_grow(mut pool)\n            mut result = payload.copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_variant_reads.my",
+    "before": "Payload(left=values, right=values)",
+    "after": "Payload(left=values.copy(), right=values.copy())",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_writeback_moves.my",
+    "before": "rt.names[key] = value",
+    "after": "rt.names[key.copy()] = value",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_writeback_moves.my",
+    "before": "Note(words=[key])",
+    "after": "Note(words=[key.copy()])",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/record_field_snapshots.my",
+    "before": "table.rows[index] = row",
+    "after": "table.rows[index] = row.copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/recursive_values.my",
+    "before": "const value, rest = pair",
+    "after": "const value, rest = pair.copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/value_equality.my",
+    "before": "second.next = Some(first)",
+    "after": "second.next = Some(first.copy())",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/frontend_mut.my",
+    "before": "const observed = observe_snapshot(values, mut values)",
+    "after": "const input_snapshot = values.copy()\n    const observed = observe_snapshot(input_snapshot, mut values)",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_fresh_returns.my",
+    "before": "return Link(next=child, value=total(child))",
+    "after": "const child_total = total(child)\n    return Link(next=child, value=child_total)",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_pin_elide.my",
+    "before": "table[1] = xs",
+    "after": "table[1] = xs.copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_plain_appends.my",
+    "before": "rows.append(row)",
+    "after": "rows.append(row.copy())",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "m.stack[m.top] = item",
+    "after": "m.stack[m.top] = item.copy()",
+    "count": 2
+  },
+  {
+    "source": "tests/lang/rc_plain_field_loans.my",
+    "before": "return rows[replace(mut rows)].label.number",
+    "after": "const receiver_snapshot = rows.copy()\n    return receiver_snapshot[replace(mut rows)].label.number",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_record_field_reads.my",
+    "before": "mut value = cursor.code[change(mut cursor)]",
+    "after": "const receiver_snapshot = cursor.code.copy()\n    mut value = receiver_snapshot[change(mut cursor)]",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_nested_read_loans.my",
+    "before": "mut selected = rows[0][replace_row(mut rows)]",
+    "after": "const receiver_snapshot = rows[0].copy()\n    mut selected = receiver_snapshot[replace_row(mut rows)]",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_read_loans.my",
+    "before": "mut selected = values[change_index(mut values)]",
+    "after": "const receiver_snapshot = values.copy()\n    mut selected = receiver_snapshot[change_index(mut values)]",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_read_loans.my",
+    "before": "mut selected = rows[change_points(mut rows)]",
+    "after": "const receiver_snapshot = rows.copy()\n    mut selected = receiver_snapshot[change_points(mut rows)]",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_nonheld_captures.my",
+    "before": "mut flags = element\n",
+    "after": "mut flags = element.copy()\n",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/exclusive_ownership.my",
+    "before": "match items[index]:",
+    "after": "const selected_item = items[index].copy()\n    match selected_item:",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/lambda_sort_keys.my",
+    "before": "yield item.name]",
+    "after": "yield item.name.copy()]",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/argument_evaluation_order.my",
+    "before": "return weigh(shape.corner.a, move(mut shape))",
+    "after": "const point_snapshot = shape.corner.a.copy()\n    return weigh(point_snapshot, move(mut shape))",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/argument_evaluation_order.my",
+    "before": "mut first = weigh(shape.corner.a, move(mut shape))",
+    "after": "const point_snapshot = shape.corner.a.copy()\n    mut first = weigh(point_snapshot, move(mut shape))",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/argument_evaluation_order.my",
+    "before": "mut seen = span(shape.corner, move(mut shape))",
+    "after": "const corner_snapshot = shape.corner.copy()\n    mut seen = span(corner_snapshot, move(mut shape))",
+    "count": 1
+  }
+]

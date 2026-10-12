@@ -11,7 +11,7 @@ func replace(mut values: dict[int, Sample], key: int, value: Sample) -> Unit:
 
 public func test_dictionary_plain_records_preserve_snapshot_and_repeated_updates() -> bool:
     mut values = {0: Sample(x=1.0, y=2.0, z=3.0)}
-    mut snapshot = values
+    mut snapshot = values.copy()
     for i in range(100):
         replace(mut values, 0, Sample(x=float(i), y=float(i + 1), z=float(i + 2)))
     return values[0].x == 99.0 and values[0].z == 101.0 and snapshot[0].y == 2.0
@@ -19,7 +19,7 @@ public func test_dictionary_plain_records_preserve_snapshot_and_repeated_updates
 
 public func test_plain_list_replacements_keep_source_and_snapshot_bits() -> bool:
     mut values = [Sample(x=1.0, y=2.0, z=3.0), Sample(x=4.0, y=5.0, z=6.0)]
-    mut before = values
+    mut before = values.copy()
     values[1] = values[0]
     values[0].x = 8.0
     return values[1].x == 1.0 and values[0].x == 8.0 and before[1].x == 4.0

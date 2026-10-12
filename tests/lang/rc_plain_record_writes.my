@@ -35,8 +35,8 @@ func loop(mut state: State, times: int):
 
 public func test_saved_record_and_child_snapshots_survive_scalar_publication() -> bool:
     mut state = State(values=[7], count=3, ready=True)
-    mut saved = state
-    mut children = state.values
+    mut saved = state.copy()
+    mut children = state.values.copy()
     add(mut state, 4)
     add(mut state, 2)
     state.values.append(9)
@@ -68,12 +68,13 @@ func with_snapshot(mut state: State, snapshot: State) -> bool:
 
 public func test_same_call_snapshot_and_pinned_parent_keep_distinct_scalar_bits() -> bool:
     mut state = State(values=[5], count=2, ready=True)
-    mut first = with_snapshot(mut state, state)
-    mut states = [state]
-    mut saved = states
+    const input_snapshot = state.copy()
+    mut first = with_snapshot(mut state, input_snapshot)
+    mut states = [state.copy()]
+    mut saved = states.copy()
     mut mutation_result_88 = count_for_append(mut state)
     state.values.append(mutation_result_88)
-    mut changed = states[0]
+    mut changed = states[0].copy()
     add(mut changed, 4)
     states[0] = changed
     return first and state.count == 4 and state.values == [5, 4] and states[0].count == 7 and saved[0].count == 3

@@ -40,8 +40,8 @@ func push(mut rt: Rt, value: int):
 
 
 func name(mut rt: Rt, key: str, value: int):
-    rt.names[key] = value
-    rt.last = Some(Note(words=[key]))
+    rt.names[key.copy()] = value
+    rt.last = Some(Note(words=[key.copy()]))
 
 
 func push_measured(mut rt: Rt, owner: Interp):
@@ -59,7 +59,7 @@ public func test_owned_local_writeback_loop_appends_in_place() -> bool:
     mut it = fresh()
     mut i = 0
     while i < 200:
-        mut wb = it.rt
+        mut wb = it.rt.copy()
         push(mut wb, i)
         it.rt = wb
         i += 1
@@ -68,23 +68,23 @@ public func test_owned_local_writeback_loop_appends_in_place() -> bool:
 
 public func test_snapshots_taken_before_the_moves_keep_their_values() -> bool:
     mut it = fresh()
-    mut first = it.rt
+    mut first = it.rt.copy()
     push(mut first, 1)
     it.rt = first
-    mut saved = it
-    mut saved_rt = it.rt
+    mut saved = it.copy()
+    mut saved_rt = it.rt.copy()
     for i in range(50):
-        mut wb = it.rt
+        mut wb = it.rt.copy()
         push(mut wb, i)
         it.rt = wb
     return saved.rt.objects == [1] and saved_rt.objects == [1] and len(it.rt.objects) == 51 and saved_rt.count == 1
 
 
 func step(mut it: Interp, note: Note, value: int):
-    mut wb = it.rt
+    mut wb = it.rt.copy()
     push(mut wb, value + len(note.words) + len(it.label))
     it.rt = wb
-    mut names = it.rt
+    mut names = it.rt.copy()
     name(mut names, it.label, value)
     it.rt = names
 
@@ -92,10 +92,10 @@ func step(mut it: Interp, note: Note, value: int):
 public func test_mut_parameter_writeback_with_read_only_record_argument() -> bool:
     mut it = fresh()
     mut note = Note(words=["a", "b"])
-    mut saved = it
+    mut saved = it.copy()
     for i in range(20):
         step(mut it, note, i)
-    mut last = it.rt.last
+    mut last = it.rt.last.copy()
     return len(it.rt.objects) == 20 and it.rt.objects[0] == 4 and it.rt.names["it"] == 19 and len(saved.rt.objects) == 0 and note.words == ["a", "b"] and last is not None and last.words == ["it"]
 
 
@@ -215,7 +215,7 @@ public func test_owner_passed_to_the_callee_sees_the_original() -> bool:
 
 public func test_nested_field_writebacks() -> bool:
     mut n = Nested(inner=fresh(), extra=[3])
-    mut saved = n
+    mut saved = n.copy()
     for i in range(5):
         mut wb = n.inner.rt
         push(mut wb, i)
@@ -234,7 +234,7 @@ public func test_nested_field_writebacks() -> bool:
 
 public func test_list_element_writebacks() -> bool:
     mut rts = [Rt(objects=[], names={}, label="a", last=None, count=0), Rt(objects=[1], names={}, label="b", last=None, count=0)]
-    mut saved = rts
+    mut saved = rts.copy()
     for i in range(4):
         mut wb = rts[1]
         push(mut wb, i)
@@ -282,7 +282,7 @@ public func test_target_rebound_inside_the_window_stores_the_new_value() -> bool
 
 public func test_owned_list_field_writeback() -> bool:
     mut bag = Bag(items=[], size=0)
-    mut saved = bag
+    mut saved = bag.copy()
     for i in range(100):
         mut items = bag.items
         items.append(i)
@@ -338,7 +338,7 @@ public func test_window_reads_target_siblings_and_matches() -> bool:
 
 public func test_nested_transfer_inside_an_outer_window() -> bool:
     mut it = fresh()
-    mut saved = it
+    mut saved = it.copy()
     for i in range(4):
         mut wb = it.rt
         mut objects = wb.objects

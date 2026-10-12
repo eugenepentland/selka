@@ -19,8 +19,9 @@ func change_index(mut values: int[]) -> int:
 
 public func test_index_callback_keeps_an_explicit_receiver_snapshot() -> bool:
     mut values = [7, 8]
-    mut snapshot = values
-    mut selected = values[change_index(mut values)]
+    mut snapshot = values.copy()
+    const receiver_snapshot = values.copy()
+    mut selected = receiver_snapshot[change_index(mut values)]
     return selected == 7 and values == [91] and snapshot == [7, 8]
 
 
@@ -38,7 +39,7 @@ public func test_scalar_loan_roots_survive_loop_reassignment_and_branches() -> b
 
 public func test_scalar_reads_keep_pending_pins_and_named_snapshots() -> bool:
     mut rows = [[7]]
-    mut snapshot = rows
+    mut snapshot = rows.copy()
     rows[0].append(rows[0][0])
     return rows == [[7, 7]] and snapshot == [[7]]
 
@@ -75,7 +76,8 @@ public func test_plain_record_read_survives_source_clear() -> bool:
 
 public func test_plain_record_callback_preserves_evaluation_snapshot() -> bool:
     mut rows = [Point(x=3, y=7)]
-    mut selected = rows[change_points(mut rows)]
+    const receiver_snapshot = rows.copy()
+    mut selected = receiver_snapshot[change_points(mut rows)]
     return selected == Point(x=3, y=7) and rows == [Point(x=91, y=92)]
 
 

@@ -38,7 +38,7 @@ public func test_short_and_negative_index_fallbacks() -> bool:
 
 public func test_snapshot_and_callback_after_fold_keep_original_owners() -> bool:
     mut items = [3, 9, 17]
-    mut snapshot = items
+    mut snapshot = items.copy()
     mut total = fold(items)
     items.append(total)
     return total == 29 and snapshot == [3, 9, 17] and items == [3, 9, 17, 29]

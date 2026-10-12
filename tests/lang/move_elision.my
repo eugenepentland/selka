@@ -15,7 +15,7 @@ func point(x: int) -> Point:
 
 public func test_a_field_write_updates_only_its_own_record() -> bool:
     mut p = point(1)
-    mut q = p
+    mut q = p.copy()
     q.x = 10
     q.tag = "q"
     return p.x == 1 and p.tag == "p1" and q.x == 10 and q.y == 2 and q.tag == "q"
@@ -33,14 +33,14 @@ public func test_field_writes_in_a_loop_accumulate_in_place() -> bool:
 
 public func test_a_record_read_after_a_copy_is_written_keeps_its_value() -> bool:
     mut p = point(3)
-    mut q = p
-    mut r = q
+    mut q = p.copy()
+    mut r = q.copy()
     r.x = 99
     return q.x == 3 and r.x == 99 and p.x == 3
 
 
 func bumped(p: Point) -> Point:
-    mut q = p
+    mut q = p.copy()
     q.x = q.x + 1
     return q
 
@@ -53,7 +53,7 @@ public func test_a_parameter_the_callee_updates_is_the_callers_value_still() -> 
 
 public func test_a_list_element_field_write_lands_in_that_element_only() -> bool:
     mut ps = [point(0), point(1), point(2)]
-    mut kept = ps[1]
+    mut kept = ps[1].copy()
     for round in range(20):
         for i in range(len(ps)):
             ps[i].x = ps[i].x + i

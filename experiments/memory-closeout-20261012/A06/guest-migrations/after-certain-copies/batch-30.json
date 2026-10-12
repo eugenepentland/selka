@@ -1,0 +1,106 @@
+{
+  "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9",
+  "cases": [
+    {
+      "source": "tests/lang/sets.my",
+      "source_sha256": "cead8715e2c46a86830dbb3564d81e4d47f602c4916708d6c05e0f55bbd3f11c",
+      "status": 1,
+      "stdout": "",
+      "stderr": "sets.my:63:19: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      mut letters = set(\"banana\")\n                    ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/stable_sorting.my",
+      "source_sha256": "8dc66d0c6ebf47e494626730c827eb325264db5d24ca4d1598b4137175a76837",
+      "status": 1,
+      "stdout": "",
+      "stderr": "stable_sorting.my:292:74: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      return words == [\"Apple\", \"apple\", \"pear\", \"pear\", \"\u00e9\", \"\ud83d\ude00\"] and sorted(words) == words and snapshot[0] == \"pear\"\n                                                                           ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/value_equality.my",
+      "source_sha256": "8da5a22c4e14e47526a8356f5a4dd456cb29c3dd0d4721f272e4b188cb8e1a32",
+      "status": 1,
+      "stdout": "",
+      "stderr": "value_equality.my:83:32: error[E_SINGLE_OWNER_MOVED]: 'first' was moved or is unavailable on this path; use .copy() when both values are needed\n      mut expected: Node? = Some(first)\n                                 ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/wide_signatures.my",
+      "source_sha256": "908f8ddf1d9b9641f0cf4f8c8088ce3154bf60dc9b1e3aa9a41b2017bdb58a2f",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": [
+        {
+          "line": 19,
+          "before": "    return text",
+          "after": "    return text.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/argument_evaluation_order.my",
+      "source_sha256": "e25698fc1865ef216ed45fb1d7b98e18fb9a2cb319b78fb1292adc223dc2f13e",
+      "status": 1,
+      "stdout": "",
+      "stderr": "argument_evaluation_order.my:21:5: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      shape.corner.a.x = 100\n      ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/discard_names.my",
+      "source_sha256": "d4187db0080ecb899065ab8639b21f576f9002e7e70f17f763ae5153e88caea1",
+      "status": 1,
+      "stdout": "",
+      "stderr": "discard_names.my:24:5: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      for _, count in counts.items():\n      ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/exclusive_ownership.my",
+      "source_sha256": "c5066f1aca685bda06b6c717cff28e1474cee1cbed492fb0c404548a9a22565d",
+      "status": 1,
+      "stdout": "",
+      "stderr": "exclusive_ownership.my:38:13: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n              items[index] = Item.payload(value=Payload(number=0, items=fields))\n              ^\n",
+      "copy_changes": [
+        {
+          "line": 35,
+          "before": "            mut fields = old.items",
+          "after": "            mut fields = old.items.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/frontend_mut.my",
+      "source_sha256": "b75db0e4676422556f3ab90399a31e61b930d464d739bdb8a273fe1cb44a17c6",
+      "status": 1,
+      "stdout": "",
+      "stderr": "frontend_mut.my:101:47: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      const observed = observe_snapshot(values, mut values)\n                                                ^\n",
+      "copy_changes": [
+        {
+          "line": 89,
+          "before": "    const original = values",
+          "after": "    const original = values.copy()",
+          "diagnostic": "E_SINGLE_OWNER_MOVED"
+        }
+      ]
+    },
+    {
+      "source": "tests/lang/generator_arguments.my",
+      "source_sha256": "50eb60df08637500cc26f486561fdb465f1ff4156e8ce4d4c576cfca50436a29",
+      "status": 1,
+      "stdout": "",
+      "stderr": "generator_arguments.my:41:84: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n      return min(x * 2 for x in xs) == -4 and max(x + 1 for x in xs) == 10 and max(w for w in words) == \"pear\" and min(len(w) for w in words) == 3 and max(x * 0.5 for x in xs) == 4.5\n                                                                                     ^\n",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/immutable_equal.my",
+      "source_sha256": "b3a304f28a1b617fd10d919a85f7c78c5a6ae5861d4142fcb02c1612a710b73f",
+      "status": 1,
+      "stdout": "",
+      "stderr": "immutable_equal.my:8:12: error[E_ZERO_RC_UNSUPPORTED]: shared snapshots and retained views are unsupported; use .borrow() for a checked view or .copy() for ownership\n      return source.view(7, 26)\n             ^\n",
+      "copy_changes": []
+    }
+  ]
+}

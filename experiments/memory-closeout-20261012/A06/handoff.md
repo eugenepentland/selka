@@ -32,7 +32,7 @@ Source revision is exactly C0. The shared pinned Zig is used via `$ZIG`.
 | Resource files, C0 release, small/large | Pass: exact outputs, RC0, managed exit-live0, clean ABI marker and symbols |
 | Parallel primality, C0 release, 1/2/8 workers, small/large | Pass: exact outputs, RC0, managed exit-live0, clean ABI marker and symbols |
 | Existing migrated word-count, domain-codec and external-capability source checks | Pass |
-| Existing generic-resource source check | Pending shared build admission |
+| Existing generic-resource source check | Refused at line52 acquire_resource passed through handle; A07 bounded provider-origin support pending integration |
 | Timing helper hashes and accumulated-output oracles | Pass |
 | Integrated candidate, all five pipelines | Pending frozen coordinator candidate |
 | Ordinary default commands / retirement requalification | Pending coordinator stages C2/C3 |
@@ -83,13 +83,29 @@ facts. A complete pass is 20 binaries and 60 counted executions. Promotion uses
 `--ownership default`. The harness keeps every refused lane in its result report.
 No baseline result qualifies a different compiler revision.
 
-No safety or in-scope application support defect has been found in completed runs.
+All four new application shapes pass the completed C0 runs. The existing generic-resource example is a source-admission blocker owned by A07; its exact original source remains unchanged. `evidence/C0-example-source-checks.json` preserves its E_SINGLE_OWNER_UNSUPPORTED diagnostic.
 The original word-count refusal correctly rejects transferring a borrowed key, but
 C0's `E_SINGLE_OWNER_OVERLAP` message says "a list" for a string. A07 accepted
-ownership of the proposed wording correction to "a value". No new shared helper
-contract, spec entry, test-root registration or coordinator production edit is
-required by A06 at this point.
+ownership of the proposed wording correction to "a value". The initial application batch required no shared helper contract or spec change. Later source-migration work adds the coordinator-registered `src/core/a06_nested_write_test.zig`; see the following section.
 
 The existing external-capabilities and generic-resource examples are source-check
 probes only, because exact live-provider outcomes are not deterministic. They are
 not substituted for the fully executable resource application matrix.
+
+
+## Secondary guest migration and compiler reproducers
+
+The coordinator subsequently reserved 64 existing guest sources (the initial 65
+list transferred `frontend_type_helpers.my` to A01). `guest-migrations/README.md`
+and `ledger.json` preserve every current admission status, exact compiler/source
+hashes, source burden and remaining owners. Frozen C0 original sources are stored
+as deterministic gzip files. Every original assertion line and public test function
+is preserved. These are source migrations, not compiler-only performance results.
+
+`nested-write/` contains source-admission reproducers and exact proposed checker
+patches for A07. Regression commit `6dd39d631` adds the original nested-field case;
+its extended tests cover list-slot reconstruction, tuple deep copies and original
+unsupported traversal/view boundaries. A01 owns the tuple method exception; A07
+owns applying and qualifying the ownership/lowering changes. Guardian passed 88
+checks on the first regression commit. Native counted tests await those compiler
+fixes and must pass on the integrated candidate before qualification is claimed.

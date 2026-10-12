@@ -15,7 +15,7 @@ func total(items: Item[]) -> int:
     mut result = 0
     mut index = 0
     while index < len(items):
-        mut item = items[index]
+        mut item = items[index].copy()
         result += middle(items, index) + item.number
         index += 1
     return result
@@ -28,7 +28,7 @@ func recursive(items: Item[], depth: int) -> int:
 
 
 func returned(items: Item[]) -> Item:
-    return items[0]
+    return items[0].copy()
 
 
 func through_owned_result(items: Item[]) -> int:
@@ -42,7 +42,7 @@ func changed(mut items: Item[]) -> int:
 
 public func test_composed_reader_preserves_snapshot_and_later_mutation() -> bool:
     mut items = [Item(text=b"first", number=3), Item(text=b"second", number=7)]
-    mut snapshot = items
+    mut snapshot = items.copy()
     mut before = total(items)
     items.append(Item(text=b"third", number=9))
     return before == 20 and total(items) == 38 and total(snapshot) == 20
@@ -72,7 +72,7 @@ public func test_managed_result_helper_keeps_owned_fallback() -> bool:
 
 public func test_mutating_helper_keeps_snapshot_and_ordinary_cleanup() -> bool:
     mut items = [Item(text=b"first", number=3)]
-    mut snapshot = items
+    mut snapshot = items.copy()
     mut result = changed(mut items)
     return result == 28 and total(items) == 28 and total(snapshot) == 6
 

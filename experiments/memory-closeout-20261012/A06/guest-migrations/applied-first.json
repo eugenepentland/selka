@@ -1,0 +1,996 @@
+[
+  {
+    "source": "tests/lang/exclusive_ownership.my",
+    "line": 26,
+    "before": "    mut work = owner.box",
+    "after": "    mut work = owner.box.copy()",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/frontend_mut.my",
+    "line": 30,
+    "before": "    mut changed = original",
+    "after": "    mut changed = original.copy()",
+    "reason": "E_SINGLE_OWNER_MOVED"
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 74,
+    "before": "    mut saved = items",
+    "after": "    mut saved = items.copy()",
+    "reason": "E_SINGLE_OWNER_MOVED"
+  },
+  {
+    "source": "tests/lang/migrated/surface_statements_case_2.my",
+    "line": 7,
+    "before": "    mut values = holder.value",
+    "after": "    mut values = holder.value.copy()",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/move_elision.my",
+    "line": 18,
+    "before": "    mut q = p",
+    "after": "    mut q = p.copy()",
+    "reason": "E_SINGLE_OWNER_MOVED"
+  },
+  {
+    "source": "tests/lang/python_core.my",
+    "line": 12,
+    "before": "    return values",
+    "after": "    return values.copy()",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/rc_call_lifetimes.my",
+    "line": 3,
+    "before": "    return items",
+    "after": "    return items.copy()",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/rc_loop_operand_isolation.my",
+    "line": 14,
+    "before": "    mut saved = data",
+    "after": "    mut saved = data.copy()",
+    "reason": "E_SINGLE_OWNER_MOVED"
+  },
+  {
+    "source": "tests/lang/rc_loop_uniqueness.my",
+    "line": 10,
+    "before": "    mut before = items",
+    "after": "    mut before = items.copy()",
+    "reason": "E_SINGLE_OWNER_MOVED"
+  },
+  {
+    "source": "tests/lang/rc_loop_versions.my",
+    "line": 3,
+    "before": "    mut before = values",
+    "after": "    mut before = values.copy()",
+    "reason": "E_SINGLE_OWNER_MOVED"
+  },
+  {
+    "source": "tests/lang/rc_mut_list_aliases.my",
+    "line": 26,
+    "before": "    return Span(source=text, start=0, end=len(text))",
+    "after": "    return Span(source=text.copy(), start=0, end=len(text))",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/rc_mut_payload_snapshots.my",
+    "line": 7,
+    "before": "    mut snapshot = table",
+    "after": "    mut snapshot = table.copy()",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/rc_mut_uniqueness.my",
+    "line": 6,
+    "before": "    mut before = items",
+    "after": "    mut before = items.copy()",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/rc_named_record_writes.my",
+    "line": 22,
+    "before": "    mut saved = state",
+    "after": "    mut saved = state.copy()",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/rc_named_releases.my",
+    "line": 23,
+    "before": "    mut first = rows[0]",
+    "after": "    mut first = rows[0].copy()",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/rc_nonheld_captures.my",
+    "line": 4,
+    "before": "    mut saved = flags",
+    "after": "    mut saved = flags.copy()",
+    "reason": "E_SINGLE_OWNER_MOVED"
+  },
+  {
+    "source": "tests/lang/rc_owned_values.my",
+    "line": 3,
+    "before": "    return items",
+    "after": "    return items.copy()",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/rc_owning_element_borrows.my",
+    "line": 18,
+    "before": "    mut span = Span(source=net, start=0, end=len(net))",
+    "after": "    mut span = Span(source=net.copy(), start=0, end=len(net))",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/rc_pin_elide.my",
+    "line": 69,
+    "before": "    mut copy = xs",
+    "after": "    mut copy = xs.copy()",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/rc_plain_aggregates.my",
+    "line": 23,
+    "before": "    mut before = values",
+    "after": "    mut before = values.copy()",
+    "reason": "E_SINGLE_OWNER_MOVED"
+  },
+  {
+    "source": "tests/lang/rc_plain_appends.my",
+    "line": 18,
+    "before": "    mut saved = items",
+    "after": "    mut saved = items.copy()",
+    "reason": "E_SINGLE_OWNER_MOVED"
+  },
+  {
+    "source": "tests/lang/rc_plain_field_loans.my",
+    "line": 26,
+    "before": "        mut row = rows[i]",
+    "after": "        mut row = rows[i].copy()",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/rc_plain_list_writes.my",
+    "line": 3,
+    "before": "    mut before = small",
+    "after": "    mut before = small.copy()",
+    "reason": "E_SINGLE_OWNER_MOVED"
+  },
+  {
+    "source": "tests/lang/rc_plain_record_writes.my",
+    "line": 39,
+    "before": "    mut children = state.values",
+    "after": "    mut children = state.values.copy()",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/rc_plain_replacements.my",
+    "line": 14,
+    "before": "    mut snapshot = values",
+    "after": "    mut snapshot = values.copy()",
+    "reason": "E_SINGLE_OWNER_MOVED"
+  },
+  {
+    "source": "tests/lang/rc_read_list_versions.my",
+    "line": 41,
+    "before": "    mut snapshot = items",
+    "after": "    mut snapshot = items.copy()",
+    "reason": "E_SINGLE_OWNER_MOVED"
+  },
+  {
+    "source": "tests/lang/rc_read_loans.my",
+    "line": 22,
+    "before": "    mut snapshot = values",
+    "after": "    mut snapshot = values.copy()",
+    "reason": "E_SINGLE_OWNER_MOVED"
+  },
+  {
+    "source": "tests/lang/rc_readonly_body.my",
+    "line": 12,
+    "before": "    mut wrapped = Wrapped.leaf(value=items)",
+    "after": "    mut wrapped = Wrapped.leaf(value=items.copy())",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/rc_readonly_calls.my",
+    "line": 18,
+    "before": "        mut item = items[index]",
+    "after": "        mut item = items[index].copy()",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/rc_readonly_managed_calls.my",
+    "line": 13,
+    "before": "    return items[index]",
+    "after": "    return items[index].copy()",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/rc_record_field_reads.my",
+    "line": 13,
+    "before": "    mut cursor = Cursor(code=items, index=index)",
+    "after": "    mut cursor = Cursor(code=items.copy(), index=index)",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/rc_scalar_loops.my",
+    "line": 25,
+    "before": "    mut saved = items",
+    "after": "    mut saved = items.copy()",
+    "reason": "E_SINGLE_OWNER_MOVED"
+  },
+  {
+    "source": "tests/lang/rc_scalar_replacements.my",
+    "line": 34,
+    "before": "    mut snapshot = values",
+    "after": "    mut snapshot = values.copy()",
+    "reason": "E_SINGLE_OWNER_MOVED"
+  },
+  {
+    "source": "tests/lang/rc_scope_inline.my",
+    "line": 2,
+    "before": "    mut before = items",
+    "after": "    mut before = items.copy()",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/rc_temporary_lifetimes.my",
+    "line": 3,
+    "before": "    mut snapshot = rows",
+    "after": "    mut snapshot = rows.copy()",
+    "reason": "E_SINGLE_OWNER_MOVED"
+  },
+  {
+    "source": "tests/lang/rc_tree_drains.my",
+    "line": 15,
+    "before": "    mut left = node.left",
+    "after": "    mut left = node.left.copy()",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/record_field_snapshots.my",
+    "line": 15,
+    "before": "    mut saved = state",
+    "after": "    mut saved = state.copy()",
+    "reason": "E_SINGLE_OWNER_MOVED"
+  },
+  {
+    "source": "tests/lang/scalar_dictionary_publication.my",
+    "line": 10,
+    "before": "    mut snapshot = mapping",
+    "after": "    mut snapshot = mapping.copy()",
+    "reason": "E_SINGLE_OWNER_MOVED"
+  },
+  {
+    "source": "tests/lang/wide_signatures.my",
+    "line": 13,
+    "before": "    return items",
+    "after": "    return items.copy()",
+    "reason": "E_SINGLE_OWNER_BORROW"
+  },
+  {
+    "source": "tests/lang/rc_journal_types.my",
+    "line": 12,
+    "before": "            mut saved = result",
+    "after": "            mut saved = result.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_loop_uniqueness.my",
+    "line": 23,
+    "before": "    mut before = rows",
+    "after": "    mut before = rows.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_loop_uniqueness.my",
+    "line": 36,
+    "before": "    mut before = items",
+    "after": "    mut before = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_loop_uniqueness.my",
+    "line": 46,
+    "before": "    mut before = rows",
+    "after": "    mut before = rows.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_loop_versions.my",
+    "line": 16,
+    "before": "    mut before = values",
+    "after": "    mut before = values.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_loop_versions.my",
+    "line": 25,
+    "before": "    mut before = values",
+    "after": "    mut before = values.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_mut_list_aliases.my",
+    "line": 73,
+    "before": "    mut other = a",
+    "after": "    mut other = a.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_mut_list_aliases.my",
+    "line": 80,
+    "before": "    mut other = b",
+    "after": "    mut other = b.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_mut_payload_snapshots.my",
+    "line": 16,
+    "before": "        mut snapshot = table",
+    "after": "        mut snapshot = table.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_mut_payload_snapshots.my",
+    "line": 22,
+    "before": "    mut snapshot = table",
+    "after": "    mut snapshot = table.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_mut_payload_snapshots.my",
+    "line": 59,
+    "before": "        mut snapshot = parts",
+    "after": "        mut snapshot = parts.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_mut_uniqueness.my",
+    "line": 16,
+    "before": "    mut caller = items",
+    "after": "    mut caller = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_named_record_writes.my",
+    "line": 57,
+    "before": "    mut saved = state",
+    "after": "    mut saved = state.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_named_record_writes.my",
+    "line": 67,
+    "before": "    mut saved = state",
+    "after": "    mut saved = state.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_owned_values.my",
+    "line": 29,
+    "before": "    mut retained = values",
+    "after": "    mut retained = values.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_owned_values.my",
+    "line": 39,
+    "before": "    mut changed = original",
+    "after": "    mut changed = original.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_owned_values.my",
+    "line": 47,
+    "before": "    mut changed = original",
+    "after": "    mut changed = original.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_owned_values.my",
+    "line": 55,
+    "before": "    mut retained = values",
+    "after": "    mut retained = values.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_owned_values.my",
+    "line": 67,
+    "before": "    mut changed = original",
+    "after": "    mut changed = original.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_owned_values.my",
+    "line": 74,
+    "before": "    mut changed = original",
+    "after": "    mut changed = original.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_plain_aggregates.my",
+    "line": 38,
+    "before": "    mut before = boards",
+    "after": "    mut before = boards.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_plain_aggregates.my",
+    "line": 47,
+    "before": "    mut before = values",
+    "after": "    mut before = values.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_plain_aggregates.my",
+    "line": 55,
+    "before": "    mut before = values",
+    "after": "    mut before = values.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_plain_list_writes.my",
+    "line": 8,
+    "before": "    mut saved = numbers",
+    "after": "    mut saved = numbers.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_plain_list_writes.my",
+    "line": 16,
+    "before": "    mut before = rows",
+    "after": "    mut before = rows.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_plain_record_writes.my",
+    "line": 38,
+    "before": "    mut saved = state",
+    "after": "    mut saved = state.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_plain_record_writes.my",
+    "line": 73,
+    "before": "    mut saved = states",
+    "after": "    mut saved = states.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_readonly_calls.my",
+    "line": 45,
+    "before": "    mut snapshot = items",
+    "after": "    mut snapshot = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_readonly_calls.my",
+    "line": 75,
+    "before": "    mut snapshot = items",
+    "after": "    mut snapshot = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_readonly_managed_calls.my",
+    "line": 51,
+    "before": "    mut saved = items",
+    "after": "    mut saved = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_record_field_reads.my",
+    "line": 98,
+    "before": "    mut snapshot = cursor",
+    "after": "    mut snapshot = cursor.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_semantic_publication.my",
+    "line": 41,
+    "before": "    mut before = receiver",
+    "after": "    mut before = receiver.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_semantic_publication.my",
+    "line": 48,
+    "before": "    mut before = receiver",
+    "after": "    mut before = receiver.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_semantic_publication.my",
+    "line": 55,
+    "before": "    mut before = receiver",
+    "after": "    mut before = receiver.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_variant_reads.my",
+    "line": 54,
+    "before": "    mut saved = pool",
+    "after": "    mut saved = pool.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_writeback_moves.my",
+    "line": 74,
+    "before": "    mut saved = it",
+    "after": "    mut saved = it.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_writeback_moves.my",
+    "line": 95,
+    "before": "    mut saved = it",
+    "after": "    mut saved = it.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_writeback_moves.my",
+    "line": 218,
+    "before": "    mut saved = n",
+    "after": "    mut saved = n.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_writeback_moves.my",
+    "line": 237,
+    "before": "    mut saved = rts",
+    "after": "    mut saved = rts.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_writeback_moves.my",
+    "line": 285,
+    "before": "    mut saved = bag",
+    "after": "    mut saved = bag.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_writeback_moves.my",
+    "line": 341,
+    "before": "    mut saved = it",
+    "after": "    mut saved = it.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/record_field_snapshots.my",
+    "line": 22,
+    "before": "    mut saved = state",
+    "after": "    mut saved = state.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/record_field_snapshots.my",
+    "line": 29,
+    "before": "    mut saved = state",
+    "after": "    mut saved = state.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/record_field_snapshots.my",
+    "line": 37,
+    "before": "    mut saved = states",
+    "after": "    mut saved = states.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/record_field_snapshots.my",
+    "line": 48,
+    "before": "    mut saved = state",
+    "after": "    mut saved = state.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/record_field_snapshots.my",
+    "line": 55,
+    "before": "    mut saved = state",
+    "after": "    mut saved = state.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/record_field_snapshots.my",
+    "line": 86,
+    "before": "    mut before = output",
+    "after": "    mut before = output.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/record_field_snapshots.my",
+    "line": 100,
+    "before": "    mut whole = wrapped",
+    "after": "    mut whole = wrapped.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/record_field_snapshots.my",
+    "line": 110,
+    "before": "    mut before = sink",
+    "after": "    mut before = sink.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/recursive_values.my",
+    "line": 209,
+    "before": "            mut changed = inner",
+    "after": "            mut changed = inner.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/scalar_dictionary_publication.my",
+    "line": 36,
+    "before": "    mut before = members",
+    "after": "    mut before = members.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/exclusive_ownership.my",
+    "line": 52,
+    "before": "    mut other = owner",
+    "after": "    mut other = owner.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/exclusive_ownership.my",
+    "line": 53,
+    "before": "    mut kept = owner",
+    "after": "    mut kept = owner.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/exclusive_ownership.my",
+    "line": 60,
+    "before": "    mut other = items",
+    "after": "    mut other = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/exclusive_ownership.my",
+    "line": 61,
+    "before": "    mut kept = items",
+    "after": "    mut kept = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/iteration_identity.my",
+    "line": 34,
+    "before": "    mut snapshot = values",
+    "after": "    mut snapshot = values.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/iteration_identity.my",
+    "line": 59,
+    "before": "    mut snapshot = values",
+    "after": "    mut snapshot = values.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 85,
+    "before": "    mut saved = items",
+    "after": "    mut saved = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 98,
+    "before": "    mut saved = items",
+    "after": "    mut saved = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 109,
+    "before": "    mut saved = holder",
+    "after": "    mut saved = holder.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 201,
+    "before": "    mut saved = right",
+    "after": "    mut saved = right.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 215,
+    "before": "    mut saved = right",
+    "after": "    mut saved = right.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 226,
+    "before": "    mut saved = items",
+    "after": "    mut saved = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 248,
+    "before": "    mut saved = mapping",
+    "after": "    mut saved = mapping.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 266,
+    "before": "    mut saved = items",
+    "after": "    mut saved = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 277,
+    "before": "    mut saved = holder",
+    "after": "    mut saved = holder.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 322,
+    "before": "    mut saved = items",
+    "after": "    mut saved = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 330,
+    "before": "    mut saved = items",
+    "after": "    mut saved = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 338,
+    "before": "    mut saved = items",
+    "after": "    mut saved = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 346,
+    "before": "    mut saved = items",
+    "after": "    mut saved = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 354,
+    "before": "    mut saved = items",
+    "after": "    mut saved = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 362,
+    "before": "    mut saved = items",
+    "after": "    mut saved = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 373,
+    "before": "    mut saved = items",
+    "after": "    mut saved = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 381,
+    "before": "    mut saved = flags",
+    "after": "    mut saved = flags.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 389,
+    "before": "    mut saved = flags",
+    "after": "    mut saved = flags.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 397,
+    "before": "    mut saved = items",
+    "after": "    mut saved = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 405,
+    "before": "    mut saved = holder",
+    "after": "    mut saved = holder.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 416,
+    "before": "    mut saved = holder",
+    "after": "    mut saved = holder.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/live_place_iteration.my",
+    "line": 447,
+    "before": "    mut saved = items",
+    "after": "    mut saved = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/python_core.my",
+    "line": 74,
+    "before": "    mut changed = counter",
+    "after": "    mut changed = counter.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_fresh_returns.my",
+    "line": 39,
+    "before": "    mut before = value",
+    "after": "    mut before = value.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_named_releases.my",
+    "line": 50,
+    "before": "    mut before = values",
+    "after": "    mut before = values.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_nested_read_loans.my",
+    "line": 39,
+    "before": "    mut snapshot = rows",
+    "after": "    mut snapshot = rows.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_pin_elide.my",
+    "line": 181,
+    "before": "    mut before = xs",
+    "after": "    mut before = xs.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_pin_elide.my",
+    "line": 323,
+    "before": "    mut before = xs",
+    "after": "    mut before = xs.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_plain_appends.my",
+    "line": 32,
+    "before": "    mut saved = items",
+    "after": "    mut saved = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_plain_appends.my",
+    "line": 80,
+    "before": "    mut saved = values",
+    "after": "    mut saved = values.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_plain_appends.my",
+    "line": 89,
+    "before": "    mut saved = pairs",
+    "after": "    mut saved = pairs.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_plain_replacements.my",
+    "line": 22,
+    "before": "    mut before = values",
+    "after": "    mut before = values.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_read_loans.my",
+    "line": 41,
+    "before": "    mut snapshot = rows",
+    "after": "    mut snapshot = rows.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_readonly_body.my",
+    "line": 51,
+    "before": "    mut before = node",
+    "after": "    mut before = node.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_readonly_body.my",
+    "line": 61,
+    "before": "    mut before = values",
+    "after": "    mut before = values.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_readonly_body.my",
+    "line": 76,
+    "before": "    mut before = items",
+    "after": "    mut before = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_scalar_replacements.my",
+    "line": 43,
+    "before": "    mut before = values",
+    "after": "    mut before = values.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_scalar_replacements.my",
+    "line": 62,
+    "before": "    mut before = values",
+    "after": "    mut before = values.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_scope_inline.my",
+    "line": 13,
+    "before": "    mut before = items",
+    "after": "    mut before = items.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "line": 378,
+    "before": "    mut snapshot = rt",
+    "after": "    mut snapshot = rt.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "line": 398,
+    "before": "    mut saved = frame",
+    "after": "    mut saved = frame.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "line": 409,
+    "before": "    mut before = m",
+    "after": "    mut before = m.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "line": 429,
+    "before": "    mut saved = m",
+    "after": "    mut saved = m.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "line": 436,
+    "before": "    mut saved = objects",
+    "after": "    mut saved = objects.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "line": 482,
+    "before": "    mut saved = table",
+    "after": "    mut saved = table.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  },
+  {
+    "source": "tests/lang/rc_temporary_lifetimes.my",
+    "line": 31,
+    "before": "    mut snapshot = rows",
+    "after": "    mut snapshot = rows.copy()",
+    "reason": "Explicit independent named snapshot; original value remains observable."
+  }
+]

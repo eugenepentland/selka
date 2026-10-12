@@ -9,7 +9,7 @@ enum Wrapped:
 
 
 func inline_variant(items: int[]) -> int:
-    mut wrapped = Wrapped.leaf(value=items)
+    mut wrapped = Wrapped.leaf(value=items.copy())
     match wrapped:
         case Wrapped.leaf(value=values):
             return 1
@@ -18,7 +18,7 @@ func inline_variant(items: int[]) -> int:
 
 
 func recursive_variant(items: int[]) -> int:
-    mut wrapped = Wrapped.next(value=Wrapped.leaf(value=items))
+    mut wrapped = Wrapped.next(value=Wrapped.leaf(value=items.copy()))
     match wrapped:
         case Wrapped.next(value=inner):
             match inner:
@@ -31,7 +31,7 @@ func recursive_variant(items: int[]) -> int:
 
 
 func length(node: Link) -> int:
-    mut tail = node.next
+    mut tail = node.next.copy()
     if tail is None:
         return 1
     return 1 + length(tail)
@@ -48,7 +48,7 @@ public func test_recursive_reader_preserves_caller_snapshot() -> bool:
     mut node = Link(next=None)
     for index in range(128):
         node = Link(next=Some(node))
-    mut before = node
+    mut before = node.copy()
     mut total = 0
     for index in range(8):
         total += length(node)
@@ -58,7 +58,7 @@ public func test_recursive_reader_preserves_caller_snapshot() -> bool:
 
 public func test_loop_reader_leaves_collection_available_for_later_mutation() -> bool:
     mut values = [1, 2, 3]
-    mut before = values
+    mut before = values.copy()
     mut first = list_sum(values)
     values.append(4)
     return first == 6 and list_sum(values) == 10 and list_sum(before) == 6
@@ -73,7 +73,7 @@ func main() -> int:
 
 public func test_inline_and_recursive_variant_wrappers_preserve_input() -> bool:
     mut items = [1, 2, 3]
-    mut before = items
+    mut before = items.copy()
     mut inline_result = inline_variant(items)
     mut recursive_result = recursive_variant(items)
     items.clear()

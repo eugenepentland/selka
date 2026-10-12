@@ -36,7 +36,7 @@ record Machine:
 
 
 func push(mut m: Machine, item: Value):
-    m.stack[m.top] = item
+    m.stack[m.top] = item.copy()
     m.top = m.top + 1
 
 
@@ -51,18 +51,18 @@ func grow_stack(mut m: Machine) -> int:
 
 func replaced_receiver(mut m: Machine, item: Value):
     mut mutation_result_53 = grow_stack(mut m)
-    m.stack[mutation_result_53] = item
+    m.stack[mutation_result_53] = item.copy()
 
 
 func rename(mut m: Machine, name: str):
-    m.names[0] = name
+    m.names[0] = name.copy()
 
 
 func local_machine(item: Value) -> Value[]:
     mut m = Machine(stack=[Value.nil, Value.nil], frames=[], names=[], top=0, count=0)
-    m.stack[m.top] = item
-    m.stack[-1] = item
-    return m.stack
+    m.stack[m.top] = item.copy()
+    m.stack[-1] = item.copy()
+    return m.stack.copy()
 
 
 record Name:
@@ -96,13 +96,14 @@ func arity_of(objects: Obj[], at: int) -> int:
 func name_of(objects: Obj[], at: int) -> Name:
     match objects[at]:
         case Obj.name(value=payload):
-            return payload
+            return payload.copy()
         case _:
             return Name(chars=b"", hash=0u32)
 
 
 func freed_arity(mut objects: Obj[], at: int) -> int:
-    match objects[at]:
+    const selected_item = objects[at].copy()
+    match selected_item:
         case Obj.callable(value=payload):
             objects[at] = Obj.free
             return payload.arity + len(payload.code.ops)
@@ -116,7 +117,7 @@ func joined(left: bytes, right: bytes) -> Name:
 
 
 func same(value: Name) -> Name:
-    return value
+    return value.copy()
 
 
 record CodeUnit:
@@ -131,11 +132,11 @@ record Loaded:
 
 
 func load(unit: CodeUnit, at: int) -> Loaded:
-    return Loaded(code=unit.chunk.code, names=unit.chunk.names, at=at)
+    return Loaded(code=unit.chunk.code.copy(), names=unit.chunk.names.copy(), at=at)
 
 
 func load_mut(mut unit: CodeUnit) -> Loaded:
-    mut loaded = Loaded(code=unit.chunk.code, names=unit.chunk.names, at=unit.arity)
+    mut loaded = Loaded(code=unit.chunk.code.copy(), names=unit.chunk.names.copy(), at=unit.arity)
     unit.chunk.code.append(99)
     return loaded
 
@@ -145,7 +146,9 @@ func made_unit() -> CodeUnit:
 
 
 func load_made() -> Loaded:
-    return Loaded(code=made_unit().chunk.code, names=made_unit().chunk.names, at=0)
+    const code_source = made_unit()
+    const name_source = made_unit()
+    return Loaded(code=code_source.chunk.code.copy(), names=name_source.chunk.names.copy(), at=0)
 
 
 record Table:
@@ -164,7 +167,7 @@ func table_arity(table: Table, at: int) -> int:
 func table_name(table: Table, at: int) -> Name:
     match table.objects[at]:
         case Obj.name(value=payload):
-            return payload
+            return payload.copy()
         case _:
             return Name(chars=b"", hash=0u32)
 
@@ -172,7 +175,7 @@ func table_name(table: Table, at: int) -> Name:
 func table_ops(table: Table, at: int) -> int[]:
     match table.objects[at]:
         case Obj.callable(value=payload):
-            return payload.code.ops
+            return payload.code.ops.copy()
         case _:
             return []
 
@@ -194,7 +197,8 @@ func nested_anchor(table: Table) -> int:
 
 func replaced_table(mut table: Table, at: int) -> int:
     table.count = table.count + 1
-    match table.objects[at]:
+    const selected_item = table.objects[at].copy()
+    match selected_item:
         case Obj.callable(value=payload):
             table.objects[at] = Obj.free
             return payload.arity + len(payload.code.ops)
@@ -214,7 +218,7 @@ func advance(mut cursor: Cursor) -> int:
 
 func fetch(mut rt: Runtime, mut cursor: Cursor) -> Value:
     rt.top = rt.top + 1
-    return rt.stack[advance(mut cursor)]
+    return rt.stack[advance(mut cursor)].copy()
 
 
 func reset_stack(mut rt: Runtime) -> int:
@@ -223,7 +227,8 @@ func reset_stack(mut rt: Runtime) -> int:
 
 
 func fetch_reset(mut rt: Runtime) -> Value:
-    return rt.stack[reset_stack(mut rt)]
+    const receiver_snapshot = rt.stack.copy()
+    return receiver_snapshot[reset_stack(mut rt)].copy()
 
 
 record Globals:
@@ -237,7 +242,7 @@ record Vm:
 
 
 func entry_at(globals: Globals, at: int) -> Value:
-    return globals.entries[at]
+    return globals.entries[at].copy()
 
 
 func name_length(vm: Vm, at: int) -> int:
@@ -251,7 +256,7 @@ func global_value(mut vm: Vm, at: int) -> Value:
 
 func find_entry(globals: Globals, at: int) -> Value?:
     if at < len(globals.entries):
-        return Some(globals.entries[at])
+        return Some(globals.entries[at].copy())
     return None
 
 
@@ -270,7 +275,8 @@ func wipe(mut vm: Vm) -> int:
 
 
 func wiped_value(mut vm: Vm) -> Value:
-    return entry_at(vm.globals, wipe(mut vm))
+    const receiver_snapshot = vm.globals.copy()
+    return entry_at(receiver_snapshot, wipe(mut vm))
 
 
 func table_name_hash(table: Table, at: int) -> u32:
@@ -278,7 +284,8 @@ func table_name_hash(table: Table, at: int) -> u32:
 
 
 func table_name_chars(table: Table, at: int) -> bytes:
-    return table_name(table, at).chars
+    const selected_name = table_name(table, at)
+    return selected_name.chars.copy()
 
 
 record Bytecode:
@@ -294,7 +301,8 @@ func read_op(mut frame: Bytecode) -> int:
 
 
 func read_value(mut frame: Bytecode) -> Value:
-    return frame.constants[read_op(mut frame)]
+    const operation_index = read_op(mut frame)
+    return frame.constants[operation_index].copy()
 
 
 func reload_constants(mut frame: Bytecode) -> int:
@@ -304,7 +312,8 @@ func reload_constants(mut frame: Bytecode) -> int:
 
 
 func read_reloaded(mut frame: Bytecode) -> Value:
-    return frame.constants[reload_constants(mut frame)]
+    const receiver_snapshot = frame.constants.copy()
+    return receiver_snapshot[reload_constants(mut frame)].copy()
 
 
 record Wire:
@@ -317,9 +326,9 @@ func matching_wires(wires: Wire[], wanted: int) -> int:
     mut total = 0
     mut j = 0
     while j < len(wires):
-        mut other = wires[j]
+        mut other = wires[j].copy()
         if j == 2:
-            other = wires[0]
+            other = wires[0].copy()
         if not other.open and other.part == wanted:
             total += len(other.net.chars)
         j += 1
@@ -327,17 +336,17 @@ func matching_wires(wires: Wire[], wanted: int) -> int:
 
 
 func first_wire(wires: Wire[]) -> Wire:
-    mut other = wires[0]
+    mut other = wires[0].copy()
     return other
 
 
 func pop(mut rt: Runtime) -> Value:
     rt.top = rt.top - 1
-    return rt.stack[rt.top]
+    return rt.stack[rt.top].copy()
 
 
 func peek(rt: Runtime, distance: int) -> Value:
-    return rt.stack[rt.top - 1 - distance]
+    return rt.stack[rt.top - 1 - distance].copy()
 
 
 func number(item: Value) -> float:
@@ -354,12 +363,13 @@ func swap_stack(mut rt: Runtime) -> int:
 
 
 func replaced_during_index(mut rt: Runtime) -> Value:
-    return rt.stack[swap_stack(mut rt)]
+    const receiver_snapshot = rt.stack.copy()
+    return receiver_snapshot[swap_stack(mut rt)].copy()
 
 
 func next_name(mut frame: Frame) -> str:
     frame.at = frame.at + 1
-    return frame.chunk.names[frame.at - 1]
+    return frame.chunk.names[frame.at - 1].copy()
 
 
 func owned_rows(count: int) -> Value[]:
@@ -370,12 +380,12 @@ func owned_rows(count: int) -> Value[]:
 
 
 func last_owned(count: int) -> Value:
-    return owned_rows(count)[-1]
+    return owned_rows(count)[-1].copy()
 
 
 public func test_loaned_field_reads_keep_values_through_their_temporaries() -> bool:
     mut rt = Runtime(stack=[Value.number(value=1.5), Value.nil, Value.number(value=2.5)], top=3)
-    mut snapshot = rt
+    mut snapshot = rt.copy()
     mut first = number(pop(mut rt))
     mut second = pop(mut rt)
     mut third = number(pop(mut rt))
@@ -395,7 +405,7 @@ public func test_index_callback_replacing_the_list_keeps_the_loaned_original() -
 
 public func test_managed_elements_and_nested_record_fields_relocate_whole_values() -> bool:
     mut frame = Frame(chunk=Chunk(code=[1, 2], names=["alpha", "beta"]), at=0)
-    mut saved = frame
+    mut saved = frame.copy()
     mut names = next_name(mut frame) + next_name(mut frame)
     return names == "alphabeta" and frame.at == 2 and saved.at == 0 and saved.chunk.names == ["alpha", "beta"]
 
@@ -406,7 +416,7 @@ public func test_owned_temporaries_are_taken_not_relocated() -> bool:
 
 public func test_field_receivers_write_through_mut_records_and_keep_snapshots() -> bool:
     mut m = Machine(stack=[Value.nil, Value.nil, Value.nil], frames=[CallFrame(ip=0, base=0), CallFrame(ip=5, base=1)], names=["a"], top=0, count=2)
-    mut before = m
+    mut before = m.copy()
     push(mut m, Value.number(value=1.0))
     push(mut m, Value.text(value="two"))
     step(mut m, 9)
@@ -426,14 +436,14 @@ public func test_completed_callback_replaces_the_field_list_before_update() -> b
 
 public func test_managed_element_field_stores_keep_their_scope() -> bool:
     mut m = Machine(stack=[], frames=[], names=["a", "b"], top=0, count=0)
-    mut saved = m
+    mut saved = m.copy()
     rename(mut m, "c")
     return m.names == ["c", "b"] and saved.names == ["a", "b"]
 
 
 public func test_payload_bindings_read_in_place_keep_their_owner() -> bool:
     mut objects = [Obj.free, Obj.callable(value=Callable(arity=2, code=Code(ops=[1, 2, 3])))]
-    mut saved = objects
+    mut saved = objects.copy()
     mut total = 0
     for i in range(4):
         total += arity_of(objects, 1) + arity_of(objects, 0)
@@ -479,7 +489,7 @@ public func test_nested_field_copies_from_mut_parameters_and_call_results() -> b
 
 public func test_readonly_table_reads_borrow_payloads_in_place() -> bool:
     mut table = Table(objects=[Obj.callable(value=Callable(arity=1, code=Code(ops=[4, 5]))), Obj.name(value=Name(chars=b"n" + b"ame", hash=9u32))], count=2)
-    mut saved = table
+    mut saved = table.copy()
     mut arity = table_arity(table, 0) + table_arity(table, 1)
     mut name = table_name(table, 1)
     mut ops = table_ops(table, 0)
@@ -564,7 +574,7 @@ public func test_records_copied_out_of_readonly_lists_into_named_locals() -> boo
     mut wires = [Wire(net=Name(chars=b"ab" + b"c", hash=1u32), part=1, open=False), Wire(net=Name(chars=b"d", hash=2u32), part=2, open=False), Wire(net=Name(chars=b"e", hash=3u32), part=1, open=True)]
     mut kept = first_wire(wires)
     wires[0] = Wire(net=Name(chars=b"", hash=0u32), part=9, open=True)
-    return matching_wires(wires, 1) == 0 and matching_wires([kept, kept], 1) == 6 and kept.net.chars == b"abc"
+    return matching_wires(wires, 1) == 0 and matching_wires([kept.copy(), kept.copy()], 1) == 6 and kept.net.chars == b"abc"
 
 
 # Run every test once, so `mylang run --rc-runtime=stats` shows balanced counts

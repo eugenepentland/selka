@@ -1,5 +1,5 @@
 func nested(mut items: int[], depth: int) -> int:
-    mut before = items
+    mut before = items.copy()
     if depth > 0:
         mut seen = nested(mut items, depth - 1)
         items.append(depth)
@@ -10,15 +10,15 @@ func nested(mut items: int[], depth: int) -> int:
 
 public func test_nested_pins_restore_the_outer_snapshot_state() -> bool:
     mut items = [7]
-    mut before = items
+    mut before = items.copy()
     mut total = nested(mut items, 3)
     items.append(99)
     return total == 4 and before == [7] and items == [7, 0, 1, 2, 3, 99]
 
 
 func snapshots(mut first: int[], mut second: int[]) -> int:
-    mut a = first
-    mut b = second
+    mut a = first.copy()
+    mut b = second.copy()
     first.append(1)
     second.append(2)
     return len(a) + len(b)

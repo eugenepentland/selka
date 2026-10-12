@@ -10,13 +10,13 @@ record Big:
 
 
 func pick(items: Item[], index: int) -> Item:
-    return items[index]
+    return items[index].copy()
 
 
 func choose(index: int, first: Item[], second: Item[]) -> Item:
     if index == 0:
-        return first[0]
-    return first[index]
+        return first[0].copy()
+    return first[index].copy()
 
 
 func scalar(items: Item[], other: Item[], times: int) -> int:
@@ -31,7 +31,7 @@ func scalar(items: Item[], other: Item[], times: int) -> int:
 
 
 func big_pick(items: Big[], index: int) -> Big:
-    return items[index]
+    return items[index].copy()
 
 
 func big_scalar(items: Big[], times: int) -> int:
@@ -48,7 +48,7 @@ func big_scalar(items: Big[], times: int) -> int:
 public func test_saved_small_results_survive_calls_and_loop_reuse() -> bool:
     mut items = [Item(text=b"a", number=3), Item(text=b"b", number=7)]
     mut other = [Item(text=b"c", number=11), Item(text=b"d", number=13)]
-    mut saved = items
+    mut saved = items.copy()
     return scalar(items, other, 4) == 448 and saved[0].number == 3
 
 

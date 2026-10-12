@@ -1,0 +1,591 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/zig-out/focus/mylang",
+  "compiler_sha256": "7673c6758088730712249a490f9065e0a082cc61d8cb72dd66674ff453348b36",
+  "results": [
+    {
+      "source": "tests/lang/argument_evaluation_order.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/argument_evaluation_order.my",
+      "stubbed": false,
+      "sha256": "e25698fc1865ef216ed45fb1d7b98e18fb9a2cb319b78fb1292adc223dc2f13e",
+      "status": 1,
+      "stdout": "",
+      "stderr": "argument_evaluation_order.my:21:5: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      shape.corner.a.x = 100\n      ^\n"
+    },
+    {
+      "source": "tests/lang/discard_names.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/discard_names.my",
+      "stubbed": true,
+      "sha256": "d4187db0080ecb899065ab8639b21f576f9002e7e70f17f763ae5153e88caea1",
+      "status": 1,
+      "stdout": "",
+      "stderr": "discard_names.my:24:5: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      for _, count in counts.items():\n      ^\n"
+    },
+    {
+      "source": "tests/lang/exclusive_ownership.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/exclusive_ownership.my",
+      "stubbed": true,
+      "sha256": "900c3d7e6ff5747cd2c7bbc2c04769f6afcc581bf884982def6a4372d7fa667f",
+      "status": 1,
+      "stdout": "",
+      "stderr": "exclusive_ownership.my:26:16: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut work = owner.box\n                 ^\n"
+    },
+    {
+      "source": "tests/lang/frontend_mut.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/frontend_mut.my",
+      "stubbed": true,
+      "sha256": "631fc8a63023a847da9885aeff0dd9ca9d650e695a14295ca751812ae83ba12d",
+      "status": 1,
+      "stdout": "",
+      "stderr": "frontend_mut.my:32:12: error[E_SINGLE_OWNER_MOVED]: 'original' was moved or is unavailable on this path; use .copy() when both values are needed\n      return original.values == [2, 3] and changed.values == [9, 3]\n             ^\n"
+    },
+    {
+      "source": "tests/lang/generator_arguments.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/generator_arguments.my",
+      "stubbed": true,
+      "sha256": "50eb60df08637500cc26f486561fdb465f1ff4156e8ce4d4c576cfca50436a29",
+      "status": 1,
+      "stdout": "",
+      "stderr": "generator_arguments.my:41:84: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n      return min(x * 2 for x in xs) == -4 and max(x + 1 for x in xs) == 10 and max(w for w in words) == \"pear\" and min(len(w) for w in words) == 3 and max(x * 0.5 for x in xs) == 4.5\n                                                                                     ^\n"
+    },
+    {
+      "source": "tests/lang/immutable_equal.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/immutable_equal.my",
+      "stubbed": true,
+      "sha256": "b3a304f28a1b617fd10d919a85f7c78c5a6ae5861d4142fcb02c1612a710b73f",
+      "status": 1,
+      "stdout": "",
+      "stderr": "immutable_equal.my:8:12: error[E_ZERO_RC_UNSUPPORTED]: shared snapshots and retained views are unsupported; use .borrow() for a checked view or .copy() for ownership\n      return source.view(7, 26)\n             ^\n"
+    },
+    {
+      "source": "tests/lang/iteration_identity.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/iteration_identity.my",
+      "stubbed": false,
+      "sha256": "9a60cfc8c087ea9d11d7f359d3c63b9208edd9b54625d58e668262bc3de8f350",
+      "status": 1,
+      "stdout": "",
+      "stderr": "iteration_identity.my:5:9: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n          values[key] = values[key] + 1\n          ^\n"
+    },
+    {
+      "source": "tests/lang/lambda_sort_keys.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/lambda_sort_keys.my",
+      "stubbed": true,
+      "sha256": "fd251cb488c283503cb7d6c219b08962d1474299c0a2efc08ec74aedf9085f2e",
+      "status": 1,
+      "stdout": "",
+      "stderr": "lambda_sort_keys.my:21:12: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      return [for item in items yield item.name]\n             ^\n"
+    },
+    {
+      "source": "tests/lang/live_place_iteration.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/live_place_iteration.my",
+      "stubbed": false,
+      "sha256": "cb678db822f7572c5d3348f491f8506779d7abed638a1e040d58e109a92b981e",
+      "status": 1,
+      "stdout": "",
+      "stderr": "live_place_iteration.my:76:5: error[E_SINGLE_OWNER_MOVED]: 'items' was moved or is unavailable on this path; use .copy() when both values are needed\n      for value in items:\n      ^\n"
+    },
+    {
+      "source": "tests/lang/migrated/surface_statements.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/migrated/surface_statements.my",
+      "stubbed": false,
+      "sha256": "e73c5d3d6e90128bfa0c94a3a81b95e17da2efbd48820985f64ad5cb228c796d",
+      "status": 1,
+      "stdout": "",
+      "stderr": "surface_statements_case_2.my:7:18: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut values = holder.value\n                   ^\n"
+    },
+    {
+      "source": "tests/lang/migrated/surface_statements_case_2.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/migrated/surface_statements_case_2.my",
+      "stubbed": true,
+      "sha256": "3d3b460cd0eba0537b4038ec6a500cd772e0522e3a36e89697591f80c381fc19",
+      "status": 1,
+      "stdout": "",
+      "stderr": "surface_statements_case_2.my:7:18: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut values = holder.value\n                   ^\n"
+    },
+    {
+      "source": "tests/lang/move_elision.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/move_elision.my",
+      "stubbed": true,
+      "sha256": "a8f219f1acec443364cefaaa9f323c69ef2c6671543dddff77aa748471bfc95a",
+      "status": 1,
+      "stdout": "",
+      "stderr": "move_elision.my:21:12: error[E_SINGLE_OWNER_MOVED]: 'p' was moved or is unavailable on this path; use .copy() when both values are needed\n      return p.x == 1 and p.tag == \"p1\" and q.x == 10 and q.y == 2 and q.tag == \"q\"\n             ^\n"
+    },
+    {
+      "source": "tests/lang/properties.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/properties.my",
+      "stubbed": true,
+      "sha256": "1a126a85cadd1b2e018a84be17940d11d86051f80570c706e54d1f23339e84cc",
+      "status": 1,
+      "stdout": "",
+      "stderr": "properties.my:66:5: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      for key in d.keys():\n      ^\n"
+    },
+    {
+      "source": "tests/lang/python_comprehension.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/python_comprehension.my",
+      "stubbed": false,
+      "sha256": "0af0792c14c6327a40a119ab5abfcad6faae4ee26a7e6c1e30491b76e04b3a42",
+      "status": 1,
+      "stdout": "",
+      "stderr": "python_comprehension.my:21:18: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut values = [for key in counts yield counts[key]]\n                   ^\n"
+    },
+    {
+      "source": "tests/lang/python_core.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/python_core.my",
+      "stubbed": false,
+      "sha256": "bcdf48800b69a95662aa11cbddc1db071b0ee122e115936f37b33e7e3e4c8126",
+      "status": 1,
+      "stdout": "",
+      "stderr": "python_core.my:12:12: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      return values\n             ^\n"
+    },
+    {
+      "source": "tests/lang/rc_call_lifetimes.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_call_lifetimes.my",
+      "stubbed": true,
+      "sha256": "88c30bf38a5e31bbb81d961bf17e55db8e24431e9dda89b542a83bbbe3f63fde",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_call_lifetimes.my:3:12: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      return items\n             ^\n"
+    },
+    {
+      "source": "tests/lang/rc_fresh_returns.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_fresh_returns.my",
+      "stubbed": false,
+      "sha256": "8a67cec289f7affeef1d53f9f3fb02b9e01f652fa2019e5a62bc21903a7f17ea",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_fresh_returns.my:28:41: error[E_SINGLE_OWNER_MOVED]: 'child' was moved or is unavailable on this path; use .copy() when both values are needed\n      return Link(next=child, value=total(child))\n                                          ^\n"
+    },
+    {
+      "source": "tests/lang/rc_journal_types.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_journal_types.my",
+      "stubbed": true,
+      "sha256": "a9795862ccf226ada4c2a7a31f91bad0e63ce85628dd10fe1d45b8cfd27fc98f",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_journal_types.my:7:41: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut result = Mixed(values=[0], view=list(mapping.values()))\n                                          ^\n"
+    },
+    {
+      "source": "tests/lang/rc_loop_operand_isolation.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_loop_operand_isolation.my",
+      "stubbed": false,
+      "sha256": "c922747e002979addf7eaa14e39efa57d3c8591831c17ea6e2f5e9941c2f2fe9",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_loop_operand_isolation.my:16:28: error[E_SINGLE_OWNER_MOVED]: 'data' was moved or is unavailable on this path; use .copy() when both values are needed\n      for index in range(len(data)):\n                             ^\n"
+    },
+    {
+      "source": "tests/lang/rc_loop_uniqueness.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_loop_uniqueness.my",
+      "stubbed": false,
+      "sha256": "b5e2bb1396b4a0955b484220cf56344dc553433a684d173749b809ad93287a1c",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_loop_uniqueness.my:16:9: error[E_SINGLE_OWNER_MOVED]: 'items' was moved or is unavailable on this path; use .copy() when both values are needed\n          items[-1] = index\n          ^\n"
+    },
+    {
+      "source": "tests/lang/rc_loop_versions.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_loop_versions.my",
+      "stubbed": false,
+      "sha256": "08c9448c7d57ac87435a28595c8437c37f06a65837a1604aa1341be2980f9438",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_loop_versions.my:4:28: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed\n      for index in range(len(values)):\n                             ^\n"
+    },
+    {
+      "source": "tests/lang/rc_mut_list_aliases.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_mut_list_aliases.my",
+      "stubbed": false,
+      "sha256": "4fd93570b1aced775125d524763cf3cacc493bc4c93164edb17e343847725256",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_mut_list_aliases.my:26:24: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      return Span(source=text, start=0, end=len(text))\n                         ^\n"
+    },
+    {
+      "source": "tests/lang/rc_mut_payload_snapshots.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_mut_payload_snapshots.my",
+      "stubbed": false,
+      "sha256": "4d5f26dcfdecc3c9378303a67f5a3f0666f7f533904d14b5adaf3c3451571054",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_mut_payload_snapshots.my:7:20: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      mut snapshot = table\n                     ^\n"
+    },
+    {
+      "source": "tests/lang/rc_mut_uniqueness.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_mut_uniqueness.my",
+      "stubbed": false,
+      "sha256": "393d9d588fc9b1c1c48cef09f76298ed978add481ee82dc87321661551841646",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_mut_uniqueness.my:6:18: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      mut before = items\n                   ^\n"
+    },
+    {
+      "source": "tests/lang/rc_named_record_writes.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_named_record_writes.my",
+      "stubbed": false,
+      "sha256": "d8f534748d6e5f6af515a1e56e522a194fc130c4088661fe790cabd5e15e4590",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_named_record_writes.my:22:17: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      mut saved = state\n                  ^\n"
+    },
+    {
+      "source": "tests/lang/rc_named_releases.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_named_releases.my",
+      "stubbed": false,
+      "sha256": "8cf7fe4c6b9eb865aac23caf48163107333465297c3a5820855374b87f4b1757",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_named_releases.my:23:17: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut first = rows[0]\n                  ^\n"
+    },
+    {
+      "source": "tests/lang/rc_nested_read_loans.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_nested_read_loans.my",
+      "stubbed": false,
+      "sha256": "09036fdf9f0118a1d4083c204e063937e5431650277de1b5e20dde65c020e2e5",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_nested_read_loans.my:26:40: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      mut selected = rows[0][replace_row(mut rows)]\n                                         ^\n"
+    },
+    {
+      "source": "tests/lang/rc_nonheld_captures.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_nonheld_captures.my",
+      "stubbed": false,
+      "sha256": "8c1cbb5a95b2ea837980282e8ae6d55f80ff566183e5a3f6bd3465ca0ec9f11a",
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_nonheld_captures.my:6:9: error[E_SINGLE_OWNER_MOVED]: 'flags' was moved or is unavailable on this path; use .copy() when both values are needed\n          flags[0] = False\n          ^\n"
+    },
+    {
+      "source": "tests/lang/rc_owned_values.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_owned_values.my",
+      "stubbed": true,
+      "sha256": "f3537acb654c4dd86eeb48b81c93f16fe7350a0cfa1f92bc237d91a11abe29b1",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_owned_values.my:3:12: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      return items\n             ^\n"
+    },
+    {
+      "source": "tests/lang/rc_owning_element_borrows.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_owning_element_borrows.my",
+      "stubbed": true,
+      "sha256": "69d382d4c61c654fcc9998578673ca7dc556004cf30492a1c3770644fba9abf9",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_owning_element_borrows.my:18:28: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      mut span = Span(source=net, start=0, end=len(net))\n                             ^\n"
+    },
+    {
+      "source": "tests/lang/rc_pin_elide.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_pin_elide.my",
+      "stubbed": true,
+      "sha256": "cb4dd862dc3ff740c96319556f1c960f01c13a1708c847461f14487c5c458850",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_pin_elide.my:69:16: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      mut copy = xs\n                 ^\n"
+    },
+    {
+      "source": "tests/lang/rc_plain_aggregates.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_plain_aggregates.my",
+      "stubbed": false,
+      "sha256": "e18652c54935c2ee0768c7eb083da10373e2fb607770b0540bed7699e9cf44d9",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_plain_aggregates.my:24:10: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed\n      edit(mut values, -1)\n           ^\n"
+    },
+    {
+      "source": "tests/lang/rc_plain_appends.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_plain_appends.my",
+      "stubbed": false,
+      "sha256": "085ef387c3c1c17b83d50e9eb2b65ec7605e18c5a48f3f47002d49ef35186aba",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_plain_appends.my:20:9: error[E_SINGLE_OWNER_MOVED]: 'items' was moved or is unavailable on this path; use .copy() when both values are needed\n          items.append(items[-1] + 1)\n          ^\n"
+    },
+    {
+      "source": "tests/lang/rc_plain_field_loans.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_plain_field_loans.my",
+      "stubbed": false,
+      "sha256": "acd86bb53de24a30703c845b7555a1ffdd03233bc7813c09c9c63abbee7ff34d",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_plain_field_loans.my:26:19: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          mut row = rows[i]\n                    ^\n"
+    },
+    {
+      "source": "tests/lang/rc_plain_list_writes.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_plain_list_writes.my",
+      "stubbed": false,
+      "sha256": "025fc574f42c1d8581019e39eafa065b544767155cd5704cf12e86dd285bfba0",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_plain_list_writes.my:4:5: error[E_SINGLE_OWNER_MOVED]: 'small' was moved or is unavailable on this path; use .copy() when both values are needed\n      small[-2] = u8(255)\n      ^\n"
+    },
+    {
+      "source": "tests/lang/rc_plain_record_writes.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_plain_record_writes.my",
+      "stubbed": false,
+      "sha256": "cca07f74240e663192e53e0474eb2813b55910fed2fd44234ef1046208b88f15",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_plain_record_writes.my:39:20: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut children = state.values\n                     ^\n"
+    },
+    {
+      "source": "tests/lang/rc_plain_replacements.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_plain_replacements.my",
+      "stubbed": true,
+      "sha256": "59c52076a791e8eca8ac6a5c7d8bd2d232f57d0b76faa1607f4e03078bd77e98",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_plain_replacements.my:16:17: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed\n          replace(mut values, 0, Sample(x=float(i), y=float(i + 1), z=float(i + 2)))\n                  ^\n"
+    },
+    {
+      "source": "tests/lang/rc_range_key_anchors.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_range_key_anchors.my",
+      "stubbed": false,
+      "sha256": "bd5c8151e112cd5f15b880701e53d11d93e998519e5ba2512ac94b317465f661",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_range_key_anchors.my:29:12: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      counts[probe] = 0\n             ^\n"
+    },
+    {
+      "source": "tests/lang/rc_read_list_versions.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_read_list_versions.my",
+      "stubbed": false,
+      "sha256": "e02dc207ba0e16041acec012828687f298b03820850b0c5dfa2f2cf0c9eb8bc5",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_read_list_versions.my:42:22: error[E_SINGLE_OWNER_MOVED]: 'items' was moved or is unavailable on this path; use .copy() when both values are needed\n      mut total = fold(items)\n                       ^\n"
+    },
+    {
+      "source": "tests/lang/rc_read_loans.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_read_loans.my",
+      "stubbed": false,
+      "sha256": "543488b997250a1f1f5e837bad68f4cdf6b650524441de2a44554cb3250ff0ac",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_read_loans.my:23:20: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed\n      mut selected = values[change_index(mut values)]\n                     ^\n"
+    },
+    {
+      "source": "tests/lang/rc_readonly_body.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_readonly_body.my",
+      "stubbed": false,
+      "sha256": "23a93cc3f23c2f8fb1ceb619b950076ab236f7ce9abfbca3c23e34686833c655",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_readonly_body.my:12:38: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      mut wrapped = Wrapped.leaf(value=items)\n                                       ^\n"
+    },
+    {
+      "source": "tests/lang/rc_readonly_calls.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_readonly_calls.my",
+      "stubbed": false,
+      "sha256": "46ee1f8f67aaad9b2831fe74824450c0a46464c94718f076ba4b0a64ac44d6f7",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_readonly_calls.my:18:20: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          mut item = items[index]\n                     ^\n"
+    },
+    {
+      "source": "tests/lang/rc_readonly_managed_calls.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_readonly_managed_calls.my",
+      "stubbed": false,
+      "sha256": "daa9647073756e074cf7734cc15aa64ae1703dac2837de63156764bf73353adf",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_readonly_managed_calls.my:13:12: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      return items[index]\n             ^\n"
+    },
+    {
+      "source": "tests/lang/rc_record_field_reads.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_record_field_reads.my",
+      "stubbed": false,
+      "sha256": "65779ac6bb7e8d0a5360dc8d6060d52c942be155c587be45b390722aa32358b7",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_record_field_reads.my:13:30: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      mut cursor = Cursor(code=items, index=index)\n                               ^\n"
+    },
+    {
+      "source": "tests/lang/rc_scalar_loops.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_scalar_loops.my",
+      "stubbed": false,
+      "sha256": "c68c4b8f9bdfde25fa03de66119edea1cdaa9830947602d973cb85452b245a82",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_scalar_loops.my:26:29: error[E_SINGLE_OWNER_MOVED]: 'items' was moved or is unavailable on this path; use .copy() when both values are needed\n      mut result = with_owner(items, 64)\n                              ^\n"
+    },
+    {
+      "source": "tests/lang/rc_scalar_replacements.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_scalar_replacements.my",
+      "stubbed": false,
+      "sha256": "65b5daacfc242776a985482e7dfa62a6fbbada174ffc3787eaeb6f10054b690f",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_scalar_replacements.my:35:10: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed\n      edit(mut values)\n           ^\n"
+    },
+    {
+      "source": "tests/lang/rc_scope_inline.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_scope_inline.my",
+      "stubbed": true,
+      "sha256": "a3a0532b6fdfe5b367c61eca05ce40e45090b4ef510236e597892a2790ba7af5",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_scope_inline.my:2:18: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      mut before = items\n                   ^\n"
+    },
+    {
+      "source": "tests/lang/rc_semantic_history.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_semantic_history.my",
+      "stubbed": true,
+      "sha256": "e794e8361f35145924ae0b9f100e1ac22e17a859c3aba8a5d72d3b11facfbd5b",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_semantic_history.my:4:17: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut saved = list(mapping.values())\n                  ^\n"
+    },
+    {
+      "source": "tests/lang/rc_semantic_publication.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_semantic_publication.my",
+      "stubbed": true,
+      "sha256": "bc969bbae75cc4c58ea646cee652359b0b583d3d461cfcac35168a5a31633c98",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_semantic_publication.my:5:27: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed\n          joined = joined + word.unwrap_or(\".\")\n                            ^\n"
+    },
+    {
+      "source": "tests/lang/rc_site_eliminations.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_site_eliminations.my",
+      "stubbed": false,
+      "sha256": "77f4a4e1b22a047f21a3583d17efba7ca6a8dbd421448e7c7fdc3ed87f191103",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_site_eliminations.my:39:5: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      m.stack[m.top] = item\n      ^\n"
+    },
+    {
+      "source": "tests/lang/rc_temporary_lifetimes.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_temporary_lifetimes.my",
+      "stubbed": false,
+      "sha256": "614eda631f9eb5b22cd7a9190ab6f9cc7b22314e10123e91fbaa40193f633ecb",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_temporary_lifetimes.my:5:22: error[E_SINGLE_OWNER_MOVED]: 'rows' was moved or is unavailable on this path; use .copy() when both values are needed\n          rows[0][1] = rows[0][1] + rows[1][0]\n                       ^\n"
+    },
+    {
+      "source": "tests/lang/rc_tree_drains.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_tree_drains.my",
+      "stubbed": false,
+      "sha256": "09300d51a4d542de94456475fe8d592399767c590e3f37e178fcf3ee1a8af74c",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_tree_drains.my:15:16: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut left = node.left\n                 ^\n"
+    },
+    {
+      "source": "tests/lang/rc_variant_reads.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_variant_reads.my",
+      "stubbed": false,
+      "sha256": "3cc0cdf44698fc83a4b40141897a86ae0331aa042f2d22196735bb6f9449667a",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_variant_reads.my:19:20: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n              return payload\n                     ^\n"
+    },
+    {
+      "source": "tests/lang/rc_view_receivers.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_view_receivers.my",
+      "stubbed": true,
+      "sha256": "e06c0325b188b3719d5be2137a9f85b3e8a2ffb1a3b974c7abf3da175492d869",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_view_receivers.my:4:17: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut saved = list(mapping.values())\n                  ^\n"
+    },
+    {
+      "source": "tests/lang/rc_writeback_moves.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/rc_writeback_moves.my",
+      "stubbed": true,
+      "sha256": "3bad6fc9d9214204ccd4078f8cee34893841ec867bd6ec5b38598e7a9c836e46",
+      "status": 1,
+      "stdout": "",
+      "stderr": "rc_writeback_moves.my:43:14: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      rt.names[key] = value\n               ^\n"
+    },
+    {
+      "source": "tests/lang/record_field_snapshots.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/record_field_snapshots.my",
+      "stubbed": false,
+      "sha256": "3f6c7a02e3f51bfcab91439264cce79d1b8d17b95b5e17d712efe82facea4a40",
+      "status": 1,
+      "stdout": "",
+      "stderr": "record_field_snapshots.my:16:5: error[E_SINGLE_OWNER_MOVED]: 'state' was moved or is unavailable on this path; use .copy() when both values are needed\n      state.values.append(14)\n      ^\n"
+    },
+    {
+      "source": "tests/lang/recursive_values.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/recursive_values.my",
+      "stubbed": true,
+      "sha256": "ed5d02a2d807dd19a818d17037e64557db852f3fae76be3a80ffa94559ca0821",
+      "status": 1,
+      "stdout": "",
+      "stderr": "recursive_values.my:88:19: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n              const value, rest = pair\n                    ^\n"
+    },
+    {
+      "source": "tests/lang/root_liveness.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/root_liveness.my",
+      "stubbed": false,
+      "sha256": "16e453f6a71600a06359cf83ec221f9ceabe477bf412c54d384deb453e3c5232",
+      "status": 1,
+      "stdout": "",
+      "stderr": "root_liveness.my:127:9: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n          balls[k] = Ball(x=ball.x + 1.0, y=ball.y, radius=ball.radius)\n          ^\n"
+    },
+    {
+      "source": "tests/lang/scalable_sorting.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/scalable_sorting.my",
+      "stubbed": false,
+      "sha256": "b8770c247c9f99d10f3f797a8642c79b31eeca540ae093937ea813503eecf83d",
+      "status": 1,
+      "stdout": "",
+      "stderr": "scalable_sorting.my:16:19: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut ordered = sorted(source)\n                    ^\n"
+    },
+    {
+      "source": "tests/lang/scalar_dictionary_publication.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/scalar_dictionary_publication.my",
+      "stubbed": true,
+      "sha256": "07eae7de602b7d407d5dd568f7fb842ed13bff7cdaeb08309a6fa46678e8613a",
+      "status": 1,
+      "stdout": "",
+      "stderr": "scalar_dictionary_publication.my:14:16: error[E_SINGLE_OWNER_MOVED]: 'mapping' was moved or is unavailable on this path; use .copy() when both values are needed\n              if mapping.pop(key) != i + 3:\n                 ^\n"
+    },
+    {
+      "source": "tests/lang/sets.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/sets.my",
+      "stubbed": true,
+      "sha256": "cead8715e2c46a86830dbb3564d81e4d47f602c4916708d6c05e0f55bbd3f11c",
+      "status": 1,
+      "stdout": "",
+      "stderr": "sets.my:63:19: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      mut letters = set(\"banana\")\n                    ^\n"
+    },
+    {
+      "source": "tests/lang/stable_sorting.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/stable_sorting.my",
+      "stubbed": false,
+      "sha256": "8dc66d0c6ebf47e494626730c827eb325264db5d24ca4d1598b4137175a76837",
+      "status": 1,
+      "stdout": "",
+      "stderr": "stable_sorting.my:292:74: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      return words == [\"Apple\", \"apple\", \"pear\", \"pear\", \"\u00e9\", \"\ud83d\ude00\"] and sorted(words) == words and snapshot[0] == \"pear\"\n                                                                           ^\n"
+    },
+    {
+      "source": "tests/lang/value_equality.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/value_equality.my",
+      "stubbed": false,
+      "sha256": "8da5a22c4e14e47526a8356f5a4dd456cb29c3dd0d4721f272e4b188cb8e1a32",
+      "status": 1,
+      "stdout": "",
+      "stderr": "value_equality.my:83:32: error[E_SINGLE_OWNER_MOVED]: 'first' was moved or is unavailable on this path; use .copy() when both values are needed\n      mut expected: Node? = Some(first)\n                                 ^\n"
+    },
+    {
+      "source": "tests/lang/wide_signatures.my",
+      "checked_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/survey-sources/tests/lang/wide_signatures.my",
+      "stubbed": true,
+      "sha256": "13613005056e476a603dfbcdd25efd115f1b485cc889997d88b6326c91356b40",
+      "status": 1,
+      "stdout": "",
+      "stderr": "wide_signatures.my:13:12: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      return items\n             ^\n"
+    }
+  ],
+  "original_survey_counts": {
+    "1": 177,
+    "0": 179
+  },
+  "counts": {
+    "0": 0,
+    "1": 64
+  },
+  "scope": "64 reserved sources selected from the A10 356-source C0 survey. Some libraries received an inert entrypoint in the checked mirror. Original source hashes are in originals.json; this is not the frozen A09 compiler binary."
+}

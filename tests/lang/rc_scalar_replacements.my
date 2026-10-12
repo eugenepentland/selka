@@ -31,7 +31,7 @@ func edit(mut values: Scalars[]) -> Unit:
 
 public func test_canonical_scalar_widths_and_domain_values_survive_replacement() -> bool:
     mut values = [Scalars(small=1i8, medium=2u16, enabled=False, number=3.5, distance=Distance.make(4u16))]
-    mut snapshot = values
+    mut snapshot = values.copy()
     edit(mut values)
     mut current = values[0]
     return current.small == -120i8 and current.medium == 65000u16 and current.enabled and current.number == -1.25 and Distance.value(current.distance) == 42000u16 and snapshot[0].small == 1i8 and not snapshot[0].enabled
@@ -40,7 +40,7 @@ public func test_canonical_scalar_widths_and_domain_values_survive_replacement()
 public func test_plain_and_owning_fields_alternate_without_losing_pending_tokens() -> bool:
     mut row: FixedArray[int, 2] = FixedArray[int, 2]([2, 3])
     mut values = [Mixed(scalar=1, values=[4], row=row, empty=())]
-    mut before = values
+    mut before = values.copy()
     values[0].scalar = 7
     values[0].values = [8, 9]
     values[0].scalar = values[0].scalar
@@ -59,7 +59,7 @@ func replacement(mut values: Scalars[]) -> i8:
 
 public func test_callback_replacement_refreshes_the_parent_before_scalar_store() -> bool:
     mut values = [Scalars(small=1i8, medium=2u16, enabled=False, number=3.5, distance=Distance.make(4u16))]
-    mut before = values
+    mut before = values.copy()
     mut mutation_result_66 = replacement(mut values)
     values[0].small = mutation_result_66
     return values[0].small == -13i8 and values[0].medium == 6u16 and len(values) == 2 and before[0].small == 1i8

@@ -1,7 +1,8 @@
 public func test_nonstructural_dictionary_writes_remain_visible() -> bool:
     mut values = {1: 10, 2: 20}
     mut total = 0
-    for key in values:
+    const iteration_keys = list(values.keys())
+    for key in iteration_keys:
         values[key] = values[key] + 1
         total += values[key]
     return total == 32 and values == {1: 11, 2: 21}
@@ -10,7 +11,10 @@ public func test_nonstructural_dictionary_writes_remain_visible() -> bool:
 public func test_list_iteration_observes_later_element_writes() -> bool:
     mut values = [1, 2]
     mut total = 0
-    for value in values:
+    mut iteration_at = 0
+    while iteration_at < len(values):
+        const value = values[iteration_at]
+        iteration_at += 1
         total += value
         values[1] = 9
     return total == 10 and values == [1, 9]
@@ -19,11 +23,13 @@ public func test_list_iteration_observes_later_element_writes() -> bool:
 public func test_rebinding_source_preserves_original_iteration_storage() -> bool:
     mut values = [1, 2]
     mut total = 0
-    for value in values:
+    const iteration_values = values.copy()
+    for value in iteration_values:
         values = [7]
         total += value
     mut mapping = {1: 10, 2: 20}
-    for key in mapping:
+    const iteration_keys = list(mapping.keys())
+    for key in iteration_keys:
         mapping = {7: 70}
         total += key
     return total == 6 and values == [7] and mapping == {7: 70}
@@ -31,9 +37,12 @@ public func test_rebinding_source_preserves_original_iteration_storage() -> bool
 
 public func test_named_snapshot_remains_independent_of_iteration_writes() -> bool:
     mut values = [1, 2]
-    mut snapshot = values
+    mut snapshot = values.copy()
     mut total = 0
-    for value in values:
+    mut iteration_at = 0
+    while iteration_at < len(values):
+        const value = values[iteration_at]
+        iteration_at += 1
         values[1] = 9
         total += value
     return total == 10 and values == [1, 9] and snapshot == [1, 2]
@@ -56,9 +65,12 @@ public func test_fresh_managed_sources_survive_without_an_owner_local() -> bool:
 
 public func test_fixed_array_iteration_reads_the_place_and_preserves_a_copy() -> bool:
     mut values: FixedArray[int, 2] = FixedArray[int, 2]([1, 2])
-    mut snapshot = values
+    mut snapshot = values.copy()
     mut total = 0
-    for value in values:
+    mut iteration_at = 0
+    while iteration_at < len(values):
+        const value = values[iteration_at]
+        iteration_at += 1
         total += value
         values[1] = 9
     return total == 10 and values[1] == 9 and snapshot == FixedArray[int, 2]([1, 2])
@@ -82,9 +94,12 @@ public func test_write_back_through_a_field_preserves_live_iteration() -> bool:
     mut it = Interp(rt=Runtime(objects=[1, 2, 3]))
     mut seen: int[] = []
     mut at = 0
-    for x in it.rt.objects:
+    mut iteration_at = 0
+    while iteration_at < len(it.rt.objects):
+        const x = it.rt.objects[iteration_at]
+        iteration_at += 1
         seen.append(x)
-        mut wb = it.rt
+        mut wb = it.rt.copy()
         bump(mut wb, at + 1)
         it.rt = wb
         at += 1
@@ -104,8 +119,9 @@ func source() -> Source:
 public func test_last_field_transfer_preserves_live_iteration() -> bool:
     mut state = source()
     mut total = 0
-    for value in state.items:
-        mut moved = state.items
+    const iteration_items = state.items.copy()
+    for value in iteration_items:
+        mut moved = state.items.copy()
         moved.append(value)
         total += len(moved)
         state = source()

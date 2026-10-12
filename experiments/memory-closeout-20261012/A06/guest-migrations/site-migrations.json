@@ -1,0 +1,152 @@
+[
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "m.stack[-1] = item",
+    "after": "m.stack[-1] = item.copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "return m.stack\n",
+    "after": "return m.stack.copy()\n",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "return payload\n",
+    "after": "return payload.copy()\n",
+    "count": 2
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "return value\n",
+    "after": "return value.copy()\n",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "code=unit.chunk.code, names=unit.chunk.names",
+    "after": "code=unit.chunk.code.copy(), names=unit.chunk.names.copy()",
+    "count": 2
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "code=made_unit().chunk.code, names=made_unit().chunk.names",
+    "after": "code=made_unit().chunk.code.copy(), names=made_unit().chunk.names.copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "return payload.code.ops",
+    "after": "return payload.code.ops.copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "func freed_arity(mut objects: Obj[], at: int) -> int:\n    match objects[at]:",
+    "after": "func freed_arity(mut objects: Obj[], at: int) -> int:\n    const selected_item = objects[at].copy()\n    match selected_item:",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "    table.count = table.count + 1\n    match table.objects[at]:",
+    "after": "    table.count = table.count + 1\n    const selected_item = table.objects[at].copy()\n    match selected_item:",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "return rt.stack[advance(mut cursor)]",
+    "after": "return rt.stack[advance(mut cursor)].copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "return rt.stack[reset_stack(mut rt)]",
+    "after": "const receiver_snapshot = rt.stack.copy()\n    return receiver_snapshot[reset_stack(mut rt)].copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "return globals.entries[at]",
+    "after": "return globals.entries[at].copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "return Some(globals.entries[at])",
+    "after": "return Some(globals.entries[at].copy())",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "return entry_at(vm.globals, wipe(mut vm))",
+    "after": "const receiver_snapshot = vm.globals.copy()\n    return entry_at(receiver_snapshot, wipe(mut vm))",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "return table_name(table, at).chars",
+    "after": "return table_name(table, at).chars.copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "return frame.constants[read_op(mut frame)]",
+    "after": "const operation_index = read_op(mut frame)\n    return frame.constants[operation_index].copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "return frame.constants[reload_constants(mut frame)]",
+    "after": "const receiver_snapshot = frame.constants.copy()\n    return receiver_snapshot[reload_constants(mut frame)].copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "mut other = wires[j]",
+    "after": "mut other = wires[j].copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "other = wires[0]",
+    "after": "other = wires[0].copy()",
+    "count": 2
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "return rt.stack[rt.top]",
+    "after": "return rt.stack[rt.top].copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "return rt.stack[rt.top - 1 - distance]",
+    "after": "return rt.stack[rt.top - 1 - distance].copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "return rt.stack[swap_stack(mut rt)]",
+    "after": "const receiver_snapshot = rt.stack.copy()\n    return receiver_snapshot[swap_stack(mut rt)].copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "return frame.chunk.names[frame.at - 1]",
+    "after": "return frame.chunk.names[frame.at - 1].copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "return owned_rows(count)[-1]",
+    "after": "return owned_rows(count)[-1].copy()",
+    "count": 1
+  },
+  {
+    "source": "tests/lang/rc_site_eliminations.my",
+    "before": "matching_wires([kept, kept], 1)",
+    "after": "matching_wires([kept.copy(), kept.copy()], 1)",
+    "count": 1
+  }
+]
