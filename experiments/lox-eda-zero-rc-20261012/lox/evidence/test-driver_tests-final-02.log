@@ -1,0 +1,16 @@
+build-slot: FIFO ticket 1575, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 1575 after 10s
+passed driver_tests::test_run_arithmetic
+passed driver_tests::test_run_class_init_method
+passed driver_tests::test_run_closure_counter
+passed driver_tests::test_run_compile_error_status
+passed driver_tests::test_run_gc_stress_same_output
+passed driver_tests::test_run_inheritance_super
+passed driver_tests::test_run_print_value_kinds
+passed driver_tests::test_run_runtime_error_trace
+passed driver_tests::test_run_set_rhs_keeps_original_receiver
+passed driver_tests::test_run_set_rhs_keeps_receiver_mutations
+passed driver_tests::test_run_shared_upvalue
+passed driver_tests::test_run_stack_overflow
+passed driver_tests::test_run_string_concat
+13 passed, 0 cached, 0 failed, 0 skipped

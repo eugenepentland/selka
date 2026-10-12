@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1349, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1349 after 5s
+table.my:90:19: error[E_SHADOWING]: binding shadows an active local or top-level function
+              const capacity = len(t.entries) * 2
+                    ^

@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1495, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1495 after 10s
+vm.my:266:52: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+      return frame.function.code.constants[read_byte(mut frame)]
+                                                     ^

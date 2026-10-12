@@ -1,0 +1,4 @@
+build-slot: build slot 1, FIFO ticket 1478 after 0s
+resolver.my:97:16: error[E_SINGLE_OWNER_MOVED]: 'scope' was moved or is unavailable on this path; use .copy() when both values are needed
+          return scope.entries[index].slot
+                 ^

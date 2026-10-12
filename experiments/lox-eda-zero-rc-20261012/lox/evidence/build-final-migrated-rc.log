@@ -1,0 +1,1 @@
+scanner.my:68:12: error[E_CORE_UNSUPPORTED]: the new core does not support borrowed views require --experimental-zero-rc yet

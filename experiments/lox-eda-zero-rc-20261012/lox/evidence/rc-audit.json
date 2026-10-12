@@ -1,0 +1,46 @@
+{
+  "original-rc": {
+    "llvm_sha256": "9ab156dd1b9bf2b31be529ecd1a87bd7da1f04f70a9fb1fc07be75ad7456728b",
+    "llvm_rc_mentions": [
+      "@myl_core_release",
+      "@myl_core_release_child_pending",
+      "@myl_core_release_slow",
+      "@myl_core_retain_slow"
+    ],
+    "llvm_rc_call_count": 2153,
+    "native_rc_symbols": [
+      "0000000001021c00 T myl_core_release",
+      "0000000001021540 T myl_core_release_child_pending",
+      "00000000010542c0 T myl_core_release_slow",
+      "0000000001054240 T myl_core_retain_slow"
+    ]
+  },
+  "migrated-rc": {
+    "llvm_sha256": "ee416643291e37126d4b2218d18bf2cca6c5487289db9845e6c36e04930092bd",
+    "llvm_rc_mentions": [
+      "@myl_core_release",
+      "@myl_core_release_child_pending",
+      "@myl_core_release_slow",
+      "@myl_core_retain_slow"
+    ],
+    "llvm_rc_call_count": 2122,
+    "native_rc_symbols": [
+      "00000000010219c0 T myl_core_release",
+      "0000000001021300 T myl_core_release_child_pending",
+      "0000000001054080 T myl_core_release_slow",
+      "0000000001054000 T myl_core_retain_slow"
+    ]
+  },
+  "zero": {
+    "llvm_sha256": "1f12f15bbcb64c6c2a2bb62994541e1d415f600727b31e2d08ea5bde04951c16",
+    "llvm_rc_mentions": [],
+    "llvm_rc_call_count": 0,
+    "native_rc_symbols": []
+  },
+  "zero-counted": {
+    "llvm_sha256": "f6d82621a4f4c2c4fc7dff0dc46cfb73be0e9ea2c533e39850433de7bf269d0e",
+    "llvm_rc_mentions": [],
+    "llvm_rc_call_count": 0,
+    "native_rc_symbols": []
+  }
+}

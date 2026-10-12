@@ -1,0 +1,18 @@
+build-slot: FIFO ticket 1677, position 4; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1677, position 4; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 1677, position 4; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 1677, position 4; earlier build tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 1677, position 4; earlier build tickets must run first; waiting (240s so far)
+build-slot: FIFO ticket 1677, position 2; earlier build tickets must run first; waiting (300s so far)
+build-slot: FIFO ticket 1677, position 2; earlier build tickets must run first; waiting (360s so far)
+build-slot: build slot 1, FIFO ticket 1677 after 380s
+original-rc-vm-binary_trees: ok
+migrated-rc-vm-binary_trees: ok
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/experiments/lox-eda-zero-rc-20261012/lox/audit-counts.py", line 61, in <module>
+    main()
+    ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/experiments/lox-eda-zero-rc-20261012/lox/audit-counts.py", line 52, in main
+    assert not any(managed.values()), (name, managed)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('zero-vm-binary_trees', {'retain': 0, 'release': 0, 'release_unique': 4516657, 'unique_test': 0})

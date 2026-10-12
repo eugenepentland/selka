@@ -1,0 +1,6 @@
+failed resolver_test::test_resolve_duplicate_local: build error (SourceError): resolver.my:268:13: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression
+failed resolver_test::test_resolve_own_initializer: build error (SourceError): resolver.my:268:13: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression
+failed resolver_test::test_resolve_slot_counts: build error (SourceError): resolver.my:268:13: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression
+failed resolver_test::test_resolve_this_outside_class: build error (SourceError): resolver.my:268:13: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression
+failed resolver_test::test_resolve_top_level_return: build error (SourceError): resolver.my:268:13: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression
+0 passed, 0 cached, 5 failed, 0 skipped

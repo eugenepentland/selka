@@ -1,0 +1,6 @@
+passed resolver_test::test_resolve_duplicate_local
+passed resolver_test::test_resolve_own_initializer
+passed resolver_test::test_resolve_slot_counts
+passed resolver_test::test_resolve_this_outside_class
+passed resolver_test::test_resolve_top_level_return
+5 passed, 0 cached, 0 failed, 0 skipped

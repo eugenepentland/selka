@@ -1,0 +1,4 @@
+build-slot: build slot 1, FIFO ticket 1334 after 0s
+heap.my:220:20: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper
+      mut __wb_202 = rt.globals
+                     ^

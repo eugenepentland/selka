@@ -1,0 +1,4 @@
+build-slot: build slot 1, FIFO ticket 1476 after 0s
+parser.my:300:116: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+                  const __owned_arg_15 = ast.Expr.assign(value=ast.AssignExpr(name=name.copy(), name_ref=intern_name(mut p, name), assigned=assigned, hops=ast.GLOBAL, slot=0))
+                                                                                                                     ^

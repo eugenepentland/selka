@@ -1,0 +1,6 @@
+passed parser_test::test_parse_call_get_set
+passed parser_test::test_parse_error_recovery
+passed parser_test::test_parse_logical
+passed parser_test::test_parse_precedence
+passed parser_test::test_parse_unary_grouping
+5 passed, 0 cached, 0 failed, 0 skipped

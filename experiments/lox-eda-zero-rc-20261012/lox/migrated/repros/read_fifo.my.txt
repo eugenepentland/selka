@@ -1,0 +1,12 @@
+# `fs.read_file` answers Err for a path that is not a regular file, such as
+# a FIFO or a bash process substitution (/dev/fd/63), which C's fopen/fread
+# (clox) and Java's Files.readAllBytes (jlox) both read.
+#
+#   mkfifo /tmp/f; echo hi > /tmp/f &
+#   mylang run read_fifo.my -- /tmp/f
+#   => Err('read \'/tmp/f\': denied: outside the granted directories, or the mode needs a write grant')
+#   (no --restrict was given, so nothing should be denied)
+#   lox <(echo 'print 1;')   => Could not open file "/dev/fd/63".
+def main(args: list[str], fs: Filesystem, out: Stream) -> int:
+    out.print(fs.read_file(args[0]))
+    return 0

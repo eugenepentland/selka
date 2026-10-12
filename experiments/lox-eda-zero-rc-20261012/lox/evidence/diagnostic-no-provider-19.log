@@ -1,0 +1,4 @@
+build-slot: build slot 1, FIFO ticket 1389 after 0s
+interpreter.my:322:27: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+              return assign(mut it, node)
+                            ^

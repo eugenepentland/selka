@@ -1,0 +1,12 @@
+build-slot: FIFO ticket 1325, position 5; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1325, position 5; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 2, FIFO ticket 1325 after 115s
+driver.my:73:109: error[E_UNUSED_CAPABILITY]: `clock` is never used, so this signature claims an effect the body cannot have; remove the parameter or use it
+  public func run_file(source: bytes, engine: Engine, gc_stress: bool, stats: bool, out: Stream, err: Stream, clock: Clock) -> int:
+                                                                                                              ^
+natives.my:3:8: warning[W_UNUSED_IMPORT]: import `time` is never referenced in this module; remove it or use it
+  import time
+         ^
+natives.my:14:19: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+  func clock_native(rt: heap.Runtime) -> value.Value:
+                    ^

@@ -1,0 +1,3 @@
+driver_tests.my:28:16: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+          return text
+                 ^

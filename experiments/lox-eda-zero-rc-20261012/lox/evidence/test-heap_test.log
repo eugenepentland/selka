@@ -1,0 +1,7 @@
+passed heap_test::test_gc_frees_unreachable
+passed heap_test::test_gc_intern_table_is_weak
+passed heap_test::test_gc_reuses_free_slot
+passed heap_test::test_gc_stress_collects_each_allocation
+passed heap_test::test_gc_threshold_accounting
+passed heap_test::test_gc_traces_instance_fields
+6 passed, 0 cached, 0 failed, 0 skipped

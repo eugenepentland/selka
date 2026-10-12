@@ -1,0 +1,3 @@
+heap_test.my:34:19: error[E_SINGLE_OWNER_MOVED]: 'fields' was moved or is unavailable on this path; use .copy() when both values are needed
+      _ = table.set(mut fields, field_name, heap.string_hash(rt, field_name), value.Value.obj(value=field_value))
+                    ^

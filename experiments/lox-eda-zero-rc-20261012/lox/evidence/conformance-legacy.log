@@ -1,0 +1,5 @@
+build-slot: build slot 1, FIFO ticket 1326 after 0s
+conformance engine=vm gc=normal: 246/246 passed
+conformance engine=vm gc=gc-stress: 246/246 passed
+conformance engine=tree gc=normal: 241/241 passed
+conformance engine=tree gc=gc-stress: 241/241 passed

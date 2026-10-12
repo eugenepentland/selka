@@ -1,0 +1,101 @@
+{
+  "compiler": {
+    "source": "e2893d2707cbe057a09abf94e04c4b12d16b7b8b",
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012/zig-out/bin/mylang",
+    "sha256": "6e7938a14ad4abc46b76c149ef12551b170f6c7e6f462beec2f81db18d40a83d"
+  },
+  "binaries": {
+    "original-rc": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-original-rc",
+      "sha256": "9c8f5d3e1b0be06ae9134be40627bc0e1c1b913097f93d4bdc3c2a16a974fc04",
+      "bytes": 994008,
+      "mode": "0555",
+      "flags": [
+        "--release"
+      ],
+      "source": "modern-control"
+    },
+    "migrated-rc": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-migrated-rc",
+      "sha256": "d0eaa00b0b5cab6aa9eaa461a4a8279eb15522c86cb288484f6278ae8c75dd6f",
+      "bytes": 988800,
+      "mode": "0555",
+      "flags": [
+        "--release"
+      ],
+      "source": "migrated"
+    },
+    "zero": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero",
+      "sha256": "a87f5bae25a477178189d093d720d0f23ddb76aba07f0de99788ad1004520029",
+      "bytes": 864256,
+      "mode": "0555",
+      "flags": [
+        "--release",
+        "--experimental-zero-rc"
+      ],
+      "source": "migrated"
+    },
+    "original-rc-counted": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-original-rc-counted",
+      "sha256": "ee5a4e7dc0fae4970d6b9afee4fbb0291d506c346b45921823ee67511272c387",
+      "bytes": 1631592,
+      "mode": "0555",
+      "flags": [
+        "--release",
+        "--counters"
+      ],
+      "source": "modern-control"
+    },
+    "migrated-rc-counted": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-migrated-rc-counted",
+      "sha256": "20faf3eb4501b3c92134f8d7b0283d659fa152087e989d16479730bba2faada0",
+      "bytes": 1622416,
+      "mode": "0555",
+      "flags": [
+        "--release",
+        "--counters"
+      ],
+      "source": "migrated"
+    },
+    "zero-counted": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero-counted",
+      "sha256": "89e37cbd218613d8d85571f31ec0312a9f20e0dc73a18f5620f49a90770f47c9",
+      "bytes": 1473552,
+      "mode": "0555",
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--counters"
+      ],
+      "source": "migrated"
+    },
+    "zero-debug": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero-debug",
+      "sha256": "f3d1c920b701d758b4788e95cccf9d835817ba0c68f3bd51f26ba58dda2495a7",
+      "bytes": 887352,
+      "mode": "0555",
+      "flags": [
+        "--experimental-zero-rc"
+      ],
+      "source": "migrated"
+    },
+    "zero-verified": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero-verified",
+      "sha256": "0e09a6be1f30a74b485427c54b206891d9e4a5c2fa6817d1c0725cc3ba7fe3d2",
+      "bytes": 1012120,
+      "mode": "0555",
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--verify-facts"
+      ],
+      "source": "migrated"
+    }
+  },
+  "checked_flag": "--experimental-zero-rc",
+  "controls": [
+    "zero-debug",
+    "zero-verified"
+  ]
+}

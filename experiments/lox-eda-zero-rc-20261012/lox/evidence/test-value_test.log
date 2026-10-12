@@ -1,0 +1,9 @@
+passed value_test::test_format_fraction
+passed value_test::test_format_integer
+passed value_test::test_format_large
+passed value_test::test_format_small
+passed value_test::test_format_special
+passed value_test::test_format_zeros
+passed value_test::test_is_falsey_rules
+passed value_test::test_values_equal_rules
+8 passed, 0 cached, 0 failed, 0 skipped

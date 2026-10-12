@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1329, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1329 after 5s
+heap.my:125:9: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+          rt.objects[slot] = obj
+          ^

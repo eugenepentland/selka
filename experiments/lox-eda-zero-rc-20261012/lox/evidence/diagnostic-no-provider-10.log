@@ -1,0 +1,4 @@
+build-slot: build slot 2, FIFO ticket 1347 after 0s
+table.my:90:40: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+              adjust_capacity(mut t, len(t.entries) * 2)
+                                         ^

@@ -1,0 +1,7 @@
+passed compiler_test::test_compile_error_message
+passed compiler_test::test_compile_global_definition
+passed compiler_test::test_compile_if_jumps
+passed compiler_test::test_compile_local_slots
+passed compiler_test::test_compile_print_addition
+passed compiler_test::test_compile_too_many_constants
+6 passed, 0 cached, 0 failed, 0 skipped

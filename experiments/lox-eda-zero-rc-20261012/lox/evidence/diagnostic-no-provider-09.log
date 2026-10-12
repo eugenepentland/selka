@@ -1,0 +1,4 @@
+build-slot: build slot 1, FIFO ticket 1342 after 0s
+table.my:78:13: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+              t.count = t.count + 1
+              ^
