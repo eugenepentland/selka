@@ -1,0 +1,59 @@
+{
+  "reference_binary_count": 8,
+  "spec_count": 61,
+  "binaries": {
+    "eda/zig-safe": {
+      "source": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/zig-safe/bin/eda-sch",
+      "frozen": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-zig-safe",
+      "sha256": "d520d6a084a49d9962d240a2c6effc84ccd40321ff0c46ff6422b84110971771",
+      "bytes": 7539120
+    },
+    "eda/zig-fast": {
+      "source": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/zig-fast/bin/eda-sch",
+      "frozen": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-zig-fast",
+      "sha256": "a67a28006cf5815b76ff658564118cbb13d22df729ad4df19a8f6ac73a129138",
+      "bytes": 8482208
+    },
+    "eda/rust": {
+      "source": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/rust-target/release/eda-sch",
+      "frozen": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-rust",
+      "sha256": "c63f2735c1f6799264e3839a93e0c23c6b50c5ca07b8b40bce45c5dd01f69c22",
+      "bytes": 1483848
+    },
+    "eda/go": {
+      "source": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/.cache/release/go/eda-sch",
+      "frozen": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-go",
+      "sha256": "0ea7d48bc5aff1b7952d9572ae0beb169316df674287b9de537b51d2b4b1054e",
+      "bytes": 3965444
+    },
+    "lox/zig-safe": {
+      "source": "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/zig-release-safe/out-release-safe/bin/lox",
+      "frozen": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-safe",
+      "sha256": "96c97215aaddd5f90ebb61a80b388289a763bf9b8e976009c09b98a3068b4b03",
+      "bytes": 4441656
+    },
+    "lox/zig-fast": {
+      "source": "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/zig-release/out-release/bin/lox",
+      "frozen": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast",
+      "sha256": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da",
+      "bytes": 4661824
+    },
+    "lox/rust": {
+      "source": "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/rust-release/target/release/lox",
+      "frozen": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-rust",
+      "sha256": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab",
+      "bytes": 694176
+    },
+    "lox/go": {
+      "source": "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/go-release/bin/lox",
+      "frozen": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-go",
+      "sha256": "4d458b9e5305a2be24360a9d5d9c58f7bc828c9f9433eb6bae984066c4081b63",
+      "bytes": 2945973
+    }
+  },
+  "notes": [
+    "Exact existing reference artifacts freshly copied; not rebuilt.",
+    "Historical executable identity can differ; see historical provenance.",
+    "60 main comparison cells plus separately identified VM step case."
+  ]
+}
