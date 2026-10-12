@@ -66,6 +66,7 @@ fn rewriteRecording(arena: std.mem.Allocator, module: *ir.Module, f: *ir.Functio
     for (0..count) |index| {
         const inst = f.insts.items[index];
         if (inst.op == .str_from_view and onlyReads(f, module, @fromBackingInt(@intCast(index)))) {
+            if (module.zero_rc and try updated(arena, f, module, f.resolve(inst.a))) continue;
             f.insts.items[index] = .{ .op = .copy, .ty = .str_view, .a = inst.a, .span = inst.span };
             try rewriteUsesRecording(arena, f, module, f.resolve(inst.a), requests);
             changed += 1;
@@ -132,6 +133,7 @@ pub fn onlyReads(f: *const ir.Function, module: *const ir.Module, slice: ir.Ref)
 /// source live, so an update while the view is live would copy the whole source instead
 /// of updating it in place: such a slice stays a copy.
 pub fn updated(arena: std.mem.Allocator, f: *const ir.Function, module: *const ir.Module, source: ir.Ref) std.mem.Allocator.Error!bool {
+    if (module.zero_rc) return ownedUpdated(arena, f, module, source);
     const aliases = try arena.alloc(bool, f.insts.items.len);
     defer arena.free(aliases);
     @memset(aliases, false);
@@ -161,6 +163,86 @@ pub fn updated(arena: std.mem.Allocator, f: *const ir.Function, module: *const i
         }
     }
     return false;
+}
+
+// A checked owner cannot be retained to keep an optimizer-created view alive.
+// Follow its borrowed parent chain and phi aliases, and leave the source slice
+// materialized if any of those owners transfers into storage or an owning call.
+const AliasEdge = struct { target: ir.Ref, next: u32 };
+const no_edge = std.math.maxInt(u32);
+
+fn ownedUpdated(arena: std.mem.Allocator, f: *const ir.Function, module: *const ir.Module, source: ir.Ref) std.mem.Allocator.Error!bool {
+    const length = f.insts.items.len;
+    const heads = try arena.alloc(u32, length);
+    defer arena.free(heads);
+    @memset(heads, no_edge);
+    var edges: std.ArrayList(AliasEdge) = .empty;
+    defer edges.deinit(arena);
+    // Reverse phi edges let each alias be visited once, including loop backedges.
+    for (f.insts.items, 0..) |inst, index| {
+        if (inst.op != .phi) continue;
+        for (f.operands(inst.data)) |operand| {
+            const owner = f.resolve(operand).index();
+            try edges.append(arena, .{ .target = @fromBackingInt(@intCast(index)), .next = heads[owner] });
+            heads[owner] = @intCast(edges.items.len - 1);
+        }
+    }
+    const aliases = try arena.alloc(bool, length);
+    defer arena.free(aliases);
+    @memset(aliases, false);
+    var pending: std.ArrayList(ir.Ref) = .empty;
+    defer pending.deinit(arena);
+    try alias(arena, f, aliases, &pending, source);
+    while (pending.pop()) |ref| {
+        const inst = f.inst(ref);
+        if (borrowedParent(f, module, inst)) |parent| try alias(arena, f, aliases, &pending, parent);
+        if (inst.op == .phi) for (f.operands(inst.data)) |operand| try alias(arena, f, aliases, &pending, operand);
+        var edge = heads[ref.index()];
+        while (edge != no_edge) : (edge = edges.items[edge].next) try alias(arena, f, aliases, &pending, edges.items[edge].target);
+    }
+    for (f.insts.items) |inst| {
+        const operands = f.valueOperands(inst);
+        for (0..operands.len()) |at| {
+            const operand = f.resolve(operands.get(at));
+            if (aliases[operand.index()] and f.inst(operand).op != .str_const and takesOwner(f, module, inst, at)) return true;
+        }
+    }
+    return false;
+}
+
+fn alias(arena: std.mem.Allocator, f: *const ir.Function, aliases: []bool, pending: *std.ArrayList(ir.Ref), value: ir.Ref) std.mem.Allocator.Error!void {
+    const ref = f.resolve(value);
+    if (aliases[ref.index()]) return;
+    aliases[ref.index()] = true;
+    try pending.append(arena, ref);
+}
+
+fn borrowedParent(f: *const ir.Function, module: *const ir.Module, inst: ir.Inst) ?ir.Ref {
+    return switch (inst.op) {
+        .list_get, .list_get_field, .record_get, .union_payload, .box_get, .dict_entry_key, .dict_entry_value, .array_get, .str_view_of, .str_slice_view => inst.a,
+        .call => if (module.functions.items[inst.a.index()].signature.viewSource()) |at| f.operands(inst.data)[at] else null,
+        else => null,
+    };
+}
+
+fn takesOwner(f: *const ir.Function, module: *const ir.Module, inst: ir.Inst, at: usize) bool {
+    if (at == 0 and inst.op.consumesOperand0()) return true;
+    const signature: ?ir.Signature = switch (inst.op) {
+        .call => module.functions.items[inst.a.index()].signature,
+        .call_indirect => module.compound(f.inst(f.resolve(inst.a)).ty).@"fn",
+        else => null,
+    };
+    if (signature) |sig| {
+        // valueOperands includes the indirect callee before the arguments.
+        const first: usize = if (inst.op == .call_indirect) 1 else 0;
+        if (at < first or at - first >= 64) return false;
+        return (sig.owned | sig.consumes) & (@as(u64, 1) << @intCast(at - first)) != 0;
+    }
+    return switch (inst.op) {
+        .list_push, .record_set, .union_make, .union_take, .box_make, .box_take, .ret, .release, .record_make => true,
+        .list_set, .list_set_field, .array_set, .dict_set_value, .dict_insert => at >= 2,
+        else => false,
+    };
 }
 
 /// The span form of a direct call of a reading helper, every parameter a borrowed `str`.

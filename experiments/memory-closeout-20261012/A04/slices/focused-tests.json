@@ -1,0 +1,9 @@
+{
+  "command": "scripts/build-slot.sh build \"$ZIG\" build test-core affected-compiler -Dtest-filter=\"A04 slice lifetime\" -j\"$MYLANG_DEV_JOBS\" --maxrss \"$MYLANG_DEV_MAXRSS\"",
+  "exit_status": 0,
+  "selected": 4,
+  "passed": 4,
+  "failed": 0,
+  "raw_log": "focused-tests.log",
+  "note": "Runner emits a failed-command trailer despite PASS and successful build exit; raw output retained."
+}
