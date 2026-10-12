@@ -1,0 +1,73 @@
+--- /dev/null
++++ b/src/core/guest_abi.zig
+@@ -0,0 +1,10 @@
++//! The only executable guest ABI. Persisted records require this provenance.
++
++/// Explicit nonzero wire tag; legacy boolean and unknown receipts cannot decode.
++pub const Abi = enum(u32) { checked_owned_v1 = 0x4f574e31 };
++
++/// All in-memory construction and linked units use this fixed ABI.
++pub const current: Abi = .checked_owned_v1;
++
++/// Native text and artifact identities must carry this exact versioned marker.
++pub const identity = "mylang-checked-owned-v1";
+--- a/src/core/ir.zig
++++ b/src/core/ir.zig
+@@ -51,11 +51,11 @@
+     bytes,
+     /// A borrowed UTF-8 span in SSA only; it has no storable memory layout.
+     str_view,
+-    /// Mutable octets in a counted leaf block; source updates preserve value semantics.
++    /// Mutable octets in an owned leaf block; source updates preserve value semantics.
+     byte_buffer = 0xfffffff0,
+-    /// Counted immutable authority/provider scope for non-stream capabilities.
++    /// Owned immutable authority/provider scope for non-stream capabilities.
+     capability,
+-    /// Counted external-handle identity; explicit completion is a runtime effect.
++    /// Owned external-handle identity; explicit completion is a runtime effect.
+     resource,
+     _,
+ 
+@@ -99,7 +99,7 @@
+     /// The tag is the case index in the checker's case order, so `Option[T]` is
+     /// `{void, T}` (None is tag 0) and `Result[T, E]` lists its cases as the checker does.
+     @"union": []const Type,
+-    /// An immutable reference-counted block holding one `T`: boxed (recursive)
++    /// An owned block holding one `T`: boxed (recursive)
+     /// record fields and union payloads.
+     box: Type,
+     /// A dictionary value; its operations do not expose any table layout.
+@@ -594,13 +594,8 @@
+ 
+ /// A whole program: interned compound types and functions.
+ pub const Module = struct {
+-    /// Experimental source contract, validated before lowering. Earlier snapshot
+-    /// builds bypass Core caches; zero-RC builds bind their mode into cache keys.
+-    single_owner: bool = false,
+-    zero_rc: bool = false,
+-    /// Conservative type families reachable from explicit list snapshots.
+-    /// These retain COW even in a single-owner module; stage caches are bypassed.
+-    shared_lists: std.ArrayList(Type) = .empty,
++    /// Fixed executable ABI provenance, never a runtime ownership selector.
++    abi: @import("guest_abi.zig").Abi = @import("guest_abi.zig").current,
+     compounds: std.ArrayList(Compound) = .empty,
+     functions: std.ArrayList(Function) = .empty,
+     /// UTF-8 bytes of string constants, by `str_const` index.
+@@ -608,14 +603,9 @@
+     /// The function `main` is, by index.
+     entry: u32 = 0,
+ 
+-    /// The count-free ABI starts with kind; the ordinary ABI starts with count.
+-    pub fn kindOffset(self: *const Module) u8 {
+-        return if (self.zero_rc) 0 else 4;
+-    }
+-
+-    /// Whether the source contract guarantees one owner for every list of `ty`.
+-    pub fn exclusiveList(self: *const Module, ty: Type) bool {
+-        return self.single_owner and self.kind(ty) == .list and std.mem.indexOfScalar(Type, self.shared_lists.items, ty) == null;
++    /// Owned block headers start with their kind word.
++    pub fn kindOffset(_: *const Module) u8 {
++        return 0;
+     }
+ 
+     /// The interned type for `compound`; a record's or union's type list is copied.

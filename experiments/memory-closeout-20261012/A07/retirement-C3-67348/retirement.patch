@@ -1,0 +1,2577 @@
+--- /dev/null
++++ b/src/core/guest_abi.zig
+@@ -0,0 +1,10 @@
++//! The only executable guest ABI. Persisted records require this provenance.
++
++/// Explicit nonzero wire tag; legacy boolean and unknown receipts cannot decode.
++pub const Abi = enum(u32) { checked_owned_v1 = 0x4f574e31 };
++
++/// All in-memory construction and linked units use this fixed ABI.
++pub const current: Abi = .checked_owned_v1;
++
++/// Native text and artifact identities must carry this exact versioned marker.
++pub const identity = "mylang-checked-owned-v1";
+--- a/src/core/ir.zig
++++ b/src/core/ir.zig
+@@ -51,11 +51,11 @@
+     bytes,
+     /// A borrowed UTF-8 span in SSA only; it has no storable memory layout.
+     str_view,
+-    /// Mutable octets in a counted leaf block; source updates preserve value semantics.
++    /// Mutable octets in an owned leaf block; source updates preserve value semantics.
+     byte_buffer = 0xfffffff0,
+-    /// Counted immutable authority/provider scope for non-stream capabilities.
++    /// Owned immutable authority/provider scope for non-stream capabilities.
+     capability,
+-    /// Counted external-handle identity; explicit completion is a runtime effect.
++    /// Owned external-handle identity; explicit completion is a runtime effect.
+     resource,
+     _,
+ 
+@@ -99,7 +99,7 @@
+     /// The tag is the case index in the checker's case order, so `Option[T]` is
+     /// `{void, T}` (None is tag 0) and `Result[T, E]` lists its cases as the checker does.
+     @"union": []const Type,
+-    /// An immutable reference-counted block holding one `T`: boxed (recursive)
++    /// An owned block holding one `T`: boxed (recursive)
+     /// record fields and union payloads.
+     box: Type,
+     /// A dictionary value; its operations do not expose any table layout.
+@@ -594,13 +594,8 @@
+ 
+ /// A whole program: interned compound types and functions.
+ pub const Module = struct {
+-    /// Experimental source contract, validated before lowering. Earlier snapshot
+-    /// builds bypass Core caches; zero-RC builds bind their mode into cache keys.
+-    single_owner: bool = false,
+-    zero_rc: bool = false,
+-    /// Conservative type families reachable from explicit list snapshots.
+-    /// These retain COW even in a single-owner module; stage caches are bypassed.
+-    shared_lists: std.ArrayList(Type) = .empty,
++    /// Fixed executable ABI provenance, never a runtime ownership selector.
++    abi: @import("guest_abi.zig").Abi = @import("guest_abi.zig").current,
+     compounds: std.ArrayList(Compound) = .empty,
+     functions: std.ArrayList(Function) = .empty,
+     /// UTF-8 bytes of string constants, by `str_const` index.
+@@ -608,14 +603,9 @@
+     /// The function `main` is, by index.
+     entry: u32 = 0,
+ 
+-    /// The count-free ABI starts with kind; the ordinary ABI starts with count.
+-    pub fn kindOffset(self: *const Module) u8 {
+-        return if (self.zero_rc) 0 else 4;
+-    }
+-
+-    /// Whether the source contract guarantees one owner for every list of `ty`.
+-    pub fn exclusiveList(self: *const Module, ty: Type) bool {
+-        return self.single_owner and self.kind(ty) == .list and std.mem.indexOfScalar(Type, self.shared_lists.items, ty) == null;
++    /// Owned block headers start with their kind word.
++    pub fn kindOffset(_: *const Module) u8 {
++        return 0;
+     }
+ 
+     /// The interned type for `compound`; a record's or union's type list is copied.
+--- a/src/core/single_owner_copy.zig
++++ b/src/core/single_owner_copy.zig
+@@ -1,5 +1,4 @@
+-//! Explicit copies recursively duplicate owned children. Zero-RC mode includes
+-//! strings and bytes; the earlier list-only mode preserves their shared form.
++//! Explicit copies recursively duplicate all admitted owned children.
+ const ir = @import("ir.zig");
+ const single_owner = @import("single_owner.zig");
+ 
+@@ -10,42 +9,16 @@
+ pub fn copy(comptime Context: type, b: Context, value: ir.Ref, span: u32) Error!ir.Ref {
+     const ty = b.typeOfRef(value);
+     if (!single_owner.containsList(b.module(), ty)) return value;
+-    if (b.module().zero_rc and (ty == .str or ty == .bytes)) return b.runtimeCall("myl_core_owned_octets_copy", &.{ty}, ty, &.{value}, span);
+-    if (b.module().zero_rc and ty == .byte_buffer) return b.emit(.{ .op = .buffer_copy, .ty = ty, .a = value, .span = span });
++    if ((ty == .str or ty == .bytes)) return b.runtimeCall("myl_core_owned_octets_copy", &.{ty}, ty, &.{value}, span);
++    if (ty == .byte_buffer) return b.emit(.{ .op = .buffer_copy, .ty = ty, .a = value, .span = span });
+     switch (b.module().compound(ty)) {
+         .list => |element| {
+             if (!single_owner.containsList(b.module(), element)) return b.emit(.{ .op = .list_copy, .ty = ty, .a = value, .span = span });
+-            if (b.module().zero_rc) return copyBlock(Context, b, value, span);
+-            const count = try b.emit(.{ .op = .list_len, .ty = .u64, .a = value, .span = span });
+-            const target = try b.synthetic(ty);
+-            const counter = try b.synthetic(.u64);
+-            try b.write(target, b.current.?, try b.emit(.{ .op = .list_new, .ty = ty, .a = count, .span = span }));
+-            try b.write(counter, b.current.?, try b.constant(.u64, 0));
+-            const header = try b.newBlock();
+-            const body = try b.newBlock();
+-            const end = try b.newBlock();
+-            try b.jump(header);
+-            b.enter(header);
+-            const index = try b.read(counter, header);
+-            const more = try b.emit(.{ .op = .cmp, .ty = .bool, .a = index, .b = count, .data = @backingInt(ir.Predicate.lt), .span = span });
+-            try b.branch(more, body, end, span);
+-            try b.seal(body);
+-            b.enter(body);
+-            const child = try b.emit(.{ .op = .list_get, .ty = element, .a = value, .b = index, .check = .exact, .span = span });
+-            const cloned = try copy(Context, b, child, span);
+-            const at = b.current.?;
+-            const pushed = try b.emit(.{ .op = .list_push, .ty = ty, .a = try b.read(target, at), .b = cloned, .span = span });
+-            try b.write(target, at, pushed);
+-            try b.write(counter, at, try b.emit(.{ .op = .add, .ty = .u64, .a = index, .b = try b.constant(.u64, 1), .span = span }));
+-            try b.jump(header);
+-            try b.seal(header);
+-            try b.seal(end);
+-            b.enter(end);
+-            return b.read(target, end);
++            return copyBlock(Context, b, value, span);
+         },
+         .box => return copyBlock(Context, b, value, span),
+         .@"union" => |cases| return copyUnion(Context, b, value, cases, span),
+-        .dict => return if (b.module().zero_rc) copyBlock(Context, b, value, span) else @import("build_dict.zig").copy(Context, b, value, span),
++        .dict => return copyBlock(Context, b, value, span),
+         .record => |fields| {
+             const children = try b.mb.allocator.alloc(ir.Ref, fields.len);
+             for (fields, 0..) |field, index| {
+--- a/src/core/zero_rc.zig
++++ b/src/core/zero_rc.zig
+@@ -1,35 +1,7 @@
+-//! Admitted runtime boundary for the zero-RC prototype. Unlisted helpers refuse.
++//! Audited runtime boundary for checked ownership. Unlisted helpers refuse.
+ const std = @import("std");
+ const ir = @import("ir.zig");
+ const rc_symbols = [_][]const u8{ "@myl_core_retain", "@myl_core_release", "@myl_core_share(", "@myl_core_free_block(" };
+-
+-/// Keep common allocator templates, removing the legacy count initialization
+-/// and using the count-free header's kind offset.
+-pub fn fastPaths(a: std.mem.Allocator, source: []const u8) std.mem.Allocator.Error![]u8 {
+-    const uncounted = try std.mem.replaceOwned(u8, a, source, "  store i32 1, ptr %head, align 8, !tbaa !3\n", "");
+-    defer a.free(uncounted);
+-    return std.mem.replaceOwned(u8, a, uncounted, ", i64 4\n", ", i64 0\n");
+-}
+-
+-/// Common declarations are not part of the owned ABI. Compact in place so this
+-/// does not allocate another copy of an emitted unit.
+-pub fn stripRcDeclarations(out: *std.ArrayList(u8)) void {
+-    var lines = std.mem.splitScalar(u8, out.items, '\n');
+-    var written: usize = 0;
+-    while (lines.next()) |line| {
+-        const forbidden = if (std.mem.startsWith(u8, line, "declare ")) for (rc_symbols) |name| {
+-            if (std.mem.indexOf(u8, line, name) != null) break true;
+-        } else false else false;
+-        if (forbidden) continue;
+-        std.mem.copyForwards(u8, out.items[written..][0..line.len], line);
+-        written += line.len;
+-        if (lines.index != null) {
+-            out.items[written] = '\n';
+-            written += 1;
+-        }
+-    }
+-    out.shrinkRetainingCapacity(written);
+-}
+ 
+ /// Runtime inputs borrow unless their bit is set. Managed results are either
+ /// independent owned storage or the consumed buffer, never a retained alias.
+@@ -193,7 +165,7 @@
+ /// Native container copies duplicate only slots. Managed children require the
+ /// explicit recursive-copy helpers, never a residual ownership-pass COW copy.
+ pub fn shallowManagedCopy(module: *const ir.Module, inst: ir.Inst) bool {
+-    if (!module.zero_rc or !module.valid(inst.ty)) return false;
++    if (!module.valid(inst.ty)) return false;
+     return switch (inst.op) {
+         .list_copy => if (module.kind(inst.ty) == .list) module.managed(module.compound(inst.ty).list) else false,
+         .dict_copy => if (module.kind(inst.ty) == .dict) blk: {
+--- a/src/core/own.zig
++++ b/src/core/own.zig
+@@ -1,44 +1,8 @@
+-//! Ownership and one-count RC (docs/design/new-core-s1.md §5-§6, §13 R-2).
+-//!
+-//! Runs per function after the facts (release) or right after construction
+-//! (debug), and turns the value-semantic Core IR into counted code in two phases.
+-//!
+-//! **Values.** Every managed value (a block pointer, or a record or union holding
+-//! one) is *owned* (+1: constructors, updates, calls, phis, `list_copy`), *borrowed*
+-//! (parameters; reads of a managed part of another value: `list_get`,
+-//! `list_get_field`, `record_get`, `union_payload`, `box_get`, valid while that
+-//! parent is) or *immortal* (string constants, `undef`). A consuming use (an update's
+-//! list, a stored value, a returned value, a phi operand on its edge) takes one owner;
+-//! every other use borrows. Calls borrow ordinary arguments and take one owner
+-//! for source `mut` or compiler-inferred consuming parameters.
+-//!
+-//! **Phase A, copy on write** (§5). Each in-place update (`list_push`, `list_set`,
+-//! `list_pop`) of list `a` takes one form:
+-//! 1. `a` owned, the update its last use, and statically unique (fresh from
+-//!    `list_new`, `list_copy` or another update, or a phi of such values, and never
+-//!    shared by a call or a retained use): in place, no test (verify builds assert
+-//!    `count == 1` and trap `R_CORE_FACT`);
+-//! 2. `a` owned and this its last use, but maybe shared: `if is_unique(a)` in place,
+-//!    else `c = list_copy(a); release(a)` and update `c`;
+-//! 3. `a` borrowed, or used after the update: update `list_copy(a)`.
+-//! A `record_set` of a managed field extracts the field it drops (released after),
+-//! and the `list_get` that reads a popped element owns it (§2.1).
+-//!
+-//! **Phase B, counting** (§6). Per owned value, liveness over the blocks:
+-//! - the last use moves the value when it consumes it; any other consuming use gets
+-//!   a `retain` first;
+-//! - a value that dies without a consuming last use is released right after it,
+-//!   or on the CFG edge where it dies (in the successor when that has one
+-//!   predecessor, else at the end of the predecessor when that has one successor,
+-//!   else in a block split into the edge). Early returns and `?` paths are edges like
+-//!   any other; paths into a block ending in `unreachable` (a trap) release nothing;
+-//! - a borrowed or immortal value that a consuming use takes is retained first
+-//!   (immortals need no count);
+-//! - a borrowed part stays valid because its parent's liveness covers the part's
+-//!   uses; when the parent is consumed while the part is still used, the part is
+-//!   *promoted* instead: retained right after it is read and owned from there on.
+-//! A final peephole drops `retain x … release x` pairs in one block with nothing
+-//! but pure reads between them (R-2: LLVM cannot fold such a pair itself).
++//! Checked ownership lowering: preserve borrowed lifetimes, transfer owned slots,
++//! materialize independent update storage where required, and insert direct drops.
++//! Internal retain obligations diagnose unsupported sharing; those that cannot be
++//! canceled locally are rejected by verification and native emission. No runtime
++//! count, uniqueness test, or copy-on-write sharing path is generated.
+ const std = @import("std");
+ const ir = @import("ir.zig");
+ const facts = @import("facts.zig");
+@@ -56,7 +20,7 @@
+ 
+ /// How the pass runs.
+ pub const Options = struct {
+-    /// Verify builds assert every statically unique update (form 1) at run time.
++    /// Verify builds keep allocation-promotion and value-fact checks.
+     verify: bool = false,
+     /// The function's facts (release builds): lists they bound may live on the stack.
+     facts: ?*const facts.Facts = null,
+@@ -71,8 +35,10 @@
+ /// What the pass did, summed over functions.
+ pub const Stats = struct {
+     in_place: u32 = 0,
++    /// Historical statistic; runtime uniqueness tests are retired and this stays zero.
+     tested: u32 = 0,
+     copied: u32 = 0,
++    /// Diagnostic obligations only; surviving retains refuse native emission.
+     retains: u32 = 0,
+     releases: u32 = 0,
+     /// `retain x … release x` pairs the peephole removed.
+@@ -144,9 +110,9 @@
+         error.OutOfMemory => return error.OutOfMemory,
+         error.UnsupportedInstruction => return error.Unsupported,
+     };
+-    if (module.zero_rc) for (f.insts.items) |*inst| {
++    for (f.insts.items) |*inst| {
+         if ((inst.op == .list_copy or inst.op == .dict_copy) and inst.data == flags.place_copy) inst.op = .copy;
+-    };
++    }
+     _ = try @import("phi_cleanup.zig").run(backing, f);
+     var stats: Stats = .{};
+     var marks: Marks = .{ .origin = if (options.provenance) |table| table.context(options.function_index) else null };
+@@ -158,8 +124,8 @@
+     }
+     // Resolve duplicate record roots before matching an exact element-field round trip.
+     // Keep the later merge too: borrow forwarding can introduce fresh field reads.
+-    if (module.zero_rc) try mergeFieldReads(scratch, f);
+-    // Element-field stores in place, before any update gets its copy-on-write form.
++    try mergeFieldReads(scratch, f);
++    // Element-field stores in place, before owned update preparation.
+     _ = try elements.fieldStores(arena, module, f);
+     // Byte-buffer appends become updates the emitter does inline.
+     _ = try buffers.appends(arena, module, f);
+@@ -179,10 +145,9 @@
+         if (selection.phi) |phi| try marks.borrowed_selection.put(scratch, @intCast(phi.index()), {});
+     }
+     try takeFields(scratch, module, f, &marks);
+-    try hoistTests(arena, scratch, module, f, &marks);
+     var phase_a = try Analysis.of(scratch, arena, module, f, &marks);
+     try phase_a.analyze();
+-    try copyOnWrite(&phase_a, options, &stats);
++    try prepareUpdates(&phase_a, &stats);
+     var phase_b = try Analysis.of(scratch, arena, module, f, &marks);
+     try phase_b.analyze();
+     try count(&phase_b, &stats);
+@@ -282,9 +247,6 @@
+     taken: std.AutoHashMapUnmanaged(u32, void) = .empty,
+     /// Records whose block-holding fields were all read out (`takeFields`): never counted.
+     emptied: std.AutoHashMapUnmanaged(u32, void) = .empty,
+-    /// Phis that join a value and its copy right after an `is_unique` test on a loop's
+-    /// entry edge (`hoistTests`): each holds a block of count 1 where it is defined.
+-    ensured: std.AutoHashMapUnmanaged(u32, void) = .empty,
+ };
+ 
+ /// Where a value is live, by block.
+@@ -396,7 +358,7 @@
+                 // Source `mut` and inferred consuming parameters both receive one count.
+                 .param => if (ownedParameter(f.signature, instruction.data)) .owned else .borrowed,
+                 .str_const, .undef => .immortal,
+-                .call => if (self.viewSource(instruction) orelse self.encodedSource(instruction)) |source| blk: {
++                .call => if (self.viewSource(instruction)) |source| blk: {
+                     self.parent[i] = source;
+                     break :blk .borrowed;
+                 } else .owned,
+@@ -450,23 +412,9 @@
+     }
+ 
+     fn viewSource(self: *const Analysis, instruction: ir.Inst) ?ir.Ref {
+-        if (!self.module.zero_rc or instruction.ty != .str_view) return null;
++        if (instruction.ty != .str_view) return null;
+         const index = self.module.functions.items[instruction.a.index()].signature.viewSource() orelse return null;
+         return self.f.resolve(self.f.operands(instruction.data)[index]);
+-    }
+-
+-    /// `encode()` changes only the source type. Its byte reads keep the text alive;
+-    /// an escaping byte value is retained by the ordinary borrowed-value rules.
+-    fn encodedSource(self: *const Analysis, instruction: ir.Inst) ?ir.Ref {
+-        // The owned runtime materializes bytes; only the RC ABI aliases text.
+-        if (self.module.zero_rc) return null;
+-        const callee = self.module.functions.items[instruction.a.index()];
+-        if (callee.signature.linkage != .extern_c or callee.signature.ret != .bytes) return null;
+-        if (!std.mem.eql(u8, callee.name, @import("flags.zig").text_encode_symbol)) return null;
+-        const operands = self.f.operands(instruction.data);
+-        if (operands.len != 1 or callee.signature.params.len != 1) return null;
+-        if (callee.signature.params[0] != .str or callee.signature.owned != 0) return null;
+-        return self.f.resolve(operands[0]);
+     }
+ 
+     /// Phis read by a non-phi instruction, directly or through other live phis.
+@@ -794,7 +742,7 @@
+ /// Only the generated key/value pair of one dictionary entry is a borrowed
+ /// record. Every other record construction keeps its ordinary owning operands.
+ fn borrowedItem(module: *const ir.Module, f: *const ir.Function, inst: ir.Inst) ?ir.Ref {
+-    if (!module.zero_rc or inst.op != .record_make) return null;
++    if (inst.op != .record_make) return null;
+     const fields = f.operands(inst.data);
+     if (fields.len != 2) return null;
+     const key = f.inst(f.resolve(fields[0]));
+@@ -869,465 +817,17 @@
+     return op.consumesOperand0() and op != .record_set and op != .array_set;
+ }
+ 
+-// ---- phase A: copy on write -------------------------------------------------------
+-
+-/// Whether updating `value` at `site` may skip the uniqueness test: it comes fresh
+-/// from an allocation, a copy or another update (or phis of those), and no use
+-/// before shares it.
+-fn staticallyUnique(a: *const Analysis, value: ir.Ref, site: ir.Ref) Error!bool {
+-    // Only families outside explicit snapshots have a single-owner guarantee.
+-    // Snapshot families use the existing COW proof and count tests.
+-    if (a.module.zero_rc and a.module.isBlock(a.inst(value).ty)) return true;
+-    if (a.module.exclusiveList(a.inst(value).ty)) return true;
+-    return uniqueWeb(a, value, site, &.{});
+-}
+-
+-/// `staticallyUnique` with the loop-entry operands `cuts` taken as fresh blocks that
+-/// nothing else holds (what a test on each of those edges would make them,
+-/// `hoistTests`). A cut operand that also reaches the web another way is not fresh.
+-fn uniqueWeb(a: *const Analysis, value: ir.Ref, site: ir.Ref, cuts: []const Cut) Error!bool {
+-    if (!a.module.isBlock(a.inst(value).ty)) return false;
+-    var web: std.ArrayList(ir.Ref) = .empty;
+-    var index: std.AutoHashMapUnmanaged(u32, u6) = .empty;
+-    try web.append(a.storage.scratch, value);
+-    var next: usize = 0;
+-    while (next < web.items.len) : (next += 1) {
+-        const current = web.items[next];
+-        if (a.class[current.index()] != .owned or web.items.len > 64) return false;
+-        const instruction = a.inst(current);
+-        switch (instruction.op) {
+-            .list_new, .list_copy, .dict_new, .dict_copy, .str_from_view, .buffer_new, .buffer_copy => {},
+-            .list_get => if (flags.transferredRead(instruction)) {
+-                if (!try exclusiveChildren(a, instruction.a)) return false;
+-            } else return false,
+-            // An ensured join holds a block of count 1, like a fresh copy.
+-            .phi => if (!a.marks.ensured.contains(@backingInt(current))) for (a.f.operands(instruction.data), 0..) |operand, k| {
+-                if (isCut(cuts, current, k)) continue;
+-                const source = a.f.resolve(operand);
+-                if (std.mem.indexOfScalar(ir.Ref, web.items, source) == null) try web.append(a.storage.scratch, source);
+-            },
+-            else => if (instruction.op.consumesOperand0()) {} else return false,
+-        }
+-    }
+-    for (cuts) |cut| {
+-        const operand = a.f.resolve(a.f.operands(a.inst(cut.phi).data)[cut.operand]);
+-        if (std.mem.indexOfScalar(ir.Ref, web.items, operand) != null) return false;
+-    }
+-    for (web.items, 0..) |member, i| try index.put(a.storage.scratch, @backingInt(member), @intCast(i));
+-    for (web.items) |member| {
+-        if (try shared(a, .{ .members = web.items, .index = &index }, member, site)) return false;
+-    }
+-    return true;
+-}
+-
+-/// A fresh collection owns unique child blocks when all stores moved unique
+-/// values into it in place and no ordinary child read was promoted, stored, returned
+-/// or lent to a call. A real collection copy does not establish this claim: its
+-/// children share. Nor does an update that may have copied its collection (a
+-/// count-tested or copied push or store): the copy shares every child it carried
+-/// over (NEW-CORE-ROW-COW-2). A promoted child read holds a second count of its
+-/// child, from the read on (NEW-CORE-ROW-COW-1).
+-fn exclusiveChildren(a: *const Analysis, root: ir.Ref) Error!bool {
+-    var values: std.ArrayList(ir.Ref) = .empty;
+-    try values.append(a.storage.scratch, a.f.resolve(root));
+-    var next: usize = 0;
+-    while (next < values.items.len) : (next += 1) {
+-        const ref = values.items[next];
+-        const inst = a.inst(ref);
+-        switch (inst.op) {
+-            .list_new => {},
+-            .list_copy => {
+-                if (inst.data != flags.place_copy) return false;
+-                const source = a.f.resolve(inst.a);
+-                const at = location(a.f, ref);
+-                if (!a.counted(source) or a.liveAfter(source, at.block, at.pos)) return false;
+-                if (!try staticallyUnique(a, source, ref)) return false;
+-                try addUnique(a.storage.scratch, &values, source);
+-            },
+-            .phi => for (a.f.operands(inst.data)) |operand| {
+-                try addUnique(a.storage.scratch, &values, a.f.resolve(operand));
+-            },
+-            .list_push, .list_set => {
+-                const child = a.f.resolve(if (inst.op == .list_push) inst.b else a.f.operands(inst.data)[0]);
+-                const list = a.f.resolve(inst.a);
+-                const at = location(a.f, ref);
+-                if (a.liveAfter(child, at.block, at.pos) or !try staticallyUnique(a, child, ref)) return false;
+-                const in_place = a.counted(list) and !a.liveAfter(list, at.block, at.pos);
+-                if (!in_place or !try staticallyUnique(a, list, ref)) return false;
+-                try addUnique(a.storage.scratch, &values, list);
+-            },
+-            else => return false,
+-        }
+-    }
+-    for (values.items) |value| {
+-        if (try sharesChildren(a, value)) return false;
+-    }
+-    for (a.f.insts.items, 0..) |inst, index| {
+-        if (inst.op != .list_get or !a.module.managed(inst.ty) or flags.transferredRead(inst)) continue;
+-        if (std.mem.indexOfScalar(ir.Ref, values.items, a.f.resolve(inst.a)) == null) continue;
+-        if (a.counted(@fromBackingInt(@intCast(index)))) return false;
+-        for (a.uses[index].items) |use| {
+-            if (use.consume != 0) return false;
+-            const user = a.f.inst(a.f.blocks.items[use.block].insts.items[use.pos]);
+-            if (user.op == .call or user.op == .call_indirect) return false;
+-        }
+-    }
+-    return true;
+-}
+-
+-/// Copying a parent shares children on both sides, including the original parent.
+-/// Inspect prospective COW copies too: phase A has not rewritten those updates yet.
+-fn sharesChildren(a: *const Analysis, value: ir.Ref) Error!bool {
+-    for (a.uses[value.index()].items) |use| {
+-        if (use.onEdge()) {
+-            if (use.consume > 1 or a.liveInto(value, use.succ)) return true;
+-            continue;
+-        }
+-        const ref = a.f.blocks.items[use.block].insts.items[use.pos];
+-        const inst = a.inst(ref);
+-        if (inst.op == .call or inst.op == .call_indirect) return true;
+-        if (use.consume > 1 or (use.consume != 0 and a.liveAfter(value, use.block, use.pos))) return true;
+-        if (inst.op == .list_copy) {
+-            if (inst.data != flags.place_copy or !a.counted(value) or a.liveAfter(value, use.block, use.pos)) return true;
+-            if (!try staticallyUnique(a, value, ref)) return true;
+-        }
+-    }
+-    return false;
+-}
++// ---- phase A: owned update preparation -----------------------------------------
+ 
+ fn addUnique(arena: std.mem.Allocator, values: *std.ArrayList(ir.Ref), ref: ir.Ref) Error!void {
+     if (std.mem.indexOfScalar(ir.Ref, values.items, ref) == null) try values.append(arena, ref);
+ }
+ 
+-fn location(f: *const ir.Function, ref: ir.Ref) struct { block: u32, pos: u32 } {
+-    for (f.blocks.items, 0..) |block, b| {
+-        if (std.mem.indexOfScalar(ir.Ref, block.insts.items, ref)) |pos| return .{ .block = @intCast(b), .pos = @intCast(pos) };
+-    }
+-    unreachable;
+-}
+-
+-/// The values one block may pass through on its way to an update: the updated value
+-/// and, through phis, everything that flows into it (`staticallyUnique`).
+-const Web = struct {
+-    members: []const ir.Ref,
+-    index: *const std.AutoHashMapUnmanaged(u32, u6),
+-
+-    fn bit(self: Web, ref: ir.Ref) ?u64 {
+-        const i = self.index.get(@backingInt(ref)) orelse return null;
+-        return @as(u64, 1) << i;
+-    }
+-};
+-
+-/// Whether some use of web member `value` other than `site` may give the block a
+-/// second owner that it still has at the update: a call argument (the callee may keep
+-/// it) or a consuming use the value outlives, or a use that consumes it twice. With
+-/// `site` none the question is about the value's death: then any call may have kept
+-/// it, even its last use, and any such use counts.
+-fn shared(a: *const Analysis, web: Web, value: ir.Ref, site: ir.Ref) Error!bool {
+-    for (a.uses[value.index()].items) |use| {
+-        if (use.onEdge()) {
+-            if (use.consume > 1) return true;
+-            if (!a.liveInto(value, use.succ)) continue;
+-            if (site == .none or try carries(a, web, value, .{ .block = use.block, .edge = use.succ }, site)) return true;
+-            continue;
+-        }
+-        const at = a.f.blocks.items[use.block].insts.items[use.pos];
+-        if (at == site) continue;
+-        const call = a.inst(at).op == .call or a.inst(at).op == .call_indirect;
+-        if (use.consume > 1 or (call and site == .none)) return true;
+-        const may_share = call or use.consume == 1;
+-        if (!may_share or !a.liveAfter(value, use.block, use.pos)) continue;
+-        if (site == .none or try carries(a, web, value, .{ .block = use.block, .pos = use.pos }, site)) return true;
+-    }
+-    return false;
+-}
+-
+-/// Where a walk of `carries` starts: after instruction `pos` of `block`, or on the
+-/// edge from `block` into `edge`.
+-const Start = struct { block: u32, pos: u32 = 0, edge: u32 = no_block };
+-
+-/// Whether the block `value` holds at `start` can still be held, by some web member,
+-/// when `site` updates it: a walk of the CFG that tracks which members hold the block
+-/// (a phi takes it on an edge whose operand holds it; a member defined again holds a
+-/// new block) and stops where none does.
+-fn carries(a: *const Analysis, web: Web, value: ir.Ref, start: Start, site: ir.Ref) Error!bool {
+-    const f = a.f;
+-    const State = struct { block: u32, holders: u64 };
+-    var seen: std.AutoHashMapUnmanaged(u64, void) = .empty;
+-    var stack: std.ArrayList(State) = .empty;
+-    const first = web.bit(value).?;
+-    var from: u32 = start.pos + 1;
+-    var block = start.block;
+-    var holders = first;
+-    if (start.edge != no_block) {
+-        holders = enter(f, web, start.block, start.edge, first);
+-        block = start.edge;
+-        from = 0;
+-    }
+-    while (true) {
+-        const insts = f.blocks.items[block].insts.items;
+-        var done = false;
+-        for (insts[@min(from, insts.len)..]) |ref| {
+-            const inst = f.inst(ref);
+-            if (inst.op == .phi) continue;
+-            if (ref == site) {
+-                if ((web.bit(f.resolve(inst.a)) orelse 0) & holders != 0) return true;
+-                // This path reaches the update with a block nothing shares; others may not.
+-                done = true;
+-                break;
+-            }
+-            if (web.bit(ref)) |b| holders &= ~b;
+-            if (holders == 0) {
+-                done = true;
+-                break;
+-            }
+-        }
+-        if (!done) {
+-            for (successors(f, block).slice()) |succ| {
+-                const next = enter(f, web, block, succ, holders);
+-                if (next == 0) continue;
+-                const key = (@as(u64, succ) << 32) ^ next ^ (next >> 32);
+-                if ((try seen.getOrPut(a.storage.scratch, key)).found_existing) continue;
+-                try stack.append(a.storage.scratch, .{ .block = succ, .holders = next });
+-            }
+-        }
+-        const state = stack.pop() orelse return false;
+-        block = state.block;
+-        holders = state.holders;
+-        from = 0;
+-    }
+-}
+-
+-/// The holders after the edge `from → to`: each web phi of `to` holds the block when
+-/// its operand on this edge does, and no longer when it does not.
+-fn enter(f: *const ir.Function, web: Web, from: u32, to: u32, holders: u64) u64 {
+-    const target = f.blocks.items[to];
+-    const pred = for (target.preds.items, 0..) |p, i| {
+-        if (@backingInt(p) == from) break i;
+-    } else return holders;
+-    var out = holders;
+-    for (target.insts.items) |ref| {
+-        const inst = f.inst(ref);
+-        // Phis lead the block; a removed trivial phi (`copy`) may sit among them.
+-        if (inst.op == .copy) continue;
+-        if (inst.op != .phi) break;
+-        const b = web.bit(ref) orelse continue;
+-        const operand = f.resolve(f.operands(inst.data)[pred]);
+-        if ((web.bit(operand) orelse 0) & holders != 0) out |= b else out &= ~b;
+-    }
+-    return out;
+-}
+-
+-// ---- hoisted uniqueness tests (NEW-CORE-U1-HOIST-1) ------------------------------
+-
+-/// Operand `operand` of a loop header's `phi`, on an edge that enters the loop (from a
+-/// predecessor the header does not dominate).
+-const Cut = struct { phi: ir.Ref, operand: usize };
+-
+-fn isCut(cuts: []const Cut, phi: ir.Ref, operand: usize) bool {
+-    for (cuts) |cut| {
+-        if (cut.phi == phi and cut.operand == operand) return true;
+-    }
+-    return false;
+-}
+-
+-/// Move uniqueness tests out of loops. An update of a value that may be shared (form 2)
+-/// tests the count each time it runs. When the value reaches the update through a loop
+-/// header's phi and nothing in the loop can share it, one test on each edge entering the
+-/// loop does: there the entering value is made unique, copied when shared
+-/// (`ensureUnique`), and the loop's own updates keep it unique, so phase A finds every
+-/// update of it in the loop statically unique (form 1). The outermost such loop is
+-/// chosen. Nothing is hoisted for a value the loop may share: a copy or a second owner
+-/// made in the loop, a call that may keep it, a store of it into another value, or an
+-/// entering value still needed in the loop.
+-fn hoistTests(arena: std.mem.Allocator, scratch: std.mem.Allocator, module: *const ir.Module, f: *ir.Function, marks: *Marks) Error!void {
+-    // One loop's tests at a time, in program order, each weighed on the code the ones before
+-    // left: a later loop that the value reaches already unique needs no test of its own.
+-    var rounds: usize = 0;
+-    while (rounds < max_hoisted) : (rounds += 1) {
+-        var cuts: std.ArrayList(Cut) = .empty;
+-        if (!try firstHoistable(scratch, arena, module, f, marks, &cuts)) return;
+-        const e: Editor = .{ .arena = arena, .f = f, .origin = marks.origin };
+-        var done: std.ArrayList(Cut) = .empty;
+-        for (cuts.items) |cut| {
+-            if (isCut(done.items, cut.phi, cut.operand)) continue;
+-            try done.append(arena, cut);
+-            const ensured = try ensureUnique(e, module, cut);
+-            try marks.ensured.put(arena, @backingInt(ensured), {});
+-        }
+-    }
+-}
+-
+-/// How many loops' tests `hoistTests` moves in one function.
+-const max_hoisted = 32;
+-
+-/// The cuts that make the first update (in block order) that tests its count statically
+-/// unique, in `cuts`; false when no update's can be.
+-fn firstHoistable(arena: std.mem.Allocator, results: std.mem.Allocator, module: *const ir.Module, f: *ir.Function, marks: *Marks, cuts: *std.ArrayList(Cut)) Error!bool {
+-    var a = try Analysis.of(arena, results, module, f, marks);
+-    try a.analyze();
+-    var shape: ?facts.Shape = null;
+-    for (f.blocks.items, 0..) |block, b| {
+-        if (!a.present(b)) continue;
+-        for (block.insts.items, 0..) |ref, pos| {
+-            const instruction = f.inst(ref);
+-            if (!isUpdate(instruction.op) or marks.taken.contains(@backingInt(ref))) continue;
+-            if (instruction.op == .list_push and instruction.data == promotion.stack_push) continue;
+-            const list = f.resolve(instruction.a);
+-            if (!a.counted(list) or a.liveAfter(list, @intCast(b), @intCast(pos))) continue;
+-            if (try staticallyUnique(&a, list, ref)) continue;
+-            if (shape == null) shape = try facts.shape(arena, f);
+-            try hoistable(&a, .{ .shape = shape.?, .site = ref, .block = @intCast(b) }, list, cuts);
+-            if (cuts.items.len != 0) return true;
+-        }
+-    }
+-    return false;
+-}
+-
+-/// The update `hoistable` weighs: its instruction and block, and the function's dominators.
+-const Hoisting = struct { shape: facts.Shape, site: ir.Ref, block: u32 };
+-
+-/// Append the loop-entry cuts after which `list`'s web is statically unique at `at.site`:
+-/// those of the outermost loop holding the update whose header joins the web, if any
+-/// loop's do.
+-fn hoistable(a: *const Analysis, at: Hoisting, list: ir.Ref, cuts: *std.ArrayList(Cut)) Error!void {
+-    const f = a.f;
+-    // The web's phis at the headers of loops holding the update.
+-    var headers: std.ArrayList(ir.Ref) = .empty;
+-    var web: std.ArrayList(ir.Ref) = .empty;
+-    try web.append(a.storage.scratch, list);
+-    var next: usize = 0;
+-    while (next < web.items.len and web.items.len <= 64) : (next += 1) {
+-        const current = web.items[next];
+-        const instruction = a.inst(current);
+-        if (instruction.op != .phi) continue;
+-        if (try loopHolds(a.storage.scratch, f, at.shape, a.where[current.index()].block, at.block)) try headers.append(a.storage.scratch, current);
+-        for (f.operands(instruction.data)) |operand| try addUnique(a.storage.scratch, &web, f.resolve(operand));
+-    }
+-    // Outermost first: a header dominates the headers of the loops inside its own.
+-    std.mem.sort(ir.Ref, headers.items, OuterFirst{ .a = a, .shape = at.shape }, OuterFirst.lessThan);
+-    for (headers.items) |phi| {
+-        const home = a.where[phi.index()].block;
+-        var local: std.ArrayList(Cut) = .empty;
+-        var plain = true;
+-        for (f.blocks.items[home].preds.items, 0..) |pred, k| {
+-            if (dominates(at.shape, home, @backingInt(pred))) continue;
+-            // The entering edge is retargeted: one jump, or one arm of a branch.
+-            const insts = f.blocks.items[pred.index()].insts.items;
+-            const term = f.inst(insts[insts.len - 1]);
+-            const targets = ir.unpackTargets(term.data);
+-            plain = plain and (term.op == .jump or (term.op == .branch and targets.then != targets.otherwise));
+-            try local.append(a.storage.scratch, .{ .phi = phi, .operand = k });
+-        }
+-        if (!plain) continue;
+-        if (local.items.len == 0 or !enterable(a, phi, local.items)) continue;
+-        if (!try uniqueWeb(a, list, at.site, local.items)) continue;
+-        try cuts.appendSlice(a.storage.scratch, local.items);
+-        return;
+-    }
+-}
+-
+-/// Whether every value entering through `cuts` can be tested there: an owned block
+-/// whose edge into the header is its last use.
+-fn enterable(a: *const Analysis, phi: ir.Ref, cuts: []const Cut) bool {
+-    const home = a.where[phi.index()].block;
+-    for (cuts) |cut| {
+-        const operand = a.f.resolve(a.f.operands(a.inst(phi).data)[cut.operand]);
+-        if (!a.module.isBlock(a.inst(operand).ty) or !a.counted(operand)) return false;
+-        if (a.where[operand.index()].block == no_block or a.liveInto(operand, home)) return false;
+-        // Taken by the phi on its edge (not consumed twice there).
+-        for (a.uses[operand.index()].items) |use| {
+-            if (use.onEdge() and use.succ == home and use.consume > 1) return false;
+-        }
+-    }
+-    return true;
+-}
+-
+-/// Orders header phis so that an outer loop's comes first.
+-const OuterFirst = struct {
+-    a: *const Analysis,
+-    shape: facts.Shape,
+-
+-    fn lessThan(self: OuterFirst, left: ir.Ref, right: ir.Ref) bool {
+-        const l = self.a.where[left.index()].block;
+-        const r = self.a.where[right.index()].block;
+-        return l != r and dominates(self.shape, l, r);
+-    }
+-};
+-
+-/// Whether block `parent` dominates block `child` (an unreachable block is dominated by none).
+-fn dominates(shape: facts.Shape, parent: u32, child: u32) bool {
+-    var at: ?ir.BlockId = @fromBackingInt(child);
+-    while (at) |block| {
+-        if (block.index() == parent) return true;
+-        if (block.index() == 0) return false;
+-        at = shape.idom[block.index()];
+-    }
+-    return false;
+-}
+-
+-/// Whether block `header` heads a loop that holds block `block`: `block` is the header or
+-/// reaches one of its back edges' sources without passing the header.
+-fn loopHolds(arena: std.mem.Allocator, f: *const ir.Function, shape: facts.Shape, header: u32, block: u32) Error!bool {
+-    if (header == no_block or !dominates(shape, header, block)) return false;
+-    for (f.blocks.items[header].preds.items) |pred_id| {
+-        const pred = @backingInt(pred_id);
+-        if (!dominates(shape, header, pred)) continue;
+-        if (block == header or block == pred or try blockReachable(arena, f, block, pred, header)) return true;
+-    }
+-    return false;
+-}
+-
+-/// Put `if is_unique(v)` on the entry edge of `cut`: the edge carries `v` on when it is
+-/// unique, else a copy of it (`v` released), joined in a phi that replaces `v` as the
+-/// header phi's operand. Returns the join.
+-fn ensureUnique(e: Editor, module: *const ir.Module, cut: Cut) Error!ir.Ref {
+-    const f = e.f;
+-    const phi = f.inst(cut.phi);
+-    const home = e.locate(cut.phi).block;
+-    const header: ir.BlockId = @fromBackingInt(@intCast(home));
+-    const pred = f.blocks.items[home].preds.items[cut.operand];
+-    const value = f.resolve(f.operands(phi.data)[cut.operand]);
+-    const ty = f.inst(value).ty;
+-    const frame = e.frameAt(cut.phi);
+-    const test_block = try e.newBlock();
+-    const copy_block = try e.newBlock();
+-    const join = try e.newBlock();
+-    if (e.origin) |origin| for ([_]ir.BlockId{ test_block, copy_block, join }) |block| try origin.setBlock(e.arena, @intCast(block.index()), frame);
+-    // The predecessor now leaves for the test block instead of the header.
+-    const pred_insts = f.blocks.items[pred.index()].insts.items;
+-    const term = &f.insts.items[pred_insts[pred_insts.len - 1].index()];
+-    if (term.op == .jump) {
+-        term.data = @backingInt(test_block);
+-    } else {
+-        const targets = ir.unpackTargets(term.data);
+-        term.data = ir.packTargets(if (targets.then == header) test_block else targets.then, if (targets.otherwise == header) test_block else targets.otherwise);
+-    }
+-    try f.blocks.items[test_block.index()].preds.append(e.arena, pred);
+-    const unique = try e.append(test_block, .{ .op = .is_unique, .ty = .bool, .a = value, .span = phi.span });
+-    try e.terminate(test_block, .{ .op = .branch, .ty = .void, .a = unique, .data = ir.packTargets(join, copy_block), .span = phi.span }, &.{ join, copy_block });
+-    const marker = try e.append(copy_block, .{ .op = .copy, .ty = ty, .a = value });
+-    const copy = try copyBefore(e, module, marker, value);
+-    _ = try e.append(copy_block, .{ .op = .release, .ty = .void, .a = value, .span = phi.span });
+-    try e.terminate(copy_block, .{ .op = .jump, .ty = .void, .data = @backingInt(join), .span = phi.span }, &.{join});
+-    // The join's predecessors are [test_block, copy_block], in that order.
+-    const ensured = try e.newInst(.{ .op = .phi, .ty = ty, .data = try e.extraOf(&.{ value, copy }), .span = phi.span });
+-    try e.inherit(ensured, cut.phi);
+-    try f.blocks.items[join.index()].insts.append(e.arena, ensured);
+-    _ = try e.append(join, .{ .op = .jump, .ty = .void, .data = @backingInt(header), .span = phi.span });
+-    f.blocks.items[home].preds.items[cut.operand] = join;
+-    // The header phi takes the join on that edge (its operands copied to a slot of its own).
+-    const operands = try e.arena.dupe(ir.Ref, f.operands(phi.data));
+-    operands[cut.operand] = ensured;
+-    f.insts.items[cut.phi.index()].data = try e.extraOf(operands);
+-    return ensured;
+-}
+-
+ /// Phase A: give every in-place update its form, extract the fields `record_set`
+ /// drops, and mark the elements popped lists hand over.
+-fn copyOnWrite(a: *Analysis, options: Options, stats: *Stats) Error!void {
++fn prepareUpdates(a: *Analysis, stats: *Stats) Error!void {
+     const f = a.f;
+-    const Form = enum { in_place, tested, copied };
++    const Form = enum { in_place, copied };
+     const Site = struct { update: ir.Ref, form: Form };
+     // Decide every form on the unchanged IR, then rewrite.
+     var sites: std.ArrayList(Site) = .empty;
+@@ -1343,7 +843,8 @@
+             const list = f.resolve(instruction.a);
+             const form: Form = if (!a.counted(list) or a.liveAfter(list, @intCast(b), @intCast(pos)))
+                 .copied
+-            else if (try staticallyUnique(a, list, ref)) .in_place else .tested;
++            else
++                .in_place;
+             try sites.append(a.storage.scratch, .{ .update = ref, .form = form });
+         }
+     }
+@@ -1361,50 +862,13 @@
+                     try useUpdatedOperand(e, site.update, copy);
+                 }
+             },
+-            .tested => {
+-                stats.tested += 1;
+-                try testUnique(e, a.module, site.update);
++            .in_place => {
++                stats.in_place += 1;
+                 if (detach) f.insts.items[site.update.index()].op = .copy;
+             },
+-            .in_place => {
+-                stats.in_place += 1;
+-                if (options.verify and !a.module.zero_rc) try assertUnique(e, site.update);
+-                if (detach) f.insts.items[site.update.index()].op = .copy;
+-            },
+-        }
+-    }
+-    if (options.verify and !a.module.zero_rc) {
+-        var reads: std.ArrayList(ir.Ref) = .empty;
+-        for (f.blocks.items) |block| for (block.insts.items) |ref| {
+-            if (flags.transferredRead(f.inst(ref))) try reads.append(a.storage.scratch, ref);
+-        };
+-        for (reads.items) |ref| try assertUnique(e, ref);
++        }
+     }
+     try extractDroppedFields(a);
+-}
+-
+-/// Split the block of `update` before it: `if is_unique(a)` the update runs on `a`,
+-/// else on a copy of `a` after `release(a)`; both reach it through a phi.
+-fn testUnique(e: Editor, module: *const ir.Module, update: ir.Ref) Error!void {
+-    const f = e.f;
+-    const instruction = f.inst(update);
+-    const list = instruction.a;
+-    const ty = f.inst(f.resolve(list)).ty;
+-    const at = try e.split(update);
+-    const unique = try e.append(at.head, .{ .op = .is_unique, .ty = .bool, .a = list, .span = instruction.span });
+-    try e.inherit(unique, update);
+-    const copy_block = try e.newBlock();
+-    if (e.origin) |origin| try origin.setBlock(e.arena, @intCast(copy_block.index()), e.frameAt(update));
+-    try e.terminate(at.head, .{ .op = .branch, .ty = .void, .a = unique, .data = ir.packTargets(at.tail, copy_block), .span = instruction.span }, &.{ at.tail, copy_block });
+-    const marker = try e.append(copy_block, .{ .op = .copy, .ty = ty, .a = list, .span = instruction.span });
+-    const copy = try copyBefore(e, module, marker, list);
+-    _ = try e.append(copy_block, .{ .op = .release, .ty = .void, .a = list, .span = instruction.span });
+-    try e.terminate(copy_block, .{ .op = .jump, .ty = .void, .data = @backingInt(at.tail), .span = instruction.span }, &.{at.tail});
+-    // The tail's predecessors are [head, copy_block], in that order.
+-    const phi = try e.newInst(.{ .op = .phi, .ty = ty, .data = try e.extraOf(&.{ list, copy }), .span = instruction.span });
+-    try e.inherit(phi, update);
+-    try f.blocks.items[at.tail.index()].insts.insert(e.arena, 0, phi);
+-    try useUpdatedOperand(e, update, phi);
+ }
+ 
+ /// Copy the block in its own representation before a consuming update.
+@@ -1418,7 +882,7 @@
+     return e.insertBefore(before, .{ .op = .str_from_view, .ty = .str, .a = view, .span = span });
+ }
+ 
+-/// Preserve a dictionary insert's probe provenance when COW changes its operand.
++/// Preserve a dictionary insert's probe provenance when materialization changes its operand.
+ fn useUpdatedOperand(e: Editor, update: ir.Ref, value: ir.Ref) Error!void {
+     const inst = e.f.inst(update);
+     if (inst.op == .dict_insert) {
+@@ -1430,18 +894,6 @@
+         e.f.insts.items[update.index()].b = probe;
+     }
+     e.f.insts.items[update.index()].a = value;
+-}
+-
+-/// Verify builds: trap `R_CORE_FACT` before a form-1 update unless its list's count is 1.
+-fn assertUnique(e: Editor, update: ir.Ref) Error!void {
+-    const instruction = e.f.inst(update);
+-    const at = try e.split(update);
+-    const unique = try e.append(at.head, .{ .op = .is_unique, .ty = .bool, .a = instruction.a, .span = instruction.span });
+-    try e.inherit(unique, update);
+-    const fail = try e.newBlock();
+-    if (e.origin) |origin| try origin.setBlock(e.arena, @intCast(fail.index()), e.frameAt(update));
+-    try e.terminate(at.head, .{ .op = .branch, .ty = .void, .a = unique, .data = ir.packTargets(at.tail, fail), .span = instruction.span }, &.{ at.tail, fail });
+-    _ = try e.append(fail, .{ .op = .@"unreachable", .ty = .void, .data = unique_assert, .span = instruction.span });
+ }
+ 
+ /// Mark the `list_get` that reads the element a `list_pop` drops: it owns that element.
+@@ -2206,7 +1658,7 @@
+ /// The `data` an owned value's releases carry: may be `undef`, unique, or plain.
+ fn releaseKind(a: *Analysis, ref: ir.Ref) Error!u64 {
+     if (a.maybeUndef(ref)) return empty_release;
+-    return if (try staticallyUnique(a, ref, .none)) unique_release else 0;
++    return if (a.module.isBlock(a.inst(ref).ty)) unique_release else 0;
+ }
+ 
+ /// A borrowed value that a consuming use takes is retained first; an immortal one
+--- a/src/core/emit_llvm.zig
++++ b/src/core/emit_llvm.zig
+@@ -7,7 +7,7 @@
+ //! block's exit label), then the blocks with their phis in front.
+ //!
+ //! The runtime ABI (src/core/runtime/core_rt.c): list and string blocks have a
+-//! 32-byte header `{u32 count, u32 kind, i64 len, i64 cap, i64 reserved}` and
++//! 32-byte header `{u32 kind, u32 padding, i64 len, i64 cap, i64 reserved}` and
+ //! their data at offset 32; traps carry pointers to private, unit-local site records.
+ const std = @import("std");
+ const zero_rc = @import("zero_rc.zig");
+@@ -196,16 +196,11 @@
+ const header_load_line = "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  {s} = load i64, ptr {s}, align 8\n";
+ const header_pointer_line = "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n";
+ 
+-/// TBAA access tags and the count's `!range` (docs/design/new-core-s1.md §6, R-2):
+-/// the reference count, the header's length and capacity, and element, field and
+-/// box data are three types no access of another aliases, so LLVM may move or fold
+-/// count updates across data accesses. Fixed node numbers, emitted with the module.
+-const tbaa_count = "!tbaa !3";
++/// TBAA access tags distinguish header fields from payload data. Node numbers
++/// remain stable for element and fact metadata.
+ const tbaa_header = "!tbaa !5";
+ const tbaa_data = "!tbaa !7";
+-/// A count is never 0 while its block is reachable: `[1, 0)`, i.e. 1 through saturated.
+-const count_range = "!range !8";
+-/// The first `!range` node number free for fact intervals (after the element tags and count branch weight).
++/// The first `!range` node number free for fact intervals (after the element tags).
+ const first_range_node = 23;
+ 
+ /// The TBAA tag of one list element scalar by its LLVM storage type (NEW-CORE-F1-TBAA-1):
+@@ -234,16 +229,13 @@
+     return tbaa_data;
+ }
+ 
+-/// The TBAA scaffold and the count range, as numbered above.
++/// The header and payload TBAA scaffold, as numbered above.
+ const tbaa_metadata =
+     \\!1 = !{!"myl.tbaa"}
+-    \\!2 = !{!"myl.count", !1, i64 0}
+-    \\!3 = !{!2, !2, i64 0}
+     \\!4 = !{!"myl.header", !1, i64 0}
+     \\!5 = !{!4, !4, i64 0}
+     \\!6 = !{!"myl.data", !1, i64 0}
+     \\!7 = !{!6, !6, i64 0}
+-    \\!8 = !{i32 1, i32 0}
+     \\!9 = !{!"branch_weights", i32 1, i32 2000}
+     \\!10 = !{!"branch_weights", i32 2000, i32 1}
+     \\!11 = !{!"myl.data.double", !6, i64 0}
+@@ -258,7 +250,6 @@
+     \\!20 = !{!19, !19, i64 0}
+     \\!21 = !{!"myl.data.ptr", !6, i64 0}
+     \\!22 = !{!21, !21, i64 0}
+-    \\!23 = !{!"branch_weights", i32 32, i32 1}
+     \\
+ ;
+ /// `  %x = load i64, ptr %at` of one data word (a union's tag word or payload word).
+@@ -267,8 +258,6 @@
+ const tag_load_line = word_load_line ++ "  {s} = trunc i64 {s} to i8\n";
+ /// Whether a union's tag byte names case `k`.
+ const case_test_line = "  {s} = icmp eq i8 {s}, {d}\n";
+-/// Non-tearing count reads after task publication; unordered preserves loop hoisting.
+-const count_load_line = "  {s} = load atomic i32, ptr {s} unordered, align 8, " ++ tbaa_count ++ ", " ++ count_range ++ "\n";
+ /// The header field loads of a list or string, tagged as header data.
+ const header_tagged_line = "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  {s} = load i64, ptr {s}, align 8, " ++ tbaa_header ++ "\n";
+ 
+@@ -330,8 +319,8 @@
+     } else for (module.functions.items, 0..) |_, index| try renderFunction(&state, &body, @intCast(index));
+     if (selection == null or selection.?.entry) try state.emitEntry(&body);
+     var out: Out = .empty;
++    try out.appendSlice(allocator, "; " ++ @import("guest_abi.zig").identity ++ "\n");
+     try out.appendSlice(allocator, "; generated by mylang-core\n");
+-    if (module.zero_rc) try out.appendSlice(allocator, "; mylang-zero-rc-v2\n");
+     try out.appendSlice(allocator, "source_filename = \"");
+     try escaped(allocator, &out, if (selection) |chosen| chosen.source_path else options.source_path);
+     try out.appendSlice(allocator, "\"\n");
+@@ -348,7 +337,7 @@
+     try out.appendSlice(allocator, call_attributes);
+     if (state.local.zeros != 0) try out.print(allocator, "@myl.zeros = private constant [{d} x i8] zeroinitializer, align 8\n", .{state.local.zeros});
+     try state.debug.finish(allocator, &out);
+-    if (module.zero_rc and !zero_rc.emittedClean(out.items)) return error.UnsupportedInstruction;
++    if (!zero_rc.emittedClean(out.items)) return error.UnsupportedInstruction;
+     if (selection) |chosen| return chosen.constants.finish(allocator, out.items);
+     return out.toOwnedSlice(allocator);
+ }
+@@ -494,7 +483,7 @@
+         const index = self.layouts.types.items.len;
+         try self.layouts.types.append(self.allocator, ty);
+         const name = try std.fmt.allocPrint(self.allocator, "@myl.layout.{d}", .{index});
+-        try emit_release.emit(self.allocator, &self.layouts.text, name, @max(1, self.module.size(ty)), .{ .refs = parts.refs.items, .guards = parts.guards.items, .zero_rc = self.module.zero_rc });
++        try emit_release.emit(self.allocator, &self.layouts.text, name, @max(1, self.module.size(ty)), .{ .refs = parts.refs.items, .guards = parts.guards.items });
+         return name;
+     }
+ 
+@@ -614,8 +603,6 @@
+             \\declare void @myl_core_assert_fail(ptr) noreturn nounwind cold
+             \\declare void @llvm.memcpy.p0.p0.i64(ptr noalias nocapture writeonly, ptr noalias nocapture readonly, i64, i1 immarg)
+             \\declare void @llvm.memmove.p0.p0.i64(ptr nocapture writeonly, ptr nocapture readonly, i64, i1 immarg)
+-            \\declare void @myl_core_release_child_pending(ptr, ptr) nounwind
+-            \\declare void @myl_core_release(ptr) nounwind
+             \\declare void @myl_core_main_error_i64(i64) nounwind cold
+             \\declare void @myl_core_main_error_u64(i64) nounwind cold
+             \\declare void @myl_core_main_error_bool(i1 zeroext) nounwind cold
+@@ -624,16 +611,14 @@
+         );
+         if (self.options.counters) try out.appendSlice(self.allocator, emit_count.declarations);
+         try out.appendSlice(self.allocator, task_bridge);
+-        if (self.module.zero_rc) try out.appendSlice(self.allocator, "declare void @myl_core_drop_owned(ptr) nounwind\ndeclare void @myl_core_box_drop_shell(ptr) nounwind\n");
++        try out.appendSlice(self.allocator, "declare void @myl_core_drop_owned(ptr) nounwind\ndeclare void @myl_core_box_drop_shell(ptr) nounwind\n");
+         const prelude = if (self.options.counters) emit_count.fast_paths else runtime_fast_paths;
+-        const paths = if (self.module.zero_rc) try zero_rc.fastPaths(self.allocator, prelude) else prelude;
+-        try fastPaths(self.allocator, out, paths, body, self.layouts.text.items);
++        try fastPaths(self.allocator, out, prelude, body, self.layouts.text.items);
+         try out.appendSlice(self.allocator, self.externs.items);
+         var number: Out = .empty;
+         try emit_number.prelude(self.allocator, &number);
+         try fastPaths(self.allocator, out, number.items, body, self.layouts.text.items);
+         try emit_bytes.prelude(self.allocator, out);
+-        if (self.module.zero_rc) zero_rc.stripRcDeclarations(out);
+     }
+ 
+     fn emitSites(self: *ModuleState, out: *Out) !void {
+@@ -653,16 +638,16 @@
+         }
+     }
+ 
+-    /// String constants are immortal blocks: the count is saturated (D4), so no release frees them.
++    /// String constants are immortal owned-ABI blocks; direct destruction skips them.
+     fn emitStrings(self: *ModuleState, out: *Out) !void {
+         for (self.local.strings.items, 0..) |literal_info, i| {
+             const bytes = self.module.strings.items[literal_info.original];
+             const block_type = try std.fmt.allocPrint(self.allocator, "{{ i32, i32, i64, i64, i64, [{d} x i8] }}", .{bytes.len + 1});
+             try out.print(self.allocator, "@myl.str.{d} = private unnamed_addr constant {s} ", .{ i, block_type });
+             const cached = text_builder.metadata(bytes);
+-            const kind = (if (literal_info.raw) (cached.kind & ~@as(u32, 255)) | 3 else cached.kind) | @as(u32, if (self.module.zero_rc) 1 << 23 else 0);
+-            const first: i64 = if (self.module.zero_rc) kind else -1;
+-            const second: u32 = if (self.module.zero_rc) 0 else kind;
++            const kind = (if (literal_info.raw) (cached.kind & ~@as(u32, 255)) | 3 else cached.kind) | @as(u32, 1 << 23);
++            const first: i64 = kind;
++            const second: u32 = 0;
+             try out.print(self.allocator, "{{ i32 {d}, i32 {d}, i64 {d}, i64 {d}, i64 {d}, [{d} x i8] c\"", .{ first, second, bytes.len, bytes.len, cached.meta, bytes.len + 1 });
+             try escaped(self.allocator, out, bytes);
+             try out.appendSlice(self.allocator, "\\00\" }, align 32\n");
+@@ -706,7 +691,7 @@
+                 owns_args = true;
+             } else return error.UnsupportedEntry;
+         }
+-        if (owns_args) try cleanup.appendSlice(self.allocator, if (self.module.zero_rc) "  call void @myl_core_drop_owned(ptr %args)\n" else "  call void @myl_core_release(ptr %args)\n");
++        if (owns_args) try cleanup.appendSlice(self.allocator, "  call void @myl_core_drop_owned(ptr %args)\n");
+         const release_args = cleanup.items;
+         const ret = entry.signature.ret;
+         const callee = try symbol(self.allocator, entry.name);
+@@ -752,7 +737,7 @@
+         try body.appendSlice(self.allocator, "failed.main:\n");
+         try helper.unionPayload(&body, .{ .result = "%error", .union_type = ret, .value = "%r", .case = shape.error_tag });
+         if (error_type == .str) {
+-            const destroy = if (self.module.zero_rc) "myl_core_drop_owned" else "myl_core_release";
++            const destroy = "myl_core_drop_owned";
+             try body.print(self.allocator, "  call void @myl_core_main_error_str(ptr %error)\n  call void @{s}(ptr %error)\n{s}  %e = call i32 @myl_core_exit(i64 1)\n", .{ destroy, release_args });
+         } else if (error_type == .bool) {
+             try body.print(self.allocator, "  call void @myl_core_main_error_bool(i1 zeroext %error)\n{s}  %e = call i32 @myl_core_exit(i64 1)\n", .{release_args});
+@@ -966,9 +951,6 @@
+     return bits;
+ }
+ 
+-/// Which count update `counted` emits.
+-const Counting = enum { retain, release };
+-
+ /// One managed part of a value a store replaces, read before the store and released after
+ /// it; `guard` is the union-case condition under which it is live, or null.
+ const Held = struct { ty: ir.Type, text: []const u8, guard: ?[]const u8 = null };
+@@ -1051,7 +1033,7 @@
+         try layoutParts(self.a(), self.state.module, shape.key, 0, 0, &parts);
+         try layoutParts(self.a(), self.state.module, shape.value, value_offset, 0, &parts);
+         const layout_name = try std.fmt.allocPrint(self.a(), "{s}.layout", .{name});
+-        try emit_release.emit(self.a(), &self.state.layouts.text, layout_name, stride, .{ .refs = parts.refs.items, .guards = parts.guards.items, .split = value_offset, .zero_rc = self.module().zero_rc });
++        try emit_release.emit(self.a(), &self.state.layouts.text, layout_name, stride, .{ .refs = parts.refs.items, .guards = parts.guards.items });
+         const structural = shape.key.integer() == null and shape.key != .bool and shape.key != .str and shape.key != .bytes;
+         const hash = if (structural) try std.fmt.allocPrint(self.a(), "{s}.key.hash", .{name}) else "null";
+         const same = if (structural) try std.fmt.allocPrint(self.a(), "{s}.key.same", .{name}) else "null";
+@@ -1690,16 +1672,16 @@
+         }
+     }
+ 
+-    /// `retain` or `release` the blocks a record or union in memory references: each managed field,
+-    /// or the payload of each managed case under its tag, loaded out of memory and counted as a value
+-    /// (a field or payload that is itself in memory is counted where it lies).
+-    fn countedMemory(self: *FunctionEmitter, out: *Out, mode: Counting, value_type: ir.Type, ptr: []const u8) Error!void {
++    /// Destroy each owned block referenced by a record or union in memory: each managed field,
++    /// or the payload of each managed case under its tag, loaded out of memory and destroyed as a value
++    /// (a field or payload that is itself in memory is destroyed where it lies).
++    fn dropMemory(self: *FunctionEmitter, out: *Out, value_type: ir.Type, ptr: []const u8) Error!void {
+         const m = self.state.module;
+         if (!m.managed(value_type)) return;
+         switch (m.compound(value_type)) {
+             .record => |fields| for (fields, 0..) |field, i| {
+                 if (!m.managed(field)) continue;
+-                try self.countedAt(out, mode, field, try self.offsetPointer(out, ptr, m.fieldOffset(value_type, i)));
++                try self.dropAt(out, field, try self.offsetPointer(out, ptr, m.fieldOffset(value_type, i)));
+             },
+             .@"union" => |cases| {
+                 const word = try self.fresh("%cw");
+@@ -1710,31 +1692,31 @@
+                     const here = try self.fresh("%cc");
+                     try out.print(self.a(), "  {s} = icmp eq i8 {s}, {d}\n", .{ here, tag, k });
+                     const join = try self.enterIf(out, here);
+-                    try self.countedAt(out, mode, case, try self.offsetPointer(out, ptr, 8));
++                    try self.dropAt(out, case, try self.offsetPointer(out, ptr, 8));
+                     try self.leaveIf(out, join);
+                 }
+             },
+             .array => |array| for (0..array.n) |i| {
+-                try self.countedAt(out, mode, array.elem, try self.offsetPointer(out, ptr, @as(u32, @intCast(i)) * m.size(array.elem)));
++                try self.dropAt(out, array.elem, try self.offsetPointer(out, ptr, @as(u32, @intCast(i)) * m.size(array.elem)));
+             },
+             .list, .box, .dict, .@"fn" => unreachable,
+         }
+     }
+ 
+     /// Count the part of type `part_type` stored at `ptr` where it is: a part over four words
+-    /// field by field through `countedMemory` (never copied out first, NEW-CORE-CE-LISTS-4,
++    /// field by field through `dropMemory` (never copied out first, NEW-CORE-CE-LISTS-4,
+     /// while `emit_homes.steps.views` is on, the default), anything else loaded as a value.
+-    fn countedAt(self: *FunctionEmitter, out: *Out, mode: Counting, part_type: ir.Type, ptr: []const u8) Error!void {
+-        if (emit_homes.steps.views and self.state.module.passedInMemory(part_type)) return self.countedMemory(out, mode, part_type, ptr);
++    fn dropAt(self: *FunctionEmitter, out: *Out, part_type: ir.Type, ptr: []const u8) Error!void {
++        if (emit_homes.steps.views and self.state.module.passedInMemory(part_type)) return self.dropMemory(out, part_type, ptr);
+         const loaded = try self.fresh("%cm");
+         try self.loadValue(out, part_type, ptr, loaded);
+-        try self.countedValue(out, mode, part_type, loaded);
++        try self.dropValue(out, part_type, loaded);
+     }
+ 
+     /// Count a value held in a register or, over four words, a pointer to its slot.
+-    fn countedValue(self: *FunctionEmitter, out: *Out, mode: Counting, value_type: ir.Type, text: []const u8) Error!void {
+-        if (self.state.module.passedInMemory(value_type)) return self.countedMemory(out, mode, value_type, text);
+-        return self.counted(out, mode, value_type, text);
++    fn dropValue(self: *FunctionEmitter, out: *Out, value_type: ir.Type, text: []const u8) Error!void {
++        if (self.state.module.passedInMemory(value_type)) return self.dropMemory(out, value_type, text);
++        return self.drop(out, value_type, text);
+     }
+ 
+     /// The check an instruction gets emitted with: verify mode emits proven checks as exact ones.
+@@ -2156,17 +2138,16 @@
+             },
+             .box_get => try self.loadValue(out, inst.ty, try self.offsetPointer(out, try self.value(inst.a), data_offset), name),
+             .box_take => try self.boxTake(out, name, inst.ty, try self.value(inst.a)),
+-            .retain, .release => {
+-                const mode: Counting = if (inst.op == .retain) .retain else .release;
++            .retain, .is_unique => return error.UnsupportedInstruction,
++            .release => {
+                 self.may_be_empty = inst.op == .release and inst.data == empty_release;
+                 defer self.may_be_empty = false;
+                 if (inst.op == .release and inst.data == unique_release) {
+                     try self.freeUnique(out, inst);
+                 } else if (self.state.module.passedInMemory(self.typeOf(inst.a))) {
+-                    try self.countedMemory(out, mode, self.typeOf(inst.a), try self.value(inst.a));
+-                } else try self.counted(out, mode, self.typeOf(inst.a), try self.value(inst.a));
++                    try self.dropMemory(out, self.typeOf(inst.a), try self.value(inst.a));
++                } else try self.drop(out, self.typeOf(inst.a), try self.value(inst.a));
+             },
+-            .is_unique => try self.isUnique(out, name, inst),
+             .err_trace => try self.errTrace(out, inst),
+             .call => try self.call(out, name, inst),
+             .print => try self.print(out, inst),
+@@ -2180,17 +2161,6 @@
+             .ret => try self.returnFrom(out, inst),
+             .@"unreachable" => try self.trapTerminator(out, inst),
+         }
+-    }
+-
+-    /// `is_unique`: the block's count is 1. A counting build counts the test and its unique outcomes.
+-    fn isUnique(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
+-        const count = try self.fresh("%rc");
+-        try out.print(self.a(), count_load_line ++ "  {s} = icmp eq i32 {s}, 1\n", .{ count, try self.value(inst.a), name, count });
+-        const record = try self.countSite(out, .unique_test, "") orelse return;
+-        const unique = try self.fresh("%cnt");
+-        try out.print(self.a(), "  {s} = zext i1 {s} to i64\n", .{ unique, name });
+-        const step: emit_count.Increment = .{ .record = record, .offset = emit_count.site_extra, .amount = unique, .loaded = try self.fresh("%cnt"), .sum = try self.fresh("%cnt") };
+-        try emit_count.increment(self.a(), out, step);
+     }
+ 
+     /// `ret`: a value over four words through `sret` (where it may already have been built), and
+@@ -3076,7 +3046,6 @@
+     /// Large payloads get their own home: none may keep pointing into that box.
+     fn unionTake(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!void {
+         const m = self.state.module;
+-        if (!m.zero_rc) return error.UnsupportedInstruction;
+         const union_type = self.typeOf(inst.a);
+         const stored = m.compound(union_type).@"union"[@intCast(inst.data)];
+         const boxed = m.kind(stored) == .box;
+@@ -3088,7 +3057,6 @@
+ 
+     /// Load into independent storage before returning only the empty box shell.
+     fn boxTake(self: *FunctionEmitter, out: *Out, name: []const u8, inner: ir.Type, box: []const u8) Error!void {
+-        if (!self.state.module.zero_rc) return error.UnsupportedInstruction;
+         try self.loadValue(out, inner, try self.offsetPointer(out, box, data_offset), name);
+         _ = try self.countSite(out, .release_unique, "");
+         try out.print(self.a(), "  call void @myl_core_box_drop_shell(ptr {s})\n", .{box});
+@@ -3224,7 +3192,7 @@
+     fn releaseHeld(self: *FunctionEmitter, out: *Out, held: []const Held) Error!void {
+         for (held) |part| {
+             const join = if (part.guard) |live| try self.enterIf(out, live) else null;
+-            try self.countedValue(out, .release, part.ty, part.text);
++            try self.dropValue(out, part.ty, part.text);
+             if (join) |label| try self.leaveIf(out, label);
+         }
+     }
+@@ -3277,20 +3245,20 @@
+         try out.print(self.a(), word_load_line ++ "  {s} = trunc i64 {s} to i32\n", .{ loaded, at, name, loaded });
+     }
+ 
+-    /// `retain` or `release` every block a value of `ty` references: a block pointer
++    /// Destroy every owned block a value of `ty` references: a block pointer
+     /// directly, a niche union when not null, a union's payload under its tag, and a
+     /// record's managed fields.
+-    fn counted(self: *FunctionEmitter, out: *Out, mode: Counting, value_type: ir.Type, text: []const u8) Error!void {
++    fn drop(self: *FunctionEmitter, out: *Out, value_type: ir.Type, text: []const u8) Error!void {
+         const m = self.state.module;
+         if (!m.managed(value_type)) return;
+-        if (m.isBlock(value_type)) return self.countBlock(out, mode, text, value_type);
++        if (m.isBlock(value_type)) return self.dropBlock(out, text, value_type);
+         const tyname = try self.ty(value_type);
+         switch (m.compound(value_type)) {
+             .record => |fields| for (fields, 0..) |field, i| {
+                 if (!m.managed(field)) continue;
+                 const field_value = try self.fresh("%cf");
+                 try out.print(self.a(), extract_value_line, .{ field_value, tyname, text, i });
+-                try self.counted(out, mode, field, field_value);
++                try self.drop(out, field, field_value);
+             },
+             .@"union" => |cases| {
+                 const layout = m.unionLayout(value_type);
+@@ -3298,7 +3266,7 @@
+                     const present = try self.fresh("%cn");
+                     try out.print(self.a(), "  {s} = icmp ne ptr {s}, null\n", .{ present, text });
+                     const join = try self.enterIf(out, present);
+-                    try self.countBlock(out, mode, text, layout.payload);
++                    try self.dropBlock(out, text, layout.payload);
+                     return self.leaveIf(out, join);
+                 }
+                 const tag = try self.fresh("%ct");
+@@ -3310,14 +3278,14 @@
+                     const join = try self.enterIf(out, here);
+                     const payload = try self.fresh("%cp");
+                     try self.unionPayload(out, .{ .result = payload, .union_type = value_type, .value = text, .case = @intCast(k) });
+-                    try self.counted(out, mode, case, payload);
++                    try self.drop(out, case, payload);
+                     try self.leaveIf(out, join);
+                 }
+             },
+             .array => |array| for (0..array.n) |i| {
+                 const element = try self.fresh("%ca");
+                 try out.print(self.a(), extract_value_line, .{ element, tyname, text, i });
+-                try self.counted(out, mode, array.elem, element);
++                try self.drop(out, array.elem, element);
+             },
+             .list, .box, .dict, .@"fn" => unreachable,
+         }
+@@ -3408,7 +3376,6 @@
+         const frame = try self.fresh("%stacklist");
+         try self.state.allocas.print(self.a(), "  {s} = alloca [{d} x i8], align 32\n", .{ frame, bytes });
+         try out.print(self.a(), identity_line, .{ name, frame });
+-        if (!self.state.module.zero_rc) try out.print(self.a(), "  store i32 1, ptr {s}, align 8, " ++ tbaa_count ++ "\n", .{name});
+         const fields = [_]struct { offset: u32, ty: []const u8, value: []const u8 }{
+             .{ .offset = self.state.module.kindOffset(), .ty = "i32", .value = stack_kind },
+             .{ .offset = len_offset, .ty = "i64", .value = "0" },
+@@ -3436,66 +3403,20 @@
+         return "zeroinitializer";
+     }
+ 
+-    /// The release of a block `own.zig` proved unique: free it without the count test
+-    /// (verify builds first assert the count is 1 and trap `R_CORE_FACT`).
++    /// Destroy a block whose lifetime ends at this instruction.
+     fn freeUnique(self: *FunctionEmitter, out: *Out, inst: ir.Inst) !void {
+         const block = try self.value(inst.a);
+         return self.freeUniqueBlock(out, block, self.typeOf(inst.a), inst.span);
+     }
+ 
+-    fn freeUniqueBlock(self: *FunctionEmitter, out: *Out, block: []const u8, block_type: ir.Type, span: u32) !void {
++    /// Direct destruction; the historical telemetry label remains schema-compatible.
++    fn freeUniqueBlock(self: *FunctionEmitter, out: *Out, block: []const u8, _: ir.Type, _: u32) !void {
+         _ = try self.countSite(out, .release_unique, "");
+-        if (self.state.module.zero_rc) return out.print(self.a(), "  call void @myl_core_drop_owned(ptr {s})\n", .{block});
+-        if (self.state.options.verify) {
+-            const count = try self.fresh("%uc");
+-            const shared = try self.fresh("%us");
+-            try out.print(self.a(), count_load_line ++ "  {s} = icmp ne i32 {s}, 1\n", .{ count, block, shared, count });
+-            const location = self.state.options.locator.locate(self.state.options.locator.context, span);
+-            const index = try self.state.site(.{ .kind = .fact, .location = location, .width = 32, .operation = "count == 1 before freeing a unique block", .function = self.sourceFunction().name });
+-            try self.trapIf(out, shared, index, "0", "1");
+-        }
+-        const m = self.state.module;
+-        if (m.single_owner and m.kind(block_type) == .list) {
+-            const element = m.compound(block_type).list;
+-            if (@import("single_owner.zig").containsList(m, element)) try self.freeUniqueElements(out, block, element);
+-        }
+-        try out.print(self.a(), "  call void @myl_core_free(ptr {s})\n", .{block});
+-    }
+-
+-    /// Emit child cleanup from record/array element types. Exclusive list families
+-    /// free directly; snapshot families and immutable leaves use normal releases.
+-    /// Recursive owning types are refused by the checker.
+-    fn freeUniqueElements(self: *FunctionEmitter, out: *Out, block: []const u8, element: ir.Type) Error!void {
+-        const length = try self.fresh("%drop.len");
+-        const at = try self.fresh("%drop.len.at");
+-        try out.print(self.a(), header_tagged_line, .{ at, block, len_offset, length, at });
+-        const loop = try self.fresh("drop.loop");
+-        const body = try self.fresh("drop.body");
+-        const step = try self.fresh("drop.step");
+-        const done = try self.fresh("drop.done");
+-        const index = try self.fresh("%drop.index");
+-        const next = try self.fresh("%drop.next");
+-        const more = try self.fresh("%drop.more");
+-        try out.print(self.a(), "  br label %{s}\n{s}:\n  {s} = phi i64 [ 0, %{s} ], [ {s}, %{s} ]\n", .{ loop, loop, index, self.label, next, step });
+-        try out.print(self.a(), "  {s} = icmp ult i64 {s}, {s}\n  br i1 {s}, label %{s}, label %{s}\n{s}:\n", .{ more, index, length, more, body, done, body });
+-        self.label = body;
+-        const saved_tags = self.tagElements(false);
+-        defer _ = self.tagElements(saved_tags);
+-        const saved_empty = self.may_be_empty;
+-        self.may_be_empty = true;
+-        defer self.may_be_empty = saved_empty;
+-        try self.countedAt(out, .release, element, try self.elementSlot(out, block, index, element));
+-        try out.print(self.a(), "  br label %{s}\n{s}:\n  {s} = add nuw i64 {s}, 1\n  br label %{s}\n{s}:\n", .{ step, step, next, index, loop, done });
+-        self.label = done;
+-        // Children are already destroyed. Detach the descriptor so the ordinary
+-        // allocator free cannot visit them again (including its pointer-list fast path).
+-        const layout = try self.offsetPointer(out, block, 24);
+-        try out.print(self.a(), "  store ptr null, ptr {s}, align 8, " ++ tbaa_header ++ "\n", .{layout});
++        try out.print(self.a(), "  call void @myl_core_drop_owned(ptr {s})\n", .{block});
+     }
+ 
+     /// Record in a fresh list's or box's header (`reserved`, offset 24) where the blocks
+-    /// in its elements are, when `element` holds any: the runtime's free releases them
+-    /// and its copy retains them.
++    /// in its elements are, so direct destruction visits each owned child once.
+     fn attachLayout(self: *FunctionEmitter, out: *Out, block: []const u8, element: ir.Type) !void {
+         if (!self.state.module.managed(element)) return;
+         const at = try self.fresh("%lay");
+@@ -3504,7 +3425,7 @@
+ 
+     /// Branch on `condition` into a fresh block; returns the join label `leaveIf` ends it with.
+     fn enterIf(self: *FunctionEmitter, out: *Out, condition: []const u8) ![]const u8 {
+-        const then = try self.fresh("rc.then");
++        const then = try self.fresh("drop.then");
+         const join = try self.fresh(self.label);
+         try out.print(self.a(), "  br i1 {s}, label %{s}, label %{s}\n{s}:\n", .{ condition, then, join, then });
+         self.label = then;
+@@ -3516,9 +3437,8 @@
+         self.label = join;
+     }
+ 
+-    /// Plain counts update inline after one threshold test. Shared counts and plain
+-    /// saturation use one cold preserve-most call; immortal constants stay read-only.
+-    fn countBlock(self: *FunctionEmitter, out: *Out, mode: Counting, block: []const u8, block_type: ir.Type) !void {
++    /// Destroy an owned block, preserving the nullable-undef guard.
++    fn dropBlock(self: *FunctionEmitter, out: *Out, block: []const u8, block_type: ir.Type) !void {
+         if (self.may_be_empty) {
+             // An `undef` value is all null pointers (`undefValue`): nothing to count.
+             const present = try self.fresh("%re");
+@@ -3526,38 +3446,10 @@
+             const join = try self.enterIf(out, present);
+             self.may_be_empty = false;
+             defer self.may_be_empty = true;
+-            try self.countBlock(out, mode, block, block_type);
++            try self.dropBlock(out, block, block_type);
+             return self.leaveIf(out, join);
+         }
+-        if (self.state.module.zero_rc and mode == .retain) return error.UnsupportedInstruction;
+-        if (mode == .release and (self.state.module.zero_rc or self.state.module.exclusiveList(block_type))) {
+-            return self.freeUniqueBlock(out, block, block_type, if (self.current == .none) self.function.span else self.function.inst(self.current).span);
+-        }
+-        if (self.count_fn != null) {
+-            const bytes = if (mode == .retain) try self.blockBytes(out, block, block_type) else "";
+-            _ = try self.countSite(out, if (mode == .retain) .retain else .release, bytes);
+-        }
+-        const count = try self.fresh("%rc");
+-        const plain = try self.fresh("%rp");
+-        const update = try self.fresh(if (mode == .retain) "rc.inc" else "rc.dec");
+-        const slow = try self.fresh("rc.slow");
+-        const done = try self.fresh(self.label);
+-        const next = try self.fresh("%rn");
+-        try out.print(self.a(), count_load_line, .{ count, block });
+-        try out.print(self.a(), "  {s} = icmp ult i32 {s}, {d}\n  br i1 {s}, label %{s}, label %{s}, !prof !23\n{s}:\n", .{ plain, count, @as(u32, if (mode == .retain) 0x7ffffffe else 0x80000000), plain, update, slow, update });
+-        if (mode == .retain) {
+-            try out.print(self.a(), "  {s} = add nuw i32 {s}, 1\n  store i32 {s}, ptr {s}, align 8, " ++ tbaa_count ++ "\n  br label %{s}\n", .{ next, count, next, block, done });
+-        } else {
+-            const last = try self.fresh("%rz");
+-            const keep = try self.fresh("rc.keep");
+-            const free = try self.fresh("rc.free");
+-            try out.print(self.a(), "  {s} = sub nuw i32 {s}, 1\n  {s} = icmp eq i32 {s}, 0\n  br i1 {s}, label %{s}, label %{s}\n", .{ next, count, last, next, last, free, keep });
+-            try out.print(self.a(), "{s}:\n  store i32 {s}, ptr {s}, align 8, " ++ tbaa_count ++ "\n  br label %{s}\n", .{ keep, next, block, done });
+-            try out.print(self.a(), "{s}:\n  call void @myl_core_free(ptr {s})\n  br label %{s}\n", .{ free, block, done });
+-        }
+-        try out.print(self.a(), "{s}:\n", .{slow});
+-        try out.print(self.a(), "  call preserve_mostcc void @myl_core_{s}_slow(ptr {s})\n  br label %{s}\n{s}:\n", .{ @tagName(mode), block, done, done });
+-        self.label = done;
++        return self.freeUniqueBlock(out, block, block_type, if (self.current == .none) self.function.span else self.function.inst(self.current).span);
+     }
+ 
+     /// In a counting build, a new counter site of `kind` at the instruction being
+@@ -3620,26 +3512,6 @@
+         }
+         const aggregate = element.isCompound() and !m.isBlock(element) and !m.passedInMemory(element) and m.kind(element) != .@"fn";
+         if (aggregate) _ = try self.countSite(out, if (inst.op == .list_get) .element_load else .element_store, bytes);
+-    }
+-
+-    /// A counting build's measure of what a retain shares: the data bytes of `block`
+-    /// (elements times their stride, text and byte lengths, entries times key and value
+-    /// sizes, a box's value), the bytes a copy would move instead.
+-    fn blockBytes(self: *FunctionEmitter, out: *Out, block: []const u8, block_type: ir.Type) Error![]const u8 {
+-        const m = self.state.module;
+-        const textual = block_type == .str or block_type == .bytes or block_type == .byte_buffer;
+-        const kind = if (textual) null else m.kind(block_type);
+-        const per: u32 = if (textual) 1 else if (kind == null) return "0" else switch (kind.?) {
+-            .list => self.state.stride(m.compound(block_type).list),
+-            .dict => m.size(m.compound(block_type).dict.key) + m.size(m.compound(block_type).dict.value),
+-            .box => return std.fmt.allocPrint(self.a(), "{d}", .{m.size(m.compound(block_type).box)}),
+-            else => return "0",
+-        };
+-        const at = try self.fresh("%cnt");
+-        const len = try self.fresh("%cnt");
+-        const bytes = try self.fresh("%cnt");
+-        try out.print(self.a(), header_load_line ++ "  {s} = mul i64 {s}, {d}\n", .{ at, block, len_offset, len, at, bytes, len, per });
+-        return bytes;
+     }
+ 
+     /// The value an `%vN` name stands for, or null for any other name.
+@@ -3847,16 +3719,6 @@
+             try emit_cap.beforeCall(@TypeOf(self), self, out, inst);
+         }
+         if (try self.specialRuntimeCall(out, name, inst)) return;
+-        const borrowed_bytes = external and signature.ret == .bytes and signature.owned == 0;
+-        const text_parameter = signature.params.len == 1 and signature.params[0] == .str;
+-        // Zero-RC encode returns fresh owned bytes; only the RC ABI aliases text.
+-        const encode_alias = borrowed_bytes and text_parameter and !m.zero_rc;
+-        if (inst.op == .call and encode_alias and
+-            std.mem.eql(u8, m.functions.items[inst.a.index()].name, flags.text_encode_symbol))
+-        {
+-            const source = self.function.operands(inst.data)[0];
+-            return out.print(self.a(), same_pointer, .{ name, try self.value(source) });
+-        }
+         const ret = signature.ret;
+         const abi: InOutAbi = if (external) .{} else inOutAbi(m, signature);
+         const sret = !external and returnsThroughSret(m, signature, abi);
+@@ -4119,11 +3981,8 @@
+ /// may move across the free.
+ const runtime_fast_paths =
+     \\@myl_core_free_lists = external thread_local(localexec) global [33 x ptr]
+-    \\declare preserve_mostcc void @myl_core_retain_slow(ptr) nounwind cold
+-    \\declare preserve_mostcc void @myl_core_release_slow(ptr) nounwind cold
+     \\declare ptr @myl_core_list_new_slow(i64, i64) nounwind
+     \\declare ptr @myl_core_list_grow(ptr, i64) nounwind
+-    \\declare void @myl_core_free_block(ptr) nounwind cold
+     \\define internal ptr @myl_core_list_new(i64 %cap, i64 %size) alwaysinline nounwind {
+     \\entry:
+     \\  %many = icmp ugt i64 %cap, 1024
+@@ -4141,10 +4000,9 @@
+     \\pop:
+     \\  %next = load ptr, ptr %head, align 8
+     \\  store ptr %next, ptr %slot, align 8
+-    \\  store i32 1, ptr %head, align 8, !tbaa !3
+     \\  %class32 = trunc i64 %class to i32
+     \\  %kind = shl i32 %class32, 24
+-    \\  %kind_at = getelementptr inbounds i8, ptr %head, i64 4
++    \\  %kind_at = getelementptr inbounds i8, ptr %head, i64 0
+     \\  store i32 %kind, ptr %kind_at, align 4, !tbaa !5
+     \\  %len_at = getelementptr inbounds i8, ptr %head, i64 8
+     \\  store i64 0, ptr %len_at, align 8, !tbaa !5
+@@ -4184,29 +4042,6 @@
+     \\  %room = call ptr @myl_core_list_reserve(ptr %list, i64 %size)
+     \\  ret ptr %room
+     \\}
+-    \\define internal void @myl_core_free(ptr %block) alwaysinline nounwind {
+-    \\entry:
+-    \\  %kind_at = getelementptr inbounds i8, ptr %block, i64 4
+-    \\  %kind = load i32, ptr %kind_at, align 4, !tbaa !5
+-    \\  %class32 = lshr i32 %kind, 24
+-    \\  %reserved_at = getelementptr inbounds i8, ptr %block, i64 24
+-    \\  %reserved = load i64, ptr %reserved_at, align 8, !tbaa !5
+-    \\  %small = icmp ne i32 %class32, 0
+-    \\  %plain = icmp eq i64 %reserved, 0
+-    \\  %fast = and i1 %small, %plain
+-    \\  br i1 %fast, label %push, label %call, !prof !10
+-    \\push:
+-    \\  call void asm sideeffect "", "~{memory}"()
+-    \\  %class = zext i32 %class32 to i64
+-    \\  %slot = getelementptr inbounds [33 x ptr], ptr @myl_core_free_lists, i64 0, i64 %class
+-    \\  %head = load ptr, ptr %slot, align 8
+-    \\  store ptr %head, ptr %block, align 8
+-    \\  store ptr %block, ptr %slot, align 8
+-    \\  ret void
+-    \\call:
+-    \\  call void @myl_core_free_block(ptr %block)
+-    \\  ret void
+-    \\}
+     \\
+ ;
+ 
+--- a/src/core/single_owner.zig
++++ b/src/core/single_owner.zig
+@@ -18,7 +18,6 @@
+ const overlap_error = "E_SINGLE_OWNER_OVERLAP";
+ const resource_escape = "E_ZERO_RC_RESOURCE_ESCAPE";
+ const resource_origin = "E_ZERO_RC_RESOURCE_ORIGIN";
+-const resource_mode = "generic resource ownership requires checked zero-RC mode";
+ 
+ /// Match may consume a freshly produced union, never a local or a projection.
+ /// Shared by checking and lowering so the source rule does not depend on SSA use counts.
+@@ -55,15 +54,10 @@
+ /// Allocation failure or a source contract violation.
+ pub const Error = error{ OutOfMemory, Rejected };
+ 
+-/// Check and render a source refusal; false means the command must not continue.
++/// Validate the mandatory checked ownership contract.
+ pub fn validate(a: std.mem.Allocator, program: typed.Program, src: language.source.Source, format: language.diagnostic_output.Format, report: *std.ArrayList(u8)) error{OutOfMemory}!bool {
+-    return validateMode(a, program, src, format, report, false);
+-}
+-
+-/// Validate the selected experimental ownership contract.
+-pub fn validateMode(a: std.mem.Allocator, program: typed.Program, src: language.source.Source, format: language.diagnostic_output.Format, report: *std.ArrayList(u8), zero_rc: bool) error{OutOfMemory}!bool {
+     var failure: Failure = .{};
+-    checkMode(a, program, &failure, zero_rc) catch |err| switch (err) {
++    check(a, program, &failure) catch |err| switch (err) {
+         error.OutOfMemory => return error.OutOfMemory,
+         error.Rejected => {
+             try render(a, src, failure, format, report);
+@@ -73,28 +67,24 @@
+     return true;
+ }
+ 
+-/// Validate every checked function, including bodies reached through callbacks.
++/// Check moves and borrows for every admitted owning leaf.
+ pub fn check(a: std.mem.Allocator, program: typed.Program, failure: *Failure) Error!void {
+-    return checkMode(a, program, failure, false);
+-}
+-
+-/// Zero-RC extends the move contract to every admitted owning leaf.
+-pub fn checkMode(a: std.mem.Allocator, program: typed.Program, failure: *Failure, zero_rc: bool) Error!void {
+     const provider_types = try providers.classify(a, program);
+     defer a.free(provider_types);
+     const linear = try a.alloc(bool, program.records.len);
++    defer a.free(linear);
+     @memset(linear, false);
+     var changed = true;
+     while (changed) {
+         changed = false;
+         for (program.records, 0..) |record, index| {
+             if (linear[index] or record.shape.builtin == .borrowed_view) continue;
+-            const owns = if (record.isCollection()) (record.collection.kind == .list or (zero_rc and (record.collection.kind == .string or record.collection.kind == .bytes or record.collection.kind == .dictionary))) else owns: {
+-                if (zero_rc and (record.collection.box or record.shape.resource != null)) break :owns true;
+-                for (record.fields) |field| if ((zero_rc and field.boxed) or isOwned(linear, field.ty, zero_rc)) break :owns true;
+-                if (record.shape.array) |array| if (isOwned(linear, array.element, zero_rc)) break :owns true;
++            const owns = if (record.isCollection()) (record.collection.kind == .list or ((record.collection.kind == .string or record.collection.kind == .bytes or record.collection.kind == .dictionary))) else owns: {
++                if ((record.collection.box or record.shape.resource != null)) break :owns true;
++                for (record.fields) |field| if ((field.boxed) or isOwned(linear, field.ty)) break :owns true;
++                if (record.shape.array) |array| if (isOwned(linear, array.element)) break :owns true;
+                 if (record.shape.variants) |variants| for (variants.cases) |case| {
+-                    if (case.payload) |payload| if ((zero_rc and case.boxed) or isOwned(linear, payload, zero_rc)) break :owns true;
++                    if (case.payload) |payload| if ((case.boxed) or isOwned(linear, payload)) break :owns true;
+                 };
+                 break :owns false;
+             };
+@@ -114,7 +104,6 @@
+             .function = function,
+             .linear = linear,
+             .provider_types = provider_types,
+-            .zero_rc = zero_rc,
+             .failure = failure,
+             .state = try work.allocator().alloc(State, function.scope.locals.len),
+         };
+@@ -124,13 +113,13 @@
+             if (index < function.signature.parameter_count and c.view(local.ty) and local.mutable) return c.reject(local.declaration, view_signature, "view parameters are read-only");
+             if (index < function.signature.parameter_count) c.state[index] = .{
+                 .available = true,
+-                .borrowed = (isOwned(linear, local.ty, zero_rc) or typed.isBorrowedView(program.records, local.ty)) and !(zero_rc and resources.affine(program, local.ty)),
+-                .dependency = if (zero_rc and resources.dependent(program, local.ty)) index else none,
++                .borrowed = (isOwned(linear, local.ty) or typed.isBorrowedView(program.records, local.ty)) and !(resources.affine(program, local.ty)),
++                .dependency = if (resources.dependent(program, local.ty)) index else none,
+                 .writable = local.mutable,
+             };
+         }
+         try c.supported(function.signature.return_type, function.declaration, 0);
+-        if (zero_rc and resources.dependent(program, function.signature.return_type)) _ = try c.resourceParameter(function, function.declaration);
++        if (resources.dependent(program, function.signature.return_type)) _ = try c.resourceParameter(function, function.declaration);
+         if (typed.isBorrowedView(program.records, function.signature.return_type)) {
+             _ = try c.returnSource(function, function.declaration);
+             if (function.signature.declared_mutates.len != 0) return c.reject(function.declaration, view_signature, "a function returning a view cannot also take mut parameters in this prototype");
+@@ -147,8 +136,8 @@
+     return ty.isAggregate() and ty.recordIndex() < linear.len and linear[ty.recordIndex()];
+ }
+ 
+-fn isOwned(linear: []const bool, ty: typed.Type, zero_rc: bool) bool {
+-    if (zero_rc and (ty.isFile() or owningCapability(ty))) return true;
++fn isOwned(linear: []const bool, ty: typed.Type) bool {
++    if ((ty.isFile() or owningCapability(ty))) return true;
+     return isLinear(linear, ty);
+ }
+ 
+@@ -186,7 +175,6 @@
+     function: typed.Function,
+     linear: []const bool,
+     provider_types: []const bool,
+-    zero_rc: bool,
+     failure: *Failure,
+     state: []State,
+     type_path: std.ArrayList(typed.Type) = .empty,
+@@ -200,24 +188,15 @@
+ 
+     fn foreign(c: *Checker) Error!void {
+         const function = c.function;
+-        // Extern signatures are scalar-only. Native provider acquisitions
+-        // separately transfer handles into lexical owning scopes.
+-        if (c.zero_rc) {
+-            if (function.policy.host != null and !function.policy.c_abi) return c.reject(function.declaration, zero_unsupported, "copied Host adapters are retired; use an extern C contract");
+-            return;
+-        }
+-        for (function.scope.locals[0..function.signature.parameter_count]) |local| {
+-            if (isLinear(c.linear, local.ty)) return c.reject(function.declaration, "E_SINGLE_OWNER_ESCAPE", "a borrowed list cannot cross a foreign-function boundary in this prototype");
+-        }
+-        if (isLinear(c.linear, function.signature.return_type)) return c.reject(function.declaration, "E_SINGLE_OWNER_ESCAPE", "foreign list results are outside the single-owner prototype");
++        if (function.policy.host != null and !function.policy.c_abi) return c.reject(function.declaration, zero_unsupported, "copied Host adapters are retired; use an extern C contract");
+     }
+ 
+     fn owns(c: *const Checker, ty: typed.Type) bool {
+-        return isOwned(c.linear, ty, c.zero_rc);
++        return isOwned(c.linear, ty);
+     }
+ 
+     fn supported(c: *Checker, ty: typed.Type, span: Span, depth: usize) Error!void {
+-        if (c.zero_rc and depth != 0) {
++        if (depth != 0) {
+             if (ty.isFile()) return c.reject(span, zero_unsupported, "store file owners in named local scopes");
+             if (owningCapability(ty)) for (c.type_path.items) |parent| {
+                 if (!providers.plainRecord(c.program.records[parent.recordIndex()]))
+@@ -225,7 +204,7 @@
+             };
+         }
+         if (typed.isBorrowedView(c.program.records, ty)) {
+-            if (!c.zero_rc or depth != 0) return c.reject(span, view_escape, "borrowed views require zero-RC mode and cannot be stored inside aggregates");
++            if (depth != 0) return c.reject(span, view_escape, "borrowed views cannot be stored inside aggregates");
+             return;
+         }
+         if (!ty.isAggregate()) return;
+@@ -233,29 +212,26 @@
+         try c.type_path.append(c.a, ty);
+         defer _ = c.type_path.pop();
+         const record = c.program.records[ty.recordIndex()];
+-        if (record.collection.box and !c.zero_rc) return c.reject(span, unsupported, "recursive boxes are outside the single-owner prototype");
+         if (record.isCollection()) {
+             if (record.collection.kind == .dictionary) {
+-                if (!c.zero_rc) return c.reject(span, unsupported, "dictionaries and sets are outside the single-owner prototype");
+                 try c.supported(record.collection.key.?, span, depth + 1);
+                 if (!record.collection.set) try c.supported(record.shape.buffer.?, span, depth + 1);
+             }
+             if (record.collection.kind == .list) try c.supported(record.shape.buffer.?, span, depth + 1);
+             return;
+         }
+-        if (!c.zero_rc and record.shape.variants != null and c.owns(ty)) return c.reject(span, unsupported, "unions containing lists are outside the single-owner prototype");
++        if (!record.shape.variants != null and c.owns(ty)) return c.reject(span, unsupported, "unions containing lists are outside the single-owner prototype");
+         try c.nestedTypes(record, span, depth);
+     }
+ 
+     fn nestedTypes(c: *Checker, record: typed.Record, span: Span, depth: usize) Error!void {
+         for (record.fields) |field| {
+-            if (field.boxed and !c.zero_rc) return c.reject(span, unsupported, "recursive records are outside the single-owner prototype");
+             try c.supported(field.ty, span, depth + 1);
+         }
+         if (record.shape.array) |array| try c.supported(array.element, span, depth + 1);
+         if (record.shape.variants) |variants| for (variants.cases) |case| {
+             if (case.payload) |payload| {
+-                if (c.zero_rc and variants.fallible and payload.isFile()) continue;
++                if (variants.fallible and payload.isFile()) continue;
+                 try c.supported(payload, span, depth + 1);
+             }
+         };
+@@ -308,7 +284,7 @@
+         if (c.state[slot].ambiguous_borrow and access != .read) return c.reject(span, borrow_error, "a dictionary default selection is read-only; make an explicit .copy() before changing it");
+         if (c.view(local.ty) and access != .read) return c.reject(span, view_escape, "views are read-only; use .copy() for independent owned storage");
+         const write = access != .read;
+-        if (c.zero_rc) try c.resourceAccess(slot, root, write, span);
++        try c.resourceAccess(slot, root, write, span);
+         for (c.loans.items) |loan| if (loan.root == root and (loan.write or write)) {
+             return c.reject(span, overlap_error, "a value cannot be moved or mutated while another argument or iteration borrows it");
+         };
+@@ -332,11 +308,11 @@
+             .field => |field| c.origin(field.base),
+             .record => |fields| if (c.borrowedItem(fields)) |owner| c.rootOf(@backingInt(owner)) else null,
+             .index => |index| if (c.freshCharacter(index.base)) null else c.origin(index.base),
+-            .cast => |value| if (c.zero_rc and c.program.nodes[@backingInt(value)].ty != node.ty) null else c.origin(value),
++            .cast => |value| if (c.program.nodes[@backingInt(value)].ty != node.ty) null else c.origin(value),
+             .wrap, .unwrap => |value| c.origin(value),
+             .block_value => |block| c.origin(block.value),
+             .buffer_operation => |operation| switch (operation.kind) {
+-                .read => if (c.zero_rc and c.program.records[c.function.scope.locals[@backingInt(operation.owner)].ty.recordIndex()].collection.kind == .string) null else c.rootOf(@backingInt(operation.owner)),
++                .read => if (c.program.records[c.function.scope.locals[@backingInt(operation.owner)].ty.recordIndex()].collection.kind == .string) null else c.rootOf(@backingInt(operation.owner)),
+                 .get, .key_at, .value_at, .setdefault, .borrow_view => c.rootOf(@backingInt(operation.owner)),
+                 .slice => if (c.view(node.ty)) c.rootOf(@backingInt(operation.owner)) else null,
+                 else => null,
+@@ -369,7 +345,7 @@
+ 
+     fn freshCharacter(c: *const Checker, base: typed.NodeId) bool {
+         const ty = c.program.nodes[@backingInt(base)].ty;
+-        return c.zero_rc and ty.isAggregate() and c.program.records[ty.recordIndex()].collection.kind == .string;
++        return ty.isAggregate() and c.program.records[ty.recordIndex()].collection.kind == .string;
+     }
+ 
+     /// A dictionary default can borrow either the dictionary or its fallback.
+@@ -531,8 +507,8 @@
+             try c.expression(store.value, .move);
+         }
+         const parameter = slot < c.function.signature.parameter_count;
+-        const affine = c.zero_rc and resources.affine(c.program, local.ty);
+-        const dependency = if (c.zero_rc and resources.dependent(c.program, local.ty)) try c.resourceOrigin(store.value) else null;
++        const affine = resources.affine(c.program, local.ty);
++        const dependency = if (resources.dependent(c.program, local.ty)) try c.resourceOrigin(store.value) else null;
+         c.state[slot] = .{ .available = true, .borrowed = parameter and !affine, .writable = local.mutable, .dependency = dependency orelse none };
+     }
+ 
+@@ -543,7 +519,7 @@
+             error.Invalid => return c.reject(span, zero_unsupported, "invalid complete tuple staging"),
+         };
+         try c.expression(store.value, .move);
+-        const dependency = if (c.zero_rc) try c.resourceOrigin(store.value) else null;
++        const dependency = try c.resourceOrigin(store.value);
+         if (dependency) |provider| if (!c.state[provider].available)
+             return c.reject(span, resource_escape, "tuple fields cannot outlive their dependent provider");
+         c.state[@backingInt(store.slot)] = .{};
+@@ -552,7 +528,7 @@
+             c.state[slot] = .{
+                 .available = true,
+                 .writable = c.function.scope.locals[slot].mutable,
+-                .dependency = if (c.zero_rc and resources.dependent(c.program, field.ty)) dependency orelse none else none,
++                .dependency = if (resources.dependent(c.program, field.ty)) dependency orelse none else none,
+             };
+         }
+     }
+@@ -570,7 +546,7 @@
+             .cast => |value| {
+                 const from = c.program.nodes[@backingInt(value)].ty;
+                 if (from != node.ty and (c.view(from) or c.view(node.ty))) return c.reject(node.span, view_unsupported, "view conversions require an explicit .copy()");
+-                try c.expression(value, if (c.zero_rc and from != node.ty) .read else access);
++                try c.expression(value, if (from != node.ty) .read else access);
+             },
+             .wrap, .unwrap, .arena_escape => |value| try c.expression(value, access),
+             .length => |value| try c.expression(value, .read),
+@@ -594,7 +570,7 @@
+             },
+             .index => |index| {
+                 const base = c.program.nodes[@backingInt(index.base)].ty;
+-                const fresh_character = c.zero_rc and base.isAggregate() and c.program.records[base.recordIndex()].collection.kind == .string;
++                const fresh_character = base.isAggregate() and c.program.records[base.recordIndex()].collection.kind == .string;
+                 if (!fresh_character and access == .move and c.owns(node.ty)) return c.reject(node.span, borrow_error, "an indexed value is borrowed; use .copy() or pop() to obtain an owned value");
+                 try c.expression(index.base, .read);
+                 const saved = c.loans.items.len;
+@@ -670,7 +646,7 @@
+     /// record constructors cannot spell these internal projections, and copying
+     /// an item still follows the ordinary explicit deep-copy path.
+     fn borrowedItem(c: *const Checker, fields: []const typed.FieldInit) ?typed.LocalId {
+-        if (!c.zero_rc or fields.len != 2) return null;
++        if (fields.len != 2) return null;
+         if (fields[0].index != 0 or fields[1].index != 1) return null;
+         const key = switch (c.program.nodes[@backingInt(fields[0].value)].data) {
+             .buffer_operation => |operation| operation,
+@@ -690,7 +666,7 @@
+         defer c.loans.shrinkRetainingCapacity(saved);
+         for (fields) |field| {
+             try c.expression(field.value, .move);
+-            if (c.zero_rc) if (try c.resourceOrigin(field.value)) |anchor|
++            if (try c.resourceOrigin(field.value)) |anchor|
+                 try c.loans.append(c.a, .{ .root = anchor, .write = false });
+         }
+     }
+@@ -714,16 +690,13 @@
+                 if (file.argument) |argument| try c.expression(argument, .read);
+             },
+             .acquire_resource => |acquire| {
+-                if (!c.zero_rc) return c.reject(node.span, unsupported, resource_mode);
+                 try c.arguments(&.{ acquire.capability, acquire.request }, &.{}, &.{});
+                 _ = c.origin(acquire.capability) orelse return c.reject(node.span, resource_origin, "bind the provider to a named local before acquiring a resource");
+             },
+             .complete_resource => |owner| {
+-                if (!c.zero_rc) return c.reject(node.span, unsupported, resource_mode);
+                 try c.expression(owner, .move);
+             },
+             .resource_io => |io| {
+-                if (!c.zero_rc) return c.reject(node.span, unsupported, resource_mode);
+                 try c.checkLocal(@backingInt(io.owner), .read, node.span);
+                 if (io.value) |input| try c.expression(input, .read);
+             },
+@@ -733,7 +706,6 @@
+ 
+     fn propagateResource(c: *Checker, value: typed.NodeId, span: Span) Error!void {
+         try c.expression(value, .move);
+-        if (!c.zero_rc) return;
+         const shape = typed.resultShape(c.program.nodes[@backingInt(value)].ty, c.program.records) orelse return;
+         if (resources.dependent(c.program, shape.error_type)) try c.resourceReturn(value, span);
+     }
+@@ -858,13 +830,13 @@
+     fn collection(c: *Checker, node: typed.Node, access: Access) Error!void {
+         const operation = node.data.buffer_operation;
+         if (operation.kind == .get and access != .read and c.owns(node.ty)) return c.reject(node.span, borrow_error, "a dictionary default selection is read-only; make an explicit .copy() before changing it");
+-        if (c.zero_rc and (operation.kind == .snapshot or operation.kind == .view))
++        if ((operation.kind == .snapshot or operation.kind == .view))
+             return c.reject(node.span, zero_unsupported, "shared snapshots and retained views are unsupported; use .borrow() for a checked view or .copy() for ownership");
+         const owner = @backingInt(operation.owner);
+-        if (c.zero_rc and c.view(node.ty) and c.state[owner].ambiguous_borrow)
++        if (c.view(node.ty) and c.state[owner].ambiguous_borrow)
+             return c.reject(node.span, view_escape, "a view cannot borrow from a dictionary lookup with a fallback; copy the selected value into a named owner first");
+         if (operation.kind == .copy) {
+-            if (c.zero_rc and providers.contains(c.provider_types, c.function.scope.locals[owner].ty))
++            if (providers.contains(c.provider_types, c.function.scope.locals[owner].ty))
+                 return c.reject(node.span, zero_unsupported, "provider owners cannot be copied; borrow the enclosing record or move it");
+             return c.checkLocal(owner, .read, node.span);
+         }
+@@ -902,14 +874,14 @@
+                 } else operation.kind == .append or (operation.kind == .write and index == 1) or (operation.kind == .insert and index == 1);
+                 const writeback = schema.collection.kind == .list and operation.kind == .write and index == 1 and c.sameSlotWriteback(operation.owner, operation.arguments[0], argument);
+                 try c.expression(argument, if (writeback) .writeback else if (consumes) .move else .read);
+-                if (c.zero_rc and schema.collection.kind == .list and operation.kind == .extend)
++                if (schema.collection.kind == .list and operation.kind == .extend)
+                     try c.independentExtension(owner, argument, node.span);
+             }
+             // These methods implicitly duplicate elements. Nested owned
+             // lists need an explicit deep copy, which .copy() provides.
+             const duplicates = switch (operation.kind) {
+-                .extend, .slice, .slice_step => !c.zero_rc,
+-                .insert, .remove, .pop_at, .reverse => !c.zero_rc,
++                .extend, .slice, .slice_step => false,
++                .insert, .remove, .pop_at, .reverse => false,
+                 else => false,
+             };
+             if (linear and duplicates) {
+@@ -926,7 +898,7 @@
+             const index = if (order.len == 0) position else order[position];
+             const write = std.mem.indexOfScalar(u16, mutates, @intCast(index)) != null;
+             const arg = args[index];
+-            const affine = c.zero_rc and resources.affine(c.program, c.program.nodes[@backingInt(arg)].ty);
++            const affine = resources.affine(c.program, c.program.nodes[@backingInt(arg)].ty);
+             try c.expression(arg, if (write) .mutate else if (affine) .move else .read);
+             if (affine) if (try c.resourceOrigin(arg)) |provider| try c.loans.append(c.a, .{ .root = provider, .write = false });
+             if (c.tracked(c.program.nodes[@backingInt(arg)].ty)) {
+@@ -976,9 +948,9 @@
+     }
+ 
+     fn matchArms(c: *Checker, value: typed.NodeId, arms: []const typed.MatchArm) Error!bool {
+-        const owned = c.zero_rc and (matchOwnsTemporary(c.program.nodes, value) or resources.affine(c.program, c.program.nodes[@backingInt(value)].ty));
++        const owned = (matchOwnsTemporary(c.program.nodes, value) or resources.affine(c.program, c.program.nodes[@backingInt(value)].ty));
+         try c.expression(value, if (owned) .move else .read);
+-        const dependency = if (c.zero_rc) try c.resourceOrigin(value) else null;
++        const dependency = try c.resourceOrigin(value);
+         const before = try c.a.dupe(State, c.state);
+         const saved = c.loans.items.len;
+         defer c.loans.shrinkRetainingCapacity(saved);
+@@ -1032,7 +1004,7 @@
+             },
+             .initialize => |store| try c.checkStore(store, true, statement.span),
+             .assign => |store| try c.checkStore(store, false, statement.span),
+-            .discard => |value| try c.expression(value, if (c.zero_rc and resources.affine(c.program, c.program.nodes[@backingInt(value)].ty)) .move else .read),
++            .discard => |value| try c.expression(value, if (resources.affine(c.program, c.program.nodes[@backingInt(value)].ty)) .move else .read),
+             .ret => |value| {
+                 if (c.view(c.function.signature.return_type)) {
+                     try c.expression(value, .read);
+@@ -1040,7 +1012,7 @@
+                     if (c.origin(value) != source) return c.reject(statement.span, view_escape, "the returned view must borrow from this function's single view parameter");
+                 } else {
+                     try c.expression(value, .move);
+-                    if (c.zero_rc and resources.dependent(c.program, c.function.signature.return_type)) try c.resourceReturn(value, statement.span);
++                    if (resources.dependent(c.program, c.function.signature.return_type)) try c.resourceReturn(value, statement.span);
+                 }
+                 return false;
+             },
+@@ -1111,11 +1083,11 @@
+ 
+ /// Whether an IR value contains an exclusively owned list, for backend guards.
+ pub fn containsList(module: *const ir.Module, ty: ir.Type) bool {
+-    if (module.zero_rc and (ty == .str or ty == .bytes or ty == .byte_buffer)) return true;
++    if ((ty == .str or ty == .bytes or ty == .byte_buffer)) return true;
+     if (!ty.isCompound()) return false;
+     return switch (module.compound(ty)) {
+         .list => true,
+-        .dict, .box => module.zero_rc,
++        .dict, .box => true,
+         .@"union" => |cases| for (cases) |payload| {
+             if (containsList(module, payload)) break true;
+         } else false,
+@@ -1127,54 +1099,12 @@
+     };
+ }
+ 
+-/// Opt a snapshot's list type and every reachable child-list type into COW.
+-/// Type-wide selection avoids introducing alias/escape inference into the experiment.
+-pub fn enableSnapshots(a: std.mem.Allocator, module: *ir.Module, ty: ir.Type) error{OutOfMemory}!void {
+-    if (!ty.isCompound()) return;
+-    switch (module.compound(ty)) {
+-        .list => |element| {
+-            if (std.mem.indexOfScalar(ir.Type, module.shared_lists.items, ty) != null) return;
+-            try module.shared_lists.append(a, ty);
+-            try enableSnapshots(a, module, element);
+-        },
+-        .record => |fields| for (fields) |field| try enableSnapshots(a, module, field),
+-        .array => |array| try enableSnapshots(a, module, array.elem),
+-        else => {},
+-    }
+-}
+-
+-/// Whether retaining this value would share a list outside the snapshot families.
+-pub fn containsExclusiveList(module: *const ir.Module, ty: ir.Type) bool {
+-    if (module.zero_rc and (ty == .str or ty == .bytes or ty == .byte_buffer)) return true;
+-    if (!ty.isCompound()) return false;
+-    return switch (module.compound(ty)) {
+-        .list => module.exclusiveList(ty),
+-        .record => |fields| for (fields) |field| {
+-            if (containsExclusiveList(module, field)) break true;
+-        } else false,
+-        .array => |array| containsExclusiveList(module, array.elem),
+-        else => false,
+-    };
+-}
+-
+-/// Fail closed if a lowering still needs to share an exclusive value. This
+-/// prototype never silently reintroduces COW for an unsupported compiler shape.
++/// Fail closed if lowering still requires sharing or runtime uniqueness tests.
+ pub fn verifyLowered(module: *const ir.Module, failure: *Failure) error{Rejected}!void {
+     for (module.functions.items) |function| for (function.blocks.items) |block| for (block.insts.items) |ref| {
+         const inst = function.inst(ref);
+-        // Verify builds intentionally assert uniqueness before updates/frees.
+-        // Those checks do not implement COW and are allowed here.
+-        if (module.zero_rc and (inst.op == .retain or inst.op == .is_unique)) {
+-            failure.* = .{ .code = "E_ZERO_RC_LOWERING", .message = "this lowering still requires reference counting; use an explicit owned copy or simplify the expression", .span = .{ .start = inst.span, .end = inst.span } };
+-            return error.Rejected;
+-        }
+-        if (inst.op != .retain) continue;
+-        if (!containsExclusiveList(module, function.inst(function.resolve(inst.a)).ty)) continue;
+-        failure.* = .{
+-            .code = "E_SINGLE_OWNER_LOWERING",
+-            .message = "this lowering still needs shared list storage; simplify the expression or use explicit .copy()",
+-            .span = .{ .start = inst.span, .end = inst.span },
+-        };
++        if (inst.op != .retain and inst.op != .is_unique) continue;
++        failure.* = .{ .code = "E_ZERO_RC_LOWERING", .message = "this lowering still requires reference counting; use an explicit owned copy or simplify the expression", .span = .{ .start = inst.span, .end = inst.span } };
+         return error.Rejected;
+     };
+ }
+--- a/src/core/build.zig
++++ b/src/core/build.zig
+@@ -68,7 +68,7 @@
+ /// What a module is built from: the checked program, its loaded source, and whether
+ /// `debug(...)` lines are dropped, as a `build --release` executable drops them
+ /// (DEBUG-LINE-1); `run`, `build --run` and `test` keep them in every mode.
+-pub const Input = struct { program: typed.Program, source: ?Source = null, drop_debug: bool = false, single_owner: bool = false, zero_rc: bool = false };
++pub const Input = struct { program: typed.Program, source: ?Source = null, drop_debug: bool = false, abi: @import("guest_abi.zig").Abi = @import("guest_abi.zig").current };
+ 
+ /// Build an executable's module from `input`, rooted at the program's `main`.
+ pub fn buildExecutable(allocator: std.mem.Allocator, input: Input, refusal: *Refusal) Error!ir.Module {
+@@ -83,6 +83,18 @@
+ /// Build selected roots with optional loaded source; digest-only inputs refuse blobs precisely.
+ pub fn buildRootsSource(allocator: std.mem.Allocator, program: typed.Program, roots: []const typed.FunctionId, source: ?Source, refusal: *Refusal) Error!ir.Module {
+     return buildRootsInput(allocator, roots, .{ .program = program, .source = source }, refusal);
++}
++
++/// All public lowering entrypoints check ownership before consuming cached bodies.
++fn checkOwnership(allocator: std.mem.Allocator, program: typed.Program, refusal: *Refusal) Error!void {
++    var failure: @import("single_owner.zig").Failure = .{};
++    @import("single_owner.zig").check(allocator, program, &failure) catch |err| switch (err) {
++        error.OutOfMemory => return error.OutOfMemory,
++        error.Rejected => {
++            refusal.* = .{ .reason = failure.message, .span = failure.span.start };
++            return error.Unsupported;
++        },
++    };
+ }
+ 
+ fn buildRootsInput(allocator: std.mem.Allocator, roots: []const typed.FunctionId, input: Input, refusal: *Refusal) Error!ir.Module {
+@@ -94,11 +106,11 @@
+ 
+ /// Lower selected roots with optional validated artifact and discovery reuse.
+ pub fn buildRootsCached(allocator: std.mem.Allocator, roots: []const typed.FunctionId, input: Input, refusal: *Refusal, cache: ?*lowering_cache.Cache) CachedError!ir.Module {
++    try checkOwnership(allocator, input.program, refusal);
+     const program = input.program;
+     var mb: ModuleBuilder = .{ .allocator = allocator, .input = input, .refusal = refusal, .discovery = .{ .enabled = cache != null } };
+     defer if (mb.provider_types) |facts| allocator.free(facts);
+-    mb.module.single_owner = input.single_owner or input.zero_rc;
+-    mb.module.zero_rc = input.zero_rc;
++    mb.module.abi = input.abi;
+     defer mb.discovery.ids.deinit(allocator);
+     defer mb.types.deinit(allocator);
+     defer mb.discovery.pending.deinit(allocator);
+@@ -180,6 +192,8 @@
+ 
+ /// Coverage checks under the caller's selected source ownership and runtime ABI.
+ pub fn coverageInput(allocator: std.mem.Allocator, input: Input) Error![]Outcome {
++    var ownership_failure: Refusal = .{};
++    try checkOwnership(allocator, input.program, &ownership_failure);
+     const program = input.program;
+     const outcomes = try allocator.alloc(Outcome, program.functions.len);
+     for (program.functions, outcomes) |function, *outcome| {
+@@ -191,8 +205,7 @@
+         var refusal: Refusal = .{};
+         var mb: ModuleBuilder = .{ .allocator = allocator, .input = input, .refusal = &refusal };
+         defer if (mb.provider_types) |facts| allocator.free(facts);
+-        mb.module.single_owner = input.single_owner or input.zero_rc;
+-        mb.module.zero_rc = input.zero_rc;
++        mb.module.abi = input.abi;
+         const index = mb.functionIndex(function.id) catch |err| switch (err) {
+             error.OutOfMemory => return error.OutOfMemory,
+             error.Unsupported => {
+@@ -215,11 +228,11 @@
+ /// The `ir.Signature.owned` bits of a function whose parameters (`unit` ones included)
+ /// are `all` and whose `mut` parameters sit at `mutated`: a `mut` parameter is passed
+ /// by value and returned, so the call hands it over (bits count passed parameters only).
+-fn ownedParameters(all: []const ir.Type, function: typed.Function, program: typed.Program, zero_rc: bool) u64 {
++fn ownedParameters(all: []const ir.Type, function: typed.Function, program: typed.Program) u64 {
+     var bits: u64 = 0;
+     for (all, function.scope.locals[0..all.len], 0..) |_, local_info, position| {
+         const mutated = std.mem.indexOfScalar(u16, function.signature.declared_mutates, @intCast(position)) != null;
+-        const affine = zero_rc and @import("single_owner_resource.zig").affine(program, local_info.ty);
++        const affine = @import("single_owner_resource.zig").affine(program, local_info.ty);
+         if (!mutated and !affine) continue;
+         var passed: u6 = 0;
+         for (all[0..position]) |param| passed += @intFromBool(param != .void);
+@@ -275,7 +288,7 @@
+         if (linkage == .extern_c and function.signature.declared_mutates.len != 0) return self.refuse("mut parameter of an extern function", span);
+         const ret = try self.returnType(function, declared, all, span);
+         const index: u32 = @intCast(self.module.functions.items.len);
+-        const owned = ownedParameters(all, function, self.input.program, self.module.zero_rc);
++        const owned = ownedParameters(all, function, self.input.program);
+         try self.module.functions.append(self.allocator, .{ .name = function.name, .signature = .{ .params = params, .ret = ret, .linkage = linkage, .owned = owned }, .span = span });
+         try self.discovery.ids.put(self.allocator, @backingInt(id), index);
+         try self.discovery.pending.append(self.allocator, id);
+@@ -324,7 +337,6 @@
+         if (ty.recordIndex() >= records.len) return self.refuse("type", span);
+         const record = records[ty.recordIndex()];
+         if (record.shape.builtin == .borrowed_view) {
+-            if (!self.module.zero_rc) return self.refuse("borrowed views require --experimental-zero-rc", span);
+             return .str_view;
+         }
+         if (record.isCollection()) switch (record.collection.kind) {
+@@ -370,7 +382,7 @@
+     pub fn runtimeFunction(self: *ModuleBuilder, symbol: []const u8, params: []const ir.Type, ret: ir.Type, linkage: ir.Linkage) Error!u32 {
+         var owned: u64 = 0;
+         var views: u64 = 0;
+-        if (self.module.zero_rc) {
++        {
+             const boundary = @import("zero_rc.zig").contract(symbol) orelse
+                 return self.refuse(try std.fmt.allocPrint(self.allocator, "unaudited zero-RC runtime helper {s}", .{symbol}), 0);
+             const owning_result = boundary.result == .fresh or boundary.result == .transferred;
+@@ -680,11 +692,8 @@
+         self.ssa.sealed.items[block.index()] = true;
+     }
+ 
+-    fn prepareParent(self: *FnBuilder, base: ir.Ref, span: u32) Error!ir.Ref {
+-        if (self.module().zero_rc) return base;
+-        const ty = self.typeOfRef(base);
+-        const kind = self.mb.module.kind(ty);
+-        if (kind == .list or kind == .dict) return self.emit(.{ .op = if (kind == .dict) .dict_copy else .list_copy, .ty = ty, .a = base, .data = flags.place_copy, .span = span });
++    fn prepareParent(self: *FnBuilder, base: ir.Ref, _: u32) Error!ir.Ref {
++        _ = self;
+         return base;
+     }
+ 
+@@ -802,25 +811,18 @@
+         var place: ?Place = null;
+         const value = try self.expressionPlace(store.value, &place);
+         const block = self.current orelse return;
+-        if (self.module().zero_rc) {
+-            // The moved source's lexical provider pin must no longer name it.
+-            // Other whole owners are unavailable under the same source contract.
+-            if (place) |source| if (source.steps.len == 0) {
+-                const empty = try self.detached(.{ .op = .undef, .ty = self.typeOfRef(value) });
+-                try self.write(source.root, block, empty);
+-            };
+-            return self.unpackPayload(value, store.unpack.?, span);
+-        }
+-        // Ordinary RC tuple parameters can remain borrowed after destructuring.
+-        for (store.unpack.?, 0..) |optional, index| {
+-            const slot = optional orelse continue;
+-            const field = try self.fieldGet(value, index, span);
+-            try self.write(self.local(slot), self.current.?, field);
+-        }
++
++        // The moved source's lexical provider pin must no longer name it.
++        // Other whole owners are unavailable under the same source contract.
++        if (place) |source| if (source.steps.len == 0) {
++            const empty = try self.detached(.{ .op = .undef, .ty = self.typeOfRef(value) });
++            try self.write(source.root, block, empty);
++        };
++        return self.unpackPayload(value, store.unpack.?, span);
+     }
+ 
+     fn providerStore(self: *FnBuilder, store: typed.Store, place: ?Place, value: ir.Ref, assign: bool, span: u32) Error!void {
+-        if (!self.module().zero_rc or self.function.resolve(value) == .none) return;
++        if (self.function.resolve(value) == .none) return;
+         if (!try self.mb.hasProvider(self.checked.scope.locals[self.local(store.slot)].ty)) return;
+         const slot = self.local(store.slot);
+         const info = self.checked.scope.locals[slot];
+@@ -838,7 +840,7 @@
+     /// A whole provider owner transferred into a value must leave no lexical pin
+     /// on its old binding. Field projections remain the enclosing owner's borrows.
+     fn clearProviderSource(self: *FnBuilder, source: ?Place, ty: typed.Type) Error!void {
+-        if (!self.module().zero_rc or !try self.mb.hasProvider(ty)) return;
++        if (!try self.mb.hasProvider(ty)) return;
+         const place = source orelse return;
+         if (place.steps.len != 0) return;
+         const old = try self.read(place.root, self.current.?);
+@@ -848,7 +850,7 @@
+ 
+     /// Record construction consumes each checked owned field in source order.
+     fn recordFieldValue(self: *FnBuilder, node: typed.NodeId) Error!ir.Ref {
+-        if (!self.module().zero_rc or !try self.mb.hasProvider(self.nodeOf(node).ty)) return self.expression(node);
++        if (!try self.mb.hasProvider(self.nodeOf(node).ty)) return self.expression(node);
+         var place: ?Place = null;
+         const value = try self.expressionPlace(node, &place);
+         if (self.current != null) try self.clearProviderSource(place, self.nodeOf(node).ty);
+@@ -908,7 +910,7 @@
+                     const owner = try self.expression(source);
+                     const variable = self.local(scope.slot);
+                     try self.write(variable, self.current.?, owner);
+-                    const provider = if (self.module().zero_rc) try self.expression(build_cap.scopeProvider(self.mb.input.program, source).?) else .none;
++                    const provider = try self.expression(build_cap.scopeProvider(self.mb.input.program, source).?);
+                     const cleanup: build_cap.Scope = .{ .owner = owner, .depth = self.loops.items.len, .provider = provider };
+                     try self.ssa.resources.append(self.allocator(), cleanup);
+                     try self.statement(scope.body);
+@@ -1070,7 +1072,7 @@
+     }
+ 
+     fn matchStatement(self: *FnBuilder, value_node: typed.NodeId, arms: []const typed.MatchArm, span: u32) Error!void {
+-        const owned = self.module().zero_rc and (@import("single_owner.zig").matchOwnsTemporary(self.mb.input.program.nodes, value_node) or @import("single_owner_resource.zig").affine(self.mb.input.program, self.nodeOf(value_node).ty));
++        const owned = (@import("single_owner.zig").matchOwnsTemporary(self.mb.input.program.nodes, value_node) or @import("single_owner_resource.zig").affine(self.mb.input.program, self.nodeOf(value_node).ty));
+         var value_place: ?Place = null;
+         const value = try self.expressionPlace(value_node, &value_place);
+         if (self.current == null) return;
+@@ -1227,15 +1229,13 @@
+         const place = self.places.get(variable) orelse return alias;
+         if (self.version(place.root) != place.root_version) return self.mb.refuse("write to a receiver's place while its arguments are evaluated", span);
+         const root = try self.read(place.root, self.current.?);
+-        const root_kind = self.mb.module.kind(self.typeOfRef(root));
+-        if (root_kind != .list and root_kind != .dict and !self.module().zero_rc) return alias;
+         const parents = try self.allocator().alloc(ir.Ref, place.steps.len);
+         const children = try self.allocator().alloc(ir.Ref, place.steps.len);
+         var value = root;
+         for (place.steps, 0..) |step, index| {
+             value = try self.prepareParent(value, span);
+             parents[index] = value;
+-            value = if (self.module().zero_rc and step == .payload)
++            value = if (step == .payload)
+                 try self.propagatedPayload(value, step.payload, span)
+             else
+                 try self.stepGet(value, step, span);
+@@ -1339,7 +1339,6 @@
+     /// A checked field destination reconstructs its hidden read into the exact
+     /// same slot. Preserve that transfer before store narrowing or ownership.
+     fn transferSlotRead(self: *FnBuilder, value: typed.NodeId, list: ir.Ref, index: ir.Ref) Error!void {
+-        if (!self.module().zero_rc) return;
+         const base = switch (self.nodeOf(value).data) {
+             .update => |update| update.base,
+             .replace => |replace| replace.base,
+@@ -1648,7 +1647,7 @@
+         const base = try self.expression(replacement.base);
+         const raw = try self.expression(replacement.index);
+         if (self.current == null) return .none;
+-        const shared = if (self.module().zero_rc and self.mb.module.kind(self.typeOfRef(base)) == .array) self.reconstructedIndex(replacement) else null;
++        const shared = if (self.mb.module.kind(self.typeOfRef(base)) == .array) self.reconstructedIndex(replacement) else null;
+         if (shared) |index| {
+             const normalized = try self.arrayIndex(base, raw, replacement.from_end, span);
+             const previous = self.ssa.array_indices.get(index);
+@@ -1740,7 +1739,7 @@
+     /// `update`: the base with each listed field replaced.
+     fn recordUpdate(self: *FnBuilder, base_node: typed.NodeId, fields: []const typed.FieldInit, span: u32) Error!ir.Ref {
+         var place: ?Place = null;
+-        const provider = self.module().zero_rc and try self.mb.hasProvider(self.nodeOf(base_node).ty);
++        const provider = try self.mb.hasProvider(self.nodeOf(base_node).ty);
+         var base = try self.expressionPlace(base_node, if (provider) &place else null);
+         if (self.current == null) return .none;
+         for (fields) |init| {
+@@ -1810,7 +1809,6 @@
+     // The source contract consumes a propagated or freshly matched union. Preserve that
+     // transfer in IR, including the ownership of a recursive boxed payload.
+     fn propagatedPayload(self: *FnBuilder, input: ir.Ref, tag: usize, span: u32) Error!ir.Ref {
+-        if (!self.module().zero_rc) return self.payloadOf(input, tag, span);
+         const stored = self.module().compound(self.typeOfRef(input)).@"union"[tag];
+         if (stored == .void) return .none;
+         const payload = if (self.module().kind(stored) == .box) self.module().compound(stored).box else stored;
+@@ -2308,7 +2306,7 @@
+         for (mutated, places, prepared) |position, *place, *path| {
+             if (place.steps.len > 0 and self.version(place.root) != place.root_version) {
+                 values[position] = try build_capture.refresh(@TypeOf(self), self, place, values[position], span);
+-            } else if (self.module().zero_rc and place.steps.len > 0) {
++            } else if (place.steps.len > 0) {
+                 path.* = try self.prepareMutPlace(place.*, span);
+                 values[position] = path.*.?.children[place.steps.len - 1];
+             } else values[position] = try self.readPlace(place.*, span);
+@@ -2449,7 +2447,7 @@
+ 
+     fn bufferOperation(self: *FnBuilder, operation: BufferOperation, ty: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
+         const receiver_type = self.ssa.types.items[self.local(operation.owner)];
+-        if (self.module().zero_rc and operation.kind == .copy) {
++        if (operation.kind == .copy) {
+             const source = try self.receiverOf(operation.owner);
+             if (self.ssa.dictionary_defaults.contains(self.function.resolve(source))) return self.copyOwned(source, span);
+         }
+@@ -2461,10 +2459,8 @@
+         return self.emit(.{ .op = .convert, .ty = ty, .a = result, .check = .exact, .span = span });
+     }
+ 
+-    fn copyList(self: *FnBuilder, owner: typed.LocalId, receiver_type: ir.Type, span: u32) Error!ir.Ref {
+-        _ = receiver_type;
+-        if (self.mb.input.single_owner) return single_owner_copy.copy(@TypeOf(self), self, try self.receiverOf(owner), span);
+-        return self.receiverOf(owner);
++    fn copyList(self: *FnBuilder, owner: typed.LocalId, _: ir.Type, span: u32) Error!ir.Ref {
++        return single_owner_copy.copy(@TypeOf(self), self, try self.receiverOf(owner), span);
+     }
+ 
+     fn bufferOperationRaw(self: *FnBuilder, operation: BufferOperation, ty: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
+@@ -2541,7 +2537,6 @@
+             // A copy of a value is the value: the next write to either copies (copy on write).
+             .copy => return self.copyList(owner, receiver_type, span),
+             .snapshot => {
+-                if (self.mb.input.single_owner) try @import("single_owner.zig").enableSnapshots(self.mb.allocator, &self.mb.module, receiver_type);
+                 return self.receiverOf(owner);
+             },
+             .iteration_check => return self.iterationCheck(operation, span),
+@@ -2581,11 +2576,11 @@
+         if (self.mb.module.kind(source_type) != .list or self.mb.module.kind(keys_type) != .list) return self.mb.refuse("keyed sort of a non-list", span);
+         const shape = build_fn.keyShape(self.mb.module, self.mb.module.compound(keys_type).list) orelse return self.mb.refuse("sort key type", span);
+         const strides = @as(u64, self.mb.module.size(self.mb.module.compound(source_type).list)) | (@as(u64, self.mb.module.size(self.mb.module.compound(keys_type).list)) << 32);
+-        if (self.mb.module.zero_rc) {
++        {
+             source = try single_owner_copy.copy(@TypeOf(self), self, source, span);
+             keys = try single_owner_copy.copy(@TypeOf(self), self, keys, span);
+         }
+-        const symbol = if (self.mb.module.zero_rc) "myl_core_owned_sort_keyed" else "myl_core_s2_sort_keyed";
++        const symbol = "myl_core_owned_sort_keyed";
+         const sorts: []const ir.Ref = &.{ source, keys, try self.constant(.u64, shape.shape), try self.constant(.u64, shape.offsets), reverse, try self.constant(.u64, strides) };
+         const sorted = try self.runtimeCall(symbol, &.{ source_type, keys_type, .u64, .u64, .bool, .u64 }, source_type, sorts, span);
+         try self.writeOwner(owner, sorted, span);
+@@ -2706,7 +2701,7 @@
+ 
+ fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Function) Error!ir.Function {
+     const parallel = @import("build_parallel.zig");
+-    if (mb.module.zero_rc and parallel.matches(mb.input.source, checked)) return parallel.build(mb, declared);
++    if (parallel.matches(mb.input.source, checked)) return parallel.build(mb, declared);
+     var b: FnBuilder = .{ .mb = mb, .function = declared, .checked = checked };
+     b.declared_ret = try mb.mapType(checked.signature.return_type, declared.span);
+     defer b.places.deinit(mb.allocator);
+@@ -2736,7 +2731,7 @@
+         const param = try b.detached(.{ .op = .param, .ty = ty, .data = passed });
+         passed += 1;
+         try b.write(@intCast(i), entry, param);
+-        if (mb.module.zero_rc and try mb.hasProvider(local.ty)) try b.ssa.resources.append(mb.allocator, .{ .owner = .none, .depth = 0, .pin = @intCast(i) });
++        if (try mb.hasProvider(local.ty)) try b.ssa.resources.append(mb.allocator, .{ .owner = .none, .depth = 0, .pin = @intCast(i) });
+     }
+     try b.statement(checked.scope.body);
+     if (b.current != null) {
+--- a/src/core/verify_ir.zig
++++ b/src/core/verify_ir.zig
+@@ -92,10 +92,6 @@
+         const internal_span = f.signature.linkage == .internal and f.signature.views != 0;
+         if (!module.valid(f.signature.ret) or out_of_range or internal_span) {
+             failure.* = .{ .function = f.name, .reason = "invalid result type or extern span admission" };
+-            return error.InvalidIr;
+-        }
+-        if (!module.zero_rc and (f.signature.ret == .str_view or std.mem.indexOfScalar(ir.Type, f.signature.params, .str_view) != null)) {
+-            failure.* = .{ .function = f.name, .reason = "str_view cannot cross a function boundary" };
+             return error.InvalidIr;
+         }
+         if (f.signature.ret == .str_view and f.signature.viewSource() == null) {
+@@ -202,7 +198,6 @@
+         const f = self.f;
+         if (f.blocks.items.len == 0) return self.fail(null, null, "a function with a body has no blocks", .{});
+         for (f.signature.params) |param| if (!self.module.valid(param)) return self.fail(null, null, "parameter type is not interned", .{});
+-        if (!self.module.zero_rc and (f.signature.ret == .str_view or std.mem.indexOfScalar(ir.Type, f.signature.params, .str_view) != null)) return self.fail(null, null, "str_view cannot cross a function boundary", .{});
+         try self.reach();
+         self.position = try self.arena.alloc(?Position, f.insts.items.len);
+         @memset(self.position, null);
+@@ -436,7 +431,7 @@
+     }
+ 
+     fn viewUses(self: *Verifier, b: usize, ref: ir.Ref, s: Shape) Error!void {
+-        const boundary_view = self.module.zero_rc and (s.inst.op == .param or s.inst.op == .call);
++        const boundary_view = (s.inst.op == .param or s.inst.op == .call);
+         const local_view = s.inst.op == .str_view_of or s.inst.op == .str_slice_view or s.inst.op == .copy;
+         if (s.inst.ty == .str_view) if (!(boundary_view or local_view)) return self.fail(b, ref, "str_view may only be defined by str_view_of or str_slice_view", .{});
+         const operands = self.f.valueOperands(s.inst);
+@@ -444,7 +439,7 @@
+             if (self.typeOf(operands.get(i)) != .str_view) continue;
+             const admitted = switch (s.inst.op) {
+                 .str_from_view, .str_len, .str_parse_int, .str_view_of, .copy => i == 0,
+-                .ret, .print => self.module.zero_rc,
++                .ret, .print => true,
+                 .dict_find => i == 1 and if (self.compoundOf(s.a, .dict)) |dict| dict.key == .str else false,
+                 .call => s.inst.a.index() < self.module.functions.items.len and admittedView(self.module.functions.items[s.inst.a.index()].signature, i),
+                 else => false,
+@@ -580,9 +575,9 @@
+             .record_set => if (self.compoundOf(s.a, .record)) |fields| inst.ty == s.a and inst.data < fields.len and fields[@intCast(inst.data)] == s.b else false,
+             .box_make => if (self.compoundOf(inst.ty, .box)) |inner| s.a == inner else false,
+             .box_get => if (self.compoundOf(s.a, .box)) |inner| inner == inst.ty else false,
+-            .box_take => self.module.zero_rc and if (self.compoundOf(s.a, .box)) |inner| inner == inst.ty else false,
+-            .retain, .release => inst.ty == .void and self.module.managed(s.a),
+-            .is_unique => inst.ty == .bool and self.module.isBlock(s.a),
++            .box_take => if (self.compoundOf(s.a, .box)) |inner| inner == inst.ty else false,
++            .release => inst.ty == .void and self.module.managed(s.a),
++            .retain, .is_unique => false,
+             // Mode 3 (`converted`) names the case in a `str` operand; the others take none.
+             .err_trace => inst.ty == .void and inst.data <= 4 and if (inst.data == 3) inst.a != .none and s.a == .str else inst.a == .none,
+             else => null,
+@@ -650,7 +645,7 @@
+         const payload = cases[@intCast(inst.data)];
+         if (inst.op == .union_take) {
+             const inner = self.compoundOf(payload, .box) orelse payload;
+-            return self.module.zero_rc and inner != .void and inner == inst.ty;
++            return inner != .void and inner == inst.ty;
+         }
+         if (inst.op == .union_payload) return payload != .void and payload == inst.ty;
+         return if (payload == .void) inst.a == .none else inst.a != .none and s.a == payload;
+--- a/src/core/borrow_selection.zig
++++ b/src/core/borrow_selection.zig
+@@ -33,7 +33,6 @@
+     const split = std.mem.indexOfScalar(u8, suffix, '_') orelse return error.UnsupportedInstruction;
+     const dictionary = number(suffix[0..split]) orelse return error.UnsupportedInstruction;
+     const value = number(suffix[split + 1 ..]) orelse return error.UnsupportedInstruction;
+-    if (!module.zero_rc) return error.UnsupportedInstruction;
+     if (!module.valid(dictionary) or !module.valid(value)) return error.UnsupportedInstruction;
+     if (module.kind(dictionary) != .dict or !module.managed(value)) return error.UnsupportedInstruction;
+     if (module.compound(dictionary).dict.value != value) return error.UnsupportedInstruction;
+--- a/src/core/aggregate_provider.zig
++++ b/src/core/aggregate_provider.zig
+@@ -110,7 +110,6 @@
+ /// Validate the complete borrowed compiler marker before omitting its machine code.
+ pub fn marker(module: *const ir.Module, function: *const ir.Function) error{UnsupportedInstruction}!bool {
+     if (!std.mem.startsWith(u8, function.name, prefix)) return false;
+-    if (!module.zero_rc) return error.UnsupportedInstruction;
+     const ty = markerType(function.name) orelse return error.UnsupportedInstruction;
+     if (@backingInt(ty) - ir.Type.first_compound >= module.compounds.items.len) return error.UnsupportedInstruction;
+     const signature = function.signature;
+--- a/src/core/build_cap.zig
++++ b/src/core/build_cap.zig
+@@ -21,7 +21,7 @@
+ fn slotField(comptime Context: type, c: Context, box: ir.Ref, field: u32, span: u32) Error!ir.Ref {
+     const ty = c.module().compound(c.typeOfRef(box)).box;
+     const field_type = c.module().compound(ty).record[field];
+-    if (c.module().zero_rc and c.module().isBlock(field_type))
++    if (c.module().isBlock(field_type))
+         return c.effectCall("myl_core_result_take_pointer", &.{ c.typeOfRef(box), .u32 }, field_type, &.{ box, try c.constant(.u32, field) }, span);
+     const value = try c.emit(.{ .op = .box_get, .ty = ty, .a = box, .span = span });
+     return c.emit(.{ .op = .record_get, .ty = c.module().compound(ty).record[field], .a = value, .data = field, .span = span });
+@@ -305,11 +305,10 @@
+         try @import("aggregate_provider.zig").keepalive(Context, c, try c.read(slot, c.current.?), span);
+         return;
+     }
+-    if (c.module().zero_rc) {
+-        const ty = c.typeOfRef(scope.owner);
+-        const symbol = if (ty == .resource) "myl_core_owned_file_scope_end" else "myl_core_owned_cap_scope_end";
+-        _ = try c.effectCall(symbol, &.{ ty, .capability }, .void, &.{ scope.owner, scope.provider }, span);
+-    } else if (c.typeOfRef(scope.owner) == .resource) _ = try c.effectCall("myl_core_file_scope_close", &.{.resource}, .void, &.{scope.owner}, span);
++
++    const ty = c.typeOfRef(scope.owner);
++    const symbol = if (ty == .resource) "myl_core_owned_file_scope_end" else "myl_core_owned_cap_scope_end";
++    _ = try c.effectCall(symbol, &.{ ty, .capability }, .void, &.{ scope.owner, scope.provider }, span);
+ }
+ 
+ /// Close active file scopes crossed by a return or a loop exit, innermost first.
+--- a/src/core/build_dict.zig
++++ b/src/core/build_dict.zig
+@@ -94,7 +94,7 @@
+ 
+ fn valueAtMode(comptime Context: type, b: Context, dict: ir.Ref, probe: ir.Ref, take: bool, span: u32) Error!ir.Ref {
+     const value_type = b.module().compound(b.typeOfRef(dict)).dict.value;
+-    return if (value_type == .void) .none else b.emit(.{ .op = .dict_entry_value, .ty = value_type, .a = dict, .b = probe, .data = if (take and b.module().zero_rc) flags.dict_take_value else 0, .span = span });
++    return if (value_type == .void) .none else b.emit(.{ .op = .dict_entry_value, .ty = value_type, .a = dict, .b = probe, .data = if (take) flags.dict_take_value else 0, .span = span });
+ }
+ 
+ /// A required lookup traps with the old core missing-key category.
+@@ -164,7 +164,7 @@
+         .capacity => return b.emit(.{ .op = .dict_entries, .ty = .u64, .a = try b.receiverOf(owner), .span = span }),
+         .copy => {
+             const source = try b.receiverOf(owner);
+-            return if (b.module().zero_rc) copy(Context, b, source, span) else source;
++            return copy(Context, b, source, span);
+         },
+         .keys, .values => {
+             const dict = try b.receiverOf(owner);
+@@ -185,8 +185,8 @@
+             const index = try b.emit(.{ .op = .sub, .ty = .i64, .a = try b.emit(.{ .op = .convert, .ty = .i64, .a = length, .check = .exact }), .b = try b.constant(.i64, 1), .span = span });
+             try requirePresent(Context, b, index, span);
+             const entry = try b.runtimeCall(ordinal_symbol, &.{ b.typeOfRef(dict), .i64 }, .i64, &.{ dict, index }, span);
+-            const value = if (ty == .void) .none else try b.emit(.{ .op = .dict_entry_key, .ty = ty, .a = dict, .b = entry, .data = if (b.module().zero_rc) flags.dict_take_key else 0, .span = span });
+-            try b.writeOwner(owner, try b.emit(.{ .op = .dict_remove, .ty = b.typeOfRef(dict), .a = dict, .b = entry, .data = if (b.module().zero_rc) flags.dict_take_key else 0, .span = span }), span);
++            const value = if (ty == .void) .none else try b.emit(.{ .op = .dict_entry_key, .ty = ty, .a = dict, .b = entry, .data = flags.dict_take_key, .span = span });
++            try b.writeOwner(owner, try b.emit(.{ .op = .dict_remove, .ty = b.typeOfRef(dict), .a = dict, .b = entry, .data = flags.dict_take_key, .span = span }), span);
+             return value;
+         },
+         .read, .get, .contains => {
+@@ -200,7 +200,7 @@
+             if (op.kind == .contains) return present(Context, b, probe, span);
+             if (op.kind == .get) {
+                 const selected = try selectValue(Context, b, dict, probe, fallback, false, span);
+-                if (!b.module().zero_rc or !b.module().managed(ty)) return selected;
++                if (!b.module().managed(ty)) return selected;
+                 const result = try b.borrowSelection(selected, dict, fallback, span);
+                 try b.rememberDefault(result, .{ .dict = dict, .probe = probe, .fallback = fallback });
+                 return result;
+@@ -242,7 +242,7 @@
+             try b.branch(try present(Context, b, probe, span), found, join, span);
+             try b.seal(found);
+             b.current = found;
+-            const removed = try b.emit(.{ .op = .dict_remove, .ty = b.typeOfRef(dict), .a = dict, .b = probe, .data = if (b.module().zero_rc) flags.dict_take_value else 0, .span = span });
++            const removed = try b.emit(.{ .op = .dict_remove, .ty = b.typeOfRef(dict), .a = dict, .b = probe, .data = flags.dict_take_value, .span = span });
+             try b.writeOwner(owner, removed, span);
+             try b.jump(join);
+             try b.seal(join);
+@@ -257,19 +257,7 @@
+             const dict = try b.writableReceiverOf(owner, span);
+             const stored_key = try storedKey(Context, b, dict, key);
+             const probe = try find(Context, b, dict, stored_key, span);
+-            if (b.module().zero_rc) return ownedDefault(Context, b, owner, dict, probe, .{ .key = stored_key, .fallback = fallback }, span);
+-            const result = try selectValue(Context, b, dict, probe, fallback, false, span);
+-            const missing = try b.newBlock();
+-            const join = try b.newBlock();
+-            try b.branch(try present(Context, b, probe, span), join, missing, span);
+-            try b.seal(missing);
+-            b.current = missing;
+-            const inserted = try b.emit(.{ .op = .dict_insert, .ty = b.typeOfRef(dict), .a = dict, .b = probe, .data = try b.extraSlice(&.{ stored_key, fallback }), .span = span });
+-            try b.writeOwner(owner, inserted, span);
+-            try b.jump(join);
+-            try b.seal(join);
+-            b.enter(join);
+-            return result;
++            return ownedDefault(Context, b, owner, dict, probe, .{ .key = stored_key, .fallback = fallback }, span);
+         },
+         else => return b.refuse(@tagName(op.kind), span),
+     }
+@@ -376,7 +364,7 @@
+     const entry = try b.runtimeCall(ordinal_symbol, &.{ b.typeOfRef(source), .u64 }, .i64, &.{ source, index }, span);
+     var key = if (keys or dictionary) try b.emit(.{ .op = .dict_entry_key, .ty = shape.key, .a = source, .b = entry, .span = span }) else .none;
+     var value = if (shape.value == .void) .none else if (!keys or dictionary) try valueAt(Context, b, source, entry, span) else .none;
+-    if (m.zero_rc) {
++    {
+         if (key != .none) key = try b.copyOwned(key, span);
+         if (value != .none) value = try b.copyOwned(value, span);
+     }
+--- a/src/core/emit_release.zig
++++ b/src/core/emit_release.zig
+@@ -1,77 +1,17 @@
+-//! Layout-specialized child destruction; the C runtime owns the count primitive
+-//! and iterative pending chain. Legacy descriptors retain the interpreted walk.
++//! Layout metadata for iterative direct destruction by the owned runtime.
+ const std = @import("std");
+ 
+-/// A descriptor's known references and nested union guards, in byte offsets.
++/// A descriptor's references and nested union guards, in byte offsets.
+ pub const Parts = struct {
+     refs: []const [2]u32,
+     guards: []const [3]u32,
+-    /// Dictionary entries additionally release just their key or value.
+-    split: ?u32 = null,
+-    zero_rc: bool = false,
+ };
+ 
+-/// Emit one layout descriptor and its specialized whole/key/value destructors.
++/// Emit an interpreted descriptor; no reference-counted release callbacks exist.
+ pub fn emit(a: std.mem.Allocator, out: *std.ArrayList(u8), name: []const u8, stride: u32, parts: Parts) std.mem.Allocator.Error!void {
+     const words = 3 + 2 * parts.refs.len + 3 * parts.guards.len;
+-    if (parts.zero_rc) {
+-        try out.print(a, "{s} = private constant [{d} x i32] [i32 {d}, i32 {d}, i32 {d}", .{ name, words, stride, parts.refs.len, parts.guards.len });
+-        for (parts.refs) |ref| try out.print(a, ", i32 {d}, i32 {d}", .{ ref[0], ref[1] });
+-        for (parts.guards) |guard| try out.print(a, ", i32 {d}, i32 {d}, i32 {d}", .{ guard[0], guard[1], guard[2] });
+-        try out.appendSlice(a, "], align 8\n");
+-        return;
+-    }
+-    try out.print(a, "{s} = private constant {{ [{d} x i32], ptr, ptr, ptr }} {{ [{d} x i32] [i32 {d}, i32 {d}, i32 -{d}", .{ name, words, words, stride, parts.refs.len, parts.guards.len + 1 });
++    try out.print(a, "{s} = private constant [{d} x i32] [i32 {d}, i32 {d}, i32 {d}", .{ name, words, stride, parts.refs.len, parts.guards.len });
+     for (parts.refs) |ref| try out.print(a, ", i32 {d}, i32 {d}", .{ ref[0], ref[1] });
+     for (parts.guards) |guard| try out.print(a, ", i32 {d}, i32 {d}, i32 {d}", .{ guard[0], guard[1], guard[2] });
+-    try out.print(a, "], ptr {s}.release, ptr ", .{name});
+-    if (parts.split != null) try out.print(a, "{s}.release.key, ptr {s}.release.value", .{ name, name }) else try out.appendSlice(a, "null, ptr null");
+-    try out.appendSlice(a, " }, align 8\n");
+-    try definition(a, out, name, parts, .all);
+-    if (parts.split != null) {
+-        try definition(a, out, name, parts, .key);
+-        try definition(a, out, name, parts, .value);
+-    }
++    try out.appendSlice(a, "], align 8\n");
+ }
+-
+-const Part = enum { all, key, value };
+-
+-fn definition(a: std.mem.Allocator, out: *std.ArrayList(u8), name: []const u8, parts: Parts, part: Part) !void {
+-    const suffix = switch (part) {
+-        .all => "",
+-        .key => ".key",
+-        .value => ".value",
+-    };
+-    try out.print(a, "define internal void {s}.release{s}(ptr %element, ptr %pending) nounwind {{\nentry:\n", .{ name, suffix });
+-    for (parts.refs, 0..) |ref, index| {
+-        if (part == .key and ref[0] >= parts.split.?) continue;
+-        if (part == .value and ref[0] < parts.split.?) continue;
+-        var chain: std.ArrayList([3]u32) = .empty;
+-        var guard = ref[1];
+-        while (guard != 0) {
+-            const g = parts.guards[guard - 1];
+-            try chain.append(a, g);
+-            guard = g[2];
+-        }
+-        // Check outer arms first: inactive payload bytes need not hold a tag.
+-        var depth = chain.items.len;
+-        while (depth > 0) {
+-            depth -= 1;
+-            const g = chain.items[depth];
+-            try out.print(a, "  %tagptr.{d}.{d} = getelementptr inbounds i8, ptr %element, i64 {d}\n  %tag.{d}.{d} = load i64, ptr %tagptr.{d}.{d}, align 8\n", .{ index, depth, g[0], index, depth, index, depth });
+-            try out.print(a, "  %guard.{d}.{d} = icmp eq i64 %tag.{d}.{d}, {d}\n" ++
+-                "  br i1 %guard.{d}.{d}, label %guarded.{d}.{d}, label %next.{d}\nguarded.{d}.{d}:\n", .{ index, depth, index, depth, g[1], index, depth, index, depth, index, index, depth });
+-        }
+-        try out.print(a, "  %at.{d} = getelementptr inbounds i8, ptr %element, i64 {d}\n" ++
+-            "  %child.{d} = load ptr, ptr %at.{d}, align 8\n", .{ index, ref[0], index, index });
+-        if (part == .all) {
+-            try out.print(a, "  call void @myl_core_release_child_pending(ptr %child.{d}, ptr %pending)\n", .{index});
+-        } else {
+-            // A dictionary overwrite/removal finishes each child in descriptor
+-            // order, as its C fallback does; a whole dying block uses the queue.
+-            try out.print(a, "  call void @myl_core_release(ptr %child.{d})\n", .{index});
+-        }
+-        try out.print(a, "  br label %next.{d}\nnext.{d}:\n", .{ index, index });
+-    }
+-    try out.appendSlice(a, "  ret void\n}\n");
+-}
+--- a/src/core/emit_cap.zig
++++ b/src/core/emit_cap.zig
+@@ -2,7 +2,7 @@
+ const std = @import("std");
+ /// Allocation and a located effect site that cannot be emitted.
+ pub const Error = error{ OutOfMemory, UnsupportedEntry, UnsupportedInstruction };
+-/// Emit a named capability argument and its one-count release after main.
++/// Emit a named capability argument and its direct destruction after main.
+ pub fn entry(c: anytype, out: *std.ArrayList(u8), cleanup: *std.ArrayList(u8), index: usize) ![]const u8 {
+     const kind = if (index < c.options.main.capabilities.len) c.options.main.capabilities[index] else return error.UnsupportedEntry;
+     if (kind > 4) return error.UnsupportedEntry;
+@@ -11,7 +11,7 @@
+         try c.externs.appendSlice(c.allocator, "declare ptr @myl_core_cap_grant(i32) nounwind\n");
+     }
+     try out.print(c.allocator, "  %cap{d} = call ptr @myl_core_cap_grant(i32 {d})\n", .{ index, kind });
+-    try cleanup.print(c.allocator, "  call void @{s}(ptr %cap{d})\n", .{ if (c.module.zero_rc) "myl_core_drop_owned" else "myl_core_release", index });
++    try cleanup.print(c.allocator, "  call void @{s}(ptr %cap{d})\n", .{ "myl_core_drop_owned", index });
+     return std.fmt.allocPrint(c.allocator, "ptr %cap{d}", .{index});
+ }
+ /// Emit the host token when main declares Host, retaining the stream-token case.
+--- a/src/core/emit_text_split.zig
++++ b/src/core/emit_text_split.zig
+@@ -122,7 +122,7 @@
+ }
+ 
+ // A private fixed-index split's bounded offset prefix lives in an entry-frame slot.
+-// Its saturated header is never published and ownership never puts it on a heap free list.
++// Its immortal owned header is never published and ownership never puts it on a heap free list.
+ fn prefixCall(comptime Context: type, comptime Output: type, context: Context, out: Output, name: []const u8, inst: ir.Inst) Error!bool {
+     if (inst.op != .call) return false;
+     const module = context.state.module;
+@@ -141,11 +141,10 @@
+     if (digit < '1' or digit > '8') return false;
+     const capacity: u32 = digit - '0';
+     const slot = try context.stackSlot(32 + capacity * 16);
+-    if (!module.zero_rc) try out.print(context.a(), "  store i32 -1, ptr {s}, align 8\n", .{slot});
+     const kind = try context.fresh("%splitkind");
+     const cap = try context.fresh("%splitcap");
+     const reserved = try context.fresh("%splitreserved");
+-    try out.print(context.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  store i32 {d}, ptr {s}, align 4\n", .{ kind, slot, module.kindOffset(), @as(u32, if (module.zero_rc) 1 << 23 else 0), kind });
++    try out.print(context.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  store i32 {d}, ptr {s}, align 4\n", .{ kind, slot, module.kindOffset(), @as(u32, 1 << 23), kind });
+     try out.print(context.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 16\n  store i64 {d}, ptr {s}, align 8\n", .{ cap, slot, capacity, cap });
+     try out.print(context.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 24\n  store i64 0, ptr {s}, align 8\n", .{ reserved, slot, reserved });
+     const args = context.function.operands(inst.data);
