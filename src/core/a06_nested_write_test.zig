@@ -199,20 +199,20 @@ test "zero RC array transfer analysis preserves unknown index and conditional li
     defer arena.deinit();
     // These value-semantic IR controls deliberately bypass source ownership
     // admission. A retained live alias must prevent selecting a direct transfer.
-    const unknown = try support.ownedText(arena.allocator(),
-        \\func overlap(mut cells: FixedArray[int[], 2], read_index: int, write_index: int) -> int:
+    const unknown = try support.ownedText(arena.allocator(), slot_records ++
+        \\func overlap(mut cells: FixedArray[Cell, 2], read_index: int, write_index: int) -> int:
         \\    const held = cells[read_index]
-        \\    cells[write_index].append(9)
-        \\    return len(held)
+        \\    cells[write_index].value = 9
+        \\    return len(held.text)
     );
     try std.testing.expect(std.mem.indexOf(u8, unknown, "retain") != null);
-    const conditional = try support.ownedText(arena.allocator(),
-        \\func conditional(mut cells: FixedArray[int[], 2], replace: bool) -> int:
+    const conditional = try support.ownedText(arena.allocator(), slot_records ++
+        \\func conditional(mut cells: FixedArray[Cell, 2], replace: bool) -> int:
         \\    mut held = cells[0]
-        \\    held.append(9)
+        \\    held.value = 9
         \\    if replace:
         \\        cells[0] = held
-        \\    return len(cells[0])
+        \\    return cells[0].value
     );
     try std.testing.expect(std.mem.indexOf(u8, conditional, "retain") != null);
 }
