@@ -1,0 +1,24 @@
+{
+  "schema": "micro-report-validation-v1",
+  "receipt_count": 91,
+  "runtime_arm_cells": 626,
+  "complete_runtime_arm_cells": 626,
+  "samples": 8994,
+  "warmups": 1812,
+  "rss": 1878,
+  "counted_cells": 273,
+  "counted_ok": 273,
+  "calibration_limited_cells": 34,
+  "zero_exit_live": true,
+  "checked_zero_rc_and_uniqueness": true,
+  "bootstrap_repetitions": 5000,
+  "artifact_check": true,
+  "output_hashes": {
+    "experiments/micro-ownership-20261012/tools/report.py": "6cc967fe947c822eea1fd21c23d67a2e78c6fe31535c91a903ed523989cf0968",
+    "experiments/micro-ownership-20261012/report/test_report.py": "f5279d9ae444322ade3be6b037a11c66bfd6e89be125ede7739ef6572d5c160f",
+    "experiments/micro-ownership-20261012/report/final/REPORT.md": "463b75c02bebbb8545d4137b5d81ec83f03ca45102926617e217580099d5af7d",
+    "experiments/micro-ownership-20261012/report/final/report.json": "d4756260a41ec52465b7135a4eb020551f0cc01b874601b86aaac53856b880ca",
+    "experiments/micro-ownership-20261012/report/final/history.json": "de855e6024669aa00031e112e59667ca6902019f8e7085e18deadbe557b53fcd",
+    "experiments/micro-ownership-20261012/report/final/per-arm.csv": "a4e85aca46a0243d3fc2b695266d8fbaeabbbf23b49c08f7132140c44dc4454b"
+  }
+}
