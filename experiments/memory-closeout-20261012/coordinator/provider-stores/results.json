@@ -1,0 +1,16 @@
+{
+  "status": "focused-pass",
+  "tests": 2,
+  "first_attempt": "one passed; restriction fixture used unsupported int(bool), corrected fixture",
+  "fixes": [
+    "skip provider bookkeeping when SSA reference resolves to Unit/none",
+    "borrow named parent for a read-only capability scope"
+  ],
+  "source_hashes": {
+    "src/core/build.zig": "e8d7e983b08cc1e42c471956e58c6871de1b907fbe9d99e03770f357c3f41234",
+    "src/core/single_owner.zig": "7ba671753f4c5a6cea40e82e7fb0258ba4f48757ffeb979cfd30f982d1541b6e",
+    "src/core/provider_store_test.zig": "bd6ca0c36c1956291cebe2087a8e98ee00d9a46d5344bb9f3f93856032fc0fa4"
+  },
+  "command": "scripts/build-slot.sh build \"$ZIG\" build test-core -Dtest-filter=\"zero RC provider\" -j4 --maxrss 8589934592",
+  "full_gate": "pending integrated candidate"
+}

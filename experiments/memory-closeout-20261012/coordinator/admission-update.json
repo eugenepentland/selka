@@ -1,0 +1,17 @@
+{
+  "build_slots": 3,
+  "build_mem": "8G",
+  "gate_slots": 2,
+  "jobs": 4,
+  "maxrss": 8589934592,
+  "observations": {
+    "MemAvailable_GiB": [
+      16,
+      17
+    ],
+    "largest_observed_active_build_RSS_GiB": 2.5,
+    "host_ram_GiB": 30
+  },
+  "reason": "Bounded source and native batches queue behind two active builds; increase shared budget by one slot with a higher admission memory threshold. Existing queued shells retain their captured budget until next invocation.",
+  "timing": "Shared timing admission still drains all existing slot lock files; no private admission directory."
+}

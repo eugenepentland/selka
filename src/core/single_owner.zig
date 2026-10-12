@@ -806,6 +806,7 @@ const Checker = struct {
                         .dir_resource => |dir| try c.arguments(&.{ provider, dir.path }, &.{}, &.{}),
                         .host_resource => |host| try c.arguments(&.{ provider, host.name }, &.{}, &.{}),
                         .environment_only => |only| try c.arguments(&.{ provider, only.names }, &.{}, &.{}),
+                        .restrict_resource => try c.expression(provider, .read),
                         else => try c.expression(source, .read),
                     }
                 }

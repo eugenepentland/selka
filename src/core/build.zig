@@ -772,7 +772,7 @@ const FnBuilder = struct {
     }
 
     fn providerStore(self: *FnBuilder, store: typed.Store, place: ?Place, value: ir.Ref, assign: bool, span: u32) Error!void {
-        if (!self.module().zero_rc or self.typeOfRef(value) != .capability) return;
+        if (!self.module().zero_rc or self.function.resolve(value) == .none or self.typeOfRef(value) != .capability) return;
         const slot = self.local(store.slot);
         const info = self.checked.scope.locals[slot];
         if (std.mem.startsWith(u8, info.name, "<")) return;
