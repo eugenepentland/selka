@@ -1,0 +1,63 @@
+
+import kicad_sch_gang as m
+import kicad_sch_shape as shape
+import kicad_sch_wire as wire
+import support_expect as ex
+
+func pin_at(index: int, side: shape.Side, net: bytes, x: int, y: int) -> m.PinAt:
+    return m.PinAt(index=index, side=side.copy(), net=net.copy(), at=wire.Point(x=x, y=y))
+
+
+# test "kicad-sch: gang planning keys on the edge and the net"
+public func test_kicad_sch_gang_planning_keys_on_the_edge_and_the_net(out: Stream) -> bool:
+    mut pins = [pin_at(0, shape.Side.bottom, b"GND", 0, 500), pin_at(1, shape.Side.bottom, b"GND", 254, 500), pin_at(2, shape.Side.bottom, b"GND", 508, 500), pin_at(3, shape.Side.top, b"VDD", 0, -500), pin_at(4, shape.Side.top, b"VBAT", 254, -500)]
+    mut gangs = m.plan(pins)
+    if not ex.eq_int(out, "one gang", len(gangs), 1):
+        return False
+    if not ex.eq_bytes(out, "gang net", gangs[0].net, b"GND") or not ex.eq_int(out, "members", len(gangs[0].pins), 3):
+        return False
+    if not ex.ok(out, "ordered members", gangs[0].pins[0].index == 0 and gangs[0].pins[2].index == 2):
+        return False
+    return ex.eq_int(out, "empty gangs", len(m.plan([])), 0)
+
+
+# test "kicad-sch: a gang refuses a run that would cross a foreign tip"
+public func test_kicad_sch_a_gang_refuses_a_run_that_would_cross_a_foreign_tip(out: Stream) -> bool:
+    mut split = [pin_at(0, shape.Side.bottom, b"GND", 0, 500), pin_at(1, shape.Side.bottom, b"VDD", 254, 500), pin_at(2, shape.Side.bottom, b"GND", 508, 500)]
+    if not ex.eq_int(out, "foreign tip blocks", len(m.plan(split)), 0):
+        return False
+    mut sorted_ = [pin_at(0, shape.Side.bottom, b"GND", 0, 500), pin_at(1, shape.Side.bottom, b"GND", 254, 500), pin_at(2, shape.Side.bottom, b"VDD", 508, 500)]
+    if not ex.eq_int(out, "contiguous grounds", len(m.plan(sorted_)), 1):
+        return False
+    mut scattered = [pin_at(0, shape.Side.left, b"GND", -500, 0), pin_at(1, shape.Side.left, b"GND", -627, 254)]
+    return ex.eq_int(out, "not collinear", len(m.plan(scattered)), 0)
+
+
+# test "kicad-sch: gang planning gangs each contiguous stretch of one net"
+public func test_kicad_sch_gang_planning_gangs_each_contiguous_stretch_of_one_net(out: Stream) -> bool:
+    mut pins = [pin_at(0, shape.Side.bottom, b"GND", 0, 500), pin_at(1, shape.Side.bottom, b"GND", 254, 500), pin_at(2, shape.Side.bottom, b"VDD", 508, 500), pin_at(3, shape.Side.bottom, b"GND", 762, 500), pin_at(4, shape.Side.bottom, b"GND", 1016, 500), pin_at(5, shape.Side.bottom, b"GND", 1270, 500)]
+    mut gangs = m.plan(pins)
+    if not ex.eq_int(out, "two stretches", len(gangs), 2):
+        return False
+    return ex.ok(out, "both kept", len(gangs[0].pins) == 2 and len(gangs[1].pins) == 3 and gangs[1].pins[0].index == 3)
+
+
+# test "kicad-sch: gang planning cuts a net at a column change instead of losing it"
+public func test_kicad_sch_gang_planning_cuts_a_net_at_a_column_change_instead_of_losing_it(out: Stream) -> bool:
+    mut pins = [pin_at(0, shape.Side.left, b"GND", -500, 0), pin_at(1, shape.Side.left, b"GND", -500, 127), pin_at(2, shape.Side.left, b"GND", -2000, 254), pin_at(3, shape.Side.left, b"GND", -2000, 381)]
+    mut gangs = m.plan(pins)
+    if not ex.eq_int(out, "two columns", len(gangs), 2):
+        return False
+    return ex.ok(out, "both column pairs", len(gangs[0].pins) == 2 and len(gangs[1].pins) == 2 and gangs[0].pins[0].at.x == -500 and gangs[1].pins[0].at.x == -2000)
+
+
+# test "kicad-sch: runPts walks the gang's tips in order"
+public func test_kicad_sch_runpts_walks_the_gang_s_tips_in_order(out: Stream) -> bool:
+    mut pins = [pin_at(0, shape.Side.left, b"GND", -500, 508), pin_at(1, shape.Side.left, b"GND", -500, 0), pin_at(2, shape.Side.left, b"GND", -500, 254)]
+    mut gangs = m.plan(pins)
+    if not ex.eq_int(out, "one gang", len(gangs), 1):
+        return False
+    mut pts = m.run_pts(gangs[0])
+    if not ex.eq_int(out, "tap count", len(pts), 3):
+        return False
+    return ex.ok(out, "sorted taps", pts[0].y == 0 and pts[1].y == 254 and pts[2].y == 508)

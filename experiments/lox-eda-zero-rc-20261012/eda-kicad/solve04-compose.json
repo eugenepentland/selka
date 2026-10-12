@@ -1,0 +1,147 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/zig-out/bin/mylang",
+  "records": [
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:406:13: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut u = self.req.shapes[p.shape].units[p.unit]\n              ^\n",
+      "source_sha256": "9dd93054c3cb75c1f00f0471099446cf4e7b4096a7a419ddeb91fc40c95e78b0",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 406,
+          "selection": "self.req.shapes[p.shape].units[p.unit]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:408:19: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          mut pin = u.pins[i]\n                    ^\n",
+      "source_sha256": "96a646c3d4ab5428d5d5cef058eb6098bc9cb60a9df1b53543cdca135b7568e9",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 408,
+          "selection": "u.pins[i]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:431:17: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          mut p = self.parts[pi]\n                  ^\n",
+      "source_sha256": "f1680427daa4a3428040700a925ceb06ecee15160e1429a6f773d60f9c4e88f4",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 431,
+          "selection": "self.parts[pi]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:439:13: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut u = self.req.shapes[p.shape].units[p.unit]\n              ^\n",
+      "source_sha256": "a50ed5d247d57c8b9e8dbe8c28bf132e576b336ab2709f7fa73e5a5648482688",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 439,
+          "selection": "self.req.shapes[p.shape].units[p.unit]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:442:19: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          mut pin = u.pins[i]\n                    ^\n",
+      "source_sha256": "1e2ab8c69122f07bdb8dea5edc23b7f2c5d5f0a2deb238f3298c77354dca8fef",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 442,
+          "selection": "u.pins[i]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:448:15: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut ref = self.parts[part].id.ref\n                ^\n",
+      "source_sha256": "6c74da31697cb355e499d1e1c42c2166fa2cfc179c34e3045b6d8e46f4e00ea5",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 448,
+          "selection": "self.parts[part].id.ref"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:452:19: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          mut pin = g.pins[i]\n                    ^\n",
+      "source_sha256": "68f9f29ee5378e3fea259c462380331c7f237bd7377d12648d2dea9c704dced0",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 452,
+          "selection": "g.pins[i]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:479:17: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          mut u = self.req.shapes[p.shape].units[p.unit]\n                  ^\n",
+      "source_sha256": "24fe4cf7a4499cd968292e684e77bb6b7c63e0ab8e78911e1dc08f08036fcc5e",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 479,
+          "selection": "self.req.shapes[p.shape].units[p.unit]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:480:9: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          self.bodies.append(body_box(p, u))\n          ^\n",
+      "source_sha256": "f34e831466125179eeff5c22934aec52933ade38bdb810d53178cff9544bfcfb",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 480,
+          "selection": "self.bodies.append(body_box(p, u))"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:480:9: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          self.bodies.append(body_box(p, u)).copy()\n          ^\n",
+      "source_sha256": "d7d132e278dccfa568a466ed5c77d72970eefbc3d2f5316d404b3b5857f25dc0",
+      "snapshot_edits": []
+    },
+    {
+      "module": "kicad_sch_compose_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:480:9: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          self.bodies.append(body_box(p, u)).copy()\n          ^\n",
+      "source_sha256": "9688b8edaddb7db9504aa0c2775baebf9ba88658b842489dba50971ff6bc7823",
+      "snapshot_edits": []
+    }
+  ]
+}

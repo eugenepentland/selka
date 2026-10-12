@@ -1,0 +1,1 @@
+{"modules": [{"module": "kicad_sch_compose_test.my", "status": 1, "stdout": "", "stderr": "kicad_sch_compose.my:552:16: error[E_SINGLE_OWNER_MOVED]: 'key' was moved or is unavailable on this path; use .copy() when both values are needed\n          by_net[key].append(i)\n                 ^\n", "source_sha256": "9688b8edaddb7db9504aa0c2775baebf9ba88658b842489dba50971ff6bc7823"}]}

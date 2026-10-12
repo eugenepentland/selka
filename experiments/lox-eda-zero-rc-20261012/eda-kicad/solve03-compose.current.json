@@ -1,0 +1,1 @@
+{"modules": [{"module": "kicad_sch_compose_test.my", "status": 1, "stdout": "", "stderr": "kicad_sch_compose.my:399:30: error[E_SYNTAX]: unexpected token; expected )\n          wire_pins(mut.copy() self, p)\n                               ^\n", "source_sha256": "9688b8edaddb7db9504aa0c2775baebf9ba88658b842489dba50971ff6bc7823"}]}

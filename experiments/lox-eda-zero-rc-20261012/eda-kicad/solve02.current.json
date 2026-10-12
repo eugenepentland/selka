@@ -1,0 +1,1 @@
+{"modules": [{"module": "kicad_sch_vendor.my", "status": 1, "stdout": "", "stderr": "kicad_sch_vendor.my:188:23: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          mut snapped = p\n                        ^\n", "source_sha256": "927b400044784e38350522ad4e83877a3dd6e8bea37e28f92b3dac011d1ca4cf"}]}

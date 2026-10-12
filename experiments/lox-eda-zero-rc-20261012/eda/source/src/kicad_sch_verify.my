@@ -1,0 +1,533 @@
+
+import kicad_sch_textbox as textbox
+import sexpr_ast as ast
+import sexpr_parser as parser
+import numeric
+import support_parse as parse_mod
+import support_strs as strs
+
+public const err_not_schematic: str = "NotSchematic"
+
+
+public const err_symbol_count_mismatch: str = "SymbolCountMismatch"
+
+
+public const err_symbol_uuid_mismatch: str = "SymbolUuidMismatch"
+
+
+public const err_unknown_lib_id: str = "UnknownLibId"
+
+
+public const err_duplicate_pad: str = "DuplicatePad"
+
+
+public const err_label_count_mismatch: str = "LabelCountMismatch"
+
+
+public const err_missing_net_label: str = "MissingNetLabel"
+
+
+public const err_no_connect_count_mismatch: str = "NoConnectCountMismatch"
+
+
+public const err_sheet_link_mismatch: str = "SheetLinkMismatch"
+
+
+public const err_off_grid: str = "OffGrid"
+
+
+public const err_wire_count_mismatch: str = "WireCountMismatch"
+
+
+public const err_wire_not_orthogonal: str = "WireNotOrthogonal"
+
+
+public const err_wire_through_pin: str = "WireThroughPin"
+
+
+public const err_label_on_wire_interior: str = "LabelOnWireInterior"
+
+
+public const err_missing_junction: str = "MissingJunction"
+
+
+public const err_stray_junction: str = "StrayJunction"
+
+
+public record Expect:
+    uuids: bytes[]
+    lib_ids: bytes[]
+    labels: bytes[]
+    rail_values: bytes[]
+    no_connects: int
+    sheets: bytes[]
+    wires: int = 0
+
+
+public func check(source: bytes, want: Expect) -> Result[textbox.Report, str]:
+    mut nodes: ast.Node[] = []
+    match parser.parse(source):
+        case Err(e):
+            return Err(parser.error_name(e))
+        case Ok(parsed):
+            nodes = parsed
+    if len(nodes) == 0 or not ast.is_form(nodes[0], b"kicad_sch"):
+        return Err(err_not_schematic)
+    mut root = ast.as_list(nodes[0])
+    if root is None:
+        return Err(err_not_schematic)
+    try grid_scan(nodes[0])
+    mut found = found_init()
+    for child in root[1:]:
+        try scan_top(child, mut found)
+    if len(found.uuids) != len(want.uuids) or len(found.lib_ids) != len(want.lib_ids):
+        return Err(err_symbol_count_mismatch)
+    for i in range(len(found.uuids)):
+        if found.uuids[i] != want.uuids[i]:
+            return Err(err_symbol_uuid_mismatch)
+    for j in range(len(found.lib_ids)):
+        mut got = found.lib_ids[j].copy()
+        if got != want.lib_ids[j] or strs.text(got)not in found.lib_names:
+            return Err(err_unknown_lib_id)
+    if found.no_connects != want.no_connects:
+        return Err(err_no_connect_count_mismatch)
+    try check_sheets(found, want)
+    try compare(found.labels, want.labels)
+    try compare(found.rail_values, want.rail_values)
+    try check_wires(found.geom, want)
+    return Ok(textbox.scan(nodes[0]))
+
+
+record Pt:
+    x: int
+    y: int
+
+
+record Seg:
+    a: Pt
+    b: Pt
+
+
+record LibPin:
+    lib: bytes
+    unit: int
+    at: Pt
+
+
+record Placed:
+    lib: bytes
+    unit: int
+    at: Pt
+    angle: int
+
+
+record Geometry:
+    segs: Seg[]
+    dots: Pt[]
+    placed: Placed[]
+    lib_pins: LibPin[]
+    label_pts: Pt[]
+
+
+record Multiset:
+    counts: dict[str, int]
+    total: int = 0
+
+
+record Found:
+    lib_names: set[str]
+    uuids: bytes[]
+    lib_ids: bytes[]
+    labels: Multiset
+    rail_values: Multiset
+    sheets: bytes[]
+    geom: Geometry
+    no_connects: int = 0
+
+
+func found_init() -> Found:
+    mut g = Geometry(segs=[], dots=[], placed=[], lib_pins=[], label_pts=[])
+    return Found(lib_names=set(), uuids=[], lib_ids=[], labels=Multiset(counts={}), rail_values=Multiset(counts={}), sheets=[], geom=g)
+
+
+func multiset_add(mut self: Multiset, value: bytes):
+    mut key = strs.text(value)
+    self.counts[key] = self.counts.get(key, 0) + 1
+    self.total += 1
+
+
+func check_wires(g: Geometry, want: Expect) -> Result[Unit, str]:
+    if len(g.segs) != want.wires:
+        return Err(err_wire_count_mismatch)
+    try check_orthogonal(g.segs)
+    try check_pin_touch(g.segs, pin_points(g))
+    try check_label_touch(g.segs, g.label_pts)
+    return check_junctions(g)
+
+
+func check_orthogonal(segs: Seg[]) -> Result[Unit, str]:
+    for s in segs:
+        if s.a.x == s.b.x and s.a.y == s.b.y:
+            return Err(err_wire_not_orthogonal)
+        if s.a.x != s.b.x and s.a.y != s.b.y:
+            return Err(err_wire_not_orthogonal)
+    return Ok(())
+
+
+# Pins and labels must attach at actual wire ends; an interior touch lies.
+func check_pin_touch(segs: Seg[], pins: Pt[]) -> Result[Unit, str]:
+    for s in segs:
+        for p in pins:
+            if on_seg(p, s) and not end_of(s, p):
+                return Err(err_wire_through_pin)
+    return Ok(())
+
+
+func check_label_touch(segs: Seg[], labels: Pt[]) -> Result[Unit, str]:
+    for s in segs:
+        for p in labels:
+            if on_seg(p, s) and not end_of(s, p):
+                return Err(err_label_on_wire_interior)
+    return Ok(())
+
+
+func check_junctions(g: Geometry) -> Result[Unit, str]:
+    mut ends: dict[int, int] = {}
+    for s in g.segs:
+        tally(mut ends, s.a)
+        tally(mut ends, s.b)
+    mut dots: set[int] = set()
+    for p in g.dots:
+        mut key = pt_key(p)
+        if ends.get(key, 0) < 2:
+            return Err(err_stray_junction)
+        dots.add(key)
+    for k in ends:
+        if ends[k] >= 3 and k not in dots:
+            return Err(err_missing_junction)
+    return Ok(())
+
+
+func tally(mut ends: dict[int, int], p: Pt):
+    mut key = pt_key(p)
+    ends[key] = ends.get(key, 0) + 1
+
+
+func pt_key(p: Pt) -> int:
+    return (p.x + 1048576) * 2097152 + p.y + 1048576
+
+
+# Re-derive pin positions from the emitted library and placed symbols.
+func pin_points(g: Geometry) -> Pt[]:
+    mut out: Pt[] = []
+    for s in g.placed:
+        for lp in g.lib_pins:
+            if lp.lib != s.lib or (lp.unit != s.unit and lp.unit != 0):
+                continue
+            mut r = rotate(lp.at, s.angle)
+            out.append(Pt(x=s.at.x + r.x, y=s.at.y - r.y))
+    return out
+
+
+func rotate(p: Pt, angle: int) -> Pt:
+    mut turn = angle % 360
+    if turn == 90:
+        return Pt(x=-p.y, y=p.x)
+    if turn == 180:
+        return Pt(x=-p.x, y=-p.y)
+    if turn == 270:
+        return Pt(x=p.y, y=-p.x)
+    return p.copy()
+
+
+func on_seg(p: Pt, s: Seg) -> bool:
+    return p.x >= min(s.a.x, s.b.x) and p.x <= max(s.a.x, s.b.x) and p.y >= min(s.a.y, s.b.y) and p.y <= max(s.a.y, s.b.y)
+
+
+func end_of(s: Seg, p: Pt) -> bool:
+    return (s.a.x == p.x and s.a.y == p.y) or (s.b.x == p.x and s.b.y == p.y)
+
+
+func check_sheets(found: Found, want: Expect) -> Result[Unit, str]:
+    if found.sheets != want.sheets:
+        return Err(err_sheet_link_mismatch)
+    return Ok(())
+
+
+func compare(found: Multiset, want: bytes[]) -> Result[Unit, str]:
+    if found.total != len(want):
+        return Err(err_label_count_mismatch)
+    mut expected = Multiset(counts={})
+    for l in want:
+        multiset_add(mut expected, l)
+    if len(expected.counts) != len(found.counts):
+        return Err(err_label_count_mismatch)
+    for key in expected.counts:
+        if key not in found.counts:
+            return Err(err_missing_net_label)
+        if found.counts[key] != expected.counts[key]:
+            return Err(err_label_count_mismatch)
+    return Ok(())
+
+
+func scan_top(node: ast.Node, mut found: Found) -> Result[Unit, str]:
+    if ast.is_form(node, b"lib_symbols"):
+        return scan_lib_symbols(node, mut found)
+    if ast.is_form(node, b"no_connect"):
+        found.no_connects += 1
+    elif ast.is_form(node, b"global_label"):
+        scan_label(node, mut found)
+    elif ast.is_form(node, b"symbol"):
+        scan_placed(node, mut found)
+    elif ast.is_form(node, b"sheet"):
+        scan_sheet(node, mut found)
+    elif ast.is_form(node, b"wire"):
+        scan_wire(node, mut found)
+    elif ast.is_form(node, b"junction"):
+        scan_junction(node, mut found)
+    return Ok(())
+
+
+func scan_wire(node: ast.Node, mut found: Found):
+    mut cl = ast.as_list(node)
+    if cl is None:
+        return
+    for child in cl[1:]:
+        if not ast.is_form(child, b"pts"):
+            continue
+        mut l = ast.as_list(child)
+        if l is None or len(l) < 3:
+            continue
+        mut a = xy_of(l[1])
+        mut b = xy_of(l[2])
+        if a is not None and b is not None:
+            found.geom.segs.append(Seg(a=a, b=b))
+
+
+func scan_junction(node: ast.Node, mut found: Found):
+    mut p = point_of(node)
+    if p is not None:
+        found.geom.dots.append(p)
+
+
+func coord(node: ast.Node) -> int?:
+    mut v = try ast.as_number(node)
+    return numeric.checked_i64(round(v * 100.0))
+
+
+func xy_of(node: ast.Node) -> Pt?:
+    if not ast.is_form(node, b"xy"):
+        return None
+    mut l = try ast.as_list(node)
+    if len(l) < 3:
+        return None
+    mut x = try coord(l[1])
+    mut y = try coord(l[2])
+    return Some(Pt(x=x, y=y))
+
+
+func at_form(node: ast.Node) -> ast.Node[]?:
+    mut cl = try ast.as_list(node)
+    for child in cl[1:]:
+        if not ast.is_form(child, b"at"):
+            continue
+        mut l = ast.as_list(child)
+        if l is not None and len(l) >= 3:
+            return Some(l.copy())
+    return None
+
+
+func point_of(node: ast.Node) -> Pt?:
+    mut l = try at_form(node)
+    mut x = try coord(l[1])
+    mut y = try coord(l[2])
+    return Some(Pt(x=x, y=y))
+
+
+func angle_of(node: ast.Node) -> int:
+    mut l = at_form(node)
+    if l is None or len(l) < 4:
+        return 0
+    mut deg = numeric.checked_i64(round(ast.as_number(l[3]).unwrap_or(0.0)))
+    if deg is None:
+        return 0
+    return deg % 360
+
+
+func unit_of(node: ast.Node) -> int:
+    mut cl = ast.as_list(node)
+    if cl is None:
+        return 1
+    for child in cl[1:]:
+        if not ast.is_form(child, b"unit"):
+            continue
+        mut l = ast.as_list(child)
+        if l is None or len(l) < 2:
+            continue
+        mut n = numeric.checked_i64(round(ast.as_number(l[1]).unwrap_or(1.0)))
+        if n is None:
+            return 1
+        return max(n, 0)
+    return 1
+
+
+func sub_unit(name: bytes) -> int?:
+    mut style = name.rfind(b"_")
+    if style < 0:
+        return None
+    mut unit = name[0:style].rfind(b"_")
+    if unit < 0:
+        return None
+    return parse_mod.parse_u32(strs.text(name[unit + 1:style]))
+
+
+func scan_label(node: ast.Node, mut found: Found):
+    mut cl = ast.as_list(node)
+    if cl is None or len(cl) < 2:
+        return
+    mut label = ast.as_text(cl[1])
+    if label is None:
+        return
+    mut labels = found.labels.copy()
+    multiset_add(mut labels, label)
+    found.labels = labels
+    mut p = point_of(node)
+    if p is not None:
+        found.geom.label_pts.append(p)
+
+
+func scan_sheet(node: ast.Node, mut found: Found):
+    mut file = property(node, b"Sheetfile")
+    if file is not None:
+        found.sheets.append(file.copy())
+
+
+func property(node: ast.Node, name: bytes) -> bytes?:
+    mut cl = try ast.as_list(node)
+    for child in cl[1:]:
+        if not ast.is_form(child, b"property"):
+            continue
+        mut l = ast.as_list(child)
+        if l is not None and len(l) >= 3 and ast.as_text(l[1]).unwrap_or(b"") == name:
+            return ast.as_text(l[2])
+    return None
+
+
+func scan_lib_symbols(node: ast.Node, mut found: Found) -> Result[Unit, str]:
+    mut cl = ast.as_list(node)
+    if cl is None:
+        return Ok(())
+    for sym in cl[1:]:
+        mut sl = ast.as_list(sym)
+        if sl is None or len(sl) < 2 or not ast.is_form(sym, b"symbol"):
+            continue
+        mut name = ast.as_text(sl[1])
+        if name is None:
+            continue
+        found.lib_names.add(strs.text(name))
+        mut pads: set[str] = set()
+        try unique_pads(sym, mut pads)
+        scan_lib_units(sl[2:], name, mut found)
+    return Ok(())
+
+
+func scan_lib_units(children: ast.Node[], lib: bytes, mut found: Found):
+    for sub in children:
+        if not ast.is_form(sub, b"symbol"):
+            continue
+        mut l = ast.as_list(sub)
+        if l is None or len(l) < 2:
+            continue
+        mut unit = sub_unit(ast.as_text(l[1]).unwrap_or(b""))
+        if unit is None:
+            continue
+        for item in l[2:]:
+            if not ast.is_form(item, b"pin"):
+                continue
+            mut at = point_of(item)
+            if at is not None:
+                found.geom.lib_pins.append(LibPin(lib=lib.copy(), unit=unit, at=at))
+
+
+func unique_pads(node: ast.Node, mut pads: set[str]) -> Result[Unit, str]:
+    mut cl = ast.as_list(node)
+    if cl is None:
+        return Ok(())
+    for child in cl:
+        if ast.is_form(child, b"number"):
+            mut l = ast.as_list(child)
+            if l is None or len(l) < 2:
+                continue
+            mut pad = ast.as_text(l[1])
+            if pad is None:
+                continue
+            mut key = strs.text(pad)
+            if key in pads:
+                return Err(err_duplicate_pad)
+            pads.add(key)
+            continue
+        if ast.as_list(child).is_some():
+            try unique_pads(child, mut pads)
+    return Ok(())
+
+
+func scan_placed(node: ast.Node, mut found: Found):
+    mut cl = ast.as_list(node)
+    if cl is None:
+        return
+    mut lib_id: bytes? = None
+    mut uuid: bytes? = None
+    for child in cl[1:]:
+        mut l = ast.as_list(child)
+        if l is None or len(l) < 2:
+            continue
+        if ast.is_form(child, b"lib_id"):
+            lib_id = ast.as_text(l[1])
+        if ast.is_form(child, b"uuid"):
+            uuid = ast.as_text(l[1])
+    if lib_id is None:
+        return
+    found.lib_ids.append(lib_id.copy())
+    found.uuids.append(uuid.unwrap_or(b"").copy())
+    mut at = point_of(node)
+    if at is not None:
+        found.geom.placed.append(Placed(lib=lib_id.copy(), unit=unit_of(node), at=at, angle=angle_of(node)))
+    mut ref = property(node, b"Reference")
+    if ref is not None and ref.startswith(b"#PWR"):
+        mut rails = found.rail_values.copy()
+        multiset_add(mut rails, property(node, b"Value").unwrap_or(b""))
+        found.rail_values = rails
+
+
+# Drawing-only body art is exempt; text and every connection anchor are not.
+func grid_scan(node: ast.Node) -> Result[Unit, str]:
+    if is_graphic_form(node):
+        return Ok(())
+    mut cl = ast.as_list(node)
+    if cl is None:
+        return Ok(())
+    if len(cl) >= 3 and is_point_form(node):
+        try on_grid(cl[1])
+        try on_grid(cl[2])
+    for child in cl:
+        try grid_scan(child)
+    return Ok(())
+
+
+func is_point_form(node: ast.Node) -> bool:
+    return ast.is_form(node, b"at") or ast.is_form(node, b"xy") or ast.is_form(node, b"start") or ast.is_form(node, b"end")
+
+
+func is_graphic_form(node: ast.Node) -> bool:
+    return ast.is_form(node, b"rectangle") or ast.is_form(node, b"polyline") or ast.is_form(node, b"circle") or ast.is_form(node, b"arc") or ast.is_form(node, b"bezier")
+
+
+func on_grid(node: ast.Node) -> Result[Unit, str]:
+    mut v = ast.as_number(node)
+    if v is None:
+        return Ok(())
+    mut scaled = v * 100.0
+    mut hundredths = numeric.checked_i64(round(scaled))
+    if hundredths is None or abs(scaled - float(hundredths)) > 0.01 or hundredths % 127 != 0:
+        return Err(err_off_grid)
+    return Ok(())

@@ -1,0 +1,102 @@
+
+import kicad_sch_wire as m
+import kicad_sch_shape as shape
+import support_expect as ex
+
+const g: int = 127
+
+
+func pt(x: int, y: int) -> m.Point:
+    return m.Point(x=x, y=y)
+
+
+func rightward(x: int, y: int) -> m.End:
+    return m.End(at=pt(x, y), side=shape.Side.right)
+
+
+func leftward(x: int, y: int) -> m.End:
+    return m.End(at=pt(x, y), side=shape.Side.left)
+
+
+func field() -> m.Field:
+    return m.Field(stops=[], bodies=[], segs=[])
+
+
+# test "kicad-sch: route prefers the straight run, then one bend"
+public func test_kicad_sch_route_prefers_the_straight_run_then_one_bend(out: Stream) -> bool:
+    mut straight = m.route(rightward(0, 0), leftward(10 * g, 0), field(), b"k")
+    if straight is None:
+        return ex.ok(out, "straight route", False)
+    if not ex.eq_int(out, "straight points", len(straight.pts), 2) or not ex.eq_bytes(out, "stable key", straight.key, b"k"):
+        return False
+    mut bent = m.route(rightward(0, 0), leftward(10 * g, 4 * g), field(), b"k")
+    if bent is None:
+        return ex.ok(out, "bent route", False)
+    if not ex.ok(out, "one horizontal-first bend", len(bent.pts) == 3 and bent.pts[1].x == 10 * g and bent.pts[1].y == 0):
+        return False
+    for p in bent.pts:
+        if not ex.ok(out, "grid", p.x % g == 0 and p.y % g == 0):
+            return False
+    return True
+
+
+# test "kicad-sch: route refuses a path that would run over a pin"
+public func test_kicad_sch_route_refuses_a_path_that_would_run_over_a_pin(out: Stream) -> bool:
+    mut from_ = rightward(0, 0)
+    mut to = leftward(10 * g, 0)
+    mut blocked = m.Field(stops=[pt(5 * g, 0)], bodies=[], segs=[])
+    if not ex.ok(out, "foreign pin blocks", m.route(from_, to, blocked, b"k").is_none()):
+        return False
+    mut ends = m.Field(stops=[from_.at, to.at], bodies=[], segs=[])
+    return ex.ok(out, "own endpoints exempt", m.route(from_, to, ends, b"k").is_some())
+
+
+# test "kicad-sch: route crosses foreign wire but avoids tees, overlaps, and bodies"
+public func test_kicad_sch_route_crosses_foreign_wire_but_avoids_tees_overlaps_and_bodies(out: Stream) -> bool:
+    mut from_ = rightward(0, 0)
+    mut to = leftward(10 * g, 0)
+    mut crossing = m.Field(stops=[], bodies=[], segs=[m.Seg(a=pt(5 * g, -2 * g), b=pt(5 * g, 2 * g))])
+    mut over = m.route(from_, to, crossing, b"k")
+    if over is None:
+        return ex.ok(out, "crossing route", False)
+    if not ex.eq_int(out, "crossing straight", len(over.pts), 2):
+        return False
+    mut tee = m.Field(stops=[], bodies=[], segs=[m.Seg(a=pt(5 * g, 0), b=pt(5 * g, 2 * g))])
+    if not ex.ok(out, "tee refused", m.route(from_, to, tee, b"k").is_none()):
+        return False
+    mut along = m.Field(stops=[], bodies=[], segs=[m.Seg(a=pt(3 * g, 0), b=pt(7 * g, 0))])
+    if not ex.ok(out, "overlap refused", m.route(from_, to, along, b"k").is_none()):
+        return False
+    mut across = m.Field(stops=[], bodies=[m.Box(x0=4 * g, y0=-g, x1=6 * g, y1=g)], segs=[])
+    if not ex.ok(out, "body refused", m.route(from_, to, across, b"k").is_none()):
+        return False
+    mut edge = m.Field(stops=[], bodies=[m.Box(x0=4 * g, y0=0, x1=6 * g, y1=2 * g)], segs=[])
+    return ex.ok(out, "body edge allowed", m.route(from_, to, edge, b"k").is_some())
+
+
+# test "kicad-sch: route gives up beyond the maximum span"
+public func test_kicad_sch_route_gives_up_beyond_the_maximum_span(out: Stream) -> bool:
+    if not ex.ok(out, "far refused", m.route(rightward(0, 0), leftward(m.max_span + g, 0), field(), b"k").is_none()):
+        return False
+    return ex.ok(out, "zero length refused", m.route(rightward(0, 0), leftward(0, 0), field(), b"k").is_none())
+
+
+# test "kicad-sch: junctions names the three-way meeting points only"
+public func test_kicad_sch_junctions_names_the_three_way_meeting_points_only(out: Stream) -> bool:
+    mut hub = pt(4 * g, 4 * g)
+    mut segs = [m.Seg(a=pt(0, 4 * g), b=hub), m.Seg(a=pt(8 * g, 4 * g), b=hub), m.Seg(a=pt(4 * g, 0), b=hub), m.Seg(a=pt(0, 0), b=pt(0, -2 * g)), m.Seg(a=pt(0, -2 * g), b=pt(2 * g, -2 * g))]
+    mut dots = m.junctions(segs)
+    if not ex.eq_int(out, "three-way only", len(dots), 1):
+        return False
+    if not ex.ok(out, "dot at hub", dots[0].x == hub.x and dots[0].y == hub.y):
+        return False
+    return ex.eq_int(out, "empty dots", len(m.junctions([])), 0)
+
+
+# test "kicad-sch: the junction point key round-trips both signs"
+public func test_kicad_sch_the_junction_point_key_round_trips_both_signs(out: Stream) -> bool:
+    for p in [pt(0, 0), pt(12700, -6350), pt(-6350, 279400)]:
+        mut back = m.unkey(m.point_key(p))
+        if not ex.ok(out, "point key inverse", back.x == p.x and back.y == p.y):
+            return False
+    return True

@@ -1,0 +1,231 @@
+
+import export_kicad_footprint as m
+import placement_geometry as geometry
+import infra_fs as fsx
+import sexpr_parser as parser_mod
+import support_parse
+import support_strs as strs
+import support_expect as ex
+
+func render(out: Stream, source: bytes) -> bytes:
+    match m.export_footprint_mod(out, source, None, None, None):
+        case Ok(data):
+            return data
+        case Err(e):
+            out.print(e)
+            assert False, "footprint export failed"
+            return b""
+
+
+func write_footprint(fs: Filesystem, name: str, source: bytes) -> bool:
+    match fsx.make_path(fs, "project/lib/footprints"):
+        case Err(_):
+            return False
+        case Ok(_):
+            pass
+    match fs.write_file("project/lib/footprints/" + name + ".sexp", source):
+        case Err(_):
+            return False
+        case Ok(_):
+            return True
+
+
+# Original private Zig test helper: inspect the emitted nth pad placement.
+func nth_pad_at_angle(mod: bytes, n: int) -> float?:
+    mut seen = 0
+    for line in strs.tokenize_scalar(mod, 10):
+        mut t = strs.trim(line, b" \t\r")
+        if not t.startswith(b"(at ") or not t.endswith(b")"):
+            continue
+        if seen != n:
+            seen += 1
+            continue
+        mut fields = strs.tokenize_scalar(t[4:len(t) - 1], 32)
+        if len(fields) < 3:
+            return None
+        return support_parse.parse_float(strs.text(fields[2]))
+    return None
+
+
+# test "exportFootprintMod emits the pad rotation geometry.zig reads, mapped into KiCad's frame"
+public func test_exportfootprintmod_emits_the_pad_rotation_geometry_zig_reads_mapped_into_kicad_s_frame(fs: Filesystem, out: Stream) -> bool:
+    mut src = b"(footprint \"rot-fixture\"\n  (pad 1 smd rect (pos 1.0 2.0 45) (size 1.2 0.6))\n  (pad 2 smd rect (pos -1.0 2.0) (size 1.2 0.6))\n  (pad 3 smd roundrect (pos 0.0 -2.0 -30) (size 1.2 0.6)))"
+    assert write_footprint(fs, "rot-fixture", src)
+    mut geom = geometry.load(fs, "project", b"rot-fixture", 0, 0.0)
+    assert not geom.fallback
+    assert len(geom.pads) == 3
+    mut result = render(out, src)
+    for i in range(len(geom.pads)):
+        mut want = m.kicad_pad_angle(geom.pads[i].rot)
+        mut got = nth_pad_at_angle(result, i)
+        if want == 0.0:
+            assert got is None
+        else:
+            if got is None:
+                return False
+            assert ex.near(out, "pad angle", got, want, 1e-4)
+    assert result.find(b"(at 1.0000 2.0000 315.0000)") >= 0
+    assert result.find(b"(at -1.0000 2.0000)") >= 0
+    assert result.find(b"(at 0.0000 -2.0000 30.0000)") >= 0
+    assert result.find(b"(size 1.2000 0.6000)") >= 0
+    return True
+
+
+# test "exportFootprintMod leaves a rotated custom pad's (at …) unrotated"
+public func test_exportfootprintmod_leaves_a_rotated_custom_pad_s_at_unrotated(fs: Filesystem, out: Stream) -> bool:
+    mut src = b"(footprint \"rot-custom\"\n  (pad 1 smd custom (pos 1.000 1.000 30) (size 2.000 2.000)\n    (poly (0.000 0.000) (2.000 0.000) (2.000 2.000) (0.000 2.000))))"
+    assert write_footprint(fs, "rot-custom", src)
+    mut geom = geometry.load(fs, "project", b"rot-custom", 0, 0.0)
+    assert len(geom.pads) == 1
+    assert ex.near(out, "source angle", geom.pads[0].rot, 30.0, 1e-9)
+    assert len(geom.pads[0].poly) >= 3
+    mut result = render(out, src)
+    assert nth_pad_at_angle(result, 0) is None
+    assert result.find(b"(at 1.000 1.000)") >= 0
+    return True
+
+
+# test "exportFootprintMod emits fab geometry on F.Fab and keeps silkscreen on F.SilkS"
+public func test_exportfootprintmod_emits_fab_geometry_on_f_fab_and_keeps_silkscreen_on_f_silks(out: Stream) -> bool:
+    mut src = b"(footprint \"T\"\n  (pad 1 smd rect (pos 0 0) (size 1 1))\n  (silkscreen (line (-1 -1) (1 -1)))\n  (fab (line (-2 -2) (2 -2)) (circle (0 0) 0.5)))"
+    mut result = render(out, src)
+    assert result.find(b"(layer \"F.Fab\")") >= 0
+    assert result.find(b"(fp_line (start -2.00 -2.00) (end 2.00 -2.00)") >= 0
+    assert result.find(b"(fp_circle (center 0.00 0.00) (end 0.50 0.00)") >= 0
+    assert result.find(b"(layer \"F.SilkS\")") >= 0
+    return True
+
+
+# test "exportFootprintMod names the body and SMD pad layers with KiCad's own spellings"
+public func test_exportfootprintmod_names_the_body_and_smd_pad_layers_with_kicad_s_own_spellings(out: Stream) -> bool:
+    mut src = b"(footprint \"T\"\n  (pad 1 smd rect (pos 0 0) (size 1 1))\n  (pad 2 smd rect (pos 2 0) (size 1 1) no-paste))"
+    mut result = render(out, src)
+    assert result.find(b"  (layer \"F.Cu\")\n") >= 0
+    assert result.find(b"(layers \"F.Cu\" \"F.Mask\" \"F.Paste\")") >= 0
+    assert result.find(b"(layers \"F.Cu\" \"F.Mask\")\n") >= 0
+    return True
+
+
+# test "exportFootprintMod strokes F.SilkS at the fabricated width and F.Fab at the documentation width"
+public func test_exportfootprintmod_strokes_f_silks_at_the_fabricated_width_and_f_fab_at_the_documentation_width(out: Stream) -> bool:
+    mut src = b"(footprint \"T\"\n  (pad 1 smd rect (pos 0 0) (size 1 1))\n  (silkscreen (line (-1 -1) (1 -1)))\n  (fab (line (-2 -2) (2 -2))))"
+    mut result = render(out, src)
+    assert result.find(b"(fp_line (start -1.00 -1.00) (end 1.00 -1.00)\n    (stroke (width 0.15) (type default))\n    (layer \"F.SilkS\")") >= 0
+    assert result.find(b"(fp_line (start -2.00 -2.00) (end 2.00 -2.00)\n    (stroke (width 0.10) (type default))\n    (layer \"F.Fab\")") >= 0
+    return True
+
+
+# test "exportFootprintMod inflates the F.CrtYd courtyard by the placement margin"
+public func test_exportfootprintmod_inflates_the_f_crtyd_courtyard_by_the_placement_margin(out: Stream) -> bool:
+    mut src = b"(footprint \"T\"\n  (pad 1 smd rect (pos 0 0) (size 1 1))\n  (courtyard (rect -0.85 -0.45 0.85 0.45)))"
+    mut result = render(out, src)
+    assert result.find(b"(fp_rect (start -1.00 -0.60) (end 1.00 0.60)") >= 0
+    assert result.find(b"(layer \"F.CrtYd\")") >= 0
+    return True
+
+
+# test "exportFootprintMod emits silkscreen poly + rect (pin-1 markers must not be dropped)"
+public func test_exportfootprintmod_emits_silkscreen_poly_rect_pin_1_markers_must_not_be_dropped(out: Stream) -> bool:
+    mut src = b"(footprint \"T\"\n  (pad 1 smd rect (pos 0 0) (size 1 1))\n  (silkscreen (poly (-3.40 1.81) (-3.40 2.19) (-3.15 2.19) (-3.15 1.81)) (rect -1 -1 1 1)))"
+    mut result = render(out, src)
+    assert result.find(b"(fp_poly") >= 0
+    assert result.find(b"(xy -3.40 1.81)") >= 0
+    assert result.find(b"(fill solid)") >= 0
+    assert result.find(b"(fp_rect (start -1.00 -1.00) (end 1.00 1.00)") >= 0
+    return True
+
+
+# test "exportFootprintMod emits a custom pad's polygon as KiCad (primitives (gr_poly …))"
+public func test_exportfootprintmod_emits_a_custom_pad_s_polygon_as_kicad_primitives_gr_poly(out: Stream) -> bool:
+    mut src = b"(footprint \"T\"\n  (pad 1 smd custom (pos 1.000 1.000) (size 2.000 2.000) (poly (0.000 0.000) (2.000 0.000) (2.000 2.000) (0.000 2.000))))"
+    mut result = render(out, src)
+    assert result.find(b"smd custom") >= 0
+    assert result.find(b"(primitives") >= 0
+    assert result.find(b"(gr_poly") >= 0
+    assert result.find(b"(xy -1.000 -1.000)") >= 0
+    assert result.find(b"(size 0.250 0.250)") >= 0
+    return True
+
+
+# test "exportFootprintMod puts a concave custom pad anchor on copper"
+public func test_exportfootprintmod_puts_a_concave_custom_pad_anchor_on_copper(out: Stream) -> bool:
+    mut src = b"(footprint \"concave\"\n  (pad 3 smd custom (pos 1.500 1.500) (size 3.000 3.000)\n    (poly (0.000 2.000) (2.000 2.000) (2.000 0.000) (3.000 0.000) (3.000 3.000) (0.000 3.000))))"
+    mut result = render(out, src)
+    assert result.find(b"(at 2.500 1.500)") >= 0
+    assert result.find(b"(xy -2.500 0.500)") >= 0
+    return True
+
+
+# test "exportFootprintMod emits a copper-pour-only footprint keepout"
+public func test_exportfootprintmod_emits_a_copper_pour_only_footprint_keepout(out: Stream) -> bool:
+    mut src = b"(footprint \"T\"\n  (pad 1 smd rect (pos 0 0) (size 1 1))\n  (copper-pour-keepout F.Cu (poly (-1 -1) (1 -1) (1 1) (-1 1))))"
+    mut result = render(out, src)
+    assert result.find(b"(layer \"F.Cu\")") >= 0
+    assert result.find(b"(copperpour not_allowed)") >= 0
+    assert result.find(b"(vias allowed)") >= 0
+    assert result.find(b"(xy -1.0000 -1.0000)") >= 0
+    return True
+
+
+# test "exportFootprintMod escapes a hostile 3D-model filename"
+public func test_exportfootprintmod_escapes_a_hostile_3d_model_filename(out: Stream) -> bool:
+    mut src = b"(footprint \"T\" (pad 1 smd rect (pos 0 0) (size 1 1)))"
+    mut model = b"Part \"A\"\\rev.step"
+    match m.export_footprint_mod(out, src, Some(model), None, None):
+        case Err(_):
+            return False
+        case Ok(result):
+            assert result.find(b"(model \"${KIPRJMOD}/models/Part \\\"A\\\"\\\\rev.step\"") >= 0
+            match parser_mod.parse(result):
+                case Err(_):
+                    return False
+                case Ok(nodes):
+                    assert len(nodes) == 1
+    return True
+
+
+# test "useSourceKicadMod replaces a (model …) block whose path holds a parenthesis"
+public func test_usesourcekicadmod_replaces_a_model_block_whose_path_holds_a_parenthesis(out: Stream) -> bool:
+    mut src = b"(footprint \"Vendor\"\n  (pad \"1\" smd rect (at 0 0) (size 1 1) (layers \"F.Cu\"))\n  (model \"${KIPRJMOD}/3d/Part(rev2).step\"\n    (offset (xyz 9 9 9))\n    (scale (xyz 1 1 1))\n    (rotate (xyz 7 7 7))\n  )\n)"
+    match m.use_source_kicad_mod(src, Some(b"new.step"), None, None):
+        case Err(_):
+            return False
+        case Ok(result):
+            assert result.find(b"Part(rev2).step") < 0
+            assert result.find(b"(xyz 9 9 9)") < 0
+            assert result.find(b"(xyz 7 7 7)") < 0
+            assert result.find(b"(model \"${KIPRJMOD}/models/new.step\"") >= 0
+            assert ex.eq_int(out, "one model reference", result.count(b"(model "), 1)
+            match parser_mod.parse(result):
+                case Err(_):
+                    return False
+                case Ok(nodes):
+                    assert len(nodes) == 1
+    mut truncated = b"(footprint \"V\"\n  (model \"x.step\"\n    (offset (xyz 0 0 0))"
+    match m.use_source_kicad_mod(truncated, Some(b"new.step"), None, None):
+        case Err(e):
+            assert e == m.err_invalid_format
+        case Ok(_):
+            return False
+    return True
+
+
+# test "exportFootprintMod emits a footprint keepout that also blocks vias"
+public func test_exportfootprintmod_emits_a_footprint_keepout_that_also_blocks_vias(out: Stream) -> bool:
+    mut src = b"(footprint \"T\" (pad 1 smd rect (pos 0 0) (size 1 1)) (copper-pour-keepout F.Cu (vias not_allowed) (poly (-1 -1) (1 -1) (1 1) (-1 1))))"
+    mut result = render(out, src)
+    assert result.find(b"(copperpour not_allowed)") >= 0
+    assert result.find(b"(vias not_allowed)") >= 0
+    return True
+
+
+# Additional regression exercises the previously unprobed native sin/cos path:
+# a local stencil window turns with the pad, without restoring whole-pad paste.
+public func test_rotated_paste_window_keeps_its_local_size_and_transforms_its_center(out: Stream) -> bool:
+    mut src = b"(footprint \"paste\" (pad 1 smd rect (pos 10 20 90) (size 4 4) (paste (rect 1 0 0.5 0.25))))"
+    mut result = render(out, src)
+    assert result.find(b"(at 10.0000 21.0000 270.0000)") >= 0
+    assert result.find(b"(size 0.500000 0.250000) (layers \"F.Paste\"))") >= 0
+    assert result.find(b"(layers \"F.Cu\" \"F.Mask\")") >= 0
+    assert result.find(b"(layers \"F.Cu\" \"F.Mask\" \"F.Paste\")") < 0
+    return True

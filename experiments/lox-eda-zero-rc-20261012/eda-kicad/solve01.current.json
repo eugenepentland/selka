@@ -1,0 +1,1 @@
+{"modules": [{"module": "kicad_sym_library.my", "status": 1, "stdout": "", "stderr": "kicad_sym_reader.my:302:25: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              return Some(child)\n                          ^\n", "source_sha256": "8ff1f5923b785a59fd4a7a3de01011bc49765f904696c5e75ffdec461f44e452"}]}

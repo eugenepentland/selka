@@ -1,0 +1,98 @@
+
+import kicad_sym_reader as reader
+import infra_fs as fsx
+import infra_log as log
+import support_strs as strs
+
+# Vendor files are indexed in bytewise filename order. The first registration
+# wins; missing directories and unreadable libraries cost only vendor coverage.
+public const sources_subdir: str = "lib/sources"
+
+
+public const suffix: str = ".kicad_sym"
+
+
+const max_vendor_symbol_bytes: int = 4194304
+
+
+const max_name_len: int = 128
+
+
+public record Library:
+    by_name: dict[str, reader.Symbol]
+    files: int = 0
+
+
+public func library_find(self: Library, name: bytes) -> reader.Symbol?:
+    if len(name) == 0 or len(name) > max_name_len:
+        return None
+    mut key = normalize(name)
+    if key in self.by_name:
+        return Some(self.by_name[key].copy())
+    return None
+
+
+public func load(fs: Filesystem, err: Stream, project_dir: str) -> Library:
+    mut lib = Library(by_name={})
+    mut dir_path = project_dir + "/" + sources_subdir
+    mut files = list_sources(fs, dir_path)
+    files.sort()
+    for name in files:
+        index_file(fs, err, mut lib, dir_path, name)
+    return lib
+
+
+func list_sources(fs: Filesystem, dir_path: str) -> str[]:
+    mut out: str[] = []
+    match fsx.list_dir(fs, dir_path):
+        case Err(_):
+            return out
+        case Ok(names):
+            for name in names:
+                # No entry kind is available (D4). A directory with this
+                # suffix cannot read_file and is discarded by index_file.
+                if name.endswith(suffix):
+                    out.append(name.copy())
+    return out
+
+
+func index_file(fs: Filesystem, err: Stream, mut lib: Library, dir_path: str, file: str):
+    mut path = dir_path + "/" + file
+    mut src: bytes = b""
+    match fsx.read_file_alloc(fs, path, max_vendor_symbol_bytes):
+        case Err(_):
+            return
+        case Ok(data):
+            src = data
+    mut syms: reader.Symbol[] = []
+    match reader.parse_library(src):
+        case Err(e):
+            log.warn(err, ("export-kicad-sch: vendor symbol library " + file + " is unreadable (" + e + ")").encode())
+            return
+        case Ok(parsed):
+            syms = parsed
+    if len(syms) == 0:
+        return
+    lib.files += 1
+    for sym in syms:
+        register(mut lib, sym.name, sym)
+    register(mut lib, file[0:len(file) - len(suffix)].encode(), syms[0])
+
+
+func register(mut lib: Library, name: bytes, sym: reader.Symbol):
+    if len(name) == 0 or len(name) > max_name_len:
+        return
+    mut key = normalize(name)
+    if key not in lib.by_name:
+        lib.by_name[key] = sym.copy()
+
+
+# Same part-name normalization as the footprint passthrough lookup.
+func normalize(name: bytes) -> str:
+    mut out: int[] = []
+    for c in name:
+        if c == 95:
+            out.append(45)
+        else:
+            out.append(strs.to_lower(c))
+    return strs.text(bytes(out))

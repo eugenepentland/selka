@@ -1,0 +1,147 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/zig-out/bin/mylang",
+  "records": [
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:483:23: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n              mut pin = u.pins[i]\n                        ^\n",
+      "source_sha256": "814b73d199c52bc28c676b64a5745c9cb02ca8571c1411e5b9ce3d803426c126",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 483,
+          "selection": "u.pins[i]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:496:17: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          mut p = self.parts[pi]\n                  ^\n",
+      "source_sha256": "9a3ada25df7558bfb4cfc45d6cd3b930c1d4c2214f097523ab6da21a15e8dfea",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 496,
+          "selection": "self.parts[pi]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:499:17: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          mut u = self.req.shapes[p.shape].units[p.unit]\n                  ^\n",
+      "source_sha256": "718abd3a624aa518c5055f0a00a3a6ec94490c52fceb0d5c14e046a131ea2aeb",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 499,
+          "selection": "self.req.shapes[p.shape].units[p.unit]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:501:23: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n              mut pin = u.pins[k]\n                        ^\n",
+      "source_sha256": "5e1b16d0003e5f646f6248772758fa98920721333725eeb94ddde64c308714df",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 501,
+          "selection": "u.pins[k]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:513:17: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut binds = self.req.facts.binds\n                  ^\n",
+      "source_sha256": "2e844098b4877fec1902fe7d4f893424780b308081c7048aaa55e93185c5aa62",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 513,
+          "selection": "self.req.facts.binds"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:517:17: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          mut s = sites[si]\n                  ^\n",
+      "source_sha256": "6caa28431412bc212dce022b9081a676edaae8b597a55bb7fc9921376fc2c083",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 517,
+          "selection": "sites[si]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:523:20: error[E_SINGLE_OWNER_BORROW]: an indexed value is borrowed; use .copy() or pop() to obtain an owned value\n          mut bind = binds[ref]\n                     ^\n",
+      "source_sha256": "1d757aa6e18997684aec2b8db3c2abdf5256425541dac56c65b6939c42461f01",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 523,
+          "selection": "binds[ref]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:534:17: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          mut s = sites[i]\n                  ^\n",
+      "source_sha256": "0aaa16c19b137f6d5a84d59304d8f6618df9be2ec95d01b9e2676f6a9078f762",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 534,
+          "selection": "sites[i]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:544:17: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut sizes = self.req.facts.net_pins\n                  ^\n",
+      "source_sha256": "e1dce3369be96c13ed3d39265be15d8c8a564629c4b6b06954119873c0843175",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 544,
+          "selection": "self.req.facts.net_pins"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:552:16: error[E_SINGLE_OWNER_MOVED]: 'key' was moved or is unavailable on this path; use .copy() when both values are needed\n          by_net[key].append(i)\n                 ^\n",
+      "source_sha256": "20613072afa89c55e7523343180a36db4b4c2327ad040100bd9acf3b3e5e48a4",
+      "snapshot_edits": []
+    },
+    {
+      "module": "kicad_sch_compose_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:552:16: error[E_SINGLE_OWNER_MOVED]: 'key' was moved or is unavailable on this path; use .copy() when both values are needed\n          by_net[key].append(i)\n                 ^\n",
+      "source_sha256": "9688b8edaddb7db9504aa0c2775baebf9ba88658b842489dba50971ff6bc7823",
+      "snapshot_edits": []
+    }
+  ]
+}

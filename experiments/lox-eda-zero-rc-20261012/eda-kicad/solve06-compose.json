@@ -1,0 +1,215 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/zig-out/bin/mylang",
+  "records": [
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:554:19: error[E_SINGLE_OWNER_BORROW]: an indexed value is borrowed; use .copy() or pop() to obtain an owned value\n          mut run = by_net[net]\n                    ^\n",
+      "source_sha256": "22692439e170a73f64721465b3574da7a48ce2e0cf9c2b8a4479cd7caf1a53e5",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 554,
+          "selection": "by_net[net]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:579:23: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      self.paths.append(path)\n                        ^\n",
+      "source_sha256": "6cbe5caa85eb9e09a7d9db8129c21a170192ace68d7e2d6808c66abd2e65737c",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 579,
+          "selection": "path"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:580:16: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut segs = self.segs\n                 ^\n",
+      "source_sha256": "8194c922b4e88a7db9f32234425da44cd27129d05d3d8c3a8966f2219f983f2b",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 580,
+          "selection": "self.segs"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:591:29: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      return wire.Field(stops=self.stops, bodies=self.bodies, segs=self.segs)\n                              ^\n",
+      "source_sha256": "f508acc747ae7785771e8cb78091ad0aed2eb8c905e9116d0cf6a930cf2e4cfa",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 591,
+          "selection": "self.stops"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:591:55: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      return wire.Field(stops=self.stops.copy(), bodies=self.bodies, segs=self.segs)\n                                                        ^\n",
+      "source_sha256": "c92199151ec2d2bddf436aeea37851cea2988921d607ac8db896aaecc0c287a5",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 591,
+          "selection": "self.bodies"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:591:80: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      return wire.Field(stops=self.stops.copy(), bodies=self.bodies.copy(), segs=self.segs)\n                                                                                 ^\n",
+      "source_sha256": "da4c25bbcb7706d378940e8cdecfe5edb43103d4bb88752669e3dd0e02a7f72b",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 591,
+          "selection": "self.segs"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:599:12: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      return self.parts[s.part].id.ref\n             ^\n",
+      "source_sha256": "ab8003ce447b69717cd3768f7fe1fe38e30667298c732a9af333321bf40902d0",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 599,
+          "selection": "self.parts[s.part].id.ref"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:603:13: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut p = self.parts[s.part]\n              ^\n",
+      "source_sha256": "00e2084f361d2e583f910148a075edeaa7d301960b11eb89c87c30d534e49758",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 603,
+          "selection": "self.parts[s.part]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:604:12: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      return self.req.shapes[p.shape].units[p.unit].pins[s.pin].pad\n             ^\n",
+      "source_sha256": "ce9bd4c916ca90cca63ea4bc749c0089a5a8883cb9d9ab0226e59f0068eeec0d",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 604,
+          "selection": "self.req.shapes[p.shape].units[p.unit].pins[s.pin].pad"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:730:16: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          return p.nets[i]\n                 ^\n",
+      "source_sha256": "af5006595cef494d2c40c250ef00b8c46b5e6f11459dbfae127cca87950ea316",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 730,
+          "selection": "p.nets[i]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:736:16: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          return it.nets[i]\n                 ^\n",
+      "source_sha256": "9f625816acce67a4962701f0589fa3b2c185b2e1bf7b652c4bce33323487620c",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 736,
+          "selection": "it.nets[i]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:766:15: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut pin = u.pins[i]\n                ^\n",
+      "source_sha256": "928d66fcba095fa36ae8978a27657ccf615f3c11c404af571ad02450754e7d3b",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 766,
+          "selection": "u.pins[i]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:775:15: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut ref = items[0].id.ref\n                ^\n",
+      "source_sha256": "a9ca7a979e55052b7833487b4c37fb3bb2fd7d1c066b9000a8fa3e4aa1e7dec3",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 775,
+          "selection": "items[0].id.ref"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:791:16: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut head = sites[run[0]]\n                 ^\n",
+      "source_sha256": "b1960d0e63c1509700a5f6d027a1893d48de267ccc4f58aa3377e55af6d8751b",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 791,
+          "selection": "sites[run[0]]"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "ed5c12e3623109d3b41e20efd557565d09d5593eedfc03b01e112f36a0c3af63"
+    },
+    {
+      "module": "kicad_sch_compose_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "source_sha256": "9688b8edaddb7db9504aa0c2775baebf9ba88658b842489dba50971ff6bc7823"
+    }
+  ]
+}

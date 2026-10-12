@@ -1,0 +1,147 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/zig-out/bin/mylang",
+  "records": [
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:341:36: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      self.parts.append(emit.Part(id=it.id, shape=it.shape, unit=it.unit, x=at.x, y=at.y, nets=nets, banked=angle.copy()))\n                                     ^\n",
+      "source_sha256": "1eac9f2d496517f06fe91c64c0cf302acf8b5a93eac786abc7e999e24f9c5710",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 341,
+          "selection": "it.id"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:368:48: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      self.free_labels.append(emit.FreeLabel(net=b.power, uuid=emit.element_uuid(self.req.sheet.design, b\"banklabel\", b.key), x=bank.frame_end_x(f), y=bank.frame_power_y(f), side=shape_mod.Side.left))\n                                                 ^\n",
+      "source_sha256": "c7ad7aceb674a5c46ab5d5c67044ff16be53b18af901a4827cd463d71c942365",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 368,
+          "selection": "b.power"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:369:24: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      self.labels.append(b.power)\n                         ^\n",
+      "source_sha256": "9e7052678c4d89dc02729c944e8a68e32fd0944dca3bcf5b1a30d961b5c88db3",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 369,
+          "selection": "b.power"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:377:16: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut segs = self.segs\n                 ^\n",
+      "source_sha256": "0d919ea38911e77a58a6460da43d12dd8e917c7b956523217381184ba81764f7",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 377,
+          "selection": "self.segs"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:384:15: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut map = self.req.facts.labels\n                ^\n",
+      "source_sha256": "f7812ca2f389818450675dc220660832a0044e13a4db304a7c4972f6c46b9082",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 384,
+          "selection": "self.req.facts.labels"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:387:35: error[E_SINGLE_OWNER_BORROW]: a borrowed selection is read-only; make an explicit .copy() before changing it\n      return [for net in nets yield map.get(strs.text(net), net)]\n                                    ^\n",
+      "source_sha256": "b9226f607818f7b9bde53a5d3c79687c27d70db53c079e7855aa7eb4dc697fb6",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 387,
+          "selection": "map.get(strs.text(net), net)"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:391:15: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut map = self.req.facts.labels\n                ^\n",
+      "source_sha256": "89e14155843bef3bccc219650a873b3990bfe604fc765fc8bb4eaea8d17c85b4",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 391,
+          "selection": "self.req.facts.labels"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:394:12: error[E_SINGLE_OWNER_BORROW]: a borrowed selection is read-only; make an explicit .copy() before changing it\n      return map.get(strs.text(net), net)\n             ^\n",
+      "source_sha256": "69288f58428278d3bb5241ec907908c136f9f528c7fc153e98c87f4728ce7bd7",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 394,
+          "selection": "map.get(strs.text(net), net)"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:399:19: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          wire_pins(mut self, p)\n                    ^\n",
+      "source_sha256": "33090ece43925ff2b28a17134707547df544ed71f3ba1abc9b411d8f6d339e0c",
+      "snapshot_edits": [
+        {
+          "file": "kicad_sch_compose.my",
+          "line": 399,
+          "selection": "mut"
+        }
+      ]
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:399:30: error[E_SYNTAX]: unexpected token; expected )\n          wire_pins(mut.copy() self, p)\n                               ^\n",
+      "source_sha256": "a36ebe0b5680f0eb33675a878780cb2a27de721e288146102cd7dc4c3e1a2e25",
+      "snapshot_edits": []
+    },
+    {
+      "module": "kicad_sch_compose_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:399:30: error[E_SYNTAX]: unexpected token; expected )\n          wire_pins(mut.copy() self, p)\n                               ^\n",
+      "source_sha256": "9688b8edaddb7db9504aa0c2775baebf9ba88658b842489dba50971ff6bc7823",
+      "snapshot_edits": []
+    }
+  ]
+}
