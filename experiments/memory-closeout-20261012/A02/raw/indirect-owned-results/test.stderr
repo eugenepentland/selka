@@ -1,0 +1,6 @@
+guardian/test: 2 test(s) selected by filter: "zero RC A02 indirect calls"
+All 2 tests passed.
+guardian/test: test wall 1.22s; slowest over 50ms:
+guardian/test:   1.21s  a02_indirect_owned_test.test.zero RC A02 indirect calls transfer owned result and mutable writeback
+guardian/test: PASS — 2 passed
+guardian/test: RESULT {"passed":2,"failed":0,"skipped":0}

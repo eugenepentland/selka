@@ -2090,7 +2090,8 @@ fn ownedRecord(module: *const ir.Module, f: *const ir.Function, record: ir.Inst)
     if ((@import("borrowed_provider.zig").call(module, f, record) catch null) != null) return false;
     if ((selections.call(module, f, record) catch null) != null) return false;
     return switch (record.op) {
-        .record_make, .record_set, .array_set, .phi, .call, .union_take, .box_take => true,
+        // Indirect internal calls use the same owned result/writeback ABI as direct calls.
+        .record_make, .record_set, .array_set, .phi, .call, .call_indirect, .union_take, .box_take => true,
         .param => ownedParameter(f.signature, record.data),
         else => false,
     };

@@ -1,0 +1,69 @@
+# spec-case: CALLBACK-1
+record CallbackProduct:
+    values: str[]
+    size: int
+
+
+func poke(mut values: int[]) -> int:
+    values[0] += 5
+    return len(values)
+
+
+func apply_scalar(callback: func(mut int[]) -> int, mut values: int[]) -> int:
+    return callback(mut values)
+
+
+func grow(mut values: str[]) -> CallbackProduct:
+    const before = values.copy()
+    values.append("grown-" + str(len(values)))
+    return CallbackProduct(values=before, size=len(values))
+
+
+func replace(mut values: str[]) -> CallbackProduct:
+    const before = values.copy()
+    values = ["replacement-" + str(len(values))]
+    return CallbackProduct(values=before, size=len(values))
+
+
+func apply_product(callback: func(mut str[]) -> CallbackProduct, mut values: str[]) -> CallbackProduct:
+    return callback(mut values)
+
+
+func independent(values: str[]) -> CallbackProduct:
+    return CallbackProduct(values=values.copy(), size=len(values))
+
+
+func apply_readonly(callback: func(str[]) -> CallbackProduct, values: str[]) -> CallbackProduct:
+    return callback(values)
+
+
+func main(args: str[], out: Stream) -> int:
+    mut numbers = [1, 2]
+    const old_numbers = numbers.copy()
+    assert apply_scalar(poke, mut numbers) == 2
+    assert apply_scalar(poke, mut numbers) == 2
+    assert numbers == [11, 2] and old_numbers == [1, 2]
+    mut callback: func(mut str[]) -> CallbackProduct = grow
+    if len(args) > 0:
+        callback = replace
+    mut values = ["seed-" + str(len(args))]
+    const before = values.copy()
+    mut product = apply_product(callback, mut values)
+    assert product.values == before
+    if len(args) > 0:
+        assert values == ["replacement-1"] and product.size == 1
+    else:
+        assert values == ["seed-0", "grown-1"] and product.size == 2
+    values.clear()
+    assert product.values == before
+    product.values.append("kept")
+    assert len(before) == 1 and len(product.values) == 2
+    mut copied = apply_readonly(independent, product.values)
+    product.values.clear()
+    copied.values.append("owned")
+    assert len(copied.values) == 3 and copied.size == 2
+    _ = apply_product(grow, mut values)
+    assert values == ["grown-0"]
+    _ = apply_readonly(independent, copied.values)
+    out.print("indirect owners preserved")
+    return 0

@@ -1,0 +1,34 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/996ba6e9ee40f947c47a9f97fbc2ef69/mylang",
+  "compiler_sha256": "e3c9738d5bb63cfd1560cfbfe0873ee252dec1f1c8e6824b4ff8e0a6455a8b54",
+  "steps": [
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/996ba6e9ee40f947c47a9f97fbc2ef69/mylang",
+        "fmt",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/src/core/a02_indirect_owned_fixture.my"
+      ],
+      "status": 0,
+      "stdout": "# spec-case: CALLBACK-1\nrecord CallbackProduct:\n    values: str[]\n    size: int\n\n\nfunc poke(mut values: int[]) -> int:\n    values[0] += 5\n    return len(values)\n\n\nfunc apply_scalar(callback: func(mut int[]) -> int, mut values: int[]) -> int:\n    return callback(mut values)\n\n\nfunc grow(mut values: str[]) -> CallbackProduct:\n    const before = values.copy()\n    values.append(\"grown-\" + str(len(values)))\n    return CallbackProduct(values=before, size=len(values))\n\n\nfunc replace(mut values: str[]) -> CallbackProduct:\n    const before = values.copy()\n    values = [\"replacement-\" + str(len(values))]\n    return CallbackProduct(values=before, size=len(values))\n\n\nfunc apply_product(callback: func(mut str[]) -> CallbackProduct, mut values: str[]) -> CallbackProduct:\n    return callback(mut values)\n\n\nfunc independent(values: str[]) -> CallbackProduct:\n    return CallbackProduct(values=values.copy(), size=len(values))\n\n\nfunc apply_readonly(callback: func(str[]) -> CallbackProduct, values: str[]) -> CallbackProduct:\n    return callback(values)\n\n\nfunc main(args: str[], out: Stream) -> int:\n    mut numbers = [1, 2]\n    const old_numbers = numbers.copy()\n    assert apply_scalar(poke, mut numbers) == 2\n    assert apply_scalar(poke, mut numbers) == 2\n    assert numbers == [11, 2] and old_numbers == [1, 2]\n    mut callback: func(mut str[]) -> CallbackProduct = grow\n    if len(args) > 0:\n        callback = replace\n    mut values = [\"seed-\" + str(len(args))]\n    const before = values.copy()\n    mut product = apply_product(callback, mut values)\n    assert product.values == before\n    if len(args) > 0:\n        assert values == [\"replacement-1\"] and product.size == 1\n    else:\n        assert values == [\"seed-0\", \"grown-1\"] and product.size == 2\n    values.clear()\n    assert product.values == before\n    product.values.append(\"kept\")\n    assert len(before) == 1 and len(product.values) == 2\n    mut copied = apply_readonly(independent, product.values)\n    product.values.clear()\n    copied.values.append(\"owned\")\n    assert len(copied.values) == 3 and copied.size == 2\n    _ = apply_product(grow, mut values)\n    assert values == [\"grown-0\"]\n    _ = apply_readonly(independent, copied.values)\n    out.print(\"indirect owners preserved\")\n    return 0\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/996ba6e9ee40f947c47a9f97fbc2ef69/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/src/core/a02_indirect_owned_fixture.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/indirect-owned-results/baseline-cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/indirect-owned-results/baseline-program"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/src/core/a02_indirect_owned_fixture.my:13:12: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression\n      return callback(mut values)\n             ^\n"
+    }
+  ],
+  "fixture_sha256": "0ca7e0856c3d7699cbbf2f9257bf93a8c83576d4400a712c6532971b00185673",
+  "expected_refusal": true
+}

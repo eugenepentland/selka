@@ -1,0 +1,483 @@
+fn main(list[str], cap) -> i64
+b0:
+  %3 = list_new list[i64] 2:i64
+  %5 = list_push list[i64] %3, 1:i64
+  %7 = list_push list[i64] %5, 2:i64
+  %8 = list_copy list[i64] %7
+  %10 = call record{i64, list[i64]} apply_scalar(&poke, %7)
+  %11 = record_get i64 %10, field0
+  %12 = record_get list[i64] %10, field1
+  %14 = cmp.eq bool %11, 2:i64
+  branch %14, b2, b1
+b1: ; preds b0
+  unreachable
+b2: ; preds b0
+  %18 = call record{i64, list[i64]} apply_scalar(&poke, %12)
+  %19 = record_get i64 %18, field0
+  %20 = record_get list[i64] %18, field1
+  %22 = cmp.eq bool %19, 2:i64
+  branch %22, b4, b3
+b3: ; preds b2
+  unreachable
+b4: ; preds b2
+  %26 = list_new list[i64] 2:i64
+  %28 = list_push list[i64] %26, 11:i64
+  %30 = list_push list[i64] %28, 2:i64
+  %31 = list_len u64 %20
+  %32 = list_len u64 %30
+  %33 = cmp.eq bool %31, %32
+  branch %33, b10, b81
+b5: ; preds b9 b16
+  unreachable
+b6: ; preds b16
+  %89 = list_len u64 param0
+  %90 = convert.proven i64 %89
+  %92 = cmp.gt bool %90, 0:i64
+  branch %92, b22, b23
+b7: ; preds b9
+  %56 = list_new list[i64] 2:i64
+  %58 = list_push list[i64] %56, 1:i64
+  %60 = list_push list[i64] %58, 2:i64
+  %61 = list_len u64 %8
+  %62 = list_len u64 %60
+  %63 = iconst bool 1
+  branch 1:bool, b17, b80
+b8: ; preds b10 b13
+  %37 = phi u64 0:u64, %45
+  %38 = cmp.lt bool %37, %31
+  branch %38, b11, b12
+b9: ; preds b81 b14 b12
+  %51 = phi bool %33, 0:bool, 1:bool
+  branch %51, b7, b5
+b10: ; preds b4
+  jump b8
+b11: ; preds b8
+  %40 = list_get i64 %20, %37
+  %41 = list_get i64 %30, %37
+  %42 = cmp.eq bool %40, %41
+  branch %42, b13, b14
+b12: ; preds b8
+  release %20
+  jump b9
+b13: ; preds b11
+  %45 = add u64 %37, 1:u64
+  jump b8
+b14: ; preds b11
+  release %20
+  jump b9
+b15: ; preds b17 b20
+  %67 = phi u64 0:u64, %75
+  %68 = cmp.lt bool %67, %61
+  branch %68, b18, b19
+b16: ; preds b80 b21 b19
+  %81 = phi bool 1:bool, 0:bool, 1:bool
+  branch %81, b6, b5
+b17: ; preds b7
+  jump b15
+b18: ; preds b15
+  %70 = list_get i64 %8, %67
+  %71 = list_get i64 %60, %67
+  %72 = cmp.eq bool %70, %71
+  branch %72, b20, b21
+b19: ; preds b15
+  release %8
+  jump b16
+b20: ; preds b18
+  %75 = add u64 %67, 1:u64
+  jump b15
+b21: ; preds b18
+  release %8
+  jump b16
+b22: ; preds b6
+  jump b23
+b23: ; preds b6 b22
+  %106 = phi fn{list[str]} -> record{record{list[str], i64}, list[str]} &grow, &replace
+  %97 = list_new list[str] 1:i64
+  %100 = list_len u64 param0
+  %101 = convert.proven i64 %100
+  %102 = call str myl_core_str_from_i64(%101)
+  %358 = str_len u64 str3
+  %359 = str_view_of str_view str3, 0:u64, %358
+  %360 = str_from_view str %359
+  %103 = str_append str %360, %102
+  release %102
+  %104 = list_push list[str] %97, %103
+  %105 = call list[str] myl_core_owned_copy_15(%104)
+  %107 = call record{record{list[str], i64}, list[str]} apply_product(%106, %104)
+  %108 = record_get record{list[str], i64} %107, field0
+  %109 = record_get list[str] %107, field1
+  %110 = record_get list[str] %108, field0
+  %111 = list_len u64 %110
+  %112 = list_len u64 %105
+  %113 = cmp.eq bool %111, %112
+  branch %113, b26, b25
+b24: ; preds b26 b29
+  %117 = phi u64 0:u64, %125
+  %118 = cmp.lt bool %117, %111
+  branch %118, b27, b28
+b25: ; preds b23 b30 b28
+  %131 = phi bool %113, 0:bool, 1:bool
+  branch %131, b32, b31
+b26: ; preds b23
+  jump b24
+b27: ; preds b24
+  %120 = list_get str %110, %117
+  %121 = list_get str %105, %117
+  %122 = call bool myl_core_str_eq(%120, %121)
+  branch %122, b29, b30
+b28: ; preds b24
+  jump b25
+b29: ; preds b27
+  %125 = add u64 %117, 1:u64
+  jump b24
+b30: ; preds b27
+  jump b25
+b31: ; preds b25
+  unreachable
+b32: ; preds b25
+  %136 = list_len u64 param0
+  %137 = convert.proven i64 %136
+  %139 = cmp.gt bool %137, 0:i64
+  branch %139, b33, b35
+b33: ; preds b32
+  %144 = list_new list[str] 1:i64
+  %146 = list_push list[str] %144, str5
+  %147 = list_len u64 %109
+  %148 = list_len u64 %146
+  %149 = cmp.eq bool %147, %148
+  branch %149, b41, b82
+b34: ; preds b37 b47
+  %221 = list_new list[str] 0:u64
+  %231 = list_len u64 %110
+  %232 = list_len u64 %105
+  %233 = cmp.eq bool %231, %232
+  branch %233, b58, b57
+b35: ; preds b32
+  %180 = list_new list[str] 2:i64
+  %182 = list_push list[str] %180, str7
+  %184 = list_push list[str] %182, str8
+  %185 = list_len u64 %109
+  %186 = list_len u64 %184
+  %187 = cmp.eq bool %185, %186
+  branch %187, b51, b83
+b36: ; preds b40 b38
+  unreachable
+b37: ; preds b38
+  jump b34
+b38: ; preds b40
+  %173 = record_get i64 %108, field1
+  %175 = cmp.eq bool %173, 1:i64
+  branch %175, b37, b36
+b39: ; preds b41 b44
+  %153 = phi u64 0:u64, %161
+  %154 = cmp.lt bool %153, %147
+  branch %154, b42, b43
+b40: ; preds b82 b45 b43
+  %167 = phi bool %149, 0:bool, 1:bool
+  branch %167, b38, b36
+b41: ; preds b33
+  jump b39
+b42: ; preds b39
+  %156 = list_get str %109, %153
+  %157 = list_get str %146, %153
+  %158 = call bool myl_core_str_eq(%156, %157)
+  branch %158, b44, b45
+b43: ; preds b39
+  release %109
+  release %146
+  jump b40
+b44: ; preds b42
+  %161 = add u64 %153, 1:u64
+  jump b39
+b45: ; preds b42
+  release %109
+  release %146
+  jump b40
+b46: ; preds b50 b48
+  unreachable
+b47: ; preds b48
+  jump b34
+b48: ; preds b50
+  %209 = record_get i64 %108, field1
+  %211 = cmp.eq bool %209, 2:i64
+  branch %211, b47, b46
+b49: ; preds b51 b54
+  %191 = phi u64 0:u64, %199
+  %192 = cmp.lt bool %191, %185
+  branch %192, b52, b53
+b50: ; preds b83 b55 b53
+  %205 = phi bool %187, 0:bool, 1:bool
+  branch %205, b48, b46
+b51: ; preds b35
+  jump b49
+b52: ; preds b49
+  %194 = list_get str %109, %191
+  %195 = list_get str %184, %191
+  %196 = call bool myl_core_str_eq(%194, %195)
+  branch %196, b54, b55
+b53: ; preds b49
+  release %109
+  release %184
+  jump b50
+b54: ; preds b52
+  %199 = add u64 %191, 1:u64
+  jump b49
+b55: ; preds b52
+  release %109
+  release %184
+  jump b50
+b56: ; preds b58 b61
+  %237 = phi u64 0:u64, %245
+  %238 = cmp.lt bool %237, %231
+  branch %238, b59, b60
+b57: ; preds b34 b62 b60
+  %251 = phi bool %233, 0:bool, 1:bool
+  branch %251, b64, b63
+b58: ; preds b34
+  jump b56
+b59: ; preds b56
+  %240 = list_get str %110, %237
+  %241 = list_get str %105, %237
+  %242 = call bool myl_core_str_eq(%240, %241)
+  branch %242, b61, b62
+b60: ; preds b56
+  jump b57
+b61: ; preds b59
+  %245 = add u64 %237, 1:u64
+  jump b56
+b62: ; preds b59
+  jump b57
+b63: ; preds b57
+  unreachable
+b64: ; preds b57
+  %259 = list_push list[str] %110, str11
+  %260 = record_set record{list[str], i64} %108, field0, %259
+  %263 = list_len u64 %105
+  release %105
+  %264 = convert.proven i64 %263
+  %266 = cmp.eq bool %264, 1:i64
+  branch %266, b67, b65
+b65: ; preds b64 b67
+  unreachable
+b66: ; preds b67
+  %277 = call record{list[str], i64} apply_readonly(&independent, %268)
+  release %268
+  %281 = list_new list[str] 0:u64
+  %282 = record_set record{list[str], i64} %260, field0, %281
+  release %282
+  %283 = record_get list[str] %277, field0
+  %286 = list_push list[str] %283, str13
+  %287 = record_set record{list[str], i64} %277, field0, %286
+  %288 = record_get list[str] %287, field0
+  %289 = list_len u64 %288
+  %290 = convert.proven i64 %289
+  %292 = cmp.eq bool %290, 3:i64
+  branch %292, b70, b68
+b67: ; preds b64
+  %268 = record_get list[str] %260, field0
+  %269 = list_len u64 %268
+  %270 = convert.proven i64 %269
+  %272 = cmp.eq bool %270, 2:i64
+  branch %272, b66, b65
+b68: ; preds b66 b70
+  unreachable
+b69: ; preds b70
+  %302 = call record{record{list[str], i64}, list[str]} apply_product(&grow, %221)
+  %303 = record_get record{list[str], i64} %302, field0
+  release %303
+  %304 = record_get list[str] %302, field1
+  %306 = list_new list[str] 1:i64
+  %308 = list_push list[str] %306, str15
+  %309 = list_len u64 %304
+  %310 = list_len u64 %308
+  %311 = cmp.eq bool %309, %310
+  branch %311, b73, b84
+b70: ; preds b66
+  %294 = record_get i64 %287, field1
+  %296 = cmp.eq bool %294, 2:i64
+  branch %296, b69, b68
+b71: ; preds b73 b76
+  %315 = phi u64 0:u64, %323
+  %316 = cmp.lt bool %315, %309
+  branch %316, b74, b75
+b72: ; preds b84 b77 b75
+  %329 = phi bool %311, 0:bool, 1:bool
+  branch %329, b79, b78
+b73: ; preds b69
+  jump b71
+b74: ; preds b71
+  %318 = list_get str %304, %315
+  %319 = list_get str %308, %315
+  %320 = call bool myl_core_str_eq(%318, %319)
+  branch %320, b76, b77
+b75: ; preds b71
+  release %304
+  release %308
+  jump b72
+b76: ; preds b74
+  %323 = add u64 %315, 1:u64
+  jump b71
+b77: ; preds b74
+  release %304
+  release %308
+  jump b72
+b78: ; preds b72
+  unreachable
+b79: ; preds b72
+  %336 = call record{list[str], i64} apply_readonly(&independent, %288)
+  release %287
+  release %336
+  print param1, str17
+  ret 0:i64
+b80: ; preds b7
+  release %8
+  jump b16
+b81: ; preds b4
+  release %20
+  jump b9
+b82: ; preds b33
+  release %109
+  release %146
+  jump b40
+b83: ; preds b35
+  release %109
+  release %184
+  jump b50
+b84: ; preds b69
+  release %304
+  release %308
+  jump b72
+fn apply_scalar(fn{list[i64]} -> record{i64, list[i64]}, list[i64]) -> record{i64, list[i64]}
+b0:
+  %2 = call_indirect record{i64, list[i64]} param0, param1
+  %3 = record_get i64 %2, field0
+  %4 = record_get list[i64] %2, field1
+  %5 = record_make record{i64, list[i64]} %3, %4
+  ret %5
+fn poke(list[i64]) -> record{i64, list[i64]}
+b0:
+  %3 = iconst bool 0
+  branch 0:bool, b1, b2
+b1: ; preds b0
+  %5 = list_len u64 param0
+  %6 = convert.exact i64 %5
+  %7 = add.exact i64 %6, 0:i64
+  jump b2
+b2: ; preds b0 b1
+  %9 = phi i64 0:i64, %7
+  %11 = list_get.exact i64 param0, %9
+  %13 = add.exact i64 %11, 5:i64
+  %15 = list_set.proven list[i64] param0, %9, %13
+  %16 = list_len u64 %15
+  %17 = convert.proven i64 %16
+  %18 = record_make record{i64, list[i64]} %17, %15
+  ret %18
+fn grow(list[str]) -> record{record{list[str], i64}, list[str]}
+b0:
+  %1 = call list[str] myl_core_owned_copy_15(param0)
+  %3 = list_len u64 param0
+  %4 = convert.proven i64 %3
+  %5 = call str myl_core_str_from_i64(%4)
+  %14 = str_len u64 str18
+  %15 = str_view_of str_view str18, 0:u64, %14
+  %16 = str_from_view str %15
+  %6 = str_append str %16, %5
+  release %5
+  %7 = list_push list[str] param0, %6
+  %8 = list_len u64 %7
+  %9 = convert.proven i64 %8
+  %10 = record_make record{list[str], i64} %1, %9
+  %11 = record_make record{record{list[str], i64}, list[str]} %10, %7
+  ret %11
+fn replace(list[str]) -> record{record{list[str], i64}, list[str]}
+b0:
+  %1 = call list[str] myl_core_owned_copy_15(param0)
+  %3 = list_new list[str] 1:i64
+  %5 = list_len u64 param0
+  release param0
+  %6 = convert.proven i64 %5
+  %7 = call str myl_core_str_from_i64(%6)
+  %16 = str_len u64 str19
+  %17 = str_view_of str_view str19, 0:u64, %16
+  %18 = str_from_view str %17
+  %8 = str_append str %18, %7
+  release %7
+  %9 = list_push list[str] %3, %8
+  %10 = list_len u64 %9
+  %11 = convert.proven i64 %10
+  %12 = record_make record{list[str], i64} %1, %11
+  %13 = record_make record{record{list[str], i64}, list[str]} %12, %9
+  ret %13
+fn myl_core_str_from_i64(i64) -> str extern
+fn myl_core_owned_copy_15(list[str]) -> list[str] runtime
+fn apply_product(fn{list[str]} -> record{record{list[str], i64}, list[str]}, list[str]) -> record{record{list[str], i64}, list[str]}
+b0:
+  %2 = call_indirect record{record{list[str], i64}, list[str]} param0, param1
+  %3 = record_get record{list[str], i64} %2, field0
+  %4 = record_get list[str] %2, field1
+  %5 = record_make record{record{list[str], i64}, list[str]} %3, %4
+  ret %5
+fn myl_core_str_eq(str, str) -> bool runtime
+fn apply_readonly(fn{list[str]} -> record{list[str], i64}, list[str]) -> record{list[str], i64}
+b0:
+  %2 = call_indirect record{list[str], i64} param0, param1
+  ret %2
+fn independent(list[str]) -> record{list[str], i64}
+b0:
+  %1 = call list[str] myl_core_owned_copy_15(param0)
+  %2 = list_len u64 param0
+  %3 = convert.proven i64 %2
+  %4 = record_make record{list[str], i64} %1, %3
+  ret %4
+facts main: %11=[-9223372036854775808,9223372036854775807] %14=[0,1] %19=[-9223372036854775808,9223372036854775807] %22=[0,1] %31=[0,140737488355328] %32=[2,2] %33=[0,1] %37=[0,140737488355328] %38=[0,1] %40=[-9223372036854775808,9223372036854775807] %41=[2,11] %42=[0,1] %45=[1,140737488355328] %51=[0,1] %61=[2,2] %62=[2,2] %63=[1,1] %67=[0,2] %68=[0,1] %70=[1,2] %71=[1,2] %72=[0,1] %75=[1,2] %81=[0,1] %89=[0,140737488355328] %90=[0,140737488355328] %92=[0,1] %100=[0,140737488355328] %101=[0,140737488355328] %111=[0,140737488355328] %112=[0,140737488355328] %113=[0,1] %117=[0,140737488355328] %118=[0,1] %122=[0,1] %125=[1,140737488355328] %131=[0,1] %136=[0,140737488355328] %137=[0,140737488355328] %139=[0,1] %147=[0,140737488355328] %148=[1,1] %149=[0,1] %153=[0,140737488355328] %154=[0,1] %158=[0,1] %161=[1,140737488355328] %167=[0,1] %173=[0,140737488355328] %175=[0,1] %185=[0,140737488355328] %186=[2,2] %187=[0,1] %191=[0,140737488355328] %192=[0,1] %196=[0,1] %199=[1,140737488355328] %205=[0,1] %209=[0,140737488355328] %211=[0,1] %231=[0,140737488355328] %232=[0,140737488355328] %233=[0,1] %237=[0,140737488355328] %238=[0,1] %242=[0,1] %245=[1,140737488355328] %251=[0,1] %263=[0,140737488355328] %264=[0,140737488355328] %266=[0,1] %269=[0,140737488355328] %270=[0,140737488355328] %272=[0,1] %289=[0,140737488355328] %290=[0,140737488355328] %292=[0,1] %294=[0,140737488355328] %296=[0,1] %309=[0,140737488355328] %310=[1,1] %311=[0,1] %315=[0,140737488355328] %316=[0,1] %320=[0,1] %323=[1,140737488355328] %329=[0,1]
+list main %3: settled=true length=%-1 len=[0,0]
+list main %5: settled=true length=%-1 elements=[1,1] len=[1,1]
+list main %7: settled=true length=%-1 elements=[1,2] len=[2,2]
+list main %8: settled=true length=%-1 elements=[1,2] len=[2,2]
+list main %26: settled=true length=%-1 len=[0,0]
+list main %28: settled=true length=%-1 elements=[11,11] len=[1,1]
+list main %30: settled=true length=%-1 elements=[2,11] len=[2,2]
+list main %40: settled=true length=%-1
+list main %41: settled=true length=%-1
+list main %56: settled=true length=%-1 len=[0,0]
+list main %58: settled=true length=%-1 elements=[1,1] len=[1,1]
+list main %60: settled=true length=%-1 elements=[1,2] len=[2,2]
+list main %70: settled=true length=%-1
+list main %71: settled=true length=%-1
+list main %97: settled=true length=%-1 len=[0,0]
+list main %104: settled=true length=%-1 len=[1,1]
+list main %106: settled=true length=%-1
+list main %120: settled=true length=%-1
+list main %121: settled=true length=%-1
+list main %144: settled=true length=%-1 len=[0,0]
+list main %146: settled=true length=%-1 len=[1,1]
+list main %156: settled=true length=%-1
+list main %157: settled=true length=%-1
+list main %180: settled=true length=%-1 len=[0,0]
+list main %182: settled=true length=%-1 len=[1,1]
+list main %184: settled=true length=%-1 len=[2,2]
+list main %194: settled=true length=%-1
+list main %195: settled=true length=%-1
+list main %221: settled=true length=%-1 len=[0,0]
+list main %240: settled=true length=%-1
+list main %241: settled=true length=%-1
+list main %259: settled=true length=%-1
+list main %281: settled=true length=%-1 len=[0,0]
+list main %286: settled=true length=%-1
+list main %306: settled=true length=%-1 len=[0,0]
+list main %308: settled=true length=%-1 len=[1,1]
+list main %318: settled=true length=%-1
+list main %319: settled=true length=%-1
+facts apply_scalar: %3=[-9223372036854775808,9223372036854775807]
+facts poke: %3=[0,0] %9=[0,0] %11=[-9223372036854775808,9223372036854775807] %13=[-9223372036854775803,9223372036854775807] %16=[0,140737488355328] %17=[0,140737488355328]
+list poke %11: settled=true length=%-1
+list poke %15: settled=true length=%-1
+facts grow: %3=[0,140737488355328] %4=[0,140737488355328] %8=[0,140737488355328] %9=[0,140737488355328]
+list grow %7: settled=true length=%-1
+facts replace: %5=[0,140737488355328] %6=[0,140737488355328] %10=[1,1] %11=[1,1]
+list replace %3: settled=true length=%-1 len=[0,0]
+list replace %9: settled=true length=%-1 len=[1,1]
+facts apply_product:
+facts apply_readonly:
+facts independent: %2=[0,140737488355328] %3=[0,140737488355328]
+field type17.1: [0, 140737488355328]
