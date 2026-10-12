@@ -1,0 +1,347 @@
+# A `mut` list argument is not pinned when the callee provably never shares it
+# (COW-PIN-ELIDE-1). Every test here calls a function whose parameter is, or is
+# not, in that summary and then tries to observe a difference from the pinned
+# call: a snapshot taken before, during or after, a value that escaped the
+# callee, a write during iteration. Both runtimes must agree with the answers
+# written down.
+record Body:
+    x: float
+    v: float
+
+
+record Holder:
+    items: int[]
+
+
+record Frame:
+    rows: int[][]
+
+
+# ---- callees the summary accepts (element reads and writes, passing on) ----
+func bump(mut xs: int[], i: int) -> int:
+    xs[i] = xs[i] + 1
+    return len(xs)
+
+
+func swap(mut xs: int[], i: int, j: int):
+    mut tmp = xs[i]
+    xs[i] = xs[j]
+    xs[j] = tmp
+
+
+func sort(mut xs: int[], lo: int, hi: int):
+    if lo >= hi:
+        return
+    if xs[lo] > xs[hi]:
+        swap(mut xs, lo, hi)
+    sort(mut xs, lo + 1, hi)
+    sort(mut xs, lo, hi - 1)
+
+
+func ping(mut xs: int[], n: int) -> int:
+    if n <= 0:
+        return len(xs)
+    xs[0] = xs[0] + 1
+    return pong(mut xs, n - 1)
+
+
+func pong(mut xs: int[], n: int) -> int:
+    if n <= 0:
+        return len(xs)
+    xs[1] = xs[1] + 10
+    return ping(mut xs, n - 1)
+
+
+func step(mut bodies: Body[], dt: float):
+    for i in range(len(bodies)):
+        mut b = bodies[i]
+        bodies[i].x = b.x + b.v * dt
+        bodies[i].v = b.v * 0.5
+
+
+func relay(mut xs: int[]) -> int:
+    xs[0] = xs[0] + 100
+    return bump(mut xs, 1)
+
+
+# ---- callees the summary must reject (each shares, grows or iterates) ----
+func snap(mut xs: int[]) -> int:
+    mut copy = xs.copy()
+    xs[0] = 9
+    return copy[0]
+
+
+func keep(mut xs: int[]) -> Holder:
+    xs[0] = 9
+    return Holder(items=xs.copy())
+
+
+func stash(mut xs: int[], mut into: Frame):
+    xs[0] = 9
+    into.rows.append(xs.copy())
+
+
+func index(mut xs: int[], mut table: dict[int, int[]]):
+    xs[0] = 9
+    table[1] = xs.copy()
+
+
+func give(mut xs: int[]) -> int[]:
+    xs[0] = 9
+    return xs.copy()
+
+
+func peek(xs: int[]) -> Holder:
+    return Holder(items=xs.copy())
+
+
+func look(mut xs: int[]) -> Holder:
+    xs[0] = 9
+    mut holder = peek(xs)
+    xs[1] = 8
+    return holder
+
+
+func grow(mut xs: int[]) -> int:
+    xs[0] = 9
+    xs.append(7)
+    return len(xs)
+
+
+func walk(mut xs: int[]) -> int:
+    mut total = 0
+    mut iteration_at = 0
+    while iteration_at < len(xs):
+        const x = xs[iteration_at]
+        iteration_at += 1
+        xs[0] = x + 1
+        total = total + x
+    return total
+
+
+func relay_snap(mut xs: int[]) -> int:
+    xs[0] = xs[0] + 100
+    return snap(mut xs)
+
+
+func relay_grow(mut xs: int[]) -> int:
+    xs[0] = xs[0] + 100
+    return grow(mut xs)
+
+
+func descend(mut xs: int[], n: int) -> int:
+    if n == 0:
+        xs.append(1)
+        return len(xs)
+    xs[0] = xs[0] + 1
+    return descend(mut xs, n - 1)
+
+
+func apply(f: func(mut int[]) -> int, mut xs: int[]) -> int:
+    return f(mut xs)
+
+
+func poke(mut xs: int[]) -> int:
+    xs[0] = xs[0] + 5
+    return len(xs)
+
+
+# ---- writes through the parameter reach the caller ----
+public func test_a_write_through_an_unpinned_parameter_reaches_the_caller() -> bool:
+    mut xs = [1, 2, 3]
+    mut n = bump(mut xs, 2)
+    return n == 3 and xs[0] == 1 and xs[2] == 4
+
+
+public func test_recursive_sort_and_swap_sort_in_place() -> bool:
+    mut xs = [5, 3, 4, 1, 2]
+    sort(mut xs, 0, 4)
+    return xs == [1, 2, 3, 4, 5]
+
+
+public func test_mutual_recursion_writes_every_level() -> bool:
+    mut xs = [0, 0]
+    mut n = ping(mut xs, 5)
+    return n == 2 and xs[0] == 3 and xs[1] == 20
+
+
+public func test_an_element_record_write_through_an_unpinned_call_reaches_the_caller() -> bool:
+    mut bodies = [Body(x=0.0, v=4.0), Body(x=1.0, v=2.0)]
+    step(mut bodies, 0.5)
+    step(mut bodies, 0.5)
+    return bodies[0].x == 3.0 and bodies[0].v == 1.0 and bodies[1].x == 2.5 and bodies[1].v == 0.5
+
+
+public func test_passing_the_parameter_on_reaches_the_callee_in_place() -> bool:
+    mut xs = [1, 1]
+    mut n = relay(mut xs)
+    return n == 2 and xs[0] == 101 and xs[1] == 2
+
+
+# ---- snapshots and shares taken before, during and after the call ----
+public func test_a_snapshot_taken_before_an_unpinned_call_keeps_its_value() -> bool:
+    mut xs = [1, 2, 3]
+    mut before = xs.copy()
+    _ = bump(mut xs, 0)
+    _ = bump(mut xs, 0)
+    return before == [1, 2, 3] and xs == [3, 2, 3]
+
+
+public func test_a_snapshot_taken_in_a_loop_between_unpinned_calls_keeps_each_value() -> bool:
+    mut xs = [0, 0]
+    mut seen: int[][] = []
+    for i in range(4):
+        _ = bump(mut xs, i % 2)
+        seen.append(xs.copy())
+    return seen[0] == [1, 0] and seen[1] == [1, 1] and seen[2] == [2, 1] and seen[3] == [2, 2]
+
+
+public func test_a_shared_field_list_is_copied_before_an_unpinned_call_writes() -> bool:
+    mut holder = Holder(items=[1, 2])
+    mut local = holder.items.copy()
+    _ = bump(mut local, 0)
+    return holder.items == [1, 2] and local == [2, 2]
+
+
+public func test_a_list_held_in_a_list_is_copied_before_an_unpinned_call_writes() -> bool:
+    mut xs = [1, 2]
+    mut rows = [xs.copy(), xs.copy()]
+    _ = bump(mut xs, 0)
+    return rows[0] == [1, 2] and rows[1] == [1, 2] and xs == [2, 2]
+
+
+public func test_a_read_only_argument_naming_the_same_list_is_a_snapshot() -> bool:
+    mut xs = [1, 2]
+    const input_snapshot = xs.copy()
+    mut n = bump_and_count(mut xs, input_snapshot)
+    return n == 2 and xs == [2, 2]
+
+
+func bump_and_count(mut xs: int[], view: int[]) -> int:
+    xs[0] = xs[0] + 1
+    return view[0] + 1
+
+
+public func test_two_lists_passed_to_one_call_are_written_independently() -> bool:
+    mut a = [1, 2]
+    mut b = [10, 20]
+    swap_across(mut a, mut b)
+    return a == [10, 2] and b == [1, 20]
+
+
+func swap_across(mut a: int[], mut b: int[]):
+    mut tmp = a[0]
+    a[0] = b[0]
+    b[0] = tmp
+
+
+public func test_a_call_in_the_body_of_a_loop_over_the_same_list_iterates_a_snapshot() -> bool:
+    mut xs = [1, 2, 3]
+    mut seen = 0
+    mut iteration_at = 0
+    while iteration_at < len(xs):
+        const x = xs[iteration_at]
+        iteration_at += 1
+        _ = bump(mut xs, 0)
+        seen = seen + x
+    return seen == 6 and xs == [4, 2, 3]
+
+
+# ---- callees that share, grow or iterate keep their pin and their answers ----
+public func test_a_callee_that_snapshots_its_parameter_sees_the_old_value() -> bool:
+    mut xs = [1, 2]
+    mut old = snap(mut xs)
+    return old == 1 and xs == [9, 2]
+
+
+public func test_a_callee_that_stores_the_list_in_a_record_keeps_it_apart_from_later_writes() -> bool:
+    mut xs = [1, 2]
+    mut holder = keep(mut xs)
+    xs[0] = 5
+    holder.items[1] = 6
+    return holder.items == [9, 6] and xs == [5, 2]
+
+
+public func test_a_callee_that_stores_the_list_in_a_list_keeps_it_apart_from_later_writes() -> bool:
+    mut xs = [1, 2]
+    mut frame = Frame(rows=[])
+    stash(mut xs, mut frame)
+    xs[1] = 5
+    frame.rows[0][0] = 6
+    return frame.rows[0] == [6, 2] and xs == [9, 5]
+
+
+public func test_a_callee_that_stores_the_list_in_a_dictionary_keeps_it_apart_from_later_writes() -> bool:
+    mut xs = [1, 2]
+    mut table: dict[int, int[]] = {}
+    index(mut xs, mut table)
+    xs[1] = 5
+    return table[1] == [9, 2] and xs == [9, 5]
+
+
+public func test_a_callee_that_returns_the_list_returns_a_value_of_its_own() -> bool:
+    mut xs = [1, 2]
+    mut ys = give(mut xs)
+    ys[1] = 7
+    xs[0] = 3
+    return ys == [9, 7] and xs == [3, 2]
+
+
+public func test_a_read_only_parameter_that_retains_the_list_keeps_the_value_it_was_given() -> bool:
+    mut xs = [1, 2]
+    mut holder = look(mut xs)
+    return holder.items == [9, 2] and xs == [9, 8]
+
+
+public func test_a_callee_that_grows_the_list_grows_the_callers_list() -> bool:
+    mut xs = [1, 2]
+    mut n = grow(mut xs)
+    mut m = grow(mut xs)
+    return n == 3 and m == 4 and xs == [9, 2, 7, 7]
+
+
+public func test_a_callee_that_writes_while_iterating_its_parameter_iterates_a_snapshot() -> bool:
+    mut xs = [1, 2, 3]
+    mut total = walk(mut xs)
+    return total == 6 and xs == [4, 2, 3]
+
+
+public func test_a_callee_that_passes_the_list_to_a_sharing_callee_keeps_the_sharing_answers() -> bool:
+    mut xs = [1, 2]
+    mut old = relay_snap(mut xs)
+    return old == 101 and xs == [9, 2]
+
+
+public func test_a_callee_that_passes_the_list_to_a_growing_callee_grows_the_callers_list() -> bool:
+    mut xs = [1, 2]
+    mut n = relay_grow(mut xs)
+    return n == 3 and xs == [9, 2, 7]
+
+
+public func test_a_recursion_that_grows_at_the_bottom_grows_the_callers_list() -> bool:
+    mut xs = [0]
+    mut n = descend(mut xs, 3)
+    return n == 2 and xs == [3, 1]
+
+
+# ---- callbacks and function values ----
+public func test_an_unpinned_callee_reached_through_a_function_value_writes_the_callers_list() -> bool:
+    mut xs = [1, 2]
+    mut before = xs.copy()
+    mut n = apply(poke, mut xs)
+    mut m = apply(poke, mut xs)
+    return n == 2 and m == 2 and xs == [11, 2] and before == [1, 2]
+
+
+public func test_a_sharing_callee_reached_through_a_function_value_keeps_its_answers() -> bool:
+    mut xs = [1, 2]
+    mut old = apply(snap, mut xs)
+    return old == 1 and xs == [9, 2]
+
+
+public func test_a_direct_and_an_indirect_call_of_one_function_agree() -> bool:
+    mut a = [3, 4]
+    mut b = [3, 4]
+    _ = poke(mut a)
+    _ = apply(poke, mut b)
+    return a == b and a == [8, 4]

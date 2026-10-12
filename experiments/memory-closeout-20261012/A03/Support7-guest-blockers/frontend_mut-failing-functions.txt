@@ -1,0 +1,15 @@
+public func test_dynamic_mut_disjoint_targets() -> bool:
+    mut values = [1, 2]
+    const left = 0
+    const right = 1
+    change_pair(mut values[left], mut values[right])
+    return values == [11, 22]
+
+public func test_named_mut_interior_places_preserve_storage_and_written_order() -> bool:
+    const operation: func(named mut left: int, named mut right: int) -> Unit = change_named
+    mut values = [1, 2]
+    mut counter = 0
+    operation(right=mut values[next_value(mut counter) - 1], left=mut values[next_value(mut counter) - 1])
+    mut point = Point(x=2, values=[3])
+    change_named(right=mut point.x, left=mut point.values[0])
+    return values == [21, 12] and counter == 2 and point.x == 22 and point.values == [13]

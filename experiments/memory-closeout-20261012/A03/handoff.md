@@ -164,3 +164,30 @@ The source sweep retained its original ten-call/60-second lease methodology.
 The coordinator subsequently approved at most 50 actions or 30 seconds per
 shared lease; A03 runners now use that policy with unchanged slot and timing
 budgets. Native census and generated-test qualification remain separate work.
+
+
+## Common Support7 complete census and guest command evidence
+
+Frozen source `bed11cf3bf3102ffec44487e431a1573fdf02ad5`, full ReleaseFast compiler
+SHA-256 `540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef`:
+`Support7-full/` passes all 405 builds and 655 counted executions in all five modes;
+`Support7-supplement/` separately passes 30 builds and 40 executions. Every counted
+run has matching output/status, zero measured RC events, zero managed exit-live
+bytes and clean selected LLVM/symbol audits. Original30 remains 23 allocating/7
+workload-free; original unmigrated source checks remain 21 admitted/9 refused.
+`Support7-full/comparison-C0.json` preserves all131 paired release observations.
+The only increased allocation traffic is library JSON +3blocks/+192bytes, localized
+by A04 to the conservative literal-slice copy; a pending fix is not part of Support7.
+Parallel whole-program allocation reductions are recorded separately by workers.
+
+`Support7-properties/` executes all16 generated properties in each mode,192passed
+inputs and25discards per mode. `Support7-guest-tests/` retains all64 source rows;
+60files ran actual public guest tests (including reused exact property evidence),
+with412passed/5failed/3unsupported test contracts per mode. Two source-refused files
+retain16 blocked contracts per mode. The private-main and importing-helper paths
+remain explicitly distinguished; no empty test command is counted as a pass.
+All these command executions are uninstrumented with leakcheck enabled, with no
+measured RC-event claim. `Support7-guest-blockers/` contains frozen source/functions,
+exact commands and native controls for equality helper, mutable writeback and
+indirect mutable-call defects. Root/A07/A10/A02 own their dispatched fixes.
+This is intermediate evidence: C1/C2/C3, final gates and affected reruns remain open.

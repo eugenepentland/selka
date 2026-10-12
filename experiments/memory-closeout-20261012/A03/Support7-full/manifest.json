@@ -1,0 +1,3415 @@
+{
+  "schema": "memory-closeout-census-manifest-v1",
+  "c0": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "historical_inputs_are_read_only": true,
+  "original_denominator": 30,
+  "historical_matrix_denominator": 48,
+  "cases": [
+    {
+      "id": "census/01_scalar",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/01_scalar.my",
+        "sha256": "b5abcbc43a679a2937c2810a1d4fd44afe287ecaf9ac9923bed6da6730eb10d9"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "60\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "116\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "01_scalar",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/01_scalar.my",
+        "sha256": "b5abcbc43a679a2937c2810a1d4fd44afe287ecaf9ac9923bed6da6730eb10d9"
+      },
+      "oracle": "Sum n+i for i=0..7: 8*n+28.",
+      "intent": "Establish the scalar control for summing eight runtime-derived values without a source collection.",
+      "category": "scalar"
+    },
+    {
+      "id": "census/02_local_list",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/02_local_list.my",
+        "sha256": "4e6a734fc170581c425c1bb753f4b61bcccd3008e2df38dad09d668c7410bff3"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "60\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "116\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "02_local_list",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/02_local_list.my",
+        "sha256": "4e6a734fc170581c425c1bb753f4b61bcccd3008e2df38dad09d668c7410bff3"
+      },
+      "oracle": "Eight elements n through n+7 sum to 8*n+28.",
+      "intent": "Positive control for existing intrafunction bounded-list promotion; inspect emitted allocation rather than assume it survives LLVM.",
+      "category": "list_construction"
+    },
+    {
+      "id": "census/03_borrowed_reader",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/03_borrowed_reader.my",
+        "sha256": "ab02b84d4d1b459b64dc94c720e86b29d5fac781e2bfbc977bc7dffe574d9c2f"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "60\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "116\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "03_borrowed_reader",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/03_borrowed_reader.my",
+        "sha256": "ab02b84d4d1b459b64dc94c720e86b29d5fac781e2bfbc977bc7dffe574d9c2f"
+      },
+      "oracle": "sum_values reads n through n+7 without mutation: 8*n+28.",
+      "intent": "Positive control for the strict borrowed-call promotion prototype, using a looped reader instead of a scalar leaf.",
+      "category": "list_construction"
+    },
+    {
+      "id": "census/04_returned_list",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/04_returned_list.my",
+        "sha256": "c1d7fa05e9c355cead2129abb02c0a326e037f1dcbe7795fb21dbcc7cd796431"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "60\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "116\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "04_returned_list",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/04_returned_list.my",
+        "sha256": "c1d7fa05e9c355cead2129abb02c0a326e037f1dcbe7795fb21dbcc7cd796431"
+      },
+      "oracle": "make_values creates n through n+7; their sum is 8*n+28.",
+      "intent": "Compare a constructor that returns its storage with the local and caller-created forms; measure the actual retained construction boundary.",
+      "category": "list_construction"
+    },
+    {
+      "id": "census/05_mut_destination",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/05_mut_destination.my",
+        "sha256": "6a35812c0123e63a83e7e577de1da6ad1b9da84bb161ea37fdb4b3ae5f9f1adb"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "60\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "116\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "05_mut_destination",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/05_mut_destination.my",
+        "sha256": "6a35812c0123e63a83e7e577de1da6ad1b9da84bb161ea37fdb4b3ae5f9f1adb"
+      },
+      "oracle": "The empty destination receives n through n+7; its sum is 8*n+28.",
+      "intent": "Exercise the proposed caller-initializes/helper-mutates pattern with the same values as the returned-list case; observe any inlining or allocation elimination.",
+      "category": "list_construction"
+    },
+    {
+      "id": "census/06_dynamic_list",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/06_dynamic_list.my",
+        "sha256": "815a72541833bc8021381bd86148f0faaef5ced7f62dab8af5ebc6fa5a76cf72"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "22\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "176\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "06_dynamic_list",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/06_dynamic_list.my",
+        "sha256": "815a72541833bc8021381bd86148f0faaef5ced7f62dab8af5ebc6fa5a76cf72"
+      },
+      "oracle": "n values n+i for i=0..n-1 sum to n*n+n*(n-1)/2.",
+      "intent": "Control for a list whose capacity depends on runtime input rather than a small compile-time bound.",
+      "category": "list_construction"
+    },
+    {
+      "id": "census/07_large_list",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/07_large_list.my",
+        "sha256": "b4e0e1341945ad35b68a1dff04cf39f89a3af1244711f48efd5a2aef4eed57ac"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "182100\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "186300\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "07_large_list",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/07_large_list.my",
+        "sha256": "b4e0e1341945ad35b68a1dff04cf39f89a3af1244711f48efd5a2aef4eed57ac"
+      },
+      "oracle": "600 values n+i for i=0..599 sum to 600*n+599*600/2 = 600*n+179700.",
+      "intent": "Control for a proven constant capacity whose 600 eight-byte integers exceed the current 4096-byte per-list promotion limit.",
+      "category": "list_construction"
+    },
+    {
+      "id": "census/08_snapshot_read",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/single-owner-followup-20261011/migrated/08_snapshot_read.my",
+        "sha256": "bee6901375bb8b7bf382da49aba8ca4f2dce45b1bf59d28d96c8a5d3471ea19c"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "120\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "232\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "08_snapshot_read",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/08_snapshot_read.my",
+        "sha256": "c1e6d1fcfa77608cea9dd96787e2e700e8a2531a2c82d479df7c8fa98083cc65"
+      },
+      "oracle": "Both names read the same eight-value sum, so the answer is 2*(8*n+28).",
+      "intent": "Observe whether a read-only source alias adds ownership operations when neither name is consumed or mutated.",
+      "category": "list_aliases"
+    },
+    {
+      "id": "census/09_snapshot_mutate",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/single-owner-followup-20261011/migrated/09_snapshot_mutate.my",
+        "sha256": "71ec38cf818d3a9b16f5379b6a633149e905b1f47f3e344eb2b9afe7ffae8b29"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "672\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "1295\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "09_snapshot_mutate",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/09_snapshot_mutate.my",
+        "sha256": "67eddd647ed7c0da3ad74e3ea3641fb2b7af119aa17d53ff7d6625709e717fc8"
+      },
+      "oracle": "Old sum is 8*n+28; new sum is 9*n+36. Weighted result is 10*(8*n+28)+(9*n+36)=89*n+316.",
+      "intent": "Require preservation of the old eight-element snapshot while a new version appends a ninth value; expose real copy-on-write and lifetime costs.",
+      "category": "list_aliases"
+    },
+    {
+      "id": "census/10_loop_snapshots",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/single-owner-followup-20261011/migrated/10_loop_snapshots.my",
+        "sha256": "3646ce290c57c61902d55bf333014f826c11e713572d4f14dd6bd338fd2e9dce"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "50\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "946\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "10_loop_snapshots",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/10_loop_snapshots.my",
+        "sha256": "372eff5f9f48a8bffa171a8ff9f2a9b41c5a021cf50fdb6e9d7dc73fe2480f8e"
+      },
+      "oracle": "Prefix j contains j*n+j*(j-1)/2 for j=1..n. Summing prefixes gives n*(n+1)*(4*n-1)/6.",
+      "intent": "Exercise loop-carried sharing and managed children by retaining every list prefix until after construction.",
+      "category": "list_aliases"
+    },
+    {
+      "id": "census/11_record_scalar",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/11_record_scalar.my",
+        "sha256": "1a29d7f37afebe2e1c42c8cc683d881f820e465cb84095db6c3f42f4068c9dfb"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "162\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "946\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "11_record_scalar",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/11_record_scalar.my",
+        "sha256": "1a29d7f37afebe2e1c42c8cc683d881f820e465cb84095db6c3f42f4068c9dfb"
+      },
+      "oracle": "The six fields sum to 6n+15. The reader adds that sum and i for i=0..n-1, giving n(6n+15)+n(n-1)/2=(13n^2+29n)/2.",
+      "intent": "Use a six-field scalar record as a control for aggregate argument handling without managed payloads.",
+      "category": "record_scalar"
+    },
+    {
+      "id": "census/12_record_list",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/12_record_list.my",
+        "sha256": "2bf9ca337a2c69e41d6fd4a0420e19e5e9c0c2353fc718a686d9dc20307091ec"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "40\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "726\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "12_record_list",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/12_record_list.my",
+        "sha256": "2bf9ca337a2c69e41d6fd4a0420e19e5e9c0c2353fc718a686d9dc20307091ec"
+      },
+      "oracle": "make_batch stores the integers 1 through n and factor n. score computes n times their sum, n^2(n+1)/2.",
+      "intent": "Observe allocation and ownership when a factory returns a record containing a runtime-sized list and another function reads its field.",
+      "category": "record_list"
+    },
+    {
+      "id": "census/13_record_snapshot",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/single-owner-followup-20261011/migrated/13_record_snapshot.my",
+        "sha256": "5c0ac76cd77cf873e324d47477030c9a5662bb8efcb638ca4a60e7436aa6b507"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "13027\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "34111\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "13_record_snapshot",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/13_record_snapshot.my",
+        "sha256": "cb1baa571e8cfdf4af9ac7638829958fb766c740b6ab6f12bf16700066edbbae"
+      },
+      "oracle": "The saved record scores n+(n+n+1)=3n+1. The updated record has stamp 2n and appends 1..n, so it scores 4n+1+n(n+1)/2. Print 1000 times the saved score plus the updated score.",
+      "intent": "Measure required snapshot preservation when a mut helper appends to a record's shared list while the original record remains observable.",
+      "category": "record_snapshot"
+    },
+    {
+      "id": "census/14_nested_lists",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/14_nested_lists.my",
+        "sha256": "e3f7c3f35d535ddda065882daa98d51d50eadb256adcf0a2187b46a0f984a20b"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "30\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "198\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "14_nested_lists",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/14_nested_lists.my",
+        "sha256": "e3f7c3f35d535ddda065882daa98d51d50eadb256adcf0a2187b46a0f984a20b"
+      },
+      "oracle": "Row i contains i, i+1 and i+2, whose sum is 3i+3. Summing rows i=0..n-1 gives 3n(n+1)/2.",
+      "intent": "Observe ownership transfer of fixed-width inner lists into a runtime-sized outer list, followed by nested borrowing in another function.",
+      "category": "nested_lists"
+    },
+    {
+      "id": "census/15_managed_elements",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/15_managed_elements.my",
+        "sha256": "7120ce2d3a1ab7454185a3b341fd76f4e3135eede75799bc6f051b4f561d7ab7"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "50\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "264\n",
+          "exit": 0
+        },
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "0\n",
+          "exit": 0
+        },
+        {
+          "id": "64",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "6652\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "15_managed_elements",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/15_managed_elements.my",
+        "sha256": "7120ce2d3a1ab7454185a3b341fd76f4e3135eede75799bc6f051b4f561d7ab7"
+      },
+      "oracle": "Entry i has label length 4+digits(n+i), two values, and value sum n+i. Its contribution is 6+digits(n+i)+n+i. For n=4 all labels use one digit, giving 50; for n=11 all use two digits, giving 264.",
+      "intent": "Exercise managed-element insertion, field borrowing and destruction with dynamically produced strings and independently allocated integer lists.",
+      "category": "managed_elements"
+    },
+    {
+      "id": "census/16_branch_alias",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/single-owner-followup-20261011/migrated/16_branch_alias.my",
+        "sha256": "d34825c9c57a5438d2ea2a7c1a26121c05ec35e92b09b0b031c39fb075b6d5b5"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "1085\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "2808\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "16_branch_alias",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/16_branch_alias.my",
+        "sha256": "90c681d1927e23aaea672ed6035101a9075e1331c663f8e26c71437945669107"
+      },
+      "oracle": "The original sums are L=2n+1 and R=4n+1. Appending n+2 gives selected sum 3n+3 for even n or 5n+3 for odd n. Print 100L+10R+selected: 1085 and 2808.",
+      "intent": "Expose alias joins and copy-on-write when one of two lists is selected by a runtime branch, extended, and compared with both original values.",
+      "category": "branch_alias"
+    },
+    {
+      "id": "census/17_indirect_reader",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/17_indirect_reader.my",
+        "sha256": "f37b50abcae38088649e9b8719882be2138ee08ffec662cfbce862832bccbba3"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "22\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "100\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "17_indirect_reader",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/17_indirect_reader.my",
+        "sha256": "f37b50abcae38088649e9b8719882be2138ee08ffec662cfbce862832bccbba3"
+      },
+      "oracle": "The four values n..n+3 sum to 4n+6. Even n chooses sum_values; odd n chooses double_values, so the outputs are 22 and 2*50=100.",
+      "intent": "Measure the ownership and allocation boundary of an indirect read-only call on a fixed-length scalar list; permit any valid devirtualization.",
+      "category": "indirect_reader"
+    },
+    {
+      "id": "census/18_recursive_reader",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/18_recursive_reader.my",
+        "sha256": "6758f3c9f4f9d318cd7e7adc440daaa05d1e8d15de40c8499387b9938f34a381"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "22\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "50\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "18_recursive_reader",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/18_recursive_reader.my",
+        "sha256": "6758f3c9f4f9d318cd7e7adc440daaa05d1e8d15de40c8499387b9938f34a381"
+      },
+      "oracle": "sum_from visits each index from zero through three once and returns zero at index four. Its result is n+(n+1)+(n+2)+(n+3)=4n+6.",
+      "intent": "Observe how an ordinary list borrow crosses recursive calls where the current strict proof remains conservative.",
+      "category": "recursive_reader"
+    },
+    {
+      "id": "census/19_return_field",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/single-owner-followup-20261011/migrated/19_return_field.my",
+        "sha256": "20ac7f38bd93d395d21d5618b6fec7eee171e35b1888f9dae06736f5f97471aa"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "1526\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "3661\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "19_return_field",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/19_return_field.my",
+        "sha256": "a04cd616dc0064dd27f6db04442958b09730df00eb964819d2d8fb7b97aa751e"
+      },
+      "oracle": "The parent's list sums to 3n+3. Appending n+3 to the extracted list produces sum 4n+6 while the parent remains unchanged. The final checksum is 100(3n+3)+(4n+6)+n=305n+306.",
+      "intent": "Expose ownership of a list returned from a borrowed record, then mutate the extracted value while retaining the parent snapshot.",
+      "category": "return_field"
+    },
+    {
+      "id": "census/20_loop_carried",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/single-owner-followup-20261011/migrated/20_loop_carried.my",
+        "sha256": "3e779a390e87406b94490c50ca4a80305846b452b11a1298dd206263d687ac12"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "56\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "594\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "20_loop_carried",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/20_loop_carried.my",
+        "sha256": "9d7aa43281d8452424da89265054c80aea2fe048f5858fea850662bc9fd4f21a"
+      },
+      "oracle": "Let w=n%3+1. Iteration i appends n+i+j for j=0..w-1. The score adds the final length nw to the sum, giving nw(3n+w)/2. With (n,w)=(4,2) and (11,3), this is 56 and 594.",
+      "intent": "Measure copies and reference counts when each loop iteration replaces its list with the result of an ordinary by-value batch-append helper, without retaining snapshots.",
+      "category": "loop_carried"
+    },
+    {
+      "id": "census/21_dict_unique",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/21_dict_unique.my",
+        "sha256": "621dbb19ac594c5dddaf32aee22f2c844f574b231d1af238ec4e0ad9519626c5"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "26\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "187\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "21_dict_unique",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/21_dict_unique.my",
+        "sha256": "621dbb19ac594c5dddaf32aee22f2c844f574b231d1af238ec4e0ad9519626c5"
+      },
+      "oracle": "Sum of i+1+n for i=0..n-1: n(n+1)/2+n^2.",
+      "intent": "Construct a dictionary and replace its values while it has one owner.",
+      "category": "dictionary"
+    },
+    {
+      "id": "census/22_dict_snapshot",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-containers-20261011/migrated/22_dict_snapshot.my",
+        "sha256": "aede74e695e6ae52ec601f9041e323e2064f78714f2627e7ba50d8748cf61bb9"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "126\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "847\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "22_dict_snapshot",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/22_dict_snapshot.my",
+        "sha256": "db12d1b3bf0224ce4221858b4a0efaa5bd1bb6e51dbe115e1015a771f3ca2475"
+      },
+      "oracle": "Sum of 10(i+1)+(i+1+n): 11n(n+1)/2+n^2.",
+      "intent": "Keep an alias alive across the same scalar dictionary updates and consume both versions.",
+      "category": "dictionary"
+    },
+    {
+      "id": "census/23_dict_managed",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/23_dict_managed.my",
+        "sha256": "231f1b33d2f819a4ad71523d8903ff97bd2bcba3126dd0161e12a2eb49c04aae"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "80\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "594\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "23_dict_managed",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/23_dict_managed.my",
+        "sha256": "231f1b33d2f819a4ad71523d8903ff97bd2bcba3126dd0161e12a2eb49c04aae"
+      },
+      "oracle": "Each entry has length 7+decimal_digits(i+n); sum (i+1) times that length. For n=4 all values have one digit, and for n=11 all have two.",
+      "intent": "Insert runtime strings into a dictionary, replace each with a concatenated value, then read them.",
+      "category": "dictionary"
+    },
+    {
+      "id": "census/24_text_builder",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/24_text_builder.my",
+        "sha256": "9edfd93957fca3660b14d4380e389bf0073f916c2e230dca7c888f3700b367fc"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "206\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "563\n",
+          "exit": 0
+        },
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "-1\n",
+          "exit": 0
+        },
+        {
+          "id": "64",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "3266\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "24_text_builder",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/24_text_builder.my",
+        "sha256": "9edfd93957fca3660b14d4380e389bf0073f916c2e230dca7c888f3700b367fc"
+      },
+      "oracle": "The text has 3n codepoints; the first lambda is at index 2 for n>0. Result: 51n+2.",
+      "intent": "Append a short Unicode piece repeatedly without publishing an alias.",
+      "category": "text"
+    },
+    {
+      "id": "census/25_text_snapshot",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-20261011/migrated/25_text_snapshot.my",
+        "sha256": "07ac0a10e6d6701595665e0ce091b99b4d20e56aeaf2c0d5e1cb58dc947c411b"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "1227\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "3376\n",
+          "exit": 0
+        },
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "-2\n",
+          "exit": 0
+        },
+        {
+          "id": "64",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "19647\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "25_text_snapshot",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/25_text_snapshot.my",
+        "sha256": "67b693e49452286bf51bf7e69357d3c10e3ab5672e53ab151b1f78dc9c9c795e"
+      },
+      "oracle": "Original length=3n, new length=4n, original z index=-1, new z index=3n. Result: 300n+4n-1+3n=307n-1.",
+      "intent": "Retain the pre-append text and consume both its original content and the extended version.",
+      "category": "text"
+    },
+    {
+      "id": "census/26_text_slice",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-views-20261011/migrated/26_text_slice.my",
+        "sha256": "32ad7a681cd48e1138a37ac86034eea13faa6692d093b0b922c2563086efe415"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "1255\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "422\n",
+          "exit": 0
+        },
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "397\n",
+          "exit": 0
+        },
+        {
+          "id": "64",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "1255\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "26_text_slice",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/26_text_slice.my",
+        "sha256": "fb9917054ea5cf2f4dde1cabb764bec2a8aa4b1771a31e8ed4636ceca2054b26"
+      },
+      "oracle": "The slice always has three codepoints and starts at character n modulo 3 of a/lambda/z. Result: 300+ord(character), giving 1255 or 422.",
+      "intent": "Return a three-codepoint substring from a helper, discard the source binding, and consume the substring.",
+      "category": "text"
+    },
+    {
+      "id": "census/27_buffer_builder",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/27_buffer_builder.my",
+        "sha256": "ba6732db91324a0bdf2ad07f00a200a0789bc78d2d3c3f3d77b0b67e5a195b6e"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "10036\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "72155\n",
+          "exit": 0
+        },
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "0\n",
+          "exit": 0
+        },
+        {
+          "id": "64",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "2355136\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "27_buffer_builder",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/27_buffer_builder.my",
+        "sha256": "ba6732db91324a0bdf2ad07f00a200a0789bc78d2d3c3f3d77b0b67e5a195b6e"
+      },
+      "oracle": "Let b_i=(17i+n) mod256 for 0<=i<3n. Result: sum (i+1)b_i.",
+      "intent": "Build a mutable buffer from runtime byte values and read its weighted checksum.",
+      "category": "buffer"
+    },
+    {
+      "id": "census/28_buffer_snapshot",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/28_buffer_snapshot.my",
+        "sha256": "61f95fef3e1ef07d4451e96b54d462df1d8fac31d0a2a74783947b63d6aa2f08"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "122595\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "338181\n",
+          "exit": 0
+        },
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "255\n",
+          "exit": 0
+        },
+        {
+          "id": "64",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "1969215\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "28_buffer_snapshot",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/28_buffer_snapshot.my",
+        "sha256": "61f95fef3e1ef07d4451e96b54d462df1d8fac31d0a2a74783947b63d6aa2f08"
+      },
+      "oracle": "The snapshot has 3n bytes b_i=(17i+n) mod256. The buffer adds 255. Result: 30000n+2 sum b_i+255.",
+      "intent": "Convert a buffer to immutable bytes, append to the buffer, and consume both versions.",
+      "category": "buffer"
+    },
+    {
+      "id": "census/29_list_filter",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/29_list_filter.my",
+        "sha256": "3884b94ec6cc0a2d1be18a8cd5191de79a71fc81b359e9577e596ff4a4f95535"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "120\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "2112\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "29_list_filter",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/29_list_filter.my",
+        "sha256": "3884b94ec6cc0a2d1be18a8cd5191de79a71fc81b359e9577e596ff4a4f95535"
+      },
+      "oracle": "The selected n values are m,m+3,...,m+3(n-1), where m=3ceil(n/3). Weighted sum: n(n+1)(m+2n-2)/2.",
+      "intent": "Materialize an input list and a filtered result with runtime sizes, preserving filtered order in a checksum.",
+      "category": "list"
+    },
+    {
+      "id": "census/30_sort_scratch",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/rc-census-20261010/samples/30_sort_scratch.my",
+        "sha256": "66f5da993bb12f39d78c65701438e4b9dfa3b3b3e44fd1f787064bde95ce6a80"
+      },
+      "runs": [
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "31156678\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "32308550\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "original_id": "30_sort_scratch",
+      "original": {
+        "path": "experiments/rc-census-20261010/samples/30_sort_scratch.my",
+        "sha256": "66f5da993bb12f39d78c65701438e4b9dfa3b3b3e44fd1f787064bde95ce6a80"
+      },
+      "oracle": "Independently numerically sort the multiset {(73i+19n) mod1009 | 0<=i<300+n}, then sum its kth element times k+1. Expected values computed with Python sorted.",
+      "intent": "Sort 300+n runtime-derived integers, beyond the small-sort paths, and consume their order. Ordinary malloc scratch is a counter blindspot to check, not a measured byte claim.",
+      "category": "sort"
+    },
+    {
+      "id": "zero-rc-containers-20261011/dictionary_copy",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-containers-20261011/samples/dictionary_copy.my",
+        "sha256": "36ccd2f634d82b9cec83540f5960a1e9f7db626af0f9287c809cc3a9dd7cd280"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "changed value-1 40\nvalue-2\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "zero-rc-containers-20261011/dictionary_mutation",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-containers-20261011/samples/dictionary_mutation.my",
+        "sha256": "cc7ca4347bde8a2494b5728c0c0a93c474008fd3e94e4798118b0a5703b185e1"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "2 replacement-7 second-8\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "zero-rc-containers-20261011/dictionary_pop",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-containers-20261011/samples/dictionary_pop.my",
+        "sha256": "2423f93fa1ed3d6f40fe5f2cddf24aa27a969905286d230589169b34a97f8148"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "value-1 value-2 fallback-4 0\nkey-2\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "zero-rc-containers-20261011/owned_options",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-containers-20261011/samples/owned_options.my",
+        "sha256": "349e5e01dda518cf33a21fe67e8544daffa19d2ea23d2ef62ae3e6b4c369dfd5"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "7 0\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "zero-rc-containers-20261011/recursive_borrow",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-containers-20261011/samples/recursive_borrow.my",
+        "sha256": "27c48892e2cc3498a30aee948d7b656fc506fd7ab57179710fb8a822b3b3196e"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "10\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "zero-rc-containers-20261011/recursive_copy",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-containers-20261011/samples/recursive_copy.my",
+        "sha256": "d547097b5fcce63f800bad3955ef0b4ffb62460e0900061a4294ad9ea5e1f252"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "207\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "zero-rc-resources-20261011/early_return",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-resources-20261011/samples/early_return.my",
+        "sha256": "6829f8edcb859953c54f7029946e76fa86aac569233b4243f21d2d571bbd23d7"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "failed\nsaved\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "zero-rc-resources-20261011/foreign_scalar",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-resources-20261011/samples/foreign_scalar.my",
+        "sha256": "5c4cf9f5a701b2f4491bc701062f5953f626ac2874e7a22fb39a3c2244c4a696"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "17\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "zero-rc-resources-20261011/native_readonly",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-resources-20261011/samples/native_readonly.my",
+        "sha256": "d341eb620ba0c2941090c293c8ee94a47ce0cc7124360c4b48a07a11ee070fda"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "10\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "link": {
+        "path": "experiments/zero-rc-resources-20261011/samples/native_readonly.c",
+        "sha256": "9521ee2a801ad7c1193c3ba1c74d4cb725dc4786718e3fac256a3df382bdba88"
+      }
+    },
+    {
+      "id": "zero-rc-resources-20261011/native_scopes",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-resources-20261011/samples/native_scopes.my",
+        "sha256": "9765e1fe0a35f54b95da3cd51446694e8b57417e56a77e99d93e5bd3728139a6"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "3\n7\nTrue\n500\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "link": {
+        "path": "experiments/zero-rc-resources-20261011/samples/native_scopes.c",
+        "sha256": "76d9325d0a4fe4aabcdfca77bd989734ede5a5ad72bddb2e8f57432828382cdd"
+      }
+    },
+    {
+      "id": "zero-rc-resources-20261011/nested_error",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-resources-20261011/samples/nested_error.my",
+        "sha256": "c4af33bc5e7059a938cba3a9d00ecb5f8ff4d8fec4c2342b5bc300c621d95865"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "True\nTrue\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "zero-rc-final-20261011/byte_helpers",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-final-20261011/samples/byte_helpers.my",
+        "sha256": "cc3baca09274c8dae40fd6731709c9b9e82daa1e5bcf3227bee1d2ee1291ca9e"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "cebb2d37 bb2d37 2\n\u03bb-7\ncebb2d37\nTrue\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "zero-rc-final-20261011/environment_owned",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-final-20261011/samples/environment_owned.my",
+        "sha256": "5ec02a9f331049d70796894d862a8022a495d3407dda546b65f184c7baad4b2e"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "1\nvalue-7\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "zero-rc-final-20261011/text_helpers",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-final-20261011/samples/text_helpers.my",
+        "sha256": "185123eb81096ab0e2926170d7c13d608e4976fc85ffd84a9ac917d87293edfe"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "a\u03bbb-7 A\u03bbB-7 a\u03bbB-7 a/b-7 7-b\u03bba\n2 2 007 \u03bb 955\nab True True True\n2 2 1\n a\u03bbb-7\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "zero-rc-final-20261011/view_boundaries",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-final-20261011/samples/view_boundaries.my",
+        "sha256": "f11bccacce54db76c5d619977e18d4c49cbb1f31349ba18efc018e14a5c30f19"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "61\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "views/borrow_only",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-views-20261011/samples/borrow_only.my",
+        "sha256": "560259d0f22712eaaff9706f585824690a2e22d61a8422cfddf0579151ab8720"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "0\n",
+          "exit": 0
+        },
+        {
+          "id": "4",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "12000\n",
+          "exit": 0
+        },
+        {
+          "id": "11",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "33000\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "views/text",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-views-20261011/samples/borrowed_text.my",
+        "sha256": "0e4ef14f3d51866b3aeebec368df3b246436e360d5e3ce20d3666924bd75a33c"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "120468\n",
+          "exit": 0
+        },
+        {
+          "id": "9",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "1205000\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "views/bytes",
+      "family": "historical-48",
+      "source": {
+        "path": "experiments/zero-rc-views-20261011/samples/borrowed_bytes.my",
+        "sha256": "6ac95fef9fee5f405ec16f6fc7142038258c276417b3d91f3af7a296a77be09e"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "23468\n",
+          "exit": 0
+        },
+        {
+          "id": "9",
+          "argv": [
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x",
+            "x"
+          ],
+          "stdout": "235000\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "library/byte_builder",
+      "family": "migrated-library-10",
+      "original": {
+        "path": "src/stdlib/fixtures/byte_builder.my",
+        "sha256": "0fd97544353fef9d959ad96979865701fda873eff9e9aa4ae71fbb30eb9b2ce0"
+      },
+      "source": {
+        "path": "src/stdlib/fixtures/byte_builder.my",
+        "sha256": "0fd97544353fef9d959ad96979865701fda873eff9e9aa4ae71fbb30eb9b2ce0"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "",
+          "exit": 42
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "library/codecs",
+      "family": "migrated-library-10",
+      "original": {
+        "path": "src/stdlib/fixtures/codecs.my",
+        "sha256": "15d1be0954ea2f46abe09cf679a19c866cc7840d8bfce596c3dd3c1264982eed"
+      },
+      "source": {
+        "path": "src/stdlib/fixtures/codecs.my",
+        "sha256": "15d1be0954ea2f46abe09cf679a19c866cc7840d8bfce596c3dd3c1264982eed"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "",
+          "exit": 42
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "library/integer_extrema",
+      "family": "migrated-library-10",
+      "original": {
+        "path": "src/stdlib/fixtures/integer_extrema.my",
+        "sha256": "6d5ecc8e225b828152404291d1924c69d6984f956aa7d781aff048f378bab1b0"
+      },
+      "source": {
+        "path": "src/stdlib/fixtures/integer_extrema.my",
+        "sha256": "6d5ecc8e225b828152404291d1924c69d6984f956aa7d781aff048f378bab1b0"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "",
+          "exit": 42
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "library/json",
+      "family": "migrated-library-10",
+      "original": {
+        "path": "src/stdlib/fixtures/json.my",
+        "sha256": "e64f4fd7109a902bdc65936974e22b0125a8140081761b72fa0becbc6af81ba6"
+      },
+      "source": {
+        "path": "src/stdlib/fixtures/json.my",
+        "sha256": "e64f4fd7109a902bdc65936974e22b0125a8140081761b72fa0becbc6af81ba6"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "",
+          "exit": 42
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "library/math",
+      "family": "migrated-library-10",
+      "original": {
+        "path": "src/stdlib/fixtures/math.my",
+        "sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02"
+      },
+      "source": {
+        "path": "src/stdlib/fixtures/math.my",
+        "sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "",
+          "exit": 42
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "library/path",
+      "family": "migrated-library-10",
+      "original": {
+        "path": "src/stdlib/fixtures/path.my",
+        "sha256": "aecc9799c0e114e98c5f7c78e87227f309cff7ad2a19d17c197177a90bc4a19b"
+      },
+      "source": {
+        "path": "src/stdlib/fixtures/path.my",
+        "sha256": "aecc9799c0e114e98c5f7c78e87227f309cff7ad2a19d17c197177a90bc4a19b"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "",
+          "exit": 42
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "library/pool",
+      "family": "migrated-library-10",
+      "original": {
+        "path": "src/stdlib/fixtures/pool.my",
+        "sha256": "3abc9fed9e74b68f1317d59d9dd18e8a1c4b45d17041b847d0d6658864a020f1"
+      },
+      "source": {
+        "path": "experiments/zero-rc-closeout-20261011/samples/pool.my",
+        "sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "",
+          "exit": 42
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "library/sort",
+      "family": "migrated-library-10",
+      "original": {
+        "path": "src/stdlib/fixtures/sort.my",
+        "sha256": "1e966e156f458334e3bbc153fe7cf535a2996f0e316028e5eb547145ef703567"
+      },
+      "source": {
+        "path": "src/stdlib/fixtures/sort.my",
+        "sha256": "1e966e156f458334e3bbc153fe7cf535a2996f0e316028e5eb547145ef703567"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "",
+          "exit": 42
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "library/strings",
+      "family": "migrated-library-10",
+      "original": {
+        "path": "src/stdlib/fixtures/strings.my",
+        "sha256": "48e88a4c0f6003e82ee2a938fe8e6b9a312f273d5f49b7b9b0d771c6fcc78a5e"
+      },
+      "source": {
+        "path": "src/stdlib/fixtures/strings.my",
+        "sha256": "48e88a4c0f6003e82ee2a938fe8e6b9a312f273d5f49b7b9b0d771c6fcc78a5e"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "",
+          "exit": 42
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "library/time_random",
+      "family": "migrated-library-10",
+      "original": {
+        "path": "src/stdlib/fixtures/time_random.my",
+        "sha256": "5ea19319d282f9eb98ac0430600387558cf249999b6ad6039865cd5b4fd8ca95"
+      },
+      "source": {
+        "path": "experiments/zero-rc-closeout-20261011/samples/time_random.my",
+        "sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "tasks/parallel_map",
+      "family": "source-tasks",
+      "source": {
+        "path": "experiments/zero-rc-closeout-20261011/samples/parallel_map.my",
+        "sha256": "7528bdf4dc63046e3c8230ba6721e92d6ba992e1a486d748ba0bbd9a59d47379"
+      },
+      "runs": [
+        {
+          "id": "workers-1",
+          "argv": [],
+          "stdout": "2016 item-0! 16\n",
+          "exit": 0,
+          "env": {
+            "MYLANG_THREADS": "1"
+          }
+        },
+        {
+          "id": "workers-2",
+          "argv": [],
+          "stdout": "2016 item-0! 16\n",
+          "exit": 0,
+          "env": {
+            "MYLANG_THREADS": "2"
+          }
+        },
+        {
+          "id": "workers-8",
+          "argv": [],
+          "stdout": "2016 item-0! 16\n",
+          "exit": 0,
+          "env": {
+            "MYLANG_THREADS": "8"
+          }
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "tasks/parallel_outcome",
+      "family": "source-tasks",
+      "source": {
+        "path": "experiments/zero-rc-closeout-20261011/samples/parallel_outcome.my",
+        "sha256": "32b470dbf7924cc207d8f26f3a9ebc8b5d3c71c681e7549a4ba96298a8d82b0b"
+      },
+      "runs": [
+        {
+          "id": "workers-1",
+          "argv": [],
+          "stdout": "416\n",
+          "exit": 0,
+          "env": {
+            "MYLANG_THREADS": "1"
+          }
+        },
+        {
+          "id": "workers-2",
+          "argv": [],
+          "stdout": "416\n",
+          "exit": 0,
+          "env": {
+            "MYLANG_THREADS": "2"
+          }
+        },
+        {
+          "id": "workers-8",
+          "argv": [],
+          "stdout": "416\n",
+          "exit": 0,
+          "env": {
+            "MYLANG_THREADS": "8"
+          }
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/array_1_control",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/array_1_control.my",
+        "sha256": "77e45594cedaafc4d72cc43a4d01cec48d4259f13155ced9680061d0f90b1407"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "array 32\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/array_1_hit",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/array_1_hit.my",
+        "sha256": "bc8a9ac45520546037cb8780b94ece0157cf3991629fe10e913081661b716095"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "array 4096\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/array_1_miss",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/array_1_miss.my",
+        "sha256": "8b3b933907b57476b3667830a477fcd4671f364081b2d48bfaee94aa8d9b9ec6"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "array 32\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/array_16_control",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/array_16_control.my",
+        "sha256": "57ddbb99836e74f2cb52970718a2c3c91dd0c78603140181726bdb64c5b30db4"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "array 32\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/array_16_hit",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/array_16_hit.my",
+        "sha256": "35ca93b5b7d60fd3b3e9e760d294224ed85be94ce2a765d6112f9a19d44abcf3"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "array 4096\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/array_16_miss",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/array_16_miss.my",
+        "sha256": "baf6ce1f20de096ec32165517057cc7122ae4f4c9acac1fc936beacb7bf33003"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "array 32\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/array_128_control",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/array_128_control.my",
+        "sha256": "e1fd8cecc93e389c63b8db6bf77846477ba27ccdcdf229a8c76d1e64645aa9aa"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "array 32\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/array_128_hit",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/array_128_hit.my",
+        "sha256": "a7b20576e9161623491f95563c3bf717e6e558dcca61bf2c864b6b1b8ce8c44a"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "array 4096\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/array_128_miss",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/array_128_miss.my",
+        "sha256": "8df977d894b00af5156bcf616fc2027f4c552f4d39e16b4f0b4f7f59609562e1"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "array 32\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/object_1_control",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/object_1_control.my",
+        "sha256": "3b466217f11380a342e2ec0c43034a0b70e5f7b97c20a7586656bffa1548e50a"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "object 32\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/object_1_hit",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/object_1_hit.my",
+        "sha256": "5919d8c57dc351f62cee8f5579b56053e10bcb19c9065c0f9980693f5dc5718f"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "object 4096\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/object_1_miss",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/object_1_miss.my",
+        "sha256": "eb59d1fca90fe87d8ec52842d268017bd64d709b0c61ab884371a522a6756311"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "object 32\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/object_16_control",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/object_16_control.my",
+        "sha256": "1b57e5212f2f512892e1e5805a816653cb7e37e8c973f5f328cdb48fc2f90a15"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "object 32\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/object_16_hit",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/object_16_hit.my",
+        "sha256": "3a15a5879653b4a926e2c1c271782cdeeb223535b436d145b892099caf31d94a"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "object 4096\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/object_16_miss",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/object_16_miss.my",
+        "sha256": "5519c4b12d7f81c2109024f300ac7dff2175fc672e8626df0a24235663987361"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "object 32\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/object_128_control",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/object_128_control.my",
+        "sha256": "a4d437dd658114bd68ce528d17f978bfafd03cf395f0b29571070f56ac8bbe8f"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "object 32\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/object_128_hit",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/object_128_hit.my",
+        "sha256": "85cfe71965bf2f5a940a1a091087ecfff261c3e44f30d65a71eb0f4ddd185fb8"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "object 4096\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/object_128_miss",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/object_128_miss.my",
+        "sha256": "e18728ab55e52f3b4a75381c32c1d8eac672aed6a9ea0e9295b85a5fc8db5bbc"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "object 32\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/record_before",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/record_before.my",
+        "sha256": "c025a2b7e8abefa2f2edae745ffa0e78f70977ff4b5508ee96e4736511b136f6"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "267560\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "batch/record_after",
+      "family": "json-field-batch",
+      "source": {
+        "path": "experiments/zero-rc-batch-20261011/samples/record_after.my",
+        "sha256": "f05beeba0791de9d38527d2e8b0665260fa62a15ac314c910af211f8da8293e7"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "267560\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    },
+    {
+      "id": "owned-payload/json_nested",
+      "family": "owned-payload",
+      "source": {
+        "path": "experiments/owned-payload-20261011/samples/json_nested.my",
+        "sha256": "564b49a330559874a40edbc6de33de6fc4df5b0254eea1eac880299ca4e8592f"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "121000\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ]
+    }
+  ]
+}
