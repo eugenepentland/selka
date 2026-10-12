@@ -1,9 +1,19 @@
 # Lox and EDA with checked ownership
 
-Status: application correctness and final registered verification have passed.
-The complete 34-design EDA and 13-workload Lox tree comparisons are available.
-The 13-workload Lox VM comparison is still running; no full-suite VM result is
-claimed yet.
+Status: migration and comparison work is complete. Application
+unit/conformance/golden checks and final registered verification passed.
+All 60 workloads were attempted across seven comparison arms. Checked ownership
+completed 57/60; each other arm completed 60/60. Three VM workloads (`equality`,
+`invocation`, `string_equality`) exceeded the 120-second ordinary warmup deadline.
+Their full-size outputs remain unqualified, and no full-suite checked VM average
+is claimed. All inputs and failures remain in the comparison denominator.
+
+The [complete comparison](bench/full-final/COMPARISON.md),
+[per-case CSV](bench/full-final/per-cell.csv) and
+[machine-readable samples](bench/full-final/full-runtime-summary.json) include
+fresh Zig/Rust/Go controls and separately identified historical results.
+Performance regressions are recorded for the user's decision; no optimization,
+default promotion or RC retirement followed the green verification gate.
 
 The full Lox interpreter and EDA renderer have been migrated to checked zero-RC
 ownership. The compiler remains `mylang`; checked ownership is selected with
@@ -59,7 +69,7 @@ Uninstrumented timing uses two warmup rounds, nine alternating measured rounds,
 and three separate GNU-time child peak-RSS runs on CPU8. Exclusive timing leases
 share the repository's admission queue. Queue wait is not guest runtime. Longer
 Lox cases are split into bounded leases so native qualification jobs can proceed.
-A guest exceeding120 seconds is retained as a censored arm; no full-suite ratio
+A guest exceeding 120 seconds is retained as a censored arm; no full-suite ratio
 is produced from an incomplete subset. Failed arms are not repeatedly retried by
 later chunks of the same case.
 
@@ -69,10 +79,12 @@ These include application startup and input processing. Managed counters exclude
 some native metadata, provider storage and allocator overhead; they are not RSS.
 Instrumented wall times are not timing samples.
 
-Stored October9 results remain separately identified in
+Stored October 9 results remain separately identified in
 [historical.json](bench/historical.json). They used CPU10 and fewer/different
 measurement rounds, and reference artifact identities can differ. Fresh paired
-comparisons are the primary controls. Host details are in
+comparisons are the primary controls. Historical Lox RSS is the maximum across
+timing rounds; current RSS is the median of three separate child peak-RSS runs.
+Historical EDA uses its exact child RSS field. Host details are in
 [measurement-host.json](bench/measurement-host.json).
 
 ## Complete EDA results
@@ -107,19 +119,35 @@ the largest case, `trees`, rises from **46.453 to 95.992 MiB** (medians of three
 RSS runs). The [tree comparison](bench/LOX-TREE-COMPARISON.md) includes
 per-case ranges and the current and historical Zig/Rust/Go comparisons.
 
-## Initial complete Lox VM result
+## Lox VM results and remaining qualification limits
 
-These are individual cases, not aggregate estimates. Runtime is the median of
-nine runs; RSS is the median of three separate runs.
+Ten of 13 checked VM workloads completed all nine timing and three RSS runs.
+Their per-case runtime ratios range from **19.144x to 66.549x** original RC.
+The three ordinary warmup timeouts remain unavailable, including their RSS;
+they are not treated as 120-second timing samples. Both RC controls and all four
+reference implementations completed 13/13. The complete comparison lists all
+13 cases, their sample ranges and exact failure commands in the raw receipts.
 
-| Workload | Original RC | Migrated RC | Zero-RC | Zero-RC / original | Original / zero-RC RSS |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Lox VM Fibonacci | 1.2923 s | 1.3191 s | 31.6937 s | 24.53x | 2636 / 2764 KiB |
+| VM workload | Original RC median | Checked median | Checked / original | Original / checked RSS |
+| --- | ---: | ---: | ---: | ---: |
+| Fibonacci | 1.2923 s | 31.6937 s | 24.53x | 2.574 / 2.699 MiB |
+| Strings | 0.7954 s | 52.9317 s | 66.55x | 2.574 / 2.699 MiB |
+| Trees | 2.0538 s | 40.5205 s | 19.73x | 166.949 / 166.773 MiB |
+| Zoo batch | 1.7787 s | 81.8694 s | 46.03x | 2.574 / 2.695 MiB |
 
-Raw samples: [initial Fibonacci receipts](bench/results/initial-fib).
-The performance regressions are being recorded without further optimization,
-as requested. The final report will replace this initial table with the complete
-comparison, including failures or censored cases.
+RSS values are medians of three child peak measurements, separate from timing.
+The instrumented counter suite has six VM timeouts; `method_call`, `properties`
+and `zoo_batch` nevertheless completed the ordinary timing/RSS suite. The two
+timeout inventories must not be conflated.
+
+The conservative migration adds explicit independent copies: Lox goes from 2 to
+184 copy sites, and EDA from 3 to 843. Allocation attribution identifies VM
+per-opcode frame copies and EDA subtree/slice copies as major traffic sources.
+For example, counted VM Fibonacci allocates 664.970 GB cumulatively with checked
+ownership versus 505,496 bytes in the RC controls, while its managed peak stays
+below 1 MB. These are costs of this migration, not a lower bound for zero-RC;
+allocation attribution is not CPU profiling. The complete report records the
+source locations and counters without applying further performance changes.
 
 ## Running the migrated applications
 
@@ -135,5 +163,8 @@ zig-out/bin/mylang build experiments/lox-eda-zero-rc-20261012/eda/source/src/mai
 ```
 
 Detailed source provenance, migration burden, exact commands and application
-receipts accompany each application. The [item ledger](ledger.json) distinguishes
-completed correctness work from the measurements still in progress.
+receipts accompany each application. The [item ledger](ledger.json) records
+completed comparison work, exact timeout reproducers and the remaining full-size
+qualification limits. [Final evidence validation](coordinator/final-evidence-validation.json)
+checks the complete receipt inventory and unchanged production sources after the
+green gate.

@@ -1,0 +1,408 @@
+{
+  "started_utc": "2026-10-12T12:01:15.731226+00:00",
+  "measurement_harness_sha256": "2e24cadd16dc9eb5a711b8c100249d76ab8c1b31ab74c138eaae5f76273e0011",
+  "prior_receipt": null,
+  "host": [
+    "Linux",
+    "linuxserver",
+    "7.0.0-31-generic",
+    "#31-Ubuntu SMP PREEMPT_DYNAMIC Sat Aug  1 04:26:38 UTC 2026",
+    "x86_64"
+  ],
+  "loadavg_start": [
+    0.9609375,
+    1.00244140625,
+    1.04150390625
+  ],
+  "spec": {
+    "cell": "lox/vm/trees",
+    "arms": {
+      "zig-safe": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-safe",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/trees.vm.40.lox"
+      ],
+      "zig-fast": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/trees.vm.40.lox"
+      ],
+      "rust": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-rust",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/trees.vm.40.lox"
+      ],
+      "go": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-go",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/trees.vm.40.lox"
+      ],
+      "mylang-original-rc": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-original-rc",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/trees.vm.40.lox"
+      ],
+      "mylang-migrated-rc": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-migrated-rc",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/trees.vm.40.lox"
+      ],
+      "mylang-zero-rc": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/trees.vm.40.lox"
+      ]
+    },
+    "oracle": "zig-safe",
+    "files": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/trees.vm.40.lox",
+      "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/trees.vm.out"
+    ],
+    "expected_stdout": "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/trees.vm.out"
+  },
+  "spec_sha256": "8c6f5fa7fa78efb77a42f5ea062a0e5011d35c21b1ace09111150963f5c0492a",
+  "cpu": 8,
+  "identities": {
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/trees.vm.40.lox": "155ef19eeb8f6db8f2b4d3979c06b40507fe6720ab521655b28cbbb43d299e53",
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-migrated-rc": "d0eaa00b0b5cab6aa9eaa461a4a8279eb15522c86cb288484f6278ae8c75dd6f",
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-original-rc": "9c8f5d3e1b0be06ae9134be40627bc0e1c1b913097f93d4bdc3c2a16a974fc04",
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero": "a87f5bae25a477178189d093d720d0f23ddb76aba07f0de99788ad1004520029",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-go": "4d458b9e5305a2be24360a9d5d9c58f7bc828c9f9433eb6bae984066c4081b63",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-rust": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-safe": "96c97215aaddd5f90ebb61a80b388289a763bf9b8e976009c09b98a3068b4b03",
+    "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/trees.vm.out": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676"
+  },
+  "guest_timeout_seconds": 120.0,
+  "warmups": 2,
+  "round_start": 0,
+  "rounds": 3,
+  "wall_samples": [
+    {
+      "arm": "zig-safe",
+      "value": 1.415983022,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "zig-fast",
+      "value": 0.96524685,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "rust",
+      "value": 1.384385308,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "go",
+      "value": 1.277485125,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "mylang-original-rc",
+      "value": 2.056432637,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "mylang-migrated-rc",
+      "value": 2.094315388,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "value": 41.03168056,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 0
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "value": 40.471698894,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "mylang-migrated-rc",
+      "value": 2.082061867,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "mylang-original-rc",
+      "value": 2.053791279,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "go",
+      "value": 1.277643608,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "rust",
+      "value": 1.385173863,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "zig-fast",
+      "value": 0.97043509,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "zig-safe",
+      "value": 1.41579086,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 1
+    },
+    {
+      "arm": "zig-safe",
+      "value": 1.412361193,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 2
+    },
+    {
+      "arm": "zig-fast",
+      "value": 0.971623043,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 2
+    },
+    {
+      "arm": "rust",
+      "value": 1.448020267,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 2
+    },
+    {
+      "arm": "go",
+      "value": 1.26629835,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 2
+    },
+    {
+      "arm": "mylang-original-rc",
+      "value": 2.17982872,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 2
+    },
+    {
+      "arm": "mylang-migrated-rc",
+      "value": 2.090576161,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 2
+    },
+    {
+      "arm": "mylang-zero-rc",
+      "value": 40.552355627,
+      "output": {
+        "stdout_sha256": "dc00383fb2d24fef0a8ace503018e64f1689080590e548654660115226860676",
+        "artifacts": {}
+      },
+      "stderr": "",
+      "round": 2
+    }
+  ],
+  "rss_samples": [],
+  "arm_status": {
+    "zig-safe": {
+      "status": "ok"
+    },
+    "zig-fast": {
+      "status": "ok"
+    },
+    "rust": {
+      "status": "ok"
+    },
+    "go": {
+      "status": "ok"
+    },
+    "mylang-original-rc": {
+      "status": "ok"
+    },
+    "mylang-migrated-rc": {
+      "status": "ok"
+    },
+    "mylang-zero-rc": {
+      "status": "ok"
+    }
+  },
+  "summary": {
+    "zig-safe": {
+      "seconds": {
+        "median": 1.41579086,
+        "min": 1.412361193,
+        "max": 1.415983022,
+        "samples": [
+          1.415983022,
+          1.41579086,
+          1.412361193
+        ]
+      }
+    },
+    "zig-fast": {
+      "seconds": {
+        "median": 0.97043509,
+        "min": 0.96524685,
+        "max": 0.971623043,
+        "samples": [
+          0.96524685,
+          0.97043509,
+          0.971623043
+        ]
+      }
+    },
+    "rust": {
+      "seconds": {
+        "median": 1.385173863,
+        "min": 1.384385308,
+        "max": 1.448020267,
+        "samples": [
+          1.384385308,
+          1.385173863,
+          1.448020267
+        ]
+      }
+    },
+    "go": {
+      "seconds": {
+        "median": 1.277485125,
+        "min": 1.26629835,
+        "max": 1.277643608,
+        "samples": [
+          1.277485125,
+          1.277643608,
+          1.26629835
+        ]
+      }
+    },
+    "mylang-original-rc": {
+      "seconds": {
+        "median": 2.056432637,
+        "min": 2.053791279,
+        "max": 2.17982872,
+        "samples": [
+          2.056432637,
+          2.053791279,
+          2.17982872
+        ]
+      }
+    },
+    "mylang-migrated-rc": {
+      "seconds": {
+        "median": 2.090576161,
+        "min": 2.082061867,
+        "max": 2.094315388,
+        "samples": [
+          2.094315388,
+          2.082061867,
+          2.090576161
+        ]
+      }
+    },
+    "mylang-zero-rc": {
+      "seconds": {
+        "median": 40.552355627,
+        "min": 40.471698894,
+        "max": 41.03168056,
+        "samples": [
+          41.03168056,
+          40.471698894,
+          40.552355627
+        ]
+      }
+    }
+  },
+  "loadavg_end": [
+    1.0,
+    1.0,
+    1.01708984375
+  ],
+  "finished_utc": "2026-10-12T12:05:27.174984+00:00"
+}

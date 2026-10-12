@@ -1,6 +1,5 @@
 {
   "base": "8fa0560309cc2c78b9691a94a6c7e2be2815d4a4",
-  "milestones_complete": false,
   "items": [
     {
       "id": "sources",
@@ -17,22 +16,22 @@
     },
     {
       "id": "correctness",
-      "state": "qualified",
+      "state": "conformance_and_golden_tests_qualified",
       "owner": "lox_owned,eda_owned",
-      "requirement": "All full-port tests plus 26 Lox performance cells and 34 EDA output goldens; no omitted failures",
+      "requirement": "Full-port units/conformance, smoke output checks, and EDA golden/error oracles; full-size workload completion is tracked separately under runtime_rss.",
       "lox_conformance_per_mode": "974/974 in5modes",
       "eda_original_tests": "310/310",
       "eda_zero_rc": "310/310 verified release and 310/310 debug",
       "eda_all_modules": "121/121 source checks",
       "eda_goldens": "34/34 entire output sets across five builds",
-      "eda_errors": "9/9 error-path comparisons across five builds"
+      "eda_errors": "9/9 error-path comparisons across five builds",
+      "full_size_lox_qualification": "Incomplete for censored runtime arms; no output qualification is inferred from a timeout."
     },
     {
       "id": "runtime_rss",
-      "state": "in_progress",
+      "state": "measured_with_three_ordinary_runtime_censors",
       "owner": "lox_eda_bench",
       "requirement": "Same-compiler original RC / migrated RC / migrated zeroRC, four reference arms; 2warmups9measured3RSS, bounded guest deadlines",
-      "completed_cells": 49,
       "total_cells": 60,
       "evidence": [
         "bench/results/initial-fib",
@@ -42,7 +41,67 @@
       "completed_groups": [
         "eda (34/34)",
         "lox/tree (13/13)"
-      ]
+      ],
+      "attempted_cells": 60,
+      "completed_cells_all_seven_arms": 57,
+      "completed_cells_by_arm": {
+        "zig-safe": 60,
+        "go": 60,
+        "mylang-zero-rc": 57,
+        "zig-fast": 60,
+        "mylang-migrated-rc": 60,
+        "rust": 60,
+        "mylang-original-rc": 60
+      },
+      "ordinary_runtime_censors": [
+        {
+          "cell": "lox/vm/equality",
+          "arm": "mylang-zero-rc",
+          "status": "timeout",
+          "phase": "warmup",
+          "timeout_seconds": 120.0,
+          "owner": "lox_owned",
+          "reproducer_argv": [
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/equality.vm.3000000.lox"
+          ],
+          "output_qualified": false,
+          "performance_action": "deferred to user; no further optimization authorized in this run"
+        },
+        {
+          "cell": "lox/vm/invocation",
+          "arm": "mylang-zero-rc",
+          "status": "timeout",
+          "phase": "warmup",
+          "timeout_seconds": 120.0,
+          "owner": "lox_owned",
+          "reproducer_argv": [
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/invocation.vm.1500000.lox"
+          ],
+          "output_qualified": false,
+          "performance_action": "deferred to user; no further optimization authorized in this run"
+        },
+        {
+          "cell": "lox/vm/string_equality",
+          "arm": "mylang-zero-rc",
+          "status": "timeout",
+          "phase": "warmup",
+          "timeout_seconds": 120.0,
+          "owner": "lox_owned",
+          "reproducer_argv": [
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "output_qualified": false,
+          "performance_action": "deferred to user; no further optimization authorized in this run"
+        }
+      ],
+      "summary": "bench/full-final/full-runtime-summary.json",
+      "comparison": "bench/full-final/COMPARISON.md"
     },
     {
       "id": "managed_counters",
@@ -73,19 +132,24 @@
     },
     {
       "id": "history",
-      "state": "prepared",
+      "state": "recorded_with_identity_and_rss_estimator_limits",
       "owner": "lox_eda_bench",
-      "requirement": "Stored historical suite and exact new identities, separate from fresh paired controls"
+      "requirement": "Stored historical suite and exact new identities, separate from fresh paired controls",
+      "evidence": "bench/full-final/COMPARISON.md"
     },
     {
       "id": "verification",
       "state": "passed",
       "owner": "root",
       "requirement": "Focused ownership/native checks then complete registered gate on frozen integrated compiler",
-      "evidence": "coordinator/integrated-gate-identity.json"
+      "evidence": "coordinator/integrated-gate-identity.json",
+      "production_unchanged_after_gate": true
     }
   ],
   "compiler_implementation_commit": "466a1a5b7",
   "frozen_compiler_commit": "e2893d2707cbe057a09abf94e04c4b12d16b7b8b",
-  "scope": "Migrate and benchmark full Lox and EDA applications; no default promotion or legacy RC retirement."
+  "scope": "Migrate and benchmark full Lox and EDA applications; no default promotion or legacy RC retirement.",
+  "comparison_complete": true,
+  "full_size_checked_qualification_complete": false,
+  "performance_decision": "Deferred to user after recording regressions; no optimization, default promotion or RC retirement after the green gate."
 }
