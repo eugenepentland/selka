@@ -47,7 +47,7 @@ fn buildRow(arena: std.mem.Allocator, root: []const u8, row: Row, release: bool)
     const output = try std.fmt.allocPrint(arena, "{s}/{s}-{s}", .{ root, row.name, if (release) "release" else "debug" });
     const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, "--link", options.clock_path, "--cache-dir", cache });
+    try argv.appendSlice(arena, &.{ options.corePath(), "build", source, "-o", output, "--link", options.clock_path, "--cache-dir", cache });
     if (release) try argv.append(arena, "--release");
     const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
     if (exitedWith(built.term, 0)) return output;

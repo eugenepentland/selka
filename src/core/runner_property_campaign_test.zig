@@ -50,7 +50,7 @@ const Project = struct {
 
     fn runPath(self: *Project, relative: []const u8, budget: u32, extra: []const []const u8) !Value {
         var args: std.ArrayList([]const u8) = .empty;
-        try args.appendSlice(self.arena, &.{ options.core_path, "test", try self.path(relative), "--json", "--seed", "42" });
+        try args.appendSlice(self.arena, &.{ options.corePath(), "test", try self.path(relative), "--json", "--seed", "42" });
         try args.appendSlice(self.arena, &.{ "--property-policy", "indexed-v1", "--property-runs", try std.fmt.allocPrint(self.arena, "{d}", .{budget}) });
         try args.appendSlice(self.arena, &.{ "--cache-dir", try self.path("cache") });
         try args.appendSlice(self.arena, extra);

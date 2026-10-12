@@ -12,7 +12,7 @@ fn qualified(arena: std.mem.Allocator) !void {
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     for ([_][]const []const u8{ &.{"--unoptimized"}, &.{"--release"}, &.{ "--release", "--verify-facts" } }) |mode| {
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(arena, &.{ options.core_path, "test", source, "--json", "--cache-dir", root });
+        try argv.appendSlice(arena, &.{ options.corePath(), "test", source, "--json", "--cache-dir", root });
         try argv.appendSlice(arena, mode);
         const result = try std.process.run(arena, std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
         if (result.term != .exited or result.term.exited != 0) report("scalar store fixture: {s}{s}\n", .{ result.stdout, result.stderr });

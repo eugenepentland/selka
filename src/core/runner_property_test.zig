@@ -11,7 +11,7 @@ fn run(a: std.mem.Allocator, fixture: []const u8, flags: []const []const u8) !Ru
     var environment = try std.testing.environ.createMap(a);
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(a, &.{ options.core_path, "test", try std.fs.path.join(a, &.{ options.fixtures, fixture }), "--json", "--seed", "7", "--property-runs", "12", "--cache-dir", root });
+    try argv.appendSlice(a, &.{ options.corePath(), "test", try std.fs.path.join(a, &.{ options.fixtures, fixture }), "--json", "--seed", "7", "--property-runs", "12", "--cache-dir", root });
     try argv.appendSlice(a, flags);
     const result = try std.process.run(a, std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
     try std.testing.expectEqualStrings("", result.stderr);

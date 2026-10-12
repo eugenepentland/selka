@@ -57,7 +57,7 @@ const Projects = struct {
         const source = try self.path(&.{ invocation.project, invocation.source });
         const private = try self.path(&.{ invocation.project, "private" });
         const store = try self.path(&.{"shared"});
-        try args.appendSlice(self.arena, &.{ tools.core_path, "test", source, "--json", "--cache-dir", private });
+        try args.appendSlice(self.arena, &.{ tools.corePath(), "test", source, "--json", "--cache-dir", private });
         try args.appendSlice(self.arena, &.{ "--shared-cache-dir", store, "--jobs", "2", "--property-runs", "5" });
         try args.appendSlice(self.arena, invocation.extra);
         const result = try std.process.run(self.arena, std.testing.io, .{ .argv = args.items, .environ_map = &self.environment });

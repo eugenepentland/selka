@@ -205,7 +205,7 @@ fn fixture(arena: std.mem.Allocator, root: []const u8, flags: []const []const u8
     const output = try std.fmt.allocPrint(arena, "{s}/ce2_effects-{d}", .{ root, flags.len });
     const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, "--cache-dir", cache });
+    try argv.appendSlice(arena, &.{ options.corePath(), "build", source, "-o", output, "--cache-dir", cache });
     try argv.appendSlice(arena, flags);
     const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
     try std.testing.expect(built.term == .exited and built.term.exited == 0);

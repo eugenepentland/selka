@@ -165,7 +165,7 @@ fn runTest(arena: std.mem.Allocator, root: []const u8, fixture: []const u8, extr
     var argv: std.ArrayList([]const u8) = .empty;
     const source = try std.fmt.allocPrint(arena, "{s}/{s}.my", .{ options.fixtures, fixture });
     const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
-    try argv.appendSlice(arena, &.{ options.core_path, "test", source, "--json", "--cache-dir", cache });
+    try argv.appendSlice(arena, &.{ options.corePath(), "test", source, "--json", "--cache-dir", cache });
     try argv.appendSlice(arena, extra);
     const result = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
     const status: u8 = switch (result.term) {
@@ -274,7 +274,7 @@ const CacheProject = struct {
 
     fn run(self: *CacheProject, relative: []const u8, extra: []const []const u8) !std.process.RunResult {
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(self.arena, &.{ options.core_path, "test", try self.path(relative), "--json", "--cache-dir", try self.path("cache") });
+        try argv.appendSlice(self.arena, &.{ options.corePath(), "test", try self.path(relative), "--json", "--cache-dir", try self.path("cache") });
         try argv.appendSlice(self.arena, extra);
         return std.process.run(self.arena, std.testing.io, .{ .argv = argv.items, .environ_map = &self.environment });
     }

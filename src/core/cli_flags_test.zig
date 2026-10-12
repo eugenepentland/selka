@@ -22,7 +22,7 @@ const Context = struct {
     /// Run the compiler with `args`, in the project directory.
     fn compiler(self: Context, args: []const []const u8) !Outcome {
         // The build names the compiler relative to the test's own working directory.
-        const executable = try std.Io.Dir.cwd().realPathFileAlloc(std.testing.io, tools.core_path, self.arena);
+        const executable = try std.Io.Dir.cwd().realPathFileAlloc(std.testing.io, tools.corePath(), self.arena);
         const argv = try std.mem.concat(self.arena, []const u8, &.{ &.{executable}, args });
         return self.spawn(argv);
     }
@@ -465,7 +465,7 @@ test "CLI rejects invalid stage compression with a configuration diagnostic" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
-    const executable = try std.Io.Dir.cwd().realPathFileAlloc(std.testing.io, tools.core_path, a);
+    const executable = try std.Io.Dir.cwd().realPathFileAlloc(std.testing.io, tools.corePath(), a);
     var environment = try std.testing.environ.createMap(a);
     defer environment.deinit();
     try environment.put("MYLANG_STAGE_CACHE_COMPRESSION", "invalid");

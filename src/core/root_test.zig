@@ -2,6 +2,7 @@
 //! each stage, then the end-to-end slice programs under `test/core`.
 comptime {
     _ = @import("single_owner_test.zig");
+    _ = @import("test_paths_test.zig");
     _ = @import("zero_rc_test.zig");
     _ = @import("a01_native_driver_test.zig");
     _ = @import("owned_payload_test.zig");

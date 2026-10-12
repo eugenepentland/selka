@@ -12,7 +12,7 @@ fn liveRun(allocator: std.mem.Allocator, flags: []const []const u8) !void {
     var environment = try std.testing.environ.createMap(a);
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(a, &.{ options.core_path, "test", try std.fs.path.join(a, &.{ options.fixtures, "i_live_place.my" }), "--cache-dir", root });
+    try argv.appendSlice(a, &.{ options.corePath(), "test", try std.fs.path.join(a, &.{ options.fixtures, "i_live_place.my" }), "--cache-dir", root });
     try argv.appendSlice(a, flags);
     const ran = try std.process.run(a, std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
     try std.testing.expect(ran.term == .exited and ran.term.exited == 0);

@@ -16,7 +16,7 @@ fn leakChecked(arena: std.mem.Allocator, root: []const u8, name: []const u8, fla
     const output = try std.fmt.allocPrint(arena, "{s}/{s}-{d}-{d}", .{ root, name, flags.len, if (flags.len > 0) flags[flags.len - 1].len else 0 });
     const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, "--cache-dir", cache });
+    try argv.appendSlice(arena, &.{ options.corePath(), "build", source, "-o", output, "--cache-dir", cache });
     try argv.appendSlice(arena, flags);
     const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
     if (built.term != .exited or built.term.exited != 0) report("build: {s}{s}\n", .{ built.stdout, built.stderr });
@@ -289,7 +289,7 @@ test "a store sunk several blocks down keeps its operands: the guest tests that 
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     // Each sinking copies the store's operands to a new place in `extra`; a copy taken from
     // under an append that moved it read freed memory (a compiler panic, at --verify-facts).
-    const ran = try std.process.run(a, std.testing.io, .{ .argv = &.{ options.core_path, "test", source, "--release", "--verify-facts", "--cache-dir", cache }, .environ_map = &environment });
+    const ran = try std.process.run(a, std.testing.io, .{ .argv = &.{ options.corePath(), "test", source, "--release", "--verify-facts", "--cache-dir", cache }, .environ_map = &environment });
     try std.testing.expect(succeeded(ran));
 }
 

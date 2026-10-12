@@ -34,7 +34,7 @@ const Context = struct {
         const path = try std.fs.path.join(self.arena, &.{ self.root, source });
         const cache = try std.fs.path.join(self.arena, &.{ self.root, "cache" });
         var args: std.ArrayList([]const u8) = .empty;
-        try args.appendSlice(self.arena, &.{ tools.core_path, "test", path, "--json", command_cache, cache, "--jobs", "2", "--property-runs", "5" });
+        try args.appendSlice(self.arena, &.{ tools.corePath(), "test", path, "--json", command_cache, cache, "--jobs", "2", "--property-runs", "5" });
         try args.appendSlice(self.arena, extra);
         const result = try std.process.run(self.arena, std.testing.io, .{ .argv = args.items });
         const parsed = std.json.parseFromSliceLeaky(std.json.Value, self.arena, result.stdout, .{}) catch .null;
@@ -247,7 +247,7 @@ fn sameReruns(context: Context, expected: []const []const u8) !void {
         if (oracle) try environment.put("MYLANG_TEST_KEYS", "per-test");
         const cache = try std.fs.path.join(context.arena, &.{ context.root, if (oracle) "cache-oracle" else "cache-derived" });
         const entry_path = try std.fs.path.join(context.arena, &.{ context.root, "app.my" });
-        const argv = [_][]const u8{ tools.core_path, "test", entry_path, "--json", command_cache, cache };
+        const argv = [_][]const u8{ tools.corePath(), "test", entry_path, "--json", command_cache, cache };
         const result = try std.process.run(context.arena, std.testing.io, .{ .argv = &argv, .environ_map = &environment });
         const report = try std.json.parseFromSliceLeaky(std.json.Value, context.arena, result.stdout, .{});
         var rerun: std.ArrayList([]const u8) = .empty;
@@ -466,7 +466,7 @@ fn runSmallStack(context: Context, source: []const u8, extra: []const u8) !Outco
     const path = try std.fs.path.join(context.arena, &.{ context.root, source });
     const cache = try std.fs.path.join(context.arena, &.{ context.root, "cache" });
     const command = try std.fmt.allocPrint(context.arena, "ulimit -s 1024 && exec \"$0\" test \"$1\" --json --cache-dir \"$2\" --max-steps 0 {s}", .{extra});
-    const result = try std.process.run(context.arena, std.testing.io, .{ .argv = &.{ "sh", "-c", command, tools.core_path, path, cache } });
+    const result = try std.process.run(context.arena, std.testing.io, .{ .argv = &.{ "sh", "-c", command, tools.corePath(), path, cache } });
     const parsed = std.json.parseFromSliceLeaky(std.json.Value, context.arena, result.stdout, .{}) catch .null;
     return .{ .status = switch (result.term) {
         .exited => |code| code,
@@ -735,7 +735,7 @@ fn runDirectory(context: Context, placement: Placement) !Outcome {
     var environment = try std.testing.environ.createMap(context.arena);
     if (placement == .children) try environment.put("MYLANG_TEST_CHILDREN", "1");
     const cache = try std.fs.path.join(context.arena, &.{ context.root, @tagName(placement) });
-    const argv = [_][]const u8{ tools.core_path, "test", context.root, "--json", command_cache, cache, "--jobs", "2" };
+    const argv = [_][]const u8{ tools.corePath(), "test", context.root, "--json", command_cache, cache, "--jobs", "2" };
     const result = try std.process.run(context.arena, std.testing.io, .{ .argv = &argv, .environ_map = &environment });
     const parsed = std.json.parseFromSliceLeaky(std.json.Value, context.arena, result.stdout, .{}) catch .null;
     return .{ .status = switch (result.term) {

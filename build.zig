@@ -6,6 +6,17 @@ const test_inputs = @import("build_test_inputs.zig");
 const verification = @import("build_verification.zig");
 var verification_registry: ?verification.Registry = null;
 var verification_core_binary: ?*std.Build.Step.Compile = null;
+/// The `build-env` host tool (`build_env.zig`): it writes the environment
+/// manifest every cached test verdict is keyed on and projects the environment
+/// every command `withTools` wraps runs in, from one definition.
+var build_env: ?*std.Build.Step.Compile = null;
+/// Where the test roots find the compiler and their fixtures
+/// (`src/core/test_paths.zig`, TEST-PATHS-1): imported as `core_test_options` by
+/// the core root and as `test_paths` by the unit, CLI and golden roots.
+var test_paths: ?*std.Build.Module = null;
+/// The component builder the CLI root runs, named at run time through
+/// `MYLANG_TEST_COMPONENT_BUILDER`.
+var component_builder_bin: ?std.Build.LazyPath = null;
 /// One mebibyte, the unit the resident-memory ceilings below are written in.
 const mib: u64 = 1 << 20;
 /// Resident-memory ceilings declared on the steps this build runs. The build
@@ -114,27 +125,32 @@ fn addInputManifests(b: *std.Build) void {
 /// The make-time environment manifest `addEnvironmentManifest` writes on every
 /// build that runs a cached test step.
 var environment_manifest: ?std.Build.LazyPath = null;
-/// Digest the complete sorted live environment, including runtime/C/loader flags.
-/// Store its digest rather than environment values in the local action cache.
-const environment_script =
-    \\env -0 | LC_ALL=C sort -z | sha256sum > "$1"
-;
+/// The tools the environment manifest identifies by content: this build's Zig,
+/// and the shell, `env`, Python and git found on the live `PATH` at make time.
+const manifest_tools = [_][]const u8{ "sh", "env", "python3", "git" };
 /// Add the step that records the make-time environment a cached test verdict
-/// depends on, once per build. A step's own environment cannot key its verdict:
-/// every Run step now inherits `zig build`'s live environment (see
-/// `withTools`), which the build runner leaves out of a step's cache key. This
-/// file carries it in instead, so a changed `PATH`, `TMPDIR` or `MYLANG_*`
-/// re-runs the cached verdicts and an unchanged one keeps them.
+/// depends on, once per build (ENV-PROJECTION-2). A step's own environment
+/// cannot key its verdict: every Run step inherits `zig build`'s live
+/// environment (see `withTools`), which the build runner leaves out of a step's
+/// cache key. `build-env digest` writes the host-scope environment identity
+/// instead: the keyed and host variables of `src/environment_identity.zon` and
+/// the digests of the tools above, so a changed `MYLANG_*`, locale or Python
+/// setting, or a different `zig`, `sh`, `env`, `python3` or `git`, re-runs the
+/// cached verdicts, while a placement or dropped variable (`PATH`, `TMPDIR`,
+/// `PWD`, `TERM`, `CODEX_*`) leaves them cached.
 fn addEnvironmentManifest(b: *std.Build) void {
-    const run = b.addSystemCommand(&.{ "sh", "-c", environment_script, "record-environment" });
+    const run = b.addRunArtifact(build_env.?);
     run.setName("record the test environment");
     run.has_side_effects = true;
     run.step.max_rss = rss.script;
+    run.addArg("digest");
     environment_manifest = run.addOutputFileArg("environment.txt");
+    run.addArg(b.fmt("zig={s}", .{b.graph.zig_exe}));
+    run.addArgs(&manifest_tools);
     verification_registry.?.register("environment-discovery", &run.step, &.{}, false, "live inherited environment must be discovered at execution time");
 }
 /// Let a test step's verdict be cached: it re-runs only when its command, the
-/// environment variables `environment_script` records, an artifact it names,
+/// environment `addEnvironmentManifest` records, an artifact it names,
 /// the tools the environment names, or one of the repository files the `list`
 /// in `build_test_inputs.zig` declares changes (or under `-Dtest-rerun`). An
 /// empty `list` declares no repository files.
@@ -163,8 +179,14 @@ fn cached(run: *std.Build.Step.Run, list: []const u8) void {
 /// it explicitly: a test that redirects `HOME` for a child compiler would
 /// otherwise send its `zig cc` invocations to an empty cache. The command also
 /// gets a Zig local cache of its own for as long as it runs (see
-/// `tools_script`). `env` then adds `MYLANG_ZIG`, which depends only on this
-/// build's configuration.
+/// `tools_script`). The command runs through `build-env project`, so it sees
+/// only the variables `src/environment_identity.zon` passes to children: the
+/// keyed and host ones the environment manifest records, and placement ones
+/// such as `PATH`, `HOME` and `TMPDIR` (ENV-PROJECTION-1). A dropped variable
+/// (`PWD`, `TERM`, `CODEX_*`, ...) can therefore never change a verdict the
+/// manifest does not key. `env` then adds `MYLANG_ZIG`, which depends only on
+/// this build's configuration, and the variables `withVariable` and
+/// `withTestPaths` give the command.
 fn withTools(step: *std.Build.Step.Run) void {
     const b = step.step.owner;
     var prefix: std.ArrayList([]const u8) = .empty;
@@ -174,18 +196,47 @@ fn withTools(step: *std.Build.Step.Run) void {
     const args = arena.alloc(std.Build.Step.Run.Arg, prefix.items.len) catch @panic("out of memory");
     for (args, prefix.items) |*arg, word| arg.* = .{ .bytes = b.graph.dupeString(word) };
     step.argv.insertSlice(arena, 0, args) catch @panic("out of memory");
-    step.argv.insert(arena, args.len, .{ .decorated_directory = .{
+    // The tool travels as an argument, so its content is part of the step's key.
+    insertFile(step, 4, "", build_env.?.getEmittedBin());
+    step.argv.insert(arena, args.len + 1, .{ .decorated_directory = .{
         .prefix = "MYLANG_COMPONENT_DIR=",
         .suffix = "",
         .make_absolute = true,
         .lazy_path = .{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components" } },
     } }) catch @panic("out of memory");
 }
-/// Give the command `withTools` wraps the variable `assignment` (`NAME=VALUE`): it
-/// goes after `sh -c SCRIPT with-tools MYLANG_ZIG=PATH`, before the command itself.
+/// Where `withVariable` and `withTestPaths` insert a variable: after
+/// `sh -c SCRIPT with-tools BUILD-ENV MYLANG_ZIG=PATH`, before the command itself.
+const variable_index = 6;
+/// Give the command `withTools` wraps the variable `assignment` (`NAME=VALUE`).
 fn withVariable(step: *std.Build.Step.Run, assignment: []const u8) void {
     const b = step.step.owner;
-    step.argv.insert(b.graph.arena, 5, .{ .bytes = b.graph.dupeString(assignment) }) catch @panic("out of memory");
+    step.argv.insert(b.graph.arena, variable_index, .{ .bytes = b.graph.dupeString(assignment) }) catch @panic("out of memory");
+}
+/// Insert at `index` of the command an absolute path to `file`, after
+/// `prefix`. The step's cache key holds the file's content, not its path, and
+/// the step waits for whatever produces it.
+fn insertFile(step: *std.Build.Step.Run, index: usize, prefix: []const u8, file: std.Build.LazyPath) void {
+    const b = step.step.owner;
+    step.argv.insert(b.graph.arena, index, .{ .lazy_path = .{
+        .prefix = b.graph.dupeString(prefix),
+        .lazy_path = file.dupe(b.graph),
+        .suffix = "",
+        .make_absolute = true,
+    } }) catch @panic("out of memory");
+    file.addStepDependencies(&step.step);
+}
+/// Name the executables a Zig test root runs (TEST-PATHS-1): `mylang` through
+/// `MYLANG_TEST_COMPILER` and, for the CLI root, the component builder through
+/// `MYLANG_TEST_COMPONENT_BUILDER`. The test binaries embed no path of this
+/// tree; the step keys each executable by content, so a changed compiler still
+/// re-runs a cached verdict without rebuilding the test binary. The command
+/// runs in the build root, where the roots' relative fixture paths resolve.
+fn withTestPaths(step: *std.Build.Step.Run, component_builder: bool) void {
+    const b = step.step.owner;
+    step.setCwd(b.path("."));
+    insertFile(step, variable_index, "MYLANG_TEST_COMPILER=", tool_inputs[0].?);
+    if (component_builder) insertFile(step, variable_index, "MYLANG_TEST_COMPONENT_BUILDER=", component_builder_bin.?);
 }
 /// The shell half of `withTools`: export Zig's global cache directory as the
 /// Zig toolchain would resolve it here and now, point `ZIG_LOCAL_CACHE_DIR` at
@@ -197,8 +248,12 @@ fn withVariable(step: *std.Build.Step.Run, assignment: []const u8) void {
 /// later run can reuse. The command replaces this shell with `exec`, so it
 /// stays the build runner's own child, keeping its pid, exit status and
 /// resource accounting; a detached watcher that ignores interrupts removes
-/// the directory once that pid has gone, however the command ended.
+/// the directory once that pid has gone, however the command ended. The first
+/// argument is the `build-env` tool, which execs `env` and the command in turn
+/// with the projected environment (ENV-PROJECTION-1), keeping that pid.
 const tools_script =
+    \\build_env=$1
+    \\shift
     \\if [ -z "${ZIG_GLOBAL_CACHE_DIR+set}" ]; then
     \\  if [ -n "${XDG_CACHE_HOME:-}" ]; then ZIG_GLOBAL_CACHE_DIR="$XDG_CACHE_HOME/zig"
     \\  elif [ -n "${HOME:-}" ]; then ZIG_GLOBAL_CACHE_DIR="$HOME/.cache/zig"; fi
@@ -207,7 +262,7 @@ const tools_script =
     \\ZIG_LOCAL_CACHE_DIR=$(mktemp -d "${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX") || exit 2
     \\export ZIG_LOCAL_CACHE_DIR
     \\(trap '' HUP INT TERM; while kill -0 $$ 2>/dev/null; do sleep 1; done; rm -rf "$ZIG_LOCAL_CACHE_DIR") </dev/null >/dev/null 2>&1 &
-    \\exec env "$@"
+    \\exec "$build_env" project -- env "$@"
 ;
 /// Refuse a configuration in which any Run step carries its own environment
 /// map. The build runner stores that map, a copy of the configure-time
@@ -280,6 +335,8 @@ const Shards = struct {
     whole: *std.Build.Step.Run,
     filters: []const []const u8 = &.{},
     cache: bool = true,
+    /// Whether the root runs the component builder (`withTestPaths`).
+    component_builder: bool = false,
 };
 /// The runs that cover one test root: `count` shards of the same test binary,
 /// each executing the slice of the root's named tests that `--guardian-shard=`
@@ -296,6 +353,7 @@ fn shardRuns(b: *std.Build, compile: *std.Build.Step.Compile, shards: Shards) []
     const steps = b.allocator.alloc(*std.Build.Step, shards.count) catch @panic("out of memory");
     for (steps, 0..) |*step, index| {
         const run = focused(b.addRunArtifact(compile), shards.bytes);
+        withTestPaths(run, shards.component_builder);
         guardian.announceShard(run, index, shards.count);
         // The shards run at once, so each runs a test's batch of guest programs on
         // its share of the CPUs (`src/wiring/core_runner.zig`).
@@ -399,15 +457,6 @@ fn addCore(b: *std.Build, inputs: CoreInputs) *std.Build.Step {
     }) });
     // The test runner's frame and byte ceilings share the run budget rules.
     const budget = b.modules.get("memory_budget") orelse @panic("memory_budget module");
-    const options = b.addOptions();
-    options.addOptionPath("core_path", inputs.compiler.getEmittedBin());
-    // The differential mode compared the slice with the retired old back end.
-    options.addOption(bool, "differential", false);
-    options.addOption([]const u8, "old_path", "");
-    options.addOptionPath("clock_path", b.path("benchmarks/runtime/ports/native_clock.c"));
-    const root = std.Io.Dir.cwd().realPathFileAlloc(b.graph.io, ".", b.allocator) catch @panic("build root");
-    options.addOption([]const u8, "fixtures", b.pathJoin(&.{ root, "test", "core" }));
-    options.addOption([]const u8, "lang_tests", b.pathJoin(&.{ root, "tests", "lang" }));
     const unit = b.addTest(.{ .max_rss = rss.compile, .filters = inputs.filters, .test_runner = inputs.test_runner, .root_module = b.createModule(.{
         .root_source_file = b.path("src/core/root_test.zig"),
         .target = inputs.target,
@@ -418,14 +467,19 @@ fn addCore(b: *std.Build, inputs: CoreInputs) *std.Build.Step {
     unit.root_module.addImport("core_tool_platform", platform);
     unit.root_module.addImport("build_identity", inputs.identity);
     unit.root_module.addImport("memory_budget", budget);
-    unit.root_module.addOptions("core_test_options", options);
+    // The compiler and fixture paths arrive at run time (TEST-PATHS-1).
+    unit.root_module.addImport("core_test_options", test_paths.?);
     // The number-text helper's target and CPU are fixed (`-mcpu baseline`), so it is
     // compiled once here and embedded, rather than by `zig build-obj` on a guest
-    // machine's first build that prints a number (NEW-CORE-S3-NUMBER-1).
+    // machine's first build that prints a number (NEW-CORE-S3-NUMBER-1). It is
+    // embedded as bytes, so its debug information would carry this tree's path
+    // into the compiler, the core test binary and every guest program that links
+    // it (TEST-PATHS-1); the object is built without it.
     const number_text = b.addObject(.{ .name = "core_number_text", .max_rss = rss.compile, .root_module = b.createModule(.{
         .root_source_file = b.path("src/core/runtime/core_number_text.zig"),
         .target = b.resolveTargetQuery(std.Target.Query.parse(.{ .arch_os_abi = "x86_64-linux-gnu.2.31", .cpu_features = "baseline" }) catch @panic("number-text target")),
         .optimize = .ReleaseFast,
+        .strip = true,
         .pic = true,
         .stack_check = false,
         .stack_protector = false,
@@ -452,6 +506,7 @@ fn addCore(b: *std.Build, inputs: CoreInputs) *std.Build.Step {
     const shards = if (inputs.filters.len == 0) @max(1, requested) else 1;
     for (0..shards) |index| {
         const run = focused(b.addRunArtifact(unit), rss.driver);
+        withTestPaths(run, false);
         verification_registry.?.declared(&run.step, "core");
         forwardFilters(b, run, inputs.filters);
         if (shards > 1) guardian.announceShard(run, index, shards);
@@ -494,6 +549,8 @@ pub fn build(b: *std.Build) void {
         std.process.exit(2);
     }
     test_rerun = b.option(bool, "test-rerun", "Run every cached test step even when none of its declared inputs changed") orelse false;
+    build_env = @import("build_env.zig").tool(b, rss.compile);
+    test_paths = b.createModule(.{ .root_source_file = b.path("src/core/test_paths.zig"), .target = target, .optimize = optimize });
     verification_registry = .{ .build = b, .controls = .{ .filtered = test_filters.len != 0, .rerun = test_rerun, .optimize = @tagName(optimize) } };
     const unit_shards = if (test_filters.len == 0) requested_shards else 1;
     // The CLI root is both smaller and coarser than the unit root, so it takes
@@ -566,6 +623,7 @@ pub fn build(b: *std.Build) void {
     components_step.dependOn(&component_build.step);
     components_step.dependOn(&install_component_tool.step);
     tool_inputs = .{exe.getEmittedBin()};
+    component_builder_bin = component_tool.getEmittedBin();
     addInputManifests(b);
     addEnvironmentManifest(b);
     // Guest-running drivers invoke an uninstalled compiler with no toolchain
@@ -636,15 +694,14 @@ pub fn build(b: *std.Build) void {
     const native_test_options = b.addOptions();
     native_test_options.addOption([]const u8, "zig_path", b.graph.zig_exe);
     native_test_options.addOption([]const u8, "cache_directory", ".mylang-cache/unit-tests");
-    native_test_options.addOptionPath("compiler_path", exe.getEmittedBin());
     unit.root_module.addOptions("native_test_options", native_test_options);
+    unit.root_module.addImport("test_paths", test_paths.?);
     const core_tests = addCore(b, .{ .target = target, .optimize = optimize, .front_end = core, .compiler = exe, .filters = test_filters, .test_runner = guardian.testRunner(guardian_dep), .identity = identity });
     _ = b.option(bool, "compiler-only", "Accepted for older scripts: install mylang and its required components");
     guardian.addAllChecks(b, guardian_exe, b.getInstallStep(), .{});
     boundedChecks(b.getInstallStep());
+    // The compiler and component builder arrive at run time (`withTestPaths`).
     const options = b.addOptions();
-    options.addOptionPath("compiler_path", exe.getEmittedBin());
-    options.addOptionPath("component_builder_path", component_tool.getEmittedBin());
     options.addOption([]const u8, "zig_path", b.graph.zig_exe);
     const integration = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .filters = test_filters, .root_module = b.createModule(.{
         .root_source_file = b.path("test/integration.zig"),
@@ -652,12 +709,14 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     }) });
     integration.root_module.addOptions("test_options", options);
+    integration.root_module.addImport("test_paths", test_paths.?);
     guardian.enableTestDiagnostics(unit.root_module);
     guardian.enableTestDiagnostics(integration.root_module);
     const compile_tests = b.step("test-compile", "Compile every Zig test without running the suite");
     compile_tests.dependOn(&unit.step);
     compile_tests.dependOn(&integration.step);
     const run_integration = focused(b.addRunArtifact(integration), rss.suite);
+    withTestPaths(run_integration, true);
     forwardFilters(b, run_integration, test_filters);
     const test_step = b.step("test", "Run the compiler, new-core, CLI, guest-language and tooling regression tests");
     b.step("test-interpreter", "Alias of test, kept for older scripts").dependOn(test_step);
@@ -712,6 +771,7 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_budget_unit.step);
     compile_tests.dependOn(&budget_unit.step);
     const run_unit = focused(b.addRunArtifact(unit), rss.suite);
+    withTestPaths(run_unit, false);
     forwardFilters(b, run_unit, test_filters);
     verification_registry.?.declared(&run_unit.step, "unit");
     verification_registry.?.declared(&run_integration.step, "cli");
@@ -719,7 +779,7 @@ pub fn build(b: *std.Build) void {
     // and `test-cli` keep the single whole-root run, so `-Dtest-filter` behaves
     // exactly as documented and its selected-test count means what it says.
     const unit_runs = shardRuns(b, unit, .{ .count = unit_shards, .bytes = rss.shard_unit, .inputs = "unit", .whole = run_unit });
-    const cli_runs = shardRuns(b, integration, .{ .count = cli_shards, .bytes = rss.shard_cli, .inputs = "cli", .whole = run_integration });
+    const cli_runs = shardRuns(b, integration, .{ .count = cli_shards, .bytes = rss.shard_cli, .inputs = "cli", .whole = run_integration, .component_builder = true });
     dependOnAll(test_step, unit_runs);
     // The fast inner loops: no Python drivers, no Guardian and no full install graph,
     // so `-Dtest-filter` returns in seconds.
@@ -737,7 +797,7 @@ pub fn build(b: *std.Build) void {
     if (test_filters.len == 0) units_sharded.dependOn(&focused_text_scalar.step);
     const cli_sharded = b.step("test-cli-sharded", "Run test/integration.zig split into -Dtest-shards/2 processes, honouring -Dtest-filter");
     dependOnAll(units_sharded, shardRuns(b, unit, .{ .count = requested_shards, .bytes = rss.shard_unit, .inputs = "", .whole = run_unit, .filters = test_filters, .cache = false }));
-    dependOnAll(cli_sharded, shardRuns(b, integration, .{ .count = @max(1, requested_shards / 2), .bytes = rss.shard_cli, .inputs = "", .whole = run_integration, .filters = test_filters, .cache = false }));
+    dependOnAll(cli_sharded, shardRuns(b, integration, .{ .count = @max(1, requested_shards / 2), .bytes = rss.shard_cli, .inputs = "", .whole = run_integration, .filters = test_filters, .cache = false, .component_builder = true }));
     dependOnAll(test_step, cli_runs);
     const audit_runtime = b.step("test-runtime-audit", "Run every Zig test root for isolated runtime probes");
     guardian.addAllChecks(b, guardian_exe, audit_runtime, .{});
@@ -765,9 +825,11 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     }) });
     golden_unit.root_module.addOptions("test_options", options);
+    golden_unit.root_module.addImport("test_paths", test_paths.?);
     guardian.enableTestDiagnostics(golden_unit.root_module);
     compile_tests.dependOn(&golden_unit.step);
     const run_golden = bounded(b.addRunArtifact(golden_unit), rss.suite);
+    withTestPaths(run_golden, false);
     cached(run_golden, "golden");
     forwardFilters(b, run_golden, test_filters);
     run_golden.setCwd(b.path("."));
@@ -1052,7 +1114,7 @@ pub fn build(b: *std.Build) void {
     guardian.addAllChecks(b, guardian_exe, doctest_step, .{});
     boundedChecks(doctest_step);
     addParityBench(b);
-    const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("build_identity.zig"), b.path("build_test_inputs.zig"), b.path("build_verification.zig"), b.path("src"), b.path("tests"), b.path("test"), b.path("selfhost") }, .check = true });
+    const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("build_env.zig"), b.path("build_identity.zig"), b.path("build_test_inputs.zig"), b.path("build_verification.zig"), b.path("src"), b.path("tests"), b.path("test"), b.path("selfhost") }, .check = true });
     const fmt_step = b.step("fmt-check", "Check canonical Zig and live .my corpus formatting");
     fmt_step.dependOn(&fmt.step);
     verification_registry.?.register("zig-format", &fmt.step, &test_inputs.zig_format, true, "exact formatter and complete source-format scope");
