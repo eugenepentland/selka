@@ -1,7 +1,7 @@
 # spec: NEW-CORE-TEXT-S3-1
 public func test_case_classify_replace_count_and_lines_preserve_snapshots() -> bool:
     mut text = "aBé🙂aB"
-    mut saved = text
+    mut saved = text.copy()
     return text.upper() == "ABé🙂AB" and text.lower() == "abé🙂ab" and text.count("aB") == 2 and text.count("") == 7 and text.replace("aB", "x") == "xé🙂x" and saved == text and "a\r\nb\rc\n".splitlines() == ["a", "b", "c"] and len("".splitlines()) == 0 and "19".isdigit() and "aB".isalpha() and " \t".isspace() and not "é".isalpha()
 
 
@@ -19,7 +19,7 @@ public func test_repr_scalar_ord_chr_and_packed_text_format() -> bool:
 # spec-case: NEW-CORE-TEXT-S3-1
 public func test_bytes_count_search_trim_and_find_any() -> bool:
     mut raw = b"\xffa,a\xff"
-    return raw.count(b"a") == 2 and raw.rfind(b"a", 0, -1) == 3 and raw.index(b",") == 2 and raw.find_any(b",\xff", 1) == 2 and raw.find_any(b"a", -1) == 1 and raw.strip(b"\xff") == b"a,a" and raw.count(b"", 99) == 0 and raw.view(1, -1) == b"a,a" and b" \tx\n".strip() == b"x"
+    return raw.count(b"a") == 2 and raw.rfind(b"a", 0, -1) == 3 and raw.index(b",") == 2 and raw.find_any(b",\xff", 1) == 2 and raw.find_any(b"a", -1) == 1 and raw.strip(b"\xff") == b"a,a" and raw.count(b"", 99) == 0 and raw[1:-1] == b"a,a" and b" \tx\n".strip() == b"x"
 
 
 # spec-case: NEW-CORE-TEXT-S3-1
@@ -53,10 +53,10 @@ public func test_decode_and_scalar_count_validate_utf8_and_clamped_ranges() -> b
 # spec-case: NEW-CORE-LIST-S3-1
 public func test_extend_and_reverse_preserve_self_and_nested_snapshots() -> bool:
     mut values = ["a", "é"]
-    mut saved = values
+    mut saved = values.copy()
     values.extend(values)
     values.reverse()
-    mut nested = [values]
+    mut nested = [values.copy()]
     values.reverse()
     return saved == ["a", "é"] and nested == [["é", "a", "é", "a"]] and values == ["a", "é", "a", "é"]
 

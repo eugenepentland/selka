@@ -21,7 +21,7 @@ public func test_encode_bytes_xor() -> bool:
 
 public func test_append_keeps_shared_text() -> bool:
     mut original = "café"
-    mut changed = original
+    mut changed = original.copy()
     for j in range(10):
         changed += "🙂"
     return original == "café" and len(changed) == 14
@@ -48,9 +48,9 @@ public func test_doubling_and_self_character_append_preserve_snapshots() -> bool
     mut text = "ab"
     for j in range(8):
         text += text
-    mut saved = text
+    mut saved = text.copy()
     text += text[0]
-    mut alias = text
+    mut alias = text.copy()
     text += alias
     return len(saved) == 512 and len(alias) == 513 and len(text) == 1026 and text[-1] == "a" and saved[-1] == "b"
 
@@ -61,7 +61,7 @@ public func test_append_alias_through_phi_preserves_the_other_owner() -> bool:
     for j in range(16):
         mut other = "x"
         if j % 2 == 0:
-            other = text
+            other = text.copy()
         mut before = len(other)
         text += other
         total += before

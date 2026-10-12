@@ -60,12 +60,12 @@ func pairs() -> str[]:
 func check(keys: str[], filler: int) -> str:
     mut out: str[] = []
     for p in range(len(keys) // 2):
-        mut a = keys[2 * p]
-        mut b = keys[2 * p + 1]
+        mut a = keys[2 * p].copy()
+        mut b = keys[2 * p + 1].copy()
         mut d: dict[str, int] = {}
         for f in range(filler):
             d["f" + str(f)] = f
-        d[a] = 1
+        d[a.copy()] = 1
         mut src = "<" + b + ">" + a
         mut n = len(b)
         mut miss = d.get(src[1:n + 1], 0)

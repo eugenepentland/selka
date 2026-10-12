@@ -90,3 +90,26 @@ both modes; mutable parameter and field arguments retain positive coverage.
 tests and the new complete fixture; both oversized nonempty repetition probes
 trap `R_MEMORY_BUDGET` under the explicit 8 MiB ceiling. No runtime/RSS speedup or
 allocation reduction is inferred from these correctness probes.
+
+## Borrowed rendering and expanded fixture migration
+
+Commit `b63b5ae80454708f05d91409dac4d31a0fd0efee` replaces rendering's temporary
+owning box with a synchronous borrow of canonical stack storage. The coordinator
+reserved `build_render.zig`/`emit_render.zig`; A07 authored and audited the shared
+`emit_llvm.zig` hook and exact generated-helper contracts. The coordinator applied
+SPEC/root registration. Five focused tests and Guardian's 88 checks passed. The
+frozen prototype also passed all five native counted modes with zero RC/leaks and
+clean LLVM/symbol audits; its ordinary/replay/control evidence is still running.
+See `rendering/` for exact identities, source diff and raw results. The equivalent
+A01 driver dependency is `1120bde6a` on this branch and `38dc781a` in integration;
+do not merge both. No allocation/runtime saving is inferred from removing the box.
+
+The coordinator also assigned 14 more `test/core` fixtures. All 42 public tests,
+including intentional traps, and every existing value assertion are preserved.
+`additional-migrations/` records original bytes/hashes, 43 extra copy calls, 43
+added/removed lines, source checks and remaining reproducers. Twelve of fourteen
+source checks pass; A07 owns the conditional-result and optional-loop failures.
+Native qualification and registered exact diagnostic oracles remain required.
+The 19 earlier guest sources now admit 18 files under support4; only borrowed
+tuple destructuring remains source-blocked. `first_word` now explicitly copies a
+borrowed generic string return, with source burden recorded separately.

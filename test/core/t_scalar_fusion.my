@@ -35,7 +35,7 @@ func branch(text: str, take: bool) -> str:
 
 
 func append_same(source: str) -> str:
-    mut text = source
+    mut text = source.copy()
     mut ch = text[0]
     if ch == "é":
         text += ch
@@ -43,8 +43,8 @@ func append_same(source: str) -> str:
 
 
 func append_distinct_alias(values: str[]) -> str:
-    mut source = values[0]
-    mut out = values[1]
+    mut source = values[0].copy()
+    mut out = values[1].copy()
     mut ch = source[0]
     if ch == "é" or ch == "\0":
         out += ch
@@ -52,8 +52,8 @@ func append_distinct_alias(values: str[]) -> str:
 
 
 func append_capacity_alias(values: str[]) -> str:
-    mut source = values[0]
-    mut out = values[1]
+    mut source = values[0].copy()
+    mut out = values[1].copy()
     for repeat in range(3):
         for ch in source:
             if ch != "?":
@@ -64,7 +64,7 @@ func append_capacity_alias(values: str[]) -> str:
 
 
 func replaced(source: str) -> str:
-    mut text = source
+    mut text = source.copy()
     mut ch = text[-1]
     mut matched = ch == "é"
     text = "replaced"
@@ -75,7 +75,7 @@ func replaced(source: str) -> str:
 
 
 func identity(text: str) -> str:
-    return text
+    return text.copy()
 
 
 func returned(text: str) -> str:
@@ -88,7 +88,7 @@ func returned(text: str) -> str:
 func stored(text: str) -> str:
     mut ch = text[0]
     mut values = [ch]
-    return values[0]
+    return values[0].copy()
 
 
 func called(text: str) -> str:
@@ -128,17 +128,17 @@ public func test_distinct_branches_and_repeated_appends_keep_the_selected_charac
 # spec-case: NEW-CORE-TEXT-BYTES-1
 public func test_same_source_destination_keeps_the_ordinary_path_and_snapshot() -> bool:
     mut source = "".join(["é", "z"])
-    mut saved = source
+    mut saved = source.copy()
     return append_same(source) == "ézé" and saved == "éz" and source == "éz"
 
 
 # spec-case: NEW-CORE-TEXT-BYTES-1
 public func test_distinct_ssa_aliases_share_input_but_copy_the_append_destination() -> bool:
     mut source = "".join(["é", "z"])
-    mut values = [source, source]
+    mut values = [source.copy(), source.copy()]
     mut result = append_distinct_alias(values)
     mut wide = "".join(["123456789012345", "é€🙂\0"])
-    mut aliases = [wide, wide]
+    mut aliases = [wide.copy(), wide.copy()]
     mut expanded = append_capacity_alias(aliases)
     return result == "ézé" and source == "éz" and values == ["éz", "éz"] and expanded == wide + wide + wide + wide and aliases == [wide, wide] and wide == "123456789012345é€🙂\0"
 

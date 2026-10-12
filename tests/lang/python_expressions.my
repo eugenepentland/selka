@@ -31,8 +31,8 @@ public func test_str_orders_by_code_point_with_a_prefix_first() -> bool:
 func first_word[T](tag: T, a: str, b: str) -> str:
     _ = tag
     if a <= b:
-        return a
-    return b
+        return a.copy()
+    return b.copy()
 
 
 # spec-case: PY-TEXT-ORDER-1

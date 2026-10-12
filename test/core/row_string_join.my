@@ -40,7 +40,7 @@ func inputs(kind: str, size: int, seed: int) -> Inputs:
     mut numbers: int[] = []
     mut fragments: str[] = []
     mut options = ["", "alpha", "café", "x", "naïve"]
-    fragments = [for j in range(size) yield options[(seed + j) % 5]]
+    fragments = [for j in range(size) yield options[(seed + j) % 5].copy()]
     texts = ["|".join(fragments), "::".join(fragments)]
     return Inputs(raw=raw, texts=texts, other=other, numbers=numbers, fragments=fragments)
 

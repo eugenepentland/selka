@@ -48,3 +48,11 @@ isolated survey mirror when necessary. `run_tests.py` acquires bounded shared
 leases internally and records command results, compiler/source hashes and every
 test name. Reports are never overwritten. Final qualification must rerun these
 sources after the integrated compiler fixes land.
+
+The support4 survey (`check-support4.json`) now admits 18/19 sources after the
+integrated compiler repairs. `first_word` in `python_expressions` additionally
+copies either borrowed string return; this keeps its existing generic ordering
+assertions. `sources-support4.json` records the resulting source hashes and
+burden separately from the earlier immutable manifest. The sole remaining source
+refusal is the borrowed tuple destructure owned by A07. Native support4 execution
+is recorded independently; source admission is not its pass criterion.
