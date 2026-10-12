@@ -1,0 +1,2 @@
+build-slot: timing slot 1, FIFO ticket 267 after 0s
+parity/intloop {'mylang-original-rc': True, 'mylang-migrated-rc': True, 'mylang-zero-rc': True, 'zig-fast': True, 'zig-safe': True, 'rust': True}

@@ -1,0 +1,52 @@
+{
+  "captured_utc": "2026-10-12T13:08:10.704755+00:00",
+  "uname": [
+    "Linux",
+    "linuxserver",
+    "7.0.0-31-generic",
+    "#31-Ubuntu SMP PREEMPT_DYNAMIC Sat Aug  1 04:26:38 UTC 2026",
+    "x86_64",
+    ""
+  ],
+  "cpu": 8,
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "loadavg": [
+    1.52294921875,
+    1.3515625,
+    1.62841796875
+  ],
+  "topology": {
+    "core_id": "16",
+    "physical_package_id": "0",
+    "thread_siblings_list": "8-9"
+  },
+  "frequency": {
+    "scaling_governor": "powersave",
+    "scaling_driver": "intel_pstate",
+    "scaling_min_freq": "400000",
+    "scaling_max_freq": "4600000",
+    "scaling_cur_freq": "4100041"
+  },
+  "perf_event_paranoid": "1"
+}

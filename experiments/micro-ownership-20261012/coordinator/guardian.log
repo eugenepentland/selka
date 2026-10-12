@@ -1,0 +1,8 @@
+build-slot: FIFO ticket 394, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 394 after 10s
+guardian: run-all: whole-tree run — --full was requested
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10455 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed

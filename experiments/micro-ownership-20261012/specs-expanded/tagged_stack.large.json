@@ -1,0 +1,299 @@
+{
+  "case": "tagged_stack",
+  "size": 4096,
+  "profile": "large",
+  "seed": 42,
+  "group": "legacy",
+  "family": "variants_errors",
+  "level": "micro",
+  "unit": "one contract operation",
+  "cell": "expanded/tagged_stack/large",
+  "protocol": "kernel",
+  "arms": {
+    "mylang-original-rc": {
+      "group": "legacy",
+      "arm": "mylang-original-rc",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/bin/legacy-mylang-original-rc-runtime",
+      "sha256": "c5927e337117f15b0388ef545c7fcc53d5d3525e7c8fa128c6c29f80f9eb30c3",
+      "status": "ok",
+      "source": "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/experiments/micro-ownership-20261012/expanded/original/legacy.my",
+      "source_sha256": "55d2bebfb847d940df1ff8b6fcfac61b51e9d7216e43e63d7a1a5b289f3b49ab",
+      "flags": [
+        "--release",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/cache"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/experiments/micro-ownership-20261012/expanded/original/legacy.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/bin/legacy-mylang-original-rc-runtime",
+        "--release",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/cache"
+      ],
+      "diagnostic": "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/logs/legacy-mylang-original-rc-runtime.txt",
+      "returncode": 0
+    },
+    "mylang-migrated-rc": {
+      "group": "legacy",
+      "arm": "mylang-migrated-rc",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/bin/legacy-mylang-migrated-rc-runtime",
+      "sha256": "0877c06586cb332228b236edcb73f89cabea6d21328afb4ef42f1d06cc313a31",
+      "status": "ok",
+      "source": "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/experiments/micro-ownership-20261012/expanded/migrated/legacy.my",
+      "source_sha256": "a1dec21e5a805b9d205bd46b351bbc6612c049c3e422aaf368d6f238cd5431b0",
+      "flags": [
+        "--release",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/cache"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/experiments/micro-ownership-20261012/expanded/migrated/legacy.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/bin/legacy-mylang-migrated-rc-runtime",
+        "--release",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/cache"
+      ],
+      "diagnostic": "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/logs/legacy-mylang-migrated-rc-runtime.txt",
+      "returncode": 0
+    },
+    "mylang-zero-rc": {
+      "group": "legacy",
+      "arm": "mylang-zero-rc",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/bin/legacy-mylang-zero-rc-runtime",
+      "sha256": "55aa4570e30738cd5edaca49b605aeb212f23fd1ffb1c431e26ae4f3bab7eb4a",
+      "status": "ok",
+      "source": "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/experiments/micro-ownership-20261012/expanded/migrated/legacy.my",
+      "source_sha256": "a1dec21e5a805b9d205bd46b351bbc6612c049c3e422aaf368d6f238cd5431b0",
+      "flags": [
+        "--release",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/cache",
+        "--experimental-zero-rc"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/experiments/micro-ownership-20261012/expanded/migrated/legacy.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/bin/legacy-mylang-zero-rc-runtime",
+        "--release",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/cache",
+        "--experimental-zero-rc"
+      ],
+      "diagnostic": "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/logs/legacy-mylang-zero-rc-runtime.txt",
+      "returncode": 0
+    },
+    "rust": {
+      "group": "legacy",
+      "arm": "rust",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-rust",
+      "sha256": "1ac2fc645e15d184a0f1937e543e0d09342683cd6a8b5f21739153dd5b1f6bfb",
+      "status": "ok",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.rs",
+      "flags": [
+        "/home/epentland/.cargo/bin/rustc",
+        "-O",
+        "--edition",
+        "2021",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.rs",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-rust"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/legacy-rust.log"
+    },
+    "go": {
+      "group": "legacy",
+      "arm": "go",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-go",
+      "sha256": "b00d920977e61eb78c5f7962dbe37b411746b91e66c3168bd16d15882c1d2efe",
+      "status": "ok",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.go",
+      "flags": [
+        "/home/epentland/.local/bin/go",
+        "build",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-go",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.go"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/legacy-go.log"
+    },
+    "zig-safe": {
+      "group": "legacy",
+      "arm": "zig-safe",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-zig-safe",
+      "sha256": "57be8ac698c590898d9829af8ed9a84af05d66c1d72610bac216f4103536fef5",
+      "status": "ok",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.zig",
+      "flags": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build-exe",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.zig",
+        "-lc",
+        "-O",
+        "ReleaseSafe",
+        "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-zig-safe"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/legacy-zig-safe.log"
+    },
+    "zig-fast": {
+      "group": "legacy",
+      "arm": "zig-fast",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-zig-fast",
+      "sha256": "2ad8e202f142e934fcc846595498bf5aa9c1f4c1e3598a1ee521c384e26f210f",
+      "status": "ok",
+      "source": "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.zig",
+      "flags": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build-exe",
+        "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.zig",
+        "-lc",
+        "-O",
+        "ReleaseFast",
+        "-femit-bin=/home/epentland/ai/canopy/mylang-micro-refs-20261012/.tmp/micro-ownership/references/bin/legacy-zig-fast"
+      ],
+      "diagnostic": "experiments/micro-ownership-20261012/references/logs/legacy-zig-fast.log"
+    }
+  },
+  "counted": {
+    "mylang-original-rc": {
+      "group": "legacy",
+      "arm": "mylang-original-rc",
+      "kind": "counted",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/bin/legacy-mylang-original-rc-counted",
+      "sha256": "95a48a69b3cb292389adb949f92012b8f20028a0815a74a049317b54c85d0c16",
+      "status": "ok",
+      "source": "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/experiments/micro-ownership-20261012/expanded/original/legacy.my",
+      "source_sha256": "55d2bebfb847d940df1ff8b6fcfac61b51e9d7216e43e63d7a1a5b289f3b49ab",
+      "flags": [
+        "--release",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/cache",
+        "--counters"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/experiments/micro-ownership-20261012/expanded/original/legacy.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/bin/legacy-mylang-original-rc-counted",
+        "--release",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/cache",
+        "--counters"
+      ],
+      "diagnostic": "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/logs/legacy-mylang-original-rc-counted.txt",
+      "returncode": 0
+    },
+    "mylang-migrated-rc": {
+      "group": "legacy",
+      "arm": "mylang-migrated-rc",
+      "kind": "counted",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/bin/legacy-mylang-migrated-rc-counted",
+      "sha256": "bc0c59a48e79d4be2162ba599a999a8d047943441910af42e7163dd8b2f47e86",
+      "status": "ok",
+      "source": "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/experiments/micro-ownership-20261012/expanded/migrated/legacy.my",
+      "source_sha256": "a1dec21e5a805b9d205bd46b351bbc6612c049c3e422aaf368d6f238cd5431b0",
+      "flags": [
+        "--release",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/cache",
+        "--counters"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/experiments/micro-ownership-20261012/expanded/migrated/legacy.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/bin/legacy-mylang-migrated-rc-counted",
+        "--release",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/cache",
+        "--counters"
+      ],
+      "diagnostic": "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/logs/legacy-mylang-migrated-rc-counted.txt",
+      "returncode": 0
+    },
+    "mylang-zero-rc": {
+      "group": "legacy",
+      "arm": "mylang-zero-rc",
+      "kind": "counted",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/bin/legacy-mylang-zero-rc-counted",
+      "sha256": "fa919065bede5fe03f6e7c8808006b54ea8a5550dd7a6812d0784f7a940159d5",
+      "status": "ok",
+      "source": "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/experiments/micro-ownership-20261012/expanded/migrated/legacy.my",
+      "source_sha256": "a1dec21e5a805b9d205bd46b351bbc6612c049c3e422aaf368d6f238cd5431b0",
+      "flags": [
+        "--release",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/cache",
+        "--experimental-zero-rc",
+        "--counters"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/experiments/micro-ownership-20261012/expanded/migrated/legacy.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/bin/legacy-mylang-zero-rc-counted",
+        "--release",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir=/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/cache",
+        "--experimental-zero-rc",
+        "--counters"
+      ],
+      "diagnostic": "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/.tmp/micro-ownership/expanded/logs/legacy-mylang-zero-rc-counted.txt",
+      "returncode": 0
+    }
+  },
+  "files": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/benchmarks/runtime/CONTRACT.md",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/benchmarks/runtime/expanded/collections/CONTRACT.md",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/benchmarks/runtime/expanded/collections/oracle.py",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/benchmarks/runtime/expanded/compute/CONTRACT.md",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/benchmarks/runtime/expanded/compute/oracle.py",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/benchmarks/runtime/expanded/registry.py",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/benchmarks/runtime/expanded/text/CONTRACT.md",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/benchmarks/runtime/expanded/text/oracle.py",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/benchmarks/runtime/oracle.py",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/benchmarks/runtime/ports/native_clock.c",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-ownership-20261012/expanded/manifest.json",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-ownership-20261012/references/manifest.json",
+    "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/experiments/micro-ownership-20261012/expanded/migrated/legacy.my",
+    "/home/epentland/ai/canopy/mylang-micro-expanded-20261012/experiments/micro-ownership-20261012/expanded/original/legacy.my",
+    "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.go",
+    "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.rs",
+    "/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/legacy/main.zig"
+  ],
+  "warmups": 3,
+  "rounds": 15,
+  "rss_rounds": 3,
+  "target_fastest_kernel_ms": 50,
+  "max_slowest_kernel_ms": 1000,
+  "max_iterations": 10000000
+}

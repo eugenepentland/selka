@@ -1,0 +1,219 @@
+{
+  "cell": "parity/calls",
+  "case": "calls",
+  "protocol": "fixed",
+  "expected_stdout": "4095\n",
+  "arms": {
+    "mylang-original-rc": {
+      "case": "calls",
+      "arm": "mylang-original-rc",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/calls-original-rc",
+      "sha256": "daf0488f7db55fb2608e7e4125c1ab784e737653b6784a722880a83355ce897d",
+      "status": "ok",
+      "source": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/original/calls.my",
+      "flags": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/original/calls.my",
+        "--release",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/calls-original-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/cache/calls-original-rc"
+      ],
+      "expected": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/calls.expected"
+    },
+    "mylang-migrated-rc": {
+      "case": "calls",
+      "arm": "mylang-migrated-rc",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/calls-migrated-rc",
+      "sha256": "dbddd323b4921c4435965a9bc72d869381c7f72966cdcfbe6683a97dbb03fbf2",
+      "status": "ok",
+      "source": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/calls.my",
+      "flags": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/calls.my",
+        "--release",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/calls-migrated-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/cache/calls-migrated-rc"
+      ],
+      "expected": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/calls.expected"
+    },
+    "mylang-zero-rc": {
+      "case": "calls",
+      "arm": "mylang-zero-rc",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/calls-zero-rc",
+      "sha256": "66e55607a2547d0e462fee6c87d1cc8756a59651be5b47b2ce6f4d2de1d7fc31",
+      "status": "ok",
+      "source": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/calls.my",
+      "flags": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/calls.my",
+        "--release",
+        "--experimental-zero-rc",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/calls-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/cache/calls-zero-rc"
+      ],
+      "expected": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/calls.expected"
+    },
+    "zig-fast": {
+      "case": "calls",
+      "arm": "zig-fast",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/calls-zig-fast",
+      "sha256": "8c63d24bd74b7349dabf38b6fc2a577dfa60d648057429cefc50e21f446d9c72",
+      "status": "ok",
+      "source": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/bench/parity/micro/calls.zig",
+      "flags": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build-exe",
+        "calls.zig",
+        "-O",
+        "ReleaseFast",
+        "-femit-bin=/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/calls-zig-fast",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/cache/calls-zig-fast",
+        "--global-cache-dir",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/cache/global"
+      ],
+      "expected": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/calls.expected"
+    },
+    "zig-safe": {
+      "case": "calls",
+      "arm": "zig-safe",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/calls-zig-safe",
+      "sha256": "37196a35d5d1c7cf8fb1c045b50693d2a1c124ae2563fb3302348851dadd79e8",
+      "status": "ok",
+      "source": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/bench/parity/micro/calls.zig",
+      "flags": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build-exe",
+        "calls.zig",
+        "-O",
+        "ReleaseSafe",
+        "-femit-bin=/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/calls-zig-safe",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/cache/calls-zig-safe",
+        "--global-cache-dir",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/cache/global"
+      ],
+      "expected": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/calls.expected"
+    },
+    "rust": {
+      "case": "calls",
+      "arm": "rust",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/calls-rust",
+      "sha256": "c8b21ad5f80b795843d585b93c62a568d990e3f34afba1c1a0472c08a083779e",
+      "status": "ok",
+      "source": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/bench/parity/micro/calls.rs",
+      "flags": [
+        "/home/epentland/.cargo/bin/rustc",
+        "--edition",
+        "2021",
+        "-C",
+        "opt-level=3",
+        "-C",
+        "codegen-units=1",
+        "-C",
+        "target-cpu=native",
+        "-C",
+        "panic=abort",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/bench/parity/micro/calls.rs",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/calls-rust"
+      ],
+      "expected": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/calls.expected"
+    }
+  },
+  "counted": {
+    "mylang-original-rc": {
+      "case": "calls",
+      "arm": "mylang-original-rc",
+      "kind": "counted",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/calls-original-rc-count",
+      "sha256": "f86e92a5a07bde5f5f50e60a3037f70c3e3d7025f5dc4746cc6d2f52c988367d",
+      "status": "ok",
+      "source": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/original/calls.my",
+      "flags": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/original/calls.my",
+        "--release",
+        "--counters",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/calls-original-rc-count",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/cache/calls-original-rc-count"
+      ],
+      "expected": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/calls.expected"
+    },
+    "mylang-migrated-rc": {
+      "case": "calls",
+      "arm": "mylang-migrated-rc",
+      "kind": "counted",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/calls-migrated-rc-count",
+      "sha256": "5e1e85666348bc83a40cd558cced463cfa979012c99b9bf4565afe647752ac34",
+      "status": "ok",
+      "source": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/calls.my",
+      "flags": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/calls.my",
+        "--release",
+        "--counters",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/calls-migrated-rc-count",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/cache/calls-migrated-rc-count"
+      ],
+      "expected": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/calls.expected"
+    },
+    "mylang-zero-rc": {
+      "case": "calls",
+      "arm": "mylang-zero-rc",
+      "kind": "counted",
+      "binary": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/calls-zero-rc-count",
+      "sha256": "bcf7cbb66fec7eae0779e393a7ecd191d1d60cc4dd9ad6a8cc8d506afc56adcb",
+      "status": "ok",
+      "source": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/calls.my",
+      "flags": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/calls.my",
+        "--release",
+        "--experimental-zero-rc",
+        "--counters",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/calls-zero-rc-count",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/cache/calls-zero-rc-count"
+      ],
+      "expected": "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/calls.expected"
+    }
+  },
+  "files": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/bench/parity/micro/MICRO.md",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/bench/parity/micro/common.zig",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/micro-ownership-20261012/parity/handoff.json",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/bench/parity/micro/calls.rs",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/bench/parity/micro/calls.zig",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/expected/calls.expected",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/migrated/calls.my",
+    "/home/epentland/ai/canopy/mylang-micro-parity-20261012/experiments/micro-ownership-20261012/parity/original/calls.my"
+  ],
+  "warmups": 2,
+  "rounds": 9,
+  "rss_rounds": 3,
+  "unit": "one full canonical kernel execution"
+}
