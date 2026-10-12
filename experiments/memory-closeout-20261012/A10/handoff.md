@@ -270,3 +270,9 @@ keys/values/items projections. Mutating methods/element writes remain refused.
 Draft prose now distinguishes those cases and snapshot allocation costs; the
 live-length index migration and preserved negative remain unchanged. No code-block
 hash changed in this prose followup; the 47/51 Support5 evidence remains exact.
+
+## Remaining current-document and recursive-diagnostic inventory
+
+`rollout/other-current-docs-inventory.json` pins nine additional current documents outside A10's existing eight-page reservation. Their RC/COW prose and runnable examples need owner review; dated historical designs are distinguished from current contracts. No additional document was edited.
+
+`rollout/C3-recursive-diagnostics.patch` is an unapplied coordinator request for `src/record_layouts.zig`: remove the obsolete sharing rationale while preserving the recursive boxed resource/result/capability refusal. Existing E_RECURSIVE_RECORD and owned-resource substring tests remain applicable. Patch application check passes; this is wording preparation, not retirement completion.

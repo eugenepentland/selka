@@ -1,0 +1,27 @@
+diff --git a/src/record_layouts.zig b/src/record_layouts.zig
+--- a/src/record_layouts.zig
++++ b/src/record_layouts.zig
+@@ -111,9 +111,8 @@
+     try @import("cell_types.zig").validate(allocator, records, sink);
+ }
+ 
+-/// RECURSIVE-VALUES-2: a boxed value is shared by every copy of its holder,
+-/// exactly as a list element is, so it obeys the list element rules: no owned
+-/// resource, no pending result obligation and no capability.
++/// RECURSIVE-VALUES-2: recursive boxed values cannot contain owned resources,
++/// pending result obligations or capabilities.
+ fn boxedContents(records: []const typed.Record, capabilities: []const bool, files: []const bool, sink: *diagnostic.Sink) Error!void {
+     for (records) |schema| {
+         if (schema.shape.variants) |variants| for (variants.cases) |case| {
+@@ -125,9 +124,9 @@
+ fn boxedContent(records: []const typed.Record, capabilities: []const bool, files: []const bool, ty: typed.Type, declaration: @import("source.zig").Span, sink: *diagnostic.Sink) Error!void {
+     const owns_resource = typed.moveOnly(ty, records) or carries(ty, files, .file);
+     if (!typed.storable(ty, records) or owns_resource or typed.requiresHandling(ty, records))
+-        return sink.fail(diagnostic.recursive_record, declaration, "a recursive value type is shared through immutable boxes, so it cannot hold an owned resource or an unhandled result");
++        return sink.fail(diagnostic.recursive_record, declaration, "a recursive boxed value cannot hold an owned resource or an unhandled result");
+     if (carries(ty, capabilities, .capability))
+-        return sink.fail(diagnostic.recursive_record, declaration, "a recursive value type is shared through immutable boxes, so it cannot hold a capability");
++        return sink.fail(diagnostic.recursive_record, declaration, "a recursive boxed value cannot hold a capability");
+ }
+ const Dependency = enum { managed, capability, file };
+ fn carries(ty: typed.Type, contains: []const bool, kind: Dependency) bool {

@@ -1,0 +1,8 @@
+{
+  "status": "unapplied coordinator-owned C3 wording request",
+  "path": "src/record_layouts.zig",
+  "source_sha256": "199d354277d69ba360f4f35c7f8414835a0b845be21dcf5d0a3df5772ab5881e",
+  "patch_sha256": "3017dfa120d594c0c400f8a7f325116e196d995d20f35f3c27386082dbb528be",
+  "contract": "Retains current recursive owned-resource, result-obligation and capability rejection; no supported source shape changes.",
+  "regression": "src/recursive_resources_test.zig checks E_RECURSIVE_RECORD and owned resource text; source admission and flags unchanged."
+}
