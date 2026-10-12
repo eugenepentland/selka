@@ -374,6 +374,7 @@ static void *small_alloc(uint32_t class) {
 
 /* A block for `data` bytes after the header; `*room` gets the data bytes it really holds. */
 static myl_block *block_alloc(uint32_t kind, size_t data, size_t *room) {
+    if (data > SIZE_MAX - MYL_HEADER - (MYL_ALIGN - 1)) out_of_memory();
     size_t bytes = MYL_HEADER + data;
     myl_block *block;
     uint32_t class = 0;
@@ -399,10 +400,19 @@ static myl_block *block_alloc(uint32_t kind, size_t data, size_t *room) {
     return block;
 }
 
+/* OWNED-CAPACITY-BOUNDS-1: leave room for both the header and allocation rounding
+   before multiplying. Zero-sized elements are valid and require no payload. */
+static size_t block_data_size(int64_t cap, int64_t element_size, bool terminated) {
+    size_t maximum = SIZE_MAX - MYL_HEADER - (MYL_ALIGN - 1) - (size_t)terminated;
+    if (cap < 0 || element_size < 0) out_of_memory();
+    if (element_size && (uint64_t)cap > maximum / (uint64_t)element_size) out_of_memory();
+    return (size_t)cap * (size_t)element_size + (size_t)terminated;
+}
+
 /* A block of `kind` with room for `cap` elements of `element_size` bytes (a string
    also for its terminating NUL); a list's `cap` is everything the block holds. */
 static myl_block *block_new(uint32_t kind, int64_t cap, int64_t element_size) {
-    size_t wanted = (size_t)(cap > 0 ? cap : 0) * (size_t)element_size + (kind == MYL_KIND_STR);
+    size_t wanted = block_data_size(cap, element_size, kind == MYL_KIND_STR);
     size_t room;
     myl_block *block = block_alloc(kind, wanted, &room);
     block->cap = kind == MYL_KIND_LIST && element_size > 0 ? (int64_t)(room / (size_t)element_size) : (cap > 0 ? cap : 0);
@@ -663,11 +673,12 @@ myl_block *myl_core_list_new_slow(int64_t cap, int64_t element_size) {
    uniqueness rule), so growing frees the old block. */
 myl_block *myl_core_list_grow(myl_block *list, int64_t element_size) {
     if (list->len < list->cap) return list;
+    if (list->cap < 0 || list->cap > INT64_MAX / 2) out_of_memory();
     int64_t cap = list->cap < 4 ? 8 : list->cap * 2;
     if (class_of(list) == 0) {
         /* A large block grows in place where the allocator can (one block either
            way), and moves to a fresh aligned block when `realloc` loses the alignment. */
-        size_t bytes = MYL_HEADER + (size_t)cap * (size_t)element_size;
+        size_t bytes = MYL_HEADER + block_data_size(cap, element_size, false);
         if (heap_ceiling) heap_refund(malloc_usable_size(list));
         myl_block *moved = realloc(list, bytes);
         if (!moved) out_of_memory();

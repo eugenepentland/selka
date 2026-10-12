@@ -1,0 +1,16 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "command": "scripts/build-slot.sh build \"$ZIG\" build test-core -Dtest-filter=\"A02 capacity\" -j\"$MYLANG_DEV_JOBS\" --maxrss \"$MYLANG_DEV_MAXRSS\"",
+  "exit_status": 0,
+  "tests_passed": 1,
+  "native_scenarios": 22,
+  "modes": [
+    "zero-RC",
+    "legacy RC control"
+  ],
+  "test_wall_seconds": 12.17,
+  "review": "A07 inspected runtime guards and approved subject to tests; all scenarios passed",
+  "policy_change": false,
+  "source_hashes": "safety-source-sha256.json",
+  "existing_failure_reproducers": "overflow-before.json"
+}

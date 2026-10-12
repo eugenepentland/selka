@@ -1,0 +1,22 @@
+{
+  "overflow_product": {
+    "status": 0,
+    "stdout": "{\"checksum\":0,\"length\":0,\"capacity\":0}\n",
+    "stderr": ""
+  },
+  "overflow_round": {
+    "status": -11,
+    "stdout": "",
+    "stderr": ""
+  },
+  "overflow_growth": {
+    "status": -6,
+    "stdout": "",
+    "stderr": "free(): invalid size\n"
+  },
+  "budget": {
+    "status": 1,
+    "stdout": "",
+    "stderr": "error[R_MEMORY_BUDGET]: memory budget exhausted; raise it with --max-memory=SIZE\n"
+  }
+}

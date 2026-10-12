@@ -25,7 +25,7 @@ __attribute__((noinline)) static myl_block *core_buffer_regrow(myl_block *buffer
            large block instead of copying it, so neither its octets nor fresh pages are
            touched again; it moves to a fresh aligned block when `realloc` loses the
            alignment (NEW-CORE-U1-GROW-1). */
-        size_t bytes = MYL_HEADER + (size_t)capacity;
+        size_t bytes = MYL_HEADER + block_data_size(capacity, 1, false);
         if (heap_ceiling) heap_refund(malloc_usable_size(buffer));
         myl_block *grown = realloc(buffer, bytes);
         if (!grown) out_of_memory();
