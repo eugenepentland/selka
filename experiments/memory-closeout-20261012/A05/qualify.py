@@ -94,6 +94,8 @@ def main():
     p.add_argument('--zig', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--overlay', action='store_true')
+    p.add_argument('--compiler-overlay', action='store_true',
+                   help='Classify a private compiler source overlay as interim evidence')
     p.add_argument('--ordinary-command', action='store_true',
                    help='Use the ordinary command without the experimental ownership selector')
     p.add_argument('--admit', action='store_true')
@@ -123,7 +125,7 @@ def main():
     modules={'memo','persistent_memo','durable','cache_record','hashes'}
     def overlay(text):
         return re.sub(r'^import (\w+)$',lambda m:'import a05_'+m[1]+' as '+m[1] if m[1] in modules else m[0],text,flags=re.M)
-    report={'base':'fbfcaa7a923186a8e773c3760f81c10aa345a432','compiler':str(a.compiler),'compiler_sha256':digest(a.compiler),'overlay':a.overlay,'check_only':a.check_only,'harness_sha256':digest(__file__),'cases':{}}
+    report={'base':'fbfcaa7a923186a8e773c3760f81c10aa345a432','compiler':str(a.compiler),'compiler_sha256':digest(a.compiler),'overlay':a.overlay or a.compiler_overlay,'library_source_overlay':a.overlay,'compiler_source_overlay':a.compiler_overlay,'check_only':a.check_only,'harness_sha256':digest(__file__),'cases':{}}
     report['compiler_source_revision']=a.compiler_revision
     report['ownership_selection']='ordinary-command' if a.ordinary_command else 'experimental-zero-rc'
     failures=0

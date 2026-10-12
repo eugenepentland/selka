@@ -458,3 +458,9 @@ full private-overlay reproduction delta are recorded. The first failed worker
 production commit gate and corrected style findings remain in evidence. The
 older worker tree intentionally has no orphaned new production source files;
 root owns the complete registered implementation commit and final gate.
+
+The qualification harness now separately labels `--compiler-overlay` from library
+source overlays. Final export qualification additionally requires a full
+integrated commit SHA, rejecting the private overlay raw receipt even before
+considering missing export coverage. The explicit negative control is retained
+in `evidence/private-compiler-export-rejection.json`.

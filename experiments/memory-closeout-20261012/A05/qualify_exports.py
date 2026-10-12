@@ -4,6 +4,7 @@
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -33,6 +34,8 @@ def main():
         report_files.append({'path': str(path), 'sha256': digest(path)})
         if not all(identity):
             failures.append({'report': str(path), 'reason': 'missing compiler identity'})
+        elif not re.fullmatch(r'[0-9a-f]{40}', identity[0]):
+            failures.append({'report': str(path), 'reason': 'compiler revision is not an exact integrated commit'})
         if data.get('overlay') or data.get('check_only'):
             failures.append({'report': str(path), 'reason': 'overlay or source-only positive report'})
         expected_selection = 'experimental-zero-rc' if args.stage == 'C1' else 'ordinary-command'

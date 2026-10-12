@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "input_receipt": "borrowed-provider/evidence/native-raw.json",
+  "expected_refusal": "compiler revision is not an exact integrated commit",
+  "actual_failures": [
+    {
+      "report": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/borrowed-provider/evidence/native-raw.json",
+      "reason": "compiler revision is not an exact integrated commit"
+    }
+  ],
+  "qualified_declarations": 0
+}
