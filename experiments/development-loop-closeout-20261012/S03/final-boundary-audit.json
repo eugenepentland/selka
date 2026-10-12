@@ -1,0 +1,92 @@
+{
+  "C0": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "C1": "a9a3208a4f3edbf17170cfc18d57f5f999af49c3",
+  "broad_root_change_exactly_approved_removal": true,
+  "closure": [
+    {
+      "path": "src/format_spec.zig",
+      "sha256": "a731f4791819e52dce6936b76aeb77eff8f256d8573f76afdf8b38ae9eddd837"
+    },
+    {
+      "path": "src/format_spec_cases.tsv",
+      "sha256": "dc5c779c812387bcf551ceb80799d7a9268ecac68684c767e70167cfaf1298eb"
+    },
+    {
+      "path": "src/format_spec_test.zig",
+      "sha256": "817e572641108110173484b9df92c9a6760a65853c609114ab25a5c7489a4723"
+    },
+    {
+      "path": "src/number_grammar.txt",
+      "sha256": "fab1ed176a1df3faab0cf6adc22a93620d69f28230ed3d6cef584ef207d0c9bc"
+    },
+    {
+      "path": "src/number_text.zig",
+      "sha256": "dc73e4fcdaf4d9ecf21f895133884b91e836afe321b450bb4b5226662786820c"
+    },
+    {
+      "path": "src/number_text_test.zig",
+      "sha256": "5c14b6bf394fd62198953177ba9cc29e2adc5de4905169f92e9e0835e689b611"
+    },
+    {
+      "path": "src/text_scalar_root_test.zig",
+      "sha256": "6b5e9efe47a2d5f3f69581f87ada5caac8704e492a561dcece3032147e5e5fff"
+    }
+  ],
+  "evidence_sha256": {
+    "experiments/development-loop-closeout-20261012/coordinator/candidate-inventory.json": "d58a615b8849b18cc685c7fcebd6479a4fca15f10e29aed68077b797bac3cca7",
+    "experiments/development-loop-closeout-20261012/coordinator/scalar-filter-controls.log": "f960b3c846b5fce0cb98ca3ccabdf6c05d19683b327a5c923866890fc51c257b",
+    "experiments/development-loop-closeout-20261012/coordinator/scalar-plan.log": "9071e7f417e068ea0b69631a3d259210334dda88d9bf97c5826b643d8ac388b0"
+  },
+  "execution_evidence": {
+    "absent_filter_expected_exit": 1,
+    "full_root_passed": 9,
+    "matching_filter_passed": 2
+  },
+  "existing_modules_and_oracles_byte_identical": true,
+  "inventory_groups": 46,
+  "named_count_after": 8,
+  "named_count_before": 8,
+  "named_tests": {
+    "src/format_spec_test.zig": [
+      "float format specifications render every CPython oracle row exactly",
+      "integer and text format specifications render every CPython oracle row exactly",
+      "round to n digits rounds the exact binary value with ties away from zero",
+      "a specification the value family cannot take is rejected with CPython's reason",
+      "a packed specification survives the runtime word unchanged"
+    ],
+    "src/number_text_test.zig": [
+      "every shared vector answers the pinned grammar's value",
+      "the grammar keeps the rounding horizon, the signed bound and the exponent bound",
+      "every shared vector answers the same through the UTF-8 octet entry points"
+    ]
+  },
+  "paired_cold_compile_link_rss_acceptance": "not qualified",
+  "registered_members": 101,
+  "required_members": 101,
+  "scalar_group": {
+    "artifacts": [
+      "text-scalar-units"
+    ],
+    "cacheable": true,
+    "id": "text_scalar_unit",
+    "inputs": [
+      "src/text_scalar_root_test.zig",
+      "src/number_text.zig",
+      "src/number_text_test.zig",
+      "src/number_grammar.txt",
+      "src/format_spec.zig",
+      "src/format_spec_test.zig",
+      "src/format_spec_cases.tsv"
+    ],
+    "label": "run test text-scalar-unit-tests",
+    "reason": "complete declared whole-action inputs",
+    "target": "verification-text_scalar_unit"
+  },
+  "schema": "frozen-text-scalar-boundary-audit-v1",
+  "unknown_members": 0,
+  "wrapper_counts": {
+    "C0_units": 7,
+    "C1_text_scalar": 1,
+    "C1_units": 6
+  }
+}
