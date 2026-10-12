@@ -284,10 +284,12 @@ pub fn Lower(comptime Context: type) type {
 }
 
 /// The source-level parent whose lifetime encloses a dependent scope.
-pub fn scopeProvider(nodes: []const typed.Node, source: typed.NodeId) ?typed.NodeId {
-    const node = nodes[@backingInt(source)];
+pub fn scopeProvider(program: typed.Program, source: typed.NodeId) ?typed.NodeId {
+    const node = program.nodes[@backingInt(source)];
     return switch (node.data) {
-        .propagate => |value| scopeProvider(nodes, value.value),
+        .propagate => |value| scopeProvider(program, value.value),
+        .block_value => |block| scopeProvider(program, block.value),
+        .call => |call| call.arguments[@import("single_owner_resource.zig").parameter(program, program.functions[@backingInt(call.function)]) orelse return null],
         .file_access => |file| file.arguments[0],
         .dir_resource => |dir| dir.capability,
         .host_resource => |host| host.capability,

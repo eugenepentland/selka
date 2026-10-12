@@ -1626,3 +1626,42 @@ test "zero RC affine resources reject record sibling invalidation" {
         \\    return 0
     , "E_SINGLE_OWNER_OVERLAP");
 }
+
+// spec-case: NEW-CORE-ZERO-RC-AFFINE-RESOURCES-1
+test "zero RC builtin file results preserve named provider origins through helpers" {
+    try executes(std.testing.allocator,
+        \\import filesystem
+        \\@ensures(True)
+        \\func opened(fs: Filesystem) -> Result[TextFile, str]:
+        \\    return fs.open("data", "w")
+        \\func write(fs: Filesystem, fail: bool) -> Result[int, str]:
+        \\    with try opened(fs) as file:
+        \\        _ = file.write("hello")
+        \\        if fail:
+        \\            return Err("early")
+        \\    const text = try fs.read_text("data")
+        \\    return Ok(len(text))
+        \\func main(out: Stream) -> int:
+        \\    const fs = filesystem.memory()
+        \\    match write(fs, False):
+        \\        case Ok(size):
+        \\            out.print(size)
+        \\        case Err(message):
+        \\            out.print(message)
+        \\    match write(fs, True):
+        \\        case Ok(size):
+        \\            out.print(size)
+        \\        case Err(message):
+        \\            out.print(message)
+        \\    return 0
+    , "5\nearly\n");
+    try refuses(std.testing.allocator,
+        \\import filesystem
+        \\func escape(fs: Filesystem) -> Result[TextFile, str]:
+        \\    _ = fs.exists("unused")
+        \\    const local = filesystem.memory()
+        \\    return local.open("data", "w")
+        \\func main() -> int:
+        \\    return 0
+    , "E_ZERO_RC_RESOURCE_ESCAPE");
+}

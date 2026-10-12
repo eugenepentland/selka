@@ -121,12 +121,12 @@ pub fn checkMode(a: std.mem.Allocator, program: typed.Program, failure: *Failure
             if (index < function.signature.parameter_count) c.state[index] = .{
                 .available = true,
                 .borrowed = (isOwned(linear, local.ty, zero_rc) or typed.isBorrowedView(program.records, local.ty)) and !(zero_rc and resources.affine(program, local.ty)),
-                .dependency = if (zero_rc and resources.affine(program, local.ty)) index else none,
+                .dependency = if (zero_rc and resources.dependent(program, local.ty)) index else none,
                 .writable = local.mutable,
             };
         }
         try c.supported(function.signature.return_type, function.declaration, 0);
-        if (zero_rc and resources.affine(program, function.signature.return_type)) _ = try c.resourceParameter(function, function.declaration);
+        if (zero_rc and resources.dependent(program, function.signature.return_type)) _ = try c.resourceParameter(function, function.declaration);
         if (typed.isBorrowedView(program.records, function.signature.return_type)) {
             _ = try c.returnSource(function, function.declaration);
             if (function.signature.declared_mutates.len != 0) return c.reject(function.declaration, view_signature, "a function returning a view cannot also take mut parameters in this prototype");
@@ -233,7 +233,10 @@ const Checker = struct {
         }
         if (record.shape.array) |array| try c.supported(array.element, span, depth + 1);
         if (record.shape.variants) |variants| for (variants.cases) |case| {
-            if (case.payload) |payload| try c.supported(payload, span, depth + 1);
+            if (case.payload) |payload| {
+                if (c.zero_rc and variants.fallible and payload.isFile()) continue;
+                try c.supported(payload, span, depth + 1);
+            }
         };
         if (record.contract.callback) |callback| {
             for (callback.parameters) |parameter| try c.supported(parameter, span, depth + 1);
@@ -401,7 +404,7 @@ const Checker = struct {
         }
         const parameter = slot < c.function.signature.parameter_count;
         const affine = c.zero_rc and resources.affine(c.program, local.ty);
-        const dependency = if (affine) try c.resourceOrigin(store.value) else null;
+        const dependency = if (c.zero_rc and resources.dependent(c.program, local.ty)) try c.resourceOrigin(store.value) else null;
         c.state[slot] = .{ .available = true, .borrowed = parameter and !affine, .writable = local.mutable, .dependency = dependency orelse none };
     }
 
@@ -560,7 +563,7 @@ const Checker = struct {
         try c.expression(value, .move);
         if (!c.zero_rc) return;
         const shape = typed.resultShape(c.program.nodes[@backingInt(value)].ty, c.program.records) orelse return;
-        if (resources.affine(c.program, shape.error_type)) try c.resourceReturn(value, span);
+        if (resources.dependent(c.program, shape.error_type)) try c.resourceReturn(value, span);
     }
 
     fn resourceReturn(c: *Checker, value: typed.NodeId, span: Span) Error!void {
@@ -576,7 +579,7 @@ const Checker = struct {
     fn resourceOrigin(c: *Checker, id: typed.NodeId) Error!?usize {
         const node = c.program.nodes[@backingInt(id)];
         if (resources.provider(node.ty)) return c.origin(id);
-        if (!resources.affine(c.program, node.ty)) return null;
+        if (!resources.dependent(c.program, node.ty)) return null;
         return switch (node.data) {
             .local => |slot| if (c.state[@backingInt(slot)].dependency == none) null else c.state[@backingInt(slot)].dependency,
             .field => |field| c.resourceOrigin(field.base),
@@ -584,6 +587,7 @@ const Checker = struct {
             .wrap, .unwrap, .cast, .complete_resource => |value| c.resourceOrigin(value),
             .propagate => |value| c.resourceOrigin(value.value),
             .variant => |variant| if (variant.value) |value| c.resourceOrigin(value) else null,
+            .file_access => |file| c.origin(file.arguments[0]) orelse return c.reject(node.span, resource_origin, "a file requires a named provider"),
             .acquire_resource => |acquire| c.origin(acquire.capability) orelse return c.reject(node.span, resource_origin, "a resource requires a named provider"),
             .call => |call| c.resourceOrigin(call.arguments[try c.resourceParameter(c.program.functions[@backingInt(call.function)], node.span)]),
             .record => |fields| result: {
@@ -604,7 +608,7 @@ const Checker = struct {
             return c.reject(span, resource_escape, "the resource's provider is no longer available");
         if (!write or !resources.provider(c.function.scope.locals[root].ty)) return;
         for (c.state, c.function.scope.locals, 0..) |state, local, other| {
-            if (state.available and c.state[c.rootOf(other)].available and state.dependency == root and resources.affine(c.program, local.ty))
+            if (state.available and c.state[c.rootOf(other)].available and state.dependency == root and resources.dependent(c.program, local.ty))
                 return c.reject(span, resource_escape, "a provider cannot move or change while a dependent resource is live");
         }
     }
@@ -769,7 +773,7 @@ const Checker = struct {
                     if (c.origin(value) != source) return c.reject(statement.span, view_escape, "the returned view must borrow from this function's single view parameter");
                 } else {
                     try c.expression(value, .move);
-                    if (c.zero_rc and resources.affine(c.program, c.function.signature.return_type)) try c.resourceReturn(value, statement.span);
+                    if (c.zero_rc and resources.dependent(c.program, c.function.signature.return_type)) try c.resourceReturn(value, statement.span);
                 }
                 return false;
             },
@@ -793,7 +797,7 @@ const Checker = struct {
             .with_scope => |scope| {
                 const source = scope.resource orelse return c.reject(statement.span, zero_unsupported, "zero-RC scopes require an explicit file owner");
                 const node = c.program.nodes[@backingInt(source)];
-                const provider = @import("build_cap.zig").scopeProvider(c.program.nodes, source) orelse return c.reject(statement.span, zero_unsupported, "open a dependent scope directly from a named provider in this prototype");
+                const provider = @import("build_cap.zig").scopeProvider(c.program, source) orelse return c.reject(statement.span, zero_unsupported, "open a dependent scope directly from a named provider in this prototype");
                 if (c.program.nodes[@backingInt(provider)].data != .local) return c.reject(statement.span, zero_unsupported, "bind the provider to a local before opening a scoped file");
                 if (node.data == .file_access or node.data == .propagate) {
                     try c.expression(source, .read);
@@ -802,7 +806,7 @@ const Checker = struct {
                         .dir_resource => |dir| try c.arguments(&.{ provider, dir.path }, &.{}, &.{}),
                         .host_resource => |host| try c.arguments(&.{ provider, host.name }, &.{}, &.{}),
                         .environment_only => |only| try c.arguments(&.{ provider, only.names }, &.{}, &.{}),
-                        else => try c.expression(provider, .read),
+                        else => try c.expression(source, .read),
                     }
                 }
                 const saved = c.loans.items.len;

@@ -839,7 +839,7 @@ const FnBuilder = struct {
                     const owner = try self.expression(source);
                     const variable = self.local(scope.slot);
                     try self.write(variable, self.current.?, owner);
-                    const provider = if (self.module().zero_rc) try self.expression(build_cap.scopeProvider(self.mb.input.program.nodes, source).?) else .none;
+                    const provider = if (self.module().zero_rc) try self.expression(build_cap.scopeProvider(self.mb.input.program, source).?) else .none;
                     const cleanup: build_cap.Scope = .{ .owner = owner, .depth = self.loops.items.len, .provider = provider };
                     try self.ssa.resources.append(self.allocator(), cleanup);
                     try self.statement(scope.body);
