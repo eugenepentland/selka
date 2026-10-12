@@ -189,7 +189,196 @@ public func set_env_slot(mut rt: Runtime, ref: value.ObjRef, index: int, item: v
 
 
 public func string_hash(rt: Runtime, ref: value.ObjRef) -> u32:
-    return string_obj(rt, ref).hash
+    match rt.objects[ref]:
+        case object.Obj.string(value=payload):
+            return payload.hash
+        case _:
+            assert False, "object is not a string"
+            return 0u32
+
+
+# Scoped queries return selected scalar fields or selected independent text.
+# No view or address escapes the call; the owned snapshot accessors above retain
+# their independent-copy contracts. Handles continue to carry object identity.
+
+
+public func string_chars(rt: Runtime, ref: value.ObjRef) -> bytes:
+    match rt.objects[ref]:
+        case object.Obj.string(value=payload):
+            return payload.chars.copy()
+        case _:
+            assert False, "object is not a string"
+            return b""
+
+
+public func string_matches(rt: Runtime, ref: value.ObjRef, chars: bytes) -> bool:
+    match rt.objects[ref]:
+        case object.Obj.string(value=payload):
+            return len(payload.chars) == len(chars) and payload.chars == chars
+        case _:
+            assert False, "object is not a string"
+            return False
+
+
+public func function_arity(rt: Runtime, ref: value.ObjRef) -> int:
+    match rt.objects[ref]:
+        case object.Obj.function(value=payload):
+            return payload.arity
+        case _:
+            assert False, "object is not a function"
+            return 0
+
+
+public func function_upvalue_count(rt: Runtime, ref: value.ObjRef) -> int:
+    match rt.objects[ref]:
+        case object.Obj.function(value=payload):
+            return payload.upvalue_count
+        case _:
+            assert False, "object is not a function"
+            return 0
+
+
+public func function_name(rt: Runtime, ref: value.ObjRef) -> value.ObjRef:
+    match rt.objects[ref]:
+        case object.Obj.function(value=payload):
+            return payload.name
+        case _:
+            assert False, "object is not a function"
+            return value.NO_OBJ
+
+
+public func function_instruction(rt: Runtime, ref: value.ObjRef, index: int) -> int:
+    match rt.objects[ref]:
+        case object.Obj.function(value=payload):
+            return payload.code.code[index]
+        case _:
+            assert False, "object is not a function"
+            return 0
+
+
+public func function_line(rt: Runtime, ref: value.ObjRef, index: int) -> int:
+    match rt.objects[ref]:
+        case object.Obj.function(value=payload):
+            return payload.code.lines[index]
+        case _:
+            assert False, "object is not a function"
+            return 0
+
+
+public func function_constant(rt: Runtime, ref: value.ObjRef, index: int) -> value.Value:
+    match rt.objects[ref]:
+        case object.Obj.function(value=payload):
+            return payload.code.constants[index]
+        case _:
+            assert False, "object is not a function"
+            return value.Value.nil
+
+
+public func closure_function(rt: Runtime, ref: value.ObjRef) -> value.ObjRef:
+    match rt.objects[ref]:
+        case object.Obj.closure(value=payload):
+            return payload.function
+        case _:
+            assert False, "object is not a closure"
+            return value.NO_OBJ
+
+
+public func closure_upvalue(rt: Runtime, ref: value.ObjRef, index: int) -> value.ObjRef:
+    match rt.objects[ref]:
+        case object.Obj.closure(value=payload):
+            return payload.upvalues[index]
+        case _:
+            assert False, "object is not a closure"
+            return value.NO_OBJ
+
+
+public func env_enclosing(rt: Runtime, ref: value.ObjRef) -> value.ObjRef:
+    match rt.objects[ref]:
+        case object.Obj.env(value=payload):
+            return payload.enclosing
+        case _:
+            assert False, "object is not a env"
+            return value.NO_OBJ
+
+
+public func env_slot(rt: Runtime, ref: value.ObjRef, index: int) -> value.Value:
+    match rt.objects[ref]:
+        case object.Obj.env(value=payload):
+            return payload.slots[index]
+        case _:
+            assert False, "object is not a env"
+            return value.Value.nil
+
+
+public func class_name(rt: Runtime, ref: value.ObjRef) -> value.ObjRef:
+    match rt.objects[ref]:
+        case object.Obj.klass(value=payload):
+            return payload.name
+        case _:
+            assert False, "object is not a klass"
+            return value.NO_OBJ
+
+
+public func class_method(rt: Runtime, ref: value.ObjRef, key: value.ObjRef, hash: u32) -> value.Value?:
+    match rt.objects[ref]:
+        case object.Obj.klass(value=payload):
+            return table.get(payload.methods, key, hash)
+        case _:
+            assert False, "object is not a klass"
+            return None
+
+
+public func instance_class(rt: Runtime, ref: value.ObjRef) -> value.ObjRef:
+    match rt.objects[ref]:
+        case object.Obj.instance(value=payload):
+            return payload.klass
+        case _:
+            assert False, "object is not a instance"
+            return value.NO_OBJ
+
+
+public func instance_field(rt: Runtime, ref: value.ObjRef, key: value.ObjRef, hash: u32) -> value.Value?:
+    match rt.objects[ref]:
+        case object.Obj.instance(value=payload):
+            return table.get(payload.fields, key, hash)
+        case _:
+            assert False, "object is not a instance"
+            return None
+
+
+public func tree_function_obj(rt: Runtime, ref: value.ObjRef) -> object.TreeFunctionObj:
+    match rt.objects[ref]:
+        case object.Obj.tree_function(value=payload):
+            return payload
+        case _:
+            assert False, "object is not a tree_function"
+            return object.TreeFunctionObj(decl=0, name=value.NO_OBJ, closure=value.NO_OBJ, is_initializer=False)
+
+
+public func native_obj(rt: Runtime, ref: value.ObjRef) -> object.NativeObj:
+    match rt.objects[ref]:
+        case object.Obj.native(value=payload):
+            return payload
+        case _:
+            assert False, "object is not a native"
+            return object.NativeObj(id=0, arity=0)
+
+
+public func bound_method_obj(rt: Runtime, ref: value.ObjRef) -> object.BoundMethodObj:
+    match rt.objects[ref]:
+        case object.Obj.bound_method(value=payload):
+            return payload
+        case _:
+            assert False, "object is not a bound_method"
+            return object.BoundMethodObj(receiver=value.Value.nil, method=value.NO_OBJ)
+
+
+public func is_instance(rt: Runtime, ref: value.ObjRef) -> bool:
+    match rt.objects[ref]:
+        case object.Obj.instance(value=_):
+            return True
+        case _:
+            return False
 
 
 # Binds a global; answers whether the name was new.
