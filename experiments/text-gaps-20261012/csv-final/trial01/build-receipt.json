@@ -1,0 +1,77 @@
+{
+  "C0": "1994cb76e266080d971be6f41e98fba5707234dd",
+  "compiler": "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/.tmp/text-gaps/csv-final/trial01/install/bin/mylang",
+  "compiler_sha256": "735974f47d40dec19068fa998fe66c0a51b9e39afae98ca25a18dee00a2f0a8c",
+  "qualification": "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/experiments/text-gaps-20261012/csv-final/trial01/qualification.json",
+  "source_patch_sha256": "d3e4aaf0e26ed4b4dfaf123c872d27ec15cc32fdaa1a455d65a819f5f2cac92b",
+  "baseline_compiler_sha256": "0ba1684ea76140b07675bf01b39baafe8a7253ea675bfba8057186f1f9f16a3b",
+  "frozen_package": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/micro-gaps/coordinator/install",
+  "entries": [
+    {
+      "group": "text",
+      "arm": "csv-candidate-zero-rc",
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/.tmp/text-gaps/csv-final/trial01/text-runtime",
+      "sha256": "ab263afb3a7cd2cca2325f20dee4c0857b9ff693841b919acf75ea75b1908383",
+      "source": "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+      "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/.tmp/text-gaps/csv-final/guest-cache01"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/.tmp/text-gaps/csv-final/trial01/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/.tmp/text-gaps/csv-final/trial01/text-runtime",
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/.tmp/text-gaps/csv-final/guest-cache01"
+      ],
+      "status": "ok",
+      "returncode": 0
+    },
+    {
+      "group": "text",
+      "arm": "csv-candidate-zero-rc",
+      "kind": "counted",
+      "binary": "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/.tmp/text-gaps/csv-final/trial01/text-counted",
+      "sha256": "1dba583491c6414c5b777f8910b48e5b2ecbd53e86265087461ff35d3ffeebfc",
+      "source": "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+      "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/.tmp/text-gaps/csv-final/guest-cache01",
+        "--counters"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/.tmp/text-gaps/csv-final/trial01/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/.tmp/text-gaps/csv-final/trial01/text-counted",
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-csv-final-20261012/.tmp/text-gaps/csv-final/guest-cache01",
+        "--counters"
+      ],
+      "status": "ok",
+      "returncode": 0
+    }
+  ]
+}

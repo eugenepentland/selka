@@ -1,0 +1,24 @@
+{
+  "base": "1994cb76e266080d971be6f41e98fba5707234dd",
+  "production_commit": "44af62b3ffccf7658858181a79dd0566bfe12f9a",
+  "tests": {
+    "source_cases": 4,
+    "checked_lanes": 5,
+    "ordinary_lanes": 5,
+    "source_native_runs": 40,
+    "direct_helper_cases": 2,
+    "direct_helper_native_modes": 3,
+    "direct_helper_runs": 6,
+    "result": "5/5 test cases passed",
+    "same_owner_scope": "Direct native helper with explicit destruction, not ownership-admitted source IR"
+  },
+  "guardian": "88/88 plus normal cached-green commit hook",
+  "oracle_counter_probes": 8,
+  "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+  "counter_contract": "all checksums, allocation counts/bytes equal common-001; retain/release/unique_test and live at exit zero",
+  "private_caches": ".tmp/text-gaps/csv-final/",
+  "limits": {
+    "jobs": 4,
+    "maxrss": 8589934592
+  }
+}
