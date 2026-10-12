@@ -375,3 +375,21 @@ Support6 RF compiler/cache without altering historical seed bytes. Final Debug/R
 host packages may share that independent seed, but their actual component manifests
 and binary identities must be verified on each final install. Root owns the final
 registered gate and any decision to change package selection.
+
+## Matched counter-only native adapter
+
+Coordinator approved a separate manual-native method for A09's eight C0 counted
+builds that emit valid release LLVM but hit the immutable old driver deletion bug.
+`manual-native/manual_native.py` reconstructs the exact Git runtime, checks its bytes
+against the frozen compiler ELF, extracts the exact embedded number object, invokes
+the unchanged counting-runtime source generator and uses the original release
+native flags. No compiler, source history, tool admission or frozen timing artifact
+changes. C0 and Support6 preparations passed; candidate JSON and parallel controls
+produce identical complete counter documents/output through normal and manual
+native builds, RC0/live0. Wrong runtime/source and LLVM ABI guards refuse.
+
+All hashes and raw commands/evidence are in `manual-native/validation.json` and
+`manual-native/raw`. A09 has the API and prepared C0 runtime for the fresh15 input
+supplement; those results and final candidate equivalence remain separate. All8
+ordinary C0 build failures remain preserved, and no old failure is relabeled as a
+successful supported compiler invocation.
