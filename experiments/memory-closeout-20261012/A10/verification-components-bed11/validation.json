@@ -1,0 +1,36 @@
+{
+  "base": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "status": "prepared-only",
+  "production_files_modified": false,
+  "base_files": {
+    "scripts/verify_cache.py": "ebf15695fe158b685e533620a5a37ad714e13e9e62709def071f6e1711de7818",
+    "scripts/verify_cache_test.py": "8853392973d69a06a8c61f5de8d7f3a7aa58dd95eea809eb512f3dd2c6570142"
+  },
+  "proposed_files": {
+    "scripts/verify_cache.py": "9a128a3e11efd9a383d221a583e0cfbe233c78576dfee4d21a0c268ebeefbbd3",
+    "scripts/verify_cache_test.py": "80808dcd56c068d1d4344a439e3f3bea9869eeb6ae32d57c95e2c736e580dab4"
+  },
+  "patch_sha256": "b8c88cdcec27f86a45c7f633ca02f10ce0077aae013e552cdc3c59821ecb924b",
+  "apply_check": "pass",
+  "new_tests": {
+    "passed": 7,
+    "seconds": 1.886
+  },
+  "first_full_suite": {
+    "tests": 73,
+    "passed": 72,
+    "setup_errors": 1,
+    "reason": "scratch omitted unchanged tests/test_inputs_coverage.py; extracted exact bed11cf3 fixture and single retry passed"
+  },
+  "complete_suite": {
+    "passed": 73,
+    "tests": 73,
+    "seconds": 28.241,
+    "log": "coordinator-tests-complete.log"
+  },
+  "logs_sha256": {
+    "coverage-retry.log": "f07367f50249f0eee92a62df2995a990da6040a61446a5f2c44034bcec2d6a91",
+    "coordinator-tests.log": "48bdb808c5c494921f88230178331162b06074be26a17bb509a17c6a27b520a0",
+    "coordinator-tests-complete.log": "dd64f560bfb4c4b5e6d3f62e0cf63fbe917c6f505aa6c6f2a3dcf6885c6fed3a"
+  }
+}

@@ -402,3 +402,15 @@ All hashes and raw commands/evidence are in `manual-native/validation.json` and
 supplement; those results and final candidate equivalence remain separate. All8
 ordinary C0 build failures remain preserved, and no old failure is relabeled as a
 successful supported compiler invocation.
+
+## C1 verification external component inputs
+
+Coordinator requested a harness-only patch against frozen Support7 source
+bed11cf3 because verify_cache.py rejected the qualified owned pin/archive build
+options. `verification-components-bed11/verification-component-inputs.patch`
+admits only those two exact options and snapshots their external bytes/symlinks
+through preparation, all action keys, admission and publication. Reported source
+identities are visible in last-run.json. All73 coordinator tests pass, including
+seven new adversarial tests. Production files remain coordinator-owned and
+unmodified here; root applies and records this harness revision separately from
+the frozen compiler. Full registered verification remains root-owned and pending.

@@ -1,0 +1,174 @@
+#!/usr/bin/env python3
+"""Prepare coordinator-owned verification patch; never edit active production."""
+from pathlib import Path
+import difflib
+import subprocess
+
+BASE = 'bed11cf3bf3102ffec44487e431a1573fdf02ad5'
+ROOT = Path(__file__).resolve().parents[4]
+EVIDENCE = Path(__file__).resolve().parent
+SCRATCH = ROOT / '.tmp/memory-closeout/A10/verification-components-bed11'
+
+def replace(text, before, after):
+    assert text.count(before) == 1, before
+    return text.replace(before, after)
+
+name = 'scripts/verify_cache.py'
+original = subprocess.check_output(['git', 'show', f'{BASE}:{name}'], cwd=ROOT, text=True)
+value = replace(original, 'RETRY = 75\n', '''RETRY = 75
+COMPONENT_SOURCE_OPTIONS = {"-Dcomponent-owned-compiler-pin", "-Dcomponent-seed-source"}
+''')
+value = replace(value, 'def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool = False,', '''def component_source_files(options: list[str]) -> list[Path]:
+    """Explicit packaging inputs; preserve logical paths for symlink watches."""
+    sources = {}
+    for arg in options:
+        name, separator, value = arg.partition("=")
+        if name not in COMPONENT_SOURCE_OPTIONS:
+            continue
+        if not separator or not value or "\\x00" in value:
+            raise VerificationError("missing or invalid component input: " + name)
+        if name in sources:
+            raise VerificationError("duplicate component input: " + name)
+        sources[name] = Path(value)
+    return list(sources.values())
+
+
+def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool = False,''')
+value = replace(value, '        snapshots = [tools, host]\n', '''        snapshots = [tools, host]
+        component_sources = None
+        if files := component_source_files(options):
+            # Bind external pin/archive bytes before preparation and keep their
+            # watches through admission, execution, and receipt publication.
+            component_sources = stack.enter_context(Snapshot(root, [], files, digest_session=session))
+            snapshots.append(component_sources)
+''')
+value = replace(value, '        try:\n            plan, artifacts, build_seconds = prepare(', '''        if component_sources is not None:
+            common["component_sources"] = component_sources.identity
+        try:
+            plan, artifacts, build_seconds = prepare(''')
+value = replace(value, '                  "actions": results, "inputs_stable": stable,\n', '''                  "actions": results, "inputs_stable": stable,
+                  "component_sources": common.get("component_sources"),
+''')
+value = replace(value, '    allowed_values = {"--maxrss", "--summary"}\n', '''    component_source_files(options)  # Reject missing or ambiguous packaging inputs.
+    allowed_values = {"--maxrss", "--summary"}
+''')
+value = replace(value, '        elif not (re.fullmatch(r"-j[1-9][0-9]*", arg)\n', '''        elif not (arg.partition("=")[0] in COMPONENT_SOURCE_OPTIONS
+                  or re.fullmatch(r"-j[1-9][0-9]*", arg)
+''')
+(SCRATCH / name).write_text(value)
+patch = ''.join(difflib.unified_diff(original.splitlines(True), value.splitlines(True), fromfile='a/'+name, tofile='b/'+name))
+
+name = 'scripts/verify_cache_test.py'
+original = subprocess.check_output(['git', 'show', f'{BASE}:{name}'], cwd=ROOT, text=True)
+tests = '''    def component_options(self, *, relative=False):
+        external = tempfile.TemporaryDirectory(prefix='component-input-', dir=REPOSITORY / '.tmp')
+        self.addCleanup(external.cleanup)
+        pin, archive = Path(external.name) / 'pin.json', Path(external.name) / 'source.tar'
+        pin.write_text('{"compiler":"qualified-original"}')
+        archive.write_bytes(b'qualified-source-archive')
+        paths = [Path(os.path.relpath(path, self.root)) if relative else path for path in (pin, archive)]
+        options = coordinator.parse_options(['-Dcomponent-owned-compiler-pin=' + str(paths[0]),
+                                             '-Dcomponent-seed-source=' + str(paths[1])])
+        return options, pin, archive
+
+    def test_component_source_options_preserve_full_gate_restrictions(self):
+        options, _, _ = self.component_options()
+        self.assertIn('--maxrss', options)
+        for bad in ['-Dcomponent-owned-compiler-pin=', '-Dcomponent-seed-source=',
+                    '-Dcomponent-owned-compiler-pin', '-Dcomponent-seed-source=x\\x00y',
+                    '-Dcomponent-other=path', '--prefix=other', '--cache-dir=other',
+                    'verification-unit', 'test', '--maxrss8589934592']:
+            with self.subTest(option=bad), self.assertRaises(coordinator.VerificationError):
+                coordinator.parse_options([bad])
+        for option in options[:2]:
+            with self.subTest(duplicate=option), self.assertRaisesRegex(coordinator.VerificationError, 'duplicate'):
+                coordinator.parse_options([option, option])
+        # Existing independently meaningful source controls need no new pairing rule.
+        for option in options[:2]:
+            self.assertIn(option, coordinator.parse_options([option]))
+
+    def test_component_source_forwarding_identity_and_warm_reuse(self):
+        options, pin, archive = self.component_options(relative=True)
+        self.assertEqual(self.execute(options), 0)
+        for phase in ['plan', 'prepare', 'gate']:
+            for option in options[:2]:
+                self.assertIn(option, self.events(phase)[0]['argv'])
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        files = report['component_sources']['files']
+        self.assertEqual({item['sha256'] for item in files},
+                         {coordinator.hashlib.sha256(path.read_bytes()).hexdigest() for path in (pin, archive)})
+        self.admissions.clear()
+        self.assertEqual(self.execute(options), 0)
+        self.assertEqual(self.admissions, [])
+        self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
+
+    def test_component_source_same_path_content_edit_invalidates_preparation_and_actions(self):
+        options, pin, archive = self.component_options()
+        self.assertEqual(self.execute(options), 0)
+        for path in (pin, archive):
+            metadata = path.stat()
+            content = path.read_bytes()
+            path.write_bytes(bytes([content[0] ^ 1]) + content[1:])
+            os.utime(path, ns=(metadata.st_atime_ns, metadata.st_mtime_ns))
+            self.admissions.clear()
+            self.assertEqual(self.execute(options), 0)
+            self.assertEqual([kind for kind, _ in self.admissions], ['build', 'build', 'gate'])
+            self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'execute'})
+        self.assertEqual(len(self.events('prepare')), 3)
+
+    def test_component_source_missing_or_non_file_never_admits_work(self):
+        options, pin, archive = self.component_options()
+        pin.unlink()
+        with self.assertRaises(SnapshotError):
+            self.execute(options)
+        self.assertEqual(self.admissions, [])
+        pin.mkdir()
+        with self.assertRaises(SnapshotError):
+            self.execute(options)
+        self.assertEqual(self.admissions, [])
+
+    def test_component_source_symlink_retarget_invalidates_identical_bytes(self):
+        options, pin, _ = self.component_options()
+        twin = pin.with_name('twin.json')
+        twin.write_bytes(pin.read_bytes())
+        alias = pin.with_name('selected.json')
+        alias.symlink_to(pin.name)
+        options[0] = '-Dcomponent-owned-compiler-pin=' + str(alias)
+        self.assertEqual(self.execute(options), 0)
+        alias.unlink()
+        alias.symlink_to(twin.name)
+        self.admissions.clear()
+        self.assertEqual(self.execute(options), 0)
+        self.assertEqual([kind for kind, _ in self.admissions], ['build', 'build', 'gate'])
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'execute'})
+
+    def test_component_source_queued_aba_refuses_before_gate(self):
+        options, pin, _ = self.component_options()
+        def mutate_restore():
+            original, metadata = pin.read_bytes(), pin.stat()
+            pin.write_bytes(b'x' * len(original))
+            pin.write_bytes(original)
+            os.utime(pin, ns=(metadata.st_atime_ns, metadata.st_mtime_ns))
+        self.before_gate = mutate_restore
+        self.assertEqual(self.execute(options), coordinator.RETRY)
+        self.assertEqual(self.events('gate'), [])
+        self.assertEqual(self.receipts(), [])
+
+    def test_component_source_running_aba_never_publishes_success(self):
+        options, _, archive = self.component_options()
+        def mutate_restore():
+            original, metadata = archive.read_bytes(), archive.stat()
+            archive.write_bytes(b'x' * len(original))
+            archive.write_bytes(original)
+            os.utime(archive, ns=(metadata.st_atime_ns, metadata.st_mtime_ns))
+        self.after_gate = mutate_restore
+        self.assertEqual(self.execute(options), coordinator.RETRY)
+        self.assertEqual(len(self.events('gate')), 1)
+        self.assertEqual(self.receipts(), [])
+
+'''
+value = replace(original, '    def test_changed_options_environment_and_tool_each_invalidate(self):\n', tests + '    def test_changed_options_environment_and_tool_each_invalidate(self):\n')
+(SCRATCH / name).write_text(value)
+patch += ''.join(difflib.unified_diff(original.splitlines(True), value.splitlines(True), fromfile='a/'+name, tofile='b/'+name))
+(EVIDENCE / 'verification-component-inputs.patch').write_text(patch)
+print(SCRATCH)
