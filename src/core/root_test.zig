@@ -7,6 +7,7 @@ comptime {
     _ = @import("a06_nested_write_test.zig");
     _ = @import("single_owner_test.zig");
     _ = @import("zero_rc_test.zig");
+    _ = @import("a01_native_driver_test.zig");
     _ = @import("a08_zero_rc_test.zig");
     _ = @import("a03_migration_boundaries_test.zig");
     _ = @import("owned_payload_test.zig");
