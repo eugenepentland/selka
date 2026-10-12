@@ -1,6 +1,7 @@
 # Local main integration checkpoint
 
-Status: final verification running; local `main` has not yet advanced.
+Status: complete verification is green. This evidence commit is ready for the
+user-authorized fast-forward of local `main`.
 
 The user requested merging the current work before continuing performance work,
 and explicitly selected the local main / development line. Its starting commit
@@ -34,8 +35,14 @@ repetitions; see `diagnostics-01/`. The cause remains unproven. Gate 03 on
 was a tooling test whose 0.5-second timeout preceded child startup. That test
 now synchronizes expiry with the child PID publication; the real expiry handler
 and cleanup checks remain. All 12 measurement tests and ten deliberately delayed
-repetitions passed; see `measurement-startup-01/`. Gate 04 will verify the fix
-with all registered checks before main advances.
+repetitions passed; see `measurement-startup-01/`. Gate 04 on `f2b091a69734d470f4e35c32e5d475c9341e3fe3` passed: all 147 build
+steps succeeded, all 3,109 selected native tests passed, and the complete profile
+reported 46/46 actions executed with stable inputs and none outstanding. Its
+27,033 native skips are shard exclusions, not dropped tests. Elapsed time was
+912.101 seconds including admission. Whole-tree Guardian passed 88 checks on the
+source commit. This subsequent commit changes evidence only; production and
+verification inputs remain those of the qualified commit. The full profile does
+not claim completion of the separate long performance/application qualification.
 
 Both gates use the unchanged qualified component pin and archive recorded in
 `../component-route.json`; no immutable bootstrap seed was repinned. This
@@ -43,7 +50,7 @@ checkpoint makes no claim that default promotion or legacy guest RC retirement
 is complete.
 
 Five existing documentation edits in the local-main checkout were backed up
-before integration. The merge will preserve those edits. Verification runs in
+before integration. The merge preserves those edits. Verification ran in
 the isolated integration checkout, not over that edited checkout.
 
 ## Performance state at checkpoint
