@@ -1,4 +1,3 @@
-module main
 import time
 import random
 
@@ -11,7 +10,7 @@ func code_of(message: str) -> int:
     return 44
 
 
-func main(clock: clock_cap, entropy: random_cap) -> int:
+func main(clock: Clock, entropy: Entropy) -> int:
     match time.now(clock):
         case Ok(instant):
             if instant.unix_nanoseconds != 0 - 7:

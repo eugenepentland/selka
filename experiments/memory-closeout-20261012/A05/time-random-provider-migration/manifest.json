@@ -1,0 +1,16 @@
+{
+  "path": "src/stdlib/fixtures/time_random_provider.my",
+  "original_sha256": "c00a39d7b71a7c9ff0cacd4a0d2144e9a8d35562a6fdb3bb1fc52bcacbb9f3ba",
+  "migrated_sha256": "5c2552826ce9c0a581a8fb2994c1a1838f2d6fea7bc85898e5b11d3d21d6a6aa",
+  "changed_lines": 2,
+  "changed_spellings": {
+    "clock_cap": "Clock",
+    "random_cap": "Entropy"
+  },
+  "explicit_copies_added": 0,
+  "unchanged": "all test bodies, results, evaluation order and native-provider inputs",
+  "reason": "existing removed capability spellings and redundant module header; both original and intermediate parser refusals preserved",
+  "compiler_source": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "removed_module_header": "module main"
+}

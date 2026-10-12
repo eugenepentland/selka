@@ -1,0 +1,85 @@
+[
+  {
+    "name": "debug-fresh",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-04/memo/debug/source/main.my",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-memo-repro/fresh-cache",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--unoptimized",
+      "--counters",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-memo-repro/debug-fresh/program",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-memo-repro/debug-fresh/program.ll",
+      "--report"
+    ],
+    "status": 0,
+    "stdout": "",
+    "stderr": "{\"version\":\"cache-report-v1\",\"program\":\"linked\",\"units\":10,\"reused\":3,\"compiled\":7,\"verified\":0,\"processes\":8,\"stages\":{\"version\":\"stage-report-v3\",\"nanoseconds\":{\"frontend\":4101874,\"lowering\":1129197,\"optimizer\":1696581,\"emission\":5323679,\"native\":67319875,\"linker\":21839905,\"frontend_phases\":[{\"name\":\"load\",\"nanoseconds\":159766,\"inclusive\":false},{\"name\":\"syntax_parse\",\"nanoseconds\":713319,\"inclusive\":false},{\"name\":\"declarations_interfaces\",\"nanoseconds\":20201,\"inclusive\":false},{\"name\":\"merge\",\"nanoseconds\":61555,\"inclusive\":false},{\"name\":\"dependency_key_preparation\",\"nanoseconds\":203975,\"inclusive\":false},{\"name\":\"retention_store_io\",\"nanoseconds\":855462,\"inclusive\":false},{\"name\":\"symbolic_templates\",\"nanoseconds\":629419,\"inclusive\":false},{\"name\":\"stand_in_planning\",\"nanoseconds\":320,\"inclusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":31418,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":711940,\"inclusive\":false},{\"name\":\"specialization_body_replay\",\"nanoseconds\":35424,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":414,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":259969,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":265,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":1354,\"inclusive\":false},{\"name\":\"check_summaries\",\"nanoseconds\":35542,\"inclusive\":false},{\"name\":\"check\",\"nanoseconds\":2938171,\"inclusive\":true}]},\"frontend\":{\"checked\":9,\"reused\":0,\"summaries\":0,\"syntax_hits\":0,\"syntax_misses\":2,\"stored\":14,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":9,\"deferred\":0,\"fallbacks\":0,\"materialized\":9,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[0,0,0,0,0,0,9],\"bypassed\":0,\"active_functions\":0,\"fresh_work\":0,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":0},\"emission\":{\"units\":10,\"reused\":0,\"rendered\":10,\"seeds_reused\":0,\"seeds_rendered\":2,\"workers\":10,\"work\":{\"receipts_checked\":0,\"keys_built\":12,\"llvm_loaded_bytes\":233334,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,5,4,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,5,4,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":4331680,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":69886,\"save_bytes_prepared\":315905,\"sequence_locks\":42}}},\"program_shared\":false}\n"
+  },
+  {
+    "name": "debug-warm",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-04/memo/debug/source/main.my",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-memo-repro/fresh-cache",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--unoptimized",
+      "--counters",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-memo-repro/debug-warm/program",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-memo-repro/debug-warm/program.ll",
+      "--report"
+    ],
+    "status": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "name": "debug-original-cache",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-04/memo/debug/source/main.my",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-04/cache",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--unoptimized",
+      "--counters",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-memo-repro/debug-original-cache/program",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-memo-repro/debug-original-cache/program.ll",
+      "--report"
+    ],
+    "status": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "name": "check-original-cache",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+      "check",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-04/memo/debug/source/main.my",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-04/cache"
+    ],
+    "status": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+]

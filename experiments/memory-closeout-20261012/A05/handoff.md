@@ -490,3 +490,15 @@ any `MYL_ZERO_RC` selector or define. Exact runtime ca2ded335 and binary0a63da3d
 are recorded with all source hashes/commands in `retirement-combined-support7/`.
 This newly executed native proof remains a scratch candidate, not production
 retirement or installed-package qualification.
+
+Support7 common matrix completed all192 original lanes:171 native passes,12
+expected refusals,4 silent warm memo build failures and5 stale native-provider
+fixture parser failures. A two-line Clock/Entropy/header migration then passes
+all5 modes plus30 provider-error executions, preserving source pairs and prior
+failures. Proposed current inputs therefore176/180 native passes+12negatives;
+borrowed-entry15, borrowed-negatives9 and cachecases7 also pass. The120-export
+inventory has115 declarations with complete5mode evidence; strictqualification
+remains0/120 because memo create/call/clear/count/capacity are blocked by four
+warm semantic-cache build failures ownedA08. Reports, rawcounters, compiler and
+source identities are in `support7-common/`; original/control reproducer is in
+`support7-memo-reproducer/`. No milestone is claimed complete.

@@ -1,0 +1,683 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "overlay": false,
+  "library_source_overlay": false,
+  "compiler_source_overlay": false,
+  "check_only": false,
+  "harness_sha256": "8d0b8414f4c5220ac5e85b6474eb734bb889296ff83a07d039de51baf139d20e",
+  "cases": {
+    "provider_tuple": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/provider_tuple.my",
+        "original_sha256": "6978f3188bd54b882e6fbe796c2a2ba0ff26e2b6a5ccf9d7407c54010a675256",
+        "source_sha256": "6978f3188bd54b882e6fbe796c2a2ba0ff26e2b6a5ccf9d7407c54010a675256",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/release/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "6978f3188bd54b882e6fbe796c2a2ba0ff26e2b6a5ccf9d7407c54010a675256"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "931ad643c5ef9d479dc900ba166fc114f330146bfc6d6989307216ecdb03c3e5",
+        "llvm_sha256": "4103d6f37e83b2688eb40b4e10f2cf46836c8a585353819247e3bfbe5b57732e",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/release/counts.json",
+          "counter_sha256": "8942bb446e0d1f2f06f521ad7dd287acfc04e1e48d8c593907b211f957a6da6e",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 10,
+          "memory": {
+            "allocs": 18,
+            "alloc_bytes": 1472,
+            "frees": 18,
+            "reallocs": 0,
+            "peak_live_bytes": 704,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      },
+      "debug": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/provider_tuple.my",
+        "original_sha256": "6978f3188bd54b882e6fbe796c2a2ba0ff26e2b6a5ccf9d7407c54010a675256",
+        "source_sha256": "6978f3188bd54b882e6fbe796c2a2ba0ff26e2b6a5ccf9d7407c54010a675256",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/debug/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--unoptimized",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/debug/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/debug/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "6978f3188bd54b882e6fbe796c2a2ba0ff26e2b6a5ccf9d7407c54010a675256"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "68f17d3de98de12a8a31789afe20eabfe166e92639465c5d2519c299d73645d7",
+        "llvm_sha256": "4103d6f37e83b2688eb40b4e10f2cf46836c8a585353819247e3bfbe5b57732e",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/debug/counts.json",
+          "counter_sha256": "8942bb446e0d1f2f06f521ad7dd287acfc04e1e48d8c593907b211f957a6da6e",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 10,
+          "memory": {
+            "allocs": 18,
+            "alloc_bytes": 1472,
+            "frees": 18,
+            "reallocs": 0,
+            "peak_live_bytes": 704,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      },
+      "verified": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/provider_tuple.my",
+        "original_sha256": "6978f3188bd54b882e6fbe796c2a2ba0ff26e2b6a5ccf9d7407c54010a675256",
+        "source_sha256": "6978f3188bd54b882e6fbe796c2a2ba0ff26e2b6a5ccf9d7407c54010a675256",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/verified/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--verify-facts",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/verified/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/verified/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "6978f3188bd54b882e6fbe796c2a2ba0ff26e2b6a5ccf9d7407c54010a675256"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "931ad643c5ef9d479dc900ba166fc114f330146bfc6d6989307216ecdb03c3e5",
+        "llvm_sha256": "4103d6f37e83b2688eb40b4e10f2cf46836c8a585353819247e3bfbe5b57732e",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/verified/counts.json",
+          "counter_sha256": "8942bb446e0d1f2f06f521ad7dd287acfc04e1e48d8c593907b211f957a6da6e",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 10,
+          "memory": {
+            "allocs": 18,
+            "alloc_bytes": 1472,
+            "frees": 18,
+            "reallocs": 0,
+            "peak_live_bytes": 704,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      },
+      "optimized-debug": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/provider_tuple.my",
+        "original_sha256": "6978f3188bd54b882e6fbe796c2a2ba0ff26e2b6a5ccf9d7407c54010a675256",
+        "source_sha256": "6978f3188bd54b882e6fbe796c2a2ba0ff26e2b6a5ccf9d7407c54010a675256",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/optimized-debug/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--optimize-debug",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/optimized-debug/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/optimized-debug/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "6978f3188bd54b882e6fbe796c2a2ba0ff26e2b6a5ccf9d7407c54010a675256"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "74b0a934bcf7028759e736a1bf99d44a66a66a1f0ac947da809f22b799c2c1c2",
+        "llvm_sha256": "4103d6f37e83b2688eb40b4e10f2cf46836c8a585353819247e3bfbe5b57732e",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/optimized-debug/counts.json",
+          "counter_sha256": "8942bb446e0d1f2f06f521ad7dd287acfc04e1e48d8c593907b211f957a6da6e",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 10,
+          "memory": {
+            "allocs": 18,
+            "alloc_bytes": 1472,
+            "frees": 18,
+            "reallocs": 0,
+            "peak_live_bytes": 704,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      },
+      "no-facts": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/provider_tuple.my",
+        "original_sha256": "6978f3188bd54b882e6fbe796c2a2ba0ff26e2b6a5ccf9d7407c54010a675256",
+        "source_sha256": "6978f3188bd54b882e6fbe796c2a2ba0ff26e2b6a5ccf9d7407c54010a675256",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/no-facts/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--no-facts",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/no-facts/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/no-facts/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "6978f3188bd54b882e6fbe796c2a2ba0ff26e2b6a5ccf9d7407c54010a675256"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "931ad643c5ef9d479dc900ba166fc114f330146bfc6d6989307216ecdb03c3e5",
+        "llvm_sha256": "4103d6f37e83b2688eb40b4e10f2cf46836c8a585353819247e3bfbe5b57732e",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support7-full/batch-08/provider_tuple/no-facts/counts.json",
+          "counter_sha256": "8942bb446e0d1f2f06f521ad7dd287acfc04e1e48d8c593907b211f957a6da6e",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 10,
+          "memory": {
+            "allocs": 18,
+            "alloc_bytes": 1472,
+            "frees": 18,
+            "reallocs": 0,
+            "peak_live_bytes": 704,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      }
+    },
+    "providers": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/providers.my",
+        "original_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+        "source_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/providers/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/providers/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/providers/release/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "cfda5b83cd12197f9f8a3a7c3891cac35e37f5e760d34d1fe89235600cda6431",
+        "llvm_sha256": "e0657b987be3faf8b8d67d43945faa719c5f83074653277c9b68d1e0ee918c0b",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support7-full/batch-08/providers/release/counts.json",
+          "counter_sha256": "6c486e7900b67aaaccaf5dbb12a5b5a181cc196fbf09dd92a4f8621e810628ce",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 60,
+          "memory": {
+            "allocs": 98,
+            "alloc_bytes": 7424,
+            "frees": 98,
+            "reallocs": 0,
+            "peak_live_bytes": 960,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      },
+      "debug": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/providers.my",
+        "original_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+        "source_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/providers/debug/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--unoptimized",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/providers/debug/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/providers/debug/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "c3343d32e6750124dcf0638ab37b804e0ba968f153b6b80a9b78272954285cb0",
+        "llvm_sha256": "cf029100e2a6117fdd583a4d1a1c2b66b30b9912348b7cebf2bee1bf96520b25",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support7-full/batch-08/providers/debug/counts.json",
+          "counter_sha256": "8937fc8bbf94bc6fd785c80976ca79955bece714a6bd12aefe113556bbc46280",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 60,
+          "memory": {
+            "allocs": 98,
+            "alloc_bytes": 7424,
+            "frees": 98,
+            "reallocs": 0,
+            "peak_live_bytes": 960,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      },
+      "verified": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/providers.my",
+        "original_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+        "source_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/providers/verified/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--verify-facts",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/providers/verified/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/providers/verified/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "0c40b5c20c009565f074f149578d90bd82934b3abc88dd0d7833ef2745159c7f",
+        "llvm_sha256": "c8daf78da903666a2b55ece0478b6915fe64e1250d3893a210dd18329ca86912",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support7-full/batch-08/providers/verified/counts.json",
+          "counter_sha256": "f9aeb0854232693c0b31b1a2bfaa5762eca6dce0e69c74d13e62f1cb82ed4a4d",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 60,
+          "memory": {
+            "allocs": 98,
+            "alloc_bytes": 7424,
+            "frees": 98,
+            "reallocs": 0,
+            "peak_live_bytes": 960,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      },
+      "optimized-debug": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/providers.my",
+        "original_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+        "source_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/providers/optimized-debug/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--optimize-debug",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/providers/optimized-debug/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/providers/optimized-debug/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "7973bf4df66b7f7a5560597acb989e2cbda81c0f2e0cf8f5808345735040b4c1",
+        "llvm_sha256": "e0657b987be3faf8b8d67d43945faa719c5f83074653277c9b68d1e0ee918c0b",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support7-full/batch-08/providers/optimized-debug/counts.json",
+          "counter_sha256": "a38c85c77ac453ee75b1e8e889915b70c9bccd623c8c5f2cdfc284a9a91a3acf",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 60,
+          "memory": {
+            "allocs": 98,
+            "alloc_bytes": 7424,
+            "frees": 98,
+            "reallocs": 0,
+            "peak_live_bytes": 960,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      },
+      "no-facts": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/providers.my",
+        "original_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+        "source_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/providers/no-facts/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--no-facts",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/providers/no-facts/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support7-full/batch-08/providers/no-facts/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/random.my:92:85: warning[W_DERIVED_EFFECTS]: `effects(mutation, managed_allocation)` is exactly what the parameters imply; remove it\n  public func randint(mut generator: Random, low: int, high: int) -> Result[int, str] effects(mutation, managed_allocation):\n                                                                                      ^\n",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "main.my": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stdout_hex": "",
+        "stderr": "",
+        "binary_sha256": "80b02ae77341951b4f2923cd75f1365b3d8d951176e86bf6b93c3d9288027db5",
+        "llvm_sha256": "cd655eddcf012f3dd2c42d6aaf12cfea9f2bb6102c84363b1a67024492988606",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support7-full/batch-08/providers/no-facts/counts.json",
+          "counter_sha256": "d182846390de87bad1565be2de89d43a4136c7d4b0fe28442146d3d5e618aa39",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 60,
+          "memory": {
+            "allocs": 98,
+            "alloc_bytes": 7424,
+            "frees": 98,
+            "reallocs": 0,
+            "peak_live_bytes": 960,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      }
+    }
+  },
+  "compiler_source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "ownership_selection": "experimental-zero-rc",
+  "failures": 0
+}

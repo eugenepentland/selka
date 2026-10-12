@@ -1,0 +1,49 @@
+import memo
+
+func compute(key: memo.Key) -> str[]:
+    match key:
+        case memo.Key.Number(value=value):
+            return ["number-" + str(value)]
+        case memo.Key.Text(value=value):
+            return ["text-" + value]
+        case memo.Key.Data(value=value):
+            return ["data-" + value.hex()]
+
+func exercise() -> Result[bool, memo.Error]:
+    mut cache = try memo.create[str[]](2, compute)
+    mut key = memo.Key.Text(value="dynamic-" + str(7))
+    const first = memo.call(mut cache, key)
+    const again = memo.call(mut cache, key)
+    if first.reused or not again.reused or first.value != ["text-dynamic-7"]:
+        return Ok(False)
+    mut snapshot = cache.copy()
+    memo.clear(mut cache)
+    key = memo.Key.Number(value=11)
+    const number = memo.call(mut cache, key)
+    const data = memo.call(mut cache, memo.Key.Data(value=b"abc"))
+    const evicted = memo.call(mut cache, memo.Key.Number(value=12))
+    const replaced = memo.call(mut cache, key)
+    if number.value != ["number-11"] or data.value != ["data-616263"] or evicted.reused or replaced.reused:
+        return Ok(False)
+    if memo.count(cache) != 2 or memo.capacity(cache) != 2 or memo.count(snapshot) != 1:
+        return Ok(False)
+    memo.clear(mut snapshot)
+    if first.value != ["text-dynamic-7"] or again.value != first.value:
+        return Ok(False)
+    mut disabled = try memo.create[str[]](0, compute)
+    const uncached = memo.call(mut disabled, memo.Key.Number(value=7))
+    const repeated = memo.call(mut disabled, memo.Key.Number(value=7))
+    return Ok(not uncached.reused and not repeated.reused and memo.count(disabled) == 0)
+
+func main() -> int:
+    match memo.create[str[]](-1, compute):
+        case Ok(_):
+            return 1
+        case Err(error):
+            if len(memo.message(error)) == 0:
+                return 2
+    match exercise():
+        case Ok(passed):
+            return if (passed) then (0) else (3)
+        case Err(_):
+            return 4

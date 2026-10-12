@@ -1,0 +1,34 @@
+import time
+import random
+
+
+func code_of(message: str) -> int:
+    if message == "clock capability was denied" or message == "entropy capability was denied":
+        return 42
+    if message == "clock capability is unavailable" or message == "entropy capability is unavailable":
+        return 43
+    return 44
+
+
+func main(clock: Clock, entropy: Entropy) -> int:
+    match time.now(clock):
+        case Ok(instant):
+            if instant.unix_nanoseconds != 0 - 7:
+                return 1
+        case Err(message):
+            return code_of(message)
+    mut first = 0u64
+    match random.from_entropy(entropy):
+        case Ok(generator):
+            first = generator.state[0]
+        case Err(message):
+            return code_of(message)
+    if first != 72623859790382856u64:
+        return 2
+    match random.from_entropy(entropy):
+        case Ok(generator):
+            if generator.state[0] != first:
+                return 3
+        case Err(_):
+            return 9
+    return 0
