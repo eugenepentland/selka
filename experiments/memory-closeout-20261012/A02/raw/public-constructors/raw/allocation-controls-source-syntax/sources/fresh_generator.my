@@ -1,0 +1,8 @@
+func make(mut count: int, i: int) -> str:
+    count += 1
+    return "word-" + str(i)
+func main(out: Stream) -> int:
+    mut count = 0
+    const answer = max(make(mut count, i) for i in range(32))
+    out.print(answer, count)
+    return 0

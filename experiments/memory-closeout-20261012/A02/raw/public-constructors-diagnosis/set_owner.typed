@@ -1,0 +1,94 @@
+fn main #0 params=0 ret=i64 cabi=false host=false
+  local %0 <collection>: set<i64> mut
+  local %1 values: set<i64> mut
+  local %2 <collection>: set<i64> mut
+  local %3 <collection>: i64 mut
+  local %4 <collection>: i64 mut
+  local %5 <collection>: i64 mut
+  local %6 <collection>: set<i64> mut
+  local %7 copied: set<i64> mut
+  local %8 <collection>: set<i64> mut
+  local %9 <collection>: unit mut
+  local %10 <conditional>: i64
+  block
+    initialize %1
+      block_value : set<i64>
+        block
+          initialize %0
+            array : set<i64>
+          discard
+            buffer_operation : unit write owner=%0
+              integer : i64 1
+              unit : unit ...
+          discard
+            buffer_operation : unit write owner=%0
+              integer : i64 2
+              unit : unit ...
+        local : set<i64> %0
+    initialize %7
+      block_value : set<i64>
+        block
+          initialize %2
+            local : set<i64> %1
+          initialize %3
+            integer : i64 0
+          initialize %4
+            cast : i64
+              buffer_operation : i64 length owner=%2
+          initialize %6
+            array : set<i64>
+          loop id=0
+            binary : bool lt
+              local : i64 %3
+              local : i64 %4
+            block
+              block
+                discard
+                  buffer_operation : unit iteration_check owner=%2
+                    local : i64 %4
+              initialize %5
+                buffer_operation : i64 key_at owner=%2
+                  local : i64 %3
+              discard
+                buffer_operation : unit write owner=%6
+                  local : i64 %5
+                  unit : unit ...
+            step:
+              block
+                block
+                  discard
+                    buffer_operation : unit iteration_check owner=%2
+                      local : i64 %4
+                assign %3
+                  binary : i64 add
+                    local : i64 %3
+                    integer : i64 1
+        local : set<i64> %6
+    discard
+      block_value : unit
+        block
+          initialize %9
+            unit : unit ...
+          initialize %8
+            local : set<i64> %7
+        buffer_operation : unit write owner=%8
+          integer : i64 3
+          local : unit %9
+    ret
+      block_value : i64
+        block
+          branch
+            binary : bool logical_and
+              binary : bool eq
+                length : i64
+                  local : set<i64> %1
+                integer : i64 2
+              binary : bool eq
+                length : i64
+                  local : set<i64> %7
+                integer : i64 3
+            assign %10
+              integer : i64 0
+            assign %10
+              integer : i64 1
+        local : i64 %10

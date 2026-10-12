@@ -1,0 +1,5 @@
+fixture zero optimized_debug True
+sets zero optimized_debug True
+generator_arguments zero optimized_debug True
+build-slot: FIFO ticket 935, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 935 after 5s

@@ -1,0 +1,785 @@
+{
+  "base": "c3909f2c0fbb97b67acb94714567abe4be33a1ec",
+  "compiler": {
+    "path": ".zig-cache/o/8054a4977f620d8fa5175f171ccad590/mylang",
+    "sha256": "bd1df6820bf43d77432235a27a64a64b95b8afdd28f07ec89b9a38b133f8243e",
+    "options": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/42bf31c1a9ee6d928a6916c8151312ca/options.zig"
+  },
+  "registered_pass": true,
+  "component_boundary": "Support6 independent owned pin supplies components; final default/retirement package qualification is separate",
+  "registered_source_sha256": {
+    "src/sema_collections.zig": "15241695f34361189b3b09a713746cccf3d4eaa604a8e715611629abde44cdbc",
+    "src/sema_gathers.zig": "5170d745ad5d887e9c707117a2444c79e6f1303a5423efe09300536a2e42724e",
+    "src/core/single_owner.zig": "c33a77f3cc11d761b841db8b8f342b6228940a73bd5436346db81be2a94d1ec4",
+    "src/core/a02_public_constructors_test.zig": "2663f432ceace68793874bae2c00d1cd1d6bfb2956f649d8375d30da83a868e4",
+    "src/core/a02_public_constructors_fixture.my": "e2115f3f5fe12ca840b25a889b39604a2914cc756f9d5de19e412fb271483c33",
+    "src/core/root_test.zig": "f2f11aad93822b9b9ccbd48c6a464c4be75a42bb26739eabd313d052bd5dfa51"
+  },
+  "native": {
+    "native-ordinary-debug": {
+      "qualified": true,
+      "cases": {
+        "fixture": {
+          "pass": true,
+          "source_sha256": "e2115f3f5fe12ca840b25a889b39604a2914cc756f9d5de19e412fb271483c33",
+          "expected": "3 2 2 pear-1 value-4 value-5\n",
+          "stdout": "3 2 2 pear-1 value-4 value-5\n",
+          "rc_events": 379,
+          "exit_live_bytes": 0,
+          "binary_sha256": "bbbceec76a17c1dece5e417e9d87bf025b5fd956248a82287a2f955479a3fd78",
+          "llvm_sha256": "96697b9c4fa9106669e2d5f806a154749c58577ef298a9a50dff6e02239b87d6",
+          "symbols_clean": false,
+          "llvm_clean": false
+        },
+        "sets": {
+          "pass": true,
+          "source_sha256": "439bd1ca40b62e1def7e45c25ef3982da3c271af4b84d2fcd4a7a37302ed65b8",
+          "expected": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "stdout": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "rc_events": 113,
+          "exit_live_bytes": 0,
+          "binary_sha256": "64f9eb6474eaa909fc80c81edc7141163bf44472985c5e6d1161f92d8b04cf78",
+          "llvm_sha256": "fef1c95c05ba177b54ccd4a08f75c07ba3fa3d0252796194594563c26d0caada",
+          "symbols_clean": false,
+          "llvm_clean": false
+        },
+        "generator_arguments": {
+          "pass": true,
+          "source_sha256": "f6af46cfc5edc9e9feaf0c1e2723f4cb1ce202c9a21c4bfe7df7dc991bd927cd",
+          "expected": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "stdout": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "rc_events": 34,
+          "exit_live_bytes": 0,
+          "binary_sha256": "f0e606fb5f8bd26567642f34d4bc817a734d1b16a94b78d9d67037679072385b",
+          "llvm_sha256": "81a7fd61e1b42ef49593a08e89d8082b4b9607bb2400c481f07c150eb5fc6117",
+          "symbols_clean": false,
+          "llvm_clean": false
+        }
+      },
+      "add_borrow_refused": null,
+      "generator_invalidation_refused": null
+    },
+    "native-ordinary-release": {
+      "qualified": true,
+      "cases": {
+        "fixture": {
+          "pass": true,
+          "source_sha256": "e2115f3f5fe12ca840b25a889b39604a2914cc756f9d5de19e412fb271483c33",
+          "expected": "3 2 2 pear-1 value-4 value-5\n",
+          "stdout": "3 2 2 pear-1 value-4 value-5\n",
+          "rc_events": 379,
+          "exit_live_bytes": 0,
+          "binary_sha256": "80ceca7a26fdced925fc2959452bd4e7b425a5456ed084cffb67fc3085587668",
+          "llvm_sha256": "12110f868aa74d45041d4ef5a44da2976bbe727293d9384b68330dfe08acda8e",
+          "symbols_clean": false,
+          "llvm_clean": false
+        },
+        "sets": {
+          "pass": true,
+          "source_sha256": "439bd1ca40b62e1def7e45c25ef3982da3c271af4b84d2fcd4a7a37302ed65b8",
+          "expected": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "stdout": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "rc_events": 113,
+          "exit_live_bytes": 0,
+          "binary_sha256": "dbd514b29a786d2995242c76aff64f30256c49f784fd76008eba9ad1d9dc5692",
+          "llvm_sha256": "8ce38ab08269fc5e35c2330411548847bf260998ccb25b6dc07a0a52a2fc8d15",
+          "symbols_clean": false,
+          "llvm_clean": false
+        },
+        "generator_arguments": {
+          "pass": true,
+          "source_sha256": "f6af46cfc5edc9e9feaf0c1e2723f4cb1ce202c9a21c4bfe7df7dc991bd927cd",
+          "expected": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "stdout": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "rc_events": 34,
+          "exit_live_bytes": 0,
+          "binary_sha256": "2bfdda57553cc7b3652b2b0d56f8891192404c5f2bb029dc842fcaa5501477ae",
+          "llvm_sha256": "0cdf160a901f348faa9993b34de81c4c11c859279e08df31da5245e70659cfdb",
+          "symbols_clean": false,
+          "llvm_clean": false
+        }
+      },
+      "add_borrow_refused": null,
+      "generator_invalidation_refused": null
+    },
+    "native-zero-debug": {
+      "qualified": true,
+      "cases": {
+        "fixture": {
+          "pass": true,
+          "source_sha256": "e2115f3f5fe12ca840b25a889b39604a2914cc756f9d5de19e412fb271483c33",
+          "expected": "3 2 2 pear-1 value-4 value-5\n",
+          "stdout": "3 2 2 pear-1 value-4 value-5\n",
+          "rc_events": 0,
+          "exit_live_bytes": 0,
+          "binary_sha256": "ab7b8a27647d2728f489e6e6134c09b8cb2ce2470f0aa032a453eba02626172b",
+          "llvm_sha256": "c1a873d3c62856711c71d0df9439ac7f28d22a4ddff16b2145ceea96e05f9299",
+          "symbols_clean": true,
+          "llvm_clean": true
+        },
+        "sets": {
+          "pass": true,
+          "source_sha256": "439bd1ca40b62e1def7e45c25ef3982da3c271af4b84d2fcd4a7a37302ed65b8",
+          "expected": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "stdout": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "rc_events": 0,
+          "exit_live_bytes": 0,
+          "binary_sha256": "ba6f3b8ee73398cafc666c94b963fec79c48c8c4226d4fbfe2f407692a2a55a5",
+          "llvm_sha256": "f08be93ead90bca6dbbc1c648f5dc8c1cf23c42da61d5dc56e5dcbded866c30b",
+          "symbols_clean": true,
+          "llvm_clean": true
+        },
+        "generator_arguments": {
+          "pass": true,
+          "source_sha256": "f6af46cfc5edc9e9feaf0c1e2723f4cb1ce202c9a21c4bfe7df7dc991bd927cd",
+          "expected": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "stdout": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "rc_events": 0,
+          "exit_live_bytes": 0,
+          "binary_sha256": "6010f0d0e250caf20bb5237c0767db6990561e33c0bfe7d9363489d684f9cb90",
+          "llvm_sha256": "4fb8a8fa839c3bb40efafef36490c7cfc02bee54203c3571c03a278dac1966b1",
+          "symbols_clean": true,
+          "llvm_clean": true
+        }
+      },
+      "add_borrow_refused": true,
+      "generator_invalidation_refused": true
+    },
+    "native-zero-no_facts": {
+      "qualified": true,
+      "cases": {
+        "fixture": {
+          "pass": true,
+          "source_sha256": "e2115f3f5fe12ca840b25a889b39604a2914cc756f9d5de19e412fb271483c33",
+          "expected": "3 2 2 pear-1 value-4 value-5\n",
+          "stdout": "3 2 2 pear-1 value-4 value-5\n",
+          "rc_events": 0,
+          "exit_live_bytes": 0,
+          "binary_sha256": "8a850199830b0d6840cf957ab0c68ff8828526de13995997d641f2633ff31797",
+          "llvm_sha256": "c1a873d3c62856711c71d0df9439ac7f28d22a4ddff16b2145ceea96e05f9299",
+          "symbols_clean": true,
+          "llvm_clean": true
+        },
+        "sets": {
+          "pass": true,
+          "source_sha256": "439bd1ca40b62e1def7e45c25ef3982da3c271af4b84d2fcd4a7a37302ed65b8",
+          "expected": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "stdout": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "rc_events": 0,
+          "exit_live_bytes": 0,
+          "binary_sha256": "cb475c7da10df3d2180c362550c11ab80afc3fc169e52d605efa24702b5712e7",
+          "llvm_sha256": "816c557d5677cbbf8976131f64b0b833400f745ec8f02adc793136d3a7e3c4cb",
+          "symbols_clean": true,
+          "llvm_clean": true
+        },
+        "generator_arguments": {
+          "pass": true,
+          "source_sha256": "f6af46cfc5edc9e9feaf0c1e2723f4cb1ce202c9a21c4bfe7df7dc991bd927cd",
+          "expected": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "stdout": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "rc_events": 0,
+          "exit_live_bytes": 0,
+          "binary_sha256": "2d83cb18d9e04f27dc2d0ad1f25b4d07536c648aa43c474cadef9fba4fdc63cf",
+          "llvm_sha256": "1b0fd1fef2469cc85e379edbb6a71efa87aae74629bbf8d4dac9b591ad032cae",
+          "symbols_clean": true,
+          "llvm_clean": true
+        }
+      },
+      "add_borrow_refused": true,
+      "generator_invalidation_refused": true
+    },
+    "native-zero-optimized_debug": {
+      "qualified": true,
+      "cases": {
+        "fixture": {
+          "pass": true,
+          "source_sha256": "e2115f3f5fe12ca840b25a889b39604a2914cc756f9d5de19e412fb271483c33",
+          "expected": "3 2 2 pear-1 value-4 value-5\n",
+          "stdout": "3 2 2 pear-1 value-4 value-5\n",
+          "rc_events": 0,
+          "exit_live_bytes": 0,
+          "binary_sha256": "532346be8721f221ed88fdb4d990f7a10589795fa04ce5ec5b0024dc59a51fad",
+          "llvm_sha256": "090a3e10c3f4e2014633db269aa33332f8a62e03e77fdd3a6404b2d82068ddae",
+          "symbols_clean": true,
+          "llvm_clean": true
+        },
+        "sets": {
+          "pass": true,
+          "source_sha256": "439bd1ca40b62e1def7e45c25ef3982da3c271af4b84d2fcd4a7a37302ed65b8",
+          "expected": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "stdout": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "rc_events": 0,
+          "exit_live_bytes": 0,
+          "binary_sha256": "4143e016400a950be94c086c010e4f40bf76e0117c52550e571359182dfb242c",
+          "llvm_sha256": "b99636ff37eb0149e5de042b62065878b27035b880fe9a32cf01c416e7c21687",
+          "symbols_clean": true,
+          "llvm_clean": true
+        },
+        "generator_arguments": {
+          "pass": true,
+          "source_sha256": "f6af46cfc5edc9e9feaf0c1e2723f4cb1ce202c9a21c4bfe7df7dc991bd927cd",
+          "expected": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "stdout": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "rc_events": 0,
+          "exit_live_bytes": 0,
+          "binary_sha256": "e7921d79355ee6143a91cb518290c557d730460e81034ed48b03843b7f1350ad",
+          "llvm_sha256": "68be381ea647c0ab6eb50757e89583c3d1647034183d46edf8b129ad02f16f29",
+          "symbols_clean": true,
+          "llvm_clean": true
+        }
+      },
+      "add_borrow_refused": true,
+      "generator_invalidation_refused": true
+    },
+    "native-zero-release": {
+      "qualified": true,
+      "cases": {
+        "fixture": {
+          "pass": true,
+          "source_sha256": "e2115f3f5fe12ca840b25a889b39604a2914cc756f9d5de19e412fb271483c33",
+          "expected": "3 2 2 pear-1 value-4 value-5\n",
+          "stdout": "3 2 2 pear-1 value-4 value-5\n",
+          "rc_events": 0,
+          "exit_live_bytes": 0,
+          "binary_sha256": "a0b6883b958260412e917e042443d0c43c9392df8e639b172916d4a293802aa3",
+          "llvm_sha256": "090a3e10c3f4e2014633db269aa33332f8a62e03e77fdd3a6404b2d82068ddae",
+          "symbols_clean": true,
+          "llvm_clean": true
+        },
+        "sets": {
+          "pass": true,
+          "source_sha256": "439bd1ca40b62e1def7e45c25ef3982da3c271af4b84d2fcd4a7a37302ed65b8",
+          "expected": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "stdout": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "rc_events": 0,
+          "exit_live_bytes": 0,
+          "binary_sha256": "c2bcbae2bcdabfb26aee200d0d64d71acf4bb4b2dfb0bffc5046d3e99036b87e",
+          "llvm_sha256": "b99636ff37eb0149e5de042b62065878b27035b880fe9a32cf01c416e7c21687",
+          "symbols_clean": true,
+          "llvm_clean": true
+        },
+        "generator_arguments": {
+          "pass": true,
+          "source_sha256": "f6af46cfc5edc9e9feaf0c1e2723f4cb1ce202c9a21c4bfe7df7dc991bd927cd",
+          "expected": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "stdout": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "rc_events": 0,
+          "exit_live_bytes": 0,
+          "binary_sha256": "3d72ae3bc473bb86efb59efb82c7a165eaa579a5f9a26bc2ede833777db945b4",
+          "llvm_sha256": "68be381ea647c0ab6eb50757e89583c3d1647034183d46edf8b129ad02f16f29",
+          "symbols_clean": true,
+          "llvm_clean": true
+        }
+      },
+      "add_borrow_refused": true,
+      "generator_invalidation_refused": true
+    },
+    "native-zero-verify": {
+      "qualified": true,
+      "cases": {
+        "fixture": {
+          "pass": true,
+          "source_sha256": "e2115f3f5fe12ca840b25a889b39604a2914cc756f9d5de19e412fb271483c33",
+          "expected": "3 2 2 pear-1 value-4 value-5\n",
+          "stdout": "3 2 2 pear-1 value-4 value-5\n",
+          "rc_events": 0,
+          "exit_live_bytes": 0,
+          "binary_sha256": "a8120a7a2a99465d21deac779488f05027adc42da6b0762749789a65cd0e86a2",
+          "llvm_sha256": "825a38ce7aa042f39abcaae811fe84fd90bd967a00a55c49ec5537f27c38a7b8",
+          "symbols_clean": true,
+          "llvm_clean": true
+        },
+        "sets": {
+          "pass": true,
+          "source_sha256": "439bd1ca40b62e1def7e45c25ef3982da3c271af4b84d2fcd4a7a37302ed65b8",
+          "expected": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "stdout": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "rc_events": 0,
+          "exit_live_bytes": 0,
+          "binary_sha256": "e5234d02718d2f2793e55e5fa737f13f6df11b39e7b648ccb975060a831285ba",
+          "llvm_sha256": "dde3db50866b654775f7926460bf230ea77e3ffe32abd84c204b1cc576120a4f",
+          "symbols_clean": true,
+          "llvm_clean": true
+        },
+        "generator_arguments": {
+          "pass": true,
+          "source_sha256": "f6af46cfc5edc9e9feaf0c1e2723f4cb1ce202c9a21c4bfe7df7dc991bd927cd",
+          "expected": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "stdout": "True\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\nTrue\n",
+          "rc_events": 0,
+          "exit_live_bytes": 0,
+          "binary_sha256": "eed5132b16b2adebadd201c2e85b26c0754a2ad465ae69b296af006a031a3542",
+          "llvm_sha256": "5534e6faa816950a25d75a1010c9d7db022e491daab7633d1f282a0d3a3bbd86",
+          "symbols_clean": true,
+          "llvm_clean": true
+        }
+      },
+      "add_borrow_refused": true,
+      "generator_invalidation_refused": true
+    }
+  },
+  "allocations": {
+    "allocation-controls": {
+      "compiler": {
+        "path": ".zig-cache/o/8054a4977f620d8fa5175f171ccad590/mylang",
+        "sha256": "bd1df6820bf43d77432235a27a64a64b95b8afdd28f07ec89b9a38b133f8243e",
+        "options": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/42bf31c1a9ee6d928a6916c8151312ca/options.zig"
+      },
+      "pass": true,
+      "cases": {
+        "fresh_generator": {
+          "pass": true,
+          "source_sha256": "2f9812eba1916685f6c787848e703299bbc9c5a6e7d3abcd5328ed5044f99ac3",
+          "totals": {
+            "calls": 33,
+            "allocs": 96,
+            "alloc_bytes": 6144,
+            "frees": 96,
+            "free_bytes": 6144,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 32,
+            "text_copy_bytes": 160,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 32,
+            "text_grow_bytes": 160,
+            "text_appends": 32,
+            "text_append_bytes": 54,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 256,
+            "live_bytes_at_exit": 0
+          },
+          "rc_events": 0
+        },
+        "fresh_manual": {
+          "pass": true,
+          "source_sha256": "ab2a2a1dcfd7c9579f744c558fe597a9c44f33f1e4add1f0eb198a684a259f5b",
+          "totals": {
+            "calls": 33,
+            "allocs": 96,
+            "alloc_bytes": 6144,
+            "frees": 96,
+            "free_bytes": 6144,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 32,
+            "text_copy_bytes": 160,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 32,
+            "text_grow_bytes": 160,
+            "text_appends": 32,
+            "text_append_bytes": 54,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 256,
+            "live_bytes_at_exit": 0
+          },
+          "rc_events": 0
+        },
+        "copied_generator": {
+          "pass": true,
+          "source_sha256": "2f90f0310a52b739b95232eaa80f597289935330a0ccdc1b546ec2145c3f13a9",
+          "totals": {
+            "calls": 1,
+            "allocs": 133,
+            "alloc_bytes": 8800,
+            "frees": 133,
+            "free_bytes": 8800,
+            "list_grows": 3,
+            "list_grow_bytes": 192,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 64,
+            "text_copy_bytes": 374,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 32,
+            "text_grow_bytes": 160,
+            "text_appends": 32,
+            "text_append_bytes": 54,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 2464,
+            "live_bytes_at_exit": 0
+          },
+          "rc_events": 0
+        },
+        "copied_manual": {
+          "pass": true,
+          "source_sha256": "88bac1fb8b4776047873981d822a15e8a9b4ff3c61ac778b1f8cd6e81d1a2ce9",
+          "totals": {
+            "calls": 1,
+            "allocs": 133,
+            "alloc_bytes": 8800,
+            "frees": 133,
+            "free_bytes": 8800,
+            "list_grows": 3,
+            "list_grow_bytes": 192,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 64,
+            "text_copy_bytes": 374,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 32,
+            "text_grow_bytes": 160,
+            "text_appends": 32,
+            "text_append_bytes": 54,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 2464,
+            "live_bytes_at_exit": 0
+          },
+          "rc_events": 0
+        },
+        "borrowed_generator": {
+          "pass": true,
+          "source_sha256": "0945100c5c0a210e93ee589b2dbbdad1e14bfd41c38d21edb08597abd9a55156",
+          "totals": {
+            "calls": 1,
+            "allocs": 111,
+            "alloc_bytes": 7392,
+            "frees": 111,
+            "free_bytes": 7392,
+            "list_grows": 3,
+            "list_grow_bytes": 192,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 42,
+            "text_copy_bytes": 220,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 32,
+            "text_grow_bytes": 160,
+            "text_appends": 32,
+            "text_append_bytes": 54,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 2464,
+            "live_bytes_at_exit": 0
+          },
+          "rc_events": 0
+        },
+        "borrowed_manual": {
+          "pass": true,
+          "source_sha256": "66a4d4ec874f5a4cda3f00e57d21ccf9c843273d2f33cef9718a9e18925fc693",
+          "totals": {
+            "calls": 1,
+            "allocs": 111,
+            "alloc_bytes": 7392,
+            "frees": 111,
+            "free_bytes": 7392,
+            "list_grows": 3,
+            "list_grow_bytes": 192,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 42,
+            "text_copy_bytes": 220,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 32,
+            "text_grow_bytes": 160,
+            "text_appends": 32,
+            "text_append_bytes": 54,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 2464,
+            "live_bytes_at_exit": 0
+          },
+          "rc_events": 0
+        },
+        "set_characters": {
+          "pass": true,
+          "source_sha256": "f07789deef5dc06d3831142a283d697e094bed9e00247a25f65641678a0f096e",
+          "totals": {
+            "calls": 1,
+            "allocs": 1,
+            "alloc_bytes": 96,
+            "frees": 1,
+            "free_bytes": 96,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 96,
+            "live_bytes_at_exit": 0
+          },
+          "rc_events": 0
+        }
+      }
+    },
+    "allocation-support6": {
+      "compiler": {
+        "path": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "source": "5167c588be79dd43d21d5013c36db15110bf239b",
+        "sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4"
+      },
+      "pass": true,
+      "cases": {
+        "set_characters": {
+          "pass": true,
+          "source_sha256": "f07789deef5dc06d3831142a283d697e094bed9e00247a25f65641678a0f096e",
+          "totals": {
+            "calls": 1,
+            "allocs": 1,
+            "alloc_bytes": 96,
+            "frees": 1,
+            "free_bytes": 96,
+            "list_grows": 0,
+            "list_grow_bytes": 0,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 0,
+            "list_copy_bytes": 0,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 96,
+            "live_bytes_at_exit": 0
+          },
+          "rc_events": 0
+        }
+      }
+    }
+  },
+  "raw": {
+    "raw/native-ordinary-debug.json.gz": {
+      "sha256": "cb22b6f51b5f4aa70fd185ce21076ad5cf45e162af9538aa425b4c1b2bea996c",
+      "uncompressed_sha256": "9ba23b4a8056906419897ec82a4eeda3281938231f19b10665a1faea9969091b"
+    },
+    "raw/native-ordinary-release.json.gz": {
+      "sha256": "9fcf20e167ed6994961794c6c943397c33d2faedefb192da6b0371567f3ce2e2",
+      "uncompressed_sha256": "ac02b3b1cbd47a1d26e4b5e7910ed7b71fe854f5c9c9f283b0e158af8b9088ae"
+    },
+    "raw/native-zero-debug.json.gz": {
+      "sha256": "7069d709d74678062a4101c989cd1537a0358325c2d96ca3295939dc178ba3ec",
+      "uncompressed_sha256": "b974dd7b9ae639c34073b6795bd6dfcc01bb5c0c9ae7dbc93b2c44e42dd3bddb"
+    },
+    "raw/native-zero-no_facts.json.gz": {
+      "sha256": "e78fa637a8bccf36203c2a520b6c3bd346a9920c9577c49459cbd1b8e312e549",
+      "uncompressed_sha256": "ec9faa4aafe28191dc6e7ad34bd4ccb1d32df1494003a72b1accbecee4e435b4"
+    },
+    "raw/native-zero-optimized_debug.json.gz": {
+      "sha256": "d17a008ef316d860e6535e90f2a1af2d46089485c2c87597ad284bf10e2b36a8",
+      "uncompressed_sha256": "7076bc37ab8f5c923201dccfc8f479a580506cd985f7094da46343b1891aa272"
+    },
+    "raw/native-zero-release.json.gz": {
+      "sha256": "e0441f6a128ef7f44e4e4f88edd2ec812201f9ed431a8446ef5b763461227afc",
+      "uncompressed_sha256": "163ac7512fbdbb87603c38f2abd3e91c2faa454c9a900a3cae044d226e1e2d48"
+    },
+    "raw/native-zero-verify.json.gz": {
+      "sha256": "87f4c144260321e29b87ea85796c37c94fa324b38073e7a695ad639257c2193d",
+      "uncompressed_sha256": "2c1afccb37b9f6c941ebf8d4af5067280128294165983c8fe766e064e14abf7f"
+    },
+    "raw/allocation-controls.json.gz": {
+      "sha256": "3e8a836e4785665c305175a1f4c90cde35f7b721ed8c181380dbec755d922424",
+      "uncompressed_sha256": "060cdce17c3267f331bab210e76ab5f463fcc103bcd85b6e1690d55e3d689b60"
+    },
+    "raw/allocation-support6.json.gz": {
+      "sha256": "77ce4fb375d9bd60cdf1b1a6cb74c6374016699d03d86a03cb6038d3db8d25c4",
+      "uncompressed_sha256": "63ab26b75afee38037efb3acc67809f27a00f2d0bd244a13fb8866473557a492"
+    },
+    "raw/fixture-release.ll.gz": {
+      "sha256": "0b0f6c5d65a203b5244777288455dbba7b3c47cf85b3cc9047aa8764d809c933",
+      "uncompressed_sha256": "090a3e10c3f4e2014633db269aa33332f8a62e03e77fdd3a6404b2d82068ddae"
+    },
+    "raw/fixture-debug.ll.gz": {
+      "sha256": "feec66cf48a5991408be971dec99b1693f67a9683c263b0def74547d2654f0aa",
+      "uncompressed_sha256": "c1a873d3c62856711c71d0df9439ac7f28d22a4ddff16b2145ceea96e05f9299"
+    },
+    "raw/fixture-verify.ll.gz": {
+      "sha256": "15b1f57268b4b939a04ef23ce452656ebd5dafee85b104eeb2ebb62245e312ca",
+      "uncompressed_sha256": "825a38ce7aa042f39abcaae811fe84fd90bd967a00a55c49ec5537f27c38a7b8"
+    },
+    "raw/fixture-optimized_debug.ll.gz": {
+      "sha256": "0b0f6c5d65a203b5244777288455dbba7b3c47cf85b3cc9047aa8764d809c933",
+      "uncompressed_sha256": "090a3e10c3f4e2014633db269aa33332f8a62e03e77fdd3a6404b2d82068ddae"
+    },
+    "raw/fixture-no_facts.ll.gz": {
+      "sha256": "feec66cf48a5991408be971dec99b1693f67a9683c263b0def74547d2654f0aa",
+      "uncompressed_sha256": "c1a873d3c62856711c71d0df9439ac7f28d22a4ddff16b2145ceea96e05f9299"
+    },
+    "raw/fixture-release.nm.gz": {
+      "sha256": "ed7bef38445fa241162b4bba61ac001dff40ebef41a0d893172243bbbd2fb8ab",
+      "uncompressed_sha256": "06e2ee4fbe11a526fdf090ebec32b2ff3ed46d2244e2379dd1b9ce0bd8472161"
+    }
+  },
+  "source_sha256": {
+    "add_borrow_negative.my": "11199957ffd71c7a8879532e4fd0d79b09d6f915dec6a7f6093a1cbeebf44e4d",
+    "borrowed_generator.my": "0945100c5c0a210e93ee589b2dbbdad1e14bfd41c38d21edb08597abd9a55156",
+    "borrowed_manual.my": "66a4d4ec874f5a4cda3f00e57d21ccf9c843273d2f33cef9718a9e18925fc693",
+    "copied_generator.my": "2f90f0310a52b739b95232eaa80f597289935330a0ccdc1b546ec2145c3f13a9",
+    "copied_manual.my": "88bac1fb8b4776047873981d822a15e8a9b4ff3c61ac778b1f8cd6e81d1a2ce9",
+    "fixture.my": "e2115f3f5fe12ca840b25a889b39604a2914cc756f9d5de19e412fb271483c33",
+    "fresh_generator.my": "2f9812eba1916685f6c787848e703299bbc9c5a6e7d3abcd5328ed5044f99ac3",
+    "fresh_manual.my": "ab2a2a1dcfd7c9579f744c558fe597a9c44f33f1e4add1f0eb198a684a259f5b",
+    "generator_arguments.my": "f6af46cfc5edc9e9feaf0c1e2723f4cb1ce202c9a21c4bfe7df7dc991bd927cd",
+    "generator_invalidation.my": "a33ef4c28a2f0c561de0e5bab0abf3ea788465d1e47da951d86462e7c5aefbd8",
+    "set_characters.my": "f07789deef5dc06d3831142a283d697e094bed9e00247a25f65641678a0f096e",
+    "sets.my": "439bd1ca40b62e1def7e45c25ef3982da3c271af4b84d2fcd4a7a37302ed65b8"
+  },
+  "guardian_test_hygiene": {
+    "first_gate": "1/88 failed, duplicate release_flag literal in test helper",
+    "fix": "use existing e2e_test.optimize_flag",
+    "focused_rerun": "1/1 passed,5native+10traps",
+    "compiler_hash_unchanged": true
+  }
+}

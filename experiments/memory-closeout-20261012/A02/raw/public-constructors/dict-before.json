@@ -1,0 +1,15 @@
+{
+  "compiler": {
+    "path": ".zig-cache/o/c527c79f6ae01d250395984464d91d88/mylang",
+    "sha256": "6ff9ae85c4dbc779a7731dd89dd0f35511bfe764abf8fcad2dca0635998ba9ef",
+    "options": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/f456b43c710c6295fb0a9d4011ddd353/options.zig"
+  },
+  "argv": [
+    ".zig-cache/o/c527c79f6ae01d250395984464d91d88/mylang",
+    "dump-typed",
+    ".tmp/memory-closeout/A02/public-constructors-validation/sources/generator_arguments.my",
+    "test_sorted_list_set_and_dict_collect_a_generator"
+  ],
+  "status": 0,
+  "stderr": ""
+}

@@ -227,6 +227,7 @@ fn dictionaryStep(comptime Checker: type, self: *Checker, b: collections.Builder
     var statements: std.ArrayList(typed.StatementId) = .empty;
     var key: typed.NodeId = undefined;
     var value: typed.NodeId = undefined;
+    var staged: ?[2]typed.LocalId = null;
     if (step.key) |key_syntax| {
         if (expected) |ty| {
             try self.hint(key_syntax, self.catalog.records[ty.recordIndex()].collection.key.?);
@@ -241,9 +242,15 @@ fn dictionaryStep(comptime Checker: type, self: *Checker, b: collections.Builder
         const tuple = record_layouts.tupleRecord(self.catalog.records, pair_type);
         if (tuple == null or tuple.?.fields.len != 2) return self.sink.failRelated(fold_code, b.span, pairs_message, .{ .span = b.span, .message = pairs_alternative, .role = .alternative });
         const slot = try b.local(pair_type);
-        try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = slot, .value = pair } }));
-        key = try b.node(tuple.?.fields[0].ty, .{ .field = .{ .base = try b.read(slot), .index = 0 } });
-        value = try b.node(tuple.?.fields[1].ty, .{ .field = .{ .base = try b.read(slot), .index = 1 } });
+        const owned_pair = if (freshOwned(self.nodes.items, pair, true)) pair else copied: {
+            const copy = try b.access(pair, .copy, &.{}, false);
+            break :copied try b.node(copy.ty, copy.data);
+        };
+        staged = .{ try b.local(tuple.?.fields[0].ty), try b.local(tuple.?.fields[1].ty) };
+        const fields = try self.allocator.dupe(?typed.LocalId, &.{ staged.?[0], staged.?[1] });
+        try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = slot, .value = owned_pair, .unpack = fields } }));
+        key = try b.read(staged.?[0]);
+        value = try b.read(staged.?[1]);
     }
     const key_type = self.nodes.items[@backingInt(key)].ty;
     const value_type = self.nodes.items[@backingInt(value)].ty;
@@ -258,10 +265,12 @@ fn dictionaryStep(comptime Checker: type, self: *Checker, b: collections.Builder
     if (!typed.storable(value_type, self.catalog.records) or typed.moveOnly(value_type, self.catalog.records) or self.requiresHandling(value_type))
         return self.sink.fail("E_DICT_TYPE", b.span, "dictionary values require copyable storable values without pending results");
     const result = try accumulator(Checker, self, b, dict_type);
-    const key_slot = try b.local(key_type);
-    const value_slot = try b.local(value_type);
-    try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = key_slot, .value = key } }));
-    try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = value_slot, .value = value } }));
+    const key_slot = if (staged) |slots| slots[0] else try b.local(key_type);
+    const value_slot = if (staged) |slots| slots[1] else try b.local(value_type);
+    if (staged == null) {
+        try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = key_slot, .value = key } }));
+        try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = value_slot, .value = value } }));
+    }
     try statements.append(self.allocator, try b.stmt(.{ .discard = try b.operation(result, .write, &.{ try b.read(key_slot), try b.read(value_slot) }) }));
     return .{ .block = try statements.toOwnedSlice(self.allocator) };
 }
@@ -298,6 +307,7 @@ fn foldStep(comptime Checker: type, self: *Checker, b: collections.Builder(Check
         .min, .max => {
             const family = foldFamily(Checker, self, ty) orelse return self.sink.fail(fold_code, value_span, "min and max require int, float or str values");
             const result = try accumulator(Checker, self, b, ty);
+            if (family == .text) self.locals.items[@backingInt(result)].name = "<fold-accumulator>";
             const seen = self.gathers.stack.items[self.gathers.stack.items.len - 1].seen orelse seen: {
                 const slot = try b.local(.bool);
                 self.gathers.stack.items[self.gathers.stack.items.len - 1].seen = slot;
@@ -309,7 +319,10 @@ fn foldStep(comptime Checker: type, self: *Checker, b: collections.Builder(Check
                 try less(Checker, self, b, family, try b.read(candidate), try b.read(result))
             else
                 try less(Checker, self, b, family, try b.read(result), try b.read(candidate));
-            const take = try b.stmt(.{ .assign = .{ .slot = result, .value = try b.read(candidate) } });
+            // The result owns its selected text. Fresh yields transfer; borrowed
+            // or unknown yields copy only when they replace the accumulator.
+            const selected = if (family == .text and !freshOwned(self.nodes.items, value, false)) try b.operation(candidate, .copy, &.{}) else try b.read(candidate);
+            const take = try b.stmt(.{ .assign = .{ .slot = result, .value = selected } });
             const first = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
                 take,
                 try b.stmt(.{ .assign = .{ .slot = seen, .value = try b.node(.bool, .{ .boolean = true }) } }),
@@ -321,6 +334,21 @@ fn foldStep(comptime Checker: type, self: *Checker, b: collections.Builder(Check
         },
         else => return error.InternalError,
     }
+}
+
+/// Only syntactically fresh text or pairs can transfer from a generator's candidate.
+/// Hidden locals and projections remain borrowed or unknown at this boundary.
+fn freshOwned(nodes: []const typed.Node, input: typed.NodeId, comptime pair: bool) bool {
+    var value = input;
+    for (0..64) |_| switch (nodes[@backingInt(value)].data) {
+        .array => return !pair,
+        .record => return pair,
+        .call, .invoke => return true,
+        .buffer_operation => |operation| return operation.kind == .copy,
+        .block_value => |block| value = block.value,
+        else => return false,
+    };
+    return false;
 }
 
 /// `left < right` for one fold family.

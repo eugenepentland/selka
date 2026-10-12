@@ -398,7 +398,13 @@ fn checkSetFromIterable(comptime Checker: type, self: *Checker, span: source.Spa
     const value_slot = try b.local(element);
     const output = try b.local(try set_lower.setType(&self.catalog, element, span));
     const sets: set_lower.Builder(Checker) = .{ .b = b };
-    const body = try sets.add(output, try b.read(value_slot));
+    const child = try b.read(value_slot);
+    // Text iteration already creates each character; collection children borrow.
+    const independent = if (element.isAggregate() and (fixed != null or schema.collection.kind != .string)) copied: {
+        const copy = try b.access(child, .copy, &.{}, false);
+        break :copied try b.node(copy.ty, copy.data);
+    } else child;
+    const body = try sets.add(output, independent);
     const slots: ComprehensionSlots = .{ .owner = owner, .index = index, .limit = limit, .slot = value_slot };
     return comprehensionLoop(Checker, self, b, slots, body, .{
         .iterable = .{ .value = iterable },

@@ -1,0 +1,6 @@
+func main() -> int:
+    mut words = ["alpha"]
+    mut keys: set[str] = set()
+    for word in words:
+        keys.add(word)
+    return len(keys)

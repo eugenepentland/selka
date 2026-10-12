@@ -1,0 +1,5 @@
+fixture ordinary debug True
+sets ordinary debug True
+generator_arguments ordinary debug True
+build-slot: FIFO ticket 938, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 938 after 5s

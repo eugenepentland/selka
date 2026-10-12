@@ -1,0 +1,4 @@
+fixture zero release True
+sets zero release True
+generator_arguments zero release True
+build-slot: build slot 1, FIFO ticket 932 after 0s

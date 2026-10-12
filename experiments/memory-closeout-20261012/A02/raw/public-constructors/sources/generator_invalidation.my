@@ -1,0 +1,7 @@
+func invalidate(mut words: str[]) -> str:
+    words.clear()
+    return "gone"
+func main() -> int:
+    mut words = ["alpha"]
+    _ = max(invalidate(mut words) for word in words)
+    return 0

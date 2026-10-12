@@ -1,0 +1,115 @@
+fn main #0 params=0 ret=i64 cabi=false host=false
+  local %0 <collection>: List<str> mut
+  local %1 words: List<str> mut
+  local %2 <collection>: List<str> mut
+  local %3 <collection>: i64 mut
+  local %4 <collection>: i64 mut
+  local %5 w: str
+  local %6 <collection>: str mut
+  local %7 <collection>: bool mut
+  local %8 <collection>: str mut
+  local %9 selected: str
+  local %10 <conditional>: i64
+  block
+    initialize %1
+      block_value : List<str>
+        block
+          initialize %0
+            acquire_buffer : List<str>
+              integer : i64 3
+          discard
+            buffer_operation : unit append owner=%0
+              array : str
+                integer : u32 112
+                integer : u32 101
+                integer : u32 97
+                integer : u32 114
+          discard
+            buffer_operation : unit append owner=%0
+              array : str
+                integer : u32 102
+                integer : u32 105
+                integer : u32 103
+          discard
+            buffer_operation : unit append owner=%0
+              array : str
+                integer : u32 107
+                integer : u32 105
+                integer : u32 119
+                integer : u32 105
+        local : List<str> %0
+    initialize %9
+      block_value : str
+        block
+          initialize %6
+            array : str
+          initialize %7
+            boolean : bool false
+          block
+            initialize %2
+              local : List<str> %1
+            initialize %3
+              integer : i64 0
+            initialize %4
+              cast : i64
+                buffer_operation : u64 length owner=%2
+            loop id=0
+              binary : bool lt
+                local : i64 %3
+                local : i64 %4
+              block
+                block
+                  discard
+                    buffer_operation : unit iteration_check owner=%2
+                      local : i64 %4
+                initialize %5
+                  buffer_operation : str read owner=%2
+                    local : i64 %3
+                block
+                  initialize %8
+                    buffer_operation : str copy owner=%5
+                  branch
+                    unary : bool not
+                      local : bool %7
+                    block
+                      assign %6
+                        local : str %8
+                      assign %7
+                        boolean : bool true
+                    branch
+                      binary : bool lt
+                        local : str %6
+                        local : str %8
+                      assign %6
+                        local : str %8
+              step:
+                block
+                  block
+                    discard
+                      buffer_operation : unit iteration_check owner=%2
+                        local : i64 %4
+                  assign %3
+                    binary : i64 add
+                      local : i64 %3
+                      integer : i64 1
+          assertion max() arg is an empty sequence
+            local : bool %7
+        local : str %6
+    discard
+      buffer_operation : unit clear owner=%1
+    ret
+      block_value : i64
+        block
+          branch
+            binary : bool eq
+              local : str %9
+              array : str
+                integer : u32 112
+                integer : u32 101
+                integer : u32 97
+                integer : u32 114
+            assign %10
+              integer : i64 0
+            assign %10
+              integer : i64 1
+        local : i64 %10

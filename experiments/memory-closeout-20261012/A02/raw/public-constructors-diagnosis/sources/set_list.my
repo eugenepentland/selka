@@ -1,0 +1,5 @@
+func main() -> int:
+    mut values = [1, 2]
+    mut copied = set(values)
+    copied.add(3)
+    return if len(values) == 2 and len(copied) == 3 then 0 else 1

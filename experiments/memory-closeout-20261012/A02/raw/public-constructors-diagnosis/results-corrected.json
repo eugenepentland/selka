@@ -1,0 +1,115 @@
+{
+  "compiler_source": "5167c588be79dd43d21d5013c36db15110bf239b",
+  "compiler_path": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+  "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "cases": {
+    "max_generator_manual_valid": {
+      "source_sha256": "5b37658604e84d450c5b76954930d4ba19f1d63b6db2d6352350a98b8fd53cfd",
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/max_generator_manual_valid.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 0,
+        "elapsed_admitted_seconds": 0.004784015007317066,
+        "stdout": "",
+        "stderr": ""
+      },
+      "typed": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "dump-typed",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/max_generator_manual_valid.my",
+          "main"
+        ],
+        "status": 0,
+        "elapsed_admitted_seconds": 0.003246464068070054,
+        "stdout": "fn main #0 params=0 ret=i64 cabi=false host=false\n  local %0 <collection>: List<str> mut\n  local %1 words: List<str> mut\n  local %2 selected: str mut\n  local %3 seen: bool mut\n  local %4 <collection>: List<str> mut\n  local %5 <collection>: i64 mut\n  local %6 <collection>: i64 mut\n  local %7 word: str\n  local %8 <conditional>: i64\n  block\n    initialize %1\n      block_value : List<str>\n        block\n          initialize %0\n            acquire_buffer : List<str>\n              integer : i64 3\n          discard\n            buffer_operation : unit append owner=%0\n              array : str\n                integer : u32 112\n                integer : u32 101\n                integer : u32 97\n                integer : u32 114\n          discard\n            buffer_operation : unit append owner=%0\n              array : str\n                integer : u32 102\n                integer : u32 105\n                integer : u32 103\n          discard\n            buffer_operation : unit append owner=%0\n              array : str\n                integer : u32 107\n                integer : u32 105\n                integer : u32 119\n                integer : u32 105\n        local : List<str> %0\n    initialize %2\n      array : str\n    initialize %3\n      boolean : bool false\n    block\n      initialize %4\n        local : List<str> %1\n      initialize %5\n        integer : i64 0\n      initialize %6\n        cast : i64\n          buffer_operation : u64 length owner=%4\n      loop id=0\n        binary : bool lt\n          local : i64 %5\n          local : i64 %6\n        block\n          block\n            discard\n              buffer_operation : unit iteration_check owner=%4\n                local : i64 %6\n          initialize %7\n            buffer_operation : str read owner=%4\n              local : i64 %5\n          block\n            branch\n              binary : bool logical_or\n                unary : bool not\n                  local : bool %3\n                binary : bool lt\n                  local : str %2\n                  local : str %7\n              block\n                assign %2\n                  buffer_operation : str copy owner=%7\n                assign %3\n                  boolean : bool true\n        step:\n          block\n            block\n              discard\n                buffer_operation : unit iteration_check owner=%4\n                  local : i64 %6\n            assign %5\n              binary : i64 add\n                local : i64 %5\n                integer : i64 1\n    assertion seen\n      local : bool %3\n    discard\n      buffer_operation : unit clear owner=%1\n    ret\n      block_value : i64\n        block\n          branch\n            binary : bool eq\n              local : str %2\n              array : str\n                integer : u32 112\n                integer : u32 101\n                integer : u32 97\n                integer : u32 114\n            assign %8\n              integer : i64 0\n            assign %8\n              integer : i64 1\n        local : i64 %8\n",
+        "stderr": ""
+      }
+    },
+    "set_text_dict_valid": {
+      "source_sha256": "7a0ecd5be502ef2b90b38aae7e10dc14578c474789d18396790535d3c8346935",
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_text_dict_valid.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "elapsed_admitted_seconds": 0.004339954117313027,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_text_dict_valid.my:2:16: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      mut keys = set({\"b\": 1, \"a\": 2})\n                 ^\n"
+      },
+      "typed": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "dump-typed",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_text_dict_valid.my",
+          "main"
+        ],
+        "status": 0,
+        "elapsed_admitted_seconds": 0.002779971808195114,
+        "stdout": "fn main #0 params=0 ret=i64 cabi=false host=false\n  local %0 <collection>: dict<str,i64> mut\n  local %1 <collection>: i64 mut\n  local %2 <collection>: i64 mut\n  local %3 <collection>: str mut\n  local %4 <collection>: set<str> mut\n  local %5 keys: set<str> mut\n  local %6 <conditional>: i64\n  block\n    initialize %5\n      block_value : set<str>\n        block\n          initialize %0\n            array : dict<str,i64>\n              array : str\n                integer : u32 98\n              integer : i64 1\n              array : str\n                integer : u32 97\n              integer : i64 2\n          initialize %1\n            integer : i64 0\n          initialize %2\n            cast : i64\n              buffer_operation : i64 length owner=%0\n          initialize %4\n            array : set<str>\n          loop id=0\n            binary : bool lt\n              local : i64 %1\n              local : i64 %2\n            block\n              block\n                discard\n                  buffer_operation : unit iteration_check owner=%0\n                    local : i64 %2\n              initialize %3\n                buffer_operation : str key_at owner=%0\n                  local : i64 %1\n              discard\n                buffer_operation : unit write owner=%4\n                  local : str %3\n                  unit : unit ...\n            step:\n              block\n                block\n                  discard\n                    buffer_operation : unit iteration_check owner=%0\n                      local : i64 %2\n                assign %1\n                  binary : i64 add\n                    local : i64 %1\n                    integer : i64 1\n        local : set<str> %4\n    ret\n      block_value : i64\n        block\n          branch\n            binary : bool eq\n              length : i64\n                local : set<str> %5\n              integer : i64 2\n            assign %6\n              integer : i64 0\n            assign %6\n              integer : i64 1\n        local : i64 %6\n",
+        "stderr": ""
+      }
+    },
+    "set_text_list_valid": {
+      "source_sha256": "7727eb08f4ba162549cc39c8bb0a308740db0927c0ab983103b5e40315347706",
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_text_list_valid.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "elapsed_admitted_seconds": 0.004509944003075361,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_text_list_valid.my:3:16: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      mut keys = set(words)\n                 ^\n"
+      },
+      "typed": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "dump-typed",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_text_list_valid.my",
+          "main"
+        ],
+        "status": 0,
+        "elapsed_admitted_seconds": 0.0027414460200816393,
+        "stdout": "fn main #0 params=0 ret=i64 cabi=false host=false\n  local %0 <collection>: List<str> mut\n  local %1 words: List<str> mut\n  local %2 <collection>: List<str> mut\n  local %3 <collection>: i64 mut\n  local %4 <collection>: i64 mut\n  local %5 <collection>: str mut\n  local %6 <collection>: set<str> mut\n  local %7 keys: set<str> mut\n  local %8 <conditional>: i64\n  block\n    initialize %1\n      block_value : List<str>\n        block\n          initialize %0\n            acquire_buffer : List<str>\n              integer : i64 3\n          discard\n            buffer_operation : unit append owner=%0\n              array : str\n                integer : u32 98\n          discard\n            buffer_operation : unit append owner=%0\n              array : str\n                integer : u32 97\n          discard\n            buffer_operation : unit append owner=%0\n              array : str\n                integer : u32 98\n        local : List<str> %0\n    initialize %7\n      block_value : set<str>\n        block\n          initialize %2\n            local : List<str> %1\n          initialize %3\n            integer : i64 0\n          initialize %4\n            cast : i64\n              buffer_operation : u64 length owner=%2\n          initialize %6\n            array : set<str>\n          loop id=0\n            binary : bool lt\n              local : i64 %3\n              local : i64 %4\n            block\n              block\n                discard\n                  buffer_operation : unit iteration_check owner=%2\n                    local : i64 %4\n              initialize %5\n                buffer_operation : str read owner=%2\n                  local : i64 %3\n              discard\n                buffer_operation : unit write owner=%6\n                  local : str %5\n                  unit : unit ...\n            step:\n              block\n                block\n                  discard\n                    buffer_operation : unit iteration_check owner=%2\n                      local : i64 %4\n                assign %3\n                  binary : i64 add\n                    local : i64 %3\n                    integer : i64 1\n        local : set<str> %6\n    discard\n      buffer_operation : unit clear owner=%1\n    ret\n      block_value : i64\n        block\n          branch\n            binary : bool eq\n              length : i64\n                local : set<str> %7\n              integer : i64 2\n            assign %8\n              integer : i64 0\n            assign %8\n              integer : i64 1\n        local : i64 %8\n",
+        "stderr": ""
+      }
+    },
+    "set_text_manual_valid": {
+      "source_sha256": "4fa3ffd0ec7c409bc44c2ea1ee2ee00e4cd829e92cb068f8eae2614848a00e58",
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_text_manual_valid.my",
+          "--experimental-zero-rc"
+        ],
+        "status": 0,
+        "elapsed_admitted_seconds": 0.004785554017871618,
+        "stdout": "",
+        "stderr": ""
+      },
+      "typed": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+          "dump-typed",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/public-constructors-diagnosis/sources/set_text_manual_valid.my",
+          "main"
+        ],
+        "status": 0,
+        "elapsed_admitted_seconds": 0.003045355901122093,
+        "stdout": "fn main #0 params=0 ret=i64 cabi=false host=false\n  local %0 words: dict<str,i64> mut\n  local %1 keys: set<str> mut\n  local %2 <collection>: dict<str,i64> mut\n  local %3 <collection>: i64 mut\n  local %4 <collection>: i64 mut\n  local %5 word: str\n  local %6 <collection>: set<str> mut\n  local %7 <collection>: unit mut\n  local %8 <conditional>: i64\n  block\n    initialize %0\n      array : dict<str,i64>\n        array : str\n          integer : u32 98\n        integer : i64 1\n        array : str\n          integer : u32 97\n        integer : i64 2\n    initialize %1\n      array : set<str>\n    block\n      initialize %2\n        local : dict<str,i64> %0\n      initialize %3\n        integer : i64 0\n      initialize %4\n        cast : i64\n          buffer_operation : i64 length owner=%2\n      loop id=0\n        binary : bool lt\n          local : i64 %3\n          local : i64 %4\n        block\n          block\n            discard\n              buffer_operation : unit iteration_check owner=%2\n                local : i64 %4\n          initialize %5\n            buffer_operation : str key_at owner=%2\n              local : i64 %3\n          block\n            discard\n              block_value : unit\n                block\n                  initialize %7\n                    unit : unit ...\n                  initialize %6\n                    local : set<str> %1\n                buffer_operation : unit write owner=%6\n                  buffer_operation : str copy owner=%5\n                  local : unit %7\n        step:\n          block\n            block\n              discard\n                buffer_operation : unit iteration_check owner=%2\n                  local : i64 %4\n            assign %3\n              binary : i64 add\n                local : i64 %3\n                integer : i64 1\n    discard\n      buffer_operation : unit clear owner=%0\n    ret\n      block_value : i64\n        block\n          branch\n            binary : bool eq\n              length : i64\n                local : set<str> %1\n              integer : i64 2\n            assign %8\n              integer : i64 0\n            assign %8\n              integer : i64 1\n        local : i64 %8\n",
+        "stderr": ""
+      }
+    }
+  }
+}

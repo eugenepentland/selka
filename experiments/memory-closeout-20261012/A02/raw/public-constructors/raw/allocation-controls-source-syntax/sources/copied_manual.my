@@ -1,0 +1,13 @@
+func main(out: Stream) -> int:
+    mut values = ["word-" + str(i) for i in range(32)]
+    mut answer = ""
+    mut seen = False
+    for value in values:
+        const candidate = value.copy()
+        if not seen or answer < candidate:
+            answer = candidate
+            seen = True
+    assert seen
+    values.clear()
+    out.print(answer)
+    return 0

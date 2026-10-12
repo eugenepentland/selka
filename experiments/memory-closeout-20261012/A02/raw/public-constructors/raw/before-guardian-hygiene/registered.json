@@ -1,0 +1,56 @@
+{
+  "base": "c3909f2c0fbb97b67acb94714567abe4be33a1ec",
+  "source_sha256": {
+    "src/sema_collections.zig": "15241695f34361189b3b09a713746cccf3d4eaa604a8e715611629abde44cdbc",
+    "src/sema_gathers.zig": "5170d745ad5d887e9c707117a2444c79e6f1303a5423efe09300536a2e42724e",
+    "src/core/single_owner.zig": "c33a77f3cc11d761b841db8b8f342b6228940a73bd5436346db81be2a94d1ec4",
+    "src/core/a02_public_constructors_test.zig": "2c6163efe016917ea0ac146e47c2cbb312bd422a8f290a898e34d317a6ccb25d",
+    "src/core/a02_public_constructors_fixture.my": "e2115f3f5fe12ca840b25a889b39604a2914cc756f9d5de19e412fb271483c33",
+    "src/core/root_test.zig": "f2f11aad93822b9b9ccbd48c6a464c4be75a42bb26739eabd313d052bd5dfa51"
+  },
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "components": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/install/libexec/mylang/components",
+  "component_boundary": "Support6 independent owned pin supplies components; final default/retirement package qualification is separate",
+  "steps": [
+    {
+      "name": "build",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build",
+        "core-test-binary",
+        "-Dtest-filter=zero RC A02 public constructors",
+        "-j4",
+        "--maxrss",
+        "8589934592",
+        "--prefix",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/public-constructors-validation/install",
+        "-Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+        "-Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 4.084591513965279,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "test",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/public-constructors-validation/install/focus/core-tests",
+        "--guardian-filter=zero RC A02 public constructors"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 2.8771631489507854,
+      "stdout": "",
+      "stderr": "guardian/test: 1 test(s) selected by filter: \"zero RC A02 public constructors\"\nAll 1 tests passed.\nguardian/test: test wall 2.86s; slowest over 50ms:\nguardian/test:   2.86s  a02_public_constructors_test.test.zero RC A02 public constructors preserve owned keys and generator results\nguardian/test: PASS \u2014 1 passed\nguardian/test: RESULT {\"passed\":1,\"failed\":0,\"skipped\":0}\n"
+    }
+  ],
+  "complete": true,
+  "compiler": {
+    "path": ".zig-cache/o/8054a4977f620d8fa5175f171ccad590/mylang",
+    "sha256": "bd1df6820bf43d77432235a27a64a64b95b8afdd28f07ec89b9a38b133f8243e",
+    "options": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/42bf31c1a9ee6d928a6916c8151312ca/options.zig"
+  },
+  "test_binary_sha256": "cd0d6088c4e889a9a1da90ca0b357170a04f311793808e417902f113a8fb07fd",
+  "pass": true
+}

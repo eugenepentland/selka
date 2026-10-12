@@ -1,0 +1,14 @@
+func main(out: Stream) -> int:
+    mut values: str[] = []
+    for i in range(32):
+        values.append("word-" + str(i))
+    mut answer = ""
+    mut seen = False
+    for value in values:
+        if not seen or answer < value:
+            answer = value.copy()
+            seen = True
+    assert seen
+    values.clear()
+    out.print(answer)
+    return 0

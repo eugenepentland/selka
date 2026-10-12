@@ -489,8 +489,8 @@ const Checker = struct {
 
     fn temporary(c: *const Checker, slot: usize) bool {
         const local = c.function.scope.locals[slot];
-        // A conditional joins owners from its branches; it is not a receiver loan.
-        if (std.mem.eql(u8, local.name, "<conditional>")) return false;
+        // Branch selections and fold accumulators hold owners, not receiver loans.
+        if (std.mem.eql(u8, local.name, "<conditional>") or std.mem.eql(u8, local.name, "<fold-accumulator>")) return false;
         return std.mem.startsWith(u8, local.name, "<") or local.origin == .iteration or local.origin == .pattern;
     }
 
