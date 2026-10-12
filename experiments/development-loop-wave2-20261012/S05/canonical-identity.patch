@@ -1,12 +1,13 @@
 --- a/scripts/verification_qualification.py
 +++ b/scripts/verification_qualification.py
-@@ -9,12 +9,13 @@
+@@ -9,13 +9,14 @@
  import hashlib
  import io
  import json
 -import marshal
  from pathlib import Path
  import re
+ import shutil
  import sys
  import tempfile
  
@@ -15,7 +16,7 @@
  from verification_snapshot import Snapshot, SnapshotError
  import verify_cache as verification
  
-@@ -22,7 +23,7 @@
+@@ -23,7 +24,7 @@
  SUPPORTED = ("fuzz", "scaling", "work-counters", "juice-instructions")
  INPUTS = ("scripts/verification_qualification.py", "scripts/verification_profiles.py",
            "scripts/fuzz_campaign.py", "scripts/fuzz_campaign_identity.py", "scripts/fuzz_campaign_store.py",
@@ -24,7 +25,7 @@
            "tests/duplicate_scaling.py", "tests/incremental_diff.py", "tests/differential_corpus.py",
            "tests/fixtures/incremental/", "test/fixtures/long-qualification/", "src/",
            "scripts/juice_cache.py", "scripts/juice_evidence.py", "scripts/juice_provider.py", "scripts/juice_worker.py",
-@@ -368,4 +369,4 @@
+@@ -395,4 +396,4 @@
          raise
  
  

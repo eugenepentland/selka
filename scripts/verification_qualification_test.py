@@ -119,7 +119,7 @@ class Qualification(unittest.TestCase):
 
     def test_arbitrary_commands_and_invalid_limits_are_rejected_before_execution(self):
         for targets, maximum, timeout, steps in ((["shell command"], 1, 3, 1), (["fuzz"] * 2, 1, 3, 1),
-                                                (["fuzz"], 0, 3, 1), (["fuzz"], 1, float("nan"), 1)):
+                                                (["fuzz"], 0, 3, 1), (["fuzz"], 1, float("nan"), 1), (["fuzz"], 1, None, 1)):
             with self.assertRaises(ValueError):
                 q.validate_options(targets, maximum, timeout, steps)
         self.assertEqual([], self.calls)

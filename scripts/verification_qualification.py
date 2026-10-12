@@ -12,6 +12,7 @@ import json
 import marshal
 from pathlib import Path
 import re
+import shutil
 import sys
 import tempfile
 
@@ -26,7 +27,7 @@ INPUTS = ("scripts/verification_qualification.py", "scripts/verification_profile
           "tests/duplicate_scaling.py", "tests/incremental_diff.py", "tests/differential_corpus.py",
           "tests/fixtures/incremental/", "test/fixtures/long-qualification/", "src/",
           "scripts/juice_cache.py", "scripts/juice_evidence.py", "scripts/juice_provider.py", "scripts/juice_worker.py",
-          "scripts/juice_tool/", "experiments/development-loop-closeout-20261012/S05/workloads/prepare.py",
+          "scripts/juice_tool/",
           "experiments/development-loop-closeout-20261012/S05/workloads/oracle.py")
 MAX_OUTPUT = 4 * 1024 * 1024
 _LOADED_CODE_OBJECT = sys._getframe().f_code
@@ -38,6 +39,8 @@ def validate_options(targets, max_actions, action_timeout, fuzz_steps):
             or set(targets) - set(OBLIGATIONS) or type(max_actions) is not int or not 1 <= max_actions <= 64
             or type(fuzz_steps) is not int or not 1 <= fuzz_steps <= 4096):
         raise ValueError("invalid named qualification targets or work limits")
+    if action_timeout is None:
+        raise ValueError("long qualification requires an explicit positive admitted deadline")
     verification.ProcessLimits(action_timeout)
 
 
@@ -65,7 +68,7 @@ def scaling_work(data):
     counters = []
     for line, (family, size) in zip(lines, expected):
         match = re.fullmatch(patterns[0 if family == "header-index" else 1], line)
-        if match is None or int(match[1]) != size or not 0 < int(match[2]) <= 4100000:
+        if match is None or int(match[1]) != size or not 0 < int(match[2]) <= (4000000 if family == "header-index" else 4100000):
             raise ValueError("missing, partial or corrupt compiler scaling work")
         counters.append({"family": family, "size": size, "work": int(match[2])})
     return {"cases_completed": 6, "compiler_invocations": 9, "counters": counters,
@@ -232,6 +235,10 @@ def _fuzz(run, root, compiler, zig, directory, deadline, steps, campaign_cache):
     run._observed_files[destination] = hashlib.sha256(report_bytes).hexdigest()
     guard = run._stack.enter_context(Snapshot(campaign_cache, ["./"], include_hidden=True))
     run.additional_snapshots.append(guard)
+    report_name = str(Path(args.report).relative_to(campaign_cache))
+    captured = {row["path"]: row["sha256"] for row in guard.identity["files"]}
+    if captured.get(report_name) != hashlib.sha256(report_bytes).hexdigest():
+        raise ValueError("fuzz report changed between validation and input capture")
     return {"steps_per_shard": steps, "counts": report["counts"], "evidence_report": str(args.report)}
 
 
@@ -241,21 +248,35 @@ def _juice(run, root, compiler, zig, directory, deadline):
     External provider closure stays visibly incomplete. Actual positive counts
     are observations; they cannot authorize a work-regression or wall ratio.
     """
-    import importlib.util
     import juice_cache
     import juice_evidence
     directory.mkdir()
-    prepare = root / "experiments/development-loop-closeout-20261012/S05/workloads/prepare.py"
-    spec = importlib.util.spec_from_file_location("approved_qualification_juice_prepare", prepare)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    before = sys.argv
-    sys.argv = [str(prepare), "--compiler", str(compiler), "--zig", str(zig), "--output", str(directory / "project")]
-    try:
-        with redirect_stdout(io.StringIO()):
-            module.main()
-    finally:
-        sys.argv = before
+    project = directory / "project"
+    project.mkdir()
+    shutil.copyfile(root / "test/fixtures/long-qualification/cases.my", project / "cases.my")
+    shutil.copyfile(root / "experiments/development-loop-closeout-20261012/S05/workloads/oracle.py", project / "oracle.py")
+    workloads = [
+        {"name": "compiler-check", "family": "compiler-check", "unit": "checked fixture", "units": 1,
+         "args": ["check", "{root}/cases.my", "--no-cache"], "expected_stdout": "", "timeout_seconds": 30},
+        {"name": "forced-test-driver", "family": "guest-test-driver", "unit": "fresh passing guest test", "units": 2,
+         "args": ["test", "{root}/cases.my", "--force", "--json", "--cache-dir", "{work}/guest-cache"],
+         "stdout_regex": '(?:.|\\n)*("passed":2,"failed":0,"skipped":0,"cached":0,"unsupported":0)(?:.|\\n)*',
+         "expected_stdout": '"passed":2,"failed":0,"skipped":0,"cached":0,"unsupported":0',
+         "check": [sys.executable, "{root}/oracle.py", "{stdout}"], "timeout_seconds": 120}]
+    components = compiler.parent.parent / "libexec/mylang/components"
+    environment = {"MYLANG_ZIG": str(zig), "ZIG": str(zig)}
+    dependencies = [str(compiler), str(zig), str(zig.resolve().parent / "lib")]
+    if components.is_dir():
+        environment["MYLANG_COMPONENT_DIR"] = str(components)
+        dependencies.append(str(components))
+    verification.atomic_record(project / "juice.json", {"version": 1, "name": "development-loop-compiler-driver",
+        "adapter": "native", "sources": ["cases.my", "oracle.py"], "environment": environment,
+        "build": {"compiler": str(compiler), "command": ["cp", "{compiler}", "{binary}"],
+                  "tools": ["cp", sys.executable], "dependencies": dependencies, "timeout_seconds": 30},
+        "workloads": workloads})
+    verification.atomic_record(project / "suite.json", {"version": "juice-suite-v1", "workloads": [
+        {"id": work["name"], "manifest": "juice.json", "workload": work["name"],
+         "complete": False, "reuse": "fresh"} for work in workloads]})
     args = juice_cache.options(["capture", str(directory / "project/suite.json"), "--compiler", str(compiler),
         "--collector", "perf", "--repeats", "3", "--fresh", "--max-actions", "2",
         "--action-timeout", str(deadline), "--cache-dir", str(directory / "capture")])
@@ -277,6 +298,12 @@ def _juice(run, root, compiler, zig, directory, deadline):
             {kind: Path(path) for kind, path in action["artifacts"].items()}, action["expected"])
         if retained.record_digest != action["record_sha256"]:
             raise ValueError("native instruction record changed")
+        record_path = Path(action["record"])
+        run._observed_files[record_path] = retained.record_digest
+        for name, digest in retained.files.items():
+            run._observed_files[record_path.parent / name] = digest
+        for kind, digest in retained.build_artifacts.items():
+            run._observed_files[Path(action["artifacts"][kind])] = digest
         work = retained.record["workloads"][action["expected"]["workload"]["name"]]
         counts = [sample["metrics"]["instructions"] for sample in work["samples"]]
         if len(counts) != 3 or any(type(count) not in (int, float) or count <= 0 for count in counts):
