@@ -40,12 +40,13 @@ foreign C sources retain their explicit provider/link boundary. Neither is an
 alternate legacy guest LLVM path.
 
 Only `zig fmt` syntax checks have run. No C3 typechecking, regression, native,
-ABI, package or performance result is claimed. The three new-file drafted regressions
+ABI, package or performance result is claimed. The five new-file drafted regressions
 cover checksum-valid legacy and foreign artifact images, compact/native receipt
-provenance, and a mixed guest bundle refusing before tool discovery. One additional in-file replay test covers missing/foreign
+provenance, a mixed guest bundle refusing before tool discovery, snapshot wire admission,
+and body-less optimizer stage envelopes. One additional in-file replay test covers missing/foreign
 payload ABI, missing envelope ABI and an old envelope version. Source
-snapshot/optimizer envelope corruption, native-handle recovery and old receipt
-replay must also pass on the combined C3 compiler.
+snapshot/optimizer envelope tests, native-handle recovery and old receipt replay
+must all pass on the combined C3 compiler.
 
 ## Coordinator-owned caller migrations
 

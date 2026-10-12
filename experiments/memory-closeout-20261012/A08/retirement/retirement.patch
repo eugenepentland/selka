@@ -1,3 +1,4 @@
+diff --git a/src/core/ir_snapshot.zig b/src/core/ir_snapshot.zig
 --- a/src/core/ir_snapshot.zig
 +++ b/src/core/ir_snapshot.zig
 @@ -1,6 +1,7 @@
@@ -46,6 +47,7 @@
      const f = wire.function;
      if (f.span >= wire.locations.len or wire.locations.len != f.insts.len + 1) return error.InvalidSnapshot;
      const strings = try a.alloc(u32, wire.strings.len);
+diff --git a/src/core/lowering_cache.zig b/src/core/lowering_cache.zig
 --- a/src/core/lowering_cache.zig
 +++ b/src/core/lowering_cache.zig
 @@ -1,6 +1,7 @@
@@ -138,6 +140,7 @@
              .wire = header,
              .local_positions = localPositions(wire, before.functions),
              .source_max = sourceMaximum(wire, before.functions),
+diff --git a/src/core/optimization_cache.zig b/src/core/optimization_cache.zig
 --- a/src/core/optimization_cache.zig
 +++ b/src/core/optimization_cache.zig
 @@ -1,5 +1,6 @@
@@ -195,6 +198,7 @@
 +pub fn Owned(comptime T: type) type {
 +    return struct { abi: guest_abi.Abi, value: T };
 +}
+diff --git a/src/core/canonical_ir.zig b/src/core/canonical_ir.zig
 --- a/src/core/canonical_ir.zig
 +++ b/src/core/canonical_ir.zig
 @@ -170,8 +170,7 @@
@@ -217,6 +221,7 @@
          try self.signature(&hash, f.signature);
          self.locate(&hash, f.span);
          put(&hash, u64, f.insts.items.len);
+diff --git a/src/core/emission_key.zig b/src/core/emission_key.zig
 --- a/src/core/emission_key.zig
 +++ b/src/core/emission_key.zig
 @@ -40,9 +40,8 @@
@@ -249,6 +254,7 @@
 +        return self.context.store.key("llvm-compact-receipt-owned-v3", &.{&digest});
      }
  };
+diff --git a/src/core/emission_cache.zig b/src/core/emission_cache.zig
 --- a/src/core/emission_cache.zig
 +++ b/src/core/emission_cache.zig
 @@ -1,5 +1,6 @@
@@ -305,6 +311,7 @@
 +    const receipt = try storage.loadValue(a, key, Receipt) orelse return null;
 +    return if (receipt.dependencies.abi == guest_abi.current) receipt else null;
 +}
+diff --git a/src/core/emit_units.zig b/src/core/emit_units.zig
 --- a/src/core/emit_units.zig
 +++ b/src/core/emit_units.zig
 @@ -1,5 +1,6 @@
@@ -471,6 +478,7 @@
          self.context.store.storeValue(self.key, cache.Artifact, self.artifact.?) catch return error.OutOfMemory;
          if (self.receipt) |receipt| try self.context.store.storeValue(receipt, cache.Receipt, receiptArtifact(self.key, self.artifact.?));
      }
+diff --git a/src/core/native_receipt.zig b/src/core/native_receipt.zig
 --- a/src/core/native_receipt.zig
 +++ b/src/core/native_receipt.zig
 @@ -1,28 +1,35 @@
@@ -514,6 +522,7 @@
 +    if (artifact.abi != handle.abi) return error.CacheMiss;
 +    return artifact;
  }
+diff --git a/src/core/unit_cache.zig b/src/core/unit_cache.zig
 --- a/src/core/unit_cache.zig
 +++ b/src/core/unit_cache.zig
 @@ -9,6 +9,7 @@
@@ -559,6 +568,7 @@
      const original = key(base, "define i32 @f()");
      try std.testing.expectEqual(original, key(base, "define i32 @f()"));
      try std.testing.expect(!std.mem.eql(u8, &original, &key(base, "define i32 @g()")));
+diff --git a/src/core/driver.zig b/src/core/driver.zig
 --- a/src/core/driver.zig
 +++ b/src/core/driver.zig
 @@ -15,6 +15,7 @@
@@ -712,6 +722,7 @@
 +        return error.ToolFailed;
 +    }
 +}
+diff --git a/src/core/optimizer_shortcut.zig b/src/core/optimizer_shortcut.zig
 --- a/src/core/optimizer_shortcut.zig
 +++ b/src/core/optimizer_shortcut.zig
 @@ -2,6 +2,7 @@
@@ -771,6 +782,7 @@
  
  fn reusableEntry(entry: Entry, module: *const @import("ir.zig").Module, index: usize, catalog: fusion.Catalog) bool {
      if (!entry.demand.fusion.identity and entry.demand.fusion.key == null) return false;
+diff --git a/src/core/fusion_checkpoint.zig b/src/core/fusion_checkpoint.zig
 --- a/src/core/fusion_checkpoint.zig
 +++ b/src/core/fusion_checkpoint.zig
 @@ -1,5 +1,6 @@
@@ -789,6 +801,7 @@
      const wire = snapshot.capture(a, context.source, context.source.module.functions.items[index]) catch |err| switch (err) {
          error.OutOfMemory => return error.OutOfMemory,
          error.InvalidSnapshot => return null,
+diff --git a/src/core/lowering_demand.zig b/src/core/lowering_demand.zig
 --- a/src/core/lowering_demand.zig
 +++ b/src/core/lowering_demand.zig
 @@ -4,10 +4,12 @@
@@ -828,6 +841,7 @@
 +        try self.store.storeValue(self.key, Manifest, .{ .abi = guest_abi.current, .receipts = self.next.items });
      }
  };
+diff --git a/src/core/build_replay.zig b/src/core/build_replay.zig
 --- a/src/core/build_replay.zig
 +++ b/src/core/build_replay.zig
 @@ -2,7 +2,7 @@
@@ -952,9 +966,11 @@
 +    try atomicWrite(context, path, no_envelope_abi);
 +    try std.testing.expect((try load(context, key)) == null);
 +}
+diff --git a/src/core/a08_retired_abi_test.zig b/src/core/a08_retired_abi_test.zig
+new file mode 100644
 --- /dev/null
 +++ b/src/core/a08_retired_abi_test.zig
-@@ -0,0 +1,95 @@
+@@ -0,0 +1,164 @@
 +//! Missing, legacy and foreign guest provenance never enters a checked native link.
 +const std = @import("std");
 +const abi = @import("guest_abi.zig");
@@ -965,6 +981,9 @@
 +const objects = @import("unit_cache.zig");
 +const stage = @import("stage_store.zig");
 +const driver = @import("driver.zig");
++const ir = @import("ir.zig");
++const snapshot = @import("ir_snapshot.zig");
++const optimizer = @import("optimization_cache.zig");
 +const plain = "define i32 @f() { ret i32 7 }\n";
 +const checked = emission.marker ++ plain;
 +const artifact: emission.Artifact = .{ .abi = abi.current, .text = checked, .number = false, .math = false, .counting = false };
@@ -1049,4 +1068,70 @@
 +    try std.testing.expectError(error.ToolFailed, driver.link(a, std.testing.io, &environment, request, &log));
 +    try std.testing.expect(std.mem.indexOf(u8, log.items, "unsupported or missing checked guest ABI") != null);
 +    try std.testing.expect(std.mem.indexOf(u8, log.items, "cannot run") == null);
++}
++
++fn locate(_: *const anyopaque, offset: u32) @import("emit_llvm.zig").Location {
++    return .{ .line = 1, .column = offset + 1, .path = "owned.my" };
++}
++
++// spec-case: NEW-CORE-STAGE-CACHE-9
++test "A08 retired ABI snapshot wire requires OWN1 before structural restoration" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var directory = std.testing.tmpDir(.{});
++    defer directory.cleanup();
++    var storage = try stage.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
++    defer storage.deinit();
++    var module: ir.Module = .{};
++    var function: ir.Function = .{ .name = "owned", .signature = .{ .params = &.{}, .ret = .void } };
++    try function.insts.append(a, .{ .op = .ret, .ty = .void });
++    var block: ir.Block = .{};
++    try block.insts.append(a, @fromBackingInt(0));
++    try function.blocks.append(a, block);
++    try module.functions.append(a, function);
++    const context = try snapshot.Context.init(a, &module, null);
++    const wire = try snapshot.capture(a, context, function);
++    const key = storage.key("A08-owned-snapshot", &.{});
++    const Legacy = struct { function: snapshot.Function, strings: []const []const u8, locations: []snapshot.Location };
++    try storage.storeValue(key, Legacy, .{ .function = wire.function, .strings = wire.strings, .locations = wire.locations });
++    try std.testing.expect((try storage.loadValue(a, key, snapshot.Wire)) == null);
++    var encoded = codec.Writer.init(a);
++    try encoded.write(snapshot.Wire, wire);
++    for ([_]u32{ 0, 1, @backingInt(abi.current) + 1 }) |foreign| {
++        std.mem.writeInt(u32, encoded.bytes.items[0..4], foreign, .little);
++        try std.testing.expect(try storage.save(key, encoded.bytes.items));
++        try std.testing.expect((try storage.loadValue(a, key, snapshot.Wire)) == null);
++    }
++    try storage.storeValue(key, snapshot.Wire, wire);
++    const restored = try snapshot.restore(a, context, (try storage.loadValue(a, key, snapshot.Wire)).?);
++    try std.testing.expectEqualStrings(function.name, restored.name);
++    try std.testing.expectEqual(ir.Op.ret, restored.insts.items[0].op);
++}
++
++// spec-case: NEW-CORE-STAGE-CACHE-9
++test "A08 retired ABI bodyless optimizer artifacts require the stage envelope" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var directory = std.testing.tmpDir(.{});
++    defer directory.cleanup();
++    var storage = try stage.Store.init(std.testing.allocator, std.testing.io, try directory.dir.realPathFileAlloc(std.testing.io, ".", a));
++    defer storage.deinit();
++    var module: ir.Module = .{};
++    const token: u8 = 0;
++    var context = optimizer.Context.init(&storage, try snapshot.Context.init(a, &module, null), .{ .context = &token, .locate = locate });
++    const key = storage.key("A08-owned-summary", &.{});
++    const value: optimizer.Summary = .{ .returned = null, .calls = &.{} };
++    try storage.storeValue(key, optimizer.Summary, value);
++    try std.testing.expect((try context.read(a, key, optimizer.Summary)) == null);
++    var encoded = codec.Writer.init(a);
++    try encoded.write(optimizer.Owned(optimizer.Summary), .{ .abi = abi.current, .value = value });
++    for ([_]u32{ 0, 1, @backingInt(abi.current) + 1 }) |foreign| {
++        std.mem.writeInt(u32, encoded.bytes.items[0..4], foreign, .little);
++        try std.testing.expect(try storage.save(key, encoded.bytes.items));
++        try std.testing.expect((try context.read(a, key, optimizer.Summary)) == null);
++    }
++    try context.save(key, optimizer.Summary, value);
++    try std.testing.expectEqualDeep(value, (try context.read(a, key, optimizer.Summary)).?);
 +}

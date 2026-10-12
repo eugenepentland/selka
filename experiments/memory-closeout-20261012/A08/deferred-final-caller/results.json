@@ -2,6 +2,9 @@
   "status": "focused_combined_test_pending_coordinator",
   "change": "DemandFinalLoader.ensure maps Unsupported to CacheMiss, identical to production FinalRestorer.ensure; OutOfMemory and CacheMiss preserved",
   "reproducer": "unfiltered Core test compilation: optimization_cache_test.zig:629 error.Unsupported not in demand_ir.Error",
-  "source_sha256": "f801ab839d611b9215bc58c0dc816fee0b52de06fbc2aef92f1e07849b54a5b8",
-  "full_gate_failure_log": "../mylang-memory-20261012/experiments/memory-closeout-20261012/coordinator/exploratory-verify-02/verify.log"
+  "full_gate_failure_log": "../mylang-memory-20261012/experiments/memory-closeout-20261012/coordinator/exploratory-verify-02/verify.log",
+  "mapping_only_source_sha256": "f801ab839d611b9215bc58c0dc816fee0b52de06fbc2aef92f1e07849b54a5b8",
+  "committed_source_sha256": "e44c71badea484455068ec9314aa96970c9e03bb6dd30865d5a49711be7ba9b7",
+  "commit": "d80da7e64",
+  "guardian": "88 passed; initial helper-only change-classification rejection retained, then repaired-receipt assertion added"
 }

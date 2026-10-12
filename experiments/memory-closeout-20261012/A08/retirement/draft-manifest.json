@@ -63,11 +63,11 @@
   },
   "new_tests": {
     "path": "src/core/a08_retired_abi_test.zig",
-    "sha256": "d5d78d6cebf584b70a1c4cc140e08c7b4486d2c568df4114fa2645dc7afa0631",
+    "sha256": "c80064e3760b7be0e28aee1768cefe8cd4c2d002f0bb01df6a2cee8683b233e7",
     "status": "prepared_uncompiled_unrun",
-    "registered_tests": 3
+    "registered_tests": 5
   },
-  "patch_sha256": "4d58f673a44efe2673bf87d0e80fb149ae510b3145eaa4c6caeb237f79c18a9d",
+  "patch_sha256": "9b66b486bac273c3a9fa46ee0a2dfe5bf179377da5058989cd278c648509b08e",
   "validation": "Zig fmt syntax check only; API/typechecking and all tests await coordinated C3 integration after C2.",
   "whole_replay_test": {
     "file": "src/core/build_replay.zig",

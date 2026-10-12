@@ -2,11 +2,21 @@
 
 Base: `fbfcaa7a923186a8e773c3760f81c10aa345a432`.
 Worktree: `/home/epentland/ai/canopy/mylang-memory-20261012-A08`.
-Branch: `codex/memory-closeout-20261012-A08`.
+Branch: `codex/memory-closeout-20261012-A08-integrated` (original worker branch preserved).
 Proposed commits: the A08 sequence contains tested comprehension/copy fixes,
 component source migrations, bounded phi cleanup, and cache/scaling evidence.
-No final candidate has been measured. The latest Support6 cache-plan qualification
-resolves the earlier Support5 component blocker; historical failures remain intact.
+Support7 common ReleaseFast qualification is now running from frozen source
+`bed11cf3bf3102ffec44487e431a1573fdf02ad5`, compiler SHA-256
+`540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef`.
+The complete installation contains actual owned components. A08's 39 new cache
+rows, repeated component protocols and remaining common-artifact checks are
+recorded separately; no qualified-C1, default or retirement milestone is claimed.
+Support7 memo warm-cache failure is under investigation using private copies of
+A05's retained cache. Historical failures and intermediate evidence remain intact.
+
+The later v9 schema, borrowed-selection, tuple, provider and component sections
+supersede early proposed-contract descriptions below. The C3 draft remains
+unapplied and unqualified, including its fixed ABI and old-artifact rejection tests.
 
 Owned production files: `src/core/{lowering_cache,optimization_cache,emission_cache}.zig`,
 `src/{semantic_store,semantic_copy}.zig`. The tuple staging addition now changes
@@ -26,6 +36,23 @@ Compiler mode: Debug, for correctness only. A09 froze a complete ReleaseFast C0 
 SHA-256 `78ac31605c7505c7cb330d41bdf2d3a232043e032f487e599f454b3bc6f2bd37`.
 Matched final ReleaseFast candidate measurements remain pending; Debug harness
 elapsed times are not throughput claims.
+
+## Support7 common component qualification
+
+Fresh builds with the common compiler above pass all **688 counted executions**:
+cache-plan 560 and test-index 128. Both builds have clean compiler allocator
+reports; all observed RC events are zero, and all normal and handled-error
+returns have zero managed bytes live at exit. Each suite retains one expected
+hard output-error trap, without a return-path cleanup claim. LLVM and linked
+symbol audits pass. The counted guest binaries happen to match Support6 byte for
+byte; these results come from new builds and executions against Support7.
+
+`support7-components-summary.json` binds full compiler/source/guest/LLVM/oracle
+identities. Both raw `components-support7-*.json` reports and compressed counters
+are retained. `support7-component-source-equivalence.json` verifies all 12 source
+and oracle files against the frozen common source tree. This is counted source
+and protocol qualification; A10 separately owns installed uninstrumented
+manifest/discovery/protocol evidence. It is not a complete C1 qualification.
 
 ## Support6 component qualification
 

@@ -18,10 +18,11 @@ BASE = 'fbfcaa7a923186a8e773c3760f81c10aa345a432'
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / 'experiments/zero-rc-20261011'))
 import audit
+from qualify import COMPILER_ALLOCATOR, digest
 
 
 def sha(path):
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return digest(path)
 
 
 def main():
@@ -74,7 +75,8 @@ def main():
                 if not args.legacy_seed: command += ['--emit-llvm', str(project / (component + '.ll'))]
                 if args.counted: command += ['--counters']
             result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, timeout=300)
-            row = dict(state=state, component=component, sources=sources, command=command, status=result.returncode, stdout=result.stdout, stderr=result.stderr, passed=result.returncode == 0)
+            compiler_allocator_diagnostics = COMPILER_ALLOCATOR.findall(result.stderr)
+            row = dict(state=state, component=component, sources=sources, command=command, status=result.returncode, stdout=result.stdout, stderr=result.stderr, compiler_allocator_clean=not compiler_allocator_diagnostics, compiler_allocator_diagnostics=compiler_allocator_diagnostics, passed=result.returncode == 0 and not compiler_allocator_diagnostics)
             if result.returncode == 0 and not args.scope_free_check:
                 row['binary_sha256'] = sha(binary)
                 selected = binary

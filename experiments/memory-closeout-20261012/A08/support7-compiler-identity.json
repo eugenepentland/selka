@@ -1,0 +1,65 @@
+{
+  "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "source_worktree": "/home/epentland/ai/canopy/mylang-memory-20261012-support7",
+  "environment_file": "/home/epentland/.config/mylang/dev-env.sh",
+  "component_cache": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/component-cache",
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "build",
+    "-Doptimize=ReleaseFast",
+    "-Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+    "-Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar",
+    "-p",
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install",
+    "-j4",
+    "--maxrss",
+    "8589934592"
+  ],
+  "status": "built successfully; common qualification pending",
+  "build_log": "build.log",
+  "component_boundary": "Full install using independently qualified owned Support6 compiler pin; actual component source and binary identities recorded at completion. Immutable historical seed unchanged.",
+  "build_exit_status": 0,
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "files": {
+    "bin/mylang": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+    "libexec/mylang/components/cache-plan-ccc22b9c6efac02da2488dc1eec1e1b441a0c224dec383f509e0200ead4d6582": "ccc22b9c6efac02da2488dc1eec1e1b441a0c224dec383f509e0200ead4d6582",
+    "libexec/mylang/components/cache-plan.json": "52488fae7bf2884569dd0fe31496ab140c69e6235f298f0abf49ead85622a505",
+    "libexec/mylang/components/test-index-0e28cc1903bc4d763f3e1b3e4ad8266c481fa8ed85e4d37af4accfc9291d16ee": "0e28cc1903bc4d763f3e1b3e4ad8266c481fa8ed85e4d37af4accfc9291d16ee",
+    "libexec/mylang/components/test-index.json": "69025cb228f81331b8ddb4b58c90b4f3db8e589485d8f2c10ba454b1079b5622",
+    "tools/selka-components": "6eff221dc0fb75a163347f9e4e4b11b9bbc1a9ddddc9b5678c075a74dbeaa9da"
+  },
+  "source_status": "",
+  "component_manifests": {
+    "test-index": {
+      "artifact": "test-index-0e28cc1903bc4d763f3e1b3e4ad8266c481fa8ed85e4d37af4accfc9291d16ee",
+      "component": "test-index",
+      "format": 1,
+      "key": "cf06cbf5d3272204bf176734d79cf63b05177da4a988af65f19e8a3bdb600431",
+      "memory_mode": "zero-rc-v1",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "0e28cc1903bc4d763f3e1b3e4ad8266c481fa8ed85e4d37af4accfc9291d16ee"
+    },
+    "cache-plan": {
+      "artifact": "cache-plan-ccc22b9c6efac02da2488dc1eec1e1b441a0c224dec383f509e0200ead4d6582",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "ac0370ea1ce6f5d34ea875bee1068c96a24fa4ad22de41e741896ace008c826d",
+      "memory_mode": "zero-rc-v1",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "ccc22b9c6efac02da2488dc1eec1e1b441a0c224dec383f509e0200ead4d6582"
+    }
+  },
+  "owned_pin": {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+    "sha256": "32f37baa2509b01c231a104d7e9ba224a7193399201d0f87ec8a5db8fa6f039b"
+  },
+  "owned_source_archive": {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar",
+    "sha256": "0557a645579881d54d3f4c493c8b07be38d42b0a21622ab712b84589ee212c27"
+  }
+}

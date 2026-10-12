@@ -1,0 +1,1 @@
+{"arguments": ["--request", "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/work/cache-plan-oracle-3n29s12_/request.bin"], "request_sha256": "99ea9baef0b96c97ba4372a1c6fc6cbe4eb9ba15d06faa9311706f7814604fb6", "status": 2, "stderr": "cache-plan: invalid request payload length\n"}
