@@ -351,6 +351,16 @@ myl_block *myl_core_ir_str_append(myl_block *a, const myl_block *b) {
     return core_text_append_bytes(a, (const unsigned char *)b + MYL_HEADER, b->len, ascii);
 }
 
+#ifdef MYL_ZERO_RC
+/* Keep scalar capture and allocation register pressure off the ASCII leaf path. */
+__attribute__((noinline)) static myl_block *core_text_append_char_general(myl_block *a, myl_block *text, uint64_t offset, uint64_t width) {
+    unsigned char bytes[4];
+    core_text_copy_short(bytes, block_data(text) + offset, (size_t)width);
+    bool ascii = width == 1 && (a->kind & MYL_TEXT_ASCII) != 0;
+    return core_text_append_bytes(a, bytes, (int64_t)width, ascii);
+}
+#endif
+
 myl_block *myl_core_ir_str_append_char(myl_block *a, myl_block *text, uint64_t offset) {
     uint64_t width = myl_core_ir_str_width(text, offset);
 #ifdef MYL_ZERO_RC
@@ -360,13 +370,15 @@ myl_block *myl_core_ir_str_append_char(myl_block *a, myl_block *text, uint64_t o
         unsigned char octet = block_data(text)[offset];
         return core_text_append_bytes(a, &octet, 1, (a->kind & MYL_TEXT_ASCII) != 0);
     }
-#endif
+    return core_text_append_char_general(a, text, offset, width);
+#else
     unsigned char bytes[4];
     /* Capture the complete scalar before a cursor reset, growth or alias free.
      * The bounded copy reads exactly width bytes, including three-byte UTF-8. */
     core_text_copy_short(bytes, block_data(text) + offset, (size_t)width);
     bool ascii = width == 1 && (a->kind & MYL_TEXT_ASCII) != 0;
     return core_text_append_bytes(a, bytes, (int64_t)width, ascii);
+#endif
 }
 
 static int64_t core_text_clamp(int64_t index, int64_t len) {

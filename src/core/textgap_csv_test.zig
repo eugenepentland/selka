@@ -20,16 +20,18 @@ fn execute(a: std.mem.Allocator, source: []const u8, expected: []const u8) !void
     try unit.check();
     var failure: @import("single_owner.zig").Failure = .{};
     try @import("single_owner.zig").checkMode(a, unit.program.?, &failure, true);
-    for (lanes) |lane| {
-        var refusal: build.Refusal = .{};
-        var module = try build.buildExecutable(a, .{ .program = unit.program.?, .single_owner = true, .zero_rc = true }, &refusal);
-        const result = if (lane.mode) |mode| try passes.run(a, &module, mode) else try passes.debug(a, &module);
-        const run = try support.runOwned(a, &module, .{ .own = false, .release = lane.release, .verify = lane.mode == .verify, .analysis = support.analysis(&result) });
-        if (run.status != 0) report("static append: {s}{s}\n", .{ run.stdout, run.stderr });
-        try std.testing.expectEqual(@as(u8, 0), run.status);
-        try std.testing.expectEqualStrings(expected, run.stdout);
-        try std.testing.expectEqualStrings("", run.stderr);
-        try std.testing.expect(zero.emittedClean(run.llvm));
+    for ([_]bool{ true, false }) |checked| {
+        for (lanes) |lane| {
+            var refusal: build.Refusal = .{};
+            var module = try build.buildExecutable(a, .{ .program = unit.program.?, .single_owner = checked, .zero_rc = checked }, &refusal);
+            const result = if (lane.mode) |mode| try passes.run(a, &module, mode) else try passes.debug(a, &module);
+            const run = try support.runOwned(a, &module, .{ .own = false, .release = lane.release, .verify = lane.mode == .verify, .analysis = support.analysis(&result) });
+            if (run.status != 0) report("static append: {s}{s}\n", .{ run.stdout, run.stderr });
+            try std.testing.expectEqual(@as(u8, 0), run.status);
+            try std.testing.expectEqualStrings(expected, run.stdout);
+            try std.testing.expectEqualStrings("", run.stderr);
+            if (checked) try std.testing.expect(zero.emittedClean(run.llvm));
+        }
     }
 }
 
@@ -145,4 +147,35 @@ test "textgap_csv ASCII append invalidates cached scalar lengths and hashes" {
         \\    out.print(value, prior, len(value), cached, keys[value])
         \\    return 0
     , "éabca éabc 5 7 9\n");
+}
+
+// Direct native helper contract: explicit destruction, no ownership rewrite.
+// Source ownership need not admit this same-owner fused instruction shape.
+// spec-case: NEW-CORE-TEXT-BYTES-1
+test "textgap_csv append helper captures same-owner scalars before growth and rejects invalid offsets" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const ir = @import("ir.zig");
+    for ([_]bool{ false, true }) |invalid| {
+        for ([_]support.RunOptions{ .{ .own = false }, .{ .own = false, .release = true }, .{ .own = false, .release = true, .verify = true } }) |mode| {
+            var module: ir.Module = .{ .zero_rc = true };
+            try module.strings.append(a, "éabc");
+            var h = try support.Hand.init(a, &module, "main", .{ .params = &.{.cap}, .ret = .i64 });
+            const literal = try h.loose(.{ .op = .str_const, .ty = .str });
+            var text = try h.emit(.{ .op = .str_append_char, .ty = .str, .a = literal, .b = literal, .data = try h.extra(&.{try h.int(.u64, 0)}) });
+            text = try h.emit(.{ .op = .str_append_char, .ty = .str, .a = text, .b = text, .data = try h.extra(&.{try h.int(.u64, if (invalid) -1 else 2)}) });
+            try h.printValues(try h.param(0), &.{text});
+            _ = try h.emit(.{ .op = .release, .ty = .void, .a = text, .data = @import("own.zig").unique_release });
+            _ = try h.emit(.{ .op = .ret, .ty = .void, .a = try h.int(.i64, 0) });
+            _ = try h.finish();
+            var options = mode;
+            options.leakcheck = !invalid;
+            const run = try support.runOwned(a, &module, options);
+            try std.testing.expectEqual(@as(u8, if (invalid) 1 else 0), run.status);
+            try std.testing.expectEqualStrings(if (invalid) "" else "éabcéa\n", run.stdout);
+            try std.testing.expectEqualStrings(if (invalid) "error[E_CORE_UNSUPPORTED]: S2 IR operation -1 is not implemented\n" else "", run.stderr);
+            try std.testing.expect(zero.emittedClean(run.llvm));
+        }
+    }
 }
