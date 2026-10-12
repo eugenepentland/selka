@@ -25,7 +25,7 @@ def main():
     raw=(a.input/'results.json').read_bytes()
     (a.output/'qualification-input.json').write_bytes(raw)
     qualified=json.loads(raw)
-    result={'qualification_sha256':q.digest(a.output/'qualification-input.json'),'compiler_sha256':qualified['compiler_sha256'],'runs':[]}
+    result={'qualification_sha256':q.digest(a.output/'qualification-input.json'),'compiler_sha256':qualified['compiler_sha256'],'ownership_selection':qualified.get('ownership_selection','unrecorded'),'runs':[]}
     for key,item in qualified['cases'].items():
         case,mode=key.split('/')
         if mode not in a.modes or case=='trap' or item['build']['status']: continue

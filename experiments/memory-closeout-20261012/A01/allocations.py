@@ -18,6 +18,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     for key in ('compiler','zig','output'): p.add_argument('--'+key,type=Path,required=True)
     p.add_argument('--source-revision',required=True)
+    p.add_argument('--ordinary',action='store_true',help='use ordinary commands without the prototype selector')
     p.add_argument('--admitted',action='store_true',help=argparse.SUPPRESS)
     a=p.parse_args()
     q.admit(a.admitted)
@@ -26,8 +27,9 @@ def main():
     env=dict(os.environ, ZIG=str(a.zig), MYLANG_ZIG=str(a.zig), MYL_CORE_LEAKCHECK='1')
     for key in ('MYLANG_CORE_SANITIZE','MYLANG_COUNTERS','MYLANG_OPTIONS'): env.pop(key,None)
     source=HERE/'samples/scaling.my';binary=a.output/'program';llvm=a.output/'program.ll'
-    build=q.run([a.compiler,'build',source,'--experimental-zero-rc','--release','--counters','--zig',a.zig,'--cache-dir',a.output/'cache','--emit-llvm',llvm,'-o',binary],env)
-    results={'source_revision':a.source_revision,'compiler_sha256':q.digest(a.compiler),'source_sha256':q.digest(source),'build':build,'runs':[]}
+    selector=[] if a.ordinary else ['--experimental-zero-rc']
+    build=q.run([a.compiler,'build',source,*selector,'--release','--counters','--zig',a.zig,'--cache-dir',a.output/'cache','--emit-llvm',llvm,'-o',binary],env)
+    results={'ownership_selection':'ordinary' if a.ordinary else 'prototype','harness_sha256':q.digest(__file__),'source_revision':a.source_revision,'compiler_sha256':q.digest(a.compiler),'source_sha256':q.digest(source),'build':build,'runs':[]}
     def save(): (a.output/'results.json').write_text(json.dumps(results,indent=2)+'\n')
     save()
     if build['status']: raise SystemExit(1)
