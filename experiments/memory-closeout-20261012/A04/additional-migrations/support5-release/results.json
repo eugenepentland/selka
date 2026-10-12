@@ -1,0 +1,650 @@
+{
+  "identity": {
+    "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+    "source_commit": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+    "sources": {
+      "test/core/t_scalar_fusion.my": "4691f7297f123051cd2ae22e6403f841c847f3743abbef996be5c9b32e12dca4",
+      "test/core/v_text.my": "583d69439ba30a7e4a37c849470d22632da7a71c31a869f271d98eb600eb4b12",
+      "test/core/f_features.my": "804dbf4df31c99d608802183fedfe6c5e2ac1ab660b993ebecda3dcce66b6fed",
+      "test/core/row_string_join.my": "943f53fcb6b89c78d17f04813cd6467b264604c81560a60499a9f6c7ae42315b",
+      "test/core/row_string_split.my": "2cdc5714dfad11b8d35100aaedc08cb7279b8fd0341eb5df08d78cc82a595b6a",
+      "test/core/s1_ascii.my": "f0472e19886786c5ab8e84a388733844569c36706b5b1ca0110447f7384d87c8",
+      "test/core/s1_bytes.my": "9f8cd6241fe1923abb067e53cb39dbfc3f8729e66a0fa2803fb165b780d05fed",
+      "test/core/s1_collisions.my": "706ffc8ed873cc2a11e7139665cfdcc175ced7346c134db5727413b281e0d956",
+      "test/core/s1_reads.my": "b17c73ef673004b6bacc36e59a45886d2ff70bc1f142ce4039af6a35b817a654",
+      "test/core/s1_views.my": "bb33e24fa121112f51a7df46a6db6b59010f8753970b23b1bc6ce4ca0cdb75d7",
+      "test/core/t_methods.my": "67bc90acd552431964c724ddb9e4ad8e192b2a9aca4570ee0fbf10bc1a37dc8e",
+      "test/core/t_text.my": "6f043d04cad4b0f2c5d52695f446bf2dc32d569b779b35b2fc909652797133ac",
+      "test/core/v_buffer_format.my": "87fc8924a8e40bc63ac5ee8cd56b59c18de763e477f406fbae096fff84ec8af0",
+      "test/core/v_buffer_mut.my": "c063d06160843d430a486f4b1f0e8b58783e4bed1b2bc36ca6e784241e7ff0a3"
+    },
+    "harness_sha256": "492cd22ce48c612fc3b24351accffec20b1838cee71f04bb87c0209a8751f51a",
+    "oracle_sha256": "99f5ee05f91ff43ba6c4bdec2a5235cf0e96adaecc38f0908381c60cba893cd7",
+    "modes": [
+      "release"
+    ]
+  },
+  "cases": {
+    "t_scalar_fusion": {
+      "release": {
+        "status": "failed",
+        "error": "{'argv': ['/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang', 'test', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/t_scalar_fusion.my', '--zig', '/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig', '--cache-dir', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/cache', '--experimental-zero-rc', '--release', '--force', '--json', '--jobs', '1'], 'status': 1, 'elapsed_ns': 37755292, 'stdout': '', 'stderr': 't_scalar_fusion.my:143:143: error[E_SINGLE_OWNER_MOVED]: \\'wide\\' was moved or is unavailable on this path; use .copy() when both values are needed\\n      return result == \"\u00e9z\u00e9\" and source == \"\u00e9z\" and values == [\"\u00e9z\", \"\u00e9z\"] and expanded == wide + wide + wide + wide and aliases == [wide, wide] and wide == \"123456789012345\u00e9\u20ac\ud83d\ude42\\\\0\"\\n                                                                                                                                                ^\\n'}",
+        "source_sha256": "4691f7297f123051cd2ae22e6403f841c847f3743abbef996be5c9b32e12dca4"
+      }
+    },
+    "v_text": {
+      "release": {
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+        "source_sha256": "583d69439ba30a7e4a37c849470d22632da7a71c31a869f271d98eb600eb4b12",
+        "binary_sha256": "0a342069ec58b0ea904b3666e63263645ff64d9053d2a0fc9abb1618aaad9716",
+        "llvm_sha256": "a74b6f6c4ba0a2044b979222c7be71319a82d4c6e48791478aee0237eb93c221",
+        "build_ns": 161913930,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/v_text/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1563526,
+            "stdout": "total 7 of 3 items 2 True None a-xb\n-9223372036854775807 18446744073709551615 -5 200 False\nh\u00e9llo 5  True\nw0, w1, w4, w9 w0 True w0w1w4\n465 n4 6\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/additional-migrations/support5-release/v_text/release/counts-1.json",
+              "counter_sha256": "fa1d6abc876396abc718d25bb64b580afdeecfb26c0072cbb8bf0ae4da78a1a8",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 973,
+              "memory": {
+                "allocs": 10833,
+                "alloc_bytes": 693312,
+                "frees": 10833,
+                "reallocs": 0,
+                "peak_live_bytes": 11008,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 68,
+              "allocs": 10833,
+              "alloc_bytes": 693312,
+              "frees": 10833,
+              "free_bytes": 693312,
+              "list_grows": 0,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 4962,
+              "text_copy_bytes": 11055,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 450,
+              "text_grow_bytes": 454,
+              "text_appends": 452,
+              "text_append_bytes": 644,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 11008,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      }
+    },
+    "f_features": {
+      "release": {
+        "status": "passed",
+        "source_sha256": "804dbf4df31c99d608802183fedfe6c5e2ac1ab660b993ebecda3dcce66b6fed",
+        "public_tests": 5,
+        "successful_tests": 5,
+        "expected_traps": 0,
+        "run": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/f_features.my",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/cache",
+            "--experimental-zero-rc",
+            "--release",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 0,
+          "elapsed_ns": 352779416,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"f_features::test_callbacks_pass_return_and_live_fixed_array_writes\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"de6ea82ae8200377ff58885fe1c99fd010cefbfaa352cdfd15640ce71f6294f0\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/f_features.my#8f30561751c82ae7fbf2905d65680b95199ccdf872b4e6af3e26cde787534387\",\"producer\":{\"facts\":{\"fresh\":22,\"reused\":0,\"fallback\":13,\"decoded\":0},\"lowering\":{\"fresh\":13,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":22,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":88,\"index_edges\":135,\"affected_nodes\":22,\"closure_nodes\":60,\"closure_edges\":27,\"reused_tests\":0,\"planned_tests\":5},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":18854,\"save_bytes_prepared\":36141,\"sequence_locks\":45}},\"nanoseconds\":{\"lowering\":4896629,\"facts\":2210495,\"graph\":135609,\"planner\":101050726,\"keys\":50999,\"publication\":4250199,\"total\":112726746},\"transport\":{\"request_bytes\":1172,\"reply_bytes\":552,\"startups\":1}}}},{\"name\":\"f_features::test_keyed_records_remain_stable_and_snapshot_keeps_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"73edc6bebc3d89ffe37501777d02e24fca733b4b1052e7b2949166619a2bede8\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"f_features::test_managed_array_mut_write_keeps_snapshot\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3fc995adeef8a16e7b1427b5485e8fac8aae48a37b19ae55b991b2bf2e0de4d2\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"f_features::test_mut_callback_copies_managed_list_back_without_changing_snapshot\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"db599fd674041fb2f3387b4fb54dad1f7e9576ba8b2356903786bf10b8eede88\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"f_features::test_sort_narrow_numeric_and_tuple_keys\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"5bb000e6d0bce52b91e15ffd5ac4017c3674c17e43647897c3022832d20b9ead\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":5,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/f_features.my\"]}\n",
+          "stderr": ""
+        },
+        "counting": "Guest-test commands verify leak checks and diagnostics; no RC counter claim from these commands."
+      }
+    },
+    "row_string_join": {
+      "release": {
+        "status": "failed",
+        "error": "{'argv': ['/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang', 'build', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_join.my', '--zig', '/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig', '--cache-dir', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/cache', '--experimental-zero-rc', '--release', '--counters', '--emit-llvm', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/row_string_join/release/program.ll', '--link', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/native_clock.o', '-o', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/row_string_join/release/program'], 'status': 2, 'elapsed_ns': 160889911, 'stdout': '', 'stderr': '/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_join.my:36:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\\n  func inputs(kind: str, size: int, seed: int) -> Inputs:\\n              ^\\n/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_join.my:48:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\\n  func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:\\n              ^\\nerror: the C compiler wrote no dependency file /home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/cache/native-link-0f6dde7d9de34805d10ac0b5dfcff1b4/foreign-0.d\\n'}",
+        "source_sha256": "943f53fcb6b89c78d17f04813cd6467b264604c81560a60499a9f6c7ae42315b"
+      }
+    },
+    "row_string_split": {
+      "release": {
+        "status": "failed",
+        "error": "{'argv': ['/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang', 'build', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_split.my', '--zig', '/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig', '--cache-dir', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/cache', '--experimental-zero-rc', '--release', '--counters', '--emit-llvm', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/row_string_split/release/program.ll', '--link', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/native_clock.o', '-o', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/row_string_split/release/program'], 'status': 2, 'elapsed_ns': 200224808, 'stdout': '', 'stderr': '/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_split.my:44:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\\n  func inputs(kind: str, size: int, seed: int) -> Inputs:\\n              ^\\n/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_split.my:56:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\\n  func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:\\n              ^\\nerror: the C compiler wrote no dependency file /home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/cache/native-link-d64300ca4f062970d99a72e099e90374/foreign-0.d\\n'}",
+        "source_sha256": "2cdc5714dfad11b8d35100aaedc08cb7279b8fd0341eb5df08d78cc82a595b6a"
+      }
+    },
+    "s1_ascii": {
+      "release": {
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+        "source_sha256": "f0472e19886786c5ab8e84a388733844569c36706b5b1ca0110447f7384d87c8",
+        "binary_sha256": "653c9313f63fa098e6520fdc6832ee11e03d928bd26ba37a584193f2031c3058",
+        "llvm_sha256": "2ff90ff4a516ef5548fe333494b08a3a91a8b44e46cae7e8de263c1111da24b5",
+        "build_ns": 268500584,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/s1_ascii/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1100178,
+            "stdout": "h\u00e9/2/\u00e9/-1\nllo/3/o/0\nw\u00f6rld/5/d/3\nrld/3/d/1\nell/3/l/1\nld/2/d/0\n/0//-1\nh\u00e9llo w\u00f6rld/11/d/2\n\u00e9/1/\u00e9/-1\nab/2/b/-1\nhlowrd/6/d/1\nhlowrd/6/d/1\ndlr\u00f6w oll\u00e9h/11/h/1\ndlrow olleh/11/h/1\n14 659485\n1 2 a 12 \u00e9 11\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/additional-migrations/support5-release/s1_ascii/release/counts-1.json",
+              "counter_sha256": "2973411beef6935ce5b481fab606237cce435bd99a9a3ec89b7b0d791bbb526a",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 64,
+              "memory": {
+                "allocs": 124,
+                "alloc_bytes": 8544,
+                "frees": 124,
+                "reallocs": 0,
+                "peak_live_bytes": 3296,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 15,
+              "allocs": 124,
+              "alloc_bytes": 8544,
+              "frees": 124,
+              "free_bytes": 8544,
+              "list_grows": 0,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 1,
+              "list_copy_bytes": 112,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 58,
+              "text_copy_bytes": 182,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 1,
+              "dict_grow_bytes": 192,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 16,
+              "text_grow_bytes": 86,
+              "text_appends": 86,
+              "text_append_bytes": 95,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 3296,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      }
+    },
+    "s1_bytes": {
+      "release": {
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+        "source_sha256": "9f8cd6241fe1923abb067e53cb39dbfc3f8729e66a0fa2803fb165b780d05fed",
+        "binary_sha256": "a1c3c87fcc44875256016e4b6b39192257099d9e6f8b107a130257ab0c4a5923",
+        "llvm_sha256": "7e157f3e5f4e9b1c6d3c5021e6c896851644ced538e8bc559d6edc7b8dac0d91",
+        "build_ns": 197620842,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/s1_bytes/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1106347,
+            "stdout": "3 h\u00e9 2 False -1\n2 \u00e9 1 False -1\n1 !invalid UTF-8 in byte string 29 False -1\n0  0 False -1\n3 ell 3 True 1\n5 world 5 False 3\n3 w\u00f6 2 False -1\n4 !invalid UTF-8 in byte string 29 False 2\n13 h\u00e9llo w\u00f6rld 11 False 3\n3 hel 3 False 2\n10 3 3\nhelloh\u00e9 7 h 6 elloh\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/additional-migrations/support5-release/s1_bytes/release/counts-1.json",
+              "counter_sha256": "3275f6b5ad23b181f893d9a4f6c7ff5bd0746f34e0097a3ac2af742f32888fb2",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 34,
+              "memory": {
+                "allocs": 55,
+                "alloc_bytes": 3904,
+                "frees": 55,
+                "reallocs": 0,
+                "peak_live_bytes": 1920,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 13,
+              "allocs": 55,
+              "alloc_bytes": 3904,
+              "frees": 55,
+              "free_bytes": 3904,
+              "list_grows": 0,
+              "list_grow_bytes": 0,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 10,
+              "buffer_copy_bytes": 37,
+              "text_copies": 14,
+              "text_copy_bytes": 36,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 1,
+              "dict_grow_bytes": 192,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 3,
+              "text_grow_bytes": 7,
+              "text_appends": 3,
+              "text_append_bytes": 59,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 1920,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      }
+    },
+    "s1_collisions": {
+      "release": {
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+        "source_sha256": "706ffc8ed873cc2a11e7139665cfdcc175ced7346c134db5727413b281e0d956",
+        "binary_sha256": "bf276b93ed4d0c65fd752c3fd3a298a26c122b16c976759010f4783e4d552c86",
+        "llvm_sha256": "588f26aefec6a5733fc92c130217cd2295f1a40436eceaedeb843a0d9c8e7921",
+        "build_ns": 445564607,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/s1_collisions/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1580318,
+            "stdout": "50\n01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212\n01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/additional-migrations/support5-release/s1_collisions/release/counts-1.json",
+              "counter_sha256": "640dd9847f55c0b20fa20f35599e9387bdf9e7b36f5b3268ebff58d163c77af3",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 1805,
+              "memory": {
+                "allocs": 4449,
+                "alloc_bytes": 333632,
+                "frees": 4449,
+                "reallocs": 0,
+                "peak_live_bytes": 6720,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 3,
+              "allocs": 4449,
+              "alloc_bytes": 333632,
+              "frees": 4449,
+              "free_bytes": 333632,
+              "list_grows": 8,
+              "list_grow_bytes": 896,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 1500,
+              "text_copy_bytes": 5956,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 100,
+              "dict_grow_bytes": 28800,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 1236,
+              "text_grow_bytes": 1902,
+              "text_appends": 1700,
+              "text_append_bytes": 4428,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 6720,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      }
+    },
+    "s1_reads": {
+      "release": {
+        "status": "failed",
+        "error": "{'argv': ['/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang', 'build', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/s1_reads/release/main.my', '--zig', '/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig', '--cache-dir', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/cache', '--experimental-zero-rc', '--release', '--counters', '-o', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/s1_reads/release/program', '--emit-llvm', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/s1_reads/release/program.ll'], 'status': 1, 'elapsed_ns': 40430635, 'stdout': '', 'stderr': '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/s1_reads/release/main.my:46:15: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression\\n      mut t = s + \"!\"\\n                ^\\n'}",
+        "source_sha256": "b17c73ef673004b6bacc36e59a45886d2ff70bc1f142ce4039af6a35b817a654"
+      }
+    },
+    "s1_views": {
+      "release": {
+        "status": "failed",
+        "error": "{'argv': ['/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang', 'build', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/s1_views/release/main.my', '--zig', '/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig', '--cache-dir', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/cache', '--experimental-zero-rc', '--release', '--counters', '-o', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/s1_views/release/program', '--emit-llvm', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/s1_views/release/program.ll'], 'status': 1, 'elapsed_ns': 159443622, 'stdout': '', 'stderr': '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/s1_views/release/main.my:35:19: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression\\n          mut key = words[i][0:3]\\n                    ^\\n'}",
+        "source_sha256": "bb33e24fa121112f51a7df46a6db6b59010f8753970b23b1bc6ce4ca0cdb75d7"
+      }
+    },
+    "t_methods": {
+      "release": {
+        "status": "passed",
+        "source_sha256": "67bc90acd552431964c724ddb9e4ad8e192b2a9aca4570ee0fbf10bc1a37dc8e",
+        "public_tests": 9,
+        "successful_tests": 7,
+        "expected_traps": 2,
+        "run": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/t_methods.my",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/cache",
+            "--experimental-zero-rc",
+            "--release",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 1,
+          "elapsed_ns": 406268060,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"t_methods::test_bytes_count_search_trim_and_find_any\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"4256713c7d720ee87ebb881f110615f1c8721ed20d29b4642d417e2c7accf723\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/t_methods.my#f0402e0002e7a484a2d3a4ec84cec1e2794ef87e6fa5fa99e39e117f65a9a75c\",\"producer\":{\"facts\":{\"fresh\":41,\"reused\":0,\"fallback\":12,\"decoded\":0},\"lowering\":{\"fresh\":12,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":41,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":164,\"index_edges\":225,\"affected_nodes\":41,\"closure_nodes\":108,\"closure_edges\":45,\"reused_tests\":0,\"planned_tests\":9},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":25558,\"save_bytes_prepared\":54448,\"sequence_locks\":42}},\"nanoseconds\":{\"lowering\":6154763,\"facts\":2903033,\"graph\":230870,\"planner\":110867349,\"keys\":94516,\"publication\":6315499,\"total\":126776237},\"transport\":{\"request_bytes\":2052,\"reply_bytes\":888,\"startups\":1}}}},{\"name\":\"t_methods::test_case_classify_replace_count_and_lines_preserve_snapshots\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"1fbefdfb7a918ac41d86b789336147017cdd7770aa396f75c03908f2592abc56\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_methods::test_decode_and_scalar_count_validate_utf8_and_clamped_ranges\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"79d09157c8b8274de871ee70058b6ab2d13dbd54a2aab44e195b18b90037543e\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_methods::test_extend_and_reverse_preserve_self_and_nested_snapshots\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"fdec7789b30aa8e581c39c7f0f2c56afe5863b87a5b56792032971a752d18cf8\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_methods::test_invalid_chr_traps_at_the_call\",\"status\":\"failed\",\"reason\":\"R_TEXT_SCALAR\\n  in t_methods::test_invalid_chr_traps_at_the_call at t_methods.my:72:9\\n\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"02b2dc5ce5ad2e41c416e97dc52b1b62f467025bc937626aaba0fc1f0dfdcbb1\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_methods::test_missing_index_traps_at_the_call\",\"status\":\"failed\",\"reason\":\"R_SUBSTRING_NOT_FOUND\\n  in t_methods::test_missing_index_traps_at_the_call at t_methods.my:66:9\\n\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"843be26e3f0dbb4827f921072429225976a4d1c2bded6e37887ad7636b057da0\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_methods::test_repr_scalar_ord_chr_and_packed_text_format\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"2a50ff0e9589caf40309f8faf4ab276114d85ddf3befe247e39261ff664bc8c8\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_methods::test_scalar_search_bounds_and_charset_trim\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"1938604f2cdf9aad92c0a0a689fcf0fdfbe84827f026a79b698095cb0f5670e9\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_methods::test_verified_lengths_survive_the_large_source_last_use\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"e26e6827a7a9f8cfdeee8aab3dd90a8a469d16026cc56a49636bd1be1bd94edf\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":7,\"failed\":2,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/t_methods.my\"]}\n",
+          "stderr": ""
+        },
+        "counting": "Guest-test commands verify leak checks and diagnostics; no RC counter claim from these commands."
+      }
+    },
+    "t_text": {
+      "release": {
+        "status": "passed",
+        "source_sha256": "6f043d04cad4b0f2c5d52695f446bf2dc32d569b779b35b2fc909652797133ac",
+        "public_tests": 10,
+        "successful_tests": 8,
+        "expected_traps": 2,
+        "run": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/t_text.my",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/cache",
+            "--experimental-zero-rc",
+            "--release",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 1,
+          "elapsed_ns": 340398810,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"t_text::test_append_alias_through_phi_preserves_the_other_owner\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"7e04972bac6245f9dd003fa615576e870c2a713bc60dbd356b77fd38662476b2\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/t_text.my#491477b9c178e1292fbdaee8dd5fcf2e4fd6a2833eda47c3f04d947b2b8e2528\",\"producer\":{\"facts\":{\"fresh\":22,\"reused\":0,\"fallback\":10,\"decoded\":0},\"lowering\":{\"fresh\":10,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":22,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":88,\"index_edges\":130,\"affected_nodes\":22,\"closure_nodes\":72,\"closure_edges\":26,\"reused_tests\":0,\"planned_tests\":10},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":15760,\"save_bytes_prepared\":29448,\"sequence_locks\":36}},\"nanoseconds\":{\"lowering\":4185980,\"facts\":1759068,\"graph\":200458,\"planner\":108481857,\"keys\":86388,\"publication\":3824808,\"total\":118762335},\"transport\":{\"request_bytes\":1228,\"reply_bytes\":592,\"startups\":1}}}},{\"name\":\"t_text::test_append_keeps_shared_text\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"ed9b229e28f75b3a7323d86d02f5a6bbe2cf6d4bb3df8dc0d572033db2a62d58\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_text::test_doubling_and_self_character_append_preserve_snapshots\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"02e9a10db2513b53ece91f7fe3a637de9caef45827a3bf0e5de5acb4682048cd\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_text::test_empty_separator_traps\",\"status\":\"failed\",\"reason\":\"R_EMPTY_SEPARATOR\\n  in t_text::test_empty_separator_traps at t_text.my:74:9\\n\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"971f8dcd330f0cc094ab81c76ee9832f3d9c2a96ac44dbc8c57c029f35683eb3\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_text::test_empty_split_join_and_find\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"81188d23e1ac05bfcea9cd0668257799e6f4d2d9681a14aa8c9b6187fd1629da\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_text::test_encode_bytes_xor\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"512473cb0b2d732315936d8a28663ad647da7e660df4bd2b4a853cfde7481707\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_text::test_large_unicode_index_and_reverse_slice\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"f7298731c4777b07f4d56ae49bc526b4b8463c93e231731f86c7438d749dd281\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_text::test_long_byte_xor_reduction\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"0ce681e21a0ceeeab27558519e27e22f237012a30d595c5390ab7fb66a31807a\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_text::test_unicode_index_slice_and_loop\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3d4c1156a2cad27db7dbaf79ec0eee6589397fccc5164f8496e3bb84785e0a30\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_text::test_zero_slice_step_traps\",\"status\":\"failed\",\"reason\":\"R_SLICE_STEP\\n  in t_text::test_zero_slice_step_traps at t_text.my:79:9\\n\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"833a70e96e3b98565ed032a9c232ac411b7ae23f1ba2fdc7846e6bc73b1bd0fb\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":8,\"failed\":2,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/t_text.my\"]}\n",
+          "stderr": ""
+        },
+        "counting": "Guest-test commands verify leak checks and diagnostics; no RC counter claim from these commands."
+      }
+    },
+    "v_buffer_format": {
+      "release": {
+        "status": "passed",
+        "source_sha256": "87fc8924a8e40bc63ac5ee8cd56b59c18de763e477f406fbae096fff84ec8af0",
+        "public_tests": 1,
+        "successful_tests": 1,
+        "expected_traps": 0,
+        "run": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/v_buffer_format.my",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/cache",
+            "--experimental-zero-rc",
+            "--release",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 0,
+          "elapsed_ns": 315790937,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"v_buffer_format::test_numeric_buffer_spelling_and_snapshots\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"1bb3dad773c04e87c4e16be431c117eec0072d6076fcd554970b8b2ac293ceb1\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/v_buffer_format.my#f5a9e1aa4988857299b7e369053b58fdb6442a4be3cd51f7c2bb9474f337d5e9\",\"producer\":{\"facts\":{\"fresh\":8,\"reused\":0,\"fallback\":1,\"decoded\":0},\"lowering\":{\"fresh\":1,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":8,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":32,\"index_edges\":25,\"affected_nodes\":8,\"closure_nodes\":12,\"closure_edges\":5,\"reused_tests\":0,\"planned_tests\":1},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":2969,\"save_bytes_prepared\":5059,\"sequence_locks\":9}},\"nanoseconds\":{\"lowering\":1336091,\"facts\":484571,\"graph\":110833,\"planner\":113966828,\"keys\":18247,\"publication\":1526649,\"total\":117547318},\"transport\":{\"request_bytes\":476,\"reply_bytes\":240,\"startups\":1}}}}],\"passed\":1,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/v_buffer_format.my\"]}\n",
+          "stderr": ""
+        },
+        "counting": "Guest-test commands verify leak checks and diagnostics; no RC counter claim from these commands."
+      }
+    },
+    "v_buffer_mut": {
+      "release": {
+        "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+        "source_sha256": "c063d06160843d430a486f4b1f0e8b58783e4bed1b2bc36ca6e784241e7ff0a3",
+        "binary_sha256": "244c46f79e49f66247eb35b70ba14acc4bb31616b142c60bfa9bc57120b1ac60",
+        "llvm_sha256": "d74cc379d1c61167575772b6fbcc1a88a7c7a67b745d3edd34d666e6c8d8a7c6",
+        "build_ns": 476471127,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/v_buffer_mut/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 21848598,
+            "stdout": "True False False False True\nTrue False False True\n8:3132334100cebb78 2\n8:3132334100cebb78 12:3132334100cebb7861626342\n14:3132334100cebb78616263423132\n1000000 137293856\n",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/additional-migrations/support5-release/v_buffer_mut/release/counts-1.json",
+              "counter_sha256": "f9c425b4c3ab343abd033c0ac6f1bb20300e0cf25a27f46842d347b385289f36",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 400026,
+              "memory": {
+                "allocs": 400040,
+                "alloc_bytes": 26607680,
+                "frees": 400040,
+                "reallocs": 10,
+                "peak_live_bytes": 2056112,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 600021,
+              "allocs": 400040,
+              "alloc_bytes": 26607680,
+              "frees": 400040,
+              "free_bytes": 27659248,
+              "list_grows": 0,
+              "list_grow_bytes": 0,
+              "reallocs": 10,
+              "realloc_added_bytes": 1051568,
+              "realloc_moves": 2,
+              "realloc_moved_bytes": 655424,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 1,
+              "buffer_copy_bytes": 8,
+              "text_copies": 400007,
+              "text_copy_bytes": 800048,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 10,
+              "buffer_grow_bytes": 1021,
+              "text_grows": 4,
+              "text_grow_bytes": 6,
+              "text_appends": 8,
+              "text_append_bytes": 88,
+              "buffer_pushes": 200003,
+              "buffer_appends": 16,
+              "buffer_append_bytes": 34,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 2056112,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      }
+    }
+  },
+  "limitations": "No performance claim; successful guest tests use leak checking; counted main programs include structural and RC audits.",
+  "provider": {
+    "source_sha256": "0af3514346f4088770f0032ce422e322d02900437626f5a1af98e2a69200dfa5",
+    "object_sha256": "c4472a664242758ac7d7e39cd3ddf63a603d71fb545aaee276f9e3a4e3761398"
+  },
+  "summary": {
+    "assigned_sources": 14,
+    "expected_lanes": 14,
+    "completed_lanes": 14,
+    "failed_lanes": 5
+  }
+}

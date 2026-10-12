@@ -1,0 +1,24 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_join.my",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/cache",
+    "--experimental-zero-rc",
+    "--release",
+    "--counters",
+    "--emit-llvm",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/row_string_join/release/program.ll",
+    "--link",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/native_clock.o",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/row_string_join/release/program"
+  ],
+  "status": 2,
+  "elapsed_ns": 160889911,
+  "stdout": "",
+  "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_join.my:36:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func inputs(kind: str, size: int, seed: int) -> Inputs:\n              ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_join.my:48:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:\n              ^\nerror: the C compiler wrote no dependency file /home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/cache/native-link-0f6dde7d9de34805d10ac0b5dfcff1b4/foreign-0.d\n"
+}

@@ -1,0 +1,44 @@
+{
+  "s1_ascii": {
+    "stdout": "hé/2/é/-1\nllo/3/o/0\nwörld/5/d/3\nrld/3/d/1\nell/3/l/1\nld/2/d/0\n/0//-1\nhéllo wörld/11/d/2\né/1/é/-1\nab/2/b/-1\nhlowrd/6/d/1\nhlowrd/6/d/1\ndlröw olléh/11/h/1\ndlrow olleh/11/h/1\n14 659485\n1 2 a 12 é 11\n",
+    "oracle": "src/core/s1_views_test.zig",
+    "constant": "ascii_expected",
+    "oracle_sha256": "bddba40ce37fe58db956485804c0c8acab900e175e140be45fe27deebfbca673"
+  },
+  "s1_bytes": {
+    "stdout": "3 hé 2 False -1\n2 é 1 False -1\n1 !invalid UTF-8 in byte string 29 False -1\n0  0 False -1\n3 ell 3 True 1\n5 world 5 False 3\n3 wö 2 False -1\n4 !invalid UTF-8 in byte string 29 False 2\n13 héllo wörld 11 False 3\n3 hel 3 False 2\n10 3 3\nhellohé 7 h 6 elloh\n",
+    "oracle": "src/core/s1_views_test.zig",
+    "constant": "bytes_expected",
+    "oracle_sha256": "bddba40ce37fe58db956485804c0c8acab900e175e140be45fe27deebfbca673"
+  },
+  "s1_collisions": {
+    "stdout": "50\n01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212\n01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212,01212\n",
+    "oracle": "src/core/s1_views_test.zig",
+    "constant": "collisions_expected",
+    "oracle_sha256": "bddba40ce37fe58db956485804c0c8acab900e175e140be45fe27deebfbca673"
+  },
+  "s1_reads": {
+    "stdout": "0:66,0:66,1:2,0:2,0:66,0:66,0:66,1:2,2:55,2:55,2:55,0:66,0:66,0:2,0:2,0:66,0:66,0:66,1:16,1:16,1:16,4:42,0:2,1:10,2:10,3:58,4:42,5:58,5:58,5:58,0:2,0:2,1:2,2:55,3:34,4:50,4:50,4:50,0:2,0:2,1:16,2:2,3:50,3:50,3:50,0:2,0:2,1:2,2:55,2:55,2:55,0:2,0:2,1:16,1:16,1:16,0:2,0:66,0:66,0:66,0:66,0:66,0:66\n0:66,0:66,1:10,0:2,0:66,0:66,0:66,1:10,2:15,2:15,2:15,0:66,0:66,0:2,0:2,0:66,0:66,0:66,1:2,1:2,1:2,4:10,0:2,1:10,2:15,3:10,4:10,5:10,5:10,5:10,0:2,0:2,1:2,2:2,3:2,4:2,4:2,4:2,0:2,0:2,1:2,2:2,3:2,3:2,3:2,0:2,0:2,1:10,2:15,2:15,2:15,0:2,0:2,1:2,1:2,1:2,0:2,0:66,0:66,0:66,0:66,0:66,0:66\n0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71,0:71\n614 300\nba\n2\nsame+abcdef!?3 xé!?3\n",
+    "oracle": "src/core/s1_views_test.zig",
+    "constant": "reads_expected",
+    "oracle_sha256": "bddba40ce37fe58db956485804c0c8acab900e175e140be45fe27deebfbca673"
+  },
+  "s1_views": {
+    "stdout": "A=10,C=2,G=7,T=19 AA=2,AC=2,AG=1,AT=5,CG=2,GG=2,GT=5,TA=8,TG=1,TT=9\n26 22 0 0\nab=39,bc=25,ca=27|abcabcab!0123456\n=1,alp=2,be=1,bet=1|zz0,zz1,zz2,zz3,zz4 zz0\nab=2,ac=1,ad=1,br=2,ca=1,da=1,ra=2|ab=0,ac=3,ad=5,br=1,ca=4,da=6,ra=2\n=6,a=3,h=1,hé=1,héé=1,é=2,éé=1,éé€=1,é€=1,é€😀=1,€=1,€😀=1,€😀a=1,😀=1,😀a=2\n=74,a=5,abc=5,abcd=10,abcdé=10,bc=2,bcd=4,bcdé=4,c=2,cd=4,cdé=4,d=4,dé=4,é=4\n0:0=2,s0:0=2,s0:2=1,s0:8=3,s0:15=4,s0:16=5,s0:17=6,1:1=2,s1:1=2,1:3=1,1:9=3,1:16=4,1:17=5,1:18=6,2:2=2,s2:2=2,3:3=2,s3:3=2,4:4=2,s4:4=2,5:5=2,s5:5=2,6:6=2,s6:6=2,7:7=2,s7:7=2,8:8=2,s8:8=2,9:9=2,s9:9=2,10:10=2,s10:10=2,11:11=2,s11:11=2,12:12=2,s12:12=2,13:13=2,s13:13=2,14:14=2,s14:14=2,15:15=2,s15:15=2,16:16=2,s16:16=2,17:17=2,s17:17=2\n21 210\n997290 4 99 25022 20 99\nab=21,bc=11,bd=11,ca=11,d=1\nab=8,bc=4,ca=4\nab=4,ba=3 ab=3,bc=3,ca=2 ab=2,bc=2,cd=1,de=1,ef=1,fa=1\nzz=0|abc=2,bca=2,cab=2,zz=0\n1160 644 1\n622\n",
+    "oracle": "src/core/s1_views_test.zig",
+    "constant": "views_expected",
+    "oracle_sha256": "bddba40ce37fe58db956485804c0c8acab900e175e140be45fe27deebfbca673"
+  },
+  "v_buffer_mut": {
+    "stdout": "True False False False True\nTrue False False True\n8:3132334100cebb78 2\n8:3132334100cebb78 12:3132334100cebb7861626342\n14:3132334100cebb78616263423132\n1000000 137293856\n",
+    "oracle": "src/core/value_e2e_test.zig",
+    "constant": "v_buffer_mut_output",
+    "oracle_sha256": "a4cf1a923b573f644eb1c8f499f2dc27639caca3b77c46f711c507728be3f9ff"
+  },
+  "v_text": {
+    "stdout": "total 7 of 3 items 2 True None a-xb\n-9223372036854775807 18446744073709551615 -5 200 False\nhéllo 5  True\nw0, w1, w4, w9 w0 True w0w1w4\n465 n4 6\n",
+    "oracle": "src/core/value_e2e_test.zig",
+    "constant": "v_text_output",
+    "oracle_sha256": "a4cf1a923b573f644eb1c8f499f2dc27639caca3b77c46f711c507728be3f9ff"
+  }
+}

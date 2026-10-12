@@ -1,0 +1,319 @@
+{
+  "identity": {
+    "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+    "source_commit": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+    "sources": {
+      "test/core/t_scalar_fusion.my": "f7e5ba24a42d283e7cd5f21bff95c2ecdafb02a67bd8ba14bbd7a2e16517fb45",
+      "test/core/v_text.my": "583d69439ba30a7e4a37c849470d22632da7a71c31a869f271d98eb600eb4b12",
+      "test/core/f_features.my": "804dbf4df31c99d608802183fedfe6c5e2ac1ab660b993ebecda3dcce66b6fed",
+      "test/core/row_string_join.my": "943f53fcb6b89c78d17f04813cd6467b264604c81560a60499a9f6c7ae42315b",
+      "test/core/row_string_split.my": "2cdc5714dfad11b8d35100aaedc08cb7279b8fd0341eb5df08d78cc82a595b6a",
+      "test/core/s1_ascii.my": "f0472e19886786c5ab8e84a388733844569c36706b5b1ca0110447f7384d87c8",
+      "test/core/s1_bytes.my": "9f8cd6241fe1923abb067e53cb39dbfc3f8729e66a0fa2803fb165b780d05fed",
+      "test/core/s1_collisions.my": "706ffc8ed873cc2a11e7139665cfdcc175ced7346c134db5727413b281e0d956",
+      "test/core/s1_reads.my": "b17c73ef673004b6bacc36e59a45886d2ff70bc1f142ce4039af6a35b817a654",
+      "test/core/s1_views.my": "bb33e24fa121112f51a7df46a6db6b59010f8753970b23b1bc6ce4ca0cdb75d7",
+      "test/core/t_methods.my": "67bc90acd552431964c724ddb9e4ad8e192b2a9aca4570ee0fbf10bc1a37dc8e",
+      "test/core/t_text.my": "6f043d04cad4b0f2c5d52695f446bf2dc32d569b779b35b2fc909652797133ac",
+      "test/core/v_buffer_format.my": "87fc8924a8e40bc63ac5ee8cd56b59c18de763e477f406fbae096fff84ec8af0",
+      "test/core/v_buffer_mut.my": "c063d06160843d430a486f4b1f0e8b58783e4bed1b2bc36ca6e784241e7ff0a3"
+    },
+    "harness_sha256": "38e181b1cff8c42b27809d4672164ae559da38de282cd849fc3cb6d65c4f5acd",
+    "oracle_sha256": "99f5ee05f91ff43ba6c4bdec2a5235cf0e96adaecc38f0908381c60cba893cd7",
+    "modes": [
+      "release"
+    ],
+    "selected_cases": [
+      "t_scalar_fusion",
+      "row_string_join",
+      "row_string_split"
+    ]
+  },
+  "cases": {
+    "t_scalar_fusion": {
+      "release": {
+        "status": "passed",
+        "source_sha256": "f7e5ba24a42d283e7cd5f21bff95c2ecdafb02a67bd8ba14bbd7a2e16517fb45",
+        "public_tests": 17,
+        "successful_tests": 8,
+        "expected_traps": 9,
+        "run": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+            "test",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/t_scalar_fusion.my",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-corrected/cache",
+            "--experimental-zero-rc",
+            "--release",
+            "--force",
+            "--json",
+            "--jobs",
+            "1"
+          ],
+          "status": 1,
+          "elapsed_ns": 394378404,
+          "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"t_scalar_fusion::test_comparison_only_reads_cover_nul_and_scalar_extremes\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"a6589a9483ab31f44c6848e3509ef9d34ab22846d2b652d89d64f51a3b71429c\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/t_scalar_fusion.my#70973fab6c123c2ace4a2dedd9212bc021b940196db9cebdefdf29bb78ac0afc\",\"producer\":{\"facts\":{\"fresh\":43,\"reused\":0,\"fallback\":30,\"decoded\":0},\"lowering\":{\"fresh\":30,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":43,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":172,\"index_edges\":315,\"affected_nodes\":43,\"closure_nodes\":150,\"closure_edges\":70,\"reused_tests\":0,\"planned_tests\":17},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":38178,\"save_bytes_prepared\":60626,\"sequence_locks\":96}},\"nanoseconds\":{\"lowering\":8113711,\"facts\":3602412,\"graph\":312730,\"planner\":100492361,\"keys\":153848,\"publication\":7690193,\"total\":120707948},\"transport\":{\"request_bytes\":2300,\"reply_bytes\":1092,\"startups\":1}}}},{\"name\":\"t_scalar_fusion::test_comparisons_and_appends_preserve_all_unicode_scalars\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"4023ed130ecd3f06377d1c10c63758ecd0127ba1ef90ac320cd66cb8f4aec140\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_scalar_fusion::test_distinct_branches_and_repeated_appends_keep_the_selected_character\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"d26999f14b11ad9997b85447815a9b9c26ccc77c840ff4fdba735dc0eae13c21\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_scalar_fusion::test_distinct_ssa_aliases_share_input_but_copy_the_append_destination\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"2ef36e04ab44082a90ecaf4a4fb7c44e375b82d9d69f2635f8ffe228ea2163ff\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_scalar_fusion::test_empty_comparison_only_read_traps\",\"status\":\"failed\",\"reason\":\"R_TEXT_BOUNDS (index 0, length 0)\\n  in t_scalar_fusion::compares at t_scalar_fusion.my:19:14\\n  in t_scalar_fusion::test_empty_comparison_only_read_traps at t_scalar_fusion.my:163:12\\n\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"e511dbc8f738bb69f13bcc0a279ab67591e066f4f57f1afd53aa0c4678472c8e\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_scalar_fusion::test_empty_iteration_does_not_read_past_the_text\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"110db206e268954dba52e8d0941b0c93d11bc608ade6e88561dc63a9ffa9b4be\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_scalar_fusion::test_empty_separator_is_a_structured_native_trap\",\"status\":\"failed\",\"reason\":\"R_EMPTY_SEPARATOR\\n  in t_scalar_fusion::test_empty_separator_is_a_structured_native_trap at t_scalar_fusion.my:194:16\\n\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"b3493678e36d3e09d9fd4dcceb2e0727b18b82f75d07661837e2711814ae490b\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_scalar_fusion::test_escaping_and_multiscalar_consumers_remain_strings\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"6cdab973f172db21dabc59b5b994fdc597c4cdd2deb6130d836bebed02d96146\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_scalar_fusion::test_large_negative_index_traps\",\"status\":\"failed\",\"reason\":\"R_TEXT_BOUNDS (index -9223372036854775807, length 2)\\n  in t_scalar_fusion::compares at t_scalar_fusion.my:19:14\\n  in t_scalar_fusion::test_large_negative_index_traps at t_scalar_fusion.my:173:12\\n\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"b6aa5fcf3f80270a64635b89f4d75cb38c5402735c56791b2a18d12f4d210972\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_scalar_fusion::test_large_positive_index_traps\",\"status\":\"failed\",\"reason\":\"R_TEXT_BOUNDS (index 9223372036854775807, length 2)\\n  in t_scalar_fusion::compares at t_scalar_fusion.my:19:14\\n  in t_scalar_fusion::test_large_positive_index_traps at t_scalar_fusion.my:168:12\\n\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"92fc172cb0736c4da0ba260a37541630bf916dae192472642866c2125c3bf011\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_scalar_fusion::test_minimum_signed_index_reports_its_original_value\",\"status\":\"failed\",\"reason\":\"R_TEXT_BOUNDS (index -9223372036854775808, length 2)\\n  in t_scalar_fusion::compares at t_scalar_fusion.my:19:14\\n  in t_scalar_fusion::test_minimum_signed_index_reports_its_original_value at t_scalar_fusion.my:189:12\\n\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"0a92cf5a3896ac949e5f119ac97ed26f6fc50932eb4ada1f0676d99610f04009\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_scalar_fusion::test_missing_list_value_is_a_structured_native_trap\",\"status\":\"failed\",\"reason\":\"R_LIST_VALUE\\n  in t_scalar_fusion::test_missing_list_value_is_a_structured_native_trap at t_scalar_fusion.my:205:5\\n\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"13c496428ad96a2929c33edd6e04f8cf375999ef95b103a7253edd11e55ad889\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_scalar_fusion::test_nonplace_unicode_index_reports_source_index_and_scalar_length\",\"status\":\"failed\",\"reason\":\"R_TEXT_BOUNDS (index 99, length 2)\\n  in t_scalar_fusion::test_nonplace_unicode_index_reports_source_index_and_scalar_length at t_scalar_fusion.my:183:14\\n\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"17db37b06a75da0345ffbbd52c682b1283dec6748d422374752c6914d1e59f59\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_scalar_fusion::test_out_of_range_byte_is_a_structured_native_trap\",\"status\":\"failed\",\"reason\":\"R_BYTE_RANGE\\n  in t_scalar_fusion::test_out_of_range_byte_is_a_structured_native_trap at t_scalar_fusion.my:199:16\\n\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"338f6607222a98d36bd8e7d862a8dc86ae2b10be5c30ab97890fb211a7a88534\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_scalar_fusion::test_rebinding_the_receiver_does_not_change_the_selected_bytes\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"219379292eafdfd2722f8c98e9efeadfae82863a5240ebc4c5dfb619d808d2d4\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_scalar_fusion::test_same_source_destination_keeps_the_ordinary_path_and_snapshot\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"e10b6508494336f83b43c3e0e5a404177f6a90b419a4e9e0b7f2bbff29d30575\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"t_scalar_fusion::test_surrogate_construction_traps_before_scalar_uses\",\"status\":\"failed\",\"reason\":\"R_TEXT_SCALAR\\n  in t_scalar_fusion::test_surrogate_construction_traps_before_scalar_uses at t_scalar_fusion.my:178:21\\n\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"d378e1b3a3e862bdffea1f14ddd9e1c990b2a5c261a9a25dce280170365bf094\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":8,\"failed\":9,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/t_scalar_fusion.my\"]}\n",
+          "stderr": ""
+        },
+        "counting": "Guest-test commands verify leak checks and diagnostics; no RC counter claim from these commands."
+      }
+    },
+    "row_string_join": {
+      "release": {
+        "status": "passed",
+        "build": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_join.my",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-corrected/cache",
+            "--experimental-zero-rc",
+            "--release",
+            "--counters",
+            "--emit-llvm",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-corrected/row_string_join/release/program.ll",
+            "--link",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/benchmarks/runtime/ports/native_clock.c",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-corrected/row_string_join/release/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 135012508,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_join.my:36:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func inputs(kind: str, size: int, seed: int) -> Inputs:\n              ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_join.my:48:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:\n              ^\n"
+        },
+        "run": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-corrected/row_string_join/release/program",
+            "64",
+            "9",
+            "7"
+          ],
+          "status": 0,
+          "elapsed_ns": 1172871,
+          "stdout": "311184 3853\n",
+          "stderr": ""
+        },
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A04/additional-migrations/support5-corrected/row_string_join/release/counts.json",
+          "counter_sha256": "7b8b24e5aaa1bbdff60cb67a9032a6c03e36969192e30634087ad18d1d22f15a",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 35,
+          "memory": {
+            "allocs": 96,
+            "alloc_bytes": 12352,
+            "frees": 96,
+            "reallocs": 0,
+            "peak_live_bytes": 6560,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "memory": {
+          "calls": 15,
+          "allocs": 96,
+          "alloc_bytes": 12352,
+          "frees": 96,
+          "free_bytes": 12352,
+          "list_grows": 0,
+          "list_grow_bytes": 0,
+          "reallocs": 0,
+          "realloc_added_bytes": 0,
+          "realloc_moves": 0,
+          "realloc_moved_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "dict_copies": 0,
+          "dict_copy_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "text_copies": 74,
+          "text_copy_bytes": 3042,
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "dict_grows": 0,
+          "dict_grow_bytes": 0,
+          "buffer_grows": 0,
+          "buffer_grow_bytes": 0,
+          "text_grows": 0,
+          "text_grow_bytes": 0,
+          "text_appends": 0,
+          "text_append_bytes": 0,
+          "buffer_pushes": 0,
+          "buffer_appends": 0,
+          "buffer_append_bytes": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0,
+          "share_bytes": 0,
+          "peak_live_bytes": 6560,
+          "live_bytes_at_exit": 0
+        },
+        "inputs": [
+          64,
+          9,
+          7
+        ],
+        "expected_checksum": 311184,
+        "source_sha256": "943f53fcb6b89c78d17f04813cd6467b264604c81560a60499a9f6c7ae42315b",
+        "binary_sha256": "d842f542a3c0cccdb2bd2842c73b47e88dbe08b8ceea385784c58a11330ff071",
+        "llvm_sha256": "d7ea34e45c7d3863d505762c0183891cb6ac5097173b705ec70a2bfbd3f85929",
+        "timing": "Printed elapsed time is ignored; this is correctness evidence, not a timing window."
+      }
+    },
+    "row_string_split": {
+      "release": {
+        "status": "passed",
+        "build": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_split.my",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-corrected/cache",
+            "--experimental-zero-rc",
+            "--release",
+            "--counters",
+            "--emit-llvm",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-corrected/row_string_split/release/program.ll",
+            "--link",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/benchmarks/runtime/ports/native_clock.c",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-corrected/row_string_split/release/program"
+          ],
+          "status": 0,
+          "elapsed_ns": 126426850,
+          "stdout": "",
+          "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_split.my:44:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func inputs(kind: str, size: int, seed: int) -> Inputs:\n              ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/row_string_split.my:56:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:\n              ^\n"
+        },
+        "run": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-corrected/row_string_split/release/program",
+            "64",
+            "9",
+            "7"
+          ],
+          "status": 0,
+          "elapsed_ns": 1141160,
+          "stdout": "246546 55153\n",
+          "stderr": ""
+        },
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A04/additional-migrations/support5-corrected/row_string_split/release/counts.json",
+          "counter_sha256": "37b2cf785707155ee608d3de909fcd19647814bde11f04c0e3b0e0ce51ce8cbc",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 1178,
+          "memory": {
+            "allocs": 1275,
+            "alloc_bytes": 98472,
+            "frees": 1275,
+            "reallocs": 0,
+            "peak_live_bytes": 7400,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "memory": {
+          "calls": 591,
+          "allocs": 1275,
+          "alloc_bytes": 98472,
+          "frees": 1275,
+          "free_bytes": 98472,
+          "list_grows": 36,
+          "list_grow_bytes": 8064,
+          "reallocs": 0,
+          "realloc_added_bytes": 0,
+          "realloc_moves": 0,
+          "realloc_moved_bytes": 0,
+          "list_copies": 0,
+          "list_copy_bytes": 0,
+          "dict_copies": 0,
+          "dict_copy_bytes": 0,
+          "buffer_copies": 0,
+          "buffer_copy_bytes": 0,
+          "text_copies": 1217,
+          "text_copy_bytes": 4104,
+          "runtime_retains": 0,
+          "runtime_releases": 0,
+          "dict_grows": 0,
+          "dict_grow_bytes": 0,
+          "buffer_grows": 0,
+          "buffer_grow_bytes": 0,
+          "text_grows": 0,
+          "text_grow_bytes": 0,
+          "text_appends": 0,
+          "text_append_bytes": 0,
+          "buffer_pushes": 0,
+          "buffer_appends": 0,
+          "buffer_append_bytes": 0,
+          "shared_retains": 0,
+          "shared_releases": 0,
+          "share_marks": 0,
+          "share_bytes": 0,
+          "peak_live_bytes": 7400,
+          "live_bytes_at_exit": 0
+        },
+        "inputs": [
+          64,
+          9,
+          7
+        ],
+        "expected_checksum": 246546,
+        "source_sha256": "2cdc5714dfad11b8d35100aaedc08cb7279b8fd0341eb5df08d78cc82a595b6a",
+        "binary_sha256": "b2e1af91a860308a39da725a3338f32aaea4786137d72465bc2d1bae3e7fade7",
+        "llvm_sha256": "145d4debe208bbb8b671b26a9db548a8ece6f1b3ea07142d39bdf8b7c9f9627a",
+        "timing": "Printed elapsed time is ignored; this is correctness evidence, not a timing window."
+      }
+    }
+  },
+  "limitations": "No performance claim; successful guest tests use leak checking; counted main programs include structural and RC audits.",
+  "provider": {
+    "source": "benchmarks/runtime/ports/native_clock.c",
+    "source_sha256": "0af3514346f4088770f0032ce422e322d02900437626f5a1af98e2a69200dfa5",
+    "contract": "--link accepts C source; compiler owns compilation and depfile caching."
+  },
+  "summary": {
+    "assigned_sources": 14,
+    "selected_sources": 3,
+    "expected_lanes": 3,
+    "completed_lanes": 3,
+    "failed_lanes": 0
+  }
+}

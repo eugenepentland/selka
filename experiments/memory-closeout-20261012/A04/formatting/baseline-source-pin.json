@@ -1,0 +1,7 @@
+{
+  "pinned_commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "path": "src/core/runtime/core_number_text.zig",
+  "source_sha256": "f96a4e88d290ab3587b8f90c64ad67eb1045f9143ecb7622bfccba3942ca05ea",
+  "matches_completed_evidence": "abi-04/results.json objects.before.sources.core_number_text.zig",
+  "reason": "Keep old-layout control reproducible after the production repair is committed; HEAD now contains the repair."
+}

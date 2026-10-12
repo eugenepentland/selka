@@ -11,6 +11,7 @@ import subprocess
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
+BEFORE_COMMIT = 'fbfcaa7a923186a8e773c3760f81c10aa345a432'
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--phase', required=True)
 args = parser.parse_args()
@@ -29,7 +30,7 @@ report = {'base_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], c
           'candidate_diff': subprocess.check_output(['git', 'diff', '--', 'src/core/runtime/core_number.c', 'src/core/runtime/core_number_text.zig'], cwd=ROOT, text=True),
           'zig': os.environ['ZIG'], 'zig_sha256': digest(Path(os.environ['ZIG'])),
           'runtime_sources': {str(p.relative_to(ROOT)): digest(p) for p in parts},
-          'c_source_sha256': digest(cfile), 'probe_sha256': digest(HERE / 'probe.c'), 'objects': {}, 'runs': []}
+          'c_source_sha256': digest(cfile), 'probe_sha256': digest(HERE / 'probe.c'), 'before_source_commit': BEFORE_COMMIT, 'objects': {}, 'runs': []}
 unit_command = [os.environ['ZIG'], 'test', str(ROOT / 'src/core/runtime/core_number_text.zig'), '--test-filter', 'number text']
 unit = subprocess.run(unit_command, capture_output=True, text=True, cwd=ROOT)
 report['unit'] = {'command': unit_command, 'status': unit.returncode, 'stdout': unit.stdout, 'stderr': unit.stderr}
@@ -41,7 +42,7 @@ for variant in ('before', 'after'):
         target = folder / name
         target.write_bytes((ROOT / 'src/core/runtime' / name).read_bytes())
     if variant == 'before':
-        old = subprocess.check_output(['git', 'show', 'HEAD:src/core/runtime/core_number_text.zig'], cwd=ROOT)
+        old = subprocess.check_output(['git', 'show', BEFORE_COMMIT + ':src/core/runtime/core_number_text.zig'], cwd=ROOT)
         (folder / 'core_number_text.zig').write_bytes(old)
     obj = folder / 'number.o'
     command = [os.environ['ZIG'], 'build-obj', str(folder / 'core_number_text.zig'), '-OReleaseFast',

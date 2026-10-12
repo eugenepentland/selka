@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/f_features.my",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/cache",
+    "--experimental-zero-rc",
+    "--release",
+    "--force",
+    "--json",
+    "--jobs",
+    "1"
+  ],
+  "status": 0,
+  "elapsed_ns": 352779416,
+  "stdout": "{\"version\":\"native-tests-v1\",\"tests\":[{\"name\":\"f_features::test_callbacks_pass_return_and_live_fixed_array_writes\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"de6ea82ae8200377ff58885fe1c99fd010cefbfaa352cdfd15640ce71f6294f0\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":{\"scope\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/f_features.my#8f30561751c82ae7fbf2905d65680b95199ccdf872b4e6af3e26cde787534387\",\"producer\":{\"facts\":{\"fresh\":22,\"reused\":0,\"fallback\":13,\"decoded\":0},\"lowering\":{\"fresh\":13,\"reused\":0,\"materialized\":0}},\"graph\":{\"nodes_read\":0,\"nodes_unchanged\":0,\"changed_nodes\":22,\"candidate_tests\":0,\"shards_read\":0,\"shards_written\":3},\"planner\":{\"index_nodes\":88,\"index_edges\":135,\"affected_nodes\":22,\"closure_nodes\":60,\"closure_edges\":27,\"reused_tests\":0,\"planned_tests\":5},\"storage\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":18854,\"save_bytes_prepared\":36141,\"sequence_locks\":45}},\"nanoseconds\":{\"lowering\":4896629,\"facts\":2210495,\"graph\":135609,\"planner\":101050726,\"keys\":50999,\"publication\":4250199,\"total\":112726746},\"transport\":{\"request_bytes\":1172,\"reply_bytes\":552,\"startups\":1}}}},{\"name\":\"f_features::test_keyed_records_remain_stable_and_snapshot_keeps_order\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"73edc6bebc3d89ffe37501777d02e24fca733b4b1052e7b2949166619a2bede8\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"f_features::test_managed_array_mut_write_keeps_snapshot\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"3fc995adeef8a16e7b1427b5485e8fac8aae48a37b19ae55b991b2bf2e0de4d2\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"f_features::test_mut_callback_copies_managed_list_back_without_changing_snapshot\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"db599fd674041fb2f3387b4fb54dad1f7e9576ba8b2356903786bf10b8eede88\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}},{\"name\":\"f_features::test_sort_narrow_numeric_and_tuple_keys\",\"status\":\"passed\",\"reason\":\"\",\"at\":\"\",\"cache\":{\"action\":\"execute\",\"reason\":\"force\",\"key\":\"5bb000e6d0bce52b91e15ffd5ac4017c3674c17e43647897c3022832d20b9ead\",\"component\":\"b5b10d137fdc2e82d88d61f95f2bb278c00fa63d6ddf3ac733da2a3db5582737\",\"key_method\":\"canonical-facts\",\"work\":null}}],\"passed\":5,\"failed\":0,\"skipped\":0,\"cached\":0,\"unsupported\":0,\"sources\":[\"/home/epentland/ai/canopy/mylang-memory-20261012-A04/test/core/f_features.my\"]}\n",
+  "stderr": ""
+}

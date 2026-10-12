@@ -1,0 +1,9 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/s1_ascii/release/program"
+  ],
+  "status": 0,
+  "elapsed_ns": 1100178,
+  "stdout": "h\u00e9/2/\u00e9/-1\nllo/3/o/0\nw\u00f6rld/5/d/3\nrld/3/d/1\nell/3/l/1\nld/2/d/0\n/0//-1\nh\u00e9llo w\u00f6rld/11/d/2\n\u00e9/1/\u00e9/-1\nab/2/b/-1\nhlowrd/6/d/1\nhlowrd/6/d/1\ndlr\u00f6w oll\u00e9h/11/h/1\ndlrow olleh/11/h/1\n14 659485\n1 2 a 12 \u00e9 11\n",
+  "stderr": ""
+}

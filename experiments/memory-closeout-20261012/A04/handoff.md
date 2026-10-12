@@ -170,3 +170,38 @@ zero RC/leaks and clean structural audits. A08 separately verifies the transitio
 from preserved C0 partial rendering stages; C0's old failed native link remains an
 explicit limitation. This does not qualify support5's historical installed RC
 components or claim C1/default/retirement completion.
+
+Numeric formatting ABI repair is committed as
+`92edc7a99e6ca2c03928586bc66f6f563a93b3b2` after Guardian88.
+The prebuilt Zig adapter now treats the first eight bytes as opaque and updates
+ASCII metadata through the selected C layout. `formatting/abi-04/` records the
+actual old/new objects under ordinary and checked ABIs: old checked fails the
+Unicode metadata oracle, both ordinary controls and the repaired checked object
+pass with no live managed blocks. Earlier harness attempts are retained and
+classified in that README. Five counted guest modes plus ordinary pass; two
+prototype cache replay requirements remain unqualified on the worker's old host
+closure. A08 owns integrated numeric-object invalidation/replay. Exact audited
+format_float/format_number/round_float contracts were authored by the coordinator
+and reviewed by A07. The harness now pins its old source to C0 so committing the
+repair does not silently turn the old control into the new implementation.
+
+Slice lifetime repair is committed as `36e1afc91`, Guardian88. Four focused IR
+tests pass, including preserved read-only fusion. New native regressions pass all
+five modes; original s1_reads passes five checked modes plus ordinary. Five
+s1_views checked lanes remain refused at an earlier sorted/list-copy path absent
+from this older worker compiler, while its ordinary control passes. All refusals
+remain in `slices/prototype-01/`; the full integrated rerun is required. The
+production pass follows borrowed parents and bidirectional phi aliases, retaining
+materialized snapshots across owner transfers or updates. Analysis remains
+O(nodes + edges) per candidate query. A07 reviewed the alias and consuming-operand
+contracts. No workaround changes either original S1 source.
+
+The additional14 support5 native survey plus targeted corrected reruns now covers
+12/14 cases; two S1 slice failures remain assigned to the optimizer repair. The
+benchmark-provider failure was harness misuse of --link with an object instead of
+C source, preserved in the initial results and corrected in a separate phase.
+Two missed copies in the scalar comparison list are now explicit without changing
+assertions; the source burden is 44 line pairs / 45 added copy calls. See
+`additional-migrations/sources-support5.json` and both native result directories.
+Borrowed tuple decomposition migrations await the integrated tuple.copy frontend
+fix (A01 eccea1cc) and are not yet counted as qualified.

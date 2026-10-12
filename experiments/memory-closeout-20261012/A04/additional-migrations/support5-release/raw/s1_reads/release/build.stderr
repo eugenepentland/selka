@@ -1,0 +1,3 @@
+/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/additional-migrations/support5-release/s1_reads/release/main.my:46:15: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression
+      mut t = s + "!"
+                ^

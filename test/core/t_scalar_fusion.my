@@ -140,7 +140,7 @@ public func test_distinct_ssa_aliases_share_input_but_copy_the_append_destinatio
     mut wide = "".join(["123456789012345", "é€🙂\0"])
     mut aliases = [wide.copy(), wide.copy()]
     mut expanded = append_capacity_alias(aliases)
-    return result == "ézé" and source == "éz" and values == ["éz", "éz"] and expanded == wide + wide + wide + wide and aliases == [wide, wide] and wide == "123456789012345é€🙂\0"
+    return result == "ézé" and source == "éz" and values == ["éz", "éz"] and expanded == wide + wide + wide + wide and aliases == [wide.copy(), wide.copy()] and wide == "123456789012345é€🙂\0"
 
 
 # spec-case: NEW-CORE-TEXT-BYTES-1
