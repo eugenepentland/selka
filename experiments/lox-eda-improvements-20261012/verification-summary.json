@@ -1,0 +1,265 @@
+{
+  "success": true,
+  "status": 0,
+  "inputs_stable": true,
+  "profile_coverage": {
+    "complete_qualification": false,
+    "complete_verification": true,
+    "counts": {
+      "executed": 46,
+      "outstanding": 0,
+      "required": 46,
+      "reused": 0
+    },
+    "filtered_inventory": false,
+    "heuristic": false,
+    "inputs_stable": true,
+    "outstanding": [],
+    "profile": "complete",
+    "qualification_outstanding": [],
+    "required": [
+      "component-preparation",
+      "input-discovery",
+      "environment-discovery",
+      "core",
+      "tooling_unit",
+      "text_scalar_unit",
+      "memory_budget",
+      "unit",
+      "cli",
+      "golden",
+      "idioms_self",
+      "idioms",
+      "incremental",
+      "interfaces",
+      "interface_oracle",
+      "parser_hints",
+      "friction",
+      "tooling_isolation",
+      "application_cache",
+      "component_builder",
+      "component_native",
+      "component-support",
+      "selfhost_numeric",
+      "spec-history",
+      "juice_pure",
+      "juice",
+      "juice-runtime",
+      "identity-qualification",
+      "affected",
+      "coverage_self",
+      "coverage",
+      "manifest_self",
+      "verification_cache",
+      "verification_session",
+      "fuzz_campaign",
+      "juice_cache",
+      "doc-coverage",
+      "guest",
+      "language",
+      "doctest",
+      "zig-format",
+      "my_format",
+      "my_format_self",
+      "noalloc_lint",
+      "embedded_migration",
+      "guardian"
+    ],
+    "status": "complete",
+    "version": "verification-profile-v2"
+  },
+  "build_admitted_seconds": 24.191388769075274,
+  "gate_admitted_seconds": 586.756663920125,
+  "actions": [
+    {
+      "id": "component-preparation",
+      "state": "fresh"
+    },
+    {
+      "id": "input-discovery",
+      "state": "fresh"
+    },
+    {
+      "id": "environment-discovery",
+      "state": "fresh"
+    },
+    {
+      "id": "core",
+      "state": "execute"
+    },
+    {
+      "id": "tooling_unit",
+      "state": "execute"
+    },
+    {
+      "id": "text_scalar_unit",
+      "state": "execute"
+    },
+    {
+      "id": "memory_budget",
+      "state": "execute"
+    },
+    {
+      "id": "unit",
+      "state": "execute"
+    },
+    {
+      "id": "cli",
+      "state": "execute"
+    },
+    {
+      "id": "golden",
+      "state": "execute"
+    },
+    {
+      "id": "idioms_self",
+      "state": "execute"
+    },
+    {
+      "id": "idioms",
+      "state": "execute"
+    },
+    {
+      "id": "incremental",
+      "state": "execute"
+    },
+    {
+      "id": "interfaces",
+      "state": "execute"
+    },
+    {
+      "id": "interface_oracle",
+      "state": "execute"
+    },
+    {
+      "id": "parser_hints",
+      "state": "execute"
+    },
+    {
+      "id": "friction",
+      "state": "execute"
+    },
+    {
+      "id": "tooling_isolation",
+      "state": "execute"
+    },
+    {
+      "id": "application_cache",
+      "state": "execute"
+    },
+    {
+      "id": "component_builder",
+      "state": "execute"
+    },
+    {
+      "id": "component_native",
+      "state": "execute"
+    },
+    {
+      "id": "component-support",
+      "state": "execute"
+    },
+    {
+      "id": "selfhost_numeric",
+      "state": "execute"
+    },
+    {
+      "id": "spec-history",
+      "state": "fresh"
+    },
+    {
+      "id": "juice_pure",
+      "state": "execute"
+    },
+    {
+      "id": "juice",
+      "state": "fresh"
+    },
+    {
+      "id": "juice-runtime",
+      "state": "fresh"
+    },
+    {
+      "id": "identity-qualification",
+      "state": "fresh"
+    },
+    {
+      "id": "affected",
+      "state": "execute"
+    },
+    {
+      "id": "coverage_self",
+      "state": "execute"
+    },
+    {
+      "id": "coverage",
+      "state": "fresh"
+    },
+    {
+      "id": "manifest_self",
+      "state": "execute"
+    },
+    {
+      "id": "verification_cache",
+      "state": "execute"
+    },
+    {
+      "id": "verification_session",
+      "state": "execute"
+    },
+    {
+      "id": "fuzz_campaign",
+      "state": "execute"
+    },
+    {
+      "id": "juice_cache",
+      "state": "execute"
+    },
+    {
+      "id": "doc-coverage",
+      "state": "execute"
+    },
+    {
+      "id": "guest",
+      "state": "fresh"
+    },
+    {
+      "id": "language",
+      "state": "fresh"
+    },
+    {
+      "id": "doctest",
+      "state": "execute"
+    },
+    {
+      "id": "zig-format",
+      "state": "execute"
+    },
+    {
+      "id": "my_format",
+      "state": "execute"
+    },
+    {
+      "id": "my_format_self",
+      "state": "execute"
+    },
+    {
+      "id": "noalloc_lint",
+      "state": "execute"
+    },
+    {
+      "id": "embedded_migration",
+      "state": "execute"
+    },
+    {
+      "id": "guardian",
+      "state": "fresh"
+    }
+  ],
+  "raw_receipt": {
+    "path": "experiments/lox-eda-improvements-20261012/verification-receipt.json.gz",
+    "sha256": "9f3ca3e3def33e0bc3a85de1a80b49a4e814f070af17c2d1287e8be76472dd3e",
+    "uncompressed_sha256": "73be96437303bcdd32214a6980d774bb65603a8f05fd4fb83f01a5f300a56fa7"
+  },
+  "timing_note": "Verification duration, not an application compile-time benchmark; admission wait is excluded from admitted seconds."
+}

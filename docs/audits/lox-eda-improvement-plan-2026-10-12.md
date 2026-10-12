@@ -1,6 +1,10 @@
 # Lox and EDA: five performance priorities
 
-Status: source and allocation audit complete; fixes are proposed, not implemented.
+Status: all five fixes are integrated in the
+[implementation run](../../experiments/lox-eda-improvements-20261012/README.md).
+The complete registered verification gate passed all 46 selected actions.
+Combined application qualification and full-workload comparisons remain pending;
+the acceptance criteria below are not yet a completed-results claim.
 Audit base: `5f1701b13f243ca1fcc05c0b38ce73b8c9c3cd4d` on the development lineage.
 
 Repeated independent copies in the application migrations are the strongest
