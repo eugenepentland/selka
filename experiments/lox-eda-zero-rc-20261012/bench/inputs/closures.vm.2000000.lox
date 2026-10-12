@@ -1,0 +1,46 @@
+var N = 2000000;
+// Closure creation, upvalue capture and closing, and calls through closures.
+fun makeCounter() {
+  var count = 0;
+  fun inc() {
+    count = count + 1;
+    return count;
+  }
+  return inc;
+}
+
+fun makeAdder(x) {
+  fun add(y) { return x + y; }
+  return add;
+}
+
+fun compose(f, g) {
+  fun h(x) { return f(g(x)); }
+  return h;
+}
+
+var total = 0;
+for (var i = 0; i < N; i = i + 1) {
+  var counter = makeCounter();
+  counter();
+  counter();
+  total = total + counter();
+  var add = makeAdder(i);
+  total = total + add(1);
+}
+
+var inc = makeAdder(1);
+var chain = inc;
+for (var j = 0; j < 20; j = j + 1) {
+  chain = compose(chain, inc);
+}
+
+var acc = 0;
+var k = 0;
+while (k < N / 10) {
+  acc = acc + chain(k);
+  k = k + 1;
+}
+
+print total;
+print acc;

@@ -1,0 +1,30 @@
+{
+  "cell": "lox/vm/properties",
+  "arms": {
+    "zig-safe": [
+      "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/zig-release-safe/out-release-safe/bin/lox",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/properties.vm.1000000.lox"
+    ],
+    "zig-fast": [
+      "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/zig-release/out-release/bin/lox",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/properties.vm.1000000.lox"
+    ],
+    "rust": [
+      "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/rust-release/target/release/lox",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/properties.vm.1000000.lox"
+    ],
+    "go": [
+      "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/.tmp/lox-bench/cache/go-release/bin/lox",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/properties.vm.1000000.lox"
+    ]
+  },
+  "oracle": "zig-safe",
+  "files": [
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/properties.vm.1000000.lox"
+  ],
+  "expected_stdout": "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/properties.vm.out"
+}

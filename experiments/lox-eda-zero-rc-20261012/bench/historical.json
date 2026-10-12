@@ -1,0 +1,1096 @@
+{
+  "lox": {
+    "receipt": "experiments/fs-x-20261009/results/lox-runtime.json.gz",
+    "receipt_sha256": "4fc85227a0f4d483281accb22ed520e22e64fb617dc365e459dce49eecac0803",
+    "rounds": 3,
+    "cpu": 10,
+    "summary": {
+      "binary_trees/vm": {
+        "mylang:release": {
+          "median_s": 1.2254121319856495,
+          "min_s": 1.2145418501459062,
+          "median_cpu_s": 1.21,
+          "maxrss_kib": 20748
+        },
+        "mylang-base:release": {
+          "median_s": 1.2899180608801544,
+          "min_s": 1.284959192154929,
+          "median_cpu_s": 1.27,
+          "maxrss_kib": 20740
+        },
+        "zig:release": {
+          "median_s": 0.4868471671361476,
+          "min_s": 0.4846862149424851,
+          "median_cpu_s": 0.47,
+          "maxrss_kib": 15284
+        },
+        "zig:release-safe": {
+          "median_s": 1.147698931163177,
+          "min_s": 1.133814592845738,
+          "median_cpu_s": 1.13,
+          "maxrss_kib": 16488
+        },
+        "rust:release": {
+          "median_s": 0.6203171939123422,
+          "min_s": 0.6186624150723219,
+          "median_cpu_s": 0.61,
+          "maxrss_kib": 18108
+        },
+        "go:release": {
+          "median_s": 0.753250994021073,
+          "min_s": 0.7464981938246638,
+          "median_cpu_s": 0.74,
+          "maxrss_kib": 56864
+        }
+      },
+      "binary_trees/tree": {
+        "mylang:release": {
+          "median_s": 0.2228446830995381,
+          "min_s": 0.2223632310051471,
+          "median_cpu_s": 0.22,
+          "maxrss_kib": 7308
+        },
+        "mylang-base:release": {
+          "median_s": 0.22325544292107224,
+          "min_s": 0.22113361908122897,
+          "median_cpu_s": 0.21,
+          "maxrss_kib": 7300
+        },
+        "zig:release": {
+          "median_s": 0.11875134706497192,
+          "min_s": 0.11761665996164083,
+          "median_cpu_s": 0.11,
+          "maxrss_kib": 3736
+        },
+        "zig:release-safe": {
+          "median_s": 0.24309115391224623,
+          "min_s": 0.2409378751181066,
+          "median_cpu_s": 0.22999999999999998,
+          "maxrss_kib": 4620
+        },
+        "rust:release": {
+          "median_s": 0.1503431610763073,
+          "min_s": 0.14932385506108403,
+          "median_cpu_s": 0.14,
+          "maxrss_kib": 5936
+        },
+        "go:release": {
+          "median_s": 0.17583202198147774,
+          "min_s": 0.17529481602832675,
+          "median_cpu_s": 0.17,
+          "maxrss_kib": 12192
+        }
+      },
+      "closures/vm": {
+        "mylang:release": {
+          "median_s": 1.8289645968470722,
+          "min_s": 1.7928611219394952,
+          "median_cpu_s": 1.82,
+          "maxrss_kib": 5388
+        },
+        "mylang-base:release": {
+          "median_s": 1.8370699209626764,
+          "min_s": 1.8292235031258315,
+          "median_cpu_s": 1.82,
+          "maxrss_kib": 5380
+        },
+        "zig:release": {
+          "median_s": 0.7568733610678464,
+          "min_s": 0.7390387409832329,
+          "median_cpu_s": 0.75,
+          "maxrss_kib": 2296
+        },
+        "zig:release-safe": {
+          "median_s": 1.1098539750091732,
+          "min_s": 1.1036854209378362,
+          "median_cpu_s": 1.1,
+          "maxrss_kib": 2928
+        },
+        "rust:release": {
+          "median_s": 0.9323746350128204,
+          "min_s": 0.9265139880590141,
+          "median_cpu_s": 0.92,
+          "maxrss_kib": 4616
+        },
+        "go:release": {
+          "median_s": 0.9043631060048938,
+          "min_s": 0.8998833049554378,
+          "median_cpu_s": 0.89,
+          "maxrss_kib": 17712
+        }
+      },
+      "closures/tree": {
+        "mylang:release": {
+          "median_s": 0.2791488741058856,
+          "min_s": 0.2791246681008488,
+          "median_cpu_s": 0.27,
+          "maxrss_kib": 6508
+        },
+        "mylang-base:release": {
+          "median_s": 0.27997761592268944,
+          "min_s": 0.27869886299595237,
+          "median_cpu_s": 0.27,
+          "maxrss_kib": 6500
+        },
+        "zig:release": {
+          "median_s": 0.16520512709394097,
+          "min_s": 0.1640688250772655,
+          "median_cpu_s": 0.16,
+          "maxrss_kib": 2456
+        },
+        "zig:release-safe": {
+          "median_s": 0.27520233602263033,
+          "min_s": 0.27505794493481517,
+          "median_cpu_s": 0.27,
+          "maxrss_kib": 2812
+        },
+        "rust:release": {
+          "median_s": 0.2378155889455229,
+          "min_s": 0.23648330010473728,
+          "median_cpu_s": 0.23,
+          "maxrss_kib": 4424
+        },
+        "go:release": {
+          "median_s": 0.21192657202482224,
+          "min_s": 0.21021710615605116,
+          "median_cpu_s": 0.2,
+          "maxrss_kib": 9280
+        }
+      },
+      "equality/vm": {
+        "mylang:release": {
+          "median_s": 1.987869270844385,
+          "min_s": 1.9722076789475977,
+          "median_cpu_s": 1.98,
+          "maxrss_kib": 2508
+        },
+        "mylang-base:release": {
+          "median_s": 1.964180891169235,
+          "min_s": 1.9578443949576467,
+          "median_cpu_s": 1.96,
+          "maxrss_kib": 2500
+        },
+        "zig:release": {
+          "median_s": 0.9048518449999392,
+          "min_s": 0.9018377258908004,
+          "median_cpu_s": 0.9,
+          "maxrss_kib": 696
+        },
+        "zig:release-safe": {
+          "median_s": 0.9700442641042173,
+          "min_s": 0.9656412531621754,
+          "median_cpu_s": 0.96,
+          "maxrss_kib": 1168
+        },
+        "rust:release": {
+          "median_s": 1.0270992880687118,
+          "min_s": 1.0258134910836816,
+          "median_cpu_s": 1.02,
+          "maxrss_kib": 2416
+        },
+        "go:release": {
+          "median_s": 1.0607528979890049,
+          "min_s": 1.0588806050363928,
+          "median_cpu_s": 1.05,
+          "maxrss_kib": 2352
+        }
+      },
+      "equality/tree": {
+        "mylang:release": {
+          "median_s": 0.3125473919790238,
+          "min_s": 0.31084055406972766,
+          "median_cpu_s": 0.3,
+          "maxrss_kib": 5668
+        },
+        "mylang-base:release": {
+          "median_s": 0.3044963169377297,
+          "min_s": 0.3041697379667312,
+          "median_cpu_s": 0.3,
+          "maxrss_kib": 5660
+        },
+        "zig:release": {
+          "median_s": 0.1880925151053816,
+          "min_s": 0.18776452611200511,
+          "median_cpu_s": 0.18,
+          "maxrss_kib": 2456
+        },
+        "zig:release-safe": {
+          "median_s": 0.20742891798727214,
+          "min_s": 0.20563470805063844,
+          "median_cpu_s": 0.2,
+          "maxrss_kib": 3568
+        },
+        "rust:release": {
+          "median_s": 0.1920553999952972,
+          "min_s": 0.19078186783008277,
+          "median_cpu_s": 0.18,
+          "maxrss_kib": 4376
+        },
+        "go:release": {
+          "median_s": 0.15832494315691292,
+          "min_s": 0.15780444396659732,
+          "median_cpu_s": 0.15,
+          "maxrss_kib": 9204
+        }
+      },
+      "fib/vm": {
+        "mylang:release": {
+          "median_s": 1.651844872161746,
+          "min_s": 1.6306846840307117,
+          "median_cpu_s": 1.64,
+          "maxrss_kib": 2508
+        },
+        "mylang-base:release": {
+          "median_s": 1.6674573849886656,
+          "min_s": 1.6561481608077884,
+          "median_cpu_s": 1.66,
+          "maxrss_kib": 2500
+        },
+        "zig:release": {
+          "median_s": 0.5862031660508364,
+          "min_s": 0.5859880810603499,
+          "median_cpu_s": 0.58,
+          "maxrss_kib": 696
+        },
+        "zig:release-safe": {
+          "median_s": 0.7262210128828883,
+          "min_s": 0.72620565793477,
+          "median_cpu_s": 0.72,
+          "maxrss_kib": 1168
+        },
+        "rust:release": {
+          "median_s": 0.8127996039111167,
+          "min_s": 0.8110473190899938,
+          "median_cpu_s": 0.81,
+          "maxrss_kib": 2384
+        },
+        "go:release": {
+          "median_s": 0.6761840910185128,
+          "min_s": 0.6629772558808327,
+          "median_cpu_s": 0.67,
+          "maxrss_kib": 2352
+        }
+      },
+      "fib/tree": {
+        "mylang:release": {
+          "median_s": 0.1376507868990302,
+          "min_s": 0.13700325600802898,
+          "median_cpu_s": 0.13,
+          "maxrss_kib": 5548
+        },
+        "mylang-base:release": {
+          "median_s": 0.13795205112546682,
+          "min_s": 0.13728339388035238,
+          "median_cpu_s": 0.13,
+          "maxrss_kib": 5540
+        },
+        "zig:release": {
+          "median_s": 0.09292937791906297,
+          "min_s": 0.09194229892455041,
+          "median_cpu_s": 0.09,
+          "maxrss_kib": 2136
+        },
+        "zig:release-safe": {
+          "median_s": 0.1597818739246577,
+          "min_s": 0.15505527495406568,
+          "median_cpu_s": 0.15000000000000002,
+          "maxrss_kib": 2928
+        },
+        "rust:release": {
+          "median_s": 0.13693440495990217,
+          "min_s": 0.13401120086200535,
+          "median_cpu_s": 0.13,
+          "maxrss_kib": 4352
+        },
+        "go:release": {
+          "median_s": 0.11223300592973828,
+          "min_s": 0.111836195923388,
+          "median_cpu_s": 0.1,
+          "maxrss_kib": 9712
+        }
+      },
+      "instantiation/vm": {
+        "mylang:release": {
+          "median_s": 1.1068108300678432,
+          "min_s": 1.077195076039061,
+          "median_cpu_s": 1.1,
+          "maxrss_kib": 4748
+        },
+        "mylang-base:release": {
+          "median_s": 1.1047047330066562,
+          "min_s": 1.0723327540326864,
+          "median_cpu_s": 1.09,
+          "maxrss_kib": 4740
+        },
+        "zig:release": {
+          "median_s": 0.38732254109345376,
+          "min_s": 0.3857018060516566,
+          "median_cpu_s": 0.38,
+          "maxrss_kib": 1816
+        },
+        "zig:release-safe": {
+          "median_s": 0.5267833939287812,
+          "min_s": 0.5263867508620024,
+          "median_cpu_s": 0.52,
+          "maxrss_kib": 2768
+        },
+        "rust:release": {
+          "median_s": 0.6273758010938764,
+          "min_s": 0.6241851600352675,
+          "median_cpu_s": 0.62,
+          "maxrss_kib": 3688
+        },
+        "go:release": {
+          "median_s": 0.7251640430185944,
+          "min_s": 0.721928047016263,
+          "median_cpu_s": 0.71,
+          "maxrss_kib": 9552
+        }
+      },
+      "instantiation/tree": {
+        "mylang:release": {
+          "median_s": 0.15778480819426477,
+          "min_s": 0.1566364320460707,
+          "median_cpu_s": 0.15,
+          "maxrss_kib": 5188
+        },
+        "mylang-base:release": {
+          "median_s": 0.15825480106286705,
+          "min_s": 0.15771716204471886,
+          "median_cpu_s": 0.15,
+          "maxrss_kib": 5176
+        },
+        "zig:release": {
+          "median_s": 0.12997029395774007,
+          "min_s": 0.12643657415173948,
+          "median_cpu_s": 0.12,
+          "maxrss_kib": 2136
+        },
+        "zig:release-safe": {
+          "median_s": 0.21977173211053014,
+          "min_s": 0.21885411301627755,
+          "median_cpu_s": 0.21000000000000002,
+          "maxrss_kib": 2768
+        },
+        "rust:release": {
+          "median_s": 0.13203274505212903,
+          "min_s": 0.13183028204366565,
+          "median_cpu_s": 0.13,
+          "maxrss_kib": 4296
+        },
+        "go:release": {
+          "median_s": 0.17542123002931476,
+          "min_s": 0.17424836591817439,
+          "median_cpu_s": 0.17,
+          "maxrss_kib": 9232
+        }
+      },
+      "invocation/vm": {
+        "mylang:release": {
+          "median_s": 3.1913852458819747,
+          "min_s": 3.169514913810417,
+          "median_cpu_s": 3.18,
+          "maxrss_kib": 2508
+        },
+        "mylang-base:release": {
+          "median_s": 3.140848702052608,
+          "min_s": 3.1210162311326712,
+          "median_cpu_s": 3.13,
+          "maxrss_kib": 2500
+        },
+        "zig:release": {
+          "median_s": 0.7460290680173784,
+          "min_s": 0.73887461097911,
+          "median_cpu_s": 0.74,
+          "maxrss_kib": 696
+        },
+        "zig:release-safe": {
+          "median_s": 1.2401384711265564,
+          "min_s": 1.237085527041927,
+          "median_cpu_s": 1.23,
+          "maxrss_kib": 1168
+        },
+        "rust:release": {
+          "median_s": 1.4265943749342114,
+          "min_s": 1.4183028009720147,
+          "median_cpu_s": 1.42,
+          "maxrss_kib": 2624
+        },
+        "go:release": {
+          "median_s": 1.1983906929381192,
+          "min_s": 1.1940355580300093,
+          "median_cpu_s": 1.19,
+          "maxrss_kib": 2672
+        }
+      },
+      "invocation/tree": {
+        "mylang:release": {
+          "median_s": 0.5108762050513178,
+          "min_s": 0.5084344688802958,
+          "median_cpu_s": 0.5,
+          "maxrss_kib": 5068
+        },
+        "mylang-base:release": {
+          "median_s": 0.5119155310094357,
+          "min_s": 0.510613129939884,
+          "median_cpu_s": 0.5,
+          "maxrss_kib": 5060
+        },
+        "zig:release": {
+          "median_s": 0.4099163271021098,
+          "min_s": 0.3964091460220516,
+          "median_cpu_s": 0.4,
+          "maxrss_kib": 2136
+        },
+        "zig:release-safe": {
+          "median_s": 0.7355615838896483,
+          "min_s": 0.7311147870495915,
+          "median_cpu_s": 0.7200000000000001,
+          "maxrss_kib": 2768
+        },
+        "rust:release": {
+          "median_s": 0.4411640961188823,
+          "min_s": 0.4368357330095023,
+          "median_cpu_s": 0.43,
+          "maxrss_kib": 4028
+        },
+        "go:release": {
+          "median_s": 0.5609501278959215,
+          "min_s": 0.5596767119131982,
+          "median_cpu_s": 0.55,
+          "maxrss_kib": 9324
+        }
+      },
+      "method_call/vm": {
+        "mylang:release": {
+          "median_s": 2.759804785018787,
+          "min_s": 2.6625392488203943,
+          "median_cpu_s": 2.75,
+          "maxrss_kib": 2508
+        },
+        "mylang-base:release": {
+          "median_s": 2.7114059440791607,
+          "min_s": 2.68636581604369,
+          "median_cpu_s": 2.7,
+          "maxrss_kib": 2500
+        },
+        "zig:release": {
+          "median_s": 0.8479708819650114,
+          "min_s": 0.8415440649259835,
+          "median_cpu_s": 0.84,
+          "maxrss_kib": 696
+        },
+        "zig:release-safe": {
+          "median_s": 1.1781432039570063,
+          "min_s": 1.178080938057974,
+          "median_cpu_s": 1.17,
+          "maxrss_kib": 1168
+        },
+        "rust:release": {
+          "median_s": 1.2559371800161898,
+          "min_s": 1.2536202389746904,
+          "median_cpu_s": 1.25,
+          "maxrss_kib": 2568
+        },
+        "go:release": {
+          "median_s": 1.122294866014272,
+          "min_s": 1.1205923538655043,
+          "median_cpu_s": 1.11,
+          "maxrss_kib": 2512
+        }
+      },
+      "method_call/tree": {
+        "mylang:release": {
+          "median_s": 0.4601950750220567,
+          "min_s": 0.4594713458791375,
+          "median_cpu_s": 0.45,
+          "maxrss_kib": 5012
+        },
+        "mylang-base:release": {
+          "median_s": 0.4559805621393025,
+          "min_s": 0.45288604008965194,
+          "median_cpu_s": 0.45,
+          "maxrss_kib": 5004
+        },
+        "zig:release": {
+          "median_s": 0.27776068286038935,
+          "min_s": 0.27446205797605217,
+          "median_cpu_s": 0.27,
+          "maxrss_kib": 2136
+        },
+        "zig:release-safe": {
+          "median_s": 0.45259654708206654,
+          "min_s": 0.45121695403940976,
+          "median_cpu_s": 0.43999999999999995,
+          "maxrss_kib": 2768
+        },
+        "rust:release": {
+          "median_s": 0.31656827102415264,
+          "min_s": 0.31413720501586795,
+          "median_cpu_s": 0.31,
+          "maxrss_kib": 4104
+        },
+        "go:release": {
+          "median_s": 0.408443302847445,
+          "min_s": 0.40590871893800795,
+          "median_cpu_s": 0.39,
+          "maxrss_kib": 8768
+        }
+      },
+      "properties/vm": {
+        "mylang:release": {
+          "median_s": 2.5977903369348496,
+          "min_s": 2.593949706060812,
+          "median_cpu_s": 2.59,
+          "maxrss_kib": 2508
+        },
+        "mylang-base:release": {
+          "median_s": 2.6410013660788536,
+          "min_s": 2.5921789328567684,
+          "median_cpu_s": 2.63,
+          "maxrss_kib": 2500
+        },
+        "zig:release": {
+          "median_s": 0.7785433440003544,
+          "min_s": 0.7742472749669105,
+          "median_cpu_s": 0.77,
+          "maxrss_kib": 696
+        },
+        "zig:release-safe": {
+          "median_s": 1.199240337824449,
+          "min_s": 1.1967190748546273,
+          "median_cpu_s": 1.19,
+          "maxrss_kib": 1168
+        },
+        "rust:release": {
+          "median_s": 1.332967185182497,
+          "min_s": 1.327407353091985,
+          "median_cpu_s": 1.33,
+          "maxrss_kib": 2568
+        },
+        "go:release": {
+          "median_s": 1.141209663124755,
+          "min_s": 1.1406462721060961,
+          "median_cpu_s": 1.13,
+          "maxrss_kib": 2672
+        }
+      },
+      "properties/tree": {
+        "mylang:release": {
+          "median_s": 0.477641612989828,
+          "min_s": 0.4740110950078815,
+          "median_cpu_s": 0.47,
+          "maxrss_kib": 4908
+        },
+        "mylang-base:release": {
+          "median_s": 0.47927495394833386,
+          "min_s": 0.47588273300789297,
+          "median_cpu_s": 0.47,
+          "maxrss_kib": 4900
+        },
+        "zig:release": {
+          "median_s": 0.3247080410365015,
+          "min_s": 0.32261765701696277,
+          "median_cpu_s": 0.32,
+          "maxrss_kib": 2136
+        },
+        "zig:release-safe": {
+          "median_s": 0.5518437949940562,
+          "min_s": 0.5509346451144665,
+          "median_cpu_s": 0.54,
+          "maxrss_kib": 2768
+        },
+        "rust:release": {
+          "median_s": 0.3795267390087247,
+          "min_s": 0.37658268213272095,
+          "median_cpu_s": 0.37,
+          "maxrss_kib": 4008
+        },
+        "go:release": {
+          "median_s": 0.4391224179416895,
+          "min_s": 0.43766874819993973,
+          "median_cpu_s": 0.43,
+          "maxrss_kib": 10056
+        }
+      },
+      "string_equality/vm": {
+        "mylang:release": {
+          "median_s": 1.8158027390018106,
+          "min_s": 1.8116642080713063,
+          "median_cpu_s": 1.8,
+          "maxrss_kib": 2988
+        },
+        "mylang-base:release": {
+          "median_s": 1.8058588518761098,
+          "min_s": 1.8057413138449192,
+          "median_cpu_s": 1.8,
+          "maxrss_kib": 2976
+        },
+        "zig:release": {
+          "median_s": 0.47121187881566584,
+          "min_s": 0.4695256140548736,
+          "median_cpu_s": 0.46,
+          "maxrss_kib": 696
+        },
+        "zig:release-safe": {
+          "median_s": 0.6037234980612993,
+          "min_s": 0.6018059060443193,
+          "median_cpu_s": 0.6,
+          "maxrss_kib": 1168
+        },
+        "rust:release": {
+          "median_s": 0.784425375983119,
+          "min_s": 0.7802917920053005,
+          "median_cpu_s": 0.77,
+          "maxrss_kib": 2568
+        },
+        "go:release": {
+          "median_s": 0.9709306128788739,
+          "min_s": 0.9611926479265094,
+          "median_cpu_s": 0.96,
+          "maxrss_kib": 2832
+        }
+      },
+      "string_equality/tree": {
+        "mylang:release": {
+          "median_s": 0.44633282301947474,
+          "min_s": 0.4461376811377704,
+          "median_cpu_s": 0.44,
+          "maxrss_kib": 5392
+        },
+        "mylang-base:release": {
+          "median_s": 0.44408138399012387,
+          "min_s": 0.4414366038981825,
+          "median_cpu_s": 0.44,
+          "maxrss_kib": 5384
+        },
+        "zig:release": {
+          "median_s": 0.1376433279365301,
+          "min_s": 0.13616538094356656,
+          "median_cpu_s": 0.13,
+          "maxrss_kib": 2296
+        },
+        "zig:release-safe": {
+          "median_s": 0.17169610899873078,
+          "min_s": 0.16944442712701857,
+          "median_cpu_s": 0.17,
+          "maxrss_kib": 2768
+        },
+        "rust:release": {
+          "median_s": 0.36485364893451333,
+          "min_s": 0.3582186170388013,
+          "median_cpu_s": 0.36,
+          "maxrss_kib": 4456
+        },
+        "go:release": {
+          "median_s": 0.16084281890653074,
+          "min_s": 0.16069114301353693,
+          "median_cpu_s": 0.15,
+          "maxrss_kib": 6352
+        }
+      },
+      "strings/vm": {
+        "mylang:release": {
+          "median_s": 1.0480410689488053,
+          "min_s": 1.0463786949403584,
+          "median_cpu_s": 1.04,
+          "maxrss_kib": 2508
+        },
+        "mylang-base:release": {
+          "median_s": 1.02922981698066,
+          "min_s": 1.020275792805478,
+          "median_cpu_s": 1.02,
+          "maxrss_kib": 2500
+        },
+        "zig:release": {
+          "median_s": 0.5098827350884676,
+          "min_s": 0.5086937858723104,
+          "median_cpu_s": 0.5,
+          "maxrss_kib": 696
+        },
+        "zig:release-safe": {
+          "median_s": 0.9921687159221619,
+          "min_s": 0.9885924991685897,
+          "median_cpu_s": 0.97,
+          "maxrss_kib": 1168
+        },
+        "rust:release": {
+          "median_s": 0.5497061919886619,
+          "min_s": 0.5479233819060028,
+          "median_cpu_s": 0.54,
+          "maxrss_kib": 2444
+        },
+        "go:release": {
+          "median_s": 0.6265958638396114,
+          "min_s": 0.6259339500684291,
+          "median_cpu_s": 0.62,
+          "maxrss_kib": 6992
+        }
+      },
+      "strings/tree": {
+        "mylang:release": {
+          "median_s": 0.1434055408462882,
+          "min_s": 0.14238406298682094,
+          "median_cpu_s": 0.14,
+          "maxrss_kib": 5548
+        },
+        "mylang-base:release": {
+          "median_s": 0.14235648000612855,
+          "min_s": 0.1412459600251168,
+          "median_cpu_s": 0.13,
+          "maxrss_kib": 5540
+        },
+        "zig:release": {
+          "median_s": 0.0864629268180579,
+          "min_s": 0.08459034096449614,
+          "median_cpu_s": 0.08,
+          "maxrss_kib": 2296
+        },
+        "zig:release-safe": {
+          "median_s": 0.1456222040578723,
+          "min_s": 0.14505934086628258,
+          "median_cpu_s": 0.14,
+          "maxrss_kib": 3724
+        },
+        "rust:release": {
+          "median_s": 0.1176045760512352,
+          "min_s": 0.11533050495199859,
+          "median_cpu_s": 0.11,
+          "maxrss_kib": 4460
+        },
+        "go:release": {
+          "median_s": 0.10847118590027094,
+          "min_s": 0.10832562088035047,
+          "median_cpu_s": 0.1,
+          "maxrss_kib": 9392
+        }
+      },
+      "trees/vm": {
+        "mylang:release": {
+          "median_s": 2.7724000269081444,
+          "min_s": 2.7488885489292443,
+          "median_cpu_s": 2.76,
+          "maxrss_kib": 170944
+        },
+        "mylang-base:release": {
+          "median_s": 2.869400114985183,
+          "min_s": 2.797848660033196,
+          "median_cpu_s": 2.86,
+          "maxrss_kib": 170936
+        },
+        "zig:release": {
+          "median_s": 0.9564557308331132,
+          "min_s": 0.932601167820394,
+          "median_cpu_s": 0.9500000000000001,
+          "maxrss_kib": 145656
+        },
+        "zig:release-safe": {
+          "median_s": 1.4265986911486834,
+          "min_s": 1.4130650688894093,
+          "median_cpu_s": 1.4100000000000001,
+          "maxrss_kib": 154448
+        },
+        "rust:release": {
+          "median_s": 1.423937362153083,
+          "min_s": 1.371484856121242,
+          "median_cpu_s": 1.41,
+          "maxrss_kib": 158860
+        },
+        "go:release": {
+          "median_s": 1.2694714500103146,
+          "min_s": 1.2664317330345511,
+          "median_cpu_s": 1.26,
+          "maxrss_kib": 159152
+        }
+      },
+      "trees/tree": {
+        "mylang:release": {
+          "median_s": 0.23877095081843436,
+          "min_s": 0.2368633090518415,
+          "median_cpu_s": 0.22,
+          "maxrss_kib": 47308
+        },
+        "mylang-base:release": {
+          "median_s": 0.23617404815740883,
+          "min_s": 0.23566084285266697,
+          "median_cpu_s": 0.23,
+          "maxrss_kib": 47304
+        },
+        "zig:release": {
+          "median_s": 0.14023652812466025,
+          "min_s": 0.13604831416159868,
+          "median_cpu_s": 0.13,
+          "maxrss_kib": 36056
+        },
+        "zig:release-safe": {
+          "median_s": 0.2155361280310899,
+          "min_s": 0.21072501502931118,
+          "median_cpu_s": 0.21,
+          "maxrss_kib": 42432
+        },
+        "rust:release": {
+          "median_s": 0.15961698605678976,
+          "min_s": 0.15837266691960394,
+          "median_cpu_s": 0.14,
+          "maxrss_kib": 41576
+        },
+        "go:release": {
+          "median_s": 0.18616649415344,
+          "min_s": 0.184720418183133,
+          "median_cpu_s": 0.16999999999999998,
+          "maxrss_kib": 83472
+        }
+      },
+      "zoo/vm": {
+        "mylang:release": {
+          "median_s": 2.775688311085105,
+          "min_s": 2.7216132308822125,
+          "median_cpu_s": 2.77,
+          "maxrss_kib": 2508
+        },
+        "mylang-base:release": {
+          "median_s": 2.818422316107899,
+          "min_s": 2.762846597004682,
+          "median_cpu_s": 2.81,
+          "maxrss_kib": 2500
+        },
+        "zig:release": {
+          "median_s": 0.8638374260626733,
+          "min_s": 0.8564500589855015,
+          "median_cpu_s": 0.86,
+          "maxrss_kib": 696
+        },
+        "zig:release-safe": {
+          "median_s": 1.3159067819360644,
+          "min_s": 1.3086788640357554,
+          "median_cpu_s": 1.31,
+          "maxrss_kib": 1168
+        },
+        "rust:release": {
+          "median_s": 1.5114098391495645,
+          "min_s": 1.5059888910036534,
+          "median_cpu_s": 1.5,
+          "maxrss_kib": 2588
+        },
+        "go:release": {
+          "median_s": 1.2265302238520235,
+          "min_s": 1.2240676179062575,
+          "median_cpu_s": 1.22,
+          "maxrss_kib": 2512
+        }
+      },
+      "zoo/tree": {
+        "mylang:release": {
+          "median_s": 0.48766535008326173,
+          "min_s": 0.4876459401566535,
+          "median_cpu_s": 0.48,
+          "maxrss_kib": 5068
+        },
+        "mylang-base:release": {
+          "median_s": 0.4916739100590348,
+          "min_s": 0.48410674883052707,
+          "median_cpu_s": 0.48,
+          "maxrss_kib": 5060
+        },
+        "zig:release": {
+          "median_s": 0.3471423238515854,
+          "min_s": 0.34228005399927497,
+          "median_cpu_s": 0.34,
+          "maxrss_kib": 2136
+        },
+        "zig:release-safe": {
+          "median_s": 0.5842573910485953,
+          "min_s": 0.5838718491140753,
+          "median_cpu_s": 0.5700000000000001,
+          "maxrss_kib": 2768
+        },
+        "rust:release": {
+          "median_s": 0.43955042609013617,
+          "min_s": 0.43848813185468316,
+          "median_cpu_s": 0.43,
+          "maxrss_kib": 4264
+        },
+        "go:release": {
+          "median_s": 0.5065639240201563,
+          "min_s": 0.5054880240932107,
+          "median_cpu_s": 0.49,
+          "maxrss_kib": 8904
+        }
+      },
+      "zoo_batch/vm": {
+        "mylang:release": {
+          "median_s": 2.298750020097941,
+          "min_s": 2.294645742047578,
+          "median_cpu_s": 2.28,
+          "maxrss_kib": 2508
+        },
+        "mylang-base:release": {
+          "median_s": 2.2964620769489557,
+          "min_s": 2.2794456200208515,
+          "median_cpu_s": 2.29,
+          "maxrss_kib": 2500
+        },
+        "zig:release": {
+          "median_s": 0.7342832889407873,
+          "min_s": 0.7294554538093507,
+          "median_cpu_s": 0.73,
+          "maxrss_kib": 696
+        },
+        "zig:release-safe": {
+          "median_s": 1.0899704440962523,
+          "min_s": 1.089710898930207,
+          "median_cpu_s": 1.08,
+          "maxrss_kib": 1168
+        },
+        "rust:release": {
+          "median_s": 1.222796852933243,
+          "min_s": 1.2182321939617395,
+          "median_cpu_s": 1.22,
+          "maxrss_kib": 2580
+        },
+        "go:release": {
+          "median_s": 1.0145618689712137,
+          "min_s": 1.0100315450690687,
+          "median_cpu_s": 1.01,
+          "maxrss_kib": 2512
+        }
+      },
+      "zoo_batch/tree": {
+        "mylang:release": {
+          "median_s": 0.4266737028956413,
+          "min_s": 0.4260047229472548,
+          "median_cpu_s": 0.42,
+          "maxrss_kib": 5012
+        },
+        "mylang-base:release": {
+          "median_s": 0.42791053699329495,
+          "min_s": 0.42421084200032055,
+          "median_cpu_s": 0.42,
+          "maxrss_kib": 5008
+        },
+        "zig:release": {
+          "median_s": 0.2904824709985405,
+          "min_s": 0.28964590397663414,
+          "median_cpu_s": 0.28,
+          "maxrss_kib": 2136
+        },
+        "zig:release-safe": {
+          "median_s": 0.48879797011613846,
+          "min_s": 0.4881331149954349,
+          "median_cpu_s": 0.48,
+          "maxrss_kib": 2768
+        },
+        "rust:release": {
+          "median_s": 0.364378415979445,
+          "min_s": 0.360475653083995,
+          "median_cpu_s": 0.36,
+          "maxrss_kib": 4296
+        },
+        "go:release": {
+          "median_s": 0.434824394993484,
+          "min_s": 0.4326410840731114,
+          "median_cpu_s": 0.42,
+          "maxrss_kib": 8756
+        }
+      }
+    }
+  },
+  "eda": {
+    "receipt": "experiments/fs-x-20261009/results/eda-runtime.json.gz",
+    "receipt_sha256": "f040833861060dcd75316e839596596174ff0c16f53e03ce4145451d7b7361c9",
+    "rounds": 10,
+    "cpu": 10,
+    "summary": {
+      "zig-fast": {
+        "total_of_case_medians_s": 0.7691,
+        "total_of_case_minimums_s": 0.7556,
+        "peak_rss_exact_mib": 80.2,
+        "median_case_rss_exact_mib": 35.0,
+        "peak_rss_wait4_mib": 80.2,
+        "total_cpu_of_case_medians_s": 0.7644,
+        "geomean_ratio_vs": {
+          "zig-safe": 0.9033,
+          "rust": 0.8875,
+          "go": 0.3673,
+          "mylang-base": 0.7647,
+          "mylang-final": 0.775
+        }
+      },
+      "zig-safe": {
+        "total_of_case_medians_s": 0.8516,
+        "total_of_case_minimums_s": 0.8398,
+        "peak_rss_exact_mib": 80.2,
+        "median_case_rss_exact_mib": 35.0,
+        "peak_rss_wait4_mib": 80.2,
+        "total_cpu_of_case_medians_s": 0.847,
+        "geomean_ratio_vs": {
+          "zig-fast": 1.107,
+          "rust": 0.9825,
+          "go": 0.4066,
+          "mylang-base": 0.8465,
+          "mylang-final": 0.8579
+        }
+      },
+      "rust": {
+        "total_of_case_medians_s": 0.8549,
+        "total_of_case_minimums_s": 0.8432,
+        "peak_rss_exact_mib": 44.0,
+        "median_case_rss_exact_mib": 9.5,
+        "peak_rss_wait4_mib": 44.0,
+        "total_cpu_of_case_medians_s": 0.8504,
+        "geomean_ratio_vs": {
+          "zig-fast": 1.1267,
+          "zig-safe": 1.0178,
+          "go": 0.4138,
+          "mylang-base": 0.8616,
+          "mylang-final": 0.8732
+        }
+      },
+      "go": {
+        "total_of_case_medians_s": 2.0641,
+        "total_of_case_minimums_s": 2.0037,
+        "peak_rss_exact_mib": 65.0,
+        "median_case_rss_exact_mib": 20.6,
+        "peak_rss_wait4_mib": 72.7,
+        "total_cpu_of_case_medians_s": 2.0586,
+        "geomean_ratio_vs": {
+          "zig-fast": 2.7229,
+          "zig-safe": 2.4597,
+          "rust": 2.4166,
+          "mylang-base": 2.0821,
+          "mylang-final": 2.1103
+        }
+      },
+      "mylang-base": {
+        "total_of_case_medians_s": 1.0012,
+        "total_of_case_minimums_s": 0.9815,
+        "peak_rss_exact_mib": 52.6,
+        "median_case_rss_exact_mib": 11.6,
+        "peak_rss_wait4_mib": 52.6,
+        "total_cpu_of_case_medians_s": 0.9962,
+        "geomean_ratio_vs": {
+          "zig-fast": 1.3077,
+          "zig-safe": 1.1813,
+          "rust": 1.1606,
+          "go": 0.4803,
+          "mylang-final": 1.0135
+        }
+      },
+      "mylang-final": {
+        "total_of_case_medians_s": 0.9885,
+        "total_of_case_minimums_s": 0.9694,
+        "peak_rss_exact_mib": 52.5,
+        "median_case_rss_exact_mib": 11.5,
+        "peak_rss_wait4_mib": 52.5,
+        "total_cpu_of_case_medians_s": 0.9837,
+        "geomean_ratio_vs": {
+          "zig-fast": 1.2903,
+          "zig-safe": 1.1656,
+          "rust": 1.1452,
+          "go": 0.4739,
+          "mylang-base": 0.9867
+        }
+      }
+    }
+  }
+}
