@@ -1,0 +1,65 @@
+{
+  "B0": "c1857310e0bf623545380c8de24515f1b9970021",
+  "implementation": [
+    "6031bf862634ca7d5bc2b1f0d4ff23a502a65303",
+    "9d93b8c4af60dbc19633f4f3e9814d7ca09db982",
+    "005dd40f96128d7d8c38de944c825d7c50876a5c"
+  ],
+  "source_sha256": {
+    "scripts/verification_qualification.py": "4b981131cc5b93542e834f4196df5293af43d2c70fb6c237993d27f044eca32f",
+    "scripts/verification_qualification_test.py": "7f872c8dc576eda4b67351a92825129f22694e712264a4b47d3c19e27c723234",
+    "scripts/verification_profiles.py": "b7873c4374f7282dddb713de9c8d2893e5eebb80f46590d0f66c637d482fd84d",
+    "scripts/verification_profiles_test.py": "1ee6728408edede21d4b9a441e06328f82e7f8e8d63fde7ee05c8d44e271d25d",
+    "scripts/juice_evidence.py": "88ef28a8237a426d7528d219773424a92deff0680e9a725db49ac1931233dd5e",
+    "scripts/juice_cache.py": "e9db35e4e9a4e283e1ec699b3e7e33c5dd83e90eea9a408f17007c36aab9ce67",
+    "scripts/juice_cache_test.py": "a029dfd2a608e869d759ede0a49fd4b84ae19cf584ddb11869cab1d6b46deeb1",
+    "tests/test_juice_evidence.py": "ddd4e03d5ecb885e9f19b67cf0e6438d539987b3955c288b6640a783c7e2a635",
+    "tests/duplicate_scaling.py": "30b490f0dbe79b64be8262b6a81a6fa31bab8cc2dd8d4d90f4bc169cffc3f8f0",
+    "test/fixtures/long-qualification/cases.my": "ab588660f625daed0012fe9a4037bde08f832747223ab52fa001971f0658b74f"
+  },
+  "source_namespace_note": "root applies canonical loaded-code identity and verification-v2 migration; worker helper run uses guarded B0 marshal until root adoption",
+  "focused_tests": {
+    "profiles": 13,
+    "qualification": 11,
+    "raw_evidence": 31,
+    "juice_adapter": 43
+  },
+  "focused_status": 0,
+  "native_full_gate": "root/S10 only; not run by worker",
+  "native_compiler": {
+    "mode": "ReleaseFast",
+    "source_equivalence": "B0 native sources; Python tooling changes only",
+    "sha256": "75935fabfbde64f8045d0aaba92122b304d344bee06839699b7b21563dcae9b1"
+  },
+  "scaling": "six real cases/nine CLI invocations; final long authority mutation-rejected",
+  "fuzz": {
+    "steps": 2,
+    "shards": 1,
+    "complete_action_status": true,
+    "outer_long_authority": "mutation-rejected"
+  },
+  "instruction_capture": {
+    "workload": "compiler-check",
+    "samples": [
+      474904,
+      474866,
+      474906
+    ],
+    "event": "cpu_core/instructions/u",
+    "fully_running_percent": 100,
+    "reuse_eligible": false,
+    "capture_repeats_after_failure": 0,
+    "read_only_recovery_status": 0
+  },
+  "unqualified": [
+    "test-driver instruction capture",
+    "external provider closure and matched cache-tier regression",
+    "complete long qualification",
+    "wall-clock median/p95 or ratios",
+    "current full bootstrap"
+  ],
+  "executable_bound_bytes": 268435456,
+  "raw_bound_bytes": 67108864,
+  "shared_blob_bound_bytes": 67108864,
+  "aggregate_bound_bytes": 1073741824
+}

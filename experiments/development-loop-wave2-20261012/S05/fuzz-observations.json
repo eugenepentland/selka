@@ -1,0 +1,86 @@
+{
+  "actions": [
+    {
+      "evidence": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S05/.mylang-cache/long-qualification/fuzz-campaign/runs/action-aoz4rtsl",
+      "explored": 2,
+      "key": "97162cd9985d7290e09532f5baa66f85731149a1cb471b795e480889c0ed0c4c",
+      "operation": "explore",
+      "replayed": 0,
+      "state": "executed",
+      "success": true,
+      "target": "incremental",
+      "value": 0
+    }
+  ],
+  "admissions": [
+    {
+      "admission_wait_seconds": 0.7299927810672671,
+      "admitted": true,
+      "cancelled": false,
+      "elapsed_seconds": 1.9305814080871642,
+      "execution_limits": {
+        "terminate_grace_seconds": 0.5,
+        "timeout_seconds": 180.0
+      },
+      "incomplete": false,
+      "kind": "gate",
+      "log_errors": [],
+      "logs": [],
+      "observed_held_seconds": 1.200588627019897,
+      "status": 0,
+      "timed_out": false,
+      "validation_seconds": 0.06930541293695569,
+      "worker_seconds": 1.131118942052126
+    }
+  ],
+  "complete": true,
+  "corpus_recovery": [],
+  "counts": {
+    "executed_replays": 0,
+    "executed_shards": 1,
+    "explored": 2,
+    "replayed": 0,
+    "reused_replays": 0,
+    "reused_shards": 0
+  },
+  "evidence_store": {
+    "root": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S05/.mylang-cache/long-qualification/fuzz-campaign/evidence-v2",
+    "shared": false
+  },
+  "freshness_reasons": [],
+  "inputs_stable": true,
+  "kind": "differential",
+  "outstanding": [],
+  "policy": "independent-seed-shards-v1",
+  "requested_shards": 1,
+  "required_actions": {
+    "incremental": [
+      {
+        "operation": "explore",
+        "value": 0
+      }
+    ]
+  },
+  "snapshot_statistics": {
+    "bytes_hashed": 703708056,
+    "digest_reuses": 4,
+    "directories_enumerated": 1374,
+    "files_hashed": 20399,
+    "metadata_observations": 594719,
+    "snapshot_reuses": 0,
+    "validation_calls": 28
+  },
+  "success": true,
+  "targets": [
+    "incremental"
+  ],
+  "unvisited_targets": [],
+  "version": 1,
+  "work_budget": {
+    "action_timeout_seconds": 180.0,
+    "exhausted": false,
+    "max_actions": 16,
+    "scope": "admitted missing actions; qualified reuse consumes no work"
+  },
+  "outer_long_request_authority": "rejected after later helper source edits; this is real bounded fuzz action evidence, not final long/profile completion"
+}

@@ -1,0 +1,144 @@
+build-slot: FIFO ticket 415, position 15; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 415, position 11; earlier build tickets must run first; waiting (61s so far)
+build-slot: FIFO ticket 415, position 7; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 415, position 7; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 415, position 4; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 415, position 4; earlier build tickets must run first; waiting (302s so far)
+build-slot: FIFO ticket 415, position 4; earlier build tickets must run first; waiting (362s so far)
+build-slot: FIFO ticket 415, position 4; earlier build tickets must run first; waiting (422s so far)
+build-slot: FIFO ticket 415, position 4; earlier build tickets must run first; waiting (482s so far)
+build-slot: build slot 2, FIFO ticket 415 after 517s
+{
+  "version": "long-qualification-v1",
+  "context_sha256": "fff8c203d55b53f9c4b7fc07a7211c762a7118bd63aacbca1d672bb173c59dd4",
+  "required": [
+    "fuzz",
+    "scaling",
+    "work-counters",
+    "juice-instructions",
+    "wall-clock-performance",
+    "bootstrap"
+  ],
+  "actions": [
+    {
+      "id": "fuzz",
+      "complete": false,
+      "success": false,
+      "qualified": false,
+      "state": "deferred",
+      "reason": "not selected; obligation remains required"
+    },
+    {
+      "id": "scaling",
+      "complete": false,
+      "success": false,
+      "qualified": false,
+      "state": "deferred",
+      "reason": "not selected; obligation remains required"
+    },
+    {
+      "id": "work-counters",
+      "complete": false,
+      "success": false,
+      "qualified": false,
+      "state": "partial",
+      "reason": "qualification command failed or inputs changed (exit 75)"
+    },
+    {
+      "id": "juice-instructions",
+      "complete": false,
+      "success": false,
+      "qualified": false,
+      "state": "deferred",
+      "reason": "not selected; obligation remains required"
+    },
+    {
+      "id": "wall-clock-performance",
+      "complete": false,
+      "success": false,
+      "qualified": false,
+      "state": "deferred",
+      "reason": "not selected; obligation remains required"
+    },
+    {
+      "id": "bootstrap",
+      "complete": false,
+      "success": false,
+      "qualified": false,
+      "state": "deferred",
+      "reason": "not selected; obligation remains required"
+    }
+  ],
+  "admissions": [
+    {
+      "kind": "build",
+      "status": 75,
+      "admitted": true,
+      "admission_wait_seconds": 517.1947531220503,
+      "validation_seconds": 0.00020134798251092434,
+      "worker_seconds": 0.0,
+      "observed_held_seconds": 0.036606218898668885,
+      "elapsed_seconds": 517.231359340949,
+      "timed_out": false,
+      "cancelled": false,
+      "incomplete": false,
+      "execution_limits": {
+        "timeout_seconds": 300,
+        "terminate_grace_seconds": 0.5
+      },
+      "logs": [
+        {
+          "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S05/.mylang-cache/long-qualification/qualification-4i_6z4vw/work-counters/compiler-0/stdout.log",
+          "truncated": false,
+          "bytes_seen": 0,
+          "capture_complete": true,
+          "capture_available": true,
+          "observed_steps": {
+            "status": "unknown",
+            "observations": [],
+            "truncated": false,
+            "malformed": false,
+            "additive": false,
+            "cpu_seconds": null,
+            "aggregate_peak_rss_bytes": null
+          }
+        },
+        {
+          "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S05/.mylang-cache/long-qualification/qualification-4i_6z4vw/work-counters/compiler-0/stderr.log",
+          "truncated": false,
+          "bytes_seen": 961,
+          "capture_complete": true,
+          "capture_available": true,
+          "observed_steps": {
+            "status": "unknown",
+            "observations": [],
+            "truncated": false,
+            "malformed": false,
+            "additive": false,
+            "cpu_seconds": null,
+            "aggregate_peak_rss_bytes": null
+          }
+        }
+      ],
+      "log_errors": []
+    }
+  ],
+  "outstanding": [
+    "fuzz",
+    "scaling",
+    "work-counters",
+    "juice-instructions",
+    "wall-clock-performance",
+    "bootstrap"
+  ],
+  "authority": "request-local live execution; serialized records cannot authorize completion"
+}
+Traceback (most recent call last):
+  File "<stdin>", line 9, in <module>
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S05/scripts/verification_qualification.py", line 161, in qualified_names
+    return {"version": "long-qualification-v1", "context_sha256": self._context,
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S05/scripts/verification_qualification.py", line 141, in authenticated_names
+    def stable(self):
+            ^^^^^^^^^
+ValueError: qualification authority/context/obligation inventory is unavailable or changed

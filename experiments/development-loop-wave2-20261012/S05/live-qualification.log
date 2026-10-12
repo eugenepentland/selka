@@ -1,0 +1,27 @@
+build-slot: gate slot 1, FIFO ticket 89 after 0s
+build-slot: FIFO ticket 450, position 19; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 450, position 12; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 450, position 8; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 450, position 8; earlier build tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 450, position 8; earlier build tickets must run first; waiting (240s so far)
+build-slot: FIFO ticket 450, position 7; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 450, position 4; earlier build tickets must run first; waiting (361s so far)
+build-slot: build slot 2, FIFO ticket 450 after 381s
+duplicate header index: 128 functions, work=100037, one distant pair, deterministic; two-run elapsed=0.097s
+duplicate header index: 512 functions, work=435502, one distant pair, deterministic; two-run elapsed=0.099s
+duplicate header index: 1024 functions, work=963411, one distant pair, deterministic; two-run elapsed=0.161s
+duplicate banded distance: 50 repeated statements, work=287153, literal drift retained
+duplicate banded distance: 100 repeated statements, work=1060299, literal drift retained
+duplicate banded distance: 200 repeated statements, work=4070419, literal drift retained
+build-slot: FIFO ticket 471, position 17; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 471, position 11; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 471, position 6; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 471, position 4; earlier build tickets must run first; waiting (181s so far)
+build-slot: build slot 2, FIFO ticket 471 after 221s
+Traceback (most recent call last):
+  File "<stdin>", line 7, in <module>
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S05/scripts/verification_qualification.py", line 172, in qualified_names
+    """Reject fabricated/mismatched/closed results before consulting live authority."""
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S05/scripts/verification_qualification.py", line 146, in authenticated_names
+ValueError: qualification authority/context/obligation inventory is unavailable or changed
