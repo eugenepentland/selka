@@ -1,0 +1,26 @@
+build-slot: FIFO ticket 2260, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2260, position 3; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 2260, position 3; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 2260, position 3; earlier build tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 2260, position 3; earlier build tickets must run first; waiting (240s so far)
+build-slot: FIFO ticket 2260, position 3; earlier build tickets must run first; waiting (300s so far)
+build-slot: FIFO ticket 2260, position 3; earlier build tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 2260, position 3; earlier build tickets must run first; waiting (421s so far)
+build-slot: FIFO ticket 2260, position 3; earlier build tickets must run first; waiting (481s so far)
+build-slot: FIFO ticket 2260, position 2; earlier build tickets must run first; waiting (541s so far)
+build-slot: build slot 2, FIFO ticket 2260 after 551s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10552 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/text-gaps-20261012 95e408cc9] Borrow temporary text reads and transfer dead checked snapshots
+ 21 files changed, 967 insertions(+), 19 deletions(-)
+ create mode 100644 src/core/inline_snapshot.zig
+ create mode 100644 src/core/textgap_buffer_span_test.zig
+ create mode 100644 src/core/textgap_decode_test.zig
+ create mode 100644 src/core/textgap_key_copy_test.zig
+ create mode 100644 src/core/textgap_literal_test.zig
+ create mode 100644 src/core/textgap_snapshot_test.zig
+ create mode 100644 test/core/textgap_snapshot.my

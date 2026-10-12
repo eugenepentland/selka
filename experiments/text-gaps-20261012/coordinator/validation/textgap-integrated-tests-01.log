@@ -1,0 +1,18 @@
+build-slot: FIFO ticket 2242, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 2242 after 20s
+guardian/test: 24 test(s) selected
+guardian/test: SLOW  9.28s  textgap_split_test.test.textgap_split five native modes preserve lengths Unicode escapes and early traps
+All 24 tests passed.
+guardian/test: test wall 19.74s; slowest over 50ms:
+guardian/test:   9.28s  textgap_split_test.test.textgap_split five native modes preserve lengths Unicode escapes and early traps
+guardian/test:   3.61s  textgap_split_test.test.textgap_split bounded reserve clamps overflow inputs and sparse long spans
+guardian/test:   1.11s  textgap_key_copy_test.test.textgap_key_copy native misses own keys and hits borrow through Unicode and replacement
+guardian/test:   0.93s  textgap_snapshot_test.test.textgap_snapshot dead owned donors transfer but live sources and children retain independent storage
+guardian/test:   0.90s  textgap_csv_test.test.textgap_csv character collectors preserve delimiter resets UTF8 and early exits across growth
+guardian/test:   0.55s  textgap_literal_test.test.textgap_literal native raw values copies replacements and mutable buffers stay independent
+guardian/test:   0.49s  textgap_csv_test.test.textgap_csv ASCII append invalidates cached scalar lengths and hashes
+guardian/test:   0.44s  textgap_buffer_span_test.test.textgap_buffer_span append borrows encoded octets with valid invalid growth and independent output
+guardian/test:   0.41s  textgap_buffer_span_test.test.textgap_buffer_span rejects forged helper contracts and parent replacement
+guardian/test:   0.40s  textgap_decode_test.test.textgap_decode mutated bytes and escaping snapshot retain original bytes
+guardian/test: PASS — 24 passed
+guardian/test: RESULT {"passed":24,"failed":0,"skipped":0}

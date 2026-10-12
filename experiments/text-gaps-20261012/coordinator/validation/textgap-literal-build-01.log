@@ -1,0 +1,21 @@
+build-slot: FIFO ticket 2159, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2159, position 3; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 2159, position 2; earlier build tickets must run first; waiting (121s so far)
+build-slot: build slot 1, FIFO ticket 2159 after 136s
+core-test-binary
++- install generated to core-tests
+   +- compile test debug native 1 errors
+src/core/textgap_literal_test.zig:8:31: error: function parameter shadows declaration of 'source'
+fn make(a: std.mem.Allocator, source: []const u8) !ir.Module {
+                              ^~~~~~
+src/core/textgap_literal_test.zig:20:1: note: declared here
+const source =
+^~~~~
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig test .zig-cache/o/4c97392a0fe7357cb3738fea423e3ed9/juice_bytes_hash.o -ODebug -I .zig-cache/o/f77856bf22d15753e2ef722d1f09ae46 --dep mylang --dep core_tool_platform --dep build_identity --dep memory_budget --dep core_test_options --dep core_number_text_object -Mroot=src/core/root_test.zig -ODebug --dep memory_budget -Mmylang=src/compiler.zig -Mcore_tool_platform=src/config_core_tool_platform.zig -ODebug -Mbuild_identity=.zig-cache/o/3dcc06369efea9db6f52a7d853d2bdf2/build_identity/identity.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig -Mcore_test_options=.zig-cache/o/0e2d29fb6976428facd3b736dcb9bc1a/options.zig -Mcore_number_text_object=.zig-cache/o/38d22d1e4461e413e446fb42adf284b2/core_number_text.o --test-filter textgap_ --test-runner ../guardian-zig/src/test_runner.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/ai/canopy/.zig-global-cache --name test --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 7/10 steps succeeded (1 failed)
+core-test-binary transitive failure
++- install generated to core-tests transitive failure
+   +- compile test debug native 1 errors
+

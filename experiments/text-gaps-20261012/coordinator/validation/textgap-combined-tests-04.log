@@ -1,0 +1,16 @@
+build-slot: build slot 1, FIFO ticket 2153 after 0s
+guardian/test: 17 test(s) selected
+All 17 tests passed.
+guardian/test: test wall 4.23s; slowest over 50ms:
+guardian/test:   1.15s  textgap_split_test.test.textgap_split five native modes preserve lengths Unicode escapes and early traps
+guardian/test:   1.06s  textgap_snapshot_test.test.textgap_snapshot dead owned donors transfer but live sources and children retain independent storage
+guardian/test:   0.33s  textgap_buffer_span_test.test.textgap_buffer_span append borrows encoded octets with valid invalid growth and independent output
+guardian/test:   0.31s  textgap_csv_test.test.textgap_csv character collectors preserve delimiter resets UTF8 and early exits across growth
+guardian/test:   0.30s  textgap_decode_test.test.textgap_decode mutated bytes and escaping snapshot retain original bytes
+guardian/test:   0.29s  textgap_buffer_span_test.test.textgap_buffer_span rejects forged helper contracts and parent replacement
+guardian/test:   0.24s  textgap_csv_test.test.textgap_csv static append keeps Unicode literals snapshots self appends and empty values independent
+guardian/test:   0.23s  textgap_decode_test.test.textgap_decode native Unicode invalid boundaries and replaced input keep independent results
+guardian/test:   0.11s  textgap_snapshot_test.test.textgap_snapshot cold warm replay matches uncached donor and retained child ownership
+guardian/test:   0.06s  textgap_split_test.test.textgap_split cold warm cached reader cleanup equals uncached LLVM
+guardian/test: PASS — 17 passed
+guardian/test: RESULT {"passed":17,"failed":0,"skipped":0}

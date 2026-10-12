@@ -1,0 +1,50 @@
+build-slot: FIFO ticket 2177, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 3, FIFO ticket 2177 after 5s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 8/88 failed (cognitive-complexity, allocator-hygiene, debug-print-ban, errdefer-in-init, test-no-conditional, bool-ops-per-condition, line-length, repeated-string-literal)
+guardian: failures grouped by check (8):
+  cognitive-complexity (1 finding)
+    - src/core/zero_rc.zig: fn contract cognitive complexity 26 (limit: 25)
+      fix: extract helpers; reduce nested control flow.
+  allocator-hygiene (4 findings)
+    - src/core/textgap_snapshot_test.zig:131: hardcoded std.testing.allocator outside test block
+      fix: thread the allocator through as a parameter instead of hardcoding a global.
+    - src/core/textgap_snapshot_test.zig:131: hardcoded std.testing.allocator outside test block
+    - src/core/textgap_split_test.zig:78: hardcoded std.testing.allocator outside test block
+    - +1 more — use --verbose for full detail
+  debug-print-ban (4 findings)
+    - src/core/textgap_key_copy_test.zig:30: std.debug.print reference outside allowed paths
+      fix: route through reporter.print/detail, or alias once at file scope and use the alias.
+    - src/core/textgap_literal_test.zig:11: std.debug.print reference outside allowed paths
+    - src/core/textgap_snapshot_test.zig:37: std.debug.print reference outside allowed paths
+    - +1 more — use --verbose for full detail
+  errdefer-in-init (4 findings)
+    - src/core/textgap_key_copy_test.zig:27: init-shaped fn 'make' has multiple `try` calls without errdefer
+      fix: add `errdefer` after each allocating `try` so a later failure cleans up.
+    - src/core/textgap_literal_test.zig:8: init-shaped fn 'make' has multiple `try` calls without errdefer
+    - src/core/textgap_snapshot_test.zig:14: init-shaped fn 'make' has multiple `try` calls without errdefer
+    - +1 more — use --verbose for full detail
+  test-no-conditional (2 findings)
+    - src/core/textgap_split_test.zig:44: more than one top-level loop — a test may keep one; the loop at line 32 asserts nothing, so hoist that one into a named helper
+      fix: one top-level loop is fine; merge multiple loops into one table-driven loop, split a branch into two independent tests, or hoist the computation into a helper. A multi-loop finding names the loop to hoist — the assertion-free one when there is one, otherwise the extra loop itself.
+    - src/core/textgap_split_test.zig:44: if at top level of test body
+  bool-ops-per-condition (11 findings)
+    - src/core/buffers.zig:43: condition has 4 boolean ops (cap 3)
+      fix: split into nested/sequential ifs, or extract into a named bool.
+    - src/core/buffers.zig:51: condition has 7 boolean ops (cap 3)
+    - src/core/own.zig:216: condition has 4 boolean ops (cap 3)
+    - +8 more — use --verbose for full detail
+  line-length (2 findings)
+    - src/core/buffers.zig:52: line is 270 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+    - src/core/verify_ir.zig:578: line is 260 chars (hard limit 240)
+  repeated-string-literal (4 findings)
+    - src/core/textgap_snapshot_test.zig: string literal emit_llvm.zig appears 3 times (lines 122, 128, 135) — extract a const
+      fix: extract the literal/const into a shared file-scope const and import it.
+    - src/core/textgap_snapshot_test.zig: string literal textgap_snapshot.my appears 3 times (lines 11, 123, 135) — extract a const
+    - src/core/textgap_split_test.zig: string literal emit_llvm.zig appears 3 times (lines 66, 75, 86) — extract a const
+    - +1 more — use --verbose for full detail
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

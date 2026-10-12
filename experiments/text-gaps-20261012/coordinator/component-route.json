@@ -1,0 +1,25 @@
+{
+  "prior_gate_success": true,
+  "qualified_inputs": [
+    {
+      "gid": 1000,
+      "mode": 292,
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar",
+      "sha256": "0557a645579881d54d3f4c493c8b07be38d42b0a21622ab712b84589ee212c27",
+      "size": 1517547520,
+      "uid": 1000
+    },
+    {
+      "gid": 1000,
+      "mode": 436,
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+      "sha256": "32f37baa2509b01c231a104d7e9ba224a7193399201d0f87ec8a5db8fa6f039b",
+      "size": 524,
+      "uid": 1000
+    }
+  ],
+  "decision": "Reuse exact qualified checked-owned compiler pin and archive from prior full gate. No pin/source changes. Default legacy seed provisioning failure is independent of these four performance changes.",
+  "legacy_failure": "Pinned legacy seed predates uncached native object lifetime fix; current ld.so.cache is outside its reviewed identity. Its uncacheable path deletes staged objects before linking.",
+  "prior_qualification": "experiments/memory-closeout-20261012/coordinator/native-platform/README.md",
+  "checked_input_boundary": "Explicit -Dcomponent-owned-compiler-pin and -Dcomponent-seed-source needed, matching prior successful full verification."
+}
