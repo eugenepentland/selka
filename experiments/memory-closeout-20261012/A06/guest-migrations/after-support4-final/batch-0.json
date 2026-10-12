@@ -1,0 +1,37 @@
+{
+  "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+  "harness_sha256": "f807849d9a4549a6170e692eb3c83ffaef358860fc859f0c963ce932ed9128b3",
+  "ownership": "zero",
+  "cases": [
+    {
+      "source": "tests/lang/scalable_sorting.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/scalable_sorting.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "08c01a778b6ceb847dfd35b025c51d4bcdaf06a851c4924851df8b1ad98b83b8",
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "copy_changes": []
+    },
+    {
+      "source": "tests/lang/properties.my",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/properties.my",
+        "--no-cache",
+        "--experimental-zero-rc"
+      ],
+      "source_sha256": "633f6ed79183d22d2732bbb6c6632b176ac4fde70c221122e1e7323970cfa4a6",
+      "status": 1,
+      "stdout": "",
+      "stderr": "properties.my:109:31: error[E_TYPE]: a tuple has no methods; take it apart with `head, rest = value`\n      const number, text = pair.copy()\n                                ^\n",
+      "copy_changes": []
+    }
+  ]
+}

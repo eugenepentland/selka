@@ -81,7 +81,7 @@ func csv_job(text: str) -> int:
         match parse_int(row[3]):
             case Some(amount):
                 if row[4] == "1":
-                    groups[row[2]] += amount
+                    groups[row[2].copy()] += amount
                     accepted += 1
                     names += score(row[1])
             case None:

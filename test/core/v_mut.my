@@ -62,7 +62,7 @@ func main(out: Stream) -> int:
     out.print(st.count, len(st.items))
     mut t = twice(mut st, 10)
     out.print(t, st.count, len(st.items), st.items[2])
-    mut h = Holder(state=st, tag=9)
+    mut h = Holder(state=st.copy(), tag=9)
     mut n2 = fill(mut h.state.items, 2)
     out.print(n2, len(h.state.items), len(st.items), h.tag)
     mut a: int[] = []

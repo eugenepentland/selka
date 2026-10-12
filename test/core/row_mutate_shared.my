@@ -25,7 +25,7 @@ func main(args: str[], host: Host, out: Stream) -> int:
     mut start = runtime_bench_now(host)
     for batch in range(iterations):
         mut index = (seed + batch * 17) % size
-        mut snapshot = values
+        mut snapshot = values.copy()
         values[index] = (values[index] + batch + 1) % 1000003
         checksum = (checksum + snapshot[index] + values[index]) % 1000000007
         snapshot = []

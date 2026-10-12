@@ -1,0 +1,295 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+  "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7",
+  "harness_sha256": "479192191eaeb27bbafca7a851b197048022d27811f58124f18b2d4e4b007639",
+  "cases": [
+    {
+      "source": "test/core/ce2_effects.my",
+      "source_sha256": "c2e6d7534add6a04f0a57207f1d8833f51716a6e094b89d1a90e1277d5a6e168",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/ce2_effects.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/ce2_effects.my:209:33: error[E_SINGLE_OWNER_MOVED]: 'frame' was moved or is unavailable on this path; use .copy() when both values are needed\n              push(mut m, next_op(mut frame))\n                                  ^\n",
+      "changes": [
+        {
+          "line": 118,
+          "before": "    return Code(consts=[10, 20, 30, 40], lines=[1, 2], name=tag, n=n, m=n * 2)",
+          "after": "    return Code(consts=[10, 20, 30, 40], lines=[1, 2], name=tag.copy(), n=n, m=n * 2)",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 144,
+          "before": "        frames.append(Frame(closure=i, code=make_code(\"m\", i), ops=code, ip=0, base=i))",
+          "after": "        frames.append(Frame(closure=i, code=make_code(\"m\", i), ops=code.copy(), ip=0, base=i))",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 183,
+          "before": "    m.frames[m.count] = Frame(closure=target, code=make_code(\"c\", target), ops=m.frames[0].ops, ip=target, base=m.top)",
+          "after": "    m.frames[m.count] = Frame(closure=target, code=make_code(\"c\", target), ops=m.frames[0].ops.copy(), ip=target, base=m.top)",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 197,
+          "before": "    mut frame = m.frames[m.count - 1]",
+          "after": "    mut frame = m.frames[m.count - 1].copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "test/core/ce2_results.my",
+      "source_sha256": "2197f4c15ecabcbc14508f0e79d8d4767e2c4950bb0815b6263b2735a04b0857",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/ce2_results.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "changes": [
+        {
+          "line": 288,
+          "before": "    mut shared = objs",
+          "after": "    mut shared = objs.copy()",
+          "diagnostic": "E_SINGLE_OWNER_MOVED"
+        },
+        {
+          "line": 388,
+          "before": "    return g.table",
+          "after": "    return g.table.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 401,
+          "before": "    mut wb = g.table",
+          "after": "    mut wb = g.table.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 409,
+          "before": "    mut wb = g.table",
+          "after": "    mut wb = g.table.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 418,
+          "before": "    mut wb = g.table",
+          "after": "    mut wb = g.table.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 427,
+          "before": "    mut snapshot = g.table",
+          "after": "    mut snapshot = g.table.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 448,
+          "before": "    mut keep = xs[1].items",
+          "after": "    mut keep = xs[1].items.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 447,
+          "before": "    mut before = xs",
+          "after": "    mut before = xs.copy()",
+          "diagnostic": "E_SINGLE_OWNER_MOVED"
+        },
+        {
+          "line": 455,
+          "before": "            keep = xs[1].items",
+          "after": "            keep = xs[1].items.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "test/core/ce_cow.my",
+      "source_sha256": "5dbca1907b210d7cf7e8605b2a65c5cc17b3aba71e92f2483205a41b63488e00",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/ce_cow.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/ce_cow.my:58:37: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              mut instance = allocate(mut rt, Obj.instance(value=ref))\n                                      ^\n",
+      "changes": [
+        {
+          "line": 46,
+          "before": "    mut wb = it.rt",
+          "after": "    mut wb = it.rt.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "test/core/ce_elements.my",
+      "source_sha256": "7b04e1b5a271158db44e78b556b5affe8ea092b437b014a02bd3a4ffd6f1368a",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/ce_elements.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/ce_elements.my:70:9: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          xs[i].name = xs[i].name + \"!\"\n          ^\n",
+      "changes": []
+    },
+    {
+      "source": "test/core/ce_records.my",
+      "source_sha256": "41e006affad911c8630939737906ebdd7f3d991444dabab38e524b0a27e4fd6a",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/ce_records.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "changes": [
+        {
+          "line": 273,
+          "before": "    mut wb = it.rt",
+          "after": "    mut wb = it.rt.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 277,
+          "before": "        mut wb2 = it.rt",
+          "after": "        mut wb2 = it.rt.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 281,
+          "before": "    mut snap = it.rt",
+          "after": "    mut snap = it.rt.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 282,
+          "before": "    mut wb3 = it.rt",
+          "after": "    mut wb3 = it.rt.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 290,
+          "before": "    mut shared = it",
+          "after": "    mut shared = it.copy()",
+          "diagnostic": "E_SINGLE_OWNER_MOVED"
+        }
+      ]
+    },
+    {
+      "source": "test/core/f1_storeback.my",
+      "source_sha256": "11d090328afa5b7e2b4320a59962827d4564b7624e2ad848990589458957e047",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/f1_storeback.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "changes": [
+        {
+          "line": 72,
+          "before": "    mut seen = bags[1].items",
+          "after": "    mut seen = bags[1].items.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 74,
+          "before": "    mut held = names[2]",
+          "after": "    mut held = names[2].copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    },
+    {
+      "source": "test/core/m_recursive_values.my",
+      "source_sha256": "0c4c5d9efc1e78e3c19df9ede42c79d6137a4c432635005b318eb2cb4b955462",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/m_recursive_values.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "m_recursive_values.my:181:5: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      values[0].scalar = 7\n      ^\n",
+      "changes": [
+        {
+          "line": 180,
+          "before": "    mut before = values",
+          "after": "    mut before = values.copy()",
+          "diagnostic": "E_SINGLE_OWNER_MOVED"
+        }
+      ]
+    },
+    {
+      "source": "test/core/rc_field_take.my",
+      "source_sha256": "2790ffc4c455df74b0204016b67f7ed966c67a325cd96f1711d8f152f86ff136",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/rc_field_take.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "changes": []
+    },
+    {
+      "source": "test/core/rc_phi_fields.my",
+      "source_sha256": "da923ea124bf1d55896244124a7ae2d7cf3a55f69f38e8089b24bd0e61bdb518",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/rc_phi_fields.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "changes": []
+    },
+    {
+      "source": "test/core/row_cow.my",
+      "source_sha256": "866ea84b8a3a0b4447ba6e040c560ae9070f84157e5554b41cb8f7045a6cf403",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/row_cow.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/row_cow.my:145:9: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          zs[i].n = 5\n          ^\n",
+      "changes": []
+    }
+  ]
+}

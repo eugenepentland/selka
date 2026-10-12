@@ -71,11 +71,11 @@ func named_sets(mut xs: Named[], round: int):
         xs[i].pos.x = xs[i].pos.x + round
         xs[i].count = len(xs[i].tags) + round
         if round % 2 == 0:
-            xs[i].note = Some(xs[i].name)
+            xs[i].note = Some(xs[i].name.copy())
         else:
             xs[i].note = None
         xs[i].extra = [round, i]
-        xs[i].tags = xs[(i + 1) % len(xs)].tags
+        xs[i].tags = xs[(i + 1) % len(xs)].tags.copy()
 
 
 func name_of(x: Named) -> str:
@@ -96,7 +96,8 @@ func describe(xs: Named[]) -> str:
 func shapes(mut xs: Shape[]) -> int:
     mut total = 0
     for i in range(len(xs)):
-        match xs[i]:
+        const selected = xs[i].copy()
+        match selected:
             case Shape.dot(value=v):
                 xs[i] = Shape.label(value=str(v))
             case Shape.pair(value=p):
@@ -125,11 +126,11 @@ func shape_text(xs: Shape[]) -> str:
 
 
 func run_frames(mut frames: Frame[], steps: int) -> int:
-    mut frame = frames[len(frames) - 1]
+    mut frame = frames[len(frames) - 1].copy()
     mut total = 0
     for s in range(steps):
         frame.ip = frame.ip + 1
-        frames[len(frames) - 1] = frame
+        frames[len(frames) - 1] = frame.copy()
         total = total + frames[len(frames) - 1].ip + len(frame.names)
         if s % 3 == 0:
             frame.names.append("n" + str(s))
@@ -147,7 +148,8 @@ enum Big:
 func rotate_big(mut xs: Big[], round: int) -> int:
     mut total = 0
     for i in range(len(xs)):
-        match xs[i]:
+        const selected = xs[i].copy()
+        match selected:
             case Big.wide(value=named):
                 xs[i] = Big.text(value=named.name + str(round))
                 total = total + len(named.tags)
@@ -165,34 +167,34 @@ func rotate_big(mut xs: Big[], round: int) -> int:
 
 func main(args: str[], out: Stream) -> int:
     mut bodies = [Body(x=1.0, y=0.0, z=0.0, vx=0.0, vy=0.0, vz=0.0, mass=2.0), Body(x=2.0, y=0.0, z=0.0, vx=0.0, vy=0.0, vz=0.0, mass=3.0), Body(x=4.0, y=0.0, z=0.0, vx=0.0, vy=0.0, vz=0.0, mass=5.0)]
-    mut shared = bodies
+    mut shared = bodies.copy()
     for k in range(1000):
         bump(mut bodies, 0.001)
     out.print(int(bodies[0].x * 1000000.0), int(bodies[2].vx * 1000000.0), shared[0].x, shared[2].vx)
     mut smalls = [Small(a=1, b=2), Small(a=3, b=4), Small(a=5, b=6)]
-    mut before = smalls
+    mut before = smalls.copy()
     small_sets(mut smalls, 10)
     small_sets(mut smalls, 7)
     out.print(smalls[0].a, smalls[0].b, smalls[2].a, smalls[2].b, before[0].a, before[2].b)
     mut names = [Named(name="a", tags=["t"], pos=Vec(x=1, y=2), count=0, note=None, extra=[]), Named(name="b", tags=["u", "v"], pos=Vec(x=3, y=4), count=0, note=Some("q"), extra=[9])]
-    mut kept = names
-    mut kept_tags = names[1].tags
+    mut kept = names.copy()
+    mut kept_tags = names[1].tags.copy()
     for round in range(5):
         named_sets(mut names, round)
     out.print(describe(names), len(names))
     out.print(describe(kept), len(kept_tags))
     mut shape_list = [Shape.dot(value=4), Shape.pair(value=Small(a=2, b=3)), Shape.label(value="hey"), Shape.nothing]
-    mut shape_copy = shape_list
+    mut shape_copy = shape_list.copy()
     mut t = 0
     for round in range(4):
         t = t + shapes(mut shape_list)
     out.print(shape_text(shape_list), shape_text(shape_copy), t)
     mut inner = Named(name="in", tags=[], pos=Vec(x=0, y=0), count=0, note=None, extra=[])
-    mut frames = [Frame(closure=1, names=["x"], code=[1, 2], inner=inner, ip=0, base=0), Frame(closure=2, names=[], code=[3], inner=inner, ip=5, base=1)]
-    mut frames_before = frames
+    mut frames = [Frame(closure=1, names=["x"], code=[1, 2], inner=inner.copy(), ip=0, base=0), Frame(closure=2, names=[], code=[3], inner=inner, ip=5, base=1)]
+    mut frames_before = frames.copy()
     out.print(run_frames(mut frames, 100), frames[1].ip, len(frames[1].names), frames_before[1].ip, len(frames_before[1].names))
     mut bigs = [Big.small(value=3), Big.text(value="abc"), Big.wide(value=Named(name="q", tags=["t"], pos=Vec(x=1, y=1), count=0, note=None, extra=[])), Big.pair(value=Small(a=1, b=2))]
-    mut bigs_before = bigs
+    mut bigs_before = bigs.copy()
     mut rotated = 0
     for round in range(9):
         rotated = rotated + rotate_big(mut bigs, round)
@@ -202,7 +204,7 @@ func main(args: str[], out: Stream) -> int:
     smalls[1].a = 1000
     mut big = bodies[1]
     bodies[1].vx = 77.0
-    mut nm = names[0]
+    mut nm = names[0].copy()
     names[0].name = "changed"
     names[0].tags.append("more")
     out.print(snap.a, smalls[1].a, big.vx, bodies[1].vx, nm.name, names[0].name, len(nm.tags), len(names[0].tags))

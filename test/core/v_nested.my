@@ -8,13 +8,13 @@ record Box:
 
 
 func grow(rows0: int[][], i: int, v: int) -> int:
-    mut rows = rows0
+    mut rows = rows0.copy()
     rows[i].append(v)
     return len(rows[i]) * 100 + len(rows0[i])
 
 
 func deep(b0: Box, v: int) -> int:
-    mut b = b0
+    mut b = b0.copy()
     b.items[0].payload[0] = v
     b.items[1].payload.append(v + 1)
     b.items[1].code = 77

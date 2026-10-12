@@ -17,7 +17,7 @@ def main():
     originals = json.loads((HERE / 'originals.json').read_text())
     current = {}
     for directory in ['after-certain-copies', 'after-manual-copies', 'after-manual-second',
-                      'after-manual-third', 'after-live-iteration', 'after-final-copies', 'after-site-binding', 'after-support3', 'after-support4-copies']:
+                      'after-manual-third', 'after-live-iteration', 'after-final-copies', 'after-site-binding', 'after-support3', 'after-support4-copies', 'after-support4-final']:
         for path in sorted((HERE / directory).glob('batch-*.json')):
             report = json.loads(path.read_text())
             for row in report['cases']:

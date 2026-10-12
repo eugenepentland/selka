@@ -32,9 +32,9 @@ record Interpreter:
 func allocate(mut rt: Runtime, obj: Obj) -> int:
     if len(rt.free_slots) > 0:
         mut slot = rt.free_slots.pop()
-        rt.objects[slot] = obj
+        rt.objects[slot] = obj.copy()
         return slot
-    rt.objects.append(obj)
+    rt.objects.append(obj.copy())
     rt.marker.marks.append(False)
     return len(rt.objects) - 1
 
@@ -43,7 +43,7 @@ func allocate(mut rt: Runtime, obj: Obj) -> int:
 # through the record's list at an index that may count from the end.
 func instantiate(mut it: Interpreter, klass_ref: int) -> int:
     mut callee_slot = it.rt.top - 1
-    mut wb = it.rt
+    mut wb = it.rt.copy()
     mut instance = allocate(mut wb, Obj.instance(value=klass_ref))
     it.rt = wb
     it.rt.stack[callee_slot] = instance
@@ -53,7 +53,8 @@ func instantiate(mut it: Interpreter, klass_ref: int) -> int:
 
 # The VM: an element's payload read before a `mut` call and used after it.
 func call_value(mut rt: Runtime, ref: int) -> int:
-    match rt.objects[ref]:
+    const callable = rt.objects[ref].copy()
+    match callable:
         case Obj.klass(value=klass):
             mut instance = allocate(mut rt, Obj.instance(value=ref))
             rt.stack[rt.top - 1] = instance
@@ -71,7 +72,8 @@ func sweep(mut rt: Runtime) -> int:
         if rt.marker.marks[i]:
             rt.marker.marks[i] = False
         else:
-            match rt.objects[i]:
+            const object = rt.objects[i].copy()
+            match object:
                 case Obj.instance(value=v):
                     rt.objects[i] = Obj.free
                     rt.free_slots.append(i)
@@ -90,7 +92,7 @@ func mark_some(mut rt: Runtime, every: int):
 
 # A copy of the list taken before the store keeps the old list.
 func snapshot_then_store(mut it: Interpreter, at: int, v: int) -> int:
-    mut before = it.rt.stack
+    mut before = it.rt.stack.copy()
     it.rt.stack[at] = v
     return before[at] * 1000 + it.rt.stack[at]
 
@@ -116,7 +118,7 @@ func note(self: Builder, mut comp: Comp, pin: str, net: str):
     if comp.pins.ref != "r":
         return
     if pin not in comp.pins.net:
-        comp.pins.net[pin] = net + str(len(self.keys))
+        comp.pins.net[pin.copy()] = net + str(len(self.keys))
 
 
 # The EDA builder: the record is passed to a call between the read of its dictionary
@@ -126,27 +128,27 @@ func build(mut self: Builder, pins: str[]):
         if p not in self.ref_inst:
             continue
         mut i = self.ref_inst[p]
-        mut key = self.keys[i]
-        mut comp = self.comps[key]
+        mut key = self.keys[i].copy()
+        mut comp = self.comps[key].copy()
         note(self, mut comp, p, "n")
         if p not in comp.seen:
-            comp.seen.add(p)
-            comp.used.append(p)
+            comp.seen.add(p.copy())
+            comp.used.append(p.copy())
         self.comps[key] = comp
 
 
 func main(out: Stream) -> int:
     mut rt = Runtime(objects=[Obj.klass(value=Klass(name="Foo", methods=[1, 2, 3]))], stack=[0, 0, 0, 0], marker=Marker(marks=[False], gray=[]), free_slots=[], top=4)
     mut it = Interpreter(rt=rt, calls=0)
-    mut kept = it.rt.stack
+    mut kept = it.rt.stack.copy()
     mut total = 0
     for round in range(40):
         for k in range(500):
             total = total + instantiate(mut it, 0)
-            mut wb = it.rt
+            mut wb = it.rt.copy()
             total = total + call_value(mut wb, 0)
             it.rt = wb
-        mut wb2 = it.rt
+        mut wb2 = it.rt.copy()
         mark_some(mut wb2, 3)
         total = total + sweep(mut wb2) * 7
         it.rt = wb2

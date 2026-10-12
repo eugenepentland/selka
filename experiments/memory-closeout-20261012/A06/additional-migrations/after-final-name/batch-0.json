@@ -1,0 +1,47 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+  "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+  "harness_sha256": "479192191eaeb27bbafca7a851b197048022d27811f58124f18b2d4e4b007639",
+  "cases": [
+    {
+      "source": "test/core/ce2_effects.my",
+      "source_sha256": "35fa15c69ea4cc28cc948ee06cd29c6219169b770625584050ae4e11e30d0671",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/test/core/ce2_effects.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": "",
+      "changes": [
+        {
+          "line": 352,
+          "before": "    mut wb = it.m",
+          "after": "    mut wb = it.m.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 354,
+          "before": "    mut keep = it",
+          "after": "    mut keep = it.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 366,
+          "before": "    mut wb = it.m",
+          "after": "    mut wb = it.m.copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        },
+        {
+          "line": 389,
+          "before": "        trap = args[0]",
+          "after": "        trap = args[0].copy()",
+          "diagnostic": "E_SINGLE_OWNER_BORROW"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,697 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+  "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7",
+  "cases": [
+    {
+      "source": "test/core/ce2_effects.my",
+      "sha256": "2950d850ba8ff2a15b7be3b1b456f05a105622a12c8b58db0df9718475b55e16",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce2_effects.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce2_effects.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce2_effects.my:48:38: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      return frame.code.consts[next_op(mut frame)]\n                                       ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__ce2_effects.my.gz"
+    },
+    {
+      "source": "test/core/ce2_results.my",
+      "sha256": "8b672a3a706e6c8332a4b181908a5a62d1e0f5fd4326b383eb311419dd930b3f",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce2_results.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce2_results.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce2_results.my:87:15: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut src = t.source\n                ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__ce2_results.my.gz"
+    },
+    {
+      "source": "test/core/ce_cow.my",
+      "sha256": "b0f1a86b886b609ba870ecb5d5248a5327e76851f87a1235ffefa5f6eec858b3",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_cow.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_cow.my:75:41: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n                  case Obj.instance(value=v):\n                                          ^\n"
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_cow.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_cow.my:35:9: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n          rt.objects[slot] = obj\n          ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__ce_cow.my.gz"
+    },
+    {
+      "source": "test/core/ce_elements.my",
+      "sha256": "7b04e1b5a271158db44e78b556b5affe8ea092b437b014a02bd3a4ffd6f1368a",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_elements.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_elements.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_elements.my:70:9: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          xs[i].name = xs[i].name + \"!\"\n          ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__ce_elements.my.gz"
+    },
+    {
+      "source": "test/core/ce_records.my",
+      "sha256": "9e96ce61618bd5c18b09225d60abe9ae4aa1cdedbcc006ddae535322e04d467e",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_records.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_records.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/ce_records.my:125:14: error[E_SINGLE_OWNER_MOVED]: 'b' was moved or is unavailable on this path; use .copy() when both values are needed\n      push_all(mut b, 5)\n               ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__ce_records.my.gz"
+    },
+    {
+      "source": "test/core/f1_storeback.my",
+      "sha256": "d4090d769e5ecf106a2be635daad9c910002b4c74b81eb120ed3e32ed63a74d2",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/f1_storeback.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/f1_storeback.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/f1_storeback.my:25:16: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut keep = c[1]\n                 ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__f1_storeback.my.gz"
+    },
+    {
+      "source": "test/core/m_recursive_values.my",
+      "sha256": "314e5f4ffad8cb3abc1608f49ed8353fe32aa968567212d9c9143a8fe0f29944",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/m_recursive_values.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": "m_recursive_values.my:44:26: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func add(mut row: int[], ignored: int) -> Unit:\n                           ^\nm_recursive_values.my:48:18: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func add_reverse(ignored: int, mut row: int[]) -> Unit:\n                   ^\n"
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/m_recursive_values.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "m_recursive_values.my:59:51: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      add(mut cursor.rows[-1], if (flag) then (tick(mut cursor)) else (0))\n                                                    ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__m_recursive_values.my.gz"
+    },
+    {
+      "source": "test/core/rc_field_take.my",
+      "sha256": "9ab03db93ba902bc9ad00c9b722aee53886c70d8183ee0421284c8bba9e5005d",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_field_take.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_field_take.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_field_take.my:30:18: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut before = rt.objects\n                   ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__rc_field_take.my.gz"
+    },
+    {
+      "source": "test/core/rc_phi_fields.my",
+      "sha256": "c1b324eb245227a33010c66f859f9ef6bb447870d8c43b57eca0d72cd3f99214",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_phi_fields.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_phi_fields.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/rc_phi_fields.my:17:35: error[E_SINGLE_OWNER_MOVED]: 'xs' was moved or is unavailable on this path; use .copy() when both values are needed\n          acc = acc + len(ys) * 3 + xs[0]\n                                    ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__rc_phi_fields.my.gz"
+    },
+    {
+      "source": "test/core/row_cow.my",
+      "sha256": "1a6cfa9f401c9cb272272e8663292718e3aa2064bce165d5c44dd6d5e01637ae",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_cow.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_cow.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_cow.my:13:17: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut keep3 = rows3[1]\n                  ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__row_cow.my.gz"
+    },
+    {
+      "source": "test/core/row_csv_aggregate.my",
+      "sha256": "65f86d527f48a01d6fa005862c214a6d29d1dc7d46291136400864593add1f24",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_csv_aggregate.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_csv_aggregate.my:92:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func inputs(kind: str, size: int, seed: int) -> Inputs:\n              ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_csv_aggregate.my:108:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:\n              ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_csv_aggregate.my:111:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n          mut cursor = seed + step\n              ^\n"
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_csv_aggregate.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_csv_aggregate.my:84:21: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n                      groups[row[2]] += amount\n                      ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__row_csv_aggregate.my.gz"
+    },
+    {
+      "source": "test/core/row_mutate_nested.my",
+      "sha256": "3c9c921f4ec3f1dfa6422c998e2b4586e44047b3efd69ac495bda7fc907713bc",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_mutate_nested.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_mutate_nested.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_mutate_nested.my:9:20: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      mut snapshot = nested\n                     ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__row_mutate_nested.my.gz"
+    },
+    {
+      "source": "test/core/row_mutate_shared.my",
+      "sha256": "5efc0bd4694858c148d4c0b69f21fc92aa79a8cdf53a0839dbe923fa5c7d3437",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_mutate_shared.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_mutate_shared.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_mutate_shared.my:29:26: error[E_SINGLE_OWNER_MOVED]: 'values' was moved or is unavailable on this path; use .copy() when both values are needed\n          values[index] = (values[index] + batch + 1) % 1000003\n                           ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__row_mutate_shared.my.gz"
+    },
+    {
+      "source": "test/core/row_record_reads.my",
+      "sha256": "6b478a3eaa3019c28875f43a73da2b1a90f830b183c69b9165bbc3b23ed57177",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_record_reads.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_record_reads.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_record_reads.my:40:20: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          mut item = records[index]\n                     ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__row_record_reads.my.gz"
+    },
+    {
+      "source": "test/core/row_word_count.my",
+      "sha256": "84a7eebdd8900e79480a8faa8795f948c7492b902ca641998d7d6b80ea41447d",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_word_count.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_word_count.my:40:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func inputs(kind: str, size: int, seed: int) -> Inputs:\n              ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_word_count.my:54:13: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n  func kernel(kind: str, data: Inputs, iterations: int, seed: int) -> int:\n              ^\n"
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_word_count.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/row_word_count.my:32:16: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          counts[word] = if (word in counts) then (counts[word] + 1) else (1)\n                 ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__row_word_count.my.gz"
+    },
+    {
+      "source": "test/core/u1_sink.my",
+      "sha256": "0568c2428132b9ad345c15f52e8783da10501968e98cbed991e4d22902e2dc54",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/u1_sink.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/u1_sink.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/u1_sink.my:33:32: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      m.frames.append(Frame(code=code, ip=0, base=m.acc))\n                                 ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__u1_sink.my.gz"
+    },
+    {
+      "source": "test/core/u1_state.my",
+      "sha256": "d0a14567ec8556b5a654ed2bb4a8d022b12f272eff586f8968d1babbafc0d911",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/u1_state.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/u1_state.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/u1_state.my:63:28: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      mut frame = Frame(code=code, ip=0, base=0, name=\"main\", hits=0, seen=[])\n                             ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__u1_state.my.gz"
+    },
+    {
+      "source": "test/core/v_mut.my",
+      "sha256": "bbf13966efb1aee82b0a4314b8e3ff1dd0db64e7282ff720a3b2c196d03d85b8",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_mut.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_mut.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_mut.my:67:43: error[E_SINGLE_OWNER_MOVED]: 'st' was moved or is unavailable on this path; use .copy() when both values are needed\n      out.print(n2, len(h.state.items), len(st.items), h.tag)\n                                            ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__v_mut.my.gz"
+    },
+    {
+      "source": "test/core/v_mut_window.my",
+      "sha256": "4eaa45609ab758c8d99e763eea232f49ec0afcd20824f717b9b2f0f7d7314f01",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_mut_window.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_mut_window.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_mut_window.my:28:15: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut box = state.boxes[0]\n                ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__v_mut_window.my.gz"
+    },
+    {
+      "source": "test/core/v_nested.my",
+      "sha256": "546721e18c02e755f5d9a9220c375287dd878e5a5a07f7bb9c002c7f09a05b58",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_nested.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_nested.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_nested.my:11:16: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      mut rows = rows0\n                 ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__v_nested.my.gz"
+    },
+    {
+      "source": "test/core/v_row_cow.my",
+      "sha256": "d00e354d343dae3886da6cfe75ef661dddbb195838ae61206b7a7c07bf79353e",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_row_cow.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_row_cow.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "v_row_cow.my:17:12: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      return xs[i]\n             ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__v_row_cow.my.gz"
+    },
+    {
+      "source": "test/core/v_snapshot.my",
+      "sha256": "60f359dad2ebd828de8ed2ecd8170258b80fbf720178a57a1d07450c03906640",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_snapshot.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_snapshot.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_snapshot.my:28:36: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      return frame.code[replace_code(mut frame)]\n                                     ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__v_snapshot.my.gz"
+    },
+    {
+      "source": "test/core/v_wide_managed.my",
+      "sha256": "7179bc569fd928cd949f12ba6ecb459f4a7325c1d667620917aaea81d3fe4e89",
+      "ordinary": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_wide_managed.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache"
+        ],
+        "status": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "zero_rc": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_wide_managed.my",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/additional-support3-cache",
+          "--experimental-zero-rc"
+        ],
+        "status": 1,
+        "stdout": "",
+        "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/test/core/v_wide_managed.my:21:13: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      mut b = b0\n              ^\n"
+      },
+      "original_archive": "experiments/memory-closeout-20261012/A06/additional-migrations/original-sources/test__core__v_wide_managed.my.gz"
+    }
+  ]
+}

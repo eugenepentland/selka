@@ -37,7 +37,7 @@ func main(args: str[], host: Host, out: Stream) -> int:
     mut index = seed % size
     mut start = runtime_bench_now(host)
     for step in range(iterations):
-        mut item = records[index]
+        mut item = records[index].copy()
         mut result = read_item(item)
         checksum = (checksum + result) % 1000000007
         index = (index + 2 * seed + 1) % size

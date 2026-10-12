@@ -127,7 +127,14 @@ and A09; A06 edits only its reserved guest fixtures and unique regression module
 Support4 exploratory application validation uses source
 `66890fbc5135a771e6a423724d13c30018ab717f`, compiler SHA256
 `4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375`.
-The first word-count release lane passed both inputs with zero RC events and no
-managed leaks. Remaining modes/applications are in progress under shared admission;
-these results are not final C1/C2/C3 qualification. Completed evidence is preserved
-before every checkpoint, and resumed mode batches use distinct output directories.
+Word count passes all five modes and both inputs, and nested JSON passes debug
+and verified release on both inputs: all 14 counted executions preserve checksums,
+have zero RC events and zero exit-live managed bytes, and pass structural audits.
+Their complete evidence is in `evidence/support4-word-*` and
+`evidence/support4-json-debug-verify`. Remaining modes/applications are in progress
+under shared admission; these results are not final C1/C2/C3 qualification.
+Completed evidence is preserved before every checkpoint, and resumed mode batches
+use distinct output directories. The initial 64-source ledger currently admits
+52 sources on exploratory compilers and retains all 12 pending lanes. The
+additional 23-source ledger admits 18 and retains five nested-slot failures.
+Native qualification is still required for every migrated registered fixture.
