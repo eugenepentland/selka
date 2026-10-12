@@ -13,7 +13,7 @@ spec.loader.exec_module(measure)
 
 class MeasurementContract(unittest.TestCase):
     def test_rotated_reversed_order_balances_positions(self):
-        for n in (5, 6):
+        for n in (5, 6, 7):
             names = list(map(str, range(n)))
             counts = {name: [0] * n for name in names}
             for rnd in range(15):

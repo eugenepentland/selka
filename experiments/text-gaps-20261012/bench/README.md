@@ -75,3 +75,23 @@ archives. Revalidate with `--artifact-map PATH`; hash mismatches are still fatal
 and the report records every relocation. Future candidates start with immutable
 archive paths. The initial trial reporter is retained as
 `tools/report_trials_initial.py` to preserve its recorded source identity.
+
+Isolated follow-up candidates use `tools/prepare_trial.py --run UNIQUE
+--common-manifest COMMON_RECEIPT --candidate-runtime PATH --candidate-counted
+PATH --candidate-manifest CANDIDATE_RECEIPT`. It validates the frozen common
+compiler, its complete recorded installation, guests, source and linked clock,
+then pins these inputs in every cell before measurement. Seven arm names are
+explicit: original C0 `checked-baseline`, frozen `checked-common`, new
+`checked-candidate`, ZigSafe, ZigFast, Rust, Go. Three separately counted checked
+binaries remain independent of timing/RSS binaries. Fifteen measured rounds
+use the existing deterministic rotated/reversed order: with seven arms, each
+position occurs two or three times per arm (two complete rotated blocks plus
+one round); carryover balance is not claimed. No schema or workload changes.
+
+For a two-cell JSON trial, call `tools/schedule.py RUN/specs RUN/results --cpu 8
+--cell json_transform.large --cell json_transform.small`, then `tools/report.py
+RUN NEW_OUTPUT --case json_transform --check-artifacts`. CSV uses corresponding
+`csv_aggregate` cells. Never wrap scheduling in a second admission lease. Full
+warmup/paired/RSS/count protocol remains3/15/3; final integrated validation runs
+all six cells. Reporter JSON includes candidate/common paired comparisons as
+well as all foreign ratios; no historical runtime samples are pooled.
