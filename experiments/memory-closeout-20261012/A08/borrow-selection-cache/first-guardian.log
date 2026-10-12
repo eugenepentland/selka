@@ -1,0 +1,15 @@
+build-slot: gate slot 1, FIFO ticket 263 after 0s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10257 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (allocator-hygiene)
+guardian: failures grouped by check (1):
+  allocator-hygiene (4 findings)
+    - src/core/a08_borrow_cache_test.zig:59: hardcoded std.testing.allocator outside test block
+      fix: thread the allocator through as a parameter instead of hardcoding a global.
+    - src/core/a08_borrow_cache_test.zig:59: hardcoded std.testing.allocator outside test block
+    - src/core/a08_borrow_cache_test.zig:61: hardcoded std.testing.allocator outside test block
+    - +1 more — use --verbose for full detail
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

@@ -1,0 +1,143 @@
+build-slot: build slot 1, FIFO ticket 818 after 0s
+42e8e93b819a2b0030eb21631a368d1acf4841fe528e5eb581066376eb84631c
+865c5b16ee9aaebb87d4a84565c6eeeb06b72b9e4e2a293f2e522496684d8fe2
+test-core
++- verification action core member 0 2 pass, 1 fail (3 total)
+guardian/test: test wall 0.58s; slowest over 50ms:
+guardian/test:   0.46s  a08_borrow_cache_test.test.zero RC A08 malformed borrowed selection cached debug body misses and repairs
+guardian/test:   0.11s  a08_borrow_cache_test.test.zero RC A08 borrowed selection cache replay tracks physical discovery in debug and release
+guardian/test: FAIL — 1 failed of 3
+guardian/test: RESULT {"passed":2,"failed":1,"skipped":0}
+error: 'a08_borrow_cache_test.test.zero RC A08 malformed borrowed selection cached debug body misses and repairs' failed:
+       guardian/test: 3 test(s) selected by filter: "borrowed selection"
+       
+       ====== expected this output: =========
+       fn main(cap) -> i64
+       b0:
+         %2 = dict_new dict[str, list[i64]] 1:u64
+         %5 = list_new list[i64] 3:i64
+         %7 = list_push list[i64] %5, 1:i64
+         %9 = list_push list[i64] %7, 2:i64
+         %11 = list_push list[i64] %9, 3:i64
+         %12 = dict_find i64 %2, str0
+         %14 = cmp.ge bool %12, 0:i64
+         branch %14, b1, b2
+       b1: ; preds b0
+         %16 = dict_set_value dict[str, list[i64]] %2, %12, %11
+         jump b3
+       b2: ; preds b0
+         %18 = dict_insert dict[str, list[i64]] %2, %12, str0, %11
+         jump b3
+       b3: ; preds b1 b2
+         %20 = phi dict[str, list[i64]] %16, %18
+         %22 = list_new list[i64] 2:i64
+         %24 = list_push list[i64] %22, 4:i64
+         %26 = list_push list[i64] %24, 5:i64
+         %29 = call i64 selected_size(%20, str1, %26)
+         %31 = call i64 selected_size(%20, str2, %26)
+         print param0, %29, %31
+         %33 = dict_clear dict[str, list[i64]] %20
+         %35 = list_push list[i64] %26, 6:i64
+         %36 = dict_len u64 %33
+         release %33
+         %37 = convert.exact i64 %36
+         %39 = add.exact i64 %37, 1:i64
+         %40 = list_len u64 %35
+         release %35
+         %41 = convert.exact i64 %40
+         print param0, %39, %41
+         ret 0:i64
+       fn selected_size(dict[str, list[i64]], str, list[i64]) -> i64
+       b0:
+         %3 = dict_find i64 param0, param1
+         %5 = cmp.ge bool %3, 0:i64
+         branch %5, b1, b2
+       b1: ; preds b0
+         %7 = dict_entry_value list[i64] param0, %3
+         jump b3
+       b2: ; preds b0
+         jump b3
+       b3: ; preds b1 b2
+         %10 = phi list[i64] %7, param2
+         %11 = call list[i64] myl_core_borrow_select_v1_16_15(%10, param0, param2)
+         %12 = list_len u64 %11
+         %13 = convert.exact i64 %12
+         ret %13
+       fn myl_core_borrow_select_v1_16_15(list[i64], dict[str, list[i64]], list[i64]) -> list[i64] runtime
+       ␃
+       
+       ======== instead found this: =========
+       fn main(cap) -> i64
+       b0:
+         %2 = dict_new dict[str, list[i64]] 1:u64
+         %5 = list_new list[i64] 3:i64
+         %7 = list_push list[i64] %5, 1:i64
+         %9 = list_push list[i64] %7, 2:i64
+         %11 = list_push list[i64] %9, 3:i64
+         %12 = dict_find i64 %2, str0
+         %14 = cmp.ge bool %12, 0:i64
+         branch %14, b1, b2
+       b1: ; preds b0
+         %16 = dict_set_value dict[str, list[i64]] %2, %12, %11
+         jump b3
+       b2: ; preds b0
+         %18 = dict_insert dict[str, list[i64]] %2, %12, str0, %11
+         jump b3
+       b3: ; preds b1 b2
+         %20 = phi dict[str, list[i64]] %16, %18
+         %22 = list_new list[i64] 2:i64
+         %24 = list_push list[i64] %22, 4:i64
+         %26 = list_push list[i64] %24, 5:i64
+         %29 = call i64 selected_size(%20, str0, %26)
+         %31 = call i64 selected_size(%20, str2, %26)
+         print param0, %29, %31
+         %33 = dict_clear dict[str, list[i64]] %20
+         %35 = list_push list[i64] %26, 6:i64
+         %36 = dict_len u64 %33
+         release %33
+         %37 = convert.exact i64 %36
+         %39 = add.exact i64 %37, 1:i64
+         %40 = list_len u64 %35
+         release %35
+         %41 = convert.exact i64 %40
+         print param0, %39, %41
+         ret 0:i64
+       fn selected_size(dict[str, list[i64]], str, list[i64]) -> i64
+       b0:
+         %3 = dict_find i64 param0, param1
+         %5 = cmp.ge bool %3, 0:i64
+         branch %5, b1, b2
+       b1: ; preds b0
+         %7 = dict_entry_value list[i64] param0, %3
+         jump b3
+       b2: ; preds b0
+         jump b3
+       b3: ; preds b1 b2
+         %10 = phi list[i64] %7, param2
+         %11 = call list[i64] myl_core_borrow_select_v1_16_15(%10, param0, param2)
+         %12 = list_len u64 %11
+         %13 = convert.exact i64 %12
+         ret %13
+       fn myl_core_borrow_select_v1_16_15(list[i64], dict[str, list[i64]], list[i64]) -> list[i64] runtime
+       ␃
+       
+       ======================================
+       First difference occurs on line 22:
+       expected:
+         %29 = call i64 selected_size(%20, str1, %26)
+                                              ^ ('\x31')
+       found:
+         %29 = call i64 selected_size(%20, str0, %26)
+                                              ^ ('\x30')
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:681:9: 0x1406495 in expectEqualStrings (std.zig)
+               return error.TestExpectedEqual;
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A08/src/core/a08_borrow_cache_test.zig:172:5: 0x140992e in test.zero RC A08 malformed borrowed selection cached debug body misses and repairs (root_test.zig)
+           try std.testing.expectEqualStrings(try @import("print.zig").module(a, &module), try @import("print.zig").module(a, &fresh_module));
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A08/zig-out/libexec/mylang/components ./.zig-cache/o/89ac33877d8a7d9a6e636a279b35a820/test "--guardian-filter=borrowed selection" --cache-dir=./.zig-cache --seed=0x364c6ad6 --listen=-
+
+Build Summary: 10/12 steps succeeded (1 failed); 2/3 tests passed (1 failed)
+test-core transitive failure
++- verification action core member 0 2 pass, 1 fail (3 total)
+

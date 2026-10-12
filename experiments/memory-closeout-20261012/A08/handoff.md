@@ -464,3 +464,33 @@ field reproduces it even without a generation update or `try`. A07 independently
 identified scalar field forwarding as the cause and owns the narrow production
 correction. These diagnostic variants are not component migrations. Full component
 protocol qualification remains required on the corrected integrated compiler.
+
+
+## Borrowed-selection cache validation
+
+The A08 cache regressions run from the coordinator-created integrated validation
+branch based on `006e2355a`. They require A07's strict restoration guard and the
+always-on marker CFG/dominance wrapper. Three new registered tests cover debug
+and verified-release cold/warm LLVM equivalence, earlier physical type discovery,
+a checksum-valid wrong-root debug artifact rejected and repaired by fresh work,
+and a selected phi with swapped incoming predecessor operands. Persistent and
+live bodies are compared through canonical identities, so valid string-slot
+relocation does not become a false failure.
+
+The predecessor corruption reproduced a missing check in the initial local marker
+proof. A07's `2cb87014c` adds general IR verification once per marker-bearing
+function at ownership and cache restoration boundaries. The first integrated run
+then exposed 192 compiler scratch allocations retained when ownership passed a
+backing allocator; A07's `522e66671` gives the verifier its own temporary arena.
+Both intermediate failures are retained under `borrow-selection-cache/`. These
+were compiler cache validation defects, not measured guest leaks or performance
+changes. The focused filter also includes A07's existing 64-level nested selection
+case; four selected tests now pass without leaks.
+
+`borrowed_cache.py` prepares twelve native command checks; `tuple_cache.py`
+prepares eleven generic tuple source checks using A01's frozen source SHA-256
+`bace27f035ed485fc988e7516c70e6747096ac55d70542eaf934cdad1b138275`.
+Both harnesses currently have Python help/parse checks only. Actual command runs
+wait for the combined compiler, and tuple runs require the producer plus Core
+contract validation. `final-qualification-plan.json` records exact remaining
+scaling, cache and rollout work. No timing window was started during this batch.

@@ -2,6 +2,7 @@
 //! each stage, then the end-to-end slice programs under `test/core`.
 comptime {
     _ = @import("a02_scalar_child_test.zig");
+    _ = @import("a08_borrow_cache_test.zig");
     _ = @import("provider_store_test.zig");
     _ = @import("a08_provider_cache_test.zig");
     _ = @import("a01_parallel_map_test.zig");
