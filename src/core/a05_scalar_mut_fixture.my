@@ -118,8 +118,10 @@ public func test_named_mut_interior_places_preserve_storage_and_written_order() 
     change_named(right=mut point.x, left=mut point.values[0])
     return values == [21, 12] and counter == 2 and point.x == 22 and point.values == [13]
 
+
 func append_value(mut row: int[]) -> Unit:
     row.append(9)
+
 
 public func test_scalar_nested_and_dictionary_writeback() -> bool:
     mut rows = [[1, 2], [3, 4]]
@@ -131,11 +133,13 @@ public func test_scalar_nested_and_dictionary_writeback() -> bool:
     change_pair(mut table[left], mut table[right])
     return rows == [[21, 22], [3, 24]] and table == {"a": 11, "b": 22}
 
+
 public func test_scalar_sibling_writeback_preserves_independent_snapshot() -> bool:
     mut values = [1, 2]
     const snapshot = values.copy()
     change_pair(mut values[0], mut values[1])
     return snapshot == [1, 2] and values == [11, 22]
+
 
 public func test_managed_mut_leaf_still_transfers_its_owner() -> bool:
     mut rows = [[1], [2]]
@@ -144,10 +148,12 @@ public func test_managed_mut_leaf_still_transfers_its_owner() -> bool:
     append_value(mut point.values)
     return rows == [[1, 9], [2]] and point.x == 3 and point.values == [4, 9]
 
+
 func observed_pair(mut left: int, mut right: int, out: Stream) -> Unit:
     out.print("callback executed")
     left += 10
     right += 20
+
 
 func main(args: str[], out: Stream) -> int:
     if len(args) > 0:
