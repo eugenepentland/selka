@@ -304,3 +304,20 @@ managed hit/miss copies, eager fallback effects, independent results after clear
 and five sizes with and without deleted entries. Native qualification awaits
 A07's integrated setdefault lowering. The get-default view regression is wired
 into the source-only harness with its intended `E_ZERO_RC_VIEW_ESCAPE` diagnostic.
+
+Support5 source `a1f19edf255c8c0886731d8d7cce450d5f657720`, compiler SHA256
+`8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789`, passes
+all 20 affected runs: persistence/durable storage, both named restricted-capability
+guest fixtures and dictionary setdefault, each in release, unoptimized debug,
+verified release, optimized debug and release without facts. Every admitted run
+preserves its assertions, has zero emitted/executed RC and managed exit-live
+bytes, and passes LLVM/symbol audits. Storage now verifies the required second-call
+cache hit and reused journal chunks with restored callable digest authority.
+Raw counters and all artifact/source/compiler hashes are retained under
+`evidence/support5-*.json` and `evidence/raw/support5-*`.
+
+All 95 public functions and 25 public type/resource declarations now have at least
+one labelled intermediate counted fixture reference. `export-status.json` keeps
+final common-C1 qualification pending. Aggregate-field providers and managed
+get-default copies/views remain separate compiler work; installed Support5
+`libexec` remains legacy bootstrap-built and is not owned-package qualification.

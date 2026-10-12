@@ -2,7 +2,7 @@
   "scope": "C0 and interim/overlay fixture evidence, not final integrated export qualification",
   "public_declarations": 120,
   "public_functions": 95,
-  "declarations_with_at_least_one_passing_fixture_reference": 118,
+  "declarations_with_at_least_one_passing_fixture_reference": 120,
   "items": [
     {
       "module": "cache_record",
@@ -46,6 +46,51 @@
           "source_sha256": "9bd5e272720a3ae780c7a387b3bbf51810bcfe3efc238dea5b4ff09d00fcc996",
           "overlay": true,
           "binary_sha256": "951feb710befccf92072571ae2b407699808d3aefd73d1b221ea9f9a8c0682dc"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "26da81e1b04996bfe18a37395212bc6bdf1143884f4ca83937d9735fb2ffb3b9"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "verified",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "b635d5221e68d72d177bb94d67326f40d65ea4172fe780229418598eb2cfe264"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "optimized-debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "25627203dab71fe02d6d4816cef906bdad919fdd757dc639ea57d27159b08601"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "no-facts",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "817c8f2de8b7a4b1f249c528020ff54bc63655870c757fac479e7f5bb332efba"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-priority.json",
+          "case": "storage",
+          "mode": "release",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "92d618790ac0a39e24f45f619bf2cd4da34b2710470801a2892f057eb9543f7c"
         }
       ],
       "final_C1_qualification": "pending",
@@ -74,6 +119,51 @@
           "source_sha256": "9bd5e272720a3ae780c7a387b3bbf51810bcfe3efc238dea5b4ff09d00fcc996",
           "overlay": true,
           "binary_sha256": "951feb710befccf92072571ae2b407699808d3aefd73d1b221ea9f9a8c0682dc"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "26da81e1b04996bfe18a37395212bc6bdf1143884f4ca83937d9735fb2ffb3b9"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "verified",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "b635d5221e68d72d177bb94d67326f40d65ea4172fe780229418598eb2cfe264"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "optimized-debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "25627203dab71fe02d6d4816cef906bdad919fdd757dc639ea57d27159b08601"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "no-facts",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "817c8f2de8b7a4b1f249c528020ff54bc63655870c757fac479e7f5bb332efba"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-priority.json",
+          "case": "storage",
+          "mode": "release",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "92d618790ac0a39e24f45f619bf2cd4da34b2710470801a2892f057eb9543f7c"
         }
       ],
       "final_C1_qualification": "pending",
@@ -102,6 +192,51 @@
           "source_sha256": "9bd5e272720a3ae780c7a387b3bbf51810bcfe3efc238dea5b4ff09d00fcc996",
           "overlay": true,
           "binary_sha256": "951feb710befccf92072571ae2b407699808d3aefd73d1b221ea9f9a8c0682dc"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "26da81e1b04996bfe18a37395212bc6bdf1143884f4ca83937d9735fb2ffb3b9"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "verified",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "b635d5221e68d72d177bb94d67326f40d65ea4172fe780229418598eb2cfe264"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "optimized-debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "25627203dab71fe02d6d4816cef906bdad919fdd757dc639ea57d27159b08601"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "no-facts",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "817c8f2de8b7a4b1f249c528020ff54bc63655870c757fac479e7f5bb332efba"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-priority.json",
+          "case": "storage",
+          "mode": "release",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "92d618790ac0a39e24f45f619bf2cd4da34b2710470801a2892f057eb9543f7c"
         }
       ],
       "final_C1_qualification": "pending",
@@ -113,6 +248,51 @@
       "kind": "record",
       "contract": "Owns output/state byte storage. Callback inputs borrow; retained fields need independent owners or explicit copies.",
       "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "26da81e1b04996bfe18a37395212bc6bdf1143884f4ca83937d9735fb2ffb3b9"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "verified",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "b635d5221e68d72d177bb94d67326f40d65ea4172fe780229418598eb2cfe264"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "optimized-debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "25627203dab71fe02d6d4816cef906bdad919fdd757dc639ea57d27159b08601"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "no-facts",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "817c8f2de8b7a4b1f249c528020ff54bc63655870c757fac479e7f5bb332efba"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-priority.json",
+          "case": "storage",
+          "mode": "release",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "92d618790ac0a39e24f45f619bf2cd4da34b2710470801a2892f057eb9543f7c"
+        },
         {
           "report": "experiments/memory-closeout-20261012/A05/evidence/support2-public-values.json",
           "case": "public_values",
@@ -132,6 +312,51 @@
       "kind": "record",
       "contract": "Owns input, chunk-list, initial-state and output-path storage. run borrows all fields and validates byte/chunk/path bounds before native storage.",
       "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "26da81e1b04996bfe18a37395212bc6bdf1143884f4ca83937d9735fb2ffb3b9"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "verified",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "b635d5221e68d72d177bb94d67326f40d65ea4172fe780229418598eb2cfe264"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "optimized-debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "25627203dab71fe02d6d4816cef906bdad919fdd757dc639ea57d27159b08601"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "no-facts",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "817c8f2de8b7a4b1f249c528020ff54bc63655870c757fac479e7f5bb332efba"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-priority.json",
+          "case": "storage",
+          "mode": "release",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "92d618790ac0a39e24f45f619bf2cd4da34b2710470801a2892f057eb9543f7c"
+        },
         {
           "report": "experiments/memory-closeout-20261012/A05/evidence/support2-public-values.json",
           "case": "public_values",
@@ -226,6 +451,51 @@
       "contract": "Borrows error; returns immutable static reason or an independent copy of dynamic detail.",
       "baseline_executable_source_references": [
         {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "26da81e1b04996bfe18a37395212bc6bdf1143884f4ca83937d9735fb2ffb3b9"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "verified",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "b635d5221e68d72d177bb94d67326f40d65ea4172fe780229418598eb2cfe264"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "optimized-debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "25627203dab71fe02d6d4816cef906bdad919fdd757dc639ea57d27159b08601"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "no-facts",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "817c8f2de8b7a4b1f249c528020ff54bc63655870c757fac479e7f5bb332efba"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-priority.json",
+          "case": "storage",
+          "mode": "release",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "92d618790ac0a39e24f45f619bf2cd4da34b2710470801a2892f057eb9543f7c"
+        },
+        {
           "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
           "case": "errors",
           "mode": "release",
@@ -279,7 +549,53 @@
       "name": "run",
       "kind": "func",
       "contract": "Borrows capability/request/callback; scoped directory lease and bounded publication; returns independent state/digest or owned error.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "26da81e1b04996bfe18a37395212bc6bdf1143884f4ca83937d9735fb2ffb3b9"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "verified",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "b635d5221e68d72d177bb94d67326f40d65ea4172fe780229418598eb2cfe264"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "optimized-debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "25627203dab71fe02d6d4816cef906bdad919fdd757dc639ea57d27159b08601"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "no-facts",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "817c8f2de8b7a4b1f249c528020ff54bc63655870c757fac479e7f5bb332efba"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-priority.json",
+          "case": "storage",
+          "mode": "release",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "92d618790ac0a39e24f45f619bf2cd4da34b2710470801a2892f057eb9543f7c"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -344,6 +660,51 @@
           "source_sha256": "9bd5e272720a3ae780c7a387b3bbf51810bcfe3efc238dea5b4ff09d00fcc996",
           "overlay": true,
           "binary_sha256": "951feb710befccf92072571ae2b407699808d3aefd73d1b221ea9f9a8c0682dc"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "26da81e1b04996bfe18a37395212bc6bdf1143884f4ca83937d9735fb2ffb3b9"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "verified",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "b635d5221e68d72d177bb94d67326f40d65ea4172fe780229418598eb2cfe264"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "optimized-debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "25627203dab71fe02d6d4816cef906bdad919fdd757dc639ea57d27159b08601"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "no-facts",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "817c8f2de8b7a4b1f249c528020ff54bc63655870c757fac479e7f5bb332efba"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-priority.json",
+          "case": "storage",
+          "mode": "release",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "92d618790ac0a39e24f45f619bf2cd4da34b2710470801a2892f057eb9543f7c"
         }
       ],
       "final_C1_qualification": "pending",
@@ -894,6 +1255,51 @@
       "kind": "enum",
       "contract": "Tagged scalar number or owned text/bytes. Keys borrow during computation and are copied when retained in cache entries.",
       "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "26da81e1b04996bfe18a37395212bc6bdf1143884f4ca83937d9735fb2ffb3b9"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "verified",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "b635d5221e68d72d177bb94d67326f40d65ea4172fe780229418598eb2cfe264"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "optimized-debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "25627203dab71fe02d6d4816cef906bdad919fdd757dc639ea57d27159b08601"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "no-facts",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "817c8f2de8b7a4b1f249c528020ff54bc63655870c757fac479e7f5bb332efba"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-priority.json",
+          "case": "storage",
+          "mode": "release",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "92d618790ac0a39e24f45f619bf2cd4da34b2710470801a2892f057eb9543f7c"
+        },
         {
           "report": "experiments/memory-closeout-20261012/A05/evidence/overlay-release.json",
           "case": "memo",
@@ -1478,6 +1884,51 @@
       "contract": "Scalar entry/byte retention bounds validated by call; zero entries computes without persistent storage.",
       "baseline_executable_source_references": [
         {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "26da81e1b04996bfe18a37395212bc6bdf1143884f4ca83937d9735fb2ffb3b9"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "verified",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "b635d5221e68d72d177bb94d67326f40d65ea4172fe780229418598eb2cfe264"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "optimized-debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "25627203dab71fe02d6d4816cef906bdad919fdd757dc639ea57d27159b08601"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "no-facts",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "817c8f2de8b7a4b1f249c528020ff54bc63655870c757fac479e7f5bb332efba"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-priority.json",
+          "case": "storage",
+          "mode": "release",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "92d618790ac0a39e24f45f619bf2cd4da34b2710470801a2892f057eb9543f7c"
+        },
+        {
           "report": "experiments/memory-closeout-20261012/A05/evidence/support2-public-values.json",
           "case": "public_values",
           "mode": "release",
@@ -1571,6 +2022,51 @@
       "contract": "Borrows error; returns immutable static reason or an independent copy of dynamic detail.",
       "baseline_executable_source_references": [
         {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "26da81e1b04996bfe18a37395212bc6bdf1143884f4ca83937d9735fb2ffb3b9"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "verified",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "b635d5221e68d72d177bb94d67326f40d65ea4172fe780229418598eb2cfe264"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "optimized-debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "25627203dab71fe02d6d4816cef906bdad919fdd757dc639ea57d27159b08601"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "no-facts",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "817c8f2de8b7a4b1f249c528020ff54bc63655870c757fac479e7f5bb332efba"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-priority.json",
+          "case": "storage",
+          "mode": "release",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "92d618790ac0a39e24f45f619bf2cd4da34b2710470801a2892f057eb9543f7c"
+        },
+        {
           "report": "experiments/memory-closeout-20261012/A05/evidence/support-errors.json",
           "case": "errors",
           "mode": "release",
@@ -1624,7 +2120,53 @@
       "name": "call",
       "kind": "func",
       "contract": "Borrows capability/key/callback; scoped directory lease joins cleanup; returns independent result snapshot or owned error.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "26da81e1b04996bfe18a37395212bc6bdf1143884f4ca83937d9735fb2ffb3b9"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-debug-verified.json",
+          "case": "storage",
+          "mode": "verified",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "b635d5221e68d72d177bb94d67326f40d65ea4172fe780229418598eb2cfe264"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "optimized-debug",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "25627203dab71fe02d6d4816cef906bdad919fdd757dc639ea57d27159b08601"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-optimized-no-facts.json",
+          "case": "storage",
+          "mode": "no-facts",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "817c8f2de8b7a4b1f249c528020ff54bc63655870c757fac479e7f5bb332efba"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support5-priority.json",
+          "case": "storage",
+          "mode": "release",
+          "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+          "source_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+          "overlay": false,
+          "binary_sha256": "92d618790ac0a39e24f45f619bf2cd4da34b2710470801a2892f057eb9543f7c"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
