@@ -275,13 +275,18 @@
     "final_method": "Separate GNU-time guest-child RSS executions; outer launcher RSS and their elapsed times excluded."
   },
   "size_aligned_counted_baseline": {
-    "status": "blocked_by_immutable_c0_native_link_failure",
+    "status": "qualified_manual_native_replay",
     "unique_builds": 8,
     "build_failures": 8,
     "case_denominator": 15,
-    "guest_executions": 0,
+    "guest_executions": 15,
     "raw": "raw/size-aligned-C0/results.json",
-    "candidate_status": "awaiting frozen compiler"
+    "candidate_status": "awaiting frozen compiler",
+    "passed_executions": 15,
+    "method": "counted-release-native-replay-v1",
+    "manual_raw": "raw/size-aligned-C0-native-replay/results.json",
+    "ordinary_compiler_status": "8native build failures preserved",
+    "candidate_requirement": "same adapter and final normal/manual controls"
   },
   "schedule": "C1-schedule.json"
 }

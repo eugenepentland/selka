@@ -1,5 +1,10 @@
 # Exact-sized counted C0 supplement: native builds blocked
 
+Subsequent resolution: root approved A10's exact-source native replay adapter.
+All 15 configurations now have separate passing counted observations in
+`../size-aligned-C0-native-replay`. The failures recorded here remain unchanged;
+the ordinary compiler command did not become successful.
+
 All eight distinct source builds failed with native-link `FileNotFound`. These
 are compiler/native build failures, not source ownership refusals. All 15
 runtime input configurations remain in the report; zero counted guest executions
@@ -28,7 +33,7 @@ All eight groups used ordinary admission separately: 22.760387215s of admitted
 work and 40.820700139s waiting. Those are scheduling observations, not compiler
 performance results.
 
-The candidate's 15 exact-sized counted runs still wait for C1. Their eventual
-allocation totals cannot be described as paired C0 savings while this baseline
-is unavailable. Existing frozen uncounted C0 binaries remain usable for the
-runtime and corrected RSS matrices, and A03's small-input census remains valid.
+The candidate's 15 exact-sized counted runs still wait for C1 and must use the
+same approved native adapter as the subsequent baseline. Existing frozen
+uncounted C0 binaries remain usable for runtime and corrected RSS pairing,
+and A03's small-input census remains valid.

@@ -135,13 +135,16 @@
     "native_scaling": "Known immutable-C0 host/native-fallback failures; never repair/relabel C0 to fabricate native comparisons",
     "diagnostic_scaling": "Six source/Core-only C0 commands prepared; execute only after freeze timing release",
     "size_aligned_counters": {
-      "status": "C0 attempted:8/8unique builds fail native-link FileNotFound,15/15configurations build_failed,0executions; candidate arm pending",
+      "status": "resolved for counted-release-native-replay-v1:8binaries/15exact-sized cases pass; ordinary8build failures preserved",
       "distinct_builds_per_arm": 8,
       "execution_configurations_per_arm": 15,
       "scope": "Exact calibrated15 sources/args/checksums; do not merge their larger-workload costs into pinned81+6 counts. C0 uncached native failure remains possible.",
       "evidence": "raw/size-aligned-C0/results.json",
       "admitted_seconds": 22.760387215,
-      "queue_seconds": 40.820700139
+      "queue_seconds": 40.820700139,
+      "manual_evidence": "raw/size-aligned-C0-native-replay/results.json",
+      "manual_admitted_seconds": 35.373652428,
+      "manual_queue_seconds": 75.878731661
     }
   },
   "c0_artifact_readiness": [
@@ -252,9 +255,12 @@
     "cases_per_arm": 15,
     "distinct_builds_per_arm": 8,
     "c0_builds_failed": 8,
-    "c0_executions_completed": 0,
-    "c0_configuration_status": "all15build_failed",
+    "c0_executions_completed": 15,
+    "c0_configuration_status": "all15passed via exact-source manual native replay; ordinary builds remain failed",
     "candidate_status": "awaiting frozen compiler; no candidate observations",
-    "evidence": "raw/size-aligned-C0/results.json"
+    "evidence": "raw/size-aligned-C0/results.json",
+    "method": "counted-release-native-replay-v1",
+    "manual_evidence": "raw/size-aligned-C0-native-replay/results.json",
+    "candidate_requirement": "same adapter with final-source prepared runtime plus repeated normal/manual equivalence controls"
   }
 }

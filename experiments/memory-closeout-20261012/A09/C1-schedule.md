@@ -39,7 +39,7 @@ ABI audits and the full gate remain required.
 | Runtime artifact preparation | Eight unique uncounted binaries, exposed as 15 worker/input cases | Ordinary bounded build admission; final native build cost still to observe |
 | Runtime comparison | 15 cases × (2 warmup + 9 measured) × 2 arms = **330 launches** | About 5.2–7.2 minutes from sizing scenarios; schedule 5–8 minutes of guest execution, without claiming a final speedup |
 | Guest RSS | 15 cases × 3 pairs × 2 arms = **90 separate launches** | About 1.4–2.0 minutes of guest execution; GNU-time child RSS, no timing use |
-| Size-aligned counters | Eight distinct counted builds per arm; **30 execution configurations**, 15 per arm | C0 attempted: eight native-link failures block all 15 baseline executions. C1 arm waits for freeze. Same calibrated sources/arguments/checksums, separate from the census |
+| Size-aligned counters | Eight distinct counted builds per arm; **30 execution configurations**, 15 per arm | All 15 C0 cases now pass via the approved native replay adapter; eight original compiler failures remain recorded. C1 uses the same adapter after freeze and repeats normal/manual controls |
 | Compiler scaling | 16 family/size cells × 5 phases = **80 final compiler calls** | A08 estimates 2–5 minutes, based on accepted C0 cells taking 4–8s each; each command has a 120s timeout |
 | Diagnostic compiler gap | Six module/generic inputs × C0/final = **12 source/Core-only commands** | Inputs frozen; still unrun. No native-link or whole-build ratio from this partial scope |
 | Cache correctness and compile memory | Existing 44 cache rows plus 12 borrowed-selection and 11 generic-tuple rows, with provider/relocation followups; representative fields64 memory run | Ordinary correctness admission and a separate sampled-memory execution; no estimate for newly added regressions |
@@ -99,15 +99,18 @@ through that known broken native path. The six frozen diagnostic-only inputs
 fill frontend/Core coverage after timing is released, without repairing the
 immutable C0 compiler or implying a valid native comparison.
 
-The exact-sized counted C0 supplement was attempted after authorization. All
-eight unique builds failed with the known native-link staging `FileNotFound`,
-blocking all 15 baseline execution configurations. No ownership refusal or
-counter result is inferred. `raw/size-aligned-C0` preserves commands, stderr,
-emitted LLVM and source snapshots. It used 22.760s admitted plus 40.821s queue.
-The compiler and host trust policy were not patched. The C1 supplement uses the
-same sources and inputs when available, but a paired allocation comparison at
-these exact sizes remains unavailable unless a valid immutable-C0 artifact can
-be recovered. The smaller preserved census retains its own valid comparisons.
+The ordinary exact-sized counted C0 builds failed eight times with the known
+native-link staging `FileNotFound`; `raw/size-aligned-C0` preserves every command,
+stderr, LLVM file and source snapshot. Root then approved the exact-source
+native adapter in A10 commit `44a9ccbbc`, after normal/manual output and entire
+counter-document equivalence controls passed. The adapter verifies C0 runtime
+bytes against the frozen compiler and links the unchanged archived release LLVM.
+All eight native binaries and 15 exact-sized cases pass under the separate
+`counted-release-native-replay-v1` method in `raw/size-aligned-C0-native-replay`.
+It used 35.374s admitted plus 75.879s queue; these are scheduling observations.
+The compiler, host policy and uninstrumented timing binaries were not changed.
+Final C1 must use the same native adapter and repeat equivalence controls before
+paired allocation reporting. No counter observation is runtime or RSS evidence.
 
 The RSS preparation defect is already repaired and qualified in commit
 `268a77a3e`: old guest-pilot RSS values are explicitly invalid, untouched raw

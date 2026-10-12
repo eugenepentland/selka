@@ -5,10 +5,14 @@ Latest preparation: `C1-schedule.md/json` distinguish 330 runtime launches,
 the independent 435-build/695-run census. The corrected RSS harness is commit
 `268a77a3e`, with native parent-memory controls and Guardian 88/88. All 15 frozen
 runtime inputs and both complete C0 installations were reverified unchanged.
-The newly authorized exact-sized counted C0 baseline encountered eight native
-build failures and executed zero of its 15 configurations; see
-`raw/size-aligned-C0`. These are explicit baseline blockers, not zero-allocation
-results. The C1 compiler/package freeze remains outstanding.
+The ordinary exact-sized counted C0 builds encountered eight native-link
+failures; these remain in `raw/size-aligned-C0`. Root subsequently approved A10's
+exact-source native adapter `44a9ccbbc`: all eight reconstructed native binaries
+and 15 counted configurations pass, using the archived LLVM and compiler-verified
+C0 runtime. `raw/size-aligned-C0-native-replay` records this separate method with
+zero observed RC and no managed exit-live bytes. Final C1 must use the same
+adapter and repeat normal/manual equivalence controls. The compiler/package
+freeze remains outstanding, and no final timing pair has run.
 
 Base C0: `fbfcaa7a923186a8e773c3760f81c10aa345a432`.
 Worktree: `/home/epentland/ai/canopy/mylang-memory-20261012-A09`.
