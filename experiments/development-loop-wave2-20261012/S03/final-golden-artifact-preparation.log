@@ -1,0 +1,16 @@
+build-slot: FIFO ticket 714, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 714 after 5s
+['/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig', 'build', '--build-file', '/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/C0/build.zig', 'prepare', '-Dkind=golden', '-Dcompiler=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang', '--cache-dir', '/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-C0-final/local', '--prefix', '/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-C0-final/install', '-j4', '--summary', 'all', '-Dbaseline=true']
+Build Summary: 4/4 steps succeeded
+prepare success
++- install s03-replayed-tests success
+   +- compile test s03-replayed-tests debug native success 378ms MaxRSS:160M
+      +- options success
+
+['/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig', 'build', '--build-file', '/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/B0/build.zig', 'prepare', '-Dkind=golden', '-Dcompiler=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang', '--cache-dir', '/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-B0-final/local', '--prefix', '/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-B0-final/install', '-j4', '--summary', 'all']
+Build Summary: 4/4 steps succeeded
+prepare success
++- install s03-replayed-tests success
+   +- compile test s03-replayed-tests debug native success 502ms MaxRSS:162M
+      +- options success
+

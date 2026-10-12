@@ -1,0 +1,264 @@
+{
+  "schema": "s03-final-golden-paired-v1",
+  "qualification": "two complete matched order-balanced pairs; descriptive only; no p95",
+  "actual_compiler_executions_each_run": 222,
+  "total_timed_actual_compiler_executions": 888,
+  "source_writes_each_run": {
+    "C0": 222,
+    "B0": 165
+  },
+  "source_bytes_each_run": {
+    "C0": 90182,
+    "B0": 66752
+  },
+  "fresh_mutable_work_dirs_each_run": 222,
+  "mismatches": 0,
+  "pairs": [
+    {
+      "pair": 0,
+      "order": [
+        "C0",
+        "B0"
+      ],
+      "C0": {
+        "name": "golden-final-timing-warm-00-C0",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-C0-final/install/bin/s03-replayed-tests"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/C0",
+        "status": 0,
+        "wall_s": 26.301817642059177,
+        "first_useful_feedback_s": 26.301817642059177,
+        "feedback_scope": "observed supported whole-root PASS; individual-test feedback unknown; polling10ms",
+        "user_s": 23.12,
+        "system_s": 11.75,
+        "max_process_rss_kib": 163408,
+        "sampled_command_rss_kib": 7324,
+        "rss_scope": "GNU time maximum process RSS including waited children; sampled command excludes descendants",
+        "selected": [
+          1
+        ],
+        "verdicts": [
+          {
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0
+          }
+        ],
+        "log_sha256": "77bfba60b47b137b564d6d3876ba8ff5720205fca98c61440823c0074a56acc8",
+        "env_cache_tiers": {
+          "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-final-timing-warm-00-C0/local",
+          "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/work",
+          "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-final-timing-warm-00-C0/runtime"
+        },
+        "cache_bytes_after": {
+          "ZIG_LOCAL_CACHE_DIR": 0,
+          "ZIG_GLOBAL_CACHE_DIR": null,
+          "MYLANG_CORE_RUNTIME_CACHE": 3418724
+        }
+      },
+      "B0": {
+        "name": "golden-final-timing-warm-00-B0",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-B0-final/install/bin/s03-replayed-tests"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/B0",
+        "status": 0,
+        "wall_s": 24.226722810883075,
+        "first_useful_feedback_s": 24.226722810883075,
+        "feedback_scope": "observed supported whole-root PASS; individual-test feedback unknown; polling10ms",
+        "user_s": 21.18,
+        "system_s": 9.93,
+        "max_process_rss_kib": 169912,
+        "sampled_command_rss_kib": 8552,
+        "rss_scope": "GNU time maximum process RSS including waited children; sampled command excludes descendants",
+        "selected": [
+          1
+        ],
+        "verdicts": [
+          {
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0
+          }
+        ],
+        "log_sha256": "eebb2981bccb131487c82eed3a11c79b8bcf1c4fe6e7eaf483795ebbb685b88d",
+        "env_cache_tiers": {
+          "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-final-timing-warm-00-B0/local",
+          "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/work",
+          "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-final-timing-warm-00-B0/runtime"
+        },
+        "cache_bytes_after": {
+          "ZIG_LOCAL_CACHE_DIR": 0,
+          "ZIG_GLOBAL_CACHE_DIR": null,
+          "MYLANG_CORE_RUNTIME_CACHE": 3006816
+        }
+      },
+      "wall_ratio_B0_over_C0": 0.9211045084634066,
+      "rss_ratio_B0_over_C0": 1.0398022128659552,
+      "artifact_bytes": {
+        "C0": 20218061,
+        "B0": 20273122
+      },
+      "matched_identity": {
+        "compiler": {
+          "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+          "sha256": "cc827c4e79243f299dc92327fa86049669307d1f0edfa816a5b641dc443176b0",
+          "source": "9d1b51f310477e4ceccffd8ad41ecf6fc2156e13",
+          "scope": "same final Debug compiler; final qualified fixed-seed components; exact final prefix manifest"
+        },
+        "compiler_manifest_sha256": "f11fb105af095c1c919ea41ad8db77e0eb328b8425f3f6892ba6f4dfb01ff467",
+        "harness_sha256": "bd0a640eef76263f47b82497759cc49c76c1d5a8820b07a2d8bb7bd571b1aea7",
+        "measurement_helper_sha256": "63faa186915fd7304910cb33eea1495e4706ebd6af1f84600f03f819dbd5722f",
+        "cpu_affinity": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "warmth": "shared Zig global warm; fresh private runtime per sample, program/cache/source preparation fresh each process"
+      }
+    },
+    {
+      "pair": 1,
+      "order": [
+        "B0",
+        "C0"
+      ],
+      "C0": {
+        "name": "golden-final-timing-warm-01-C0",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-C0-final/install/bin/s03-replayed-tests"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/C0",
+        "status": 0,
+        "wall_s": 26.115845947992057,
+        "first_useful_feedback_s": 26.115845947992057,
+        "feedback_scope": "observed supported whole-root PASS; individual-test feedback unknown; polling10ms",
+        "user_s": 22.98,
+        "system_s": 11.79,
+        "max_process_rss_kib": 169876,
+        "sampled_command_rss_kib": 8388,
+        "rss_scope": "GNU time maximum process RSS including waited children; sampled command excludes descendants",
+        "selected": [
+          1
+        ],
+        "verdicts": [
+          {
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0
+          }
+        ],
+        "log_sha256": "6fd9ec4b6479169cbf4e61ffb7a69ea1e1e166d8d4f3523f555bd37b7dd08154",
+        "env_cache_tiers": {
+          "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-final-timing-warm-01-C0/local",
+          "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/work",
+          "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-final-timing-warm-01-C0/runtime"
+        },
+        "cache_bytes_after": {
+          "ZIG_LOCAL_CACHE_DIR": 0,
+          "ZIG_GLOBAL_CACHE_DIR": null,
+          "MYLANG_CORE_RUNTIME_CACHE": 3418724
+        }
+      },
+      "B0": {
+        "name": "golden-final-timing-warm-01-B0",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-B0-final/install/bin/s03-replayed-tests"
+        ],
+        "cwd": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/B0",
+        "status": 0,
+        "wall_s": 24.288464105920866,
+        "first_useful_feedback_s": 24.288464105920866,
+        "feedback_scope": "observed supported whole-root PASS; individual-test feedback unknown; polling10ms",
+        "user_s": 21.17,
+        "system_s": 10.06,
+        "max_process_rss_kib": 170020,
+        "sampled_command_rss_kib": 7784,
+        "rss_scope": "GNU time maximum process RSS including waited children; sampled command excludes descendants",
+        "selected": [
+          1
+        ],
+        "verdicts": [
+          {
+            "passed": 1,
+            "failed": 0,
+            "skipped": 0
+          }
+        ],
+        "log_sha256": "99c28f73587da5c0d5ea7464b48c76f3485540081eff504bfbfbade114dd4fed",
+        "env_cache_tiers": {
+          "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-final-timing-warm-01-B0/local",
+          "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+          "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/work",
+          "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-final-timing-warm-01-B0/runtime"
+        },
+        "cache_bytes_after": {
+          "ZIG_LOCAL_CACHE_DIR": 0,
+          "ZIG_GLOBAL_CACHE_DIR": null,
+          "MYLANG_CORE_RUNTIME_CACHE": 3006816
+        }
+      },
+      "wall_ratio_B0_over_C0": 0.9300278518371452,
+      "rss_ratio_B0_over_C0": 1.0008476771292,
+      "artifact_bytes": {
+        "C0": 20218061,
+        "B0": 20273122
+      },
+      "matched_identity": {
+        "compiler": {
+          "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-final-candidate/bin/mylang",
+          "sha256": "cc827c4e79243f299dc92327fa86049669307d1f0edfa816a5b641dc443176b0",
+          "source": "9d1b51f310477e4ceccffd8ad41ecf6fc2156e13",
+          "scope": "same final Debug compiler; final qualified fixed-seed components; exact final prefix manifest"
+        },
+        "compiler_manifest_sha256": "f11fb105af095c1c919ea41ad8db77e0eb328b8425f3f6892ba6f4dfb01ff467",
+        "harness_sha256": "bd0a640eef76263f47b82497759cc49c76c1d5a8820b07a2d8bb7bd571b1aea7",
+        "measurement_helper_sha256": "63faa186915fd7304910cb33eea1495e4706ebd6af1f84600f03f819dbd5722f",
+        "cpu_affinity": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "warmth": "shared Zig global warm; fresh private runtime per sample, program/cache/source preparation fresh each process"
+      }
+    }
+  ]
+}

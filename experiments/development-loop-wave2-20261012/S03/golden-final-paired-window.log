@@ -1,0 +1,11 @@
+build-slot: FIFO ticket 45, position 1; draining active work (build1.lock); waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 45 after 35s
+['/usr/bin/python3', '/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/experiments/development-loop-wave2-20261012/S03/measure_final_goldens.py', 'timing', '--label', 'C0', '--sample', '0', '--tier', 'warm', '--timeout', '60']
+{"mode": "timing", "label": "C0", "sample": 0, "tier": "warm", "wall_s": 26.301817642059177, "checked_cases": 222, "mismatches": 0}
+['/usr/bin/python3', '/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/experiments/development-loop-wave2-20261012/S03/measure_final_goldens.py', 'timing', '--label', 'B0', '--sample', '0', '--tier', 'warm', '--timeout', '60']
+{"mode": "timing", "label": "B0", "sample": 0, "tier": "warm", "wall_s": 24.226722810883075, "checked_cases": 222, "mismatches": 0}
+['/usr/bin/python3', '/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/experiments/development-loop-wave2-20261012/S03/measure_final_goldens.py', 'timing', '--label', 'B0', '--sample', '1', '--tier', 'warm', '--timeout', '60']
+{"mode": "timing", "label": "B0", "sample": 1, "tier": "warm", "wall_s": 24.288464105920866, "checked_cases": 222, "mismatches": 0}
+['/usr/bin/python3', '/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/experiments/development-loop-wave2-20261012/S03/measure_final_goldens.py', 'timing', '--label', 'C0', '--sample', '1', '--tier', 'warm', '--timeout', '60']
+{"mode": "timing", "label": "C0", "sample": 1, "tier": "warm", "wall_s": 26.115845947992057, "checked_cases": 222, "mismatches": 0}
+Two complete matched golden pairs; descriptive only, no p95.

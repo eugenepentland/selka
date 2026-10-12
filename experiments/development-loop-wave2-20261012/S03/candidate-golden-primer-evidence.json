@@ -1,0 +1,22 @@
+{
+  "scope": "Candidate golden correctness only; existing full-primer wrapper selects4tests and differs from isolated1test wrapper; not paired timing",
+  "source": "9d1b51f310477e4ceccffd8ad41ecf6fc2156e13",
+  "golden_source_sha256": "16811e085de8541b830d7efe05ad8552ded594897e59eb490ba5b44aba7202ac",
+  "compiler_sha256": "cc827c4e79243f299dc92327fa86049669307d1f0edfa816a5b641dc443176b0",
+  "checked_cases": 222,
+  "actual_compiler_executions": 222,
+  "source_writes": 165,
+  "source_bytes": 66752,
+  "fresh_work_directories": 222,
+  "mismatches": 0,
+  "selected_tests": 4,
+  "passed_tests": 4,
+  "corpus_body_wall_s": 23.94,
+  "evidence": {
+    "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/experiments/development-loop-wave2-20261012/S10/raw/final-primer-9d1/stderr.log": "29a22754389403458081c951b7046867e629500e5f6cb8890450d06c11e10acc",
+    "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/experiments/development-loop-wave2-20261012/S10/raw/final-primer-9d1/capture.json": "dd906b98ab73843ca381c0480802191a5ef0f202ec1d0168c3f46d415fae5e8d",
+    "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/experiments/development-loop-wave2-20261012/S10/raw/final-primer-9d1/report-00.json": "812cf7095386e10e6942eb25bca0f5bb84d378682ec5eb57cab8bcf9d745cbe9",
+    "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/experiments/development-loop-wave2-20261012/S10/raw/final-primer-9d1/evidence-sha256.json": "0062c28803b6d21b38936397160dad400e999e5e167439f9356c8eca9f88c363"
+  },
+  "excerpt_sha256": "375de54e0d15e2a1eeb050def65317acfbd838247fed305309be0a5aebc42eeb"
+}

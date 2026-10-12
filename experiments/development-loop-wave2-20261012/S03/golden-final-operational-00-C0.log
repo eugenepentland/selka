@@ -1,0 +1,2 @@
+build-slot: build slot 1, FIFO ticket 717 after 0s
+{"mode": "operational", "label": "C0", "sample": 0, "tier": "warm", "wall_s": 30.62016667611897, "checked_cases": 222, "mismatches": 0}
