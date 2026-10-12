@@ -179,3 +179,16 @@ not change the ABI or lifetime inference. Frozen `samples/fresh_field.my` and
 Root's Core test import is included; the old dictionary_views dependency overlay
 and transferred guest migration edits remain excluded. Complete tuple unpacking is
 separate work and is not claimed by this fix.
+
+
+Retirement preparation was refreshed against integration
+`44947e6967d8eb0deeaa86b25ca2bb44bc58803d` under
+`retirement/integration-44947/`. Three isolated patches cover task runtime removal,
+dependent scheduler/emitted-IR fixture migration, and the shared Core map-selector
+request. All three dry-run applications pass against exact archived inputs. Static
+checks preserve every synchronization/pending line and seven queue/join/map bodies.
+No production retirement is applied, and no native retirement result is claimed.
+The directory records ownership boundaries, exact hashes, C2 authorization and
+shared ABI dependencies, and the required final reruns. Evidence is committed from
+the coordinator-created clean A01 validation checkout at `67348fc8c`; the old
+worker's validation overlays and transferred guest migrations remain untouched.
