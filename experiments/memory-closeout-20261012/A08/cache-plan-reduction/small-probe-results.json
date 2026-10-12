@@ -1,0 +1,73 @@
+[
+  {
+    "name": "small-graph",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/experiments/memory-closeout-20261012/A08/cache-plan-reduction/small-graph.my",
+      "--experimental-zero-rc",
+      "--facts"
+    ],
+    "status": 0,
+    "elapsed_incidental": 0.023146085906773806,
+    "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+    "source_sha256": "d5bfe5bf8c9bb8355b19d826bf8e415f1cf9616f601e5fc0c625688ed19de383",
+    "ir_sha256": "2d81d3e521decad58f917c031b306cd7bf52bf1efe7c9ab44d5236e1793170b9",
+    "retain_lines": [
+      "  retain %24"
+    ]
+  },
+  {
+    "name": "small-marks",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/experiments/memory-closeout-20261012/A08/cache-plan-reduction/small-marks.my",
+      "--experimental-zero-rc",
+      "--facts"
+    ],
+    "status": 0,
+    "elapsed_incidental": 0.010308627970516682,
+    "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+    "source_sha256": "9244a7b4d86a77ad2e20b3849e671de07ff09dbc0f382d2249195684beac39ca",
+    "ir_sha256": "8801057b84b7732be2993097cdabcec756216db14ce2a20e95349fabd93c4002",
+    "retain_lines": [
+      "  retain %22"
+    ]
+  },
+  {
+    "name": "small-one-loop",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/experiments/memory-closeout-20261012/A08/cache-plan-reduction/small-one-loop.my",
+      "--experimental-zero-rc",
+      "--facts"
+    ],
+    "status": 0,
+    "elapsed_incidental": 0.008534571854397655,
+    "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+    "source_sha256": "237ea7fc27ae17b8d2f41d3952c6714e9a289e7587a2fb2ec8c5b07e7209fe8e",
+    "ir_sha256": "15601b11f93932d6960f3d44dd32d472e032e98de6430af5d4cd27e30681863f",
+    "retain_lines": [
+      "  retain %66",
+      "  retain %22"
+    ]
+  },
+  {
+    "name": "small-one-loop-no-write",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/experiments/memory-closeout-20261012/A08/cache-plan-reduction/small-one-loop-no-write.my",
+      "--experimental-zero-rc",
+      "--facts"
+    ],
+    "status": 0,
+    "elapsed_incidental": 0.006495442008599639,
+    "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+    "source_sha256": "fec4e8ec46881ec2d8e6091ecf2eb04d981dea9c2f443525a6f2e8c98e27b1f4",
+    "ir_sha256": "fcab20506b8e1717dec224e9b51f423bbeb9e957501e5882a6a07ca1e76a4135",
+    "retain_lines": []
+  }
+]

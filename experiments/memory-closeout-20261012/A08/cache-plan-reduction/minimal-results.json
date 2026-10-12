@@ -1,0 +1,101 @@
+[
+  {
+    "name": "minimal-record-facts",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/experiments/memory-closeout-20261012/A08/cache-plan-reduction/minimal-record.my",
+      "--experimental-zero-rc",
+      "--facts"
+    ],
+    "status": 0,
+    "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+    "source_sha256": "ee49bd6dbafa2ca5b57285879163fdccae10169cdd827d6c3df5d8ffbc8ee45f",
+    "retain_lines": []
+  },
+  {
+    "name": "minimal-constant-facts",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/experiments/memory-closeout-20261012/A08/cache-plan-reduction/minimal-constant.my",
+      "--experimental-zero-rc",
+      "--facts"
+    ],
+    "status": 0,
+    "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+    "source_sha256": "c9d6fb249c63f4a8a573fef570e76abd1b63d069b0ff5780ed00ea0a7d26cb6d",
+    "retain_lines": []
+  },
+  {
+    "name": "small-one-loop-raw",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+      "dump-ir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/experiments/memory-closeout-20261012/A08/cache-plan-reduction/small-one-loop.my",
+      "--experimental-zero-rc"
+    ],
+    "status": 0,
+    "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+    "source_sha256": "237ea7fc27ae17b8d2f41d3952c6714e9a289e7587a2fb2ec8c5b07e7209fe8e",
+    "retain_lines": []
+  },
+  {
+    "name": "small-one-loop-zero",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/experiments/memory-closeout-20261012/A08/cache-plan-reduction/small-one-loop.my",
+      "--release",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/cache-plan-reduction/cache",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/cache-plan-reduction/zero",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/cache-plan-reduction/zero.ll",
+      "--experimental-zero-rc"
+    ],
+    "status": 1,
+    "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A08/experiments/memory-closeout-20261012/A08/cache-plan-reduction/small-one-loop.my:8:5: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression\n      marks.seen[0] = generation\n      ^\n",
+    "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789"
+  },
+  {
+    "name": "small-one-loop-ordinary",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/experiments/memory-closeout-20261012/A08/cache-plan-reduction/small-one-loop.my",
+      "--release",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/cache-plan-reduction/cache",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/cache-plan-reduction/ordinary",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/cache-plan-reduction/ordinary.ll"
+    ],
+    "status": 0,
+    "stderr": "",
+    "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+    "binary_sha256": "029fa4ad92e3ae173c60e29d031632482a58c928ddc6b4e6afad554c1e9da84f",
+    "runs": [
+      {
+        "arguments": [],
+        "status": 0,
+        "stdout": "1\n1 1\n",
+        "stderr": ""
+      },
+      {
+        "arguments": [
+          "x"
+        ],
+        "status": 0,
+        "stdout": "1\n1 1\n",
+        "stderr": ""
+      }
+    ]
+  }
+]

@@ -1,0 +1,66 @@
+public record Work:
+    index_nodes: int
+    index_edges: int
+    affected_nodes: int
+    closure_nodes: int
+    closure_edges: int
+    reused_tests: int
+    planned_tests: int
+
+
+func check_work(work: Work) fails str:
+    if work.index_nodes + work.index_edges + work.affected_nodes + work.closure_nodes + work.closure_edges > 64000000:
+        fail "incremental planning work exceeds limit"
+
+
+record Closures:
+    members: int[][]
+    successors: int[][]
+    values: int[][]
+    state: int[]
+    seen: int[]
+    generation: int
+    group_seen: int[]
+
+
+func close_group(mut closures: Closures, group: int, mut work: Work) fails str:
+    if closures.state[group] == 2:
+        return
+    closures.generation += 1
+    mut generation = closures.generation
+    mut pending: int[] = [group]
+    closures.group_seen[group] = generation
+    mut reached: int[] = []
+    mut next = 0
+    while next < len(pending):
+        mut current = pending[next]
+        next += 1
+        for offset in range(len(closures.members[current])):
+            const node = closures.members[current][offset]
+            work.closure_nodes += 1
+            try check_work(work)
+            if closures.seen[node] != generation:
+                closures.seen[node] = generation
+                reached.append(node)
+        for offset in range(len(closures.successors[current])):
+            const target = closures.successors[current][offset]
+            work.closure_edges += 1
+            try check_work(work)
+            if closures.group_seen[target] != generation:
+                closures.group_seen[target] = generation
+                pending.append(target)
+    closures.values[group] = reached
+    closures.state[group] = 2
+
+
+func main(args: str[], out: Stream) -> int:
+    mut closures = Closures(members=[[0], [1]], successors=[[1], []], values=[[], []], state=[0, 0], seen=[0, 0], generation=0, group_seen=[0, 0])
+    mut work = Work(index_nodes=0, index_edges=0, affected_nodes=0, closure_nodes=0, closure_edges=0, reused_tests=0, planned_tests=0)
+    const group = len(args) % 2
+    match close_group(mut closures, group, mut work):
+        case Ok(_):
+            out.print(len(closures.values[group]), work.closure_nodes, work.closure_edges)
+        case Err(message):
+            out.print(message)
+            return 1
+    return 0

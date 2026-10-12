@@ -1,0 +1,3 @@
+/home/epentland/ai/canopy/mylang-memory-20261012-A08/experiments/memory-closeout-20261012/A08/cache-plan-reduction/small-one-loop.my:8:5: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression
+      marks.seen[0] = generation
+      ^

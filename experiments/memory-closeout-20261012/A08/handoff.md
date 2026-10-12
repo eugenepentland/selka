@@ -331,3 +331,15 @@ oracle, requires a different candidate object, and verifies repair after stale o
 bytes are placed at the candidate's disposable object path. These inputs only have
 Python parse/help checks so far; they await the integrated numeric fix and must not
 be counted as completed qualification. No historical shared artifact is mutated.
+
+
+## Cache-plan blocker reduction
+
+`cache-plan-reduction/README.md` and raw reports reduce the support5 refusal to
+`small-one-loop.my`, a 19-line mutable-record/scalar-capture/loop fixture. The
+ordinary native control returns the expected result; zero-RC build still refuses.
+Constant/argument controls remove the retain, while retaining the captured scalar
+field reproduces it even without a generation update or `try`. A07 independently
+identified scalar field forwarding as the cause and owns the narrow production
+correction. These diagnostic variants are not component migrations. Full component
+protocol qualification remains required on the corrected integrated compiler.
