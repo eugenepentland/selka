@@ -338,3 +338,12 @@ def process_observations(observation=None):
                     rss_scope='process-lifetime-high-water', aggregate_peak_rss_bytes=None)
     except (KeyError, TypeError, OverflowError):
         return unknown
+
+
+def guest_test_timings(path=None, *, action_id, member):
+    """Read supported guest verdict inventory with explicitly unknown test clocks."""
+    import verification_guest_telemetry
+    if path is None:
+        import verification_telemetry
+        return verification_telemetry.unknown_tests('supported guest JSON log unavailable')
+    return verification_guest_telemetry.read_guest_tests(path, action_id=action_id, member=member)

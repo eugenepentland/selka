@@ -45,6 +45,8 @@ def validate_tests(record, *, action_id=None, member=None):
     try:
         if not isinstance(record, dict) or record.get('version') != VERSION or type(record['version']) is not int:
             return unknown
+        if record.get('malformed') is True:
+            return unknown
         for field in ('producer', 'action_id', 'member_id'):
             if not isinstance(record[field], str) or not record[field] or len(record[field]) > MAX_LABEL:
                 return unknown
@@ -72,7 +74,10 @@ def validate_tests(record, *, action_id=None, member=None):
                 return unknown
             counts['reused' if state == 'reused' else 'skipped' if state == 'skipped' else 'executed'] += 1
             counts['timed'] += ns is not None
-            detached.append(dict(test_id=name, state=state, elapsed_ns=ns))
+            scope = row.get('elapsed_scope', 'test-execution')
+            if scope not in ('test-execution', 'runner-protocol-interval'):
+                return unknown
+            detached.append(dict(test_id=name, state=state, elapsed_ns=ns, elapsed_scope=scope))
         complete = record['complete'] and len(rows) == selected
         timing = 'complete' if complete and counts['timed'] == selected else 'partial'
         execution_timing = 'complete' if complete and counts['timed'] == counts['executed'] else 'partial'
