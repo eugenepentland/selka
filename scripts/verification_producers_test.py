@@ -54,6 +54,20 @@ class ProducerTests(unittest.TestCase):
         self.assertEqual(len(identity['sources']), 11)
         self.assertEqual(identity['implementation']['sha256'], self.record['producers']['tooling-units']['implementation']['sha256'])
 
+    def test_actual_pinned_zig_lowercase_optimize_tags_qualify(self):
+        binary, source = self.identities()
+        for mode in ('debug', 'release_safe', 'release_fast', 'release_small'):
+            record = copy.deepcopy(self.record)
+            record['producers']['tooling-units'] = producers.producer_metadata(
+                self.root, 'tooling-units', self.artifact, mode)
+            context = copy.deepcopy(self.context)
+            context['action_controls']['optimize'] = mode
+            identity = producers.qualified_identity(record, 'tooling-units', binary, source, context)
+            with self.subTest(mode=mode):
+                self.assertIsNotNone(identity)
+                self.assertEqual(identity['mode'], mode)
+        self.assertEqual(self.record['producers']['tooling-units']['mode'], 'debug')
+
     def test_independent_compiler_edit_preserves_identity(self):
         before = self.qualify()
         (self.root / 'src/compiler.zig').write_text('unrelated compiler change')
@@ -81,7 +95,7 @@ class ProducerTests(unittest.TestCase):
     def test_mode_seed_abi_schema_and_tool_changes(self):
         original = self.qualify()
         for field, value in [('mode', 'ReleaseFast'), ('seed', {'sha256': 'c' * 64}),
-                             ('abi', 'changed'), ('interface', 'changed'), ('version', 2)]:
+                             ('abi', 'changed'), ('interface', 'changed'), ('version', 3)]:
             record = copy.deepcopy(self.record)
             record['producers']['tooling-units'][field] = value
             with self.subTest(field=field):

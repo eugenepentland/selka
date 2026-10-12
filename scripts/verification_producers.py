@@ -18,11 +18,13 @@ import sys
 
 from verification_snapshot import Snapshot
 
-VERSION = 1
-DOMAIN = 'selka-qualified-native-producer-v1'
+VERSION = 2
+DOMAIN = 'selka-qualified-native-producer-v2'
 INTERFACE = 'guardian-zig-test-runner-v1'
 ABI = 'zig-native-test-executable-v1'
-MODES = {'Debug', 'ReleaseSafe', 'ReleaseFast', 'ReleaseSmall'}
+MODES = {'debug', 'release_safe', 'release_fast', 'release_small'}
+MODE_ALIASES = dict(Debug='debug', ReleaseSafe='release_safe',
+                    ReleaseFast='release_fast', ReleaseSmall='release_small')
 CLOSURES = {
     'tooling-units': (
         'src/tooling_root_test.zig', 'src/doc_coverage_test.zig', 'src/doc_coverage.zig',
@@ -74,6 +76,7 @@ def content(item: dict) -> dict:
 
 def producer_metadata(root: Path, label: str, artifact: Path, mode: str) -> dict | None:
     """Capture one reviewed producer, or decline narrowing for a changed closure."""
+    mode = MODE_ALIASES.get(mode, mode)
     if mode not in MODES:
         raise ValueError('unsupported producer optimize mode: ' + mode)
     if label not in CLOSURES or not closure_supported(root, label):
@@ -123,7 +126,8 @@ build code, Guardian runner/diagnostic source and pinned Zig tools/library bytes
                     for field in ('build_configuration', 'tools'))
                 or not isinstance(inherited['options'], list)
                 or not all(isinstance(option, str) for option in inherited['options'])
-                or metadata['mode'] != inherited['action_controls']['optimize']):
+                or metadata['mode'] != MODE_ALIASES.get(inherited['action_controls']['optimize'],
+                                                       inherited['action_controls']['optimize'])):
             return None
         if len(artifact_files) != 1 or metadata['implementation'] != content(artifact_files[0]):
             return None
