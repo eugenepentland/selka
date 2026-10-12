@@ -1,0 +1,9 @@
+build-slot: FIFO ticket 1744, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1744 after 10s
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling serde_json v1.0.151
+   Compiling memchr v2.8.3
+   Compiling itoa v1.0.18
+   Compiling runtime_text v0.1.0 (/home/epentland/ai/canopy/mylang-micro-refs-20261012/experiments/micro-ownership-20261012/references/sources/text)
+    Finished `release` profile [optimized] target(s) in 2.43s
