@@ -1,0 +1,39 @@
+{
+  "source_commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "installation": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0",
+  "compiler_optimize": "Debug",
+  "build_command": "scripts/build-slot.sh build \"$ZIG\" build -p \"$PWD/.tmp/memory-closeout/A09/C0\" -j4 --maxrss 8589934592",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_version": "0.17.0-dev.1683+5ceec001b",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "guardian_commit": "ae1ae2899cc60b575e9e1b9212d73eddf9e2df72",
+  "files": {
+    "bin/mylang": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+    "libexec/mylang/components/cache-plan-14501451340ebbb82684c4108f35b9a71cc2d407333ed50f6f90bc321954261e": "14501451340ebbb82684c4108f35b9a71cc2d407333ed50f6f90bc321954261e",
+    "libexec/mylang/components/cache-plan.json": "44e7c8ed5cb9698221a185056651e3dbe38ea3e5167f59859b49e10a09df1fce",
+    "libexec/mylang/components/test-index-b3ad0140096fa33d2775a7f74bf4385b0750ee09ce885d5c0c23453a7d6c285e": "b3ad0140096fa33d2775a7f74bf4385b0750ee09ce885d5c0c23453a7d6c285e",
+    "libexec/mylang/components/test-index.json": "81006c7e1c24629159943474e4d0d0a7a5125d18c40f124b7274403fbad6f295",
+    "tools/selka-components": "69c222bf0361ea763cab6222d9e9279b77bc380bc27ef6ee3ad56a1480a930c1"
+  },
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "component_manifests": {
+    "test-index.json": {
+      "artifact": "test-index-b3ad0140096fa33d2775a7f74bf4385b0750ee09ce885d5c0c23453a7d6c285e",
+      "component": "test-index",
+      "format": 1,
+      "key": "c5252fad3ec1c7d4164d91bc716032258c003b0f9b8ded07092d902350bde3cc",
+      "protocol": 1,
+      "schema": 1,
+      "sha256": "b3ad0140096fa33d2775a7f74bf4385b0750ee09ce885d5c0c23453a7d6c285e"
+    },
+    "cache-plan.json": {
+      "artifact": "cache-plan-14501451340ebbb82684c4108f35b9a71cc2d407333ed50f6f90bc321954261e",
+      "component": "cache-plan",
+      "format": 1,
+      "key": "f0b5459555ce2f1dd4edeac738aeff7b9affe77733f8104b0f768828a58866ee",
+      "protocol": 2,
+      "schema": 2,
+      "sha256": "14501451340ebbb82684c4108f35b9a71cc2d407333ed50f6f90bc321954261e"
+    }
+  }
+}
