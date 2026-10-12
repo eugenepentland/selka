@@ -1,0 +1,567 @@
+
+import sexpr_ast as ast
+import numeric
+import math
+import support_sort as srt
+import support_parse as parse_mod
+import support_strs as strs
+
+public record Box:
+    x0: int
+    y0: int
+    x1: int
+    y1: int
+
+
+public enum Kind:
+    caption
+    label
+    field
+    pin_name
+    pin_number
+
+
+public record Item:
+    box: Box
+    kind: Kind
+    text: bytes
+
+
+public record Pair:
+    a: bytes
+    b: bytes
+    kind_a: Kind
+    kind_b: Kind
+    x: int = 0
+    y: int = 0
+
+
+public record Report:
+    texts: int = 0
+    overlaps: int = 0
+    first: Pair? = None
+
+
+# Extents are an approximation, never a structural export failure. A character
+# advances one font size; global labels start 9/8 sizes beyond their anchor.
+public func scan(root: ast.Node) -> Report:
+    mut items: Item[] = []
+    mut libs: LibSymbol[] = []
+    mut cl = ast.as_list(root)
+    if cl is None:
+        return Report()
+    for child in cl[1:len(cl)]:
+        if ast.is_form(child, b"lib_symbols"):
+            read_lib_symbols(child, mut libs)
+    for child2 in cl[1:len(cl)]:
+        read_top(child2, libs, mut items)
+    return overlaps_of(items)
+
+
+# private in Zig; split-file tests exercise the same box calculation.
+public enum Just:
+    start
+    middle
+    end
+
+
+public enum Cross:
+    center
+    above
+    below
+
+
+public record Placement:
+    x: int
+    y: int
+    dir: int
+    w: int
+    h: int
+    just: Just
+    cross: Cross
+    lead: int = 0
+
+
+record Span:
+    u0: int
+    u1: int
+    v0: int
+    v1: int
+
+
+public func box_of(p: Placement) -> Box:
+    mut u0 = p.lead
+    if p.just == Just.middle:
+        u0 = -divtrunc(p.w, 2)
+    elif p.just == Just.end:
+        u0 = -p.lead - p.w
+    mut v0 = 0
+    if p.cross == Cross.center:
+        v0 = -divtrunc(p.h, 2)
+    elif p.cross == Cross.above:
+        v0 = -p.h - number_gap(p.h)
+    mut span = Span(u0=u0, u1=u0 + p.w, v0=v0, v1=v0 + p.h)
+    # Opposite reading directions mirror along the advance axis.
+    if p.dir == 180 or p.dir == 270:
+        mut start = span.u0
+        span.u0 = -span.u1
+        span.u1 = -start
+    if p.dir == 90 or p.dir == 270:
+        return Box(x0=p.x + span.v0, y0=p.y - span.u1, x1=p.x + span.v1, y1=p.y - span.u0)
+    return Box(x0=p.x + span.u0, y0=p.y + span.v0, x1=p.x + span.u1, y1=p.y + span.v1)
+
+
+func number_gap(h: int) -> int:
+    return divtrunc(h, 5)
+
+
+func label_lead(h: int) -> int:
+    return divtrunc(h * 9, 8)
+
+
+# UTF-8 code points, not byte count: an em dash advances one character.
+func advance(text: bytes, size: int) -> int:
+    mut chars = 0
+    for c in text:
+        if bit_and(c, 192) != 128:
+            chars += 1
+    return chars * size
+
+
+func overlaps_of(items: Item[]) -> Report:
+    mut ordered = items
+    srt.sort_by(mut ordered, left_of)
+    mut out = Report(texts=len(ordered))
+    mut i = 0
+    for a in ordered:
+        for b in ordered[i + 1:len(ordered)]:
+            if b.box.x0 >= a.box.x1 - 10:
+                break
+            if not hits(a.box, b.box):
+                continue
+            out.overlaps += 1
+            if out.first.is_none():
+                out.first = Some(Pair(a=a.text, b=b.text, kind_a=a.kind, kind_b=b.kind, x=max(a.box.x0, b.box.x0), y=max(a.box.y0, b.box.y0)))
+        i += 1
+    return out
+
+
+func left_of(a: Item, b: Item) -> bool:
+    if a.box.x0 != b.box.x0:
+        return a.box.x0 < b.box.x0
+    return a.box.y0 < b.box.y0
+
+
+func hits(a: Box, b: Box) -> bool:
+    if min(a.x1, b.x1) - max(a.x0, b.x0) <= 10:
+        return False
+    return min(a.y1, b.y1) - max(a.y0, b.y0) > 10
+
+
+record LibPin:
+    unit: int
+    x: int
+    y: int
+    angle: int
+    len: int
+    name: bytes
+    name_size: int
+    number: bytes
+    number_size: int
+
+
+record LibSymbol:
+    name: bytes
+    pins: LibPin[]
+    show_names: bool = True
+    show_numbers: bool = True
+    name_offset: int = 0
+
+
+func libraries_find(self: LibSymbol[], id_: bytes) -> LibSymbol?:
+    for entry in self:
+        if entry.name == id_:
+            return Some(entry)
+    return None
+
+
+func read_lib_symbols(node: ast.Node, mut libs: LibSymbol[]):
+    mut cl = ast.as_list(node)
+    if cl is None:
+        return
+    for sym in cl[1:len(cl)]:
+        if not ast.is_form(sym, b"symbol"):
+            continue
+        mut sl = ast.as_list(sym)
+        if sl is None:
+            continue
+        if len(sl) < 2:
+            continue
+        mut name = ast.as_text(sl[1])
+        if name is None:
+            continue
+        mut entry = LibSymbol(name=name, pins=[])
+        read_pin_policy(sym, mut entry)
+        for sub in sl[2:len(sl)]:
+            read_lib_unit(sub, mut entry)
+        libs.append(entry)
+
+
+func read_pin_policy(sym: ast.Node, mut entry: LibSymbol):
+    mut cl = ast.as_list(sym)
+    if cl is None:
+        return
+    for child in cl[1:len(cl)]:
+        if ast.is_form(child, b"pin_numbers"):
+            entry.show_numbers = not hidden(child)
+        if not ast.is_form(child, b"pin_names"):
+            continue
+        entry.show_names = not hidden(child)
+        entry.name_offset = number_child(child, b"offset").unwrap_or(0)
+
+
+func read_lib_unit(sub: ast.Node, mut entry: LibSymbol):
+    if not ast.is_form(sub, b"symbol"):
+        return
+    mut l = ast.as_list(sub)
+    if l is None:
+        return
+    if len(l) < 2:
+        return
+    mut unit = sub_unit(ast.as_text(l[1]).unwrap_or(b""))
+    if unit is None:
+        return
+    for item in l[2:len(l)]:
+        if not ast.is_form(item, b"pin"):
+            continue
+        mut pin = read_lib_pin(item, unit)
+        if pin is not None:
+            entry.pins.append(pin)
+
+
+func read_lib_pin(item: ast.Node, unit: int) -> LibPin?:
+    mut at = try at_form(item)
+    mut name = named_text(item, b"name")
+    mut number = named_text(item, b"number")
+    mut x = try coord(at[1])
+    mut y = try coord(at[2])
+    return Some(LibPin(unit=unit, x=x, y=y, angle=angle_at(at), len=number_child(item, b"length").unwrap_or(0), name=name.text, name_size=name.size, number=number.text, number_size=number.size))
+
+
+record NamedText:
+    text: bytes
+    size: int = 0
+
+
+func named_text(item: ast.Node, form: bytes) -> NamedText:
+    mut cl = ast.as_list(item)
+    if cl is None:
+        return NamedText(text=b"")
+    for child in cl[1:len(cl)]:
+        if not ast.is_form(child, form):
+            continue
+        mut l = ast.as_list(child)
+        if l is None:
+            continue
+        if len(l) < 2:
+            continue
+        return NamedText(text=ast.as_text(l[1]).unwrap_or(b""), size=font_size(child))
+    return NamedText(text=b"")
+
+
+func font_size(node: ast.Node) -> int:
+    mut cl = ast.as_list(node)
+    if cl is None:
+        return 0
+    for child in cl[1:len(cl)]:
+        if not ast.is_form(child, b"effects"):
+            continue
+        if hidden(child):
+            return 0
+        mut el = ast.as_list(child)
+        if el is None:
+            continue
+        for f in el[1:len(el)]:
+            if ast.is_form(f, b"font"):
+                return number_child(f, b"size").unwrap_or(0)
+    return 0
+
+
+func read_top(node: ast.Node, libs: LibSymbol[], mut items: Item[]):
+    if ast.is_form(node, b"text"):
+        append_caption(node, mut items)
+    elif ast.is_form(node, b"global_label"):
+        append_label(node, mut items)
+    elif ast.is_form(node, b"symbol"):
+        append_symbol(node, libs, mut items)
+
+
+func append_caption(node: ast.Node, mut items: Item[]):
+    mut cl = ast.as_list(node)
+    if cl is None:
+        return
+    if len(cl) < 2:
+        return
+    mut text = ast.as_text(cl[1])
+    mut at = at_form(node)
+    if text is None or at is None:
+        return
+    mut size = font_size(node)
+    mut x = coord(at[1])
+    mut y = coord(at[2])
+    if size == 0 or x is None or y is None:
+        return
+    mut p = Placement(x=x, y=y, dir=angle_at(at), w=advance(text, size), h=size, just=Just.start, cross=Cross.above)
+    items.append(Item(kind=Kind.caption, text=text, box=box_of(p)))
+
+
+func append_label(node: ast.Node, mut items: Item[]):
+    mut cl = ast.as_list(node)
+    if cl is None:
+        return
+    if len(cl) < 2:
+        return
+    mut text = ast.as_text(cl[1])
+    mut at = at_form(node)
+    if text is None or at is None:
+        return
+    mut size = font_size(node)
+    mut x = coord(at[1])
+    mut y = coord(at[2])
+    if size == 0 or x is None or y is None:
+        return
+    mut p = Placement(x=x, y=y, dir=angle_at(at), w=advance(text, size), h=size, lead=label_lead(size), just=Just.start, cross=Cross.center)
+    items.append(Item(kind=Kind.label, text=text, box=box_of(p)))
+
+
+record Pose:
+    x: int
+    y: int
+    angle: int
+
+
+func append_symbol(node: ast.Node, libs: LibSymbol[], mut items: Item[]):
+    mut at = at_form(node)
+    if at is None:
+        return
+    mut x = coord(at[1])
+    mut y = coord(at[2])
+    if x is None or y is None:
+        return
+    mut origin = Pose(x=x, y=y, angle=angle_at(at))
+    append_fields(node, origin, mut items)
+    mut id_ = form_text(node, b"lib_id")
+    if id_ is None:
+        return
+    mut entry = libraries_find(libs, id_)
+    if entry is None:
+        return
+    mut unit = unit_of(node)
+    for pin in entry.pins:
+        if pin.unit == unit or pin.unit == 0:
+            append_pin_texts(entry, pin, origin, mut items)
+
+
+func append_fields(node: ast.Node, origin: Pose, mut items: Item[]):
+    mut cl = ast.as_list(node)
+    if cl is None:
+        return
+    for child in cl[1:len(cl)]:
+        if not ast.is_form(child, b"property") or hidden(child):
+            continue
+        mut l = ast.as_list(child)
+        if l is None:
+            continue
+        if len(l) < 3:
+            continue
+        mut text = ast.as_text(l[2])
+        if text is None:
+            continue
+        if len(text) == 0:
+            continue
+        mut size = font_size(child)
+        mut at = at_form(child)
+        if size == 0 or at is None:
+            continue
+        mut x = coord(at[1])
+        mut y = coord(at[2])
+        if x is None or y is None:
+            continue
+        mut just = Just.middle
+        if justified_left(child):
+            just = Just.start
+        mut p = Placement(x=x, y=y, dir=drawn_field_angle(angle_at(at), origin.angle), w=advance(text, size), h=size, just=just, cross=Cross.center)
+        items.append(Item(kind=Kind.field, text=text, box=box_of(p)))
+
+
+func drawn_field_angle(field: int, parent: int) -> int:
+    if parent == 90 or parent == 270:
+        return (field + 270) % 360
+    return field
+
+
+func append_pin_texts(entry: LibSymbol, pin: LibPin, origin: Pose, mut items: Item[]):
+    mut at = on_sheet(pin.x, pin.y, origin)
+    mut dir_ = (pin.angle + origin.angle) % 360
+    mut body = along(at, dir_, pin.len)
+    if entry.show_names and pin.name_size > 0 and len(pin.name) > 0:
+        mut p = Placement(x=body.x, y=body.y, dir=dir_, w=advance(pin.name, pin.name_size), h=pin.name_size, lead=entry.name_offset, just=Just.start, cross=Cross.center)
+        items.append(Item(kind=Kind.pin_name, text=pin.name, box=box_of(p)))
+    if not entry.show_numbers or pin.number_size == 0 or len(pin.number) == 0:
+        return
+    mut mid = along(at, dir_, divtrunc(pin.len, 2))
+    mut p2 = Placement(x=mid.x, y=mid.y, dir=dir_, w=advance(pin.number, pin.number_size), h=pin.number_size, just=Just.middle, cross=Cross.above)
+    items.append(Item(kind=Kind.pin_number, text=pin.number, box=box_of(p2)))
+
+
+record Sheet2:
+    x: int
+    y: int
+
+
+func on_sheet(x: int, y: int, origin: Pose) -> Sheet2:
+    mut r = turn(x, y, origin.angle)
+    return Sheet2(x=origin.x + r[0], y=origin.y - r[1])
+
+
+func turn(x: int, y: int, angle: int) -> FixedArray[int, 2]:
+    mut a = angle % 360
+    if a == 90:
+        return FixedArray[int, 2]([-y, x])
+    if a == 180:
+        return FixedArray[int, 2]([-x, -y])
+    if a == 270:
+        return FixedArray[int, 2]([y, -x])
+    return FixedArray[int, 2]([x, y])
+
+
+func along(p: Sheet2, dir_: int, d: int) -> Sheet2:
+    mut a = dir_ % 360
+    if a == 90:
+        return Sheet2(x=p.x, y=p.y - d)
+    if a == 180:
+        return Sheet2(x=p.x - d, y=p.y)
+    if a == 270:
+        return Sheet2(x=p.x, y=p.y + d)
+    return Sheet2(x=p.x + d, y=p.y)
+
+
+func coord(node: ast.Node) -> int?:
+    mut v = try ast.as_number(node)
+    mut value = try numeric.checked_i64(math.round(v * 100.0))
+    return Some(int(value))
+
+
+func at_form(node: ast.Node) -> ast.Node[]?:
+    mut cl = try ast.as_list(node)
+    for child in cl[1:len(cl)]:
+        if not ast.is_form(child, b"at"):
+            continue
+        mut l = ast.as_list(child)
+        if l is not None and len(l) >= 3:
+            return Some(l)
+    return None
+
+
+func angle_at(at: ast.Node[]) -> int:
+    if len(at) < 4:
+        return 0
+    mut deg = numeric.checked_i64(math.round(ast.as_number(at[3]).unwrap_or(0.0)))
+    if deg is None:
+        return 0
+    return int(deg) % 360
+
+
+func number_child(node: ast.Node, form: bytes) -> int?:
+    mut cl = try ast.as_list(node)
+    for child in cl[1:len(cl)]:
+        if not ast.is_form(child, form):
+            continue
+        mut l = ast.as_list(child)
+        if l is not None and len(l) >= 2:
+            return coord(l[1])
+    return None
+
+
+func form_text(node: ast.Node, form: bytes) -> bytes?:
+    mut cl = try ast.as_list(node)
+    for child in cl[1:len(cl)]:
+        if not ast.is_form(child, form):
+            continue
+        mut l = ast.as_list(child)
+        if l is not None and len(l) >= 2:
+            return ast.as_text(l[1])
+    return None
+
+
+func hidden(node: ast.Node) -> bool:
+    mut cl = ast.as_list(node)
+    if cl is None:
+        return False
+    for child in cl[1:len(cl)]:
+        if ast.is_form(child, b"hide"):
+            mut l = ast.as_list(child)
+            if l is not None and len(l) >= 2:
+                return ast.as_atom(l[1]).unwrap_or(b"") == b"yes"
+    return False
+
+
+func justified_left(node: ast.Node) -> bool:
+    mut cl = ast.as_list(node)
+    if cl is None:
+        return False
+    for child in cl[1:len(cl)]:
+        if not ast.is_form(child, b"effects"):
+            continue
+        mut el = ast.as_list(child)
+        if el is None:
+            continue
+        for j in el[1:len(el)]:
+            if not ast.is_form(j, b"justify"):
+                continue
+            mut jl = ast.as_list(j)
+            if jl is None:
+                continue
+            for word in jl[1:len(jl)]:
+                if ast.as_atom(word).unwrap_or(b"") == b"left":
+                    return True
+    return False
+
+
+func unit_of(node: ast.Node) -> int:
+    mut cl = ast.as_list(node)
+    if cl is None:
+        return 1
+    for child in cl[1:len(cl)]:
+        if not ast.is_form(child, b"unit"):
+            continue
+        mut l = ast.as_list(child)
+        if l is not None and len(l) >= 2:
+            mut n = numeric.checked_i64(math.round(ast.as_number(l[1]).unwrap_or(1.0)))
+            if n is None:
+                return 1
+            return max(int(n), 0)
+    return 1
+
+
+func sub_unit(name: bytes) -> int?:
+    mut style = -1
+    mut i = len(name) - 1
+    while i >= 0:
+        if name[i] == 95:
+            style = i
+            break
+        i -= 1
+    if style < 0:
+        return None
+    mut unit = -1
+    mut j = style - 1
+    while j >= 0:
+        if name[j] == 95:
+            unit = j
+            break
+        j -= 1
+    if unit < 0:
+        return None
+    mut number = try parse_mod.parse_u32(strs.text(name[unit + 1:style]))
+    return Some(int(number))

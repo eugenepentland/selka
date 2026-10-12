@@ -1,0 +1,58 @@
+
+
+# Test assertions for the port (Zig `std.testing.expect*`).
+#
+# A mylang test is a `public def test_*() -> bool`; the run stops at the first
+# `return False`.  These helpers print what differed to a Stream and return a
+# bool, so a test reads
+#
+#     def test_x(out: Stream) -> bool:
+#         if not ex.eq_int(out, "count", got, 3):
+#             return False
+#
+# (`ex` = `import support_expect as ex`).  `label` names the value in the message.
+public func ok(out: Stream, label: str, cond: bool) -> bool:
+    if not cond:
+        out.print(f"expected {label.copy()} to hold")
+    return cond
+
+
+public func eq_int(out: Stream, label: str, got: int, want: int) -> bool:
+    if got != want:
+        out.print(f"{label.copy()}: got {got}, want {want}")
+        return False
+    return True
+
+
+public func eq_str(out: Stream, label: str, got: str, want: str) -> bool:
+    if got != want:
+        out.print(f"{label.copy()}: got {got.copy()}, want {want.copy()}")
+        return False
+    return True
+
+
+# Byte-exact comparison; reports the first differing offset, not two large blobs.
+public func eq_bytes(out: Stream, label: str, got: bytes, want: bytes) -> bool:
+    if got == want:
+        return True
+    mut n = min(len(got), len(want))
+    mut i = 0
+    while i < n and got[i] == want[i]:
+        i = i + 1
+    out.print(f"{label.copy()}: bytes differ at offset {i} (got {len(got)} bytes, want {len(want)} bytes)")
+    return False
+
+
+# Float equality within `tol` (Zig `expectApproxEqAbs`).
+public func near(out: Stream, label: str, got: float, want: float, tol: float) -> bool:
+    if abs(got - want) > tol:
+        out.print(f"{label.copy()}: got {got}, want {want} (tolerance {tol})")
+        return False
+    return True
+
+
+public func eq_strs(out: Stream, label: str, got: str[], want: str[]) -> bool:
+    if got != want:
+        out.print(f"{label.copy()}: got {got}, want {want}")
+        return False
+    return True

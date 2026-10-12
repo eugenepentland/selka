@@ -1,0 +1,192 @@
+
+import eval_env as env_mod
+import render_block_types as rb
+import support_strs as strs
+
+# Flattened hierarchical refs belong to their first top-level sub-block; plain
+# refs resolve to the first section/top-level member that registered them.
+public record Membership:
+    ref_to_node: dict[str, int]
+    sub_to_node: dict[str, int]
+
+
+public func membership_resolve(self: Membership, flat_ref: bytes) -> int?:
+    mut slash = flat_ref.find(b"/")
+    if slash >= 0:
+        mut sub_key = strs.text(flat_ref[:slash])
+        if sub_key in self.sub_to_node:
+            return Some(self.sub_to_node[sub_key])
+        return None
+    mut key = strs.text(flat_ref)
+    if key in self.ref_to_node:
+        return Some(self.ref_to_node[key])
+    return None
+
+
+# sec_node/sub_node None suppresses/folds a node; attachments are section ids.
+public func build(block: env_mod.DesignBlock, sec_node: int?[], sub_node: int?[], sub_attachments: int?[]) -> Membership:
+    mut ref_to_node: dict[str, int] = {}
+    mut sub_to_node: dict[str, int] = {}
+    mut si = 0
+    while si < len(block.sections):
+        mut sec = block.sections[si]
+        mut nid = sec_node[si]
+        if nid is not None:
+            add_section_refs(mut ref_to_node, sec, nid)
+            for ss in sec.sub_sections:
+                add_section_refs(mut ref_to_node, ss, nid)
+        si += 1
+    mut bi = 0
+    while bi < len(block.sub_blocks):
+        mut nid2 = node_for_sub(bi, sec_node, sub_node, sub_attachments)
+        if nid2 is not None:
+            put_if_absent(mut sub_to_node, block.sub_blocks[bi].name, nid2)
+        bi += 1
+    return Membership(ref_to_node=ref_to_node, sub_to_node=sub_to_node)
+
+
+func add_section_refs(mut map_: dict[str, int], sec: env_mod.Section, nid: int):
+    for inst in sec.instances:
+        put_if_absent(mut map_, inst.ref_des, nid)
+    for pg in sec.pin_groups:
+        put_if_absent(mut map_, pg.ref_des, nid)
+
+
+func node_for_sub(bi: int, sec_node: int?[], sub_node: int?[], sub_attachments: int?[]) -> int?:
+    if bi < len(sub_attachments):
+        mut host_sec = sub_attachments[bi]
+        if host_sec is not None:
+            if host_sec < len(sec_node):
+                return sec_node[host_sec]
+            return None
+    if bi < len(sub_node):
+        return sub_node[bi]
+    return None
+
+
+func put_if_absent(mut map_: dict[str, int], key: bytes, nid: int):
+    if len(key) == 0:
+        return
+    mut text = strs.text(key)
+    if text not in map_:
+        map_[text] = nid
+
+
+# Attach to the section sharing most signal nets. Explicit hosts override;
+# connector sections lose ties to a functional section. Power is excluded.
+public func compute_sub_block_attachments(block: env_mod.DesignBlock) -> int?[]:
+    mut result: int?[] = []
+    for sb in block.sub_blocks:
+        result.append(None)
+    if len(block.sub_blocks) == 0 or len(block.sections) == 0:
+        return result
+    mut net_to_subs: dict[str, set[str]] = {}
+    for nt in block.net_ties:
+        mut a_slash = nt.a.find(b"/")
+        mut b_slash = nt.b.find(b"/")
+        mut parent = b""
+        mut sub = b""
+        if a_slash < 0 and b_slash >= 0:
+            parent = nt.a
+            sub = nt.b[:b_slash]
+        elif b_slash < 0 and a_slash >= 0:
+            parent = nt.b
+            sub = nt.a[:a_slash]
+        else:
+            continue
+        mut key = strs.text(parent)
+        if key not in net_to_subs:
+            net_to_subs[key] = set()
+        net_to_subs[key].add(strs.text(sub))
+    mut sb_name_to_idx: dict[str, int] = {}
+    mut idx = 0
+    while idx < len(block.sub_blocks):
+        sb_name_to_idx[strs.text(block.sub_blocks[idx].name)] = idx
+        idx += 1
+    # First explicit section declaration wins; hosts are authoritative.
+    mut explicit_host: dict[str, int] = {}
+    mut sec_idx = 0
+    while sec_idx < len(block.sections):
+        for host_name in block.sections[sec_idx].hosts:
+            mut host_key = strs.text(host_name)
+            if host_key not in explicit_host:
+                explicit_host[host_key] = sec_idx
+        sec_idx += 1
+    # Collect shared power nets before computing peripheral affinity.
+    mut power_nets: set[str] = set()
+    for sec in block.sections:
+        for port in sec.ports:
+            if port.signal_type == env_mod.SignalType.power:
+                power_nets.add(strs.text(port.name))
+    mut sec_count = len(block.sections)
+    mut sb_count = len(block.sub_blocks)
+    mut counts: int[] = []
+    mut count_idx = 0
+    while count_idx < sb_count * sec_count:
+        counts.append(0)
+        count_idx += 1
+    mut sec_idx2 = 0
+    while sec_idx2 < sec_count:
+        mut sec2 = block.sections[sec_idx2]
+        mut sec_nets: set[str] = set()
+        for pg in sec2.pin_groups:
+            for p in pg.pins:
+                sec_nets.add(strs.text(p.net))
+        for port2 in sec2.ports:
+            sec_nets.add(strs.text(port2.name))
+        for net in sec_nets:
+            if net in power_nets or net not in net_to_subs:
+                continue
+            mut subs = net_to_subs[net]
+            if len(subs) != 1:
+                continue
+            for sub_name in subs:
+                if sub_name in sb_name_to_idx:
+                    mut sb_idx = sb_name_to_idx[sub_name]
+                    counts[sb_idx * sec_count + sec_idx2] += 1
+        sec_idx2 += 1
+    mut sb_idx2 = 0
+    while sb_idx2 < sb_count:
+        mut sb2 = block.sub_blocks[sb_idx2]
+        mut sb_key = strs.text(sb2.name)
+        if sb_key in explicit_host:
+            result[sb_idx2] = Some(explicit_host[sb_key])
+            sb_idx2 += 1
+            continue
+        mut best_idx: int? = None
+        mut best_count = 0
+        mut best_is_conn = True
+        mut sec_idx3 = 0
+        while sec_idx3 < sec_count:
+            mut sec3 = block.sections[sec_idx3]
+            mut c = counts[sb_idx2 * sec_count + sec_idx3]
+            if c > 0:
+                mut is_conn = rb.classify_by_name(sec3.name, sec3.instances) == rb.Category.connector
+                # A module belongs with its subsystem, not the connector its
+                # I/O happens to pass through. Count first, functional tie next.
+                mut better = c > best_count or (c == best_count and best_is_conn and not is_conn)
+                if better:
+                    best_count = c
+                    best_idx = Some(sec_idx3)
+                    best_is_conn = is_conn
+            sec_idx3 += 1
+        if best_count >= 1:
+            result[sb_idx2] = best_idx
+        sb_idx2 += 1
+    return result
+
+
+# Indices are identity: two instances of one module may be equal by value.
+# Preserve declaration order and share the same ownership decision everywhere.
+public func attached_sub_blocks(block: env_mod.DesignBlock, sub_attachments: int?[], sec_idx: int) -> int[]:
+    mut out: int[] = []
+    mut sb_idx = 0
+    while sb_idx < len(block.sub_blocks):
+        if sb_idx >= len(sub_attachments):
+            break
+        mut host = sub_attachments[sb_idx]
+        if host is not None:
+            if host == sec_idx:
+                out.append(sb_idx)
+        sb_idx += 1
+    return out

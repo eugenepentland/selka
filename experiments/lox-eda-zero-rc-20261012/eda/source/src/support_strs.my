@@ -1,0 +1,320 @@
+
+
+# Byte-wise text helpers: the `std.mem`, `std.ascii` and `std.fs.path` calls that
+# mylang's `str`/`bytes` methods lack or spell differently (the counterpart of Go's
+# support/{ascii,strs,path}.go).
+#
+# Text rule of the port (see PORTING-MYLANG.md, "Text: bytes or str"): model and file
+# text, tokens, AST atoms and everything emitted byte-for-byte are `bytes`; a `str`
+# is for dict and set keys and short labels. Everything here takes a `bytes` unless
+# the name or comment says `str`. Characters are `int` byte values (`ord("a")` is 97).
+#
+# Every function is ASCII-only or byte-wise, like Zig's: mylang's own `str.lower()`,
+# `str.upper()`, `isalpha()` and `isdigit()` are ASCII-only too, so they agree, but
+# `len(str)` counts Unicode scalars where Zig's `.len` counts bytes: use `byte_len`.
+# Zig `s.len` of text held as a `str`: the UTF-8 byte count, not the scalar count.
+public func byte_len(s: str) -> int:
+    return len(s.encode())
+
+
+# A `str` from `bytes` that must be UTF-8 (every model and golden file is). Traps
+# `R_ASSERT` on invalid UTF-8 instead of returning a Result: nothing in the slice can
+# recover from it, and Zig would have copied the bytes through unchecked.
+public func text(b: bytes) -> str:
+    match b.decode():
+        case Ok(s):
+            return s
+        case Err(_):
+            assert False, "invalid UTF-8 in text"
+    return ""
+
+
+# --- std.ascii ----------------------------------------------------------------
+# `std.ascii.isDigit`.
+public func is_digit(c: int) -> bool:
+    return c >= 48 and c <= 57
+
+
+# `std.ascii.isAlphabetic`.
+public func is_alphabetic(c: int) -> bool:
+    return (c >= 97 and c <= 122) or (c >= 65 and c <= 90)
+
+
+# `std.ascii.isAlphanumeric`.
+public func is_alphanumeric(c: int) -> bool:
+    return is_alphabetic(c) or is_digit(c)
+
+
+# `std.ascii.isUpper`.
+public func is_upper(c: int) -> bool:
+    return c >= 65 and c <= 90
+
+
+# `std.ascii.isLower`.
+public func is_lower(c: int) -> bool:
+    return c >= 97 and c <= 122
+
+
+# `std.ascii.isWhitespace`: space, \t, \n, \v, \f, \r.
+public func is_whitespace(c: int) -> bool:
+    return c == 32 or (c >= 9 and c <= 13)
+
+
+# `std.ascii.toUpper`.
+public func to_upper(c: int) -> int:
+    if is_lower(c):
+        return c - 32
+    return c
+
+
+# `std.ascii.toLower`.
+public func to_lower(c: int) -> int:
+    if is_upper(c):
+        return c + 32
+    return c
+
+
+# `std.ascii.lowerString` / `allocLowerString`.
+public func lower_bytes(s: bytes) -> bytes:
+    mut out: int[] = []
+    for c in s:
+        out.append(to_lower(c))
+    return bytes(out)
+
+
+# `std.ascii.upperString` / `allocUpperString`.
+public func upper_bytes(s: bytes) -> bytes:
+    mut out: int[] = []
+    for c in s:
+        out.append(to_upper(c))
+    return bytes(out)
+
+
+# `std.ascii.eqlIgnoreCase`.
+public func eql_ignore_case(a: bytes, b: bytes) -> bool:
+    if len(a) != len(b):
+        return False
+    mut i = 0
+    while i < len(a):
+        if to_lower(a[i]) != to_lower(b[i]):
+            return False
+        i += 1
+    return True
+
+
+# `std.ascii.startsWithIgnoreCase`.
+public func starts_with_ignore_case(haystack: bytes, needle: bytes) -> bool:
+    if len(needle) > len(haystack):
+        return False
+    return eql_ignore_case(haystack[0:len(needle)], needle)
+
+
+# `std.ascii.endsWithIgnoreCase`.
+public func ends_with_ignore_case(haystack: bytes, needle: bytes) -> bool:
+    if len(needle) > len(haystack):
+        return False
+    return eql_ignore_case(haystack[len(haystack) - len(needle):len(haystack)], needle)
+
+
+# `std.ascii.indexOfIgnoreCase`: the first index of `needle` under ASCII case folding, or -1.
+public func index_of_ignore_case(haystack: bytes, needle: bytes) -> int:
+    mut i = 0
+    while i + len(needle) <= len(haystack):
+        if eql_ignore_case(haystack[i:i + len(needle)], needle):
+            return i
+        i += 1
+    return -1
+
+
+# --- std.mem ------------------------------------------------------------------
+# `std.mem.order(u8, a, b)` as -1 (`.lt`), 0 (`.eq`) or 1 (`.gt`): bytewise, then by length.
+public func bytes_order(a: bytes, b: bytes) -> int:
+    mut n = len(a)
+    if len(b) < n:
+        n = len(b)
+    mut i = 0
+    while i < n:
+        if a[i] != b[i]:
+            if a[i] < b[i]:
+                return -1
+            return 1
+        i += 1
+    if len(a) < len(b):
+        return -1
+    if len(a) > len(b):
+        return 1
+    return 0
+
+
+# `std.mem.lessThan(u8, a, b)`.
+public func bytes_less(a: bytes, b: bytes) -> bool:
+    return bytes_order(a, b) < 0
+
+
+# `std.mem.order(u8, a, b)` for text held as `str` (mylang has no `<` on `str`).
+# Unicode scalar order equals UTF-8 byte order, so this agrees with the byte compare.
+public func str_order(a: str, b: str) -> int:
+    return bytes_order(a.encode(), b.encode())
+
+
+# `std.mem.lessThan(u8, a, b)` for `str`.
+public func str_less(a: str, b: str) -> bool:
+    return str_order(a, b) < 0
+
+
+# `std.mem.indexOfPos`: the first index >= `start` of `needle` in `haystack`, or -1
+# (an empty needle is found at `start`; a `start` past the end finds nothing).
+public func index_of_pos(haystack: bytes, start: int, needle: bytes) -> int:
+    if start > len(haystack):
+        return -1
+    mut r = haystack[start:len(haystack)].find(needle)
+    if r < 0:
+        return -1
+    return start + r
+
+
+# `std.mem.indexOfScalarPos`.
+public func index_of_scalar_pos(haystack: bytes, start: int, c: int) -> int:
+    if start >= len(haystack):
+        return -1
+    return haystack.find_any(bytes([c]), start)
+
+
+# `std.mem.indexOfAny`: the first index of any byte of `values`, or -1.
+public func index_of_any(s: bytes, values: bytes) -> int:
+    return s.find_any(values, 0)
+
+
+# `std.mem.lastIndexOfAny`.
+public func last_index_of_any(s: bytes, values: bytes) -> int:
+    mut i = len(s) - 1
+    while i >= 0:
+        if s[i] in values:
+            return i
+        i -= 1
+    return -1
+
+
+# `std.mem.trimStart` (`trimLeft`): drop any byte of `cutset` from the front.
+public func trim_start(s: bytes, cutset: bytes) -> bytes:
+    mut i = 0
+    while i < len(s) and s[i] in cutset:
+        i += 1
+    return s[i:]
+
+
+# `std.mem.trimEnd` (`trimRight`).
+public func trim_end(s: bytes, cutset: bytes) -> bytes:
+    mut i = len(s)
+    while i > 0 and s[i - 1] in cutset:
+        i -= 1
+    return s[:i]
+
+
+# `std.mem.trim`: drop any byte of `cutset` from both ends (mylang's `strip()` takes no set).
+public func trim(s: bytes, cutset: bytes) -> bytes:
+    return trim_end(trim_start(s, cutset), cutset)
+
+
+# `std.mem.tokenizeAny` collected into a list: the non-empty runs between delimiter bytes.
+public func tokenize_any(s: bytes, delimiters: bytes) -> bytes[]:
+    mut out: bytes[] = []
+    mut i = 0
+    while i < len(s):
+        while i < len(s) and s[i] in delimiters:
+            i += 1
+        mut start = i
+        while i < len(s) and s[i]not in delimiters:
+            i += 1
+        if i > start:
+            out.append(s[start:i])
+    return out
+
+
+# `std.mem.tokenizeScalar` collected into a list.
+public func tokenize_scalar(s: bytes, delimiter: int) -> bytes[]:
+    return tokenize_any(s, bytes([delimiter]))
+
+
+# --- std.fs.path (POSIX), over `str` paths --------------------------------------
+# Number of leading characters of `path` left after dropping trailing `/`.
+func strip_trailing_slashes(path: str) -> int:
+    mut end = len(path)
+    while end > 0 and path[end - 1] == "/":
+        end -= 1
+    return end
+
+
+# `std.fs.path.join`: naive `/` join of the non-empty parts, one separator where both
+# sides carry one. It never cleans `.` or `..` and never collapses other separators.
+public func path_join(parts: str[]) -> str:
+    mut out = ""
+    for p in parts:
+        if len(p) == 0:
+            continue
+        if len(out) == 0:
+            out = p.copy()
+            continue
+        mut prev_sep = out[len(out) - 1] == "/"
+        mut this_sep = p[0] == "/"
+        if not prev_sep and not this_sep:
+            out = out + "/" + p.copy()
+        elif prev_sep and this_sep:
+            out = out + p[1:]
+        else:
+            out = out + p.copy()
+    return out
+
+
+# `std.fs.path.dirname`: the path up to its last component, `/` for a top-level absolute
+# path, None for a path with no parent (`a`, `/`, empty).
+public func path_dirname(path: str) -> str?:
+    mut end = strip_trailing_slashes(path)
+    if end == 0:
+        return None
+    mut i = end - 1
+    while i >= 0 and path[i] != "/":
+        i -= 1
+    if i < 0:
+        return None
+    mut j = i
+    while j > 0 and path[j - 1] == "/":
+        j -= 1
+    if j == 0:
+        return Some(path[0:1])
+    return Some(path[0:j])
+
+
+# `std.fs.path.basename`: the last component, trailing `/` ignored; empty for an empty or root path.
+public func path_basename(path: str) -> str:
+    mut end = strip_trailing_slashes(path)
+    if end == 0:
+        return ""
+    mut i = end - 1
+    while i >= 0 and path[i] != "/":
+        i -= 1
+    return path[i + 1:end]
+
+
+# --- integer formatting ----------------------------------------------------------
+# Zig `{x:0>W}` of a non-negative integer: lower-case hex, zero-padded to `width` (never cut).
+public func hex_pad(value: int, width: int) -> str:
+    assert value >= 0, "hex_pad takes a non-negative value"
+    mut digits = "0123456789abcdef"
+    mut out = ""
+    mut v = value
+    while v > 0:
+        out = digits[v % 16] + out
+        v = v // 16
+    while len(out) < width:
+        out = "0" + out
+    return out
+
+
+# Zig `{d:0>W}` of a non-negative integer: decimal, zero-padded to `width` (never cut).
+public func zero_pad(value: int, width: int) -> str:
+    assert value >= 0, "zero_pad takes a non-negative value"
+    mut out = str(value)
+    while len(out) < width:
+        out = "0" + out
+    return out

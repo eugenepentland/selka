@@ -1,0 +1,92 @@
+[
+  {
+    "file": "board_layers.my",
+    "line": 200,
+    "before": "return name",
+    "after": "return name.copy()"
+  },
+  {
+    "file": "eval_env.my",
+    "line": 1693,
+    "before": "return value",
+    "after": "return value.copy()"
+  },
+  {
+    "file": "eval_net_analysis.my",
+    "line": 98,
+    "before": "return name",
+    "after": "return name.copy()"
+  },
+  {
+    "file": "export_kicad.my",
+    "line": 41,
+    "before": "return kicad_name",
+    "after": "return kicad_name.copy()"
+  },
+  {
+    "file": "export_kicad_sch.my",
+    "line": 707,
+    "before": "return local",
+    "after": "return local.copy()"
+  },
+  {
+    "file": "flat_netlist.my",
+    "line": 50,
+    "before": "return name",
+    "after": "return name.copy()"
+  },
+  {
+    "file": "kicad_pcb_format.my",
+    "line": 33,
+    "before": "return s",
+    "after": "return s.copy()"
+  },
+  {
+    "file": "kicad_pcb_format.my",
+    "line": 44,
+    "before": "return s",
+    "after": "return s.copy()"
+  },
+  {
+    "file": "kicad_sch_compose.my",
+    "line": 382,
+    "before": "return nets",
+    "after": "return nets.copy()"
+  },
+  {
+    "file": "kicad_sch_compose.my",
+    "line": 389,
+    "before": "return net",
+    "after": "return net.copy()"
+  },
+  {
+    "file": "kicad_sch_plan.my",
+    "line": 118,
+    "before": "return fallback",
+    "after": "return fallback.copy()"
+  },
+  {
+    "file": "net_name.my",
+    "line": 19,
+    "before": "return name",
+    "after": "return name.copy()"
+  },
+  {
+    "file": "stdlib.my",
+    "line": 125,
+    "before": "return path",
+    "after": "return path.copy()"
+  },
+  {
+    "file": "stdlib.my",
+    "line": 199,
+    "before": "return sub_path",
+    "after": "return sub_path.copy()"
+  },
+  {
+    "file": "support_strs_test.my",
+    "line": 94,
+    "before": "return absent",
+    "after": "return absent.copy()"
+  }
+]

@@ -1,0 +1,23 @@
+
+import lib_limits as m
+import support_expect as ex
+
+# test "lib read caps clear their worst-case part"
+public func test_lib_read_caps_clear_their_worst_case_part(out: Stream) -> bool:
+    if not ex.ok(out, "largest footprint headroom", m.max_footprint_bytes > 17 * 1024):
+        return False
+    if not ex.ok(out, "1000-pin BGA", m.max_lib_file_bytes > 1000 * 162):
+        return False
+    return ex.ok(out, "retired cap", m.max_lib_file_bytes > m.retired_lib_file_cap_bytes)
+
+
+# test "the synthetic over-cap pinout straddles the retired cap"
+public func test_the_synthetic_over_cap_pinout_straddles_the_retired_cap(out: Stream) -> bool:
+    mut src = m.synth_pinout_source(b"big", m.retired_lib_file_cap_bytes + 4096)
+    if not ex.ok(out, "past retired cap", len(src) > m.retired_lib_file_cap_bytes):
+        return False
+    if not ex.ok(out, "inside live cap", len(src) < m.max_lib_file_bytes):
+        return False
+    if not ex.ok(out, "head", src.startswith(b"(pinout \"big\"\n")):
+        return False
+    return ex.ok(out, "tail sentinel is bare atom", src.endswith(b"  (pin LAST \"LASTFN\" (alt \"SENTINEL\" io))\n)\n"))

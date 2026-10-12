@@ -1,0 +1,143 @@
+
+import stdlib as m
+import infra_fs as fsx
+import support_strs as strs
+import support_expect as ex
+
+# test "the bundle carries the whole passives prelude"
+public func test_the_bundle_carries_the_whole_passives_prelude(out: Stream) -> bool:
+    mut prelude = ["cap-0201", "cap-0402", "cap-0603", "cap-0805", "res-0201", "res-0402", "res-0603", "res-0805", "ind-0201", "ind-0402", "ind-0603", "ind-0805", "ind-1616", "ind-2016", "ferrite-0402", "led-0402"]
+    for name in prelude:
+        if not expect_family_bundled(out, name):
+            return False
+    return True
+
+
+func expect_family_bundled(out: Stream, name: str) -> bool:
+    mut data = m.bundled("lib/components/" + name + ".sexp")
+    if data is None:
+        return ex.ok(out, "family bundled", False)
+    return ex.ok(out, "footprint declared", data.find(b"(footprint ") >= 0)
+
+
+# test "every bundled component's footprint and pinout is bundled too"
+public func test_every_bundled_component_s_footprint_and_pinout_is_bundled_too(out: Stream) -> bool:
+    mut comps = m.stems("lib/components/")
+    while True:
+        mut name = m.stem_iterator_next(mut comps)
+        if name is None:
+            break
+        mut data = m.bundled("lib/components/" + name + ".sexp")
+        if data is None:
+            return False
+        if not expect_referenced_file_bundled(out, data, b"(footprint ", "lib/footprints/"):
+            return False
+        if not expect_referenced_file_bundled(out, data, b"(pinout ", "lib/pinouts/"):
+            return False
+    return True
+
+
+func expect_referenced_file_bundled(out: Stream, data: bytes, form: bytes, dir_: str) -> bool:
+    mut at = data.find(form)
+    if at < 0:
+        return True
+    mut rest = strs.trim_start(data[at + len(form):len(data)], b" \t\"")
+    mut end = strs.index_of_any(rest, b" \t\")\n")
+    if end < 0:
+        return False
+    return ex.ok(out, "referenced file bundled", m.bundled(dir_ + strs.text(rest[0:end]) + ".sexp").is_some())
+
+
+# test "a project file overrides the bundle, and a missing one falls through to it"
+public func test_a_project_file_overrides_the_bundle_and_a_missing_one_falls_through_to_it(fs: Filesystem, out: Stream) -> bool:
+    match fsx.make_path(fs, "project/lib/components"):
+        case Err(_):
+            return False
+        case Ok(_):
+            pass
+    mut local_src = b"(component-family \"cap-0402\" (symbol generic-cap) (footprint local-0402) (parameter \"value\" capacitance))"
+    match fs.write_file("project/lib/components/cap-0402.sexp", local_src):
+        case Err(_):
+            return False
+        case Ok(_):
+            pass
+    mut local = m.open(fs, "project", "lib/components/cap-0402.sexp", 1048576)
+    if local is None:
+        return False
+    if not ex.ok(out, "project wins", not local.bundled):
+        return False
+    if not ex.ok(out, "project bytes", local.bytes.find(b"local-0402") >= 0):
+        return False
+    mut fell_through = m.open(fs, "project", "lib/components/res-0402.sexp", 1048576)
+    if fell_through is None:
+        return False
+    if not ex.ok(out, "bundle fallback", fell_through.bundled):
+        return False
+    if not ex.ok(out, "synthetic path", m.is_bundled_path(fell_through.path)):
+        return False
+    return ex.eq_str(out, "path", fell_through.path, "netlisp:stdlib/lib/components/res-0402.sexp")
+
+
+# test "a bundled path reads back by path"
+public func test_a_bundled_path_reads_back_by_path(fs: Filesystem, out: Stream) -> bool:
+    mut found = m.standard(fs, "lib/footprints/c-0402.sexp", 1048576)
+    if found is None:
+        return False
+    mut again = m.read_path(fs, found.path, 1048576)
+    if again is None:
+        return False
+    if not ex.eq_bytes(out, "reads by path", again, found.bytes):
+        return False
+    return ex.ok(out, "missing real file", m.read_path(fs, "/definitely/not/here.sexp", 1048576).is_none())
+
+
+# test "a stdlib root overrides the embedded table"
+public func test_a_stdlib_root_overrides_the_embedded_table(fs: Filesystem, out: Stream) -> bool:
+    match fsx.make_path(fs, "override/components"):
+        case Err(_):
+            return False
+        case Ok(_):
+            pass
+    mut src = b"(component-family \"res-0402\" (symbol generic-res) (footprint override-0402) (parameter \"value\" resistance))"
+    match fs.write_file("override/components/res-0402.sexp", src):
+        case Err(_):
+            return False
+        case Ok(_):
+            pass
+    mut roots = m.no_roots()
+    m.set_roots(mut roots, None, Some("override"))
+    mut found = m.open_with_roots(fs, roots, "/no/such/project", "lib/components/res-0402.sexp", 1048576)
+    if found is None:
+        return False
+    if not ex.ok(out, "override beats bundle", not found.bundled):
+        return False
+    if not ex.ok(out, "override bytes", found.bytes.find(b"override-0402") >= 0):
+        return False
+    return ex.ok(out, "override adds without removing", m.resolve_path_with_roots(fs, roots, "/no/such/project", "lib/components/cap-0402.sexp").is_some())
+
+
+# test "bundled stems list one sub-directory at a time"
+public func test_bundled_stems_list_one_sub_directory_at_a_time(out: Stream) -> bool:
+    mut comps = m.stems("lib/components/")
+    if not lists_stem(out, mut comps, "cap-0402"):
+        return False
+    mut fps = m.stems_in("footprints")
+    if not lists_stem(out, mut fps, "c-0402"):
+        return False
+    mut none = m.stems_in("datasheets")
+    return ex.ok(out, "unknown dir empty", m.stem_iterator_next(mut none).is_none())
+
+
+func lists_stem(out: Stream, mut it: m.StemIterator, want: str) -> bool:
+    mut found = False
+    while True:
+        mut name = m.stem_iterator_next(mut it)
+        if name is None:
+            break
+        if name == want:
+            found = True
+        if not ex.ok(out, "bare basename", name.find("/") < 0):
+            return False
+        if not ex.ok(out, "no suffix", not name.endswith(".sexp")):
+            return False
+    return found

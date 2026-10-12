@@ -1,0 +1,294 @@
+
+import board_layers as m
+import support_expect as ex
+
+func implicit() -> m.Stack:
+    return m.Stack(planes=[])
+
+
+func declared(count: int, planes: m.PlaneAt[]) -> m.Stack:
+    return m.Stack(copper_layers=count, declared=True, planes=planes)
+
+
+func signal_is(row: m.Row, index: int) -> bool:
+    mut sig = row.signal
+    return sig is not None and m.signal_index_int(sig) == index
+
+
+func row_named(t: m.LayerTable, kicad_name: bytes) -> m.Row?:
+    for row in m.layer_table_fab_rows(t):
+        if m.row_kicad_name(row) == kicad_name:
+            return Some(row)
+    return None
+
+
+# test "imported copper spellings are recognized without minting rows"
+public func test_imported_copper_spellings_are_recognized_without_minting_rows(out: Stream) -> bool:
+    for name in [b"F&B.Cu", b"*.Cu", b"in3.cu", b"In12.Cu"]:
+        if not ex.ok(out, "import copper", m.is_imported_copper_name(name)):
+            return False
+    for name2 in [b"F.Cu", b"In.Cu", b"InX.Cu", b"Edge.Cuts"]:
+        if not ex.ok(out, "not imported copper", not m.is_imported_copper_name(name2)):
+            return False
+    return True
+
+
+# test "an undeclared board builds the implicit four-layer table"
+public func test_an_undeclared_board_builds_the_implicit_four_layer_table(out: Stream) -> bool:
+    mut s = m.Stack(planes=[], implicit_rail=Some(b"V_3V3"))
+    mut t = m.stack_table(s)
+    if not ex.eq_int(out, "physical layers", m.layer_table_stack_count(t), 4):
+        return False
+    if not ex.eq_int(out, "signals", m.stack_signal_count(s), 2):
+        return False
+    mut rows = m.layer_table_rows(t)
+    mut names = [m.f_cu, b"In1.Cu", b"In2.Cu", m.b_cu]
+    for i in range(4):
+        if not ex.eq_bytes(out, "stack name", m.row_name(rows[i]), names[i]):
+            return False
+    if not ex.ok(out, "top signal", signal_is(rows[0], 0)):
+        return False
+    if not ex.ok(out, "bottom signal", signal_is(rows[3], 1)):
+        return False
+    if not ex.ok(out, "inner 1 plane", rows[1].signal.is_none()):
+        return False
+    if not ex.ok(out, "inner 2 plane", rows[2].signal.is_none()):
+        return False
+    if not ex.ok(out, "plane kind", rows[1].kind == m.Kind.plane):
+        return False
+    if not ex.ok(out, "ground class", rows[1].plane_net.is_none()):
+        return False
+    if not ex.eq_bytes(out, "rail", rows[2].plane_net.unwrap_or(b""), b"V_3V3"):
+        return False
+    mut legacy = m.layer_table_rows(m.stack_table(implicit()))
+    return ex.ok(out, "no rail still ground", legacy[2].plane_net.is_none())
+
+
+# test "a six-layer declared stackup numbers signals around its planes"
+public func test_a_six_layer_declared_stackup_numbers_signals_around_its_planes(out: Stream) -> bool:
+    mut planes = [m.PlaneAt(index=2, net=b"GND"), m.PlaneAt(index=5, net=b"V_3V3")]
+    mut s = declared(6, planes)
+    mut t = m.stack_table(s)
+    if not ex.eq_int(out, "physical", m.layer_table_stack_count(t), 6):
+        return False
+    if not ex.eq_int(out, "signals", m.stack_signal_count(s), 4):
+        return False
+    mut names = [b"F.Cu", b"B.Cu", b"In2.Cu", b"In3.Cu"]
+    for i in range(4):
+        if not ex.eq_bytes(out, "signal name", m.stack_signal_name(s, m.signal_index_of(i)), names[i]):
+            return False
+    if not ex.eq_int(out, "signal 2 stack", m.stack_index_int(m.stack_signal_stack(s, m.signal_index_of(2))), 3):
+        return False
+    if not ex.eq_int(out, "bottom stack", m.stack_index_int(m.stack_signal_stack(s, m.signal_index_of(1))), 6):
+        return False
+    mut row = m.layer_table_row_at_stack(t, m.stack_index_of(5))
+    if row is None:
+        return False
+    if not ex.ok(out, "plane", row.kind == m.Kind.plane):
+        return False
+    if not ex.eq_bytes(out, "plane rail", row.plane_net.unwrap_or(b""), b"V_3V3"):
+        return False
+    if not ex.ok(out, "plane not signal", row.signal.is_none()):
+        return False
+    mut routed = m.layer_table_row_of_signal(t, m.signal_index_of(3))
+    if routed is None:
+        return False
+    if not ex.eq_bytes(out, "scalar/table agree", m.row_name(routed), b"In3.Cu"):
+        return False
+    return ex.ok(out, "off board", m.layer_table_row_at_stack(t, m.stack_index_of(7)).is_none())
+
+
+# test "layer names round-trip through the shared table"
+public func test_layer_names_round_trip_through_the_shared_table(out: Stream) -> bool:
+    mut s = declared(6, [m.PlaneAt(index=2, net=b"GND"), m.PlaneAt(index=5, net=b"V_3V3")])
+    for i in range(m.stack_signal_count(s)):
+        mut name = m.stack_signal_name(s, m.signal_index_of(i))
+        mut sig = m.stack_signal_index_of_name(s, name)
+        if sig is None:
+            return False
+        if not ex.eq_int(out, "round trip", m.signal_index_int(sig), i):
+            return False
+    mut lower = m.stack_signal_index_of_name(s, b"in2.cu")
+    if lower is None:
+        return False
+    if not ex.eq_int(out, "case insensitive", m.signal_index_int(lower), 2):
+        return False
+    for name2 in [b"In1.Cu", b"In4.Cu", b"Edge.Cuts"]:
+        if not ex.ok(out, "not routable", m.stack_signal_index_of_name(s, name2).is_none()):
+            return False
+    mut two = declared(2, [])
+    mut top = m.stack_signal_index_of_name(two, b"F.Cu")
+    if top is None:
+        return False
+    if not ex.eq_int(out, "two layer top", m.signal_index_int(top), 0):
+        return False
+    return ex.ok(out, "two layer no inner", m.stack_signal_index_of_name(two, b"In1.Cu").is_none())
+
+
+# test "the layer table carries each row's Gerber identity"
+public func test_the_layer_table_carries_each_row_s_gerber_identity(out: Stream) -> bool:
+    mut rows = m.layer_table_rows(m.stack_table(implicit()))
+    mut suffixes = [b"F_Cu.gtl", b"In1_Cu.g2", b"In2_Cu.g3", b"B_Cu.gbl"]
+    mut functions = [b"Copper,L1,Top", b"Copper,L2,Inr", b"Copper,L3,Inr", b"Copper,L4,Bot"]
+    for i in range(4):
+        if not ex.eq_bytes(out, "suffix", m.row_gerber_suffix(rows[i]), suffixes[i]):
+            return False
+        if not ex.eq_bytes(out, "function", m.row_gerber_function(rows[i]), functions[i]):
+            return False
+    mut four = m.layer_table_rows(m.stack_table(declared(4, [m.PlaneAt(index=2, net=b"GND")])))
+    if not ex.ok(out, "declared plane", four[1].kind == m.Kind.plane):
+        return False
+    if not ex.eq_bytes(out, "plane is Inr", m.row_gerber_function(four[1]), b"Copper,L2,Inr"):
+        return False
+    if not ex.eq_bytes(out, "signal is Inr", m.row_gerber_function(four[2]), b"Copper,L3,Inr"):
+        return False
+    if not ex.ok(out, "never Inner", m.row_gerber_function(four[1]).find(b"Inner") < 0):
+        return False
+    if not ex.eq_bytes(out, "inner suffix", m.row_gerber_suffix(four[2]), b"In2_Cu.g3"):
+        return False
+    mut two = m.stack_table(declared(2, []))
+    if not ex.eq_int(out, "two layers", m.layer_table_stack_count(two), 2):
+        return False
+    return ex.eq_bytes(out, "two layer bottom", m.row_gerber_function(m.layer_table_rows(two)[1]), b"Copper,L2,Bot")
+
+
+# test "the layer table carries the technical fabrication rows"
+public func test_the_layer_table_carries_the_technical_fabrication_rows(out: Stream) -> bool:
+    mut two = m.stack_table(declared(2, []))
+    mut six = m.stack_table(declared(6, []))
+    if not ex.eq_int(out, "stack count", m.layer_table_stack_count(two), 2):
+        return False
+    if not ex.eq_int(out, "copper rows", len(m.layer_table_rows(two)), 2):
+        return False
+    mut tech = m.layer_table_tech_rows(two)
+    if not ex.eq_int(out, "technical rows", len(tech), m.tech_row_count):
+        return False
+    if not ex.eq_int(out, "two layer package", len(m.layer_table_fab_rows(two)), 2 + m.tech_row_count):
+        return False
+    if not ex.eq_int(out, "six layer package", len(m.layer_table_fab_rows(six)), 6 + m.tech_row_count):
+        return False
+    mut suffixes = [b"F_Mask.gts", b"B_Mask.gbs", b"F_Paste.gtp", b"B_Paste.gbp", b"F_Silkscreen.gto", b"B_Silkscreen.gbo", b"Edge_Cuts.gm1"]
+    mut functions = [b"Soldermask,Top", b"Soldermask,Bot", b"Paste,Top", b"Paste,Bot", b"Legend,Top", b"Legend,Bot", b"Profile,NP"]
+    for i in range(len(tech)):
+        mut row = tech[i]
+        if not ex.ok(out, "not copper", not m.kind_is_copper(row.kind)):
+            return False
+        if not ex.ok(out, "not signal", row.signal.is_none()):
+            return False
+        if not ex.ok(out, "not outer face", not m.row_is_outer(row, 2)):
+            return False
+        if not ex.eq_bytes(out, "technical suffix", m.row_gerber_suffix(row), suffixes[i]):
+            return False
+        if not ex.eq_bytes(out, "technical function", m.row_gerber_function(row), functions[i]):
+            return False
+    if not ex.eq_bytes(out, "silk file", m.row_kicad_name(tech[4]), b"F.SilkS"):
+        return False
+    if not ex.eq_bytes(out, "silk display", m.row_name(tech[4]), b"F.Silkscreen"):
+        return False
+    if not ex.eq_bytes(out, "mask file", m.row_kicad_name(tech[0]), b"F.Mask"):
+        return False
+    if not ex.eq_bytes(out, "mask display", m.row_name(tech[0]), b"F.Mask"):
+        return False
+    if not ex.ok(out, "front mask", tech[0].side.unwrap_or(m.Side.back) == m.Side.front):
+        return False
+    if not ex.ok(out, "back mask", tech[1].side.unwrap_or(m.Side.front) == m.Side.back):
+        return False
+    if not ex.ok(out, "profile sideless", tech[6].side.is_none()):
+        return False
+    mut copper = m.layer_table_rows(two)
+    if not ex.eq_bytes(out, "copper display", m.row_name(copper[0]), b"F.Cu"):
+        return False
+    if not ex.eq_bytes(out, "copper file", m.row_kicad_name(copper[0]), b"F.Cu"):
+        return False
+    if not ex.ok(out, "copper front", copper[0].side.unwrap_or(m.Side.back) == m.Side.front):
+        return False
+    if not ex.ok(out, "copper back", copper[1].side.unwrap_or(m.Side.front) == m.Side.back):
+        return False
+    if not ex.ok(out, "inner sideless", m.layer_table_rows(six)[2].side.is_none()):
+        return False
+    for j in range(2):
+        if not ex.eq_bytes(out, "mask negative", m.row_gerber_polarity(tech[j]), b"Negative"):
+            return False
+    if not ex.eq_bytes(out, "paste positive", m.row_gerber_polarity(tech[2]), b"Positive"):
+        return False
+    if not ex.eq_bytes(out, "profile positive", m.row_gerber_polarity(tech[6]), b"Positive"):
+        return False
+    return ex.eq_bytes(out, "copper positive", m.row_gerber_polarity(copper[0]), b"Positive")
+
+
+# test "the named layer constants are the spellings the table itself carries"
+public func test_the_named_layer_constants_are_the_spellings_the_table_itself_carries(out: Stream) -> bool:
+    mut t = m.stack_table(declared(2, []))
+    mut rows = m.layer_table_rows(t)
+    if not ex.eq_bytes(out, "top file", m.row_kicad_name(rows[0]), b"F.Cu"):
+        return False
+    if not ex.eq_bytes(out, "bottom file", m.row_kicad_name(rows[1]), b"B.Cu"):
+        return False
+    if not ex.eq_bytes(out, "top constant", m.f_cu, m.row_kicad_name(rows[0])):
+        return False
+    if not ex.eq_bytes(out, "bottom constant", m.b_cu, m.row_kicad_name(rows[1])):
+        return False
+    for name in [m.f_mask, m.b_mask, m.f_paste, m.b_paste, m.f_silks, m.b_silks, m.edge_cuts]:
+        if not ex.ok(out, "fabricated constant finds row", row_named(t, name).is_some()):
+            return False
+    for name2 in [m.f_crtyd, m.b_crtyd, m.f_fab, m.b_fab, m.f_adhes, m.b_adhes, m.dwgs_user, m.cmts_user]:
+        if not ex.ok(out, "document constant emits nothing", row_named(t, name2).is_none()):
+            return False
+    if not ex.eq_bytes(out, "silk constant", m.f_silks, b"F.SilkS"):
+        return False
+    mut silk = row_named(t, m.f_silks)
+    if silk is None:
+        return False
+    if not ex.eq_bytes(out, "silk UI", m.row_name(silk), b"F.Silkscreen"):
+        return False
+    if not ex.eq_bytes(out, "profile constant", m.edge_cuts, b"Edge.Cuts"):
+        return False
+    if not ex.eq_bytes(out, "courtyard constant", m.f_crtyd, b"F.CrtYd"):
+        return False
+    return ex.eq_bytes(out, "drawing constant", m.dwgs_user, b"Dwgs.User")
+
+
+# test "a front-side layer name flips to its back twin and a sideless one does not"
+public func test_a_front_side_layer_name_flips_to_its_back_twin_and_a_sideless_one_does_not(out: Stream) -> bool:
+    mut cases: bytes[][] = [[b"F.Cu", b"B.Cu"], [b"F.Paste", b"B.Paste"], [b"F.Mask", b"B.Mask"], [b"F.SilkS", b"B.SilkS"], [b"F.Fab", b"B.Fab"], [b"F.CrtYd", b"B.CrtYd"], [b"F.Adhes", b"B.Adhes"], [b"Edge.Cuts", b"Edge.Cuts"], [b"*.Cu", b"*.Cu"], [b"In2.Cu", b"In2.Cu"], [b"Dwgs.User", b"Dwgs.User"], [b"B.Cu", b"B.Cu"], [b"B.SilkS", b"B.SilkS"]]
+    for pair in cases:
+        if not ex.eq_bytes(out, "twin", m.back_side_name(pair[0]), pair[1]):
+            return False
+    return True
+
+
+# test "layer rows carry position colours and poured outer faces stay routable"
+public func test_layer_rows_carry_position_colours_and_poured_outer_faces_stay_routable(out: Stream) -> bool:
+    mut t = m.stack_table(declared(4, [m.PlaneAt(index=1, net=b"GND"), m.PlaneAt(index=2, net=b"GND"), m.PlaneAt(index=4, net=b"GND")]))
+    mut rows = m.layer_table_rows(t)
+    mut colors = [b"#C83434", b"#C2C200", b"#C200C2", b"#4D7FC4"]
+    for i in range(4):
+        if not ex.eq_bytes(out, "position color", m.row_color(rows[i]), colors[i]):
+            return False
+    if not ex.ok(out, "top poured", rows[0].kind == m.Kind.plane):
+        return False
+    if not ex.ok(out, "top still routes", signal_is(rows[0], 0)):
+        return False
+    if not ex.ok(out, "bottom still routes", signal_is(rows[3], 1)):
+        return False
+    return ex.ok(out, "plane free inner", signal_is(rows[2], 2))
+
+
+# test "a layer set with no bits is unrestricted"
+public func test_a_layer_set_with_no_bits_is_unrestricted(out: Stream) -> bool:
+    mut unrestricted = m.layer_set_unrestricted()
+    if not ex.ok(out, "unrestricted", m.layer_set_is_unrestricted(unrestricted)):
+        return False
+    for index in [0, 63, 200]:
+        if not ex.ok(out, "every layer", m.layer_set_contains(unrestricted, m.signal_index_of(index))):
+            return False
+    mut only_bottom = m.layer_set_with(unrestricted, m.signal_index_of(1))
+    if not ex.ok(out, "restricted", not m.layer_set_is_unrestricted(only_bottom)):
+        return False
+    if not ex.ok(out, "bottom belongs", m.layer_set_contains(only_bottom, m.signal_index_of(1))):
+        return False
+    if not ex.ok(out, "top absent", not m.layer_set_contains(only_bottom, m.signal_index_of(0))):
+        return False
+    if not ex.ok(out, "past mask absent", not m.layer_set_contains(only_bottom, m.signal_index_of(m.max_signal_layers))):
+        return False
+    return ex.ok(out, "past mask discarded", only_bottom == m.layer_set_with(only_bottom, m.signal_index_of(m.max_signal_layers)))

@@ -1,0 +1,42 @@
+
+import flat_netlist as m
+import support_expect as ex
+
+# test "uuidFromId pins the identity KiCad sync keys on"
+public func test_uuidfromid_pins_the_identity_kicad_sync_keys_on(out: Stream) -> bool:
+    # Frozen identity: digest prefix and text spelling must never drift.
+    return ex.eq_bytes(out, "stable identity", m.uuid_from_id(b"aa000001"), b"11d1e8b6-ab30-561d-9ee4-8da03a84febb")
+
+
+# test "flatten currency types default their optional fields"
+public func test_flatten_currency_types_default_their_optional_fields(out: Stream) -> bool:
+    mut pin = m.FlatPin(ref_des=b"U1", pin=b"3")
+    if not ex.eq_bytes(out, "pin ref", pin.ref_des, b"U1"):
+        return False
+    if not ex.eq_bytes(out, "pin id", pin.pin, b"3"):
+        return False
+    mut net = m.FlatNet(name=b"VDD", pins=[pin])
+    if not ex.eq_int(out, "net pins", len(net.pins), 1):
+        return False
+    # The constructor explicitly supplies aggregate defaults prohibited as
+    # record defaults in mylang; it preserves all documented literal defaults.
+    mut inst = m.flat_instance_default(b"C1", b"cap-0402", b"100nF", b"c-0402", [], b"")
+    if not ex.eq_bytes(out, "symbol", inst.symbol, b""):
+        return False
+    if not ex.eq_bytes(out, "pinout", inst.pinout, b""):
+        return False
+    if not ex.eq_bytes(out, "origin", inst.origin_key, b""):
+        return False
+    if not ex.ok(out, "dnp", not inst.dnp):
+        return False
+    if not ex.eq_bytes(out, "decouple pin", inst.bind.decouple.pin, b""):
+        return False
+    if not ex.eq_bytes(out, "decouple ic", inst.bind.decouple.ic, b""):
+        return False
+    if not ex.ok(out, "rail", not inst.bind.decouple.rail):
+        return False
+    if not ex.eq_bytes(out, "near ref", inst.bind.near.ref, b""):
+        return False
+    if not ex.eq_bytes(out, "near pin", inst.bind.near.pin, b""):
+        return False
+    return ex.eq_bytes(out, "near own", inst.bind.near.own, b"")

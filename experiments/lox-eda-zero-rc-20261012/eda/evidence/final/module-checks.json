@@ -1,0 +1,731 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/zig-out/bin/mylang",
+  "modules": [
+    {
+      "module": "board_layers.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "board_layers_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "decouple_key.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "decouple_key_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "design_model.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "design_model_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "diagram_membership.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "diagram_membership_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "escape.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "escape_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "eval_electrical.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "eval_electrical_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "eval_env.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "eval_env_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "eval_net_analysis.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "eval_net_analysis_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "eval_rails.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "eval_rails_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "export_kicad_footprint.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "export_kicad_footprint_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "export_kicad_model.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "export_kicad_netlist.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "export_kicad_netlist_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "export_kicad_sch.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "export_kicad_sch_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "export_kicad_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "flat_netlist.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "flat_netlist_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "footprint_paste.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "footprint_paste_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "infra_fs.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "infra_fs_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "infra_log.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "json_writer.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "json_writer_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_pcb_format.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_pcb_format_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_bank_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_compose_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_emit.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_emit_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_gang.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_gang_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_glyph_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_plan.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_plan_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_project.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_project_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_shape.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_shape_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_sheet.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_sheet_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_stagger.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_stagger_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_stub.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_stub_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_testdata.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_textbox.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_textbox_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_vendor.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_vendor_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_verify.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_verify_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_wire.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_wire_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sym_library.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sym_library_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sym_reader.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sym_reader_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sym_testdata.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "lib_limits.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "lib_limits_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "main.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "main_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "net_name.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "net_name_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "numeric.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "numeric_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "pad_neck_profile.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "placement_geometry.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "placement_geometry_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "placement_pin_roles.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "placement_pin_roles_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "poly_scanline.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "poly_scanline_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "render_block_types.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "render_svg_context.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "render_svg_context_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "render_svg_draw_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "sexpr_ast.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "sexpr_ast_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "sexpr_paren_span.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "sexpr_paren_span_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "sexpr_parser.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "sexpr_parser_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "sexpr_tokenizer.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "sexpr_tokenizer_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "stdlib.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "stdlib_embed.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "stdlib_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_crc32.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_crc32_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_expect.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_expect_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_float_fmt.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_float_fmt_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_parse.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_parse_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_sha256.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_sha256_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_sort.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_sort_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_strs.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_strs_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "uuid.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "uuid_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "zipfile.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "zipfile_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

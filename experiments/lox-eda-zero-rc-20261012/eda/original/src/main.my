@@ -1,0 +1,94 @@
+# eda-sch entry point (port of zig/src/main.zig).
+#
+# Exit status: 0 success, 1 model or export failure, 2 usage error.
+
+import design_model
+import export_kicad
+import export_kicad_sch
+import infra_fs
+import support_strs as strs
+
+const usage: bytes = b"usage: eda-sch --model <model.sexp> --project-dir <dir> --out-dir <dir> [--flat] [--no-vendor-symbols]\n"
+
+
+# Parsed command line (Zig `Args`; `opts.flat` / `opts.vendor` are flattened in).
+public record Args:
+    model: str = ""
+    project_dir: str = ""
+    out_dir: str = ""
+    flat: bool = False
+    vendor: bool = True
+
+
+# Parse the arguments after the program name; None on any usage error.
+public func parse_args(argv: str[]) -> Args?:
+    mut a = Args()
+    mut i = 0
+    while i < len(argv):
+        mut arg = argv[i]
+        if arg == "--flat":
+            a = replace(a, flat=True)
+        elif arg == "--no-vendor-symbols":
+            a = replace(a, vendor=False)
+        elif i + 1 < len(argv) and arg == "--model":
+            i = i + 1
+            a = replace(a, model=argv[i])
+        elif i + 1 < len(argv) and arg == "--project-dir":
+            i = i + 1
+            a = replace(a, project_dir=argv[i])
+        elif i + 1 < len(argv) and arg == "--out-dir":
+            i = i + 1
+            a = replace(a, out_dir=argv[i])
+        else:
+            return None
+        i = i + 1
+    if len(a.model) == 0 or len(a.project_dir) == 0 or len(a.out_dir) == 0:
+        return None
+    return Some(a)
+
+
+func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:
+    mut parsed = parse_args(args)
+    if parsed is None:
+        _ = err.write(usage)
+        return 2
+    match run(fs, out, err, parsed):
+        case Ok(_):
+            return 0
+        case Err(e):
+            err.print("eda-sch: " + e)
+            return 1
+
+
+func run(fs: Filesystem, out: Stream, err: Stream, args: Args) -> Result[Unit, str]:
+    mut source = b""
+    match infra_fs.read_file_alloc(fs, args.model, 268435456):
+        case Err(e):
+            err.print(f"eda-sch: cannot read {args.model}: {e}")
+            return Err(e)
+        case Ok(data):
+            source = data
+    mut diag = design_model.Diag(message=b"")
+    mut model: design_model.Model? = None
+    match design_model.load(source, mut diag):
+        case Err(e2):
+            _ = err.write(f"{args.model}:{diag.line}: error: ".encode() + diag.message + b"\n")
+            return Err(e2)
+        case Ok(parsed):
+            model = Some(parsed)
+    if model is None:
+        return Err("BadModel")
+    mut output = try export_kicad_sch.export_sch(fs, err, model.block, args.project_dir, model.design, export_kicad_sch.Options(flat=args.flat, vendor=args.vendor))
+    mut net = try export_kicad.export_netlist_only(fs, model.block, args.project_dir, model.design)
+    try infra_fs.make_path(fs, args.out_dir)
+    for f in output.files:
+        try write_out(fs, args.out_dir, f.name, f.bytes)
+    for f2 in output.sidecars:
+        try write_out(fs, args.out_dir, f2.name, f2.bytes)
+    try write_out(fs, args.out_dir, model.design + b".net", net)
+    _ = out.write(b"eda-sch: " + model.design + f": {len(output.files)} sheets, {len(output.sidecars)} sidecars, {output.stats.components} symbols ({output.stats.vendor_bodies} vendor), {output.stats.instances} instances\n".encode())
+    return Ok(())
+
+
+func write_out(fs: Filesystem, dir: str, name: bytes, data: bytes) -> Result[Unit, str]:
+    return infra_fs.write_file(fs, strs.path_join([dir, strs.text(name)]), data)

@@ -1,0 +1,521 @@
+
+import export_kicad_sch as m
+import export_kicad as export_mod
+import eval_env as env
+import flat_netlist as flat
+import kicad_sym_testdata as vendor_data
+import kicad_sch_testdata as data
+import kicad_sch_textbox as textbox
+import sexpr_parser as parser
+import infra_fs as fsx
+import support_expect as ex
+
+# Test fixtures are constructed from the same ordered Zig tables. Defaults
+# come from the environment helpers, without copying recursive identity.
+func ic(ref: bytes, component: bytes) -> env.Instance:
+    mut value = env.instance_default(ref)
+    value.component = component
+    return value
+
+
+func cap(ref: bytes) -> env.Instance:
+    mut value = ic(ref, b"cap-0402")
+    value.value = b"100nF"
+    return value
+
+
+func resistor(ref: bytes, value: bytes) -> env.Instance:
+    mut instance = ic(ref, b"res-0402")
+    instance.value = value
+    return instance
+
+
+func pin(ref: bytes, number: bytes) -> env.PinRef:
+    return env.pin_ref_default(ref, number)
+
+
+func net(name: bytes, pins: env.PinRef[]) -> env.Net:
+    return env.Net(name=name, pins=pins)
+
+
+func section(name: bytes, instances: env.Instance[]) -> env.Section:
+    mut result = env.section_default(name)
+    result.instances = instances
+    return result
+
+
+func block(name: bytes, instances: env.Instance[], nets: env.Net[], sections: env.Section[]) -> env.DesignBlock:
+    mut result = env.design_block_default(name)
+    result.instances = instances
+    result.nets = nets
+    result.sections = sections
+    return result
+
+
+func fixture_instances() -> env.Instance[]:
+    mut u1 = ic(b"U1", b"acme-mcu")
+    u1.value = b"ACME-100"
+    u1.uuid = b"11111111-1111-5111-8111-111111111111"
+    mut c1 = cap(b"C1")
+    c1.uuid = b"22222222-2222-5222-8222-222222222222"
+    mut r1 = resistor(b"R1", b"10k")
+    r1.dnp = True
+    r1.uuid = b"33333333-3333-5333-8333-333333333333"
+    return [u1, c1, r1]
+
+
+func fixture_block() -> env.DesignBlock:
+    mut instances = fixture_instances()
+    mut nets = [net(b"VDD3V3", [pin(b"U1", b"1"), pin(b"C1", b"1")]), net(b"GND", [pin(b"U1", b"2"), pin(b"C1", b"2")]), net(b"adc1/AIN.U1.3", [pin(b"U1", b"3"), pin(b"R1", b"1")])]
+    mut core = section(b"Core System", [instances[0]])
+    core.description = b"one MCU and its bypass"
+    return block(b"Fixture Board", instances, nets, [core])
+
+
+func export_output(fs: Filesystem, out: Stream, value: env.DesignBlock, name: bytes, opts: m.Options) -> m.Output:
+    match m.export_sch(fs, out, value, "/nonexistent", name, opts):
+        case Ok(result):
+            return result
+        case Err(e):
+            out.print(e)
+            assert False, "schematic export failed"
+            return m.Output(files=[], sidecars=[], stats=m.Stats())
+
+
+func export_root(fs: Filesystem, out: Stream, value: env.DesignBlock, name: bytes) -> bytes:
+    mut result = export_output(fs, out, value, name, m.Options())
+    return result.files[0].bytes
+
+
+func vendor_project(fs: Filesystem) -> bool:
+    match fsx.make_path(fs, "project/lib/sources"):
+        case Err(_):
+            return False
+        case Ok(_):
+            pass
+    match fs.write_file("project/lib/sources/acme-mcu.kicad_sym", vendor_data.vendor_flat()):
+        case Err(_):
+            return False
+        case Ok(_):
+            return True
+
+
+func export_with_vendor(fs: Filesystem, out: Stream, opts: m.Options) -> bytes:
+    assert vendor_project(fs)
+    match m.export_sch(fs, out, fixture_block(), "project", b"fixture", opts):
+        case Ok(result):
+            return result.files[0].bytes
+        case Err(e):
+            out.print(e)
+            assert False, "vendor export failed"
+            return b""
+
+
+func stub_block() -> env.DesignBlock:
+    mut instances = [ic(b"U1", b"acme-mcu"), cap(b"C1"), cap(b"C2"), resistor(b"R1", b"0R"), ic(b"U2", b"acme-io")]
+    mut nets = [net(b"V1P8", [pin(b"R1", b"2"), pin(b"U2", b"1")]), net(b"V1P8.U1.1", [pin(b"U1", b"1"), pin(b"C1", b"1")]), net(b"V1P8.U1.2", [pin(b"U1", b"2"), pin(b"C2", b"1")]), net(b"GND", [pin(b"U1", b"3"), pin(b"C1", b"2"), pin(b"C2", b"2")]), net(b"3.3V_SENSE", [pin(b"U1", b"4"), pin(b"R1", b"1")])]
+    return block(b"Stub Board", instances, nets, [section(b"Core System", instances[0:3]), section(b"Rail", instances[3:5])])
+
+
+func bypass(ref: bytes, pad: bytes) -> env.Instance:
+    mut result = cap(ref)
+    mut binds = result.bind
+    binds.decouple = env.DecoupleBind(ic=b"U1", pin=pad)
+    result.bind = binds
+    return result
+
+
+func wire_block() -> env.DesignBlock:
+    mut instances = [ic(b"U1", b"acme-mcu"), bypass(b"C1", b"1"), bypass(b"C2", b"5"), resistor(b"R1", b"10k"), resistor(b"R2", b"10k"), ic(b"U2", b"acme-io")]
+    # First-seen net order determines pad edges and the nonoverlapping chain.
+    # C2 returns only to AGND, so the two declared bypasses cannot gang.
+    mut nets = [net(b"VDD3V3", [pin(b"U1", b"1"), pin(b"U1", b"5"), pin(b"C1", b"1"), pin(b"C2", b"1")]), net(b"AGND", [pin(b"C2", b"2")]), net(b"SPARE1", [pin(b"R1", b"1")]), net(b"TAP", [pin(b"U1", b"3"), pin(b"R1", b"2"), pin(b"R2", b"1")]), net(b"GND", [pin(b"U1", b"2"), pin(b"C1", b"2")]), net(b"LINK", [pin(b"U1", b"4"), pin(b"U2", b"1")]), net(b"SPARE2", [pin(b"R2", b"2")])]
+    return block(b"Wired Board", instances, nets, [section(b"Core System", instances[0:5]), section(b"IO Bank", instances[5:6])])
+
+
+func gang_block() -> env.DesignBlock:
+    mut c4 = bypass(b"C4", b"1")
+    c4.value = b"10uF"
+    mut instances = [ic(b"U1", b"acme-mcu"), bypass(b"C1", b"1"), bypass(b"C2", b"1"), bypass(b"C3", b"1"), c4, cap(b"C5")]
+    mut nets = [net(b"VDD3V3", [pin(b"U1", b"1"), pin(b"C1", b"1"), pin(b"C2", b"1"), pin(b"C3", b"1"), pin(b"C4", b"1")]), net(b"VDDA", [pin(b"U1", b"3"), pin(b"C5", b"1")]), net(b"GND", [pin(b"U1", b"2"), pin(b"C1", b"2"), pin(b"C2", b"2"), pin(b"C3", b"2"), pin(b"C4", b"2"), pin(b"C5", b"2")])]
+    return block(b"Ganged Board", instances, nets, [section(b"Core System", instances)])
+
+
+func edge_block() -> env.DesignBlock:
+    mut instances = [ic(b"U1", b"acme-mcu")]
+    mut nets = [net(b"GND", [pin(b"U1", b"1"), pin(b"U1", b"2"), pin(b"U1", b"3")]), net(b"VDD3V3", [pin(b"U1", b"4"), pin(b"U1", b"5")]), net(b"SIG", [pin(b"U1", b"6")])]
+    return block(b"Edge Board", instances, nets, [section(b"Core", instances)])
+
+
+func mpn_block() -> env.DesignBlock:
+    mut u1 = ic(b"U1", b"acme-mcu")
+    u1.value = b"ACME-100"
+    u1.properties = [env.Property(key=b"mpn", value=b"ACME-100-QFN48"), env.Property(key=b"manufacturer", value=b"Acme")]
+    mut c1 = cap(b"C1")
+    c1.properties = [env.Property(key=b"mpn", value=b"GRM155R71C104KA88D")]
+    mut u2 = ic(b"U2", b"acme-io")
+    u2.value = b"ACME-200"
+    mut instances = [u1, c1, u2]
+    mut nets = [net(b"VDD3V3", [pin(b"U1", b"1"), pin(b"C1", b"1"), pin(b"U2", b"1")]), net(b"GND", [pin(b"U1", b"2"), pin(b"C1", b"2"), pin(b"U2", b"2")])]
+    return block(b"Part Number Board", instances, nets, [section(b"Core", instances)])
+
+
+func cap_index(i: int) -> int:
+    return (if (i <= 12) then (i) else (i + 1))
+
+
+func pwr_block() -> env.DesignBlock:
+    return block(b"LDO", [ic(b"U1", b"acme-ldo")], [net(b"VOUT", [pin(b"U1", b"3")])], [])
+
+
+func big_block(subs: env.SubBlock[]) -> env.DesignBlock:
+    mut instances = [ic(b"U1", b"acme-mcu")]
+    for i in range(1, 13):
+        instances.append(cap(("C" + str(i)).encode()))
+    instances.append(ic(b"U2", b"acme-io"))
+    for j in range(14, 26):
+        instances.append(cap(("C" + str(j - 1)).encode()))
+    mut vdd = [pin(b"U1", b"1")]
+    mut gnd = [pin(b"U2", b"2")]
+    for k in range(1, 25):
+        mut ref = instances[cap_index(k)].ref_des
+        vdd.append(pin(ref, b"1"))
+        gnd.append(pin(ref, b"2"))
+    mut result = block(b"Big Board", instances, [net(b"VDD", vdd), net(b"GND", gnd)], [section(b"Core", instances[0:13]), section(b"IO Bank", instances[13:14])])
+    result.sub_blocks = subs
+    return result
+
+
+func big_with_pwr() -> env.DesignBlock:
+    return big_block([env.SubBlock(name=b"pwr", block=pwr_block(), source=b"")])
+
+
+func child_files_of(root: bytes) -> bytes[]:
+    mut rest = root
+    mut needle = b"(property \"Sheetfile\" \""
+    mut files: bytes[] = []
+    while True:
+        mut i = rest.find(needle)
+        if i < 0:
+            return files
+        rest = rest[i + len(needle):len(rest)]
+        mut end = rest.find(b"\"")
+        assert end >= 0
+        files.append(rest[0:end])
+
+
+func zip_central_dir_start(zip: bytes) -> int:
+    mut i = len(zip) - 6
+    return zip[i] + 256 * zip[i + 1] + 65536 * zip[i + 2] + 16777216 * zip[i + 3]
+
+
+# test "kicad-sch: export is deterministic across runs"
+public func test_kicad_sch_export_is_deterministic_across_runs(fs: Filesystem, out: Stream) -> bool:
+    assert export_root(fs, out, fixture_block(), b"fixture") == export_root(fs, out, fixture_block(), b"fixture")
+    assert export_root(fs, out, wire_block(), b"wired") == export_root(fs, out, wire_block(), b"wired")
+    assert export_root(fs, out, edge_block(), b"edged") == export_root(fs, out, edge_block(), b"edged")
+    return True
+
+
+# test "kicad-sch: export emits the pinned header and each instance's own uuid"
+public func test_kicad_sch_export_emits_the_pinned_header_and_each_instance_s_own_uuid(fs: Filesystem, out: Stream) -> bool:
+    mut result = export_root(fs, out, fixture_block(), b"fixture")
+    for needle in [b"(version 20260306)", b"(generator \"netlisp\")", b"(generator_version \"10.0\")"]:
+        assert result.find(needle) >= 0
+    for instance in fixture_instances():
+        assert result.find(b"(uuid \"" + instance.uuid + b"\")") >= 0
+        assert result.find(b"(reference \"" + instance.ref_des + b"\")") >= 0
+    return True
+
+
+# test "kicad-sch: export writes hierarchical net names into labels unchanged"
+public func test_kicad_sch_export_writes_hierarchical_net_names_into_labels_unchanged(fs: Filesystem, out: Stream) -> bool:
+    mut result = export_root(fs, out, fixture_block(), b"fixture")
+    assert result.find(b"(global_label \"adc1/AIN.U1.3\"") >= 0
+    assert result.find(b"{slash}") < 0
+    assert result.find(b"(global_label \"VDD3V3\"") >= 0
+    return True
+
+
+# test "kicad-sch: export replaces ground labels with rail symbols and drives each rail"
+public func test_kicad_sch_export_replaces_ground_labels_with_rail_symbols_and_drives_each_rail(fs: Filesystem, out: Stream) -> bool:
+    mut result = export_root(fs, out, fixture_block(), b"fixture")
+    assert result.find(b"(symbol \"netlisp:PWR_GND\"") >= 0
+    assert result.find(b"(lib_id \"netlisp:PWR_GND\")") >= 0
+    assert result.find(b"(reference \"#PWR01\")") >= 0
+    assert result.count(b"(global_label \"GND\"") == 1
+    assert result.count(b"(lib_id \"netlisp:PWR_FLAG\")") == 1
+    assert result.find(b"(pin power_out line") >= 0
+    return True
+
+
+# test "kicad-sch: export maps dnp to KiCad's dnp and in_bom flags"
+public func test_kicad_sch_export_maps_dnp_to_kicad_s_dnp_and_in_bom_flags(fs: Filesystem, out: Stream) -> bool:
+    mut result = export_root(fs, out, fixture_block(), b"fixture")
+    assert result.find(b"(dnp yes)") >= 0
+    assert result.find(b"(in_bom no)") >= 0
+    assert result.find(b"(on_board yes)") >= 0
+    return True
+
+
+# test "kicad-sch: the vendor fixture export matches its committed golden file"
+public func test_kicad_sch_the_vendor_fixture_export_matches_its_committed_golden_file(fs: Filesystem, out: Stream) -> bool:
+    mut result = export_with_vendor(fs, out, m.Options())
+    return ex.eq_bytes(out, "vendor fixture", result, data.fixture_vendor())
+
+
+# test "kicad-sch: a vendor body reaches the emitted sheet and can be switched off"
+public func test_kicad_sch_a_vendor_body_reaches_the_emitted_sheet_and_can_be_switched_off(fs: Filesystem, out: Stream) -> bool:
+    mut on = export_with_vendor(fs, out, m.Options())
+    assert on.find(b"(name \"D\"") >= 0
+    assert on.find(b"(length 5.08)") >= 0
+    assert on.find(b"(global_label \"adc1/AIN.U1.3\"") >= 0
+    mut off = export_with_vendor(fs, out, m.Options(vendor=False))
+    assert off.find(b"(name \"D\"") < 0
+    assert off.find(b"(length 2.54)") >= 0
+    return True
+
+
+# test "kicad-sch: fixture export matches the committed golden file"
+public func test_kicad_sch_fixture_export_matches_the_committed_golden_file(fs: Filesystem, out: Stream) -> bool:
+    return ex.eq_bytes(out, "fixture", export_root(fs, out, fixture_block(), b"fixture"), data.fixture())
+
+
+# test "kicad-sch: the export-kicad bundle carries the schematic on request"
+public func test_kicad_sch_the_export_kicad_bundle_carries_the_schematic_on_request(fs: Filesystem, out: Stream) -> bool:
+    mut plain: bytes = b""
+    mut with_sch: bytes = b""
+    match export_mod.export_kicad_zip(fs, out, fixture_block(), "/nonexistent", b"fixture", export_mod.BundleOptions()):
+        case Err(_):
+            return False
+        case Ok(result):
+            plain = result
+    match export_mod.export_kicad_zip(fs, out, fixture_block(), "/nonexistent", b"fixture", export_mod.BundleOptions(schematic=True)):
+        case Err(_):
+            return False
+        case Ok(result):
+            with_sch = result
+    assert plain.find(b"fixture.kicad_sch") < 0
+    assert plain.find(b"netlisp.kicad_sym") < 0
+    for name in [b"fixture.kicad_sch", b"fixture.kicad_pro", b"sym-lib-table", b"fp-lib-table", b"netlisp.kicad_sym"]:
+        assert with_sch.find(name) >= 0
+    mut cd = zip_central_dir_start(plain)
+    assert plain[0:cd] == with_sch[0:cd]
+    return True
+
+
+# test "kicad-sch: an empty design still exports a self-checking sheet"
+public func test_kicad_sch_an_empty_design_still_exports_a_self_checking_sheet(fs: Filesystem, out: Stream) -> bool:
+    mut result = export_root(fs, out, block(b"Empty", [], [], []), b"empty")
+    assert result.find(b"(kicad_sch") >= 0
+    assert result.find(b"(lib_symbols") >= 0
+    assert result.find(b"(symbol (lib_id") < 0
+    return True
+
+
+# test "kicad-sch: a net on a missing ref-des draws no label and does not fail the export"
+public func test_kicad_sch_a_net_on_a_missing_ref_des_draws_no_label_and_does_not_fail_the_export(fs: Filesystem, out: Stream) -> bool:
+    mut value = block(b"Orphan", [ic(b"U1", b"acme-mcu")], [net(b"ORPHAN", [pin(b"U9", b"1")]), net(b"SHARED", [pin(b"U1", b"1"), pin(b"U9", b"2")])], [])
+    mut result = export_root(fs, out, value, b"orphan")
+    assert result.find(b"(global_label \"SHARED\"") >= 0
+    assert result.find(b"(global_label \"ORPHAN\"") < 0
+    return True
+
+
+# test "kicad-sch: firstUndrawn finds an uncovered pin and passes full coverage"
+public func test_kicad_sch_firstundrawn_finds_an_uncovered_pin_and_passes_full_coverage(out: Stream) -> bool:
+    mut known: dict[str, int] = {"U1": 0}
+    mut drawn: set[str] = set()
+    drawn.add(m.pin_key(b"U1", b"1"))
+    mut nets = [flat.FlatNet(name=b"N", pins=[flat.FlatPin(ref_des=b"U1", pin=b"1"), flat.FlatPin(ref_des=b"U1", pin=b"2"), flat.FlatPin(ref_des=b"U9", pin=b"1")])]
+    mut missing = m.first_undrawn(nets, known, drawn)
+    if missing is None:
+        return False
+    assert ex.eq_bytes(out, "first missing pin", missing.pin, b"2")
+    drawn.add(m.pin_key(b"U1", b"2"))
+    assert m.first_undrawn(nets, known, drawn) is None
+    return True
+
+
+# test "kicad-sch: qualify re-attaches the sub-block path to a module-local ref"
+public func test_kicad_sch_qualify_re_attaches_the_sub_block_path_to_a_module_local_ref(out: Stream) -> bool:
+    assert ex.eq_bytes(out, "nested", m.qualify(b"adc1/C3", b"U1"), b"adc1/U1")
+    assert ex.eq_bytes(out, "root", m.qualify(b"C3", b"U1"), b"U1")
+    assert ex.eq_bytes(out, "empty", m.qualify(b"adc1/C3", b""), b"")
+    return True
+
+
+# test "kicad-sch: a passive is emitted as a real Device glyph rather than a box"
+public func test_kicad_sch_a_passive_is_emitted_as_a_real_device_glyph_rather_than_a_box(fs: Filesystem, out: Stream) -> bool:
+    mut result = export_root(fs, out, stub_block(), b"stubs")
+    for needle in [b"(rectangle (start -2.54 1.016) (end 2.54 -1.016)", b"(polyline (pts (xy -0.762 -2.032) (xy -0.762 2.032))", b"(pin_numbers (hide yes))", b"(pin passive line (at -3.81 0 0) (length 1.27)", b"(pin passive line (at -3.81 0 0) (length 2.54)", b"(pin_names (offset 0.254))"]:
+        assert result.find(needle) >= 0
+    return True
+
+
+# test "kicad-sch: bypass stubs of a rail all label as the rail and its own dotted net survives"
+public func test_kicad_sch_bypass_stubs_of_a_rail_all_label_as_the_rail_and_its_own_dotted_net_survives(fs: Filesystem, out: Stream) -> bool:
+    mut result = export_root(fs, out, stub_block(), b"stubs")
+    assert result.find(b"V1P8.U1.") < 0
+    assert result.count(b"(global_label \"V1P8\"") >= 3
+    assert result.find(b"(global_label \"3.3V_SENSE\"") >= 0
+    return True
+
+
+# test "kicad-sch: caps on different bypass stubs of one rail join one bank"
+public func test_kicad_sch_caps_on_different_bypass_stubs_of_one_rail_join_one_bank(fs: Filesystem, out: Stream) -> bool:
+    mut result = export_root(fs, out, stub_block(), b"stubs")
+    assert result.find(b"Decoupling \xe2\x80\x94 U1 \xc2\xb7 V1P8") >= 0
+    assert result.count(b" 270) (unit 1)") == 2
+    return True
+
+
+# test "kicad-sch: a bound bypass cap and a three-pin cluster net become drawn wire"
+public func test_kicad_sch_a_bound_bypass_cap_and_a_three_pin_cluster_net_become_drawn_wire(fs: Filesystem, out: Stream) -> bool:
+    mut result = export_root(fs, out, wire_block(), b"wired")
+    assert result.count(b"(global_label \"VDD3V3\"") == 1
+    assert result.count(b"(global_label \"TAP\"") == 1
+    assert result.find(b"(junction ") >= 0
+    assert result.count(b"(global_label \"SPARE1\"") == 1
+    return True
+
+
+# test "kicad-sch: a two-pin net spanning two sections is still label-connected"
+public func test_kicad_sch_a_two_pin_net_spanning_two_sections_is_still_label_connected(fs: Filesystem, out: Stream) -> bool:
+    mut result = export_root(fs, out, wire_block(), b"wired")
+    assert result.count(b"(global_label \"LINK\"") == 2
+    return True
+
+
+# test "kicad-sch: a decoupling bank replaces its members' labels with one rail label"
+public func test_kicad_sch_a_decoupling_bank_replaces_its_members_labels_with_one_rail_label(fs: Filesystem, out: Stream) -> bool:
+    mut result = export_root(fs, out, gang_block(), b"ganged")
+    assert result.count(b"(global_label \"VDD3V3\"") == 2
+    assert result.count(b"(lib_id \"netlisp:PWR_GND\")") == 3
+    assert result.find(b"Decoupling \xe2\x80\x94 U1 \xc2\xb7 VDD3V3") >= 0
+    assert result.count(b"(junction ") == 6
+    return True
+
+
+# test "kicad-sch: a ganged cap is turned upright and drops its per-pin drawing"
+public func test_kicad_sch_a_ganged_cap_is_turned_upright_and_drops_its_per_pin_drawing(fs: Filesystem, out: Stream) -> bool:
+    mut result = export_root(fs, out, gang_block(), b"ganged")
+    assert result.count(b" 270) (unit 1)") == 4
+    assert result.find(b"(justify left))") >= 0
+    assert result.find(b"\"Reference\" \"C1\"") >= 0
+    return True
+
+
+# test "kicad-sch: a hub's repeated rail pins are ganged under one adornment"
+public func test_kicad_sch_a_hub_s_repeated_rail_pins_are_ganged_under_one_adornment(fs: Filesystem, out: Stream) -> bool:
+    mut result = export_root(fs, out, edge_block(), b"edged")
+    assert result.count(b"(lib_id \"netlisp:PWR_GND\")") == 1
+    assert result.count(b"(global_label \"VDD3V3\"") == 1
+    assert result.count(b"(global_label \"SIG\"") == 1
+    assert result.count(b"(junction ") == 1
+    assert result.count(b"(font (size 0 0))") == 6
+    return True
+
+
+# test "kicad-sch: a resolved part number is shown on a hub and hidden on a passive"
+public func test_kicad_sch_a_resolved_part_number_is_shown_on_a_hub_and_hidden_on_a_passive(fs: Filesystem, out: Stream) -> bool:
+    mut result = export_root(fs, out, mpn_block(), b"mpn")
+    assert result.count(b"(property \"MPN\" \"ACME-100-QFN48\"") == 1
+    assert result.find(b"\"ACME-100-QFN48\" (at 40.64 48.26 0) (effects (font (size 1.27 1.27)))") >= 0
+    assert result.find(b"(property \"MPN\" \"GRM155R71C104KA88D\"") >= 0
+    assert result.find(b"(property \"MPN\" \"GRM155R71C104KA88D\" (at 29.21 64.77 0) (hide yes)") >= 0
+    assert result.count(b"(property \"MPN\"") == 2
+    return True
+
+
+# test "kicad-sch: a displayed part number clears the Value above it and every neighbour"
+public func test_kicad_sch_a_displayed_part_number_clears_the_value_above_it_and_every_neighbour(fs: Filesystem, out: Stream) -> bool:
+    mut result = export_root(fs, out, mpn_block(), b"mpn")
+    assert result.find(b"\"ACME-100\" (at 40.64 45.72 0)") >= 0
+    match parser.parse(result):
+        case Err(_):
+            return False
+        case Ok(nodes):
+            mut report = textbox.scan(nodes[0])
+            assert report.overlaps == 0
+            assert report.texts > 0
+    return True
+
+
+# test "kicad-sch: a hierarchical export links a sheet per section, module, and leftover"
+public func test_kicad_sch_a_hierarchical_export_links_a_sheet_per_section_module_and_leftover(fs: Filesystem, out: Stream) -> bool:
+    mut result = export_output(fs, out, big_with_pwr(), b"big", m.Options())
+    assert result.files[0].name == b"big.kicad_sch"
+    mut links = child_files_of(result.files[0].bytes)
+    mut want = [b"big-core.kicad_sch", b"big-io-bank.kicad_sch", b"big-sub-block-pwr.kicad_sch", b"big-unsectioned.kicad_sch"]
+    assert len(links) == len(want)
+    assert len(result.files) == len(want) + 1
+    for i in range(len(want)):
+        assert links[i] == want[i]
+        assert result.files[i + 1].name == want[i]
+    assert result.files[1].bytes.find(b"\"Reference\" \"U1\"") >= 0
+    assert result.files[2].bytes.find(b"\"Reference\" \"U1\"") < 0
+    assert result.files[2].bytes.find(b"\"Reference\" \"U2\"") >= 0
+    assert result.files[3].bytes.find(b"\"Reference\" \"pwr/U1\"") >= 0
+    assert result.files[4].bytes.find(b"\"Reference\" \"C24\"") >= 0
+    return True
+
+
+# test "kicad-sch: child sheets nest their instance path under the root's uuid"
+public func test_kicad_sch_child_sheets_nest_their_instance_path_under_the_root_s_uuid(fs: Filesystem, out: Stream) -> bool:
+    mut result = export_output(fs, out, big_with_pwr(), b"big", m.Options())
+    mut root = result.files[0].bytes
+    mut uuid_at = root.find(b"(uuid \"") + 7
+    assert uuid_at >= 7
+    mut tail = root[uuid_at:len(root)]
+    mut end = tail.find(b"\"")
+    assert end >= 0
+    mut root_uuid = tail[0:end]
+    mut nested = b"(path \"/" + root_uuid + b"/"
+    assert root.find(b"(sheet_instances") >= 0
+    for file in result.files[1:len(result.files)]:
+        assert file.bytes.find(nested) >= 0
+        assert file.bytes.find(b"(sheet_instances") < 0
+    return True
+
+
+# test "kicad-sch: a hierarchical export is deterministic across runs"
+public func test_kicad_sch_a_hierarchical_export_is_deterministic_across_runs(fs: Filesystem, out: Stream) -> bool:
+    mut value = big_with_pwr()
+    mut first = export_output(fs, out, value, b"big", m.Options())
+    mut second = export_output(fs, out, value, b"big", m.Options())
+    assert len(first.files) == len(second.files)
+    for i in range(len(first.files)):
+        assert first.files[i].name == second.files[i].name
+        assert first.files[i].bytes == second.files[i].bytes
+    return True
+
+
+# test "kicad-sch: the flat threshold and the flat option both collapse the hierarchy"
+public func test_kicad_sch_the_flat_threshold_and_the_flat_option_both_collapse_the_hierarchy(fs: Filesystem, out: Stream) -> bool:
+    mut one = export_output(fs, out, fixture_block(), b"fixture", m.Options())
+    assert len(one.files) == 1
+    assert one.files[0].bytes.find(b"(sheet (at") < 0
+    mut forced = export_output(fs, out, big_with_pwr(), b"big", m.Options(flat=True))
+    assert len(forced.files) == 1
+    assert forced.files[0].bytes.find(b"\"Reference\" \"U2\"") >= 0
+    assert forced.files[0].bytes.find(b"\"Reference\" \"pwr/U1\"") >= 0
+    return True
+
+
+# test "kicad-sch: a multi-part instance emits KiCad units that share one reference"
+public func test_kicad_sch_a_multi_part_instance_emits_kicad_units_that_share_one_reference(fs: Filesystem, out: Stream) -> bool:
+    mut instance = ic(b"U1", b"acme-mcu")
+    instance.value = b"ACME-100"
+    instance.uuid = b"44444444-4444-5444-8444-444444444444"
+    instance.parts = [env.Part(name=b"Power", pins=[env.PartPin(pin=b"1", net=b"VDD3V3", pin_name=b"", group=b""), env.PartPin(pin=b"2", net=b"GND", pin_name=b"", group=b"")])]
+    mut value = block(b"Units", [instance], [net(b"VDD3V3", [pin(b"U1", b"1")]), net(b"GND", [pin(b"U1", b"2")]), net(b"SPARE", [pin(b"U1", b"3")])], [])
+    mut result = export_root(fs, out, value, b"units")
+    assert result.find(b"(symbol \"acme-mcu_1_1\"") >= 0
+    assert result.find(b"(symbol \"acme-mcu_2_1\"") >= 0
+    assert result.find(b"(unit 1)") >= 0
+    assert result.find(b"(unit 2)") >= 0
+    assert result.count(b"(reference \"U1\") (unit ") == 2
+    assert result.count(instance.uuid) == 1
+    assert result.find(b"(global_label \"SPARE\"") >= 0
+    return True

@@ -1,0 +1,274 @@
+
+import infra_fs as m
+import support_expect as ex
+
+func write(fs: Filesystem, path: str, data: bytes) -> bool:
+    match fs.write_file(path, data):
+        case Err(_):
+            return False
+        case Ok(_):
+            return True
+
+
+func setup(fs: Filesystem, path: str) -> bool:
+    match m.make_path(fs, path):
+        case Err(_):
+            return False
+        case Ok(_):
+            return True
+
+
+func read_trace_file(fs: Filesystem, mut trace: m.ReadTrace, path: str) -> bool:
+    match m.read_file_alloc_traced(fs, mut trace, path, 64):
+        case Err(_):
+            return False
+        case Ok(_):
+            return True
+
+
+# test "read trace digest sorts canonical paths"
+public func test_read_trace_digest_sorts_canonical_paths(out: Stream) -> bool:
+    mut first = m.read_trace_init()
+    m.read_trace_record(mut first, "/project/src/design.sexp", b"source")
+    m.read_trace_record(mut first, "/project/src/design.bom", b"bom")
+    mut second = m.read_trace_init()
+    m.read_trace_record(mut second, "/project/src/design.bom", b"bom")
+    m.read_trace_record(mut second, "/project/src/design.sexp", b"source")
+    return ex.eq_bytes(out, "read order independent", m.read_trace_digest(first), m.read_trace_digest(second))
+
+
+# test "read trace reports retained evidence memory"
+public func test_read_trace_reports_retained_evidence_memory(out: Stream) -> bool:
+    mut trace = m.read_trace_init()
+    m.read_trace_record(mut trace, "/project/src/design.sexp", b"source")
+    m.read_trace_record(mut trace, "/project/src/design.bom", b"bom")
+    # D4: value storage has no observable allocator capacity. Account for
+    # retained paths, complete bytes, and conservative entry metadata instead.
+    mut bound = len("/project/src/design.sexp".encode()) + len("/project/src/design.bom".encode()) + len(b"source") + len(b"bom") + 2 * 64
+    return ex.ok(out, "evidence storage accounted", m.read_trace_retained_bytes(trace) >= bound)
+
+
+# test "nested read traces invalidate both scopes without stealing reads"
+public func test_nested_read_traces_invalidate_both_scopes_without_stealing_reads(out: Stream) -> bool:
+    mut outer = m.read_trace_init()
+    mut inner = m.read_trace_init()
+    m.read_trace_begin(mut outer)
+    m.read_trace_begin_nested(mut outer, mut inner)
+    if not ex.ok(out, "outer owns reads", m.has_active_read_trace(outer)):
+        return False
+    if not ex.ok(out, "outer invalidated", not outer.consistent):
+        return False
+    if not ex.ok(out, "inner invalidated", not inner.consistent):
+        return False
+    m.read_trace_end(mut inner)
+    return ex.ok(out, "ending inner cannot steal outer", m.has_active_read_trace(outer))
+
+
+# test "read trace rejects an end call away from its owner thread"
+public func test_read_trace_rejects_an_end_call_away_from_its_owner_thread(out: Stream) -> bool:
+    # D4 has no threads; the explicit scope-ownership guard preserves the
+    # refusal, invalidation, retained scope and subsequent proper close.
+    mut trace = m.read_trace_init()
+    m.read_trace_begin(mut trace)
+    m.read_trace_end_with_owner(mut trace, False)
+    if not ex.ok(out, "wrong owner invalidates", not trace.consistent):
+        return False
+    if not ex.ok(out, "wrong owner cannot close", trace.active):
+        return False
+    m.read_trace_end_with_owner(mut trace, True)
+    return ex.ok(out, "owner closes", not trace.active)
+
+
+# test "read trace binds child Dir bytes and detects ABA consumption"
+public func test_read_trace_binds_child_dir_bytes_and_detects_aba_consumption(fs: Filesystem, out: Stream) -> bool:
+    if not setup(fs, "lib/modules") or not write(fs, "lib/modules/demo.sexp", b"A"):
+        return False
+    mut stable = m.read_trace_init()
+    m.read_trace_begin(mut stable)
+    match m.read_file_alloc_traced(fs, mut stable, "lib/modules/demo.sexp", 16):
+        case Err(_):
+            return False
+        case Ok(first):
+            if not ex.eq_bytes(out, "child bytes", first, b"A"):
+                return False
+    m.read_trace_end(mut stable)
+    if not ex.ok(out, "bound path", m.read_trace_digest_for_path(stable, "lib/modules/demo.sexp").is_some()):
+        return False
+    if not ex.ok(out, "stable verifies", m.read_trace_verify(fs, stable)):
+        return False
+    mut aba = m.read_trace_init()
+    m.read_trace_begin(mut aba)
+    if not read_trace_file(fs, mut aba, "lib/modules/demo.sexp"):
+        return False
+    if not write(fs, "lib/modules/demo.sexp", b"B") or not read_trace_file(fs, mut aba, "lib/modules/demo.sexp"):
+        return False
+    if not write(fs, "lib/modules/demo.sexp", b"A"):
+        return False
+    m.read_trace_end(mut aba)
+    if not ex.ok(out, "ABA inconsistent", not aba.consistent):
+        return False
+    return ex.ok(out, "ABA fails verify", not m.read_trace_verify(fs, aba))
+
+
+# test "read trace rejects directory and negative-dependency ABA"
+public func test_read_trace_rejects_directory_and_negative_dependency_aba(fs: Filesystem, out: Stream) -> bool:
+    if not setup(fs, "lib/modules") or not setup(fs, "src"):
+        return False
+    if not write(fs, "lib/modules/stable.sexp", b"stable") or not write(fs, "lib/modules/policy.sexp", b"policy"):
+        return False
+    mut directory_aba = m.read_trace_init()
+    m.read_trace_begin(mut directory_aba)
+    # D4 records each consumed complete listing explicitly. Retain the
+    # initial listing, then observe an interleaved membership change.
+    match m.list_dir_traced(fs, mut directory_aba, "lib/modules"):
+        case Err(_):
+            return False
+        case Ok(_):
+            pass
+    match fs.remove("lib/modules/policy.sexp"):
+        case Err(_):
+            return False
+        case Ok(_):
+            pass
+    match m.list_dir_traced(fs, mut directory_aba, "lib/modules"):
+        case Err(_):
+            return False
+        case Ok(_):
+            pass
+    if not write(fs, "lib/modules/policy.sexp", b"policy"):
+        return False
+    m.read_trace_end(mut directory_aba)
+    if not ex.ok(out, "directory ABA fails", not m.read_trace_verify(fs, directory_aba)):
+        return False
+    mut negative_aba = m.read_trace_init()
+    m.read_trace_begin(mut negative_aba)
+    if not read_trace_file(fs, mut negative_aba, "lib/modules/stable.sexp"):
+        return False
+    match m.access_traced(fs, mut negative_aba, "src/board.checks.sexp"):
+        case Ok(_):
+            return False
+        case Err(e):
+            if not ex.eq_str(out, "absent error", e, "FileNotFound"):
+                return False
+    if not write(fs, "src/board.checks.sexp", b"(assert true)"):
+        return False
+    m.read_trace_end(mut negative_aba)
+    return ex.ok(out, "negative dependency fails", not m.read_trace_verify(fs, negative_aba))
+
+
+# test "cache probe leaves the closure alone without weakening the tamper guard"
+public func test_cache_probe_leaves_the_closure_alone_without_weakening_the_tamper_guard(fs: Filesystem, out: Stream) -> bool:
+    if not setup(fs, "src") or not write(fs, "src/probe.sexp", b"A"):
+        return False
+    mut plain = m.read_trace_init()
+    m.read_trace_begin(mut plain)
+    if not read_trace_file(fs, mut plain, "src/probe.sexp"):
+        return False
+    m.read_trace_end(mut plain)
+    mut plain_digest = m.read_trace_digest(plain)
+    mut probed = m.read_trace_init()
+    m.read_trace_begin(mut probed)
+    mut probe = m.begin_cache_probe(mut probed)
+    match m.list_dir_traced(fs, mut probed, "src"):
+        case Err(_):
+            return False
+        case Ok(_):
+            pass
+    m.cache_probe_end(mut probe, mut probed)
+    if not read_trace_file(fs, mut probed, "src/probe.sexp"):
+        return False
+    m.read_trace_end(mut probed)
+    if not ex.eq_bytes(out, "hidden metadata does not change closure", m.read_trace_digest(probed), plain_digest):
+        return False
+    if not ex.ok(out, "probed verifies", m.read_trace_verify(fs, probed)):
+        return False
+    mut exposed = m.read_trace_init()
+    m.read_trace_begin(mut exposed)
+    match m.list_dir_traced(fs, mut exposed, "src"):
+        case Err(_):
+            return False
+        case Ok(_):
+            pass
+    if not read_trace_file(fs, mut exposed, "src/probe.sexp"):
+        return False
+    m.read_trace_end(mut exposed)
+    if not ex.ok(out, "visible metadata changes closure", m.read_trace_digest(exposed) != plain_digest):
+        return False
+    mut tampered = m.read_trace_init()
+    m.read_trace_begin(mut tampered)
+    if not read_trace_file(fs, mut tampered, "src/probe.sexp"):
+        return False
+    mut probe2 = m.begin_cache_probe(mut tampered)
+    match m.list_dir_traced(fs, mut tampered, "src"):
+        case Err(_):
+            return False
+        case Ok(_):
+            pass
+    m.cache_probe_end(mut probe2, mut tampered)
+    m.read_trace_end(mut tampered)
+    if not write(fs, "src/probe.sexp", b"B"):
+        return False
+    return ex.ok(out, "probe never hides consumed bytes", not m.read_trace_verify(fs, tampered))
+
+
+# test "cache probe rejects an end call away from its owner thread"
+public func test_cache_probe_rejects_an_end_call_away_from_its_owner_thread(out: Stream) -> bool:
+    # D4: explicit scope ownership instead of a host Thread.Id.
+    mut trace = m.read_trace_init()
+    m.read_trace_begin(mut trace)
+    mut probe = m.begin_cache_probe(mut trace)
+    if not ex.ok(out, "scope hidden", not trace.active):
+        return False
+    m.cache_probe_end_with_owner(mut probe, mut trace, False)
+    if not ex.ok(out, "wrong owner invalidates", not trace.consistent):
+        return False
+    m.cache_probe_end_with_owner(mut probe, mut trace, True)
+    return ex.ok(out, "owner restores scope", trace.active)
+
+
+# test "read trace rejects symlink removal and retargeting"
+public func test_read_trace_rejects_symlink_removal_and_retargeting(fs: Filesystem, out: Stream) -> bool:
+    # D4: Filesystem has no symlink creation, target identity, or stat. The
+    # supported counterpart covers removal and changed bytes on logical file
+    # paths, plus consumed directory membership. Equal-byte symlink retargets
+    # cannot be observed and are explicitly outside this adapter's guarantee.
+    if not setup(fs, "lib/components") or not setup(fs, "lib/modules"):
+        return False
+    if not write(fs, "lib/components/alias.sexp", b"same"):
+        return False
+    mut stable = m.read_trace_init()
+    m.read_trace_begin(mut stable)
+    if not read_trace_file(fs, mut stable, "lib/components/alias.sexp"):
+        return False
+    m.read_trace_end(mut stable)
+    if not ex.ok(out, "stable logical path", m.read_trace_verify(fs, stable)):
+        return False
+    match fs.remove("lib/components/alias.sexp"):
+        case Err(_):
+            return False
+        case Ok(_):
+            pass
+    if not ex.ok(out, "path removal", not m.read_trace_verify(fs, stable)):
+        return False
+    if not write(fs, "lib/components/alias.sexp", b"changed"):
+        return False
+    if not ex.ok(out, "observable retarget bytes", not m.read_trace_verify(fs, stable)):
+        return False
+    if not write(fs, "lib/modules/policy.sexp", b"same"):
+        return False
+    mut directory = m.read_trace_init()
+    m.read_trace_begin(mut directory)
+    match m.list_dir_traced(fs, mut directory, "lib/modules"):
+        case Err(_):
+            return False
+        case Ok(_):
+            pass
+    m.read_trace_end(mut directory)
+    if not ex.ok(out, "stable directory", m.read_trace_verify(fs, directory)):
+        return False
+    match fs.remove("lib/modules/policy.sexp"):
+        case Err(_):
+            return False
+        case Ok(_):
+            pass
+    return ex.ok(out, "membership removal", not m.read_trace_verify(fs, directory))

@@ -1,0 +1,286 @@
+{
+  "version": "native-tests-v1",
+  "tests": [
+    {
+      "name": "sexpr_parser_test::test_fuzz_parser_never_crashes_on_arbitrary_bytes",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "9b31498a0e13c15290d4ee526df57eded3dcdd808c12e2d0c1b8246a7ac857bf",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "experiments/lox-eda-zero-rc-20261012/eda/source/src/sexpr_parser_test.my#c1e9a0e050657401c5e3b8d81851b080b435aa6df456a432f20d56a9c1741d24",
+          "producer": {
+            "facts": {
+              "fresh": 91,
+              "reused": 0,
+              "fallback": 76,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 76,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 91,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 3
+          },
+          "planner": {
+            "index_nodes": 364,
+            "index_edges": 875,
+            "affected_nodes": 91,
+            "closure_nodes": 1672,
+            "closure_edges": 1387,
+            "reused_tests": 0,
+            "planned_tests": 14
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 112239,
+              "save_bytes_prepared": 213252,
+              "sequence_locks": 234
+            }
+          },
+          "nanoseconds": {
+            "lowering": 25551332,
+            "facts": 12166329,
+            "graph": 441427,
+            "planner": 63244367,
+            "keys": 579592,
+            "publication": 24413601,
+            "total": 127106465
+          },
+          "transport": {
+            "request_bytes": 4632,
+            "reply_bytes": 4956,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "sexpr_parser_test::test_fuzz_parser_property",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "f61ac5839fbf77d8a8e106a59432946a98fb8e850442fb4cc69f6d95c4df9684",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": null
+      },
+      "property": {
+        "seed": 8679566789041942096,
+        "counts": {
+          "runs": 100,
+          "passed": 100,
+          "discarded": 0,
+          "processes": 1,
+          "shrinks": 0,
+          "attempts": 0
+        },
+        "failure": null,
+        "campaign": null
+      }
+    },
+    {
+      "name": "sexpr_parser_test::test_parse_isform_helper",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "198fd6f977720794e87453be1d30d8a8ebadeb2aae8fa30f52ea2262ed7a6ea8",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "sexpr_parser_test::test_parse_multiple_top_level_forms",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "426fce186e3bfe8f33082d4291f193e74c8c59c9efcdbf143aae08d5a93911b0",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "sexpr_parser_test::test_parse_nested_lists",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "b4c7fb2583781426e7098c7f8e3f765c90ffbb891d76eb9d6e7c82bcc2d7554d",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "sexpr_parser_test::test_parse_numbers_and_units",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "0e3955551cb3fe6e8ada373b0445f994e7326b54ea0ac01ba6b4ae3402158e87",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "sexpr_parser_test::test_parse_rejects_excessively_deep_nesting",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "ef618cc1270ca56faaa95f11a990180f2987c8802fde5bcda2f63ef287d473ba",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "sexpr_parser_test::test_parse_si_scaled_values",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "22a14bffb0a2c692b335476e6de04d3c2dc3f447bd0b82abc3505e383bd38ccb",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "sexpr_parser_test::test_parse_simple_list",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "ee92cc73b82fc2aabb9cb77bea4718b8afc84f50e73d486f3f0a549dad185627",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "sexpr_parser_test::test_parse_with_comments",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "1e8bc64f453f3f18e607f1f4bb0b271d2cd94edb13b4554e3926f92461d146b0",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "sexpr_parser_test::test_parsediag_column_aligns_a_caret_under_the_offending_token",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "48261ec622ef97c8c620c5072c6d3102f3e65e6c1d395120403e21d0a3c5cbab",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "sexpr_parser_test::test_parsediag_locates_a_mid_file_syntax_error",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "15ae9278234a24ea0411e3ec9a4d889c5b858435fa623209583d225b2fbe0e75",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "sexpr_parser_test::test_parsediag_points_an_unterminated_list_at_its_open_paren",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "e0589b0d4f67ed7520cd61f569d2d69aeb1f5de18ee8c4cbdf871c3c5be49770",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "sexpr_parser_test::test_suffixed_literals_retain_their_spelling",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "5ea9382f885cd4e5cd0d415d09182f8f3994b6c9d692a62a605833ca01ea149b",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    }
+  ],
+  "passed": 14,
+  "failed": 0,
+  "skipped": 0,
+  "cached": 0,
+  "unsupported": 0,
+  "sources": [
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/experiments/lox-eda-zero-rc-20261012/eda/source/src/sexpr_parser_test.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/experiments/lox-eda-zero-rc-20261012/eda/source/src/sexpr_ast.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/experiments/lox-eda-zero-rc-20261012/eda/source/src/sexpr_parser.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/experiments/lox-eda-zero-rc-20261012/eda/source/src/sexpr_tokenizer.my"
+  ]
+}

@@ -1,0 +1,65 @@
+
+import kicad_sch_project as m
+import kicad_sch_shape as shape
+import kicad_sch_emit as emit
+import json
+import support_strs as strs
+
+func fixture_shapes() -> shape.Shape[]:
+    mut units = [shape.ShapeUnit(number=1, title=b"", pins=[], half_w=254, half_h=254, graphics=[], stubs=[])]
+    return [shape.Shape(lib_name=b"demo-part", units=units)]
+
+
+func project_json(data: bytes) -> json.Json:
+    match json.loads(strs.text(data)):
+        case Ok(document):
+            return document
+        case Err(_):
+            assert False, "invalid project JSON"
+            return json.null_value()
+
+
+# test "kicad-sch: the sidecar set names the four project files"
+public func test_kicad_sch_the_sidecar_set_names_the_four_project_files() -> bool:
+    mut files = m.sidecars(b"demo", fixture_shapes(), [emit.Rail(lib_name=b"PWR_GND", net=b"GND")])
+    assert len(files) == 4
+    assert [for f in files yield f.name] == [b"sym-lib-table", b"fp-lib-table", b"demo.kicad_pro", b"netlisp.kicad_sym"]
+    assert files[0].bytes.find(b"(name \"netlisp\")") >= 0
+    assert files[1].bytes.find(b"(name \"footprints\")") >= 0
+    assert files[0].bytes.find(b"${KIPRJMOD}/netlisp.kicad_sym") >= 0
+    assert files[1].bytes.find(b"${KIPRJMOD}/footprints.pretty") >= 0
+    assert files[2].bytes.find(b"\"demo.kicad_pro\"") >= 0
+    assert json.get(project_json(files[2].bytes), "meta") is not None
+    assert files[3].bytes.find(b"(kicad_symbol_lib") >= 0
+    assert files[3].bytes.find(b"(symbol \"PWR_FLAG\"") >= 0
+    return True
+
+
+# test "kicad-sch: the symbol library drops the lib_id prefix"
+public func test_kicad_sch_the_symbol_library_drops_the_lib_id_prefix() -> bool:
+    mut shapes = fixture_shapes()
+    mut rails = [emit.Rail(lib_name=b"PWR_GND", net=b"GND")]
+    mut text = emit.library_file(shapes, rails)
+    assert text.startswith(b"(kicad_symbol_lib")
+    assert text.find(b"(symbol \"demo-part\"") >= 0
+    assert text.find(b"(symbol \"PWR_GND\"") >= 0
+    assert text.find(b"netlisp:") < 0
+    assert text.find(b"(symbol \"PWR_FLAG\"") >= 0
+    return True
+
+
+# test "kicad-sch: the project file escapes a hostile design name"
+public func test_kicad_sch_the_project_file_escapes_a_hostile_design_name() -> bool:
+    mut files = m.sidecars(b"od\"d\\n<a>me\x01", [], [])
+    assert files[2].bytes.find(b"<a>") >= 0
+    mut document = project_json(files[2].bytes)
+    match json.get(document, "meta"):
+        case Some(meta):
+            match json.get(meta, "filename"):
+                case Some(filename):
+                    assert json.as_str(filename) == Some("od\"d\\n<a>me\x01.kicad_pro")
+                case None:
+                    assert False, "missing project filename"
+        case None:
+            assert False, "missing project meta"
+    return True

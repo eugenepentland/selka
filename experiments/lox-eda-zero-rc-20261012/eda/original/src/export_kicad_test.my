@@ -1,0 +1,99 @@
+
+import export_kicad as m
+import flat_netlist as flat
+import eval_env as env
+
+func pin_currency(pin: flat.FlatPin) -> flat.FlatPin:
+    return pin
+
+
+func net_currency(net: flat.FlatNet) -> flat.FlatNet:
+    return net
+
+
+func instance_currency(inst: flat.FlatInstance) -> flat.FlatInstance:
+    return inst
+
+
+# test "the export layer re-exports the flatten currency types unchanged"
+public func test_the_export_layer_re_exports_the_flatten_currency_types_unchanged() -> bool:
+    # The annotation crossing is the original identity assertion at compile time.
+    mut pin: m.FlatPin = pin_currency(flat.FlatPin(ref_des=b"U1", pin=b"3"))
+    mut net: m.FlatNet = net_currency(flat.FlatNet(name=b"VDD", pins=[pin]))
+    mut inst: m.FlatInstance = instance_currency(flat.flat_instance_default(b"U1", b"ic", b"", b"", [], b""))
+    assert pin.ref_des == b"U1" and pin.pin == b"3"
+    assert net.name == b"VDD" and net.pins[0] == pin
+    assert inst.ref_des == b"U1" and inst.component == b"ic"
+    return True
+
+
+# test "netlist generation"
+public func test_netlist_generation() -> bool:
+    mut instances = [flat.flat_instance_default(b"R1", b"res-0402", b"220k", b"r-0402", [], b"")]
+    mut pins = [m.FlatPin(ref_des=b"R1", pin=b"1"), m.FlatPin(ref_des=b"U1", pin=b"3")]
+    mut nets = [m.FlatNet(name=b"VDD", pins=pins)]
+    mut output = m.write_netlist(b"test", instances, nets, {"r-0402": b"R_0402_1005Metric"}, {})
+    assert output.find(b"(export (version \"E\")") >= 0
+    assert output.find(b"(ref \"R1\")") >= 0
+    assert output.find(b"footprints:R_0402_1005Metric") >= 0
+    assert output.find(b"(name \"VDD\")") >= 0
+    return True
+
+
+# test "footprint mod export"
+public func test_footprint_mod_export(out: Stream) -> bool:
+    mut source = b"(footprint \"R_0402_1005Metric\"\n  (description \"Resistor SMD 0402\")\n\n"
+    source += b"  (pad 1 smd roundrect (pos -0.51 0.00) (size 0.54 0.64))\n"
+    source += b"  (pad 2 smd roundrect (pos 0.51 0.00) (size 0.54 0.64))\n"
+    source += b"  (courtyard (rect -0.93 -0.47 0.93 0.47))\n  (silkscreen\n    (line (-0.15 -0.35) (0.15 -0.35))\n  )\n)"
+    mut output = b""
+    match m.export_footprint_mod(out, source, None, None, None):
+        case Ok(data):
+            output = data
+        case Err(e):
+            assert False, e
+    assert output.find(b"(footprint \"R_0402_1005Metric\"") >= 0
+    assert output.find(b"thru_hole") < 0
+    assert output.find(b"(pad \"1\" smd roundrect") >= 0
+    assert output.find(b"(layers \"F.Cu\" \"F.Mask\" \"F.Paste\")") >= 0
+    assert output.find(b"fp_rect") >= 0 and output.find(b"fp_line") >= 0
+    assert output.find(b"(layer \"F.SilkS\")") >= 0
+    return True
+
+
+# test "sanitizeKicadName neutralizes traversal and passes safe names through"
+public func test_sanitizekicadname_neutralizes_traversal_and_passes_safe_names_through(out: Stream) -> bool:
+    assert not m.kicad_name_is_unsafe(b"R_0402_1005Metric")
+    assert m.sanitize_kicad_name(out, b"R_0402_1005Metric") == b"R_0402_1005Metric"
+    assert m.kicad_name_is_unsafe(b"../../etc/passwd")
+    mut s1 = m.sanitize_kicad_name(out, b"../../etc/passwd")
+    assert s1.find(b"/") < 0 and s1.find(b"..") < 0
+    assert m.kicad_name_is_unsafe(b"a\\b")
+    mut s2 = m.sanitize_kicad_name(out, b"a\\b")
+    assert s2.find(b"\\") < 0
+    return True
+
+
+# test "collectInstances prefixes a decoupling binding's target IC like the ref-des"
+public func test_collectinstances_prefixes_a_decoupling_binding_s_target_ic_like_the_ref_des() -> bool:
+    mut ic = env.instance_default(b"U1")
+    ic.label = b"U1"
+    ic.component = b"ic"
+    mut cap = env.instance_default(b"C1")
+    cap.label = b"C1"
+    cap.component = b"cap-0402"
+    cap.value = b"100nF"
+    cap.bind.decouple.ic = b"U1"
+    cap.bind.decouple.pin = b"4"
+    mut child = env.design_block_default(b"rail")
+    child.instances = [ic, cap]
+    mut block = env.design_block_default(b"board")
+    block.sub_blocks = [env.SubBlock(name=b"pwr", block=child, source=b"")]
+    mut instances: m.FlatInstance[] = []
+    m.collect_instances(block, b"", mut instances)
+    assert len(instances) == 2
+    assert instances[1].ref_des == b"pwr/C1"
+    assert instances[1].bind.decouple.ic == b"pwr/U1"
+    assert instances[1].bind.decouple.pin == b"4"
+    assert instances[0].bind.decouple.ic == b""
+    return True

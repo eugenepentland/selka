@@ -1,0 +1,217 @@
+
+import eval_env as env_mod
+import flat_netlist as flat_netlist
+import export_kicad_netlist as netlist_mod
+import export_kicad_footprint as footprint_mod
+import infra_fs as infra_fs
+import infra_log as log
+import stdlib as stdlib
+import lib_limits as lib_limits
+import support_parse as parse_mod
+import support_strs as strs
+import byte_builder
+
+public record ModelTransform:
+    offset: float[]
+    rotation: float[]
+    model: bytes? = None
+
+
+public func load_model_config(fs: Filesystem, project_dir: str) -> dict[str, ModelTransform]:
+    mut map: dict[str, ModelTransform] = {}
+    mut content = b""
+    match infra_fs.read_file_alloc(fs, project_dir + "/lib/models/model-config.json", 1048576):
+        case Err(_):
+            return map
+        case Ok(data):
+            content = data
+    mut pos = 0
+    while pos < len(content):
+        mut q1 = strs.index_of_pos(content, pos, b"\"")
+        if q1 < 0:
+            break
+        mut q2 = strs.index_of_pos(content, q1 + 1, b"\"")
+        if q2 < 0:
+            break
+        mut key = content[q1 + 1:q2]
+        mut brace = strs.index_of_pos(content, q2, b"{")
+        if brace < 0:
+            break
+        mut brace_end = strs.index_of_pos(content, brace, b"}")
+        if brace_end < 0:
+            break
+        mut obj = content[brace:brace_end + 1]
+        mut transform = ModelTransform(offset=[0.0, 0.0, 0.0], rotation=[0.0, 0.0, 0.0])
+        mut os = obj.find(b"\"offset\":[")
+        if os >= 0:
+            mut arr_start = os + 10
+            mut arr_end = strs.index_of_pos(obj, arr_start, b"]")
+            if arr_end >= 0:
+                transform.offset = parse_float3(obj[arr_start:arr_end])
+        mut rs = obj.find(b"\"rotation\":[")
+        if rs >= 0:
+            mut rotation_start = rs + 12
+            mut rotation_end = strs.index_of_pos(obj, rotation_start, b"]")
+            if rotation_end >= 0:
+                transform.rotation = parse_float3(obj[rotation_start:rotation_end])
+        mut ms = obj.find(b"\"model\":\"")
+        if ms >= 0:
+            mut val_start = ms + 9
+            mut val_end = strs.index_of_pos(obj, val_start, b"\"")
+            if val_end >= 0:
+                transform.model = Some(obj[val_start:val_end])
+        map[strs.text(key)] = transform
+        pos = brace_end + 1
+    return map
+
+
+public func parse_float3(s: bytes) -> float[]:
+    mut result = [0.0, 0.0, 0.0]
+    mut idx = 0
+    for part in s.split(b","):
+        if idx >= 3:
+            break
+        mut trimmed = strs.trim(part, b" \t\n\r")
+        result[idx] = parse_mod.parse_float(strs.text(trimmed)).unwrap_or(0.0)
+        idx += 1
+    return result
+
+
+public func build_kicad_mod(fs: Filesystem, err: Stream, project_dir: str, fp_name: bytes, fp_sexp_source: bytes, model_name: bytes?, model_offset: float[]?, model_rotation: float[]?) -> Result[bytes, str]:
+    mut src_path = footprint_mod.find_source_kicad_mod(fs, project_dir, fp_name)
+    if src_path is not None:
+        match infra_fs.read_file_alloc(fs, src_path, 10485760):
+            case Ok(original):
+                return footprint_mod.use_source_kicad_mod(original, model_name, model_offset, model_rotation)
+            case Err(_):
+                pass
+    return footprint_mod.export_footprint_mod(err, fp_sexp_source, model_name, model_offset, model_rotation)
+
+
+public func export_footprints(fs: Filesystem, err: Stream, block: env_mod.DesignBlock, project_dir: str, output_pretty_dir: str) -> Result[Unit, str]:
+    mut pretty_parent = strs.path_dirname(output_pretty_dir).unwrap_or(".")
+    mut model_dir = pretty_parent + "/models"
+    try infra_fs.make_path(fs, model_dir)
+    mut instances: flat_netlist.FlatInstance[] = []
+    flat_netlist.collect_instances(block, b"", mut instances)
+    mut processed_fps: set[str] = set()
+    mut model_cfg = load_model_config(fs, project_dir)
+    for inst in instances:
+        if len(inst.footprint) == 0:
+            continue
+        mut key = strs.text(inst.footprint)
+        if key in processed_fps:
+            continue
+        processed_fps.add(key)
+        mut fp_source = stdlib.read(fs, project_dir, "lib/footprints/" + key + ".sexp", lib_limits.max_footprint_bytes)
+        if fp_source is None:
+            continue
+        mut kicad_name = inst.footprint
+        match netlist_mod.extract_footprint_name(fp_source):
+            case Ok(name):
+                kicad_name = name
+            case Err(_):
+                pass
+        mut model_name: bytes? = None
+        mut model_offset: float[]? = None
+        mut model_rotation: float[]? = None
+        if key in model_cfg:
+            mut cfg = model_cfg[key]
+            model_name = cfg.model
+            model_offset = Some(cfg.offset)
+            model_rotation = Some(cfg.rotation)
+        if model_name is None:
+            model_name = footprint_mod.find_model_file(fs, project_dir, inst.footprint, inst.component)
+        mut mod_output = b""
+        match build_kicad_mod(fs, err, project_dir, inst.footprint, fp_source, model_name, model_offset, model_rotation):
+            case Err(_):
+                continue
+            case Ok(data):
+                mod_output = data
+        mut mod_path = output_pretty_dir + "/" + strs.text(kicad_name) + ".kicad_mod"
+        # Whole-file Filesystem write is the D4 create/write adapter.
+        match infra_fs.write_file(fs, mod_path, mod_output):
+            case Err(_):
+                # G30/D4: write_file combines create/write errors. Preserve the
+                # tolerated-create-failure path; later write failure is merged.
+                continue
+            case Ok(_):
+                pass
+        if model_name is not None:
+            mut source = project_dir + "/lib/models/" + strs.text(model_name)
+            mut dest = model_dir + "/" + strs.text(model_name)
+            match infra_fs.copy_file(fs, source, dest):
+                case Err(e):
+                    log.warn(err, b"copy " + model_name + b": " + e.encode())
+                case Ok(_):
+                    pass
+    return Ok(())
+
+
+record FlatSection:
+    name: bytes
+    instances: env_mod.Instance[]
+    pin_groups: env_mod.PinGroup[]
+
+
+public func export_section_layout(block: env_mod.DesignBlock) -> bytes:
+    mut flat_sections: FlatSection[] = []
+    for sec in block.sections:
+        if len(sec.sub_sections) > 0:
+            flat_sections.append(FlatSection(name=sec.name, instances=[], pin_groups=sec.pin_groups))
+        else:
+            flat_sections.append(FlatSection(name=sec.name, instances=sec.instances, pin_groups=sec.pin_groups))
+        for sub in sec.sub_sections:
+            flat_sections.append(FlatSection(name=sub.name, instances=sub.instances, pin_groups=sub.pin_groups))
+    mut n = len(flat_sections)
+    if n == 0:
+        return b"{\"cell_size_mm\":50,\"sections\":[],\"ref_section\":{}}"
+    mut n_cols = 1
+    while n_cols * n_cols < n:
+        n_cols += 1
+    mut ref_map: dict[str, int] = {}
+    for si in range(n):
+        mut sec2 = flat_sections[si]
+        for inst in sec2.instances:
+            ref_map[strs.text(inst.ref_des)] = si
+        for pg in sec2.pin_groups:
+            if strs.text(pg.ref_des)not in ref_map:
+                ref_map[strs.text(pg.ref_des)] = si
+    mut w = byte_builder.create()
+    byte_builder.append(mut w, b"{\"cell_size_mm\":50,\"sections\":[")
+    for si2 in range(n):
+        mut sec3 = flat_sections[si2]
+        if si2 > 0:
+            byte_builder.append(mut w, b",")
+        mut row = si2 // n_cols
+        mut col = si2 % n_cols
+        byte_builder.append(mut w, b"{\"name\":\"" + sec3.name)
+        byte_builder.append_text(mut w, "\",\"row\":" + str(row) + ",\"col\":" + str(col) + ",\"refs\":[")
+        mut first = True
+        for inst2 in sec3.instances:
+            if not first:
+                byte_builder.append(mut w, b",")
+            byte_builder.append(mut w, b"\"" + inst2.ref_des + b"\"")
+            first = False
+        for pg2 in sec3.pin_groups:
+            mut found = False
+            for inst3 in sec3.instances:
+                if inst3.ref_des == pg2.ref_des:
+                    found = True
+                    break
+            if not found:
+                if not first:
+                    byte_builder.append(mut w, b",")
+                byte_builder.append(mut w, b"\"" + pg2.ref_des + b"\"")
+                first = False
+        byte_builder.append(mut w, b"]}")
+    byte_builder.append(mut w, b"],\"ref_section\":{")
+    mut ref_first = True
+    for ref in ref_map:
+        if not ref_first:
+            byte_builder.append(mut w, b",")
+        byte_builder.append(mut w, b"\"" + ref.encode() + b"\":")
+        byte_builder.append_text(mut w, str(ref_map[ref]))
+        ref_first = False
+    byte_builder.append(mut w, b"}}")
+    return byte_builder.finish(w)

@@ -1,0 +1,92 @@
+
+import kicad_sch_vendor as m
+import kicad_sch_shape as shape
+import kicad_sym_reader as reader
+import kicad_sym_library as library
+import kicad_sym_testdata as data
+import support_expect as ex
+
+func index_of(source: bytes, key: str) -> library.Library:
+    mut lib = library.Library(by_name={}, files=1)
+    match reader.parse_library(source):
+        case Ok(symbols):
+            lib.by_name[key] = symbols[0]
+        case Err(_):
+            assert False, "fixture library parses"
+    return lib
+
+
+func req(component: bytes) -> shape.Request:
+    return shape.request_default(shape.names_default(component), "/nonexistent")
+
+
+# test "kicad-sch: a vendor symbol supplies the body, pin sides, and pin names"
+public func test_kicad_sch_a_vendor_symbol_supplies_the_body_pin_sides_and_pin_names(fs: Filesystem, out: Stream) -> bool:
+    mut lib = index_of(data.vendor_flat(), "acme-3")
+    mut s = m.synth(fs, out, Some(lib), req(b"acme-3"))
+    if not ex.ok(out, "vendor", s.vendor) or not ex.eq_bytes(out, "library name", s.lib_name, b"acme-3") or not ex.eq_int(out, "one unit", len(s.units), 1):
+        return False
+    mut u = s.units[0]
+    if not ex.eq_int(out, "three pins", len(u.pins), 3) or not ex.ok(out, "pin sides", u.pins[0].side == shape.Side.left and u.pins[2].side == shape.Side.right) or not ex.eq_bytes(out, "vendor pin name", u.pins[2].name, b"D"):
+        return False
+    return ex.eq_int(out, "vendor lead", u.pins[2].len, 508) and ex.eq_int(out, "one graphic", len(u.graphics), 1) and ex.ok(out, "vendor rectangle", u.graphics[0].kind == reader.Kind.rectangle) and ex.eq_int(out, "recentered pins", u.pins[0].x, -u.pins[2].x)
+
+
+# test "kicad-sch: vendor pin endpoints are snapped onto the 1.27 mm grid"
+public func test_kicad_sch_vendor_pin_endpoints_are_snapped_onto_the_1_27_mm_grid(fs: Filesystem, out: Stream) -> bool:
+    mut lib = index_of(data.vendor_units(), "acme-dual")
+    mut s = m.synth(fs, out, Some(lib), req(b"acme-dual"))
+    if not ex.ok(out, "vendor", s.vendor):
+        return False
+    for u in s.units:
+        if not ex.ok(out, "nonempty unit", len(u.pins) > 0 or len(u.graphics) > 0):
+            return False
+    if not ex.eq_int(out, "two units", len(s.units), 2):
+        return False
+    return ex.ok(out, "grid snapped pin/body", s.units[0].pins[0].x % shape.grid == 0 and s.units[0].pins[0].y % shape.grid == 0 and s.units[0].half_w % shape.grid == 0) and ex.ok(out, "shared unit-0 graphics", len(s.units[1].graphics) >= 4)
+
+
+# test "kicad-sch: pads missing from a vendor symbol land in a catch-all unit"
+public func test_kicad_sch_pads_missing_from_a_vendor_symbol_land_in_a_catch_all_unit(fs: Filesystem, out: Stream) -> bool:
+    mut lib = index_of(data.vendor_flat(), "acme-3")
+    mut request = req(b"acme-3")
+    request.used = [b"2", b"EP"]
+    mut s = m.synth(fs, out, Some(lib), request)
+    if not ex.eq_int(out, "catch-all unit", len(s.units), 2):
+        return False
+    return ex.eq_int(out, "second unit number", s.units[1].number, 2) and ex.eq_int(out, "one missing pad", len(s.units[1].pins), 1) and ex.eq_bytes(out, "thermal pad", s.units[1].pins[0].pad, b"EP") and ex.eq_int(out, "vendor unit untouched", len(s.units[0].pins), 3)
+
+
+func duplicate_lib() -> bytes:
+    return b"(kicad_symbol_lib (version 20211014) (symbol \"DUP\" (pin passive line (at 0 0 0) (length 2.54) (name \"A\" (effects)) (number \"1\" (effects))) (pin passive line (at 0 -2.54 0) (length 2.54) (name \"B\" (effects)) (number \"1\" (effects)))))"
+
+
+func collide_lib() -> bytes:
+    return b"(kicad_symbol_lib (version 20211014) (symbol \"TIGHT\" (pin passive line (at 0 0 0) (length 2.54) (name \"A\" (effects)) (number \"1\" (effects))) (pin passive line (at 0 0.3175 0) (length 2.54) (name \"B\" (effects)) (number \"2\" (effects)))))"
+
+
+# test "kicad-sch: an unsafe vendor symbol is rejected in favour of the box"
+public func test_kicad_sch_an_unsafe_vendor_symbol_is_rejected_in_favour_of_the_box(fs: Filesystem, out: Stream) -> bool:
+    mut dup = index_of(duplicate_lib(), "dup")
+    mut request = req(b"dup")
+    request.fp_pads = [b"1", b"2"]
+    mut boxed = m.synth(fs, out, Some(dup), request)
+    if not ex.ok(out, "duplicate rejected", not boxed.vendor) or not ex.eq_int(out, "fallback pad count", len(boxed.units[0].pins), 2):
+        return False
+    mut tight = index_of(collide_lib(), "tight")
+    request.names.component = b"tight"
+    mut also_boxed = m.synth(fs, out, Some(tight), request)
+    if not ex.ok(out, "snapped collision rejected", not also_boxed.vendor):
+        return False
+    mut off = m.synth(fs, out, None, req(b"acme-3"))
+    return ex.ok(out, "vendor off", not off.vendor)
+
+
+# test "kicad-sch: sideOf inverts the library pin angle onto an edge"
+public func test_kicad_sch_sideof_inverts_the_library_pin_angle_onto_an_edge(out: Stream) -> bool:
+    return ex.ok(out, "axes", m.side_of(0) == shape.Side.left and m.side_of(90) == shape.Side.bottom and m.side_of(180) == shape.Side.right and m.side_of(270) == shape.Side.top) and ex.ok(out, "wrapped/nearest", m.side_of(360) == shape.Side.left and m.side_of(-90) == shape.Side.top and m.side_of(170) == shape.Side.right)
+
+
+# test "kicad-sch: snapNearest keeps spacing across a half-grid pin row"
+public func test_kicad_sch_snapnearest_keeps_spacing_across_a_half_grid_pin_row(out: Stream) -> bool:
+    return ex.eq_int(out, "zero", m.snap_nearest(0), 0) and ex.eq_int(out, "positive grid", m.snap_nearest(12700), 12700) and ex.eq_int(out, "negative grid", m.snap_nearest(-12700), -12700) and ex.eq_int(out, "half-grid upper", m.snap_nearest(120650), 127000) and ex.eq_int(out, "half-grid next", m.snap_nearest(107950), 114300)

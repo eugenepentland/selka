@@ -1,0 +1,14 @@
+
+# Guest test translated from the `test "..."` block of zig/src/uuid.zig.
+import uuid
+
+# test "format stamps version and variant and renders the canonical shape"
+public func test_format_stamps_version_and_variant_and_renders_the_canonical_shape() -> bool:
+    mut raw_list = [for i in range(16) yield i]
+    mut raw = bytes(raw_list)
+    mut v4 = uuid.format(raw, uuid.Version.random_v4)
+    assert v4 == b"00010203-0405-4607-8809-0a0b0c0d0e0f", "v4 text"
+    mut v5 = uuid.format(raw, uuid.Version.name_v5)
+    assert v5 == b"00010203-0405-5607-8809-0a0b0c0d0e0f", "v5 text"
+    assert len(v4) == uuid.TEXT_LEN, "text length"
+    return True

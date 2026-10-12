@@ -1,0 +1,55 @@
+
+import support_parse as sp
+
+# `Some(x)` needs an expected Option type (E_OPTION_INFERENCE), so compare through these.
+func is_int(v: int?, want: int) -> bool:
+    if v is None:
+        return False
+    return v == want
+
+
+func is_float(v: float?, want: float) -> bool:
+    if v is None:
+        return False
+    return v == want
+
+
+public func test_parse_int_accepts_what_zig_accepts() -> bool:
+    if not is_int(sp.parse_int("5"), 5) or not is_int(sp.parse_int("+5"), 5) or not is_int(sp.parse_int("-5"), -5):
+        return False
+    if not is_int(sp.parse_int("1_0"), 10) or not is_int(sp.parse_int("010"), 10) or not is_int(sp.parse_int("-0"), 0):
+        return False
+    return is_int(sp.parse_int("-9223372036854775808"), -9223372036854775807 - 1)
+
+
+public func test_parse_int_rejects_what_zig_rejects() -> bool:
+    mut bad = [" 5", "5 ", "\t5", "5\n", "_1", "1_", "", "-", "+", "0x10", "1e3", "+-1", "1.0", "9223372036854775808", "-9223372036854775809"]
+    for s in bad:
+        if sp.parse_int(s) is not None:
+            return False
+    return True
+
+
+public func test_parse_u32_range() -> bool:
+    if not is_int(sp.parse_u32("4294967295"), 4294967295) or not is_int(sp.parse_u32("0"), 0) or not is_int(sp.parse_u32("+5"), 5):
+        return False
+    return sp.parse_u32("4294967296") is None and sp.parse_u32("-5") is None and is_int(sp.parse_u32("-0"), 0)
+
+
+public func test_parse_float_accepts_what_zig_accepts() -> bool:
+    if not is_float(sp.parse_float(".5"), 0.5) or not is_float(sp.parse_float("5."), 5.0) or not is_float(sp.parse_float("1e+3"), 1000.0):
+        return False
+    if not is_float(sp.parse_float("1_0.5"), 10.5) or not is_float(sp.parse_float("2.5e-7"), 0.00000025):
+        return False
+    mut inf = sp.parse_float("inf")
+    if inf is None:
+        return False
+    return inf > 1e308 and sp.parse_float("nan") is not None
+
+
+public func test_parse_float_rejects_what_zig_rejects() -> bool:
+    mut bad = [" 1", "1 ", "\t1", "", "-", ".", "e3", "1e", "1d3", "1f"]
+    for s in bad:
+        if sp.parse_float(s) is not None:
+            return False
+    return True

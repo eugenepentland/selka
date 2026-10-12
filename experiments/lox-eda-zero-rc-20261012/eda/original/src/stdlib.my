@@ -1,0 +1,199 @@
+
+import stdlib_embed as embed
+import infra_fs as fsx
+
+# D9: roots are explicit values, never process-global state. Ordinary readers
+# use no_roots(); open_with_roots serves clients with configured override roots.
+# Project library, shared library, stdlib override, then bundle: first hit wins.
+public const bundled_prefix: str = "netlisp:stdlib/"
+
+
+public const max_stems_prefix: int = 37
+
+
+public record Roots:
+    lib: str = ""
+    stdlib: str = ""
+
+
+public record Found:
+    path: str
+    bytes: bytes
+    bundled: bool
+
+
+public record StemIterator:
+    prefix: str
+    index: int = 0
+
+
+public func no_roots() -> Roots:
+    return Roots()
+
+
+public func set_roots(mut roots: Roots, lib: str?, stdlib: str?):
+    roots.lib = lib.unwrap_or("")
+    roots.stdlib = stdlib.unwrap_or("")
+
+
+public func lib_root(roots: Roots) -> str?:
+    if len(roots.lib) > 0:
+        return Some(roots.lib)
+    return None
+
+
+public func open(fs: Filesystem, project_dir: str, sub_path: str, max_bytes: int) -> Found?:
+    return open_with_roots(fs, no_roots(), project_dir, sub_path, max_bytes)
+
+
+public func open_with_roots(fs: Filesystem, roots: Roots, project_dir: str, sub_path: str, max_bytes: int) -> Found?:
+    mut local = open_under(fs, project_dir, sub_path, max_bytes)
+    if local is not None:
+        return Some(local)
+    mut root = lib_root(roots)
+    if root is not None and root != project_dir:
+        mut shared = open_under(fs, root, sub_path, max_bytes)
+        if shared is not None:
+            return Some(shared)
+    return standard_with_roots(fs, roots, sub_path, max_bytes)
+
+
+public func read(fs: Filesystem, project_dir: str, sub_path: str, max_bytes: int) -> bytes?:
+    mut found = try open(fs, project_dir, sub_path, max_bytes)
+    return Some(found.bytes)
+
+
+public func resolve_path(fs: Filesystem, project_dir: str, sub_path: str) -> str?:
+    return resolve_path_with_roots(fs, no_roots(), project_dir, sub_path)
+
+
+public func resolve_path_with_roots(fs: Filesystem, roots: Roots, project_dir: str, sub_path: str) -> str?:
+    mut local = path_under(fs, project_dir, sub_path)
+    if local is not None:
+        return Some(local)
+    mut root = lib_root(roots)
+    if root is not None and root != project_dir:
+        mut shared = path_under(fs, root, sub_path)
+        if shared is not None:
+            return Some(shared)
+    if len(roots.stdlib) > 0:
+        mut override = path_under(fs, roots.stdlib, strip_lib_prefix(sub_path))
+        if override is not None:
+            return Some(override)
+    if bundled(sub_path).is_none():
+        return None
+    return Some(bundled_path(sub_path))
+
+
+public func exists(fs: Filesystem, project_dir: str, sub_path: str) -> bool:
+    return resolve_path(fs, project_dir, sub_path).is_some()
+
+
+public func standard(fs: Filesystem, sub_path: str, max_bytes: int) -> Found?:
+    return standard_with_roots(fs, no_roots(), sub_path, max_bytes)
+
+
+public func standard_with_roots(fs: Filesystem, roots: Roots, sub_path: str, max_bytes: int) -> Found?:
+    if len(roots.stdlib) > 0:
+        mut override = open_under(fs, roots.stdlib, strip_lib_prefix(sub_path), max_bytes)
+        if override is not None:
+            return Some(override)
+    mut data = try bundled(sub_path)
+    if len(data) > max_bytes:
+        return None
+    return Some(Found(path=bundled_path(sub_path), bytes=data, bundled=True))
+
+
+public func bundled(sub_path: str) -> bytes?:
+    for entry in embed.entries():
+        if entry.path == sub_path:
+            return Some(entry.bytes)
+    return None
+
+
+public func bundled_path(sub_path: str) -> str:
+    return bundled_prefix + sub_path
+
+
+public func is_bundled_path(path: str) -> bool:
+    return path.startswith(bundled_prefix)
+
+
+public func display_path(path: str) -> str:
+    if is_bundled_path(path):
+        return path[8:len(path)]
+    return path
+
+
+public func read_path(fs: Filesystem, path: str, max_bytes: int) -> bytes?:
+    if is_bundled_path(path):
+        mut data = try bundled(path[len(bundled_prefix):len(path)])
+        if len(data) > max_bytes:
+            return None
+        return Some(data)
+    match fsx.read_file_alloc(fs, path, max_bytes):
+        case Ok(bytes_):
+            return Some(bytes_)
+        case Err(_):
+            return None
+
+
+public func stem_iterator_next(mut self: StemIterator) -> str?:
+    mut rows = embed.entries()
+    while self.index < len(rows):
+        mut entry = rows[self.index]
+        self.index += 1
+        if not entry.path.startswith(self.prefix):
+            continue
+        mut rest = entry.path[len(self.prefix):len(entry.path)]
+        if rest.find("/") >= 0 or not rest.endswith(".sexp"):
+            continue
+        return Some(rest[0:len(rest) - 5])
+    return None
+
+
+public func list_dirs(project_dir: str, sub: str, mut out: str[]):
+    list_dirs_with_roots(no_roots(), project_dir, sub, mut out)
+
+
+public func list_dirs_with_roots(roots: Roots, project_dir: str, sub: str, mut out: str[]):
+    out.append(project_dir + "/lib/" + sub)
+    mut root = lib_root(roots)
+    if root is not None and root != project_dir:
+        out.append(root + "/lib/" + sub)
+    if len(roots.stdlib) > 0:
+        out.append(roots.stdlib + "/" + sub)
+
+
+public func stems(prefix: str) -> StemIterator:
+    return StemIterator(prefix=prefix)
+
+
+public func stems_in(sub: str) -> StemIterator:
+    mut prefix = "lib/" + sub + "/"
+    if len(prefix.encode()) > max_stems_prefix:
+        return StemIterator(prefix="\x00")
+    return StemIterator(prefix=prefix)
+
+
+# The real filename under a root, and its whole bytes under the shared cap.
+func open_under(fs: Filesystem, root: str, sub_path: str, max_bytes: int) -> Found?:
+    mut path = root + "/" + sub_path
+    match fsx.read_file_alloc(fs, path, max_bytes):
+        case Err(_):
+            return None
+        case Ok(data):
+            return Some(Found(path=path, bytes=data, bundled=False))
+
+
+func path_under(fs: Filesystem, root: str, sub_path: str) -> str?:
+    mut path = root + "/" + sub_path
+    if fs.exists(path):
+        return Some(path)
+    return None
+
+
+func strip_lib_prefix(sub_path: str) -> str:
+    if sub_path.startswith("lib/"):
+        return sub_path[4:len(sub_path)]
+    return sub_path

@@ -1,0 +1,731 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-verify-02/zig-out/bin/mylang",
+  "modules": [
+    {
+      "module": "board_layers.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "board_layers.my:215:16: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n          return colors[v]\n                 ^\n"
+    },
+    {
+      "module": "board_layers_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "board_layers_test.my:21:25: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              return Some(row)\n                          ^\n"
+    },
+    {
+      "module": "decouple_key.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "support_strs.my:256:19: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              out = p\n                    ^\n"
+    },
+    {
+      "module": "decouple_key_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "support_strs.my:256:19: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              out = p\n                    ^\n"
+    },
+    {
+      "module": "design_model.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "design_model.my:39:15: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut top = nodes[0]\n                ^\n"
+    },
+    {
+      "module": "design_model_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "design_model_test.my:25:23: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n              mut reg = b.instances[0]\n                        ^\n"
+    },
+    {
+      "module": "diagram_membership.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "diagram_membership.my:90:22: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n              parent = nt.a\n                       ^\n"
+    },
+    {
+      "module": "diagram_membership_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "diagram_membership.my:90:22: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n              parent = nt.a\n                       ^\n"
+    },
+    {
+      "module": "escape.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "escape_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "eval_electrical.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "eval_electrical.my:100:17: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n                  decl.domain_ = a\n                  ^\n"
+    },
+    {
+      "module": "eval_electrical_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "eval_electrical.my:100:17: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n                  decl.domain_ = a\n                  ^\n"
+    },
+    {
+      "module": "eval_env.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "eval_env.my:1686:30: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n                  quote = Some(s)\n                               ^\n"
+    },
+    {
+      "module": "eval_env_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "eval_env.my:1686:30: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n                  quote = Some(s)\n                               ^\n"
+    },
+    {
+      "module": "eval_net_analysis.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "eval_net_analysis.my:168:9: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n          for pin in net.pins:\n          ^\n"
+    },
+    {
+      "module": "eval_net_analysis_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "eval_net_analysis.my:168:9: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n          for pin in net.pins:\n          ^\n"
+    },
+    {
+      "module": "eval_rails.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "eval_rails.my:51:134: error[E_SINGLE_OWNER_MOVED]: 'base' was moved or is unavailable on this path; use .copy() when both values are needed\n              mut incoming = env_mod.PowerRail(name=base, aliases=[], nominal=nominal, rated_voltage=resolve_rail_rated_voltage(block, base, port), source_ref_des=sb.name, source_port=port.name, source_path=path_temp, capacity_typ=port.current_typ, capacity_max=port.current_max, enable_net=port.enable_net)\n                                                                                                                                       ^\n"
+    },
+    {
+      "module": "eval_rails_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "eval_rails_test.my:46:43: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      outer.sub_blocks = [env.SubBlock(name=name, block=inner, source=b\"\")]\n                                            ^\n"
+    },
+    {
+      "module": "export_kicad.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad.my:79:24: error[E_SINGLE_OWNER_MOVED]: 'e' was moved or is unavailable on this path; use .copy() when both values are needed\n              return Err(e)\n                         ^\n"
+    },
+    {
+      "module": "export_kicad_footprint.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad_footprint.my:102:15: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n          off = model_offset\n                ^\n"
+    },
+    {
+      "module": "export_kicad_footprint_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad_footprint.my:102:15: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n          off = model_offset\n                ^\n"
+    },
+    {
+      "module": "export_kicad_model.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad_model.my:92:25: error[E_SINGLE_OWNER_BORROW]: a borrowed selection cannot be stored or returned; make an explicit .copy()\n      mut pretty_parent = strs.path_dirname(output_pretty_dir).unwrap_or(\".\")\n                          ^\n"
+    },
+    {
+      "module": "export_kicad_netlist.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad_netlist.my:31:24: error[E_SINGLE_OWNER_BORROW]: a borrowed selection is read-only; make an explicit .copy() before changing it\n          mut kicad_fp = fp_name_map.get(strs.text(inst.footprint), inst.footprint)\n                         ^\n"
+    },
+    {
+      "module": "export_kicad_netlist_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad_netlist_test.my:24:25: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n              return Some(nested)\n                          ^\n"
+    },
+    {
+      "module": "export_kicad_sch.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad_sch.my:134:52: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      return Builder(block=block.copy(), project_dir=project_dir, design=design, opts=opts, instances=instances, nets=nets, pin_net={}, binds={}, net_pins={}, labels={}, ref_inst={}, fp={}, comps={}, shapes=[], src=[], keys=[], sec_of_ref={}, owners=[], attach=[], captions={}, stats=Stats(), sym_lib=sym_lib)\n                                                     ^\n"
+    },
+    {
+      "module": "export_kicad_sch_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad_sch_test.my:17:5: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      value.component = component\n      ^\n"
+    },
+    {
+      "module": "export_kicad_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "export_kicad_test.my:11:12: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      return net\n             ^\n"
+    },
+    {
+      "module": "flat_netlist.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "flat_netlist.my:70:20: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          mut slot = rule\n                     ^\n"
+    },
+    {
+      "module": "flat_netlist_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "flat_netlist.my:70:20: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          mut slot = rule\n                     ^\n"
+    },
+    {
+      "module": "footprint_paste.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "footprint_paste_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "sexpr_parser.my:178:34: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n                      mut source = tok.source\n                                   ^\n"
+    },
+    {
+      "module": "infra_fs.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "infra_fs.my:111:5: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      self.reads[path.copy()] = data\n      ^\n"
+    },
+    {
+      "module": "infra_fs_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "infra_fs.my:111:5: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      self.reads[path.copy()] = data\n      ^\n"
+    },
+    {
+      "module": "infra_log.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "json_writer.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "support_strs.my:256:19: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              out = p\n                    ^\n"
+    },
+    {
+      "module": "json_writer_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "support_strs.my:256:19: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              out = p\n                    ^\n"
+    },
+    {
+      "module": "kicad_pcb_format.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_pcb_format.my:19:21: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n          return Some(atom)\n                      ^\n"
+    },
+    {
+      "module": "kicad_pcb_format_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_pcb_format.my:19:21: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n          return Some(atom)\n                      ^\n"
+    },
+    {
+      "module": "kicad_sch_bank.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_bank.my:104:17: error[E_SINGLE_OWNER_MOVED]: 'key' was moved or is unavailable on this path; use .copy() when both values are needed\n          by_pair[key].append(i)\n                  ^\n"
+    },
+    {
+      "module": "kicad_sch_bank_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_bank_test.my:7:57: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      return m.Candidate(item=item, ref=ref.copy(), value=value, power=power, gnd=b\"GND\", power_pin=0, reach=381)\n                                                          ^\n"
+    },
+    {
+      "module": "kicad_sch_compose.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose.my:65:39: error[E_SINGLE_OWNER_MOVED]: 'packed' was moved or is unavailable on this path; use .copy() when both values are needed\n          cells.append(sheet_mod.Cell(w=packed.block.w, h=packed.block.h + 762, ox=0, oy=762))\n                                        ^\n"
+    },
+    {
+      "module": "kicad_sch_compose_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_compose_test.my:20:27: error[E_SINGLE_OWNER_MOVED]: 'title' was moved or is unavailable on this path; use .copy() when both values are needed\n      assert m.band_heading(title, b\"STM32N657L0H3Q Core Systems\") == Some(b\"STM32N657L0H3Q Core Systems\")\n                            ^\n"
+    },
+    {
+      "module": "kicad_sch_emit.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_emit.my:211:57: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n          caption(mut out, doc.sheet.design, Caption(text=doc.sheet.title, x=1270, y=1016, size=title_size), b\"title\")\n                                                          ^\n"
+    },
+    {
+      "module": "kicad_sch_emit_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_emit_test.my:52:17: error[E_SINGLE_OWNER_MOVED]: 'rail' was moved or is unavailable on this path; use .copy() when both values are needed\n      mut right = rail\n                  ^\n"
+    },
+    {
+      "module": "kicad_sch_gang.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_gang.my:31:16: error[E_SINGLE_OWNER_MOVED]: 'key' was moved or is unavailable on this path; use .copy() when both values are needed\n          by_net[key].append(p)\n                 ^\n"
+    },
+    {
+      "module": "kicad_sch_gang_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_gang.my:31:16: error[E_SINGLE_OWNER_MOVED]: 'key' was moved or is unavailable on this path; use .copy() when both values are needed\n          by_net[key].append(p)\n                 ^\n"
+    },
+    {
+      "module": "kicad_sch_glyph_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:115:26: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      return Request(names=names, project_dir=project_dir, fp_pads=[], used=[], parts=[], glyph=Class.box)\n                           ^\n"
+    },
+    {
+      "module": "kicad_sch_plan.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "support_strs.my:256:19: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              out = p\n                    ^\n"
+    },
+    {
+      "module": "kicad_sch_plan_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "support_strs.my:256:19: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              out = p\n                    ^\n"
+    },
+    {
+      "module": "kicad_sch_project.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_project.my:37:159: error[E_SINGLE_OWNER_MOVED]: 'project_name' was moved or is unavailable on this path; use .copy() when both values are needed\n      return [Sidecar(name=sym_lib_table_file, bytes=sym_table), Sidecar(name=fp_lib_table_file, bytes=fp_table), Sidecar(name=project_name, bytes=project_file(project_name)), Sidecar(name=sym_lib_file, bytes=emit.library_file(shapes, rails))]\n                                                                                                                                                                ^\n"
+    },
+    {
+      "module": "kicad_sch_project_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_project.my:37:159: error[E_SINGLE_OWNER_MOVED]: 'project_name' was moved or is unavailable on this path; use .copy() when both values are needed\n      return [Sidecar(name=sym_lib_table_file, bytes=sym_table), Sidecar(name=fp_lib_table_file, bytes=fp_table), Sidecar(name=project_name, bytes=project_file(project_name)), Sidecar(name=sym_lib_file, bytes=emit.library_file(shapes, rails))]\n                                                                                                                                                                ^\n"
+    },
+    {
+      "module": "kicad_sch_shape.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:115:26: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      return Request(names=names, project_dir=project_dir, fp_pads=[], used=[], parts=[], glyph=Class.box)\n                           ^\n"
+    },
+    {
+      "module": "kicad_sch_shape_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape_test.my:89:16: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut pins = shape.units[0].pins\n                 ^\n"
+    },
+    {
+      "module": "kicad_sch_sheet.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:115:26: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      return Request(names=names, project_dir=project_dir, fp_pads=[], used=[], parts=[], glyph=Class.box)\n                           ^\n"
+    },
+    {
+      "module": "kicad_sch_sheet_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:115:26: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      return Request(names=names, project_dir=project_dir, fp_pads=[], used=[], parts=[], glyph=Class.box)\n                           ^\n"
+    },
+    {
+      "module": "kicad_sch_stagger.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_stagger.my:13:15: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      mut map = nets\n                ^\n"
+    },
+    {
+      "module": "kicad_sch_stagger_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_stagger_test.my:7:43: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      return shape.Pin(pad=pad.copy(), name=pad, side=shape.Side.left, x=-1270, y=y)\n                                            ^\n"
+    },
+    {
+      "module": "kicad_sch_stub.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_stub.my:36:9: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n          out[strs.text(net2.name)] = s.base\n          ^\n"
+    },
+    {
+      "module": "kicad_sch_stub_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_stub_test.my:7:49: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      return flat.FlatPin(ref_des=ref.copy(), pin=pin)\n                                                  ^\n"
+    },
+    {
+      "module": "kicad_sch_testdata.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "kicad_sch_textbox.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_textbox.my:144:41: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n                  out.first = Some(Pair(a=a.text, b=b.text, kind_a=a.kind, kind_b=b.kind, x=max(a.box.x0, b.box.x0), y=max(a.box.y0, b.box.y0)))\n                                          ^\n"
+    },
+    {
+      "module": "kicad_sch_textbox_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_textbox.my:144:41: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n                  out.first = Some(Pair(a=a.text, b=b.text, kind_a=a.kind, kind_b=b.kind, x=max(a.box.x0, b.box.x0), y=max(a.box.y0, b.box.y0)))\n                                          ^\n"
+    },
+    {
+      "module": "kicad_sch_vendor.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_vendor.my:45:22: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n          units.append(adapted)\n                       ^\n"
+    },
+    {
+      "module": "kicad_sch_vendor_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_vendor_test.my:13:13: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n              lib.by_name[key.copy()] = symbols[0]\n              ^\n"
+    },
+    {
+      "module": "kicad_sch_verify.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_verify.my:336:25: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n              return Some(l)\n                          ^\n"
+    },
+    {
+      "module": "kicad_sch_verify_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_verify_test.my:15:22: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n          parts.append(new)\n                       ^\n"
+    },
+    {
+      "module": "kicad_sch_wire.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:115:26: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      return Request(names=names, project_dir=project_dir, fp_pads=[], used=[], parts=[], glyph=Class.box)\n                           ^\n"
+    },
+    {
+      "module": "kicad_sch_wire_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sch_shape.my:115:26: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      return Request(names=names, project_dir=project_dir, fp_pads=[], used=[], parts=[], glyph=Class.box)\n                           ^\n"
+    },
+    {
+      "module": "kicad_sym_library.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sym_library.my:55:32: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n                      out.append(name)\n                                 ^\n"
+    },
+    {
+      "module": "kicad_sym_library_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sym_library.my:55:32: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n                      out.append(name)\n                                 ^\n"
+    },
+    {
+      "module": "kicad_sym_reader.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sym_reader.my:117:19: error[E_SINGLE_OWNER_BORROW]: an indexed value is borrowed; use .copy() or pop() to obtain an owned value\n          mut acc = units[number]\n                    ^\n"
+    },
+    {
+      "module": "kicad_sym_reader_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "kicad_sym_reader_test.my:54:17: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut units = syms[0].units\n                  ^\n"
+    },
+    {
+      "module": "kicad_sym_testdata.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "lib_limits.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "lib_limits_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "support_expect.my:22:22: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n          out.print(f\"{label}: got {got}, want {want}\")\n                       ^\n"
+    },
+    {
+      "module": "main.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "design_model.my:39:15: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut top = nodes[0]\n                ^\n"
+    },
+    {
+      "module": "main_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "design_model.my:39:15: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut top = nodes[0]\n                ^\n"
+    },
+    {
+      "module": "net_name.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "net_name_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "numeric.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "numeric_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "pad_neck_profile.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "placement_geometry.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "placement_geometry.my:131:33: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n                  keepouts.append(k)\n                                  ^\n"
+    },
+    {
+      "module": "placement_geometry_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "placement_geometry_test.my:12:24: error[E_SINGLE_OWNER_BORROW]: a borrowed selection cannot be stored or returned; make an explicit .copy()\n                  return ast.as_list(nodes[0]).unwrap_or([])\n                         ^\n"
+    },
+    {
+      "module": "placement_pin_roles.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "placement_pin_roles.my:53:35: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n                      pinout_name = p\n                                    ^\n"
+    },
+    {
+      "module": "placement_pin_roles_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "placement_pin_roles_test.my:194:14: error[E_SINGLE_OWNER_BORROW]: an indexed value is borrowed; use .copy() or pop() to obtain an owned value\n      mut r3 = reqs[\"3\"]\n               ^\n"
+    },
+    {
+      "module": "poly_scanline.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "poly_scanline_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "support_expect.my:22:22: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n          out.print(f\"{label}: got {got}, want {want}\")\n                       ^\n"
+    },
+    {
+      "module": "render_block_types.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "eval_env.my:1686:30: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n                  quote = Some(s)\n                               ^\n"
+    },
+    {
+      "module": "render_svg_context.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "render_svg_context.my:189:13: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              self.pin_net[strs.text(pin.ref_des + b\".\" + pin.pin)] = net.name\n              ^\n"
+    },
+    {
+      "module": "render_svg_context_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "render_svg_context_test.my:9:5: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      item.component = component\n      ^\n"
+    },
+    {
+      "module": "render_svg_draw_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "render_svg_context.my:189:13: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              self.pin_net[strs.text(pin.ref_des + b\".\" + pin.pin)] = net.name\n              ^\n"
+    },
+    {
+      "module": "sexpr_ast.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "sexpr_ast_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "sexpr_paren_span.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "sexpr_paren_span_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "sexpr_parser.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "sexpr_parser.my:178:34: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n                      mut source = tok.source\n                                   ^\n"
+    },
+    {
+      "module": "sexpr_parser_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "sexpr_parser.my:178:34: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n                      mut source = tok.source\n                                   ^\n"
+    },
+    {
+      "module": "sexpr_tokenizer.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "sexpr_tokenizer.my:266:15: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut src = t.source\n                ^\n"
+    },
+    {
+      "module": "sexpr_tokenizer_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "sexpr_tokenizer.my:266:15: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut src = t.source\n                ^\n"
+    },
+    {
+      "module": "stdlib.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "stdlib.my:35:5: error[E_SINGLE_OWNER_BORROW]: a borrowed selection is read-only; make an explicit .copy() before changing it\n      roots.lib = lib.unwrap_or(\"\")\n      ^\n"
+    },
+    {
+      "module": "stdlib_embed.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "stdlib_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "stdlib.my:35:5: error[E_SINGLE_OWNER_BORROW]: a borrowed selection is read-only; make an explicit .copy() before changing it\n      roots.lib = lib.unwrap_or(\"\")\n      ^\n"
+    },
+    {
+      "module": "support_crc32.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_crc32_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "support_expect.my:22:22: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n          out.print(f\"{label}: got {got}, want {want}\")\n                       ^\n"
+    },
+    {
+      "module": "support_expect.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "support_expect.my:22:22: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n          out.print(f\"{label}: got {got}, want {want}\")\n                       ^\n"
+    },
+    {
+      "module": "support_expect_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "support_expect.my:22:22: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n          out.print(f\"{label}: got {got}, want {want}\")\n                       ^\n"
+    },
+    {
+      "module": "support_float_fmt.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_float_fmt_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_parse.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_parse_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_sha256.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_sha256_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "support_expect.my:22:22: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n          out.print(f\"{label}: got {got}, want {want}\")\n                       ^\n"
+    },
+    {
+      "module": "support_sort.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_sort_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "support_strs.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "support_strs.my:256:19: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              out = p\n                    ^\n"
+    },
+    {
+      "module": "support_strs_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "support_expect.my:22:22: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n          out.print(f\"{label}: got {got}, want {want}\")\n                       ^\n"
+    },
+    {
+      "module": "uuid.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "uuid_test.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "zipfile.my",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "module": "zipfile_test.my",
+      "status": 1,
+      "stdout": "",
+      "stderr": "zipfile_test.my:127:49: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          mut entries = [m.Entry(name=name0, data=input_), m.Entry(name=b\"second.bin\", data=input_[split:len(input_)])]\n                                                  ^\n"
+    }
+  ]
+}

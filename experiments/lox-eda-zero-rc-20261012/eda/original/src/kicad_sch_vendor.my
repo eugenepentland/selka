@@ -1,0 +1,234 @@
+
+import kicad_sym_library as library
+import kicad_sch_shape as shape
+import kicad_sym_reader as kicad_sym
+import kicad_sch_sheet as sheet
+import infra_log as log
+import support_strs as strs
+
+public func synth(fs: Filesystem, err: Stream, lib: library.Library?, req: shape.Request) -> shape.Shape:
+    if lib is not None:
+        mut sym = resolve(lib, req.names)
+        if sym is not None:
+            mut s = build(fs, err, sym, req)
+            if s is not None:
+                return s
+    return shape.synth(fs, req)
+
+
+func resolve(lib: library.Library, names: shape.Names) -> kicad_sym.Symbol?:
+    mut first = library.library_find(lib, names.component)
+    if first is not None:
+        return first
+    mut second = library.library_find(lib, names.symbol)
+    if second is not None:
+        return second
+    return library.library_find(lib, names.pinout)
+
+
+func build(fs: Filesystem, err: Stream, sym: kicad_sym.Symbol, req: shape.Request) -> shape.Shape?:
+    mut merged = merge_units(sym)
+    if len(merged) == 0 or count_pins(merged) == 0:
+        return None
+    mut duplicate = repeated_pad(merged)
+    if duplicate is not None:
+        log.warn(err, b"export-kicad-sch: vendor symbol '" + sym.name + b"' draws pad " + duplicate + b" twice \xe2\x80\x94 synthesising a box instead")
+        return None
+    mut ctx = Ctx(fallback={})
+    ctx_index_names(fs, mut ctx, req)
+    mut units: shape.ShapeUnit[] = []
+    for i in range(len(merged)):
+        mut adapted = adapt_unit(ctx, merged[i], i + 1)
+        if adapted is None:
+            log.warn(err, b"export-kicad-sch: vendor symbol '" + sym.name + b"' has pins that collide on the connection grid \xe2\x80\x94 synthesising a box instead")
+            return None
+        units.append(adapted)
+    append_missing(fs, err, mut units, req, merged, sym.name)
+    return Some(shape.Shape(lib_name=shape.lib_name_for(req), units=units, vendor=True))
+
+
+func append_missing(fs: Filesystem, err: Stream, mut units: shape.ShapeUnit[], req: shape.Request, drawn: kicad_sym.SymbolUnit[], name: bytes):
+    mut extra = missing_pads(fs, req, drawn)
+    if len(extra) == 0:
+        return
+    mut msg = b"export-kicad-sch: vendor symbol '" + name + b"' does not draw " + str(len(extra)).encode() + b" pad(s) the design uses \xe2\x80\x94 adding them as unit " + str(len(units) + 1).encode()
+    log.warn(err, msg)
+    units.append(shape.box_unit(extra, len(units) + 1))
+
+
+# Common graphics appear on every unit, common pins only on the first.
+func merge_units(sym: kicad_sym.Symbol) -> kicad_sym.SymbolUnit[]:
+    mut common: kicad_sym.SymbolUnit? = None
+    mut real: kicad_sym.SymbolUnit[] = []
+    for u in sym.units:
+        if u.number == 0:
+            common = Some(u)
+        else:
+            real.append(u)
+    if common is None:
+        return real
+    if len(real) == 0:
+        return [common]
+    mut out: kicad_sym.SymbolUnit[] = []
+    for i in range(len(real)):
+        mut unit = real[i]
+        mut pins = unit.pins
+        if i == 0:
+            pins = common.pins
+            pins.extend(unit.pins)
+        mut graphics = common.graphics
+        graphics.extend(unit.graphics)
+        out.append(kicad_sym.SymbolUnit(number=unit.number, pins=pins, graphics=graphics))
+    return out
+
+
+func count_pins(units: kicad_sym.SymbolUnit[]) -> int:
+    mut n = 0
+    for u in units:
+        n += len(u.pins)
+    return n
+
+
+func repeated_pad(units: kicad_sym.SymbolUnit[]) -> bytes?:
+    mut seen: set[str] = set()
+    for u in units:
+        for p in u.pins:
+            mut key = strs.text(p.pad)
+            if key in seen:
+                return Some(p.pad)
+            seen.add(key)
+    return None
+
+
+func missing_pads(fs: Filesystem, req: shape.Request, units: kicad_sym.SymbolUnit[]) -> shape.PadName[]:
+    mut drawn: set[str] = set()
+    for u in units:
+        for p in u.pins:
+            drawn.add(strs.text(p.pad))
+    mut out: shape.PadName[] = []
+    for pn in shape.required_pads(fs, req):
+        if strs.text(pn.pad)not in drawn:
+            out.append(pn)
+    return out
+
+
+record Ctx:
+    fallback: dict[str, bytes]
+
+
+func ctx_index_names(fs: Filesystem, mut self: Ctx, req: shape.Request):
+    for pn in shape.required_pads(fs, req):
+        self.fallback[strs.text(pn.pad)] = pn.name
+
+
+func ctx_name_of(self: Ctx, pin: kicad_sym.Pin) -> bytes:
+    if len(pin.name) > 0 and pin.name != b"~":
+        return pin.name
+    return self.fallback.get(strs.text(pin.pad), pin.pad)
+
+
+record Box:
+    min: kicad_sym.Point
+    max: kicad_sym.Point
+
+
+func box_add(mut self: Box, p: kicad_sym.Point, pad: int):
+    self.min = kicad_sym.Point(x=min(self.min.x, p.x - pad), y=min(self.min.y, p.y - pad))
+    self.max = kicad_sym.Point(x=max(self.max.x, p.x + pad), y=max(self.max.y, p.y + pad))
+
+
+func adapt_unit(ctx: Ctx, u: kicad_sym.SymbolUnit, number: int) -> shape.ShapeUnit?:
+    mut pins = snap_pins(u.pins)
+    mut box = try extents(pins, u.graphics)
+    mut shift = kicad_sym.Point(x=-snap_nearest((box.min.x + box.max.x) // 2), y=-snap_nearest((box.min.y + box.max.y) // 2))
+    mut out: shape.Pin[] = []
+    mut seen: set[int] = set()
+    for p in pins:
+        mut at = kicad_sym.Point(x=p.at.x + shift.x, y=p.at.y + shift.y)
+        mut key = point_key(at)
+        if key in seen:
+            return None
+        seen.add(key)
+        mut name = ctx_name_of(ctx, p)
+        out.append(shape.Pin(pad=p.pad, name=name, side=side_of(p.angle), show_name=not shape.names_pad(shape.PadName(pad=p.pad, name=name)), x=int(at.x / 100), y=int(at.y / 100), len=int(p.length / 100)))
+    return Some(shape.ShapeUnit(number=number, title=b"", pins=out, half_w=half_abs(box.min.x + shift.x, box.max.x + shift.x), half_h=half_abs(box.min.y + shift.y, box.max.y + shift.y), graphics=body(u.graphics, box, shift), stubs=[]))
+
+
+func body(graphics: kicad_sym.Graphic[], box: Box, shift: kicad_sym.Point) -> kicad_sym.Graphic[]:
+    if len(graphics) == 0:
+        return [inset(box, shift)]
+    mut out: kicad_sym.Graphic[] = []
+    for g in graphics:
+        out.append(translate(g, shift))
+    return out
+
+
+func inset(box: Box, shift: kicad_sym.Point) -> kicad_sym.Graphic:
+    mut dx = min(12700, (box.max.x - box.min.x) // 4)
+    mut dy = min(12700, (box.max.y - box.min.y) // 4)
+    mut pts = [kicad_sym.Point(x=box.min.x + dx + shift.x, y=box.max.y - dy + shift.y), kicad_sym.Point(x=box.max.x - dx + shift.x, y=box.min.y + dy + shift.y)]
+    return kicad_sym.Graphic(kind=kicad_sym.Kind.rectangle, pts=pts, text=b"", style=kicad_sym.Style(width=254, fill=kicad_sym.Fill.background))
+
+
+func translate(g: kicad_sym.Graphic, shift: kicad_sym.Point) -> kicad_sym.Graphic:
+    mut pts: kicad_sym.Point[] = []
+    for p in g.pts:
+        mut moved = kicad_sym.Point(x=p.x + shift.x, y=p.y + shift.y)
+        if g.kind == kicad_sym.Kind.text:
+            moved = kicad_sym.Point(x=snap_nearest(moved.x), y=snap_nearest(moved.y))
+        pts.append(moved)
+    mut out = g
+    out.pts = pts
+    return out
+
+
+func snap_pins(pins: kicad_sym.Pin[]) -> kicad_sym.Pin[]:
+    mut out: kicad_sym.Pin[] = []
+    for p in pins:
+        mut snapped = p
+        snapped.at = kicad_sym.Point(x=snap_nearest(p.at.x), y=snap_nearest(p.at.y))
+        out.append(snapped)
+    return out
+
+
+func extents(pins: kicad_sym.Pin[], graphics: kicad_sym.Graphic[]) -> Box?:
+    mut box: Box? = None
+    for p in pins:
+        box = Some(grow(box, p.at, 0))
+    for g in graphics:
+        for point in g.pts:
+            box = Some(grow(box, point, g.radius))
+    return box
+
+
+func grow(box: Box?, p: kicad_sym.Point, pad: int) -> Box:
+    mut out = box.unwrap_or(Box(min=p, max=p))
+    box_add(mut out, p, pad)
+    return out
+
+
+func half_abs(lo: int, hi: int) -> int:
+    mut widest = max(abs(lo), abs(hi))
+    mut hundredths = (widest + 99) // 100
+    return sheet.snap_up(max(hundredths, shape.pitch))
+
+
+# Private Zig functions made public for split tests.
+public func snap_nearest(v: int) -> int:
+    return ((v + 6350) // 12700) * 12700
+
+
+func point_key(p: kicad_sym.Point) -> int:
+    mut span_ = 2 * kicad_sym.max_coord + 1
+    return (p.x + kicad_sym.max_coord) * span_ + p.y + kicad_sym.max_coord
+
+
+public func side_of(angle: int) -> shape.Side:
+    mut quarter = ((angle + 45) // 90) % 4
+    if quarter == 1:
+        return shape.Side.bottom
+    if quarter == 2:
+        return shape.Side.right
+    if quarter == 3:
+        return shape.Side.top
+    return shape.Side.left

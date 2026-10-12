@@ -1,0 +1,164 @@
+{
+  "version": "native-tests-v1",
+  "tests": [
+    {
+      "name": "stdlib_test::test_a_bundled_path_reads_back_by_path",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "3688bbb700921a6b1bc45ced30dec7869918e666648ec5a9bc11557fa43084f1",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "experiments/lox-eda-zero-rc-20261012/eda/source/src/stdlib_test.my#5e5ed62322a0599bc451a21cd06788cbac439b0d31cd9f1504e6e356cab5d827",
+          "producer": {
+            "facts": {
+              "fresh": 119,
+              "reused": 0,
+              "fallback": 89,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 89,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 119,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 3
+          },
+          "planner": {
+            "index_nodes": 476,
+            "index_edges": 1495,
+            "affected_nodes": 119,
+            "closure_nodes": 940,
+            "closure_edges": 1162,
+            "reused_tests": 0,
+            "planned_tests": 6
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 126534,
+              "save_bytes_prepared": 266642,
+              "sequence_locks": 273
+            }
+          },
+          "nanoseconds": {
+            "lowering": 57081433,
+            "facts": 13164975,
+            "graph": 609533,
+            "planner": 69439587,
+            "keys": 353636,
+            "publication": 30282569,
+            "total": 171131027
+          },
+          "transport": {
+            "request_bytes": 6152,
+            "reply_bytes": 4180,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "stdlib_test::test_a_project_file_overrides_the_bundle_and_a_missing_one_falls_through_to_it",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "09b7376cb2f9f009c735b33d4be0f1de64d6d7faf44adf13243186521c6f4aeb",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "stdlib_test::test_a_stdlib_root_overrides_the_embedded_table",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "cf8800d79dfec63e9ef3af2abf3f16f7a07fbf06d03c8fc1e061fc4cd3eeccc6",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "stdlib_test::test_bundled_stems_list_one_sub_directory_at_a_time",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "16a8d94a05304b91d278cfa5e277d65bcd11d0404b730f3db7e4a2322f4658f6",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "stdlib_test::test_every_bundled_component_s_footprint_and_pinout_is_bundled_too",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "9aea071f3c817316b3704d0b9208507a359b0e310fa2928a7049da39efca8753",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "stdlib_test::test_the_bundle_carries_the_whole_passives_prelude",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "aef856035f76e5d60b40004ca0dcf65b5b070b90a57cc5edebcaf67386cba549",
+        "component": "2b31151a22dff685672539b0948ecbd6a0b2f90fc2a5cce86228d56f5894c780",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    }
+  ],
+  "passed": 6,
+  "failed": 0,
+  "skipped": 0,
+  "cached": 0,
+  "unsupported": 0,
+  "sources": [
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/experiments/lox-eda-zero-rc-20261012/eda/source/src/stdlib_test.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/experiments/lox-eda-zero-rc-20261012/eda/source/src/stdlib.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/experiments/lox-eda-zero-rc-20261012/eda/source/src/stdlib_embed.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/experiments/lox-eda-zero-rc-20261012/eda/source/src/infra_fs.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/experiments/lox-eda-zero-rc-20261012/eda/source/src/support_sha256.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/experiments/lox-eda-zero-rc-20261012/eda/source/src/support_strs.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-eda/experiments/lox-eda-zero-rc-20261012/eda/source/src/support_expect.my"
+  ]
+}

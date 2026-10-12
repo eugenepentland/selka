@@ -1,0 +1,113 @@
+
+
+# SHA-256 (FIPS 180-4), the counterpart of `std.crypto.hash.sha2.Sha256`.
+#
+#     digest = support_sha256.sha256(data)       # 32 bytes, `Sha256.hash(data, &out, .{})`
+#
+# Zig's incremental `init` / `update` / `update` / `finalResult` is the digest of the
+# concatenation: collect the pieces (`data_a + data_b`, or a `byte_builder`) and hash once.
+# All arithmetic is `u32` with `wrapping_add` and the bit helpers, so the code reads like the
+# specification; a full 64-byte block is read straight from `data`, only the padded tail
+# is copied. Verified against Python's `hashlib` on the boundary lengths in the test file.
+# The 64 round constants K[0..63] of FIPS 180-4 in decimal (mylang has no `0x` literals),
+# as a function (D6: a table constant is a function).
+func round_constants() -> u32[]:
+    return [1116352408, 1899447441, 3049323471, 3921009573, 961987163, 1508970993, 2453635748, 2870763221, 3624381080, 310598401, 607225278, 1426881987, 1925078388, 2162078206, 2614888103, 3248222580, 3835390401, 4022224774, 264347078, 604807628, 770255983, 1249150122, 1555081692, 1996064986, 2554220882, 2821834349, 2952996808, 3210313671, 3336571891, 3584528711, 113926993, 338241895, 666307205, 773529912, 1294757372, 1396182291, 1695183700, 1986661051, 2177026350, 2456956037, 2730485921, 2820302411, 3259730800, 3345764771, 3516065817, 3600352804, 4094571909, 275423344, 430227734, 506948616, 659060556, 883997877, 958139571, 1322822218, 1537002063, 1747873779, 1955562222, 2024104815, 2227730452, 2361852424, 2428436474, 2756734187, 3204031479, 3329325298]
+
+
+func rotr(x: u32, n: u32) -> u32:
+    return bit_or(shift_right(x, n), shift_left(x, 32u32 - n))
+
+
+# One 64-byte block of `data` starting at `off` folded into `state` (8 words).
+func compress(mut state: u32[], data: bytes, off: int, k: u32[]):
+    mut w: u32[] = []
+    mut i = 0
+    while i < 16:
+        mut p = off + 4 * i
+        mut word = shift_left(u32(data[p]), 24u32)
+        word = bit_or(word, shift_left(u32(data[p + 1]), 16u32))
+        word = bit_or(word, shift_left(u32(data[p + 2]), 8u32))
+        word = bit_or(word, u32(data[p + 3]))
+        w.append(word)
+        i += 1
+    while i < 64:
+        mut x = w[i - 15]
+        mut y = w[i - 2]
+        mut s0 = bit_xor(bit_xor(rotr(x, 7u32), rotr(x, 18u32)), shift_right(x, 3u32))
+        mut s1 = bit_xor(bit_xor(rotr(y, 17u32), rotr(y, 19u32)), shift_right(y, 10u32))
+        w.append(wrapping_add(wrapping_add(w[i - 16], s0), wrapping_add(w[i - 7], s1)))
+        i += 1
+    mut a = state[0]
+    mut b = state[1]
+    mut c = state[2]
+    mut d = state[3]
+    mut e = state[4]
+    mut f = state[5]
+    mut g = state[6]
+    mut h = state[7]
+    i = 0
+    while i < 64:
+        mut big1 = bit_xor(bit_xor(rotr(e, 6u32), rotr(e, 11u32)), rotr(e, 25u32))
+        mut ch = bit_xor(bit_and(e, f), bit_and(bit_xor(e, 4294967295u32), g))
+        mut t1 = wrapping_add(wrapping_add(h, big1), wrapping_add(wrapping_add(ch, k[i]), w[i]))
+        mut big0 = bit_xor(bit_xor(rotr(a, 2u32), rotr(a, 13u32)), rotr(a, 22u32))
+        mut maj = bit_xor(bit_xor(bit_and(a, b), bit_and(a, c)), bit_and(b, c))
+        mut t2 = wrapping_add(big0, maj)
+        h = g
+        g = f
+        f = e
+        e = wrapping_add(d, t1)
+        d = c
+        c = b
+        b = a
+        a = wrapping_add(t1, t2)
+        i += 1
+    state[0] = wrapping_add(state[0], a)
+    state[1] = wrapping_add(state[1], b)
+    state[2] = wrapping_add(state[2], c)
+    state[3] = wrapping_add(state[3], d)
+    state[4] = wrapping_add(state[4], e)
+    state[5] = wrapping_add(state[5], f)
+    state[6] = wrapping_add(state[6], g)
+    state[7] = wrapping_add(state[7], h)
+
+
+# The last one or two blocks: the tail of `data` after its full blocks, a 128 byte,
+# zeros, and the message length in bits as eight big-endian bytes.
+func padded_tail(data: bytes, full: int) -> bytes:
+    mut tail = data[full * 64:].to_list()
+    tail.append(128)
+    while len(tail) % 64 != 56:
+        tail.append(0)
+    mut bits = len(data) * 8
+    mut shift = 56
+    while shift >= 0:
+        tail.append(bit_and(shift_right(bits, shift), 255))
+        shift -= 8
+    return bytes(tail)
+
+
+# `Sha256.hash`: the 32-byte digest of `data`.
+public func sha256(data: bytes) -> bytes:
+    mut k = round_constants()
+    # H0..H7 of FIPS 180-4 (0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f,
+    # 0x9b05688c, 0x1f83d9ab, 0x5be0cd19) in decimal.
+    mut state: u32[] = [1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225]
+    mut full = len(data) // 64
+    mut off = 0
+    while off < full * 64:
+        compress(mut state, data, off, k)
+        off += 64
+    mut tail = padded_tail(data, full)
+    off = 0
+    while off < len(tail):
+        compress(mut state, tail, off, k)
+        off += 64
+    mut out: int[] = []
+    for word in state:
+        out.append(int(shift_right(word, 24u32)))
+        out.append(int(bit_and(shift_right(word, 16u32), 255u32)))
+        out.append(int(bit_and(shift_right(word, 8u32), 255u32)))
+        out.append(int(bit_and(word, 255u32)))
+    return bytes(out)

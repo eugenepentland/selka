@@ -1,0 +1,56 @@
+
+import byte_builder
+import support_strs as strs
+
+public func write_escaped(mut w: byte_builder.Builder, s: bytes):
+    for c in s:
+        if c == 34:
+            byte_builder.append(mut w, b"\\\"")
+        elif c == 92:
+            byte_builder.append(mut w, b"\\\\")
+        elif c == 10:
+            byte_builder.append(mut w, b"\\n")
+        elif c == 13:
+            byte_builder.append(mut w, b"\\r")
+        elif c == 9:
+            byte_builder.append(mut w, b"\\t")
+        elif c < 32:
+            byte_builder.append_text(mut w, "\\u" + strs.hex_pad(c, 4))
+        else:
+            _ = byte_builder.append_byte(mut w, c)
+
+
+public func write_string(mut w: byte_builder.Builder, s: bytes):
+    _ = byte_builder.append_byte(mut w, 34)
+    write_escaped(mut w, s)
+    _ = byte_builder.append_byte(mut w, 34)
+
+
+public func write_script_string(mut w: byte_builder.Builder, s: bytes):
+    _ = byte_builder.append_byte(mut w, 34)
+    mut i = 0
+    while i < len(s):
+        mut c = s[i]
+        if c == 60:
+            byte_builder.append(mut w, b"\\u003c")
+        elif c == 226 and i + 2 < len(s) and s[i + 1] == 128 and (s[i + 2] == 168 or s[i + 2] == 169):
+            if s[i + 2] == 168:
+                byte_builder.append(mut w, b"\\u2028")
+            else:
+                byte_builder.append(mut w, b"\\u2029")
+            i += 2
+        else:
+            write_escaped(mut w, s[i:i + 1])
+        i += 1
+    _ = byte_builder.append_byte(mut w, 34)
+
+
+public func write_string_oom(mut w: byte_builder.Builder, value: bytes):
+    write_string(mut w, value)
+
+
+public func write_field(mut w: byte_builder.Builder, key: bytes, value: bytes):
+    _ = byte_builder.append_byte(mut w, 34)
+    byte_builder.append(mut w, key)
+    byte_builder.append(mut w, b"\":")
+    write_string(mut w, value)

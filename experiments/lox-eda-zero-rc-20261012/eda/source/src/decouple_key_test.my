@@ -1,0 +1,40 @@
+
+import decouple_key as m
+import support_expect as ex
+
+# test "pinFromOrigin reads value@PAD#replica and rejects every other key shape"
+public func test_pinfromorigin_reads_value_pad_replica_and_rejects_every_other_key_shape(out: Stream) -> bool:
+    if not ex.eq_bytes(out, "numeric pad", m.pin_from_origin(b"100nF@24#0").unwrap_or(b""), b"24"):
+        return False
+    if not ex.eq_bytes(out, "named pad", m.pin_from_origin(b"100nF@J14#2").unwrap_or(b""), b"J14"):
+        return False
+    for key in [b"100nF#1", b"C_VIN", b"C_VDD_1", b"100nF@#0", b"100nF@24", b""]:
+        if not ex.ok(out, "no encoded pad", m.pin_from_origin(key).is_none()):
+            return False
+    return True
+
+
+# test "capFarads parses SI prefixes including the micro sign and the bulk threshold"
+public func test_capfarads_parses_si_prefixes_including_the_micro_sign_and_the_bulk_threshold(out: Stream) -> bool:
+    if not ex.near(out, "nF", m.cap_farads(b"100nF"), 100e-9, 1e-18):
+        return False
+    if not ex.near(out, "pF", m.cap_farads(b"10pF"), 10e-12, 1e-18):
+        return False
+    if not ex.near(out, "uF", m.cap_farads(b"4.7uF"), 4.7e-6, 1e-12):
+        return False
+    if not ex.near(out, "U", m.cap_farads(b"4.7U"), 4.7e-6, 1e-12):
+        return False
+    if not ex.near(out, "micro sign", m.cap_farads(b"10\xc2\xb5F"), 10e-6, 1e-12):
+        return False
+    if not ex.near(out, "mF", m.cap_farads(b"1mF"), 1e-3, 1e-9):
+        return False
+    if not ex.near(out, "M not milli", m.cap_farads(b"1MF"), 0.0, 0.0):
+        return False
+    if not ex.ok(out, "bulk threshold", m.cap_farads(b"10\xc2\xb5F") >= m.bulk_farads()):
+        return False
+    if not ex.ok(out, "HF cap", m.cap_farads(b"100nF") < m.bulk_farads()):
+        return False
+    for text in [b"abc", b"100", b""]:
+        if not ex.near(out, "unrecognized is zero", m.cap_farads(text), 0.0, 0.0):
+            return False
+    return True

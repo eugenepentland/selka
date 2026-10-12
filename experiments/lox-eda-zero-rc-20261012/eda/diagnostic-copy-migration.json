@@ -1,0 +1,338 @@
+[
+  {
+    "file": "export_kicad_footprint.my",
+    "line": 74,
+    "before": "return Ok(source)",
+    "after": "return Ok(source.copy())",
+    "diagnostic": "export_kicad_footprint.my:74:19: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "design_model.my",
+    "line": 37,
+    "before": "offending = Some(nodes[1])",
+    "after": "offending = Some(nodes[1].copy())",
+    "diagnostic": "design_model.my:37:30: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+  },
+  {
+    "file": "diagram_membership.my",
+    "line": 32,
+    "before": "mut sec = block.sections[si]",
+    "after": "mut sec = block.sections[si].copy()",
+    "diagnostic": "diagram_membership.my:32:19: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+  },
+  {
+    "file": "kicad_sch_plan.my",
+    "line": 123,
+    "before": "mut candidate = base",
+    "after": "mut candidate = base.copy()",
+    "diagnostic": "kicad_sch_plan.my:123:21: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "kicad_sym_reader_test.my",
+    "line": 23,
+    "before": "mut u = syms[0].units[0]",
+    "after": "mut u = syms[0].units[0].copy()",
+    "diagnostic": "kicad_sym_reader_test.my:23:13: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+  },
+  {
+    "file": "eval_rails.my",
+    "line": 46,
+    "before": "mut existing = by_root[root_key]",
+    "after": "mut existing = by_root[root_key].copy()",
+    "diagnostic": "eval_rails.my:46:32: error[E_SINGLE_OWNER_BORROW]: an indexed value is borrowed; use .copy() or pop() to obtain an owned value"
+  },
+  {
+    "file": "board_layers.my",
+    "line": 199,
+    "before": "return twin[1]",
+    "after": "return twin[1].copy()",
+    "diagnostic": "board_layers.my:199:20: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+  },
+  {
+    "file": "kicad_sch_emit.my",
+    "line": 177,
+    "before": "return Some(prop.value)",
+    "after": "return Some(prop.value.copy())",
+    "diagnostic": "kicad_sch_emit.my:177:21: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper"
+  },
+  {
+    "file": "export_kicad_sch.my",
+    "line": 134,
+    "before": "return Builder(block=block, project_dir=project_dir, design=design, opts=opts, instances=instances, nets=nets, pin_net={}, binds={}, net_pins={}, labels={}, ref_inst={}, fp={}, comps={}, shapes=[], src=[], keys=[], sec_of_ref={}, owners=[], attach=[], captions={}, stats=Stats(), sym_lib=sym_lib)",
+    "after": "return Builder(block=block.copy(), project_dir=project_dir, design=design, opts=opts, instances=instances, nets=nets, pin_net={}, binds={}, net_pins={}, labels={}, ref_inst={}, fp={}, comps={}, shapes=[], src=[], keys=[], sec_of_ref={}, owners=[], attach=[], captions={}, stats=Stats(), sym_lib=sym_lib)",
+    "diagnostic": "export_kicad_sch.my:134:26: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "net_name_test.my",
+    "line": 7,
+    "before": "return o == Some(want)",
+    "after": "return o == Some(want.copy())",
+    "diagnostic": "net_name_test.my:7:22: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "sexpr_parser.my",
+    "line": 94,
+    "before": "return Ok(nodes)",
+    "after": "return Ok(nodes.copy())",
+    "diagnostic": "sexpr_parser.my:94:23: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it"
+  },
+  {
+    "file": "placement_geometry.my",
+    "line": 127,
+    "before": "pads.append(p)",
+    "after": "pads.append(p.copy())",
+    "diagnostic": "placement_geometry.my:127:29: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "sexpr_tokenizer.my",
+    "line": 73,
+    "before": "return Tokenizer(source=source, cur=Cursor(pos=0, line=1, col=1, error_span=ast.span_zero()))",
+    "after": "return Tokenizer(source=source.copy(), cur=Cursor(pos=0, line=1, col=1, error_span=ast.span_zero()))",
+    "diagnostic": "sexpr_tokenizer.my:73:29: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "kicad_sch_vendor.my",
+    "line": 15,
+    "before": "return s",
+    "after": "return s.copy()",
+    "diagnostic": "kicad_sch_vendor.my:15:24: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "kicad_sch_bank_test.my",
+    "line": 7,
+    "before": "return m.Candidate(item=item, ref=ref, value=value, power=power, gnd=b\"GND\", power_pin=0, reach=381)",
+    "after": "return m.Candidate(item=item, ref=ref.copy(), value=value, power=power, gnd=b\"GND\", power_pin=0, reach=381)",
+    "diagnostic": "kicad_sch_bank_test.my:7:39: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "kicad_sch_project_test.my",
+    "line": 26,
+    "before": "assert [for f in files yield f.name] == [b\"sym-lib-table\", b\"fp-lib-table\", b\"demo.kicad_pro\", b\"netlisp.kicad_sym\"]",
+    "after": "assert [for f in files yield f.name.copy()] == [b\"sym-lib-table\", b\"fp-lib-table\", b\"demo.kicad_pro\", b\"netlisp.kicad_sym\"]",
+    "diagnostic": "kicad_sch_project_test.my:26:34: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper"
+  },
+  {
+    "file": "kicad_sch_shape_test.my",
+    "line": 39,
+    "before": "mut u = shape.units[0]",
+    "after": "mut u = shape.units[0].copy()",
+    "diagnostic": "kicad_sch_shape_test.my:39:13: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+  },
+  {
+    "file": "eval_rails_test.my",
+    "line": 44,
+    "before": "inner.ports = [port]",
+    "after": "inner.ports = [port.copy()]",
+    "diagnostic": "eval_rails_test.my:44:20: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "export_kicad.my",
+    "line": 78,
+    "before": "log.warn(err, f\"Failed to create output dir {output_dir}: {e}\".encode())",
+    "after": "log.warn(err, f\"Failed to create output dir {output_dir.copy()}: {e}\".encode())",
+    "diagnostic": "export_kicad.my:78:58: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "support_expect.my",
+    "line": 16,
+    "before": "out.print(f\"expected {label} to hold\")",
+    "after": "out.print(f\"expected {label.copy()} to hold\")",
+    "diagnostic": "support_expect.my:16:31: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "kicad_sch_shape.my",
+    "line": 111,
+    "before": "return Names(component=component, symbol=b\"\", pinout=b\"\")",
+    "after": "return Names(component=component.copy(), symbol=b\"\", pinout=b\"\")",
+    "diagnostic": "kicad_sch_shape.my:111:28: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "design_model_test.my",
+    "line": 20,
+    "before": "mut b = model.block",
+    "after": "mut b = model.block.copy()",
+    "diagnostic": "design_model_test.my:20:21: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper"
+  },
+  {
+    "file": "eval_env.my",
+    "line": 1602,
+    "before": "return Some(s)",
+    "after": "return Some(s.copy())",
+    "diagnostic": "eval_env.my:1602:25: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it"
+  },
+  {
+    "file": "kicad_pcb_format.my",
+    "line": 16,
+    "before": "return Some(string_)",
+    "after": "return Some(string_.copy())",
+    "diagnostic": "kicad_pcb_format.my:16:21: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "zipfile_test.my",
+    "line": 35,
+    "before": "return e",
+    "after": "return e.copy()",
+    "diagnostic": "zipfile_test.my:35:20: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it"
+  },
+  {
+    "file": "kicad_sch_glyph_test.my",
+    "line": 10,
+    "before": "mut row = inputs[i]",
+    "after": "mut row = inputs[i].copy()",
+    "diagnostic": "kicad_sch_glyph_test.my:10:19: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+  },
+  {
+    "file": "placement_pin_roles.my",
+    "line": 38,
+    "before": "mut pinout_name = component",
+    "after": "mut pinout_name = component.copy()",
+    "diagnostic": "placement_pin_roles.my:38:23: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "kicad_sch_stagger.my",
+    "line": 12,
+    "before": "return s",
+    "after": "return s.copy()",
+    "diagnostic": "kicad_sch_stagger.my:12:16: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "infra_fs.my",
+    "line": 111,
+    "before": "self.reads[path] = data",
+    "after": "self.reads[path.copy()] = data",
+    "diagnostic": "infra_fs.my:111:16: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "kicad_sch_vendor_test.my",
+    "line": 13,
+    "before": "lib.by_name[key] = symbols[0]",
+    "after": "lib.by_name[key.copy()] = symbols[0]",
+    "diagnostic": "kicad_sch_vendor_test.my:13:25: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "kicad_sch_textbox.my",
+    "line": 132,
+    "before": "mut ordered = items",
+    "after": "mut ordered = items.copy()",
+    "diagnostic": "kicad_sch_textbox.my:132:19: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "kicad_sch_bank.my",
+    "line": 100,
+    "before": "mut c = cands[i]",
+    "after": "mut c = cands[i].copy()",
+    "diagnostic": "kicad_sch_bank.my:100:17: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+  },
+  {
+    "file": "kicad_sch_stagger_test.my",
+    "line": 7,
+    "before": "return shape.Pin(pad=pad, name=pad, side=shape.Side.left, x=-1270, y=y)",
+    "after": "return shape.Pin(pad=pad.copy(), name=pad, side=shape.Side.left, x=-1270, y=y)",
+    "diagnostic": "kicad_sch_stagger_test.my:7:26: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "placement_pin_roles_test.my",
+    "line": 193,
+    "before": "mut r2 = reqs[\"2\"]",
+    "after": "mut r2 = reqs[\"2\"].copy()",
+    "diagnostic": "placement_pin_roles_test.my:193:14: error[E_SINGLE_OWNER_BORROW]: an indexed value is borrowed; use .copy() or pop() to obtain an owned value"
+  },
+  {
+    "file": "escape.my",
+    "line": 48,
+    "before": "mut name = names[k]",
+    "after": "mut name = names[k].copy()",
+    "diagnostic": "escape.my:48:28: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+  },
+  {
+    "file": "board_layers_test.my",
+    "line": 10,
+    "before": "return m.Stack(copper_layers=count, declared=True, planes=planes)",
+    "after": "return m.Stack(copper_layers=count, declared=True, planes=planes.copy())",
+    "diagnostic": "board_layers_test.my:10:63: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "kicad_sch_verify.my",
+    "line": 89,
+    "before": "mut got = found.lib_ids[j]",
+    "after": "mut got = found.lib_ids[j].copy()",
+    "diagnostic": "kicad_sch_verify.my:89:19: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value"
+  },
+  {
+    "file": "export_kicad_netlist_test.my",
+    "line": 21,
+    "before": "return Some(text)",
+    "after": "return Some(text.copy())",
+    "diagnostic": "export_kicad_netlist_test.my:21:29: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "kicad_sch_compose.my",
+    "line": 50,
+    "before": "return emit.Rail(lib_name=b\"PWR_\" + shape_mod.sanitize_lib_name(net), net=net)",
+    "after": "return emit.Rail(lib_name=b\"PWR_\" + shape_mod.sanitize_lib_name(net), net=net.copy())",
+    "diagnostic": "kicad_sch_compose.my:50:79: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "flat_netlist.my",
+    "line": 64,
+    "before": "return rules",
+    "after": "return rules.copy()",
+    "diagnostic": "flat_netlist.my:64:16: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "kicad_sym_library.my",
+    "line": 31,
+    "before": "return Some(self.by_name[key])",
+    "after": "return Some(self.by_name[key].copy())",
+    "diagnostic": "kicad_sym_library.my:31:21: error[E_SINGLE_OWNER_BORROW]: an indexed value is borrowed; use .copy() or pop() to obtain an owned value"
+  },
+  {
+    "file": "kicad_sch_sheet.my",
+    "line": 46,
+    "before": "return Layout(spots=block.spots, page_w=clamp_page(block.w + 2 * margin), page_h=clamp_page(block.h + 2 * margin))",
+    "after": "return Layout(spots=block.spots.copy(), page_w=clamp_page(block.w + 2 * margin), page_h=clamp_page(block.h + 2 * margin))",
+    "diagnostic": "kicad_sch_sheet.my:46:25: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper"
+  },
+  {
+    "file": "export_kicad_test.my",
+    "line": 7,
+    "before": "return pin",
+    "after": "return pin.copy()",
+    "diagnostic": "export_kicad_test.my:7:12: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "kicad_sch_gang_test.my",
+    "line": 8,
+    "before": "return m.PinAt(index=index, side=side, net=net, at=wire.Point(x=x, y=y))",
+    "after": "return m.PinAt(index=index, side=side, net=net.copy(), at=wire.Point(x=x, y=y))",
+    "diagnostic": "kicad_sch_gang_test.my:8:48: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "kicad_sch_wire.my",
+    "line": 59,
+    "before": "return Some(Path(key=key, pts=pts))",
+    "after": "return Some(Path(key=key.copy(), pts=pts))",
+    "diagnostic": "kicad_sch_wire.my:59:34: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "kicad_sym_reader.my",
+    "line": 90,
+    "before": "out.append(sym)",
+    "after": "out.append(sym.copy())",
+    "diagnostic": "kicad_sym_reader.my:90:24: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  },
+  {
+    "file": "kicad_sch_textbox_test.my",
+    "line": 71,
+    "before": "mut first = hit.first",
+    "after": "mut first = hit.first.copy()",
+    "diagnostic": "kicad_sch_textbox_test.my:71:17: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper"
+  },
+  {
+    "file": "kicad_sch_stub_test.my",
+    "line": 7,
+    "before": "return flat.FlatPin(ref_des=ref, pin=pin)",
+    "after": "return flat.FlatPin(ref_des=ref.copy(), pin=pin)",
+    "diagnostic": "kicad_sch_stub_test.my:7:33: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()"
+  }
+]

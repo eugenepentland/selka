@@ -1,0 +1,20 @@
+
+# Guest tests translated from the `test "..."` blocks of zig/src/sexpr/ast.zig.
+import sexpr_ast as ast
+
+# test "node constructors"
+public func test_node_constructors() -> bool:
+    mut n = ast.node_atom(ast.span_zero(), b"hello")
+    match ast.as_atom(n):
+        case Some(a):
+            assert a == b"hello", "atom text"
+        case None:
+            assert False, "expected an atom"
+    assert ast.as_number(n) is None, "an atom has no number"
+    mut n2 = ast.node_int(ast.span_zero(), 42)
+    match ast.as_number(n2):
+        case Some(v):
+            assert v == 42.0, "int as number"
+        case None:
+            assert False, "expected a number"
+    return True
