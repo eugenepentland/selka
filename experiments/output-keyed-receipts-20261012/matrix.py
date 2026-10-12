@@ -902,15 +902,15 @@ def row1_complete_judge(run: Run) -> list[dict]:
 
 # Rows 2-5: compiler, runner and runtime edits in a scratch worktree ---------
 
-ROW3_ANCHOR = '"  {s} = add i64 {s}, 1\\n  br label %{s}\\n{s}:\\n  {s} = add i64 {s}, 0\\n";'
-ROW3_REPLACEMENT = '"  call void asm sideeffect \\"nop\\", \\"\\"()\\n  {s} = add i64 {s}, 1\\n  br label %{s}\\n{s}:\\n  {s} = add i64 {s}, 0\\n";'
+ROW3_ANCHOR = '.dict_new => try out.print(arena, "  {s} = call ptr @myl_core_dict_new(i64 {s}, ptr {s})\\n",'
+ROW3_REPLACEMENT = '.dict_new => try out.print(arena, "  call void asm sideeffect \\"nop\\", \\"\\"()\\n  {s} = call ptr @myl_core_dict_new(i64 {s}, ptr {s})\\n",'
 
 EDITS = {
     "02-parser-comment": ("src/parser.zig", None, "\n// lane-f row 2: comment-only front-end edit\n",
                           "append a comment line (front end, no code change)"),
-    "03-emitter-helper": ("src/core/emit_text_split.zig", ROW3_ANCHOR, ROW3_REPLACEMENT,
-                          "emit a side-effecting `nop` in the whitespace-split cursor's advance block: "
-                          "changes the bytes of every program that splits on whitespace, not its meaning"),
+    "03-emitter-helper": ("src/core/emit_dict.zig", ROW3_ANCHOR, ROW3_REPLACEMENT,
+                          "emit a side-effecting `nop` before every dictionary construction: changes the "
+                          "bytes of every program that builds a dictionary, not its meaning"),
     "04-runner-edit": ("src/core/test_runner_execute.zig", None, "\n// lane-f row 4: runner source edit (runner_identity input)\n",
                        "append a comment line to a runner_identity source"),
     "05-runtime-edit": ("src/core/runtime/core_rt.c", None,
@@ -919,7 +919,7 @@ EDITS = {
 }
 
 
-def edit_row_plan(row_id: str, *, force_compare: bool = False):
+def edit_row_plan(row_id: str, *, force_compare: bool = False, flags: tuple[str, ...] = ()):
     relative, old, new, description = EDITS[row_id]
     label = "row%s-tree" % row_id.split("-")[0]
 
@@ -936,15 +936,15 @@ def edit_row_plan(row_id: str, *, force_compare: bool = False):
         focus = str(tree / "zig-out/focus/mylang")
         steps = [reset_dir(lambda c: c.row_work(row_id, "edit")), add_worktree(label),
                  build(ctx, tree, "build-before", "affected-compiler"),
-                 mylang_test(ctx, "cold", tree, entry, work / "cache", compiler=focus, env=env),
-                 mylang_test(ctx, "warm", tree, entry, work / "cache", compiler=focus, env=env),
+                 mylang_test(ctx, "cold", tree, entry, work / "cache", compiler=focus, flags=flags, env=env),
+                 mylang_test(ctx, "warm", tree, entry, work / "cache", compiler=focus, flags=flags, env=env),
                  edit(label, relative, old, new, description), build(ctx, tree, "build-after", "affected-compiler"),
                  store_count(row_id, "stores-before"),
-                 mylang_test(ctx, "after-edit", tree, entry, work / "cache", compiler=focus, env=env),
+                 mylang_test(ctx, "after-edit", tree, entry, work / "cache", compiler=focus, flags=flags, env=env),
                  store_count(row_id, "stores-after")]
         if force_compare:
             steps.append(mylang_test(ctx, "forced", tree, entry, work / "cache-forced", compiler=focus,
-                                     flags=("--force",), env=env))
+                                     flags=flags + ("--force",), env=env))
         steps += [restore(label, relative), remove_worktree(label)]
         return steps
     return plan
@@ -1002,8 +1002,10 @@ def row3_judge(run: Run) -> list[dict]:
                "executed_names": summary.get("executed_names", [])[:50]},
               0 < summary.get("eligible_executed", 0) < summary.get("eligible", 0), "exec_receipts", run.ctx.features),
     ]
+    # The cold run executed every test, so it reports every execution key; a
+    # warm run's IR hits carry none.
     keys_after = execution_keys(after)
-    keys_warm = execution_keys(run.report("warm"))
+    keys_warm = execution_keys(run.report("cold"))
     if keys_after and keys_warm:
         changed = sorted(name for name, key in keys_after.items() if keys_warm.get(name) != key)
         wrong = sorted(t["name"] for t in (after or {}).get("tests", [])
