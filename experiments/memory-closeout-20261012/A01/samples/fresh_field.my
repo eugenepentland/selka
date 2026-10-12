@@ -1,0 +1,46 @@
+record Cell:
+    name: str
+    rows: str[][]
+record Envelope:
+    cell: Cell
+    spare: str[]
+func fresh(mut calls: int, value: int) -> Cell:
+    calls += 1
+    return Cell(name="value-" + str(value), rows=[["row-" + str(value)], ["ignored-" + str(value)]])
+func envelope(mut calls: int, value: int) -> Envelope:
+    return Envelope(cell=fresh(mut calls, value), spare=["spare-" + str(value)])
+func maker(value: int) -> Cell:
+    return Cell(name="callback-" + str(value), rows=[["discarded"]])
+func early(mut calls: int) -> str:
+    return fresh(mut calls, 7).name.copy()
+func fail(mut calls: int) -> Result[int, str]:
+    const rows = fresh(mut calls, 8).rows.copy()
+    if len(rows) == 2:
+        return Err(rows[0][0].copy())
+    return Ok(0)
+func main(out: Stream) -> int:
+    mut calls = 0
+    mut names: str[] = []
+    for i in range(16):
+        names.append(fresh(mut calls, i).name.copy())
+    const nested = envelope(mut calls, 19).cell.name.copy()
+    mut rows = fresh(mut calls, 20).rows.copy()
+    const returned = early(mut calls)
+    match fail(mut calls):
+        case Ok(value):
+            assert False
+        case Err(error):
+            assert error == "row-8"
+    const function = maker
+    const invoked = function(25).name.copy()
+    assert fresh(mut calls, 26).name.startswith("value-")
+    const indexed = fresh(mut calls, 27).rows[0].copy()
+    assert len(fresh(mut calls, 28).rows) == 2
+    assert calls == 23
+    assert names[0] == "value-0" and names[15] == "value-15"
+    assert nested == "value-19" and returned == "value-7"
+    assert invoked == "callback-25" and indexed == ["row-27"]
+    rows[0] = ["changed"]
+    assert rows[1] == ["ignored-20"]
+    out.print("fresh-field", calls)
+    return 0

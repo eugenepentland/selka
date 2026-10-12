@@ -167,3 +167,15 @@ exact `dictionary_views.zig` prerequisite is already integrated by the coordinat
 and excluded from this worker's feature commit. Single-item record borrowing remains
 A07's separate work. `qualify.py --cases dict_items` supports later final-artifact
 qualification, including ordinary command mode.
+
+The fresh whole-result field receiver repair in `fresh-field/` passed five native
+modes and six negative controls. A hidden whole-result owner now lives through
+immediate read/copy receiver operations, including nested fields and function
+invocation, with single evaluation and exact ignored-child/early/error cleanup.
+Arbitrary partial moves, borrowed escapes, invalidated views, temporary mutation
+and pending-sibling operations remain refused. The 64-field bounded helper does
+not change the ABI or lifetime inference. Frozen `samples/fresh_field.my` and
+`qualify.py --cases fresh_field` support later integrated/ordinary qualification.
+Root's Core test import is included; the old dictionary_views dependency overlay
+and transferred guest migration edits remain excluded. Complete tuple unpacking is
+separate work and is not claimed by this fix.

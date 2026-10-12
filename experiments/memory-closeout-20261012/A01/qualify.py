@@ -23,6 +23,7 @@ EXPECTED = {'wide': '2145\n', 'managed': '2016 item-0! 16\n', 'outcome': '416\n'
 
 EXPECTED['result_list']='27 4 5 4 5\n3889\n'
 EXPECTED['dict_items']='passed 38\n'
+EXPECTED['fresh_field']='fresh-field 23\n'
 
 EXPECTED['result_direct']=EXPECTED['result']
 

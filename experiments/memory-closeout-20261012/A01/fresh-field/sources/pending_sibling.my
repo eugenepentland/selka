@@ -1,0 +1,8 @@
+record Pending:
+    name: str
+    outcome: Result[int, str]
+func pending() -> Pending:
+    return Pending(name="kept", outcome=Ok(1))
+func main() -> int:
+    const text = pending().name.copy()
+    return len(text)

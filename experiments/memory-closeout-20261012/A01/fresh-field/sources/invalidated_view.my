@@ -1,0 +1,10 @@
+record Cell:
+    name: str
+    rows: str[][]
+func make() -> Cell:
+    return Cell(name="value-" + str(1), rows=[["ignored-" + str(1)]])
+func main() -> int:
+    mut whole = make()
+    const view = whole.name.borrow(0, 3)
+    whole = make()
+    return len(view)
