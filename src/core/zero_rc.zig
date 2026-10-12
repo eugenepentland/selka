@@ -48,6 +48,7 @@ pub fn contract(symbol: []const u8) ?Contract {
     if (std.mem.eql(u8, symbol, "myl_core_group_open") or std.mem.eql(u8, symbol, "myl_core_owned_group_take")) return .{ .result = .fresh };
     if (std.mem.eql(u8, symbol, "myl_core_owned_file_scope_end") or std.mem.eql(u8, symbol, "myl_core_owned_cap_scope_end")) return .{ .owned = 1 };
     if (std.mem.eql(u8, symbol, "myl_core_clock_advance") or std.mem.eql(u8, symbol, "myl_core_host_check")) return .{};
+    if (providerContract(symbol)) |result| return result;
     // Trial transport keeps native FILE/path state, never a managed argument.
     // Register accepts only a compiler-generated static function pointer.
     const test_helpers = [_][]const u8{
@@ -60,7 +61,7 @@ pub fn contract(symbol: []const u8) ?Contract {
     };
     for (test_helpers) |name| if (std.mem.eql(u8, symbol, name)) return .{};
     if (std.mem.eql(u8, symbol, "myl_core_test_read_text") or std.mem.eql(u8, symbol, "myl_core_test_read_bytes")) return .{ .result = .fresh };
-    if (std.mem.startsWith(u8, symbol, @import("emit_values.zig").copy_prefix)) return .{ .result = .fresh };
+    if (callableDigest(symbol) or std.mem.startsWith(u8, symbol, @import("emit_values.zig").copy_prefix)) return .{ .result = .fresh };
     if (std.mem.eql(u8, symbol, "myl_core_view_slice")) return .{ .views = 1, .result = .borrowed };
     for ([_][]const u8{ "myl_core_view_chars", "myl_core_view_index", "myl_core_view_byte" }) |name| {
         if (std.mem.eql(u8, symbol, name)) return .{ .views = 1 };
@@ -112,6 +113,32 @@ pub fn contract(symbol: []const u8) ?Contract {
     };
     for (mutations) |name| if (std.mem.eql(u8, symbol, name)) return .{ .owned = 1, .result = .transferred };
     return null;
+}
+
+// These adapters synchronously borrow every input. A completion either closes
+// its native handle or leaves the owner available for the emitted failure move.
+fn providerContract(symbol: []const u8) ?Contract {
+    const readers = [_][]const u8{ "myl_core_provider_keepalive", "myl_core_resource_complete", "myl_core_stream_write_bytes", "myl_core_stream_write_buffer" };
+    for (readers) |name| if (std.mem.eql(u8, symbol, name)) return .{};
+    const constructors = [_][]const u8{
+        "myl_core_resource_acquire", "myl_core_resource_read",        "myl_core_resource_write",
+        "myl_core_durable_access",   "myl_core_octets_repeat_signed", "myl_core_octets_repeat_unsigned",
+    };
+    for (constructors) |name| if (std.mem.eql(u8, symbol, name)) return .{ .result = .fresh };
+    return null;
+}
+
+// Prepared digest adapters accept only a scalar function pointer and return an
+// immutable static string. Admit the generated schema hash, never an open prefix.
+fn callableDigest(symbol: []const u8) bool {
+    const prefix = @import("callable_digest_contract.zig").prefix;
+    if (!std.mem.startsWith(u8, symbol, prefix) or symbol.len != prefix.len + 64) return false;
+    for (symbol[prefix.len..]) |byte| {
+        const digit = byte >= '0' and byte <= '9';
+        const letter = byte >= 'a' and byte <= 'f';
+        if (!digit and !letter) return false;
+    }
+    return true;
 }
 
 /// A final emitted-code guard supplements IR verification and runtime tripwires.

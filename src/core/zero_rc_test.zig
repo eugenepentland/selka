@@ -1418,3 +1418,17 @@ const json_lookup_output =
     "[{\"nested\":\"value-7\"}] {\"nested\":[\"value-9\"]}\n" ++
     "[{\"nested\":\"value-7\"}] {\"nested\":[\"value-9\"]}\n" ++
     "{\"target\":\"changed\"} [\"changed\"]\n";
+
+// spec-case: NEW-CORE-ZERO-RC-1
+test "zero RC scalar text conversions and characters have fresh receiver origins" {
+    try executes(std.testing.allocator,
+        \\func main(out: Stream) -> int:
+        \\    mut total = 0
+        \\    for value in [0.1, 2.5]:
+        \\        const encoded = str(value).encode()
+        \\        total += len(encoded)
+        \\    const letters = [for letter in "abc" yield letter]
+        \\    out.print(total, letters[1])
+        \\    return 0
+    , "6 b\n");
+}

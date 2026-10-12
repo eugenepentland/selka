@@ -297,11 +297,13 @@ const Checker = struct {
         return switch (node.data) {
             .local => |slot| c.rootOf(@backingInt(slot)),
             .field => |field| c.origin(field.base),
-            .index => |index| c.origin(index.base),
-            .cast, .wrap, .unwrap => |value| c.origin(value),
+            .index => |index| if (c.freshCharacter(index.base)) null else c.origin(index.base),
+            .cast => |value| if (c.zero_rc and c.program.nodes[@backingInt(value)].ty != node.ty) null else c.origin(value),
+            .wrap, .unwrap => |value| c.origin(value),
             .block_value => |block| c.origin(block.value),
             .buffer_operation => |operation| switch (operation.kind) {
-                .read, .get, .key_at, .value_at, .borrow_view => c.rootOf(@backingInt(operation.owner)),
+                .read => if (c.zero_rc and c.program.records[c.function.scope.locals[@backingInt(operation.owner)].ty.recordIndex()].collection.kind == .string) null else c.rootOf(@backingInt(operation.owner)),
+                .get, .key_at, .value_at, .borrow_view => c.rootOf(@backingInt(operation.owner)),
                 .slice => if (c.view(node.ty)) c.rootOf(@backingInt(operation.owner)) else null,
                 else => null,
             },
@@ -315,6 +317,25 @@ const Checker = struct {
             },
             else => null,
         };
+    }
+
+    /// Only the exact projection reconstructed by its parent may write in place.
+    fn sameFieldWriteback(c: *const Checker, base: typed.NodeId, field: typed.FieldInit) bool {
+        const nested = c.program.nodes[@backingInt(field.value)];
+        const nested_base = switch (nested.data) {
+            .update => |update| update.base,
+            .replace => |replace| replace.base,
+            else => return false,
+        };
+        return switch (c.program.nodes[@backingInt(nested_base)].data) {
+            .field => |projection| projection.base == base and projection.index == field.index,
+            else => false,
+        };
+    }
+
+    fn freshCharacter(c: *const Checker, base: typed.NodeId) bool {
+        const ty = c.program.nodes[@backingInt(base)].ty;
+        return c.zero_rc and ty.isAggregate() and c.program.records[ty.recordIndex()].collection.kind == .string;
     }
 
     fn wholeOwner(c: *const Checker, id: typed.NodeId) bool {
@@ -422,7 +443,7 @@ const Checker = struct {
             .record => |fields| for (fields) |field| try c.expression(field.value, .move),
             .update => |update| {
                 try c.expression(update.base, if (access == .update) .mutate else .move);
-                for (update.fields) |field| try c.expression(field.value, .move);
+                for (update.fields) |field| try c.expression(field.value, if (access == .update and c.sameFieldWriteback(update.base, field)) .update else .move);
             },
             .replace => |replace| {
                 try c.expression(replace.base, if (access == .update) .mutate else .move);

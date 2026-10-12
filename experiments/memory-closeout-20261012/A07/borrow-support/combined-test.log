@@ -1,0 +1,60 @@
+build-slot: FIFO ticket 188, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 188 after 5s
+9860b781455ba0fff0277654eea23ec3a893cb3614551f277cbf67d7850f6cf7
+d7c7a2468458d4cddf08970071fd85e6b6c3ff126b450eb15d8f1628fe38d91f
+test-core
++- verification action core member 0 75 pass, 1 fail (76 total)
+guardian/test: SLOW  8.99s  zero_rc_task_test.test.zero RC task captures and results are free from ThreadSanitizer reports
+guardian/test: test wall 55.17s; slowest over 50ms:
+guardian/test:   11.49s  zero_rc_test.test.zero RC recursive copies preserve mixed children after original destruction
+guardian/test:   8.99s  zero_rc_task_test.test.zero RC task captures and results are free from ThreadSanitizer reports
+guardian/test:   5.18s  zero_rc_test.test.zero RC Result main destroys text errors and borrowed argv in five modes
+guardian/test:   4.45s  shared_counts_test.test.zero RC runtime ABI has no count member and forbids legacy helpers
+guardian/test:   4.19s  zero_rc_task_test.test.zero RC task groups move captures and results across joins at 1 2 8 threads
+guardian/test:   2.61s  zero_rc_task_test.test.zero RC source map borrows inputs until joining and owns each result
+guardian/test:   1.10s  zero_rc_test.test.zero RC dictionaries grow replace and deeply copy managed entries
+guardian/test:   0.95s  zero_rc_test.test.zero RC dictionary pop transfers owned values and defaults
+guardian/test:   0.84s  zero_rc_task_test.test.zero RC task groups join and destroy discarded results on implicit exit
+guardian/test:   0.80s  zero_rc_test.test.zero RC mut text replacement early returns and loop moves execute
+guardian/test: FAIL — 1 failed of 76
+guardian/test: RESULT {"passed":75,"failed":1,"skipped":0}
+error: 'zero_rc_test.test.zero RC dependent resource returns reject local and ambiguous providers' failed:
+       guardian/test: 76 test(s) selected by filter: "zero RC"
+       guardian/test: SLOW  11.49s  zero_rc_test.test.zero RC recursive copies preserve mixed children after original destruction
+       guardian/test: SLOW  5.18s  zero_rc_test.test.zero RC Result main destroys text errors and borrowed argv in five modes
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/sema.zig:1537:5: 0x1e8906f in retryOr (compiler.zig)
+           return err;
+           ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/sema.zig:1887:62: 0x1c1f919 in checkProgram (compiler.zig)
+           for (sink.items.items) |item| if (item.severity == .err) return retryOr(&plan, error.SourceError);
+                                                                    ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/sema.zig:1750:9: 0x1c0852f in checkCore (compiler.zig)
+               return err;
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/sema.zig:1708:5: 0x1c07e3d in checkCached (compiler.zig)
+           return checkCore(allocator, src, program, sink, .{ .names = module_names, .cache = cache });
+           ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/project_compile.zig:91:43: 0x28e343e in checkWithCache (compiler.zig)
+                   const semantic = cache orelse return err;
+                                                 ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/project_compile.zig:58:9: 0x28e2596 in check (compiler.zig)
+               return self.checkWithCache(null);
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/embedded_project.zig:19:9: 0x28de7ac in init (compiler.zig)
+               try self.compilation.check();
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/zero_rc_test.zig:148:9: 0x29b425a in checked (root_test.zig)
+               try project.init(a, .{ .context = &entry, .read = ProjectEntry.read });
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/zero_rc_test.zig:163:87: 0x29b8038 in refuses (root_test.zig)
+           try std.testing.expectError(error.Rejected, contract.checkMode(arena.allocator(), try checked(arena.allocator(), source), &failure, true));
+                                                                                             ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A07/src/core/zero_rc_test.zig:1452:5: 0x29b8425 in test.zero RC dependent resource returns reject local and ambiguous providers (root_test.zig)
+           try refuses(std.testing.allocator,
+           ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A07/zig-out/libexec/mylang/components ./.tmp/memory-closeout/A07/zig-cache/o/d5ef26c2e08b90c15f36f394132fa729/test "--guardian-filter=zero RC" --cache-dir=./.tmp/memory-closeout/A07/zig-cache --seed=0x22fa606c --listen=-
+
+Build Summary: 10/12 steps succeeded (1 failed); 75/76 tests passed (1 failed)
+test-core transitive failure
++- verification action core member 0 75 pass, 1 fail (76 total)
+
