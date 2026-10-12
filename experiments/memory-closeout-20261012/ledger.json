@@ -57,5 +57,72 @@
       "assignment": "CLI paths, default and RC retirement",
       "status": "in_progress"
     }
-  ]
+  ],
+  "scope_updates": [
+    {
+      "requested_by": "user",
+      "change": "Expand Result-list support, including parallel.map returning Results.",
+      "owner": "A01",
+      "status": "in_progress"
+    }
+  ],
+  "interim_compilers": [
+    {
+      "name": "support",
+      "revision": "4c4c1663680fa4c290691867107eee24b504604d",
+      "sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5"
+    },
+    {
+      "name": "support2",
+      "revision": "245e892f8518943ee44a0cc6009ab4b4fa6bca43",
+      "sha256": "3e9f7f2cd7e1ff7dc13b342dc812cb64b340cddc02b8b2b4b1ae8008cb203c7c"
+    },
+    {
+      "name": "support3",
+      "revision": "0d17e4e130706639c0f49e78b60502bfb2151ebc",
+      "sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7",
+      "native_qualification": "blocked by preexisting uncacheable unit-object lifetime bug; A01 owns fix"
+    }
+  ],
+  "baseline_census": {
+    "original_cases": 30,
+    "allocating": 23,
+    "allocation_free": 7,
+    "migrated_refused": 0,
+    "rc_executions": 0,
+    "expanded_cases": 81,
+    "expanded_executions": 131,
+    "evidence": "A03/C0-release/REPORT.md",
+    "final_candidate_qualification": false
+  },
+  "admission": {
+    "build_slots": 2,
+    "gate_slots": 2,
+    "jobs": 4,
+    "maxrss": 8589934592,
+    "gate_policy": "One full verification maximum; second gate slot is for bounded Guardian hooks.",
+    "observed_MemAvailable_GiB": [
+      14.8,
+      19
+    ],
+    "timing": "A09 schedules exclusive admission; no timing queued during exploratory full verification."
+  },
+  "exploratory_full_gate": {
+    "revision": "245e892f8518943ee44a0cc6009ab4b4fa6bca43",
+    "worktree": "/home/epentland/ai/canopy/mylang-memory-20261012-verify-01",
+    "status": "failed",
+    "known_failure": "Scalar DictItem snapshot copy crash fixed in4fc3f9517; CLI fix needs focused rerun and final full gate remains required.",
+    "selected_actions": 45,
+    "reused_actions": 0,
+    "build_admitted_seconds": 45.331,
+    "gate_admitted_seconds": 913.661,
+    "evidence": "coordinator/exploratory-verify-01/verify.log",
+    "actual_failures": [
+      "language members0/1/2 dictionary snapshot panic",
+      "interface_oracle dictionary snapshot panic",
+      "noalloc_lint dictionary snapshot panic",
+      "Core dict fixture dictionary snapshot panic",
+      "CLI fix contextual dictionary snapshot status2"
+    ]
+  }
 }
