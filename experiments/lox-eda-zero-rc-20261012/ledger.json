@@ -41,10 +41,12 @@
     },
     {
       "id": "verification",
-      "state": "pending",
+      "state": "compiler_gate_passed",
       "owner": "root",
-      "requirement": "Focused ownership/native checks then complete registered gate on frozen integrated compiler"
+      "requirement": "Focused ownership/native checks then complete registered gate on frozen integrated compiler",
+      "evidence": "coordinator/compiler-identity.json"
     }
   ],
-  "compiler_implementation_commit": "466a1a5b7"
+  "compiler_implementation_commit": "466a1a5b7",
+  "frozen_compiler_commit": "e2893d2707cbe057a09abf94e04c4b12d16b7b8b"
 }

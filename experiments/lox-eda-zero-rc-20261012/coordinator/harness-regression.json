@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "cases": [
+    "timeout retained",
+    "nonzero exit retained",
+    "output mismatch retained",
+    "remaining arms continue",
+    "60-cell denominator",
+    "incomplete aggregate withheld",
+    "changed arm identity refused"
+  ]
+}

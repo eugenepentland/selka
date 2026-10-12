@@ -1,0 +1,16 @@
+{
+  "removed": [
+    {
+      "cache": "/home/epentland/ai/canopy/mylang-memory-20261012-A01-optional/.zig-cache",
+      "bytes_before": 1439179553
+    },
+    {
+      "cache": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.zig-cache",
+      "bytes_before": 4509189745
+    }
+  ],
+  "sources_clean": true,
+  "no_active_processes": true,
+  "preserved": "sources, all .tmp/component caches and source archives, all installed binaries, raw evidence",
+  "utc": "2026-10-12T08:04:14Z"
+}

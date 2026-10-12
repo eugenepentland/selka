@@ -1,0 +1,25 @@
+{
+  "archive": "/tmp/eda-render-owned-final.tar.gz",
+  "files": [
+    {
+      "file": "render_svg_draw_test.my",
+      "old_sha256": "a2eb92f63b1a718c167d0c89977aa528e7dcf3aefd7f24af04c50c462445cda2",
+      "sha256": "a2eb92f63b1a718c167d0c89977aa528e7dcf3aefd7f24af04c50c462445cda2"
+    },
+    {
+      "file": "render_svg_context.my",
+      "old_sha256": "5f456e8136638275c1bdd17148a359fa9c1e78e3908d362612444156e12ff0f3",
+      "sha256": "248f42c5c50fe140618f6075db81317cab4f80859613bfaf97d1773517d2df88"
+    },
+    {
+      "file": "render_svg_context_test.my",
+      "old_sha256": "eaf0cfc478f22acbe58e46fe968f9400f9fa66847c42ac68670395ae27d45e9b",
+      "sha256": "eaf0cfc478f22acbe58e46fe968f9400f9fa66847c42ac68670395ae27d45e9b"
+    },
+    {
+      "file": "render_block_types.my",
+      "old_sha256": "c5edfcf56f5ffa9629a0d109e92951ebbc6be7729d47566e1033f26f7b5a26ea",
+      "sha256": "c5edfcf56f5ffa9629a0d109e92951ebbc6be7729d47566e1033f26f7b5a26ea"
+    }
+  ]
+}

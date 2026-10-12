@@ -1,4 +1,3 @@
-
 # clox's stack VM (SPEC §8.5 and §8.6). All live state -- the value stack,
 # the call frames and the open upvalues -- sits in the Runtime's root fields.
 import chunk
@@ -10,7 +9,6 @@ import object
 import output
 import table
 import value
-
 
 public enum InterpretResult:
     OK
@@ -133,14 +131,7 @@ func call(mut rt: heap.Runtime, mut o: output.Output, closure: value.ObjRef, cou
         return runtime_error(mut rt, mut o, b"Stack overflow.")
     mut frame_index = rt.frame_count
     rt.frame_count = rt.frame_count + 1
-    rt.frames[frame_index] = heap.CallFrame(
-        closure=closure,
-        function=function.copy(),
-        code=function.code.code.copy(),
-        upvalues=heap.closure_obj(rt, closure).upvalues.copy(),
-        ip=0,
-        base=rt.stack_top - count - 1
-    )
+    rt.frames[frame_index] = heap.CallFrame(closure=closure, function=function.copy(), code=function.code.code.copy(), upvalues=heap.closure_obj(rt, closure).upvalues.copy(), ip=0, base=rt.stack_top - count - 1)
     return True
 
 
@@ -416,7 +407,7 @@ func inherit(mut rt: heap.Runtime, mut o: output.Output) -> bool:
         return runtime_error(mut rt, mut o, b"Superclass must be a class.")
     mut methods = heap.class_obj(rt, as_obj(heap.peek(rt, 0))).methods.copy()
     const __owned_arg_9 = heap.class_obj(rt, as_obj(parent)).methods.copy()
-    table.add_all( __owned_arg_9, mut methods)
+    table.add_all(__owned_arg_9, mut methods)
     mut subclass_ref = as_obj(heap.peek(rt, 0))
     heap.set_class_methods(mut rt, subclass_ref, methods)
     _ = heap.pop(mut rt)

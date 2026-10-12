@@ -35,7 +35,8 @@ def main():
     doc={'started_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
          'host':os.uname()._asdict() if hasattr(os.uname(),'_asdict') else list(os.uname()),
          'loadavg_start':os.getloadavg(),'spec':spec,'spec_sha256':digest(a.spec),'cpu':a.cpu,'identities':identities,
-         'guest_timeout_seconds':a.guest_timeout,'warmups':a.warmups,'round_start':a.round_start,'rounds':a.rounds,'wall_samples':[],'rss_samples':[]}
+         'guest_timeout_seconds':a.guest_timeout,'warmups':a.warmups,'round_start':a.round_start,'rounds':a.rounds,'wall_samples':[],'rss_samples':[],
+         'arm_status':{name:{'status':'ok'} for name in names}}
     checkpoint('header',{k:v for k,v in doc.items() if k not in ['wall_samples','rss_samples']})
     oracle=None
     def execute(argv,name):
@@ -45,8 +46,8 @@ def main():
         except subprocess.TimeoutExpired:
             os.killpg(child.pid,signal.SIGKILL)
             stdout,stderr=child.communicate()
-            checkpoint('timeout',{'argv':argv,'timeout_seconds':a.guest_timeout,'censored':True,'stderr':stderr.decode(errors='replace')})
-            raise
+            return {'status':'timeout','arm':name,'argv':argv,'timeout_seconds':a.guest_timeout,
+                    'censored':True,'stdout_sha256':hashlib.sha256(stdout).hexdigest(),'stderr':stderr.decode(errors='replace')}
         return subprocess.CompletedProcess(argv,child.returncode,stdout,stderr)
     def run(name,rss=False):
         nonlocal oracle
@@ -56,37 +57,52 @@ def main():
         if rss:
             with tempfile.NamedTemporaryFile() as f:
                 r=execute(['/usr/bin/time','-f','%M','-o',f.name,*argv],name)
+                if isinstance(r,dict):return r
+                if r.returncode:return {'status':'failed','arm':name,'argv':argv,'returncode':r.returncode,'stderr':r.stderr.decode(errors='replace')}
                 measurement=int(pathlib.Path(f.name).read_text().strip())
         else:
             start=time.perf_counter_ns();r=execute(argv,name)
             measurement=(time.perf_counter_ns()-start)/1e9
+            if isinstance(r,dict):return r
         if r.returncode:
-            checkpoint('failure',{'arm':name,'argv':argv,'status':r.returncode,'stderr':r.stderr.decode(errors='replace')})
-            raise RuntimeError((name,r.returncode,r.stderr[-2000:]))
+            return {'status':'failed','arm':name,'argv':argv,'returncode':r.returncode,'stderr':r.stderr.decode(errors='replace')}
         result={'stdout_sha256':hashlib.sha256(r.stdout).hexdigest(),
                 'artifacts':{f:digest(f) for f in spec.get('artifacts',[])}}
         if spec.get('golden_dir'):
             def tree(d):
                 return {str(f.relative_to(d)):digest(f) for f in pathlib.Path(d).rglob('*') if f.is_file()}
             got=tree(pathlib.Path(spec['out_dir']));want=tree(pathlib.Path(spec['golden_dir']))
-            assert got==want,(name,'golden mismatch',got,want)
+            if got!=want:return {'status':'output_mismatch','arm':name,'reason':'golden tree','got':got,'expected':want}
             result['golden_tree']=got
         if spec.get('expected_stdout'):
-            assert r.stdout==pathlib.Path(spec['expected_stdout']).read_bytes(),(name,'stdout oracle mismatch')
+            if r.stdout!=pathlib.Path(spec['expected_stdout']).read_bytes():
+                return {'status':'output_mismatch','arm':name,'reason':'expected stdout','stdout_sha256':result['stdout_sha256']}
         if oracle is None:oracle=result
-        assert result==oracle,(name,result,oracle)
+        if result!=oracle:return {'status':'output_mismatch','arm':name,'reason':'reference oracle','got':result,'expected':oracle}
         return {'arm':name,'value':measurement,'output':result,'stderr':r.stderr.decode(errors='replace')}
-    checkpoint('oracle',run(spec.get('oracle',names[0])))
-    for _ in range(a.warmups):
-        for name in names:checkpoint('warmup',run(name))
+    def attempt(name,phase,rnd=None,rss=False):
+        if doc['arm_status'][name]['status']!='ok':return None
+        try:sample=run(name,rss)
+        except FileNotFoundError as error:
+            sample={'status':'output_mismatch','arm':name,'reason':'missing output artifact','detail':str(error)}
+        if rnd is not None:sample['round']=rnd
+        if 'status' in sample:
+            doc['arm_status'][name]={**sample,'phase':phase}
+            checkpoint('arm_failure',doc['arm_status'][name])
+            return None
+        checkpoint(phase,sample)
+        return sample
+    attempt(spec.get('oracle',names[0]),'oracle')
+    for rnd in range(a.warmups):
+        for name in names:attempt(name,'warmup',rnd)
     for rnd in range(a.round_start,a.round_start+a.rounds):
         for name in names if rnd%2==0 else list(reversed(names)):
-            sample={'round':rnd,**run(name)}
-            doc['wall_samples'].append(sample);checkpoint('wall_sample',sample)
+            sample=attempt(name,'wall_sample',rnd)
+            if sample is not None:doc['wall_samples'].append(sample)
     for rnd in range(a.rss_rounds):
         for name in names if rnd%2==0 else list(reversed(names)):
-            sample={'round':rnd,**run(name,True)}
-            doc['rss_samples'].append(sample);checkpoint('rss_sample',sample)
+            sample=attempt(name,'rss_sample',rnd,True)
+            if sample is not None:doc['rss_samples'].append(sample)
     doc['summary']={}
     for name in names:
         doc['summary'][name]={}

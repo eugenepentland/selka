@@ -1,11 +1,9 @@
-
 # Lox heap objects (SPEC §4.2): one union case per kind, stored inline in the
 # Runtime's object table. Every payload is a value record. ObjRef indices
 # carry identity; changes to a payload are stored back into its table slot.
 import chunk
 import table
 import value
-
 
 public record StringObj:
     chars: bytes
