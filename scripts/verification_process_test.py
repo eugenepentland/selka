@@ -11,7 +11,7 @@ import time
 import unittest
 from unittest import mock
 
-from verification_process import BoundedProcessLogs, ProcessLimits, terminate_owned, wait_owned, _kill_identity, _process_starttime
+from verification_process import arm_parent_death, BoundedProcessLogs, ProcessLimits, terminate_owned, wait_owned, _kill_identity, _process_starttime
 
 
 class WatchdogTests(unittest.TestCase):
@@ -494,6 +494,42 @@ class WatchdogTests(unittest.TestCase):
             retry = self.supervised(f'from pathlib import Path; Path({str(success)!r}).write_text("fresh")')
             self.assertTrue(wait_owned(retry).complete)
             self.assertEqual(success.read_text(), 'fresh')
+
+    def test_parent_identity_mismatch_refuses_work_after_arming(self):
+        with mock.patch('ctypes.CDLL') as library:
+            library.return_value.prctl.return_value = 0
+            self.assertFalse(arm_parent_death(os.getppid(), _process_starttime(os.getppid()) + 1))
+            library.return_value.prctl.assert_called_once_with(1, signal.SIGTERM, 0, 0, 0)
+        with self.assertRaises(ValueError):
+            arm_parent_death(True, 1)
+
+    def test_hard_parent_crash_reaps_detached_action_lineage(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            marker = Path(temporary)/'lineage.json'
+            worker = ('import json,os,subprocess,time; from pathlib import Path; '
+                      'child=subprocess.Popen(["sleep","60"],start_new_session=True); '
+                      f'target=Path({str(marker)!r}); temporary=target.with_suffix(".tmp"); temporary.write_text(json.dumps({{"worker":os.getpid(),"detached":child.pid}})); temporary.rename(target); '
+                      'time.sleep(60)')
+            launcher = ('import os; from scripts.verification_process import run_supervised; '
+                        f'raise SystemExit(run_supervised({[sys.executable, "-c", worker]!r},dict(os.environ)))')
+            source = ('import subprocess,time; '
+                      f'child=subprocess.Popen({[sys.executable,"-c",launcher]!r},start_new_session=True); '
+                      '__FIXTURE_READY__; child.wait()')
+            parent = self.ready_spawn(source)
+            try:
+                self.await_file(marker)
+                import json
+                lineage = json.loads(marker.read_text())
+                os.kill(parent.pid, signal.SIGKILL)
+                self.assertEqual(parent.wait(timeout=3), -signal.SIGKILL)
+                deadline = time.monotonic() + 3
+                while any(_process_starttime(pid) is not None for pid in lineage.values()) and time.monotonic() < deadline:
+                    time.sleep(.01)
+                for pid in lineage.values():
+                    self.assertIsNone(_process_starttime(pid))
+            finally:
+                if parent.poll() is None:
+                    terminate_owned(parent)
 
     def test_interrupt_cleans_and_propagates(self):
         class Interrupt:

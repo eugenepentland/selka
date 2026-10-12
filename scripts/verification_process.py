@@ -314,6 +314,25 @@ def _process_starttime(pid):
         return None
 
 
+def arm_parent_death(parent_pid: int, parent_start: int) -> bool:
+    """Arm Linux parent-death cancellation, then reject a lost/replaced parent.
+
+    Call only in a fresh owned launcher, before handshake or work starts. The
+    expected identity is wrapper-only metadata, never action environment/key
+    data. Kernel cancellation closes the race after this identity check; checking
+    after prctl closes the race where the parent died before registration.
+    """
+    if (type(parent_pid) is not int or parent_pid <= 1
+        or type(parent_start) is not int or parent_start <= 0):
+        raise ValueError('parent identity must contain positive PID and birth')
+    import ctypes
+    libc = ctypes.CDLL(None, use_errno=True)
+    if libc.prctl(1, signal.SIGTERM, 0, 0, 0) != 0:  # PR_SET_PDEATHSIG
+        error = ctypes.get_errno()
+        raise OSError(error, os.strerror(error))
+    return os.getppid() == parent_pid and _process_starttime(parent_pid) == parent_start
+
+
 def _descendants(pid):
     """Snapshot all thread-owned descendants and their kernel birth identities."""
     result = {}
@@ -391,7 +410,7 @@ def _reap_adopted():
             return
 
 
-def _run_lineage(argv: list[str], env: dict[str, str], restore_mask) -> int:
+def _run_lineage(argv: list[str], env: dict[str, str], restore_mask, parent_pid, parent_start) -> int:
     """Run inside the admitted child, retaining and reaping its entire lineage.
 
     Linux subreaping is enabled here only, never in the shared coordinator.
@@ -413,8 +432,9 @@ def _run_lineage(argv: list[str], env: dict[str, str], restore_mask) -> int:
     worker = None
     try:
         # Pending fork-window cancellation reaches this handler before work starts.
+        parent_alive = arm_parent_death(parent_pid, parent_start)
         signal.pthread_sigmask(signal.SIG_SETMASK, restore_mask)
-        if interrupted:
+        if interrupted or not parent_alive:
             return 130
         worker = subprocess.Popen(argv, env=env, close_fds=False)
         while worker.poll() is None and not interrupted:
@@ -456,8 +476,13 @@ def run_supervised(argv: list[str], env: dict[str, str]) -> int:
     inner process owns only the action lineage, so cleanup cannot mistake these
     helpers for action children. Admission descriptors remain inherited.
     Call in the fresh admitted launcher, never in a multithreaded coordinator.
+    Kernel parent-death cancellation covers a hard coordinator/launcher crash.
     The parent watchdog must allow at least 0.5 seconds for lineage cleanup.
     """
+    parent_pid = os.getppid()
+    parent_start = _process_starttime(parent_pid)
+    own_pid = os.getpid()
+    own_start = _process_starttime(own_pid)
     interrupted = False
     child = None
     def interrupt(signum, frame):
@@ -471,10 +496,12 @@ def run_supervised(argv: list[str], env: dict[str, str]) -> int:
     previous = {sig: signal.signal(sig, interrupt) for sig in (signal.SIGTERM, signal.SIGINT)}
     restore_mask = signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGTERM, signal.SIGINT})
     try:
+        if parent_start is None or not arm_parent_death(parent_pid, parent_start):
+            return 130
         child = os.fork()
         if child == 0:
             try:
-                status = 130 if interrupted else _run_lineage(argv, env, restore_mask)
+                status = 130 if interrupted else _run_lineage(argv, env, restore_mask, own_pid, own_start)
             except BaseException:
                 status = 125
             os._exit(status)
