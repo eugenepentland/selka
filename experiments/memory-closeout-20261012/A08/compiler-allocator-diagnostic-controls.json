@@ -1,0 +1,19 @@
+{
+  "status": "retained_diagnostic_controls_passed",
+  "engine_sha256": "9fecbf4cb6b36607550ebdb9f232589b4bdc71db5fa7580cbbb217185be696ab",
+  "rows": [
+    {
+      "retained_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/selections/prototype-03/raw/release/build.stderr",
+      "sha256": "af968a1bf9d4d20085488832ed74b7d9f2f384bfe50fd64c720f8611175c653b",
+      "allocator_reports": 112,
+      "expected": 112
+    },
+    {
+      "retained_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/selections/prototype-04/raw/release/build.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "allocator_reports": 0,
+      "expected": 0
+    }
+  ],
+  "scope": "Harness diagnostic classification only; existing compiler and guest outcomes retained under A04 identities. No new compiler execution or guest allocation measurement."
+}

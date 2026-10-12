@@ -11,6 +11,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import time
@@ -31,6 +32,7 @@ DEP = '''public func values(n: int) -> int[]:
 '''
 MODES = {"rc": [], "single": ["--experimental-single-owner"], "zero": ["--experimental-zero-rc"]}
 RC_TOKENS = ("@myl_core_retain", "@myl_core_release", "@myl_core_share(", "@myl_core_free_block(", "load atomic i32")
+COMPILER_ALLOCATOR = re.compile(r'^.*(?:error\(SafeAllocator\): leaked|error\(gpa\):.*leaked).*$', re.MULTILINE)
 
 
 def digest(path):
@@ -101,7 +103,11 @@ class Run:
         if retired_flag:
             diagnostic = stderr.lower()
             ok = status == 2 and retired_flag in stderr and ('retired' in diagnostic or 'checked ownership is the default; drop the flag' in diagnostic)
+        compiler_allocator_diagnostics = COMPILER_ALLOCATOR.findall(stderr)
+        ok &= not compiler_allocator_diagnostics
         row = dict(name=name, mode=mode, arguments=arguments, status=status, expected_refusal=bool(refuse or retired_flag), passed=ok, report=report, execution=execution, llvm_rc_clean=clean, elapsed_ns=elapsed, elapsed_includes_admission_wait=self.args.admission != 'held', max_rss_kib=rss.read_text().strip().splitlines()[-1] if rss.exists() else None, compiler_sha256=digest(compiler or self.args.compiler), compiler_source_revision=self.args.candidate_revision if compiler else self.args.source_revision, sources={str(p.relative_to(project)):digest(p) for p in project.rglob('*.my')}, binary_sha256=digest(target) if status == 0 else None, llvm_sha256=digest(llvm) if status == 0 and emit else None)
+        row['compiler_allocator_clean'] = not compiler_allocator_diagnostics
+        row['compiler_allocator_diagnostics'] = compiler_allocator_diagnostics
         row['expected_refusal_code'] = refusal_code
         row['outcome'] = ('completed' if execution and execution['status'] == 0 else 'guest_failure') if status == 0 else 'compile_timeout' if status == 124 else 'source_refusal' if 'error[E_' in stderr else 'compiler_failure'
         if retired_flag and ok:
