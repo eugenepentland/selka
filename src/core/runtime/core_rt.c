@@ -750,6 +750,7 @@ static void retain_block(myl_block *block) {
    copy-on-write update (`own.zig`), so the original block stays intact. The
    copy is a second owner of every block the elements hold. */
 myl_block *myl_core_list_copy(myl_block *list, int64_t element_size) {
+    if (list->len < 0 || list->len == INT64_MAX) out_of_memory();
     myl_block *copy = block_new(MYL_KIND_LIST, list->len + 1, element_size);
     memcpy(block_data(copy), block_data(list), (size_t)list->len * (size_t)element_size);
     copy->len = list->len;

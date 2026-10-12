@@ -1,0 +1,47 @@
+{
+  "base_commit": "9ea4204e9a9e2b17fa47ac24af8403d679d0fe08",
+  "instrumentation": "-fsanitize=signed-integer-overflow -fsanitize-trap=signed-integer-overflow",
+  "before": {
+    "binary_sha256": "3e677812cd902d7b591b378a73cf72e91aecbe928f330ad29e61f5f883dbbd60",
+    "scenarios": {
+      "11": {
+        "status": -4,
+        "stdout": "",
+        "stderr": ""
+      },
+      "12": {
+        "status": 11,
+        "stdout": "incorrectly admitted\n",
+        "stderr": ""
+      }
+    }
+  },
+  "after": {
+    "11": {
+      "status": 1,
+      "stdout": "",
+      "stderr": "fatal: out of memory\n"
+    },
+    "12": {
+      "status": 1,
+      "stdout": "",
+      "stderr": "fatal: out of memory\n"
+    }
+  },
+  "sources": {
+    "src/core/runtime/core_rt.c": "40715efa7436be3bade842fcfc109c417405c2c87679660294de5c2a4bab1f8f",
+    "src/core/a02_capacity_fixture.c": "225837fa55fa8e5954af608aa604cd9b76be57ef93a9527224988420a5fc3c9b",
+    "src/core/a02_capacity_test.zig": "36e9ebb56323570e0be496173f1a75a1b3db5532f5dc8b9312750ad79fe67d94",
+    ".tmp/memory-closeout/A02/list-copy-overflow/core_rt.c": "f027e1d61181ef499209edf7627c3f1fc3988f9ab4ae0898e98f55fa6c32c1d3",
+    ".tmp/memory-closeout/A02/list-copy-overflow/patched/core_rt.c": "f2322eaaee12dca4ca55365ebf31a226f19aba0062ef91c4cc7f3fa1f1433e8b",
+    ".tmp/memory-closeout/A02/list-copy-overflow/patched/after": "c53d9ebcab03295aecf5d64fd95cc6235c85236f0dfa63d5ae2543ec0bae9306"
+  },
+  "registered_test": {
+    "status": 0,
+    "scenarios": 26,
+    "modes": [
+      "zero-RC",
+      "ordinary RC control"
+    ]
+  }
+}

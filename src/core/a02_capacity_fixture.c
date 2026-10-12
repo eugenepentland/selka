@@ -68,6 +68,18 @@ int main(int argc, char **argv) {
     case 10:
         (void)block_new(MYL_KIND_STR, INT64_MAX, 2);
         break;
+    case 11: {
+        myl_block *list = myl_core_list_new_slow(INT64_MAX, 0);
+        list->len = INT64_MAX;
+        (void)myl_core_list_copy(list, 0);
+        break;
+    }
+    case 12: {
+        myl_block *list = myl_core_list_new_slow(0, 0);
+        list->len = -1;
+        (void)myl_core_list_copy(list, 0);
+        break;
+    }
     default: return 10;
     }
     puts("incorrectly admitted");

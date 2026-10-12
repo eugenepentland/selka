@@ -26,7 +26,7 @@ test "A02 capacity rejects arithmetic overflow and preserves ordinary owned grow
         });
         try std.testing.expectEqualStrings("", built.stderr);
         try std.testing.expect(built.term == .exited and built.term.exited == 0);
-        for (0..11) |scenario| {
+        for (0..13) |scenario| {
             const ran = try std.process.run(a, io, .{
                 .argv = &.{ binary, try std.fmt.allocPrint(a, "{d}", .{scenario}) },
                 .environ_map = &environment,
