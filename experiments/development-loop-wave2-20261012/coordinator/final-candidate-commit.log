@@ -1,0 +1,22 @@
+build-slot: gate slot 1, FIFO ticket 203 after 0s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10005 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/dl-wave2-20261012-integration ffb651c59] Adopt qualified bootstrap seed and reviewed native host identity
+ 16 files changed, 1185 insertions(+), 31 deletions(-)
+ create mode 100644 experiments/development-loop-wave2-20261012/REPORT.md
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/candidate-commit-hook.log
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/evidence-sha256.json
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/format-before-seed-repair.log
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/host-adoption-hook-first.log
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/native-driver-focused-tests.log
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/native-driver-registered-build.log
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/post-host-configuration-check.json
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/process-final-tests.log
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/repaired-compiler-manifest.json
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/session-final-tests.log
+Merge made by the 'ours' strategy.
+02975797051dae5bfb2306ddc439f18af86bd6e8

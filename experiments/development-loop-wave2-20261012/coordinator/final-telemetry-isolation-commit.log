@@ -1,0 +1,5 @@
+[codex/dl-wave2-20261012-integration 1eea98741] Isolate nested collector fixtures from live gate telemetry
+ Date: Mon Oct 12 03:50:16 2026 +0000
+ 3 files changed, 56 insertions(+), 3 deletions(-)
+ create mode 100644 experiments/development-loop-wave2-20261012/S01/sidecar-isolation-tests.log
+ create mode 100644 experiments/development-loop-wave2-20261012/S01/sidecar-isolation.md

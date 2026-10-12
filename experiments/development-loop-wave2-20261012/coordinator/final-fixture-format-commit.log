@@ -1,0 +1,10 @@
+build-slot: gate slot 1, FIFO ticket 208 after 0s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10005 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/dl-wave2-20261012-integration 9d1b51f31] Format long qualification fixture after native preparation
+ 2 files changed, 144 insertions(+)
+ create mode 100644 experiments/development-loop-wave2-20261012/coordinator/final-native-and-preparation-first.log

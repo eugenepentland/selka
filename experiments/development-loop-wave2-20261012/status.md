@@ -1,191 +1,121 @@
 # Development-loop wave 2 ownership and qualification ledger
 
-User authorized the next ten-item wave after reviewing the prior closeout.
-Base B0: `c1857310e0bf623545380c8de24515f1b9970021` (tested source
-`a9a3208a4f3edbf17170cfc18d57f5f999af49c3`; later changes are evidence only).
-Fetched local main and origin/development still equal
-`fbfcaa7a923186a8e773c3760f81c10aa345a432`. Published origin/main is separate.
-Integration: `codex/dl-wave2-20261012-integration`; no main update or push.
-Prior candidate and its pinned compilers remain frozen, read-only baselines.
+User authorization: execute the next ten-item wave; subsequently adopt the
+memory team's existing native-link fix (`632726724`). Coordinator plus ten
+workers used separate branches/worktrees. No nested subteams, push or main update.
 
-## Operating contract
+## Source and evidence freezes
 
-Read CLAUDE.md, prior REPORT.md and S10/final-matrix.md, and the DL roadmap.
-Each Sxx owns its new `mylang-dl-wave2-20261012-Sxx` worktree at B0 and its
-`experiments/development-loop-wave2-20261012/Sxx/` evidence directory. Do not
-modify old worktrees. No nested workers. Commit fixed changes with normal hooks;
-only the coordinator cherry-picks. Do not push, merge main, or change peers.
+- B0: `c1857310e0bf623545380c8de24515f1b9970021`; its tested production source
+  was `a9a3208a4f3edbf17170cfc18d57f5f999af49c3`.
+- Startup fetch: local main and origin/development both
+  `fbfcaa7a923186a8e773c3760f81c10aa345a432`. Published origin/main is a separate
+  lineage and was not merged.
+- Integration branch: `codex/dl-wave2-20261012-integration`, worktree
+  `/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration`.
+- Intermediate production freeze: `5e6180689b5b837aa60bd5a43f60b0981c58b638`.
+  Its compiler `abc4663e...` and historical uncacheable-host measurements remain
+  distinct from the final candidate.
+- Compiler source freeze: `9d1b51f310477e4ceccffd8ad41ecf6fc2156e13`; final
+  Debug compiler `cc827c4e79243f299dc92327fa86049669307d1f0edfa816a5b641dc443176b0`.
+  Final qualification source: `1eea987411a1ac5b42941b2ad26a25052a002460`,
+  adding only the telemetry fixture isolation fix. Full forced verification at `9d1b51f3`
+  passed 46 groups / 106 members; final selective requalification passed with
+  33 reused / 13 executed, stable inputs and only the two declared dependent
+  action keys changed.
+  All captures finished before evidence-only integration, which does not alter
+  the tested production source.
 
-Source `/home/epentland/.config/mylang/dev-env.sh` from your worktree. Use the
-pinned Zig, private local cache and on-disk TMPDIR; keep shared global cache and
-admission unchanged. Significant native work uses build admission; S10 owns
-the timing schedule and only the coordinator launches final complete gates.
-No redundant full gates. Ask S10 before timing; never nest timing in build/gate.
-Disk is shared and limited: avoid unnecessary full compiler builds and preserve
-pinned artifacts. No clearing shared caches or stopping other teams' processes.
-No Guardian FEEDBACK entries. No weaker cache authority, skipped required tests,
-automatic configuration-pin refresh, uncalibrated hard policies or false speed claims.
+See [REPORT.md](REPORT.md) for acceptance and exact measurement scopes. Old
+candidate trees, compiler bundles and raw failures remain preserved.
 
-Coordinator alone owns shared build files, SPEC.md, guardian.toml, existing root
-imports, verify_cache.py/tests, cache_session.py/tests, configuration pins, docs,
-and final inventory/CLI integration. Send small patches with caller contracts and
-tests. Compiler driver/guest runner/test receipt/runtime/ABI and bootstrap edits
-require an explicit coordinator ownership decision. Guardian implementation is
-outside this wave. Memory team is active at 3cc4953b0a2be79fd9c91a6c1ba8e7dc11aa0526;
-A07 owns ABI, A08 caches, A09 timings, A10 rollout. Its checkout is dirty and not ours.
-Bootstrap remains dff9304b9cd7bc72e66f9feb20f1b05281d67333; do not take over its checkout.
+## Exclusive ownership and final disposition
 
-## Assignments
+Coordinator owns build registration, existing test-root imports, SPEC/Guardian
+configuration, verification/session integration and tests, pins, inventory,
+documentation and this ledger. Workers own their uniquely named helpers/tests
+and `Sxx/` evidence; only the coordinator integrates commits. Completed claims
+remain assigned unless explicitly transferred.
 
-| Session | Next-wave responsibility | Exclusive source scope | Status / evidence |
+| Session | Source claim | Integrated work / evidence | Remaining requirement |
 | --- | --- | --- | --- |
-| S01 | Native/guest telemetry contract and adopted supported collectors | verification_report.py/tests; new telemetry helpers | Integrated native runner protocol; guest native timing remains limited |
-| S02 | Live concurrent requests, subscriber cancellation and cleanup | verification_process.py/tests; unique lifecycle harness | Live eight-case matrix in final qualification; existing claims preserved |
-| S03 | Independent native root and golden cold/warm/RSS tradeoffs | unique measurement harness; test/golden_parity.zig only if justified | Warm and cold boundary costs measured; matched repaired golden replay active |
-| S04 | Measure/reduce warm validation and fresh-action overhead | verification_snapshot.py/tests except loaded-code identity integration | Integrated detached selection and deferred redundant scan; final consumer audit passed |
-| S05 | Authenticated long-qualification orchestration and real counters | verification_profiles.py/tests, fuzz_campaign.py, juice_cache.py adapters; new qualification helper | Integrated authenticated bounded orchestration; full long qualification remains open |
-| S06 | Live edits, invalidation, revert and compatible second-worktree matrix | unique live matrix harness and fixtures | Live fail/revert/membership matrix active; final v2 followup pending |
-| S07 | Calibrated action budgets and explicit headroom evidence | verification_budgets.py/tests, verification_policy.py/tests | Integrated report-only calibration; insufficient headroom for hard policy |
-| S08 | Canonical actual-loaded-code identity and startup invalidation | new verification_code_identity.py/tests | Canonical identity and source authentication integrated; startup regressions passed |
-| S09 | Refreshed bootstrap/memory ownership and qualified stage adoption | unique bridge/integration fixtures and evidence | Approved driver repair applied; private repaired seed qualification active |
-| S10 | Controlled baseline/edit latency, timing schedule and independent acceptance | unique qualification harness and evidence | Partial cohorts and planning pairs passed; final complete candidate gate pending seed |
+| S01 | verification_report.py/tests; new telemetry helpers | Native runner collector, labels, `8c6823d3a` fixture isolation and `8043fdffe` audit; native timing restored | Unsupported guest/driver observations remain unknown |
+| S02 | verification_process.py/tests; lifecycle harness | `32faf6077`, `264fa127d`, `517a4c569`; 35 focused tests and eight-case bounded matrix | Native full-inventory shared-subscriber continuation |
+| S03 | unique measurement harness; golden helper only with proof | `e20931e37`, `604de6bcc`, `52dc2fbb7`, `d40cddce5`; scalar tradeoff and two matched golden pairs | Fully cold golden tier unmeasured; no further split proposed |
+| S04 | verification_snapshot.py/tests excluding loaded-code integration | `d9c40d162`, live revalidation actors and planning pairs; host/config consumer review | Five final whole-loop observations recorded by S10; broad latency remains open |
+| S05 | verification_profiles.py/tests, fuzz/Juice adapters and qualification helper | `6031bf862`, `9d93b8c4a`, `005dd40f9`, `b106c6366`; bounded actual adapters | Full long-qualification wall-clock, driver and bootstrap obligations |
+| S06 | unique live matrix harness and fixtures | `ded9adef1`; 17 native and 20 repaired guest cases in recorded contexts | Final complete edit matrix and native guest receipt reuse |
+| S07 | verification_budgets.py/tests and verification_policy.py/tests | `a95c01122`; compatible-cohort calibration and headroom | Remains report-only pending calibrated evidence |
+| S08 | verification_code_identity.py/tests and source authentication API | `b44a9241f`, `f2976df`, `a8ff1bb01`; 24 helper and seven caller regressions | Five compatible complete requests passed with identical action keys across modes |
+| S09 | bridge/seed evidence, exact owner patch proposals | `8634ec91d`, `f71e3bd33`, `67d24256a`; repaired qualified seed adopted by coordinator | Full DL7 compiler port and strict performance policy |
+| S10 | qualification harness, timing schedule and acceptance evidence | `40afe4e7b`, `2a9a3dee3`, `2fe140b45`; full/requalification, five compatible repeats and final helper40 passed | Full ordinary-edit matrix, stable population tails and strict port ratios unqualified |
 
-Each worker reports exact claims, contracts, dependencies, commits, raw commands,
-source/tool/cache conditions, and passed/failed/not-qualified outcomes. All ten
-assignments progress concurrently; native execution respects machine admission.
-Final source candidate is frozen before complete verification and measurement.
-Ordinary-edit 5-second feedback / 15-second p95 and self-host 1.5x median/p95
-remain targets requiring actual evidence; prior operational samples do not qualify them.
+SHAs in the table identify worker deliverables; integration cherry-picks have
+their own SHAs in Git. Coordinator commit `5e6180689` contains shared wiring and
+small reviewed patches while preserving overlapping canonical-identity edits.
 
-## Integration progress (source candidate frozen)
+All ten sessions completed their assigned wave deliverables and committed their
+evidence. The 40 final helper edits observed median 365.503 ms and empirical p95
+425.486 ms; the five unchanged complete windows took 47.72–56.50 seconds. Final
+source remains explicitly `1eea9874`; later commits only archive evidence and
+update this report/ledger. Both broader roadmap milestones remain open.
 
-Worker source commits adopted: S01 c6a107d0c/1eb747d6e; S02 32faf6077;
-S04 d9c40d162 plus planning/evidence commits; S05 6031bf862/9d93b8c4a;
-S07 a95c01122; S08 b44a9241f; S09 8634ec91d/f71e3bd33; S10 40afe4e7b.
-Original SHAs identify worker deliverables; integration cherry-picks have distinct
-SHAs recorded by git. S03/S06/live lifecycle and final timing evidence remain active.
+## Joint owner decisions
 
-Coordinator wiring currently adopts native runner-protocol telemetry, reachable
-member labels, selected snapshot records, deferred redundant tool validation,
-parent-death cleanup, canonical loaded-code identities, authenticated bounded long
-qualification, and exclusive request measurement with receipt rollback.
-Verification receipts move to version/directory 2; report schema remains 1.
-Deterministic fuzz seed derivation remains unchanged; only action domains migrate.
+Memory ownership remains with its active workstream: A07 ABI, A08 caches, A09
+timing and A10 rollout. The memory checkout and active bootstrap checkout were
+read-only to this wave. The bootstrap snapshot remains
+`dff9304b9cd7bc72e66f9feb20f1b05281d67333`; it does not qualify full port acceptance.
 
-Focused integration checks so far: 37/37 real native scalar/tooling tests; native
-sidecars exact selected inventories; 88 coordinator adversarial tests; 15 retained
-session tests; 40 fuzz adapter tests; 43 Juice adapter tests; 12 measurement tests;
-11 long-qualification and 13 profile tests. Late holder loss now overwrites any
-prior success report and revokes newly published receipts. Meaningful changes
-since a focused run require the relevant checks again. This is not a complete gate.
-Input coverage passes. S04 and coordinator explicitly reviewed all configuration
-consumers and qualified pin4493db3a525705b6f1222c50796175cdff55b2301d5160e8d02297d43942885e.
-The fresh inventory contains46 groups and106/106 required registered actions.
-No pin was auto-refreshed.
+The user approved the exact memory-owner native-link repair. Both current native
+regressions pass. The same approved cleanup delta was separately qualified on
+the immutable historical seed as `1665d74029c406dd5b90807186a752ebac6bcbb8`.
+Coordinator adopted that pin and preserved the exact object as a merge parent
+in `02975797051dae5bfb2306ddc439f18af86bd6e8`, without replacing current source
+with historical APIs. Forty fact/leak tests, four protocol oracles, two seed
+native regressions, reproducibility and five rejection controls passed.
 
-S10's isolated 40+40 guest source-edit cohorts passed real frontend checks, with
-first-check empirical p95 86.255ms and 145.967ms. These are partial semantic
-feedback on the frozen prior compiler, not native test or complete-gate acceptance.
+Coordinator also explicitly reviewed and adopted the memory owner's current-host
+qualification `a9dc0edfe640b98a0869330fe6a19d21b6bbc255`: one loader-cache digest
+plus its evidence comment. The unrelated owner test rename was excluded.
+Meaningful current tests reject substitution of every declared runtime input.
+Unknown-host fallback, runtime/ABI, default mode and tool pin remain unchanged.
 
-The host loader-cache identity changed. The compiler correctly refuses native
-cache approval, exposing pre-existing deletion of uncached object files before
-linking. Owner commit 632726724 already fixes it. S09's exact reviewed three-file
-adoption patch was approved by the user and applied. Both focused native
-regressions pass on the repaired candidate. Main compiler compilation succeeded;
-registered component preparation failed in the old immutable bootstrap seed with
-the same deletion bug. The failure is preserved, not relabeled as a passing build.
-S09 is qualifying an isolated replacement seed with the same owner cleanup delta;
-active seed and tool trust pins remain unchanged.
+Neither platform source nor seed JSON is part of the actual 212-file CONFIG
+projection. S04 verified their preparation and producer/action invalidation;
+the reviewed pin remains
+`4493db3a525705b6f1222c50796175cdff55b2301d5160e8d02297d43942885e`.
+No automatic repin occurred.
 
-S05 completed juice_evidence.py and tests/test_juice_evidence.py
-for the observed executable-size adapter gap. Executables need a separate
-bounded allowance; raw file, aggregate evidence and shared blob-store bounds stay
-unchanged. Coordinator preserves the canonical loaded-code edit during integration.
+S09 transferred exclusive use of
+`/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/S09-native-component-cache`
+to the coordinator through supported `MYLANG_COMPONENT_CACHE`. Keep the exact
+root for this frozen identity; no mutable seed Zig cache was moved or shared.
+S09 stopped all jobs before handoff. The old seed remains intact.
 
-## Approved owner repair
+## Operational and evidence boundaries
 
-The user explicitly approved “Adopt the existing fix” for memory owner commit
-632726724. Coordinator applied S09's reviewed exact driver delta, unchanged A01
-regression and current-root import. Source ownership remains with the memory
-team; its checkout is untouched. Tool approval/ABI/default memory mode unchanged.
-This supersedes the pending adoption authorization above. Candidate checks follow.
+Use the repository-pinned Zig, worktree-local Zig cache/on-disk TMPDIR and shared
+global cache. Significant work follows shared build/gate admission; direct
+verification owns its own admission. S10 schedules exclusive bounded timing.
+The external dev-env changed at 02:10:41 UTC to build3/gate2/jobs4; this wave did
+not raise slot limits. Captures retain actual environment and CPU affinity.
 
-Additional integration: S05 artifact adapter patch 005dd40f96128d7d8c38de944c825d7c50876a5c
-applied exactly via git show/git apply to preserve coordinator-owned edits in the
-same files. Executable-only validation supports256MiB; raw64MiB, aggregate1GiB and
-shared blob64MiB remain. Oversized executables produce fresh-only observations,
-never expanded reusable-store authority. Raw31 tests pass. S08 authentication API
-f2976df integrated (24 tests pass); common caller authentication is integrated with7 real caller regressions passing.
-Native process helper now preserves both supported flat and scripts.package import
-forms; all35 process tests pass after the migration correction.
+Receipts use namespace/version 2, reports schema 1 and versioned action domains.
+Canonical actual-loaded code is authenticated against watched sources. Failed,
+interrupted, late-unstable or expired-window work cannot publish reusable success;
+new receipts are revoked even after a late qualification/publication failure.
 
-Current shared dev-env was changed externally at02:10:41 UTC to build3/gate2/jobs4.
-No session command edited it or increased a slot limit. Captures record their actual
-environment; timing still owns the same shared namespace and excludes cooperating
-build/gate holders. Older admission declarations are not pooled silently.
+Only the coordinator launches the integrated complete gate. Candidates remain
+frozen through all captures; no evidence cherry-picks change HEAD mid-run.
+Required work is never dropped to meet latency targets. Timeout exceptions are
+bounded qualification controls, not inferred production policy.
 
-## Frozen wave2 source and current qualification boundary
+All normal hooks ran. No Guardian FEEDBACK changes, shared-cache clearing,
+unrelated process cancellation, main update or push occurred. S03 canceled only
+its own obsolete fallback runs on coordinator request and deleted only completed
+private cold caches, preserving raw evidence and frozen artifacts.
 
-Source candidate: `5e6180689b5b837aa60bd5a43f60b0981c58b638`. Normal commit hook
-passed88 Guardian checks. Repaired main compiler SHA256
-`abc4663ecc3356557a8238185005f79486343fe2ecde9258b82a266458781040`;804 source
-file hashes match the frozen candidate. The copied companion components retain
-their prior provenance and do not qualify new seed provisioning. See coordinator/
-repaired-compiler-manifest.json and native-driver-{registered-build,focused-tests}.log.
-The direct selected native executable passed both required cleanup regressions.
-
-Final complete verification, unchanged complete requests, native golden replay,
-and final ordinary-edit native completion remain pending. Existing observed
-semantic-feedback and planning-slice improvements are narrower claims. DL7 full
-bootstrap and every required median/p95 ratio remain open. No main update or push.
-
-## Explicit current-host qualification adoption
-
-Coordinator reviewed the memory owner's committed runtime probes, loader traces,
-S04's independent current six-file comparison, and positive/negative production
-approval checks. The owner-authored hash update in `a9dc0edfe640b98a0869330fe6a19d21b6bbc255`
-is explicitly adopted on this isolated integration branch: only the reviewed
-`/etc/ld.so.cache` fingerprint and evidence comment change. The unrelated owner
-test rename is excluded. The evidence comment names the adopted committed package.
-No runtime/ABI, default memory mode, discovery policy, or unknown-host fallback
-changes. This is a reviewed owner qualification, not an automatic pin refresh.
-Focused production runtime identity checks remain required on the new candidate.
-
-Neither this platform source nor the proposed seed JSON belongs to the actual
-212-file CONFIG projection. S04 independently verified their preparation,
-compiler/component producer and action-input invalidation paths. The explicitly
-qualified declarative CONFIG fingerprint remains unchanged; no repin is needed.
-The repaired5e618 artifact and all earlier measurements retain their original
-uncacheable-native context. A new source/artifact candidate will be frozen for
-final verification; previous successful measurements are not relabeled.
-
-## Qualified historical seed adoption
-
-The same user-approved owner cleanup fix is backported to the original immutable
-seed source, with only its adapted regression and root import. S09 qualified exact
-commit `1665d74029c406dd5b90807186a752ebac6bcbb8`, archive SHA256
-`2632c3ddd2992a989a08e1a070288901c58391eade2e330af5fb14f291d063d5`.
-The coordinator explicitly adopts that reviewed seed pin on this isolated branch.
-No seed mode, ABI, Zig version, trust policy or build recipe changes. Normal seed
-source and binary authentication remain mandatory. No existing seed is overwritten.
-
-Private evidence passes: 40 component tests in debug and release with fact/leak
-checks; four protocol/property/hostile-frame oracles; two native cleanup tests
-under current admission; both component binaries reproduce with --uncached;
-five bad/missing/malformed/recipe/archive controls reject. S09 rehashed all 621
-seed source records and the seed/component artifact chains before handoff.
-
-S09 transferred exclusive use of its qualified component cache at the existing
-absolute path via supported MYLANG_COMPONENT_CACHE. No mutable Zig cache is moved
-or shared across compiler generations. The original seed and old measurements
-remain immutable. The coordinator will retain exact seed1665d740 as a merge parent
-so a future published full clone has the source object for normal git archive.
-Shallow/source-only distributions still need the existing verified archive route.
-This does not establish the full self-hosting compiler-port milestone.
-
-The first host-adoption commit hook correctly required a same-change tagged test.
-The existing approvedRuntime regression is strengthened to reject substitution
-of each declared runtime input, including the loader cache, while preserving
-positive actual-host, missing-input, preload and SourceChanged controls. This
-adds meaningful coverage to the reviewed six-file contract; no production
-approval algorithm changes. The failed hook is archived before retry.
+The full ordinary-edit target, calibrated hard policies, unsupported timing,
+remaining long qualification and self-hosting median/p95 acceptance remain
+explicit in the report. This ledger does not mark either entire roadmap complete.
