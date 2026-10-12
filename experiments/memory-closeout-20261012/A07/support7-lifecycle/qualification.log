@@ -1,0 +1,8 @@
+build-slot: FIFO ticket 987, position 11; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 987, position 3; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 2, FIFO ticket 987 after 75s
+release passed
+debug passed
+verify passed
+optimized_debug passed
+no_facts passed

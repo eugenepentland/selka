@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A07-validation/.tmp/memory-closeout/A07/support7-lifecycle/native/release/main.my",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A07-validation/.tmp/memory-closeout/A07/support7-lifecycle/native/cache",
+    "--experimental-zero-rc",
+    "--counters",
+    "--release",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A07-validation/.tmp/memory-closeout/A07/support7-lifecycle/native/release/program",
+    "--emit-llvm",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A07-validation/.tmp/memory-closeout/A07/support7-lifecycle/native/release/program.ll"
+  ],
+  "status": 0,
+  "stdout": "",
+  "stderr": ""
+}

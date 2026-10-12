@@ -2398,3 +2398,9 @@ test "zero RC aggregate provider markers reject malformed calls before ownership
     try std.testing.expectError(error.UnsupportedInstruction, provider.marker(&module, &module.functions.items[0]));
     try std.testing.expectError(error.UnsupportedInstruction, markers.validate(std.testing.allocator, &module, &function));
 }
+
+// spec-case: NEW-CORE-ZERO-RC-RESOURCE-SCOPES-1
+// spec-case: NEW-CORE-ZERO-RC-DEFAULT-BORROWS-1
+test "zero RC live file scopes and fresh selections clean up across loop exits" {
+    try executes(std.testing.allocator, @embedFile("a07_lifecycle_fixture.my"), "43 18\nscope-47 36\npayload\nFalse\n");
+}
