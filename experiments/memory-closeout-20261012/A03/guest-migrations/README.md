@@ -79,3 +79,51 @@ and a positive snapshot source executed in debug and verified release. The
 complete log is `boundaries-focused.log`. This focused result supplements the
 required complete final gate. `qualification.json` and `review-identities.json`
 record the source burden and unchanged 356 public test signatures.
+
+The support3 native retest was stopped at a safe admission boundary after 30
+completed build attempts (31 file records, the last without a mode result).
+Successful source lowering reached a shared native-link `FileNotFound` defect;
+there were no successful executions. `migration-support3-runtime.json.gz` keeps
+every completed failure and its exact compiler identity. The coordinator/A01
+repaired the object-lifetime issue in support4. The harness now stops at the
+first non-diagnostic compiler/tool failure and supports `SIGUSR1` checkpoints
+after completed lanes, preserving evidence and avoiding repeated infrastructure
+failures. Minimal support2 ownership/lowering reproducers and their diagnostics
+are archived separately; none were copied away to force admission.
+
+After that exploratory result, the coordinator retained conservative whole-root
+exclusivity for calls with multiple mutable children. General path-disjointness
+analysis is outside this closeout. Two dict key0/key2 calls (including reordered
+named arguments) and one row0/row1 call now copy child owners, call once, and write
+back in source argument order. Their callees see an independent snapshot or fresh
+arguments, never the parent root; no alias-index semantics are changed. The
+original same-root list and dictionary calls remain explicit negative regressions,
+and a positive case verifies each index is evaluated once, named argument order,
+independent snapshots, and cleanup. This source update adds six explicit copies
+and 15 added/3 removed lines relative to the first migration commit. It preserves
+all public test signatures and return assertions; it is not an allocation saving.
+`distinct-child-review.json` records the exact source identities.
+
+The following Support4 exploratory results are archived in `support4-summary.json`:
+36 assigned files, 30 attempted, 18 admitted/executed files containing 109 Boolean
+tests, 11 source/lowering refusals, one compiler panic and six unmeasured files.
+All executed files matched output/exit and had RC0, zero managed exit-live and
+clean LLVM/symbol audits. The first 26 files use the earlier source snapshot; the
+next four use the explicit distinct-child update, with exact per-row hashes.
+The tail stopped on the first compiler failure: `providerStore` inspected a
+resolved `Ref.none`. A07/coordinator identified a shared guard fix. The remaining
+six files were not silently treated as passes; broad Support4 sweeps were paused
+until the corrected integrated compiler.
+
+The expanded boundary suite passes all seven registered tests: 11 negative
+sources plus two positives executed in both debug and verified release, with
+native managed-leak checks and emitted LLVM RC audits. The earlier run passed
+all negative groups but both native positives hit the known C0 driver staging
+defect. The coordinator authorized the already-integrated driver dependency
+locally; the rerun then exited0 with7/7. The local duplicate driver commit
+`90ce40266e589598a6e98ac9a2c88ec26e0cb233` must not be integrated again. Exact
+test-source/test-runner identities and logs are retained in
+`boundaries-distinct-qualification.json` and `boundaries-distinct-focused.log`.
+A redundant queued CLI positive run was cancelled before admission, without
+starting a compiler, when broad Support4 sweeps paused; its cancellation receipt
+remains visible and it is not counted as a qualification run.

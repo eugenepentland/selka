@@ -117,7 +117,11 @@ func change_pair(mut first: dict[int, int], mut second: dict[int, int], source: 
 public func test_multiple_mut_places_release_in_evaluation_order() -> bool:
     mut original = {0: {1: 7}, 2: {1: 8}}
     const snapshot = original.copy()
-    mut seen = change_pair(mut original[0], mut original[2], snapshot)
+    mut first = original[0].copy()
+    mut second = original[2].copy()
+    mut seen = change_pair(mut first, mut second, snapshot)
+    original[0] = first
+    original[2] = second
     return seen == 15 and original[0][1] == 13 and original[2][1] == 17
 
 
@@ -125,7 +129,11 @@ public func test_multiple_mut_places_release_in_evaluation_order() -> bool:
 public func test_reordered_named_mut_arguments_preserve_evaluation_order() -> bool:
     mut original = {0: {1: 7}, 2: {1: 8}}
     const snapshot = original.copy()
-    mut seen = change_pair(second=mut original[2], first=mut original[0], source=snapshot)
+    mut second = original[2].copy()
+    mut first = original[0].copy()
+    mut seen = change_pair(second=mut second, first=mut first, source=snapshot)
+    original[2] = second
+    original[0] = first
     return seen == 15 and original[0][1] == 13 and original[2][1] == 17
 
 

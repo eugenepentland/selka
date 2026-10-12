@@ -6,9 +6,11 @@
   A01's 36 guest fixture reservations and reserved
   `src/core/a03_migration_boundaries_test.zig`; the coordinator supplied its
   `src/core/root_test.zig` registration. The exact guest file list is in
-  `guest-migrations/review-identities.json`.
-- Harness commit: `d23f84d0c`; the following evidence/admission commit is the
-  current branch head when this handoff is delivered.
+  `guest-migrations/review-identities.json`. A subsequent explicit reservation
+  covers the eight additional core fixtures in `additional-migrations/originals.json`.
+- Delivered commits: harness `d23f84d0c`, baseline `58fb3cf25`, first guest
+  migration `448062611`, supplemental corpus `338fc9dd2`, additional core
+  migration `17a70623b`. Follow-up evidence and boundary updates are in progress.
 - Implemented: isolated failure-preserving census adapter; 81-case pinned
   manifest preserving the original 30 IDs and all historical 48 matrix cases.
 - Completed tests: all 81 C0 release cases / 131 executions; zero RC, no managed
@@ -43,10 +45,10 @@ production defect; the expanded guest migration work below found additional
 compiler blockers. The integrated candidate dependency remains open.
 A baseline-only success does not qualify default promotion or legacy retirement.
 
-The transferred migration preserves 356 public test signatures. Explicit source
-copy calls increase from 7 to 250; the migration changes 331 added/286 removed
-lines including comments. This is source migration, not a compiler-only win.
-Nine negative borrow/write cases preserve rejection of former implicit-snapshot
+The first transferred migration preserves 356 public test signatures. Explicit
+source copy calls increase from 7 to 250 in that commit; it changes 331 added/286
+removed lines including comments. This is source migration, not a compiler-only win.
+The initial nine negative borrow/write cases preserve rejection of former implicit-snapshot
 call windows and mutable iteration; the positive snapshot case executes in
 debug and verified release. Five focused registered tests pass.
 
@@ -57,11 +59,44 @@ ran 21/24 files /118 Boolean tests successfully with RC0, no managed leaks and
 clean LLVM/symbols. Exact tested sources and receipts are archived in
 `guest-migrations/`; these results do not claim final C1 qualification.
 
-Open production reproducers include nested writes, distinct mutable collection
-places, dictionary-item iteration, fresh-value projections, optional narrowing,
+Open production reproducers include nested writes, dictionary-item iteration,
+fresh-value projections, optional narrowing,
 interior dictionary mutable lowering, and a managed-string destructuring swap
 (A07 and coordinator); aggregate render-helper ownership is assigned to A04.
 The snapshot scalar panic is fixed by the coordinator and awaits fresh recheck.
 See `guest-migrations/README.md` and `qualification.json` for source paths and
 limits. The smallest valid local copy/staging migrations are already applied;
 legitimate in-place operations remain intact for their compiler owners to fix.
+
+The coordinator subsequently retained whole-root exclusivity for multiple mutable
+children, including known-distinct constant slots. Three such calls now use local
+child copies, one call, and source-order writebacks; the callee cannot observe
+the original root. Original list/dictionary calls remain negative regressions.
+This adds six explicit copies and is not a performance saving or a general
+path-disjointness claim. See `guest-migrations/distinct-child-review.json`.
+
+Additional core qualification on support4 admitted seven of eight assigned files,
+executed 11 exact stdout/status/trap/trace contracts, and passed all seven LLVM
+and symbol audits. All nine normal/Result-error runs had RC0/live0. Intentional
+bounds traps retained 1,192 and 160 live bytes at abort and do not claim managed
+cleanup. `v_narrow.my` remains unchanged and refused pending A07's optional-place
+fix. All source identities, source burden, counter data, command receipts and
+harness snapshots are archived under `additional-migrations/`. A09 owns the
+precise counter native oracle and independently passed eight modes times two
+paths on the same migrated source.
+
+The separate supplemental corpus now includes six pinned new API fixtures: owned
+list methods, text/JSON/codec/path contracts, borrowed repetition, generic resource
+lifecycle, direct Result lists/maps, and borrowed aggregate rendering. Its final
+five-mode matrix is 30 builds/40 executions; the original81 and original30
+denominators remain unchanged. Fresh C0 refusals stay visible with no fictional
+allocation observations. Final C1/C2/C3 measurements remain pending the actual
+integrated artifact, not these interim support compilers.
+
+Latest focused boundary result: seven registered tests pass, covering 11 negative
+sources and two positive sources executed in debug/verified release with native
+leak checking and emitted LLVM RC audits. The locally cherry-picked driver
+dependency `90ce40266e589598a6e98ac9a2c88ec26e0cb233` duplicates already-integrated
+`38dc781a8` and is explicitly excluded from A03's integration handoff. Guardian
+required a module doc for the expanded test file; it was added and all88 passed.
+Final integrated verification still must rerun this coverage.

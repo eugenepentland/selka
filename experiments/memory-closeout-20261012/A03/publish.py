@@ -79,7 +79,7 @@ def main():
         lines.append(f"| n={count}; denominator 30 | {row['allocating']} | {row['allocation_free']} | {row['executed_rc']} | {row['refused']} | {row['failed']} | {row['unmeasured']} |")
     original = summary["original_source_checks"]
     if summary['original_denominator']:
-        lines += ["", f"The original unmigrated source checks admitted {original['admitted']}, refused {original['refused']}, and left {original['unmeasured']} unmeasured.",
+        lines += ["", f"The original unmigrated source checks admitted {original['admitted']}, refused {original['refused']}, failed outside a source diagnostic {original.get('failed', 0)}, and left {original['unmeasured']} unmeasured.",
                   "These checks are a separate source-migration inventory; they are not counted as migrated execution successes.", ""]
     lines += ["| Configuration/status | Cases |", "| --- | ---: |"]
     for status, count in sorted(summary["case_status"].items()):

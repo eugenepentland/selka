@@ -2,5 +2,7 @@
   "REPORT.md": "53877f6ec7a4065903a28d034693cce8baf7997ed9fd5c8c328f75b6f98c931c",
   "controls.json": "753d43b48b991d4d9d44d03edb4b70f1e49d5bbef32af7729a35a7dfd653ab92",
   "raw-json.tar.gz": "913b89cf3a5c847f2fb75176a48c55e1e69b3c2f8ad5358aa1125096d4ad693d",
-  "results.json.gz": "f471f22d5edc0c8eff267926f3c01eaed4fb855c2e42e6df3d220733c1c1891b"
+  "results.json.gz": "f471f22d5edc0c8eff267926f3c01eaed4fb855c2e42e6df3d220733c1c1891b",
+  "census.py.snapshot": "edf834975c2b939ec19c6c9679830e668147df1632251940af44fc7fc7c427bb",
+  "manifest.json": "10ab16d4161b51e789be8ebb3a2c37376b8b741a03c604b64c369707b56248d4"
 }

@@ -118,6 +118,86 @@
         "no_facts"
       ],
       "baseline_expectation": "C0 refusal expected for generic-resource lifecycle"
+    },
+    {
+      "id": "supplemental/a01-result-list",
+      "family": "supplemental-20261012",
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/supplemental/a01_result_list.my",
+        "sha256": "6c5ad78bda5b1908889e1a32956456bacbf615ecbc5d36b2fbc7100875865cf6"
+      },
+      "provenance": {
+        "owner": "A01",
+        "commit": "3c8c494758221d8d1f3dce6f65a05dce3ada5868",
+        "path": "experiments/memory-closeout-20261012/A01/samples/result_list.my",
+        "initial_qualification_compiler_sha256": "a6795771960a0540e9c573b99dc5117d8450b8010e242ed485744eb725edf320"
+      },
+      "runs": [
+        {
+          "id": "workers-1",
+          "argv": [],
+          "stdout": "27 4 5 4 5\n3889\n",
+          "exit": 0,
+          "env": {
+            "MYLANG_THREADS": "1"
+          }
+        },
+        {
+          "id": "workers-2",
+          "argv": [],
+          "stdout": "27 4 5 4 5\n3889\n",
+          "exit": 0,
+          "env": {
+            "MYLANG_THREADS": "2"
+          }
+        },
+        {
+          "id": "workers-8",
+          "argv": [],
+          "stdout": "27 4 5 4 5\n3889\n",
+          "exit": 0,
+          "env": {
+            "MYLANG_THREADS": "8"
+          }
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "baseline_expectation": "C0 refusal: managed Result list generic constraint; refusal remains in denominator"
+    },
+    {
+      "id": "supplemental/a04-render-borrows",
+      "family": "supplemental-20261012",
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/supplemental/a04_render_borrows.my",
+        "sha256": "1830d6daa744237c6279de5d7af6d162c0646c70cac2972220811907f4041635"
+      },
+      "provenance": {
+        "owner": "A04",
+        "commit": "b63b5ae80454708f05d91409dac4d31a0fd0efee",
+        "path": "tests/lang/a04_render_borrows.my"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "release",
+        "debug",
+        "verify",
+        "optimized_debug",
+        "no_facts"
+      ],
+      "baseline_expectation": "C0 refusal expected for borrowed aggregate rendering"
     }
   ]
 }

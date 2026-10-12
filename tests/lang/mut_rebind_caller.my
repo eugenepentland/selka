@@ -247,7 +247,11 @@ func replace_rows(mut first: int[], mut second: int[], left: int[], right: int[]
 public func test_multiple_interior_references_survive_later_argument_allocations() -> bool:
     mut rows = [[1], [2]]
     mut saved = rows.copy()
-    replace_rows(mut rows[0], mut rows[1], [3], [4])
+    mut first = rows[0].copy()
+    mut second = rows[1].copy()
+    replace_rows(mut first, mut second, [3], [4])
+    rows[0] = first
+    rows[1] = second
     return rows == [[3], [4]] and saved == [[1], [2]]
 
 

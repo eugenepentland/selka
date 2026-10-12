@@ -1,0 +1,5 @@
+func main(out: Stream) -> int:
+    const values = {"a": 1}
+    const doubled = {name.copy(): value * 2 for name, value in values.items()}
+    out.print(doubled["a"])
+    return 0

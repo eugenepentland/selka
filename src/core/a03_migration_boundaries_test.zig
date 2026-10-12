@@ -1,3 +1,5 @@
+//! Migration boundaries retain invalidating-borrow refusals and execute explicit
+//! snapshots with source-order selection, mutation, and owned writeback.
 const std = @import("std");
 const language = @import("mylang");
 const ownership = @import("single_owner.zig");
@@ -191,4 +193,57 @@ test "zero RC migration executes explicit snapshots before owner replacement" {
         \\    out.print(state.names[0])
         \\    return 0
     , "102\n9\n403\n8\n");
+}
+
+// Same-root mutable child loans remain conservatively exclusive. The source
+// migration uses independent owners, not a general path-disjointness waiver.
+// spec-case: NEW-CORE-ZERO-RC-1
+test "zero RC migration rejects multiple mutable children of one root" {
+    try refuses(std.testing.allocator,
+        \\func change(mut first: int[], mut second: int[]) -> Unit:
+        \\    first.append(3)
+        \\    second.append(4)
+        \\func main() -> int:
+        \\    mut rows = [[1], [2]]
+        \\    change(mut rows[0], mut rows[1])
+        \\    return rows[0][1] + rows[1][1]
+    );
+    try refuses(std.testing.allocator,
+        \\func change(mut first: dict[int, int], mut second: dict[int, int]) -> Unit:
+        \\    first[1] = 13
+        \\    second[1] = 17
+        \\func main() -> int:
+        \\    mut mapping = {0: {1: 7}, 2: {1: 8}}
+        \\    change(second=mut mapping[2], first=mut mapping[0])
+        \\    return mapping[0][1] + mapping[2][1]
+    );
+}
+
+// Select each index once, copy in source argument order, and write back in the
+// same order. This case has distinct indices and the callee cannot see the root.
+// spec-case: NEW-CORE-ZERO-RC-1
+test "zero RC migration preserves indexed named argument order through child copies" {
+    try executes(std.testing.allocator,
+        \\func select(mut order: int[], index: int) -> int:
+        \\    order.append(index)
+        \\    return index
+        \\func change(mut first: int[], mut second: int[]) -> int:
+        \\    first.append(3)
+        \\    second.append(4)
+        \\    return first[0] * 10 + second[0]
+        \\func main(out: Stream) -> int:
+        \\    mut rows = [[1], [2]]
+        \\    const saved = rows.copy()
+        \\    mut order: int[] = []
+        \\    const second_index = select(mut order, 1)
+        \\    mut second = rows[second_index].copy()
+        \\    const first_index = select(mut order, 0)
+        \\    mut first = rows[first_index].copy()
+        \\    const observed = change(second=mut second, first=mut first)
+        \\    rows[second_index] = second
+        \\    rows[first_index] = first
+        \\    out.print(observed, order[0], order[1], len(order))
+        \\    out.print(rows[0][1], rows[1][1], len(saved[0]), len(saved[1]))
+        \\    return 0
+    , "12 1 0 2\n3 4 1 1\n");
 }

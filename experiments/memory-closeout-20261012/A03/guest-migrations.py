@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import signal
 import subprocess
 import sys
 
@@ -45,11 +46,22 @@ def main():
     lease = census.AdmissionLease(output, env, 10)
     census.LEASE = lease
     audit = census.load_helper('a03_migration_audit', 'experiments/zero-rc-20261011/audit.py')
+    stop_requested = False
+
+    def checkpoint(_signum, _frame):
+        nonlocal stop_requested
+        stop_requested = True
+
+    signal.signal(signal.SIGUSR1, checkpoint)
     results = {'compiler_source_revision': args.source_revision,
                'compiler_path': str(args.compiler.resolve()), 'compiler_sha256': census.digest(args.compiler),
                'harness_sha256': census.digest(__file__), 'census_helper_sha256': census.digest(census.__file__),
                'ownership': args.ownership,
-               'modes': args.modes, 'check_only': args.check_only, 'files': {}, 'failures': []}
+               'modes': args.modes, 'check_only': args.check_only, 'selected_files': files,
+               'assigned_files': list(ids), 'planned_builds': len(files) * (1 if args.check_only else len(args.modes)),
+               'files': {}, 'failures': []}
+    (output / 'harness.py.snapshot').write_bytes(Path(__file__).read_bytes())
+    (output / 'census.py.snapshot').write_bytes(Path(census.__file__).read_bytes())
     mode_flags = ['--experimental-zero-rc'] if args.ownership == 'opt-in' else []
     try:
         for name in files:
@@ -84,6 +96,11 @@ def main():
                 row['modes'][mode] = item
                 if result['exit'] != 0:
                     results['failures'].append(name + '/' + mode + '/build')
+                    if result['exit'] is None or result['exit'] < 0 or 'error[E_' not in result['stderr']:
+                        item['infrastructure_or_compiler_failure'] = True
+                        results['stopped_after'] = name + '/' + mode
+                        results['stop_reason'] = 'Non-diagnostic compiler/tool failure; avoid repeating it across the corpus.'
+                        stop_requested = True
                 elif not args.check_only:
                     item.update(binary_sha256=census.digest(binary), llvm_sha256=census.digest(llvm))
                     symbols = subprocess.run(['nm', str(binary)], capture_output=True, text=True, check=True).stdout
@@ -105,6 +122,10 @@ def main():
                         results['failures'].append(name + '/' + mode + '/run')
                 census.save(output / 'results.json', results)
                 print(name, mode, result['exit'], result['stderr'].split('\n')[0], flush=True)
+                if stop_requested:
+                    results.setdefault('stop_reason', 'SIGUSR1 checkpoint after completed lane')
+                    results['checkpointed'] = True
+                    return 3
     finally:
         lease.close()
         census.save(output / 'results.json', results)

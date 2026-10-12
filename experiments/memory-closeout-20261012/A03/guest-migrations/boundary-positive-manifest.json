@@ -1,0 +1,46 @@
+{
+  "schema": "memory-closeout-census-manifest-v1",
+  "original_denominator": 0,
+  "cases": [
+    {
+      "id": "owner_snapshot",
+      "family": "boundary-positive-interim",
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/guest-migrations/reproducers/owner_snapshot.my",
+        "sha256": "06e2de244fd87f4aa755dde5481dc762a37fabdfb3dfa590ed57550c532683f4"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "102\n9\n403\n8\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "debug",
+        "verify"
+      ]
+    },
+    {
+      "id": "distinct_child_snapshot",
+      "family": "boundary-positive-interim",
+      "source": {
+        "path": "experiments/memory-closeout-20261012/A03/guest-migrations/reproducers/distinct_child_snapshot.my",
+        "sha256": "2f5e848f0050cfd54c50634f85c44cb61bbce920325b87ce6c914e47e2cac008"
+      },
+      "runs": [
+        {
+          "id": "0",
+          "argv": [],
+          "stdout": "12 1 0 2\n3 4 1 1\n",
+          "exit": 0
+        }
+      ],
+      "modes": [
+        "debug",
+        "verify"
+      ]
+    }
+  ]
+}

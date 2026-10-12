@@ -255,7 +255,7 @@ def summarize(result, cases, original_denominator=30):
                "planned_builds": sum(len(case["modes"]) for case in cases),
                "planned_executions": sum(len(case["modes"]) * len(case["runs"]) for case in cases),
                "completed_builds": 0,
-               "case_status": {}, "original_30": {}, "original_source_checks": {"admitted": 0, "refused": 0, "unmeasured": original_denominator},
+               "case_status": {}, "original_30": {}, "original_source_checks": {"admitted": 0, "refused": 0, "failed": 0, "unmeasured": original_denominator},
                "executions": 0, "passed_executions": 0,
                "executions_with_rc": 0, "executions_with_managed_leaks": 0}
     for case in cases:
@@ -291,7 +291,8 @@ def summarize(result, cases, original_denominator=30):
     for case in original:
         checked = result["cases"].get(case["id"], {}).get("original_admission")
         if checked:
-            summary["original_source_checks"]["admitted" if checked["exit"] == 0 else "refused"] += 1
+            status = "admitted" if checked["exit"] == 0 else "refused" if "error[E_" in checked["stderr"] else "failed"
+            summary["original_source_checks"][status] += 1
             summary["original_source_checks"]["unmeasured"] -= 1
     summary["complete_matrix"] = summary["completed_builds"] == summary["planned_builds"]
     return summary
@@ -373,6 +374,11 @@ def main():
             result["summary"] = summarize(result, cases, original_denominator)
             save(result_path, result)
             print(row["status"], case["id"], mode, flush=True)
+            if row["status"] in ("build_failed", "harness_failed"):
+                result["checkpoint_reason"] = "Compiler/tool or harness failure; preserve completed lanes and avoid repeating infrastructure failure."
+                save(result_path, result)
+                LEASE.close()
+                return 3
             if STOP_REQUESTED:
                 print("checkpoint requested; all completed lanes saved", flush=True)
                 LEASE.close()

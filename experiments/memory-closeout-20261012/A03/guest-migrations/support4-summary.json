@@ -1,0 +1,34 @@
+{
+  "compiler_source_revision": "66890fbc5135a771e6a423724d13c30018ab717f",
+  "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+  "assigned_files": 36,
+  "completed_files": 30,
+  "unmeasured": [
+    "tests/lang/mut_rebind_modules.my",
+    "tests/lang/mut_rebinding.my",
+    "tests/lang/mut_record_call_window.my",
+    "tests/lang/operand_snapshots.my",
+    "tests/lang/option_narrowing.my",
+    "tests/lang/frontend_type_helpers.my"
+  ],
+  "passed_files": 18,
+  "executed_boolean_tests": 109,
+  "refused": {
+    "tests/lang/array_negative_index.my": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-support4-runtime/sources/tests/lang/array_negative_index.my:228:9: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+    "tests/lang/array_places.my": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-support4-runtime/sources/tests/lang/array_places.my:164:5: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it",
+    "tests/lang/dict_comprehensions.my": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-support4-runtime/sources/tests/lang/dict_comprehensions.my:13:43: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value",
+    "tests/lang/dictionary_hashing.my": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-support4-runtime/sources/tests/lang/dictionary_hashing.my:1:1: error[E_CORE_UNSUPPORTED]: the new core does not support unaudited zero-RC runtime helper myl_core_render_shape_48_22 yet",
+    "tests/lang/dictionary_views.my": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-support4-runtime/sources/tests/lang/dictionary_views.my:59:5: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value",
+    "tests/lang/element_access.my": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-support4-runtime/sources/tests/lang/element_access.my:141:17: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper",
+    "tests/lang/field_augmented.my": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-support4-runtime/sources/tests/lang/field_augmented.my:70:5: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+    "tests/lang/keyed_sorting.my": "keyed_sorting.my:157:51: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper",
+    "tests/lang/loop_rebinding.my": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-support4-runtime/sources/tests/lang/loop_rebinding.my:208:5: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value",
+    "tests/lang/mut_argument_places.my": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-support4-tail/sources/tests/lang/mut_argument_places.my:190:18: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression",
+    "tests/lang/mut_dictionary_arguments.my": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-support4-tail/sources/tests/lang/mut_dictionary_arguments.my:11:18: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression"
+  },
+  "compiler_failed": {
+    "tests/lang/mut_rebind_caller.my": "thread 2848856 panic: index out of bounds: index 4294967295, len 3"
+  },
+  "run_failed": [],
+  "not_final_C1": true
+}
