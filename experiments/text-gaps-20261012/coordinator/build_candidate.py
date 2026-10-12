@@ -32,6 +32,7 @@ def run(command, log, env=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('name')
+    parser.add_argument('--baseline-install', type=Path, default=BASELINE)
     args = parser.parse_args()
     assert args.name and '/' not in args.name and args.name not in ('.', '..')
     assert os.environ.get('MYLANG_SLOT_DIR')
@@ -50,7 +51,8 @@ def main():
              '--maxrss', env['MYLANG_DEV_MAXRSS']]
     run(build, evidence / 'host-build.log', env)
     install = work / 'install'
-    shutil.copytree(BASELINE, install, symlinks=True)
+    baseline = args.baseline_install.resolve(strict=True)
+    shutil.copytree(baseline, install, symlinks=True)
     compiler = install / 'bin/mylang'
     assert not compiler.is_symlink()
     compiler.chmod(0o755)
@@ -84,6 +86,7 @@ def main():
     files = [{'path': str(path.relative_to(install)), 'sha256': sha(path), 'bytes': path.stat().st_size}
              for path in sorted(install.rglob('*')) if path.is_file()]
     receipt = {'source_commit': commit, 'compiler': str(compiler), 'compiler_sha256': compiler_hash,
+               'baseline_installation': str(baseline),
                'host_build_command': build, 'installation': str(install), 'installation_files': files,
                'component_provenance': str(ROOT / 'experiments/micro-gaps-20261012/coordinator/installation.json'),
                'entries': entries, 'qualification': '100 independent oracle probes; counted probes require counters, zero RC and zero exit-live',
