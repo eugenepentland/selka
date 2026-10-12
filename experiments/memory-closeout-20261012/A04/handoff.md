@@ -337,3 +337,11 @@ identity and fresh phase; the exact adapter used remains archived with its hash.
 C3 runtime/compiler patches remain isolated drafts. A10 now owns the narrow
 borrowed-equality changes in build_values/emit_values; the affected A04 C3 draft
 must be refreshed against that final implementation before retirement activation.
+
+## Full-gate follow-ups
+
+- `78dbb358d2306a043f22c1b9fafe81641ad8ea55`: exact scalar saturation helper admission; two Core tests and12 native lanes, including the unchanged original width-boundary function. Full recursive-values equality is separately owned by A10.
+- `187b0fe30`: repeated STR capacity/terminator repair restores moving Unicode cursor; two focused tests, all7 before/after source-identical lanes and10 repetition+4 negative lanes pass. Walks1,201,439,895→1,639,865; every paired managed metric unchanged. Exact artifact and raw evidence under `text-cursor/`.
+- Extrema lint wrappers move existing scenario bodies into private helpers, preserve all3 public tests/oracles and pass23 native+3 negatives plus lint/format; `extrema/wrapper-hygiene/`. Saturation fixture formatting changes only blank lines.
+
+The user subsequently changed the endpoint to a green complete verification gate; additional performance qualification is deferred. No A04 report promotes the intermediate Support7/prototype artifacts to a completed default or retirement milestone.

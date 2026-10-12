@@ -1,0 +1,22 @@
+{
+  "reason": "Noalloc lint L_TEST_CONDITIONAL requires direct public test assertions; same scenario bodies and public oracles retained in private helpers.",
+  "original_sha256": "29a31315bb1cef6f8220faca7e4b5dff018c17b14057f0916852baf76ca15c17",
+  "migrated_sha256": "b2ca510bc5add60d2d2ab7f6abfab0c32403bb472a7f82ff5a8b0e807e094c05",
+  "scenarios": [
+    {
+      "public_name": "test_dynamic_list_extrema_borrow_and_copy_independently",
+      "body_sha256_before_and_after": "019d9ea8b1943a175bc081b09e383fd5e3755c2f1a5d652f2f06f2b6edcd683c",
+      "private_name": "scenario_dynamic_list_extrema_borrow_and_copy_independently"
+    },
+    {
+      "public_name": "test_list_extrema_keep_scalar_ordering_and_first_ties",
+      "body_sha256_before_and_after": "dc13c1839cd617cd7a748071845a5964a49a588644559c3e4d32c3d9bbb767a9",
+      "private_name": "scenario_list_extrema_keep_scalar_ordering_and_first_ties"
+    },
+    {
+      "public_name": "test_list_input_and_scalar_arguments_evaluate_once",
+      "body_sha256_before_and_after": "37159adfcd9c589153a9b8fb7af82a76041ef38a3355a8098745a87285ba8606",
+      "private_name": "scenario_list_input_and_scalar_arguments_evaluate_once"
+    }
+  ]
+}

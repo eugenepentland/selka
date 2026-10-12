@@ -1,5 +1,4 @@
 # Runtime inputs keep every signedness/width path in the generated native code.
-
 func boundaries_i8(one: i8) -> bool:
     const low = -128i8
     const high = 127i8
@@ -12,6 +11,7 @@ func boundaries_i8(one: i8) -> bool:
     if saturating_sub(high, -one) != high or saturating_sub(low, -one) != low + one:
         return False
     return saturating_mul(high, high) == high
+
 
 func boundaries_i16(one: i16) -> bool:
     const low = -32768i16
@@ -26,6 +26,7 @@ func boundaries_i16(one: i16) -> bool:
         return False
     return saturating_mul(high, high) == high
 
+
 func boundaries_i32(one: i32) -> bool:
     const low = -2147483648i32
     const high = 2147483647i32
@@ -38,6 +39,7 @@ func boundaries_i32(one: i32) -> bool:
     if saturating_sub(high, -one) != high or saturating_sub(low, -one) != low + one:
         return False
     return saturating_mul(high, high) == high
+
 
 func boundaries_i64(one: i64) -> bool:
     const low = -9223372036854775808
@@ -52,6 +54,7 @@ func boundaries_i64(one: i64) -> bool:
         return False
     return saturating_mul(high, high) == high
 
+
 func boundaries_u8(one: u8) -> bool:
     const low = 0u8
     const high = 255u8
@@ -60,6 +63,7 @@ func boundaries_u8(one: u8) -> bool:
     if saturating_mul(high, 0u8) != 0u8 or saturating_sub(high, one) != high - one:
         return False
     return saturating_mul(high, high) == high
+
 
 func boundaries_u16(one: u16) -> bool:
     const low = 0u16
@@ -70,6 +74,7 @@ func boundaries_u16(one: u16) -> bool:
         return False
     return saturating_mul(high, high) == high
 
+
 func boundaries_u32(one: u32) -> bool:
     const low = 0u32
     const high = 4294967295u32
@@ -78,6 +83,7 @@ func boundaries_u32(one: u32) -> bool:
     if saturating_mul(high, 0u32) != 0u32 or saturating_sub(high, one) != high - one:
         return False
     return saturating_mul(high, high) == high
+
 
 func boundaries_u64(one: u64) -> bool:
     const low = 0u64
@@ -88,9 +94,11 @@ func boundaries_u64(one: u64) -> bool:
         return False
     return saturating_mul(high, high) == high
 
+
 # spec-case: NEW-CORE-S3-NUMERIC-1
 public func test_dynamic_saturating_boundaries() -> bool:
     return boundaries_i8(1i8) and boundaries_i16(1i16) and boundaries_i32(1i32) and boundaries_i64(1i64) and boundaries_u8(1u8) and boundaries_u16(1u16) and boundaries_u32(1u32) and boundaries_u64(1u64)
+
 
 func main(args: str[]) -> int:
     const one = len(args) + 1
