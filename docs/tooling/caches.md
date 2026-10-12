@@ -139,7 +139,9 @@ $ mylang check-project app/main.my --explain-invalidation --report --cache-dir=.
 ## Shared compiler artifacts
 
 Set `MYLANG_COMPILER_SHARED_CACHE` to one dedicated local directory to share
-immutable compiler artifacts between compatible worktrees. Keep each worktree's
+immutable compiler artifacts between compatible worktrees. Sharing is off
+otherwise: the per-user default location applies only once the compiler's
+`default_sharing` switch is on ([default location](native-build.md#shared-compiler-artifacts)). Keep each worktree's
 `--cache-dir` and `ZIG_LOCAL_CACHE_DIR` separate. This is independent of
 `MYLANG_TEST_SHARED_CACHE`, which shares eligible test successes.
 

@@ -1,0 +1,3 @@
+{
+ "harness_note": "First run judged 'v3 namespace beside v2' at the cache root; receipt namespaces live in <cache>/tests/. The harness was wrong, not the tree; fixed, rerun passes (tests/receipts-v2, tests/receipts-v3, tests/manifests-v2, tests/manifests-v3)."
+}

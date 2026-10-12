@@ -23,6 +23,7 @@ import datetime
 import hashlib
 import json
 import os
+import re
 import shlex
 import shutil
 import struct
@@ -485,6 +486,7 @@ class Cmd:
     slot: str | None = None
     parse: str | None = None  # "tests" | "cache-report" | "coordinator"
     always: bool = False      # cleanup: run even after an earlier failure
+    required: bool = False    # a non-zero exit stops the sub-case (builds)
 
     def render(self, tree: str) -> str:
         parts = ["cd " + shlex.quote(self.cwd), "&&"]
@@ -538,7 +540,7 @@ FEATURE_NOTES = {
     "coordinator_path_free": "per-action path_free in last-run.json (Lane D)",
     "mismatch_counter": "mismatches.log and the determinism-mismatch counter (Lane E, D3)",
     "build_env": "build_env.zig host tool and its built binary (Lane A/C)",
-    "program_key_report": "per-test program_key in the test report (Lane B)",
+    "execution_key_report": "per-test cache.execution_key in the test report (Lane B)",
 }
 
 
@@ -568,7 +570,7 @@ def probe_features(tree: Path) -> dict[str, bool]:
         "coordinator_path_free": _grep(tree, ["scripts/verify_cache.py"], "path_free"),
         "mismatch_counter": _grep(tree, ["src/*.zig", "src/core/*.zig"], "mismatches.log"),
         "build_env": (tree / "build_env.zig").exists(),
-        "program_key_report": _grep(tree, ["src/core/test_runner_report.zig"], "program_key"),
+        "execution_key_report": _grep(tree, ["src/core/test_runner_report.zig"], "execution_key"),
     }
 
 
@@ -695,6 +697,9 @@ class Run:
                     self.results[step.name] = record
                 else:
                     self.results[step.name] = self.run_command(index, step)
+                    if step.required and self.results[step.name]["exit"] != 0:
+                        raise RuntimeError("required step exited %d: %s" % (
+                            self.results[step.name]["exit"], self.results[step.name]["stderr_tail"][-600:]))
             except Exception as error:  # noqa: BLE001 - recorded as row evidence
                 self.results[step.name] = {"step": step.name, "error": "%s: %s" % (type(error).__name__, error)}
                 if failure is None:
@@ -711,7 +716,7 @@ class Run:
             if directory in step.env:
                 Path(step.env[directory]).mkdir(parents=True, exist_ok=True)
         full = ([str(self.ctx.tree / "scripts/build-slot.sh"), step.slot] if step.slot else []) + argv
-        compiler = next((item for item in argv if item.endswith("/zig-out/bin/mylang")), None)
+        compiler = next((item for item in argv if item.endswith(("/zig-out/bin/mylang", "/zig-out/focus/mylang"))), None)
         if compiler and compiler not in self.compilers:
             self.compilers[compiler] = sha256_file(Path(compiler))
         stem = "%02d-%s" % (index, step.name)
@@ -720,7 +725,10 @@ class Run:
         seconds = round(time.monotonic() - started, 3)
         (self.dir / (stem + ".stdout")).write_text(completed.stdout)
         (self.dir / (stem + ".stderr")).write_text(completed.stderr)
+        queue = admission_queue_seconds(completed.stderr) if step.slot else 0
         record = {"step": step.name, "kind": "command", "argv": full, "cwd": step.cwd,
+                  "queue_seconds": queue,
+                  "seconds_excluding_queue": None if queue is None else round(seconds - queue, 3),
                   "env_set": step.env, "env_unset": step.unset, "exit": completed.returncode,
                   "started": started_at, "harness_seconds_including_queue": seconds,
                   "stdout": stem + ".stdout", "stderr": stem + ".stderr",
@@ -738,6 +746,15 @@ class Run:
                 record["excerpt"] = [{key: row.get(key) for key in ("id", "state", "reason", "action_key", "path_free")}
                                      for row in record["parsed"].get("actions", [])]
         return record
+
+
+QUEUE_LINE = re.compile(r"^build-slot: \w+ slot \d+, FIFO ticket \d+ after (\d+)s", re.MULTILINE)
+
+
+def admission_queue_seconds(stderr: str) -> int | None:
+    """The wait `scripts/build-slot.sh` reports before admitting the command."""
+    found = QUEUE_LINE.findall(stderr)
+    return int(found[-1]) if found else None
 
 
 def latest_coordinator_report(tree: Path, since_monotonic: float) -> dict | None:
@@ -791,8 +808,9 @@ def remove_worktree(label: str) -> Py:
     return Py("worktree-remove-" + label, "git worktree remove --force work/%s" % label, action, always=True)
 
 
-def build(ctx: Context, tree: Path, name: str = "build") -> Cmd:
-    return Cmd(name, ["zig", "build"], str(tree), ctx.tree_env(tree), slot="build")
+def build(ctx: Context, tree: Path, name: str = "build", target: str | None = None) -> Cmd:
+    argv = ["zig", "build"] + ([target] if target else [])
+    return Cmd(name, argv, str(tree), ctx.tree_env(tree), slot="build", required=True)
 
 
 def mylang_test(ctx: Context, name: str, tree: Path, entry: str, cache: Path, *, compiler: str | None = None,
@@ -884,15 +902,15 @@ def row1_complete_judge(run: Run) -> list[dict]:
 
 # Rows 2-5: compiler, runner and runtime edits in a scratch worktree ---------
 
-ROW3_ANCHOR = '"  {s} = add i64 {s}, 1\\n  br label %{s}\\n{s}:\\n  {s} = add i64 {s}, 0\\n";'
-ROW3_REPLACEMENT = '"  call void asm sideeffect \\"nop\\", \\"\\"()\\n  {s} = add i64 {s}, 1\\n  br label %{s}\\n{s}:\\n  {s} = add i64 {s}, 0\\n";'
+ROW3_ANCHOR = '.dict_new => try out.print(arena, "  {s} = call ptr @myl_core_dict_new(i64 {s}, ptr {s})\\n",'
+ROW3_REPLACEMENT = '.dict_new => try out.print(arena, "  call void asm sideeffect \\"nop\\", \\"\\"()\\n  {s} = call ptr @myl_core_dict_new(i64 {s}, ptr {s})\\n",'
 
 EDITS = {
     "02-parser-comment": ("src/parser.zig", None, "\n// lane-f row 2: comment-only front-end edit\n",
                           "append a comment line (front end, no code change)"),
-    "03-emitter-helper": ("src/core/emit_text_split.zig", ROW3_ANCHOR, ROW3_REPLACEMENT,
-                          "emit a side-effecting `nop` in the whitespace-split cursor's advance block: "
-                          "changes the bytes of every program that splits on whitespace, not its meaning"),
+    "03-emitter-helper": ("src/core/emit_dict.zig", ROW3_ANCHOR, ROW3_REPLACEMENT,
+                          "emit a side-effecting `nop` before every dictionary construction: changes the "
+                          "bytes of every program that builds a dictionary, not its meaning"),
     "04-runner-edit": ("src/core/test_runner_execute.zig", None, "\n// lane-f row 4: runner source edit (runner_identity input)\n",
                        "append a comment line to a runner_identity source"),
     "05-runtime-edit": ("src/core/runtime/core_rt.c", None,
@@ -901,7 +919,7 @@ EDITS = {
 }
 
 
-def edit_row_plan(row_id: str, *, force_compare: bool = False):
+def edit_row_plan(row_id: str, *, force_compare: bool = False, flags: tuple[str, ...] = ()):
     relative, old, new, description = EDITS[row_id]
     label = "row%s-tree" % row_id.split("-")[0]
 
@@ -909,17 +927,45 @@ def edit_row_plan(row_id: str, *, force_compare: bool = False):
         tree = ctx.scratch(label)
         work = ctx.row_work(row_id, "edit")
         entry = entry_for_lang(ctx)
-        env = ctx.test_env(tree, work)
-        steps = [reset_dir(lambda c: c.row_work(row_id, "edit")), add_worktree(label), build(ctx, tree, "build-before"),
-                 mylang_test(ctx, "cold", tree, entry, work / "cache", env=env),
-                 mylang_test(ctx, "warm", tree, entry, work / "cache", env=env),
-                 edit(label, relative, old, new, description), build(ctx, tree, "build-after"),
-                 mylang_test(ctx, "after-edit", tree, entry, work / "cache", env=env)]
+        # A row-private object store: new entries in it after the edit are
+        # exactly the `zig cc` compiles and links the edited run performed.
+        env = ctx.test_env(tree, work, MYLANG_CORE_RUNTIME_CACHE=str(work / "core-runtime"))
+        # An edit without its spec-tagged test fails Guardian, which gates the
+        # install of zig-out/bin/mylang; `affected-compiler` installs the same
+        # compiler ungated at zig-out/focus/mylang, so both sides use that copy.
+        focus = str(tree / "zig-out/focus/mylang")
+        steps = [reset_dir(lambda c: c.row_work(row_id, "edit")), add_worktree(label),
+                 build(ctx, tree, "build-before", "affected-compiler"),
+                 mylang_test(ctx, "cold", tree, entry, work / "cache", compiler=focus, flags=flags, env=env),
+                 mylang_test(ctx, "warm", tree, entry, work / "cache", compiler=focus, flags=flags, env=env),
+                 edit(label, relative, old, new, description), build(ctx, tree, "build-after", "affected-compiler"),
+                 store_count(row_id, "stores-before"),
+                 mylang_test(ctx, "after-edit", tree, entry, work / "cache", compiler=focus, flags=flags, env=env),
+                 store_count(row_id, "stores-after")]
         if force_compare:
-            steps.append(mylang_test(ctx, "forced", tree, entry, work / "cache-forced", flags=("--force",), env=env))
+            steps.append(mylang_test(ctx, "forced", tree, entry, work / "cache-forced", compiler=focus,
+                                     flags=flags + ("--force",), env=env))
         steps += [restore(label, relative), remove_worktree(label)]
         return steps
     return plan
+
+
+def store_count(row_id: str, name: str) -> Py:
+    def action(run: Run) -> dict:
+        work = run.ctx.row_work(row_id, "edit")
+        count = lambda root: sum(1 for p in root.rglob("*") if p.is_file()) if root.exists() else 0
+        return {"objects": count(work / "core-runtime" / "units-v1"),
+                "runtime_store_files": count(work / "core-runtime"),
+                "programs": sum(count(path) for path in (work / "cache").glob("programs-v*"))}
+    return Py(name, "count unit objects and linked programs in the row-private stores", action)
+
+
+def store_growth(run: Run) -> dict | None:
+    before = run.result("stores-before").get("result")
+    after = run.result("stores-after").get("result")
+    if not before or not after:
+        return None
+    return {key: after[key] - before[key] for key in before}
 
 
 def baseline_checks(run: Run) -> list[dict]:
@@ -930,9 +976,16 @@ def row2_judge(run: Run) -> list[dict]:
     after = run.tests("after-edit")
     checks = baseline_checks(run) + judge_no_failures("after-edit", after, run.status("after-edit"))
     checks += judge_exec_tier("after-edit", after, run.ctx.features)
-    seconds = run.result("after-edit").get("harness_seconds_including_queue")
-    checks.append(check("after-edit wall time recorded", "lowering and emission only", seconds, True,
-                        "informational: harness clock including admission queue; not a timed cohort sample"))
+    growth = store_growth(run)
+    checks.append(check("after-edit: zero zig cc (no new unit object, no new linked program)",
+                        {"objects": 0, "programs": 0}, growth,
+                        None if growth is None else growth["objects"] == 0 and growth["programs"] == 0,
+                        "" if growth else "not judged: store counts missing"))
+    seconds = run.result("after-edit").get("seconds_excluding_queue")
+    checks.append(check("after-edit wall time recorded", "lowering and emission only (baseline 78 s, 0 cached)",
+                        {"seconds_excluding_queue": seconds,
+                         "queue_seconds": run.result("after-edit").get("queue_seconds")}, True,
+                        "informational: harness clock minus the build-slot queue; not an exclusive timing window"))
     return checks
 
 
@@ -941,7 +994,7 @@ def row3_judge(run: Run) -> list[dict]:
     a, f = verdict_map(after), verdict_map(forced)
     differing = sorted(name for name in set(a) | set(f) if a.get(name) != f.get(name))
     summary = run.tests("after-edit")
-    checks = baseline_checks(run) + [
+    checks = baseline_checks(run) + [growth_note(run),
         check("verdicts equal a --force run", "0 differing", {"tests": len(a), "differing": differing[:50]},
               bool(a) and not differing),
         gated("only tests whose program bytes changed execute", "0 < executed < eligible",
@@ -949,23 +1002,41 @@ def row3_judge(run: Run) -> list[dict]:
                "executed_names": summary.get("executed_names", [])[:50]},
               0 < summary.get("eligible_executed", 0) < summary.get("eligible", 0), "exec_receipts", run.ctx.features),
     ]
-    keyed = [t for t in (after or {}).get("tests", []) if isinstance(t.get("cache"), dict) and "program_key" in t["cache"]]
-    warm = {t.get("name"): t["cache"].get("program_key") for t in (run.report("warm") or {}).get("tests", [])
-            if isinstance(t.get("cache"), dict) and "program_key" in t["cache"]}
-    if keyed and warm:
-        wrong = sorted(t["name"] for t in keyed
-                       if (t["cache"]["program_key"] != warm.get(t["name"])) != (t.get("status") in EXECUTED_STATUSES)
-                       and eligible(t))
-        checks.append(check("executed set equals changed program_key set", "0 mismatched", wrong, not wrong))
+    # The cold run executed every test, so it reports every execution key; a
+    # warm run's IR hits carry none.
+    keys_after = execution_keys(after)
+    keys_warm = execution_keys(run.report("cold"))
+    if keys_after and keys_warm:
+        changed = sorted(name for name, key in keys_after.items() if keys_warm.get(name) != key)
+        wrong = sorted(t["name"] for t in (after or {}).get("tests", [])
+                       if t.get("name") in keys_after and eligible(t)
+                       and (keys_warm.get(t["name"]) != keys_after[t["name"]]) != (t.get("status") in EXECUTED_STATUSES))
+        checks.append(check("executed set equals changed execution_key set", "0 mismatched",
+                            {"changed_keys": len(changed), "mismatched": wrong[:50]}, not wrong))
     else:
-        checks.append(check("executed set equals changed program_key set", "per-test program_key", None, None,
-                            "not judged: the test report carries no per-test program_key"))
+        checks.append(check("executed set equals changed execution_key set", "per-test execution_key", None, None,
+                            "not judged: the test report carries no per-test cache.execution_key"))
     return checks
+
+
+def execution_keys(report: dict | None) -> dict[str, str]:
+    """Per-test `cache.execution_key` (the program-keyed receipt identity)."""
+    keys = {}
+    for test in (report or {}).get("tests", []):
+        cache = test.get("cache")
+        if isinstance(cache, dict) and isinstance(cache.get("execution_key"), str):
+            keys[test.get("name")] = cache["execution_key"]
+    return keys
+
+
+def growth_note(run: Run) -> dict:
+    return check("store growth recorded", "informational", store_growth(run), True,
+                 "new unit objects and linked programs during the edited run")
 
 
 def row4_judge(run: Run) -> list[dict]:
     after = run.tests("after-edit")
-    checks = baseline_checks(run) + judge_no_failures("after-edit", after, run.status("after-edit"))
+    checks = baseline_checks(run) + judge_no_failures("after-edit", after, run.status("after-edit")) + [growth_note(run)]
     checks.append(gated("every execution receipt misses", "0 exec hits", after.get("exec_hits"),
                         after.get("available") and after.get("exec_hits") == 0, "exec_receipts", run.ctx.features))
     checks.append(check("IR receipts also miss", "0 IR hits", after.get("ir_hits"),
@@ -976,7 +1047,7 @@ def row4_judge(run: Run) -> list[dict]:
 
 def row5_judge(run: Run) -> list[dict]:
     after = run.tests("after-edit")
-    checks = baseline_checks(run) + judge_no_failures("after-edit", after, run.status("after-edit"))
+    checks = baseline_checks(run) + judge_no_failures("after-edit", after, run.status("after-edit")) + [growth_note(run)]
     checks.append(gated("every execution receipt misses", "0 exec hits", after.get("exec_hits"),
                         after.get("available") and after.get("exec_hits") == 0, "exec_receipts", run.ctx.features))
     checks.append(check("IR tier outcome recorded", "informational", after.get("ir_hits"), True,
@@ -1016,10 +1087,16 @@ def row6_judge(run: Run) -> list[dict]:
 
 # Row 7 ----------------------------------------------------------------------
 
-def row7_env(ctx: Context, tree: Path, shared: Path, side: str) -> dict:
-    return ctx.tree_env(tree, CODEX_THREAD_ID="lane-f-row07-" + side, TERM="xterm-256color" if side == "a" else "dumb",
-                        MYLANG_TEST_SHARED_CACHE=str(shared / "tests"),
-                        MYLANG_COMPILER_SHARED_CACHE=str(shared / "compiler"), **ctx.keyed_extra())
+def row7_env(ctx: Context, tree: Path, shared: Path, side: str, stores: bool = True) -> dict:
+    """The launcher of worktree SIDE. The native shared stores are set only for
+    its `mylang test` run: the complete gate's own tests assume no shared store
+    (see REPORT.md, row 7), and the coordinator shares through
+    --shared-cache-dir instead."""
+    env = ctx.tree_env(tree, CODEX_THREAD_ID="lane-f-row07-" + side, TERM="xterm-256color" if side == "a" else "dumb",
+                       **ctx.keyed_extra())
+    if stores:
+        env.update(MYLANG_TEST_SHARED_CACHE=str(shared / "tests"), MYLANG_COMPILER_SHARED_CACHE=str(shared / "compiler"))
+    return env
 
 
 def row7_plan(ctx: Context) -> list:
@@ -1030,13 +1107,24 @@ def row7_plan(ctx: Context) -> list:
                                        unset=["MYL_CORE_LEAKCHECK"], slot="build", parse="tests")
     verification = ("--shared-cache-dir", str(shared / "verification"))
     return [reset_dir(lambda c: c.row_work("07-two-worktrees", "shared")), add_worktree("row07-a"), add_worktree("row07-b"),
-            Cmd("build-a", ["zig", "build"], str(a), env_a, slot="build"),
-            Cmd("build-b", ["zig", "build"], str(b), env_b, slot="build"),
+            Cmd("build-a", ["zig", "build"], str(a), env_a, slot="build", required=True),
+            Cmd("build-b", ["zig", "build"], str(b), env_b, slot="build", required=True),
             test("tests-a", a, env_a), test("tests-b", b, env_b),
-            coordinator(ctx, "complete-a", a, *verification, env=env_a),
-            coordinator(ctx, "complete-b", b, *verification, env=env_b),
+            coordinator(ctx, "complete-a", a, *verification, env=row7_env(ctx, a, shared, "a", stores=False)),
+            coordinator(ctx, "complete-b", b, *verification, env=row7_env(ctx, b, shared, "b", stores=False)),
             Py("binary-paths", "grep -a counts of each root path in installed units/core/cli test binaries", row7_binary_paths),
+            Py("keep-diagnostics", "copy each tree's coordinator diagnostics (per-action dependency summaries)", row7_keep),
             remove_worktree("row07-a"), remove_worktree("row07-b")]
+
+
+def row7_keep(run: Run) -> dict:
+    copied = {}
+    for side in ("row07-a", "row07-b"):
+        source = run.ctx.scratch(side) / ".mylang-cache/verification-v3/diagnostics"
+        if source.exists():
+            shutil.copytree(source, run.dir / (side + "-diagnostics"), dirs_exist_ok=True)
+            copied[side] = len(list(source.iterdir()))
+    return copied
 
 
 def row7_binary_paths(run: Run) -> dict:
@@ -1105,10 +1193,15 @@ def row8_ld_judge(run: Run) -> list[dict]:
     repeat = run.tests("repeat")
     checks = judge_no_failures("repeat", repeat, run.status("repeat"))
     reasons = repeat.get("by_reason", {}) if repeat.get("available") else {}
-    checks.append(check("LD_PRELOAD set: no receipts written or read", "0 cached; reason untracked-loader-environment",
+    # The refusal may surface as `untracked-loader-environment` or, earlier in the
+    # admission order, as `uncacheable-toolchain` (the toolchain identity sees the
+    # loader variable). Either is a refusal; `no-success-receipt` would be a miss
+    # that writes a receipt, so it fails the row.
+    refusals = {"untracked-loader-environment", "uncacheable-toolchain", "live-effects", "configured-skip", "unsupported"}
+    checks.append(check("LD_PRELOAD set: no receipts written or read", "0 cached on a repeat; every reason a refusal",
                         {"cached": repeat.get("by_status", {}).get("cached", 0), "by_reason": reasons},
                         repeat.get("available") and repeat.get("by_status", {}).get("cached", 0) == 0
-                        and set(reasons) <= {"untracked-loader-environment", "live-effects", "configured-skip", "unsupported"}))
+                        and bool(reasons) and set(reasons) <= refusals))
     return checks
 
 
@@ -1118,7 +1211,7 @@ def row8_projection_plan(ctx: Context) -> list:
     env = ctx.test_env(ctx.tree, work, CODEX_THREAD_ID="lane-f-row08-probe")
     run_probe = [ctx.compiler(ctx.tree), "run", probe, "--cache-dir", str(work / "cache")]
     return [reset_dir(lambda c: c.row_work("08-negative-controls", "projection")),
-            locate_build_env(ctx.tree),
+            *locate_build_env(ctx, ctx.tree, work),
             Cmd("control-unprojected", run_probe, str(ctx.tree), env, slot="build"),
             Cmd("projected", ["{build_env}", "project", "--", *run_probe], str(ctx.tree), env, slot="build")]
 
@@ -1130,18 +1223,24 @@ def row8_projection_judge(run: Run) -> list[dict]:
                   run.status("projected") == 0)]
 
 
-def locate_build_env(tree: Path) -> Py:
-    def action(run: Run) -> dict:
-        explicit = run.ctx.build_env
-        candidates = [Path(explicit)] if explicit else []
-        candidates += [tree / "zig-out/bin/build-env", tree / "zig-out/tools/build-env", tree / "zig-out/libexec/build-env"]
-        for candidate in candidates:
-            if candidate.is_file() and os.access(candidate, os.X_OK):
-                run.state["build_env"] = str(candidate)
-                return {"build_env": str(candidate), "sha256": sha256_file(candidate)}
-        raise RuntimeError("build-env binary not found (pass --build-env PATH); looked in: "
-                           + ", ".join(str(c) for c in candidates))
-    return Py("locate-build-env", "find the build-env host tool (--build-env or zig-out)", action)
+def locate_build_env(ctx: Context, tree: Path, work: Path) -> list:
+    """`build-env` is a build-graph host tool and is not installed. Use
+    --build-env when given, else compile TREE's build_env.zig exactly as
+    `build.zig` declares it (host target, ReleaseSafe) into the row's work dir."""
+    target = work / "build-env"
+
+    def record(run: Run) -> dict:
+        chosen = Path(run.ctx.build_env) if run.ctx.build_env else target
+        if not (chosen.is_file() and os.access(chosen, os.X_OK)):
+            raise RuntimeError("build-env binary not found at " + str(chosen))
+        run.state["build_env"] = str(chosen)
+        return {"build_env": str(chosen), "sha256": sha256_file(chosen)}
+    steps = []
+    if not ctx.build_env:
+        steps.append(Cmd("compile-build-env", [ctx.zig, "build-exe", "build_env.zig", "-OReleaseSafe",
+                                               "-femit-bin=" + str(target)], str(tree), ctx.tree_env(tree), slot="build"))
+    steps.append(Py("locate-build-env", "record the build-env host tool and its SHA-256", record))
+    return steps
 
 
 # Row 9 ----------------------------------------------------------------------
@@ -1326,15 +1425,37 @@ def row12_plan(ctx: Context) -> list:
     tree = ctx.scratch("row12-tree")
     shared = ctx.row_work("12-projection-gate", "complete")
     return [reset_dir(lambda c: c.row_work("12-projection-gate", "complete")), add_worktree("row12-tree"),
-            build(ctx, tree), locate_build_env(tree),
+            build(ctx, tree), *locate_build_env(ctx, tree, shared),
             coordinator(ctx, "projected-complete", tree, "--force", "--shared-cache-dir", str(shared / "verification"),
                         prefix=("{build_env}", "project", "--")),
             remove_worktree("row12-tree")]
 
 
+def row12_in_tree_plan(ctx: Context) -> list:
+    """The same projected, forced complete gate in the target tree itself, whose
+    path has an ordinary length (scratch trees under work/ nest deeper, and some
+    CLI tests are sensitive to that; see REPORT.md, row 12)."""
+    shared = ctx.row_work("12-projection-gate", "complete-in-tree")
+    return [reset_dir(lambda c: c.row_work("12-projection-gate", "complete-in-tree")),
+            *locate_build_env(ctx, ctx.tree, shared),
+            coordinator(ctx, "projected-complete", ctx.tree, "--force", "--shared-cache-dir", str(shared / "verification"),
+                        prefix=("{build_env}", "project", "--"))]
+
+
+def failed_tests(run: Run, name: str) -> list[str]:
+    """Zig test names the gate reported as failed, from the step's stderr."""
+    record = run.result(name)
+    try:
+        text = (run.dir / record["stderr"]).read_text(errors="replace")
+    except (KeyError, OSError):
+        return []
+    return sorted(set(re.findall(r"^error: '(.+)' failed:", text, re.MULTILINE)))
+
+
 def row12_judge(run: Run) -> list[dict]:
     report = run.report("projected-complete")
-    return [check("complete gate exits 0 under build-env project", 0, run.status("projected-complete"),
+    return [check("complete gate exits 0 under build-env project", 0,
+                  {"exit": run.status("projected-complete"), "failed_tests": failed_tests(run, "projected-complete")},
                   run.status("projected-complete") == 0),
             check("coordinator reports success", True, (report or {}).get("success"), (report or {}).get("success") is True)]
 
@@ -1361,8 +1482,13 @@ def row13_tests_plan(ctx: Context) -> list:
 
 
 def row13_namespaces(run: Run) -> dict:
+    # Receipt namespaces live under `<cache>/tests/` (`receipts-v3`,
+    # `manifests-v3`); list both levels.
     cache = run.ctx.row_work("13-namespace-bump", "test-receipts") / "cache"
-    return {"entries": sorted(path.name for path in cache.iterdir()) if cache.exists() else []}
+    entries = sorted(path.name for path in cache.iterdir()) if cache.exists() else []
+    tests = cache / "tests"
+    entries += sorted("tests/" + path.name for path in tests.iterdir()) if tests.exists() else []
+    return {"entries": entries}
 
 
 def row13_tests_judge(run: Run) -> list[dict]:
@@ -1373,8 +1499,9 @@ def row13_tests_judge(run: Run) -> list[dict]:
     checks += judge_none_hit("new-1 (v2 receipts ignored)", run.tests("new-1"), feature="test_v3_namespaces", features=f)
     checks += judge_all_hit("new-2 (second v3 run hits)", run.tests("new-2"))
     checks += judge_all_hit("old-3 (v2 receipts untouched)", run.tests("old-3"))
-    checks.append(gated("a v3 namespace exists beside v2", "*-v3 entry", entries,
-                        any(name.endswith("-v3") for name in entries), "test_v3_namespaces", f))
+    checks.append(gated("v3 receipt namespaces exist beside the v2 ones", "tests/receipts-v3 and tests/receipts-v2", entries,
+                        "tests/receipts-v3" in entries and any(name.startswith("tests/receipts-v2") for name in entries),
+                        "test_v3_namespaces", f))
     return checks
 
 
@@ -1479,7 +1606,8 @@ ROWS = [
          Subcase("own-compilers", True, row11_plan(True), row11_judge)]),
     Row(12, "projection-gate", "Projection safety of the whole gate",
         "The complete gate passes under `build-env project` before projection becomes the default",
-        [Subcase("complete", True, row12_plan, row12_judge, needs=("build_env",))]),
+        [Subcase("complete", True, row12_plan, row12_judge, needs=("build_env",)),
+         Subcase("complete-in-tree", True, row12_in_tree_plan, row12_judge, needs=("build_env",))]),
     Row(13, "namespace-bump", "Namespace bump",
         "Old v2 receipts are ignored, not misread; the first v3 gate is a full run and the second is a hit",
         [Subcase("test-receipts", True, row13_tests_plan, row13_tests_judge),
@@ -1556,17 +1684,17 @@ def execute(ctx: Context, selected, allow_heavy: bool) -> int:
         return 2
     ctx.evidence.mkdir(parents=True, exist_ok=True)
     frozen = manifest(ctx)
-    summary_path = ctx.evidence / "summary.json"
-    try:
-        summary = json.loads(summary_path.read_text())
-    except (OSError, json.JSONDecodeError):
-        summary = {"schema": SCHEMA, "rows": {}}
-    summary.setdefault("rows", {})
     for row, subs in selected:
         row_dir = ctx.evidence / row.id
         row_dir.mkdir(parents=True, exist_ok=True)
+        # Sub-cases run in an earlier invocation keep their records; a rerun of
+        # one sub-case replaces only that sub-case (each names its own manifest).
+        try:
+            previous = json.loads((row_dir / "row.json").read_text()).get("subcases", {})
+        except (OSError, json.JSONDecodeError):
+            previous = {}
         row_record = {"row": row.number, "id": row.id, "case": row.case, "expected": row.expected,
-                      "manifest": frozen, "started": now(), "subcases": {}}
+                      "manifest": frozen, "started": now(), "subcases": dict(previous)}
         for sub in subs:
             missing = [need for need in sub.needs if not ctx.features.get(need)]
             if missing:
@@ -1585,12 +1713,14 @@ def execute(ctx: Context, selected, allow_heavy: bool) -> int:
             else:
                 checks = sub.judge(run)
                 decision = decide(checks)
-            record = {"decision": decision, "started": started, "finished": now(), "checks": checks,
+            record = {"decision": decision, "started": started, "finished": now(), "checks": checks, "manifest": frozen,
                       "compilers_sha256": run.compilers, "steps": run.results}
             for result in record["steps"].values():
                 result.pop("parsed", None)
             (run.dir / "result.json").write_text(json.dumps(record, indent=1, sort_keys=True, default=str))
-            row_record["subcases"][sub.name] = {"decision": decision, "evidence": str((run.dir / "result.json").relative_to(ctx.evidence)),
+            row_record["subcases"][sub.name] = {"decision": decision, "harness_sha256": frozen["harness_sha256"],
+                                                "tree_head": ctx.head, "finished": now(),
+                                                "evidence": str((run.dir / "result.json").relative_to(ctx.evidence)),
                                                 "checks": [{k: c[k] for k in ("check", "result")} for c in checks]}
             print("matrix: row %s sub-case %s: %s" % (row.id, sub.name, decision), flush=True)
             for item in checks:
@@ -1598,12 +1728,30 @@ def execute(ctx: Context, selected, allow_heavy: bool) -> int:
         row_record["finished"] = now()
         row_record["decision"] = aggregate([s["decision"] for s in row_record["subcases"].values()])
         (row_dir / "row.json").write_text(json.dumps(row_record, indent=1, sort_keys=True, default=str))
-        summary["rows"][row.id] = {"decision": row_record["decision"], "finished": row_record["finished"],
-                                   "tree_head": ctx.head,
-                                   "subcases": {name: value["decision"] for name, value in row_record["subcases"].items()}}
-    summary["last_manifest"] = frozen
-    summary_path.write_text(json.dumps(summary, indent=1, sort_keys=True, default=str))
+        write_summary(ctx.evidence, frozen)
+    summary = write_summary(ctx.evidence, frozen)
     return 0 if all(value["decision"] in (PASS, "skipped") for value in summary["rows"].values()) else 1
+
+
+def write_summary(evidence: Path, frozen: dict | None = None) -> dict:
+    """Rebuild summary.json from every row.json, so an interrupted invocation
+    never loses rows another invocation recorded."""
+    path = evidence / "summary.json"
+    try:
+        previous = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        previous = {}
+    rows = {}
+    for row_file in sorted(evidence.glob("*/row.json")):
+        record = json.loads(row_file.read_text())
+        subcases = record.get("subcases", {})
+        rows[record["id"]] = {"decision": aggregate([s["decision"] for s in subcases.values()]),
+                              "subcases": {name: value["decision"] for name, value in subcases.items()},
+                              "finished": record.get("finished")}
+    summary = {"schema": SCHEMA, "rows": rows,
+               "last_manifest": frozen if frozen is not None else previous.get("last_manifest")}
+    path.write_text(json.dumps(summary, indent=1, sort_keys=True, default=str))
+    return summary
 
 
 def main(argv: list[str]) -> int:

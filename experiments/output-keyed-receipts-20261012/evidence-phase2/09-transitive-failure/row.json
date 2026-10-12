@@ -1,0 +1,97 @@
+{
+ "case": "Transitive failure injection",
+ "decision": "pass",
+ "expected": "An edit in a function a cached-pass test reaches makes it execute and fail; no stale pass",
+ "finished": "2026-10-12T15:59:27.410+00:00",
+ "id": "09-transitive-failure",
+ "manifest": {
+  "compiler": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/bin/mylang",
+  "compiler_sha256": "27385c43a08071a5144529a376b7afdc7f93e575bb048785990124ac7395b134",
+  "environment": {
+   "launcher_sha256_16": {
+    "CODEX_THREAD_ID": null,
+    "PWD": "5ffa26a83103a9ee",
+    "TERM": "7f44899d0925ec2c"
+   },
+   "values": {
+    "HOME": "/home/epentland",
+    "LANG": "en_US.UTF-8",
+    "MYLANG_BUILD_MEM": "8G",
+    "MYLANG_BUILD_SLOTS": "3",
+    "MYLANG_DEV_JOBS": "4",
+    "MYLANG_DEV_MAXRSS": "8589934592",
+    "MYLANG_GATE_SLOTS": "2",
+    "MYLANG_SLOT_DIR": "/home/epentland/.cache/mylang/slots",
+    "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   }
+  },
+  "features": {
+   "build_env": true,
+   "coordinator_path_free": true,
+   "coordinator_v3": true,
+   "exec_receipts": true,
+   "exec_receipts_opt_in": false,
+   "execution_key_report": true,
+   "fact_leak_receipts": true,
+   "mismatch_counter": true,
+   "runner_identity": true,
+   "test_v3_namespaces": true
+  },
+  "harness_sha256": "37e1a14aa7722bd8c367557e83dcba9aefb22bbcefa8bc8faef3e04e55497dac",
+  "options": {
+   "build_env": null,
+   "dry_run": false,
+   "evidence": "experiments/output-keyed-receipts-20261012/evidence-phase2",
+   "heavy": false,
+   "keep_work": false,
+   "lang_entry": null,
+   "manifest_only": null,
+   "old_ref": "f6971a623",
+   "rows": "1:lang-debug,1:lang-facts-leak,6,8,9,10,11:same-compiler",
+   "small_entry": "tests/lang/frontend_numbers.my",
+   "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "work": null
+  },
+  "plan": "docs/audits/output-keyed-shared-receipts-plan-2026-10-12.md",
+  "schema": "output-keyed-matrix-v1",
+  "slot_dir": "/home/epentland/.cache/mylang/slots",
+  "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+  "tree_dirty_sha256": null,
+  "tree_head": "6b670ccad45ccbab29f5f4ad95ac0bd09059d27b",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+ },
+ "row": 9,
+ "started": "2026-10-12T15:58:56.603+00:00",
+ "subcases": {
+  "helper-edit": {
+   "checks": [
+    {
+     "check": "warm (precondition): every eligible test reused",
+     "result": "pass"
+    },
+    {
+     "check": "edited helper's caller executes and fails (no stale pass)",
+     "result": "pass"
+    },
+    {
+     "check": "unaffected test stays reused",
+     "result": "pass"
+    },
+    {
+     "check": "run exits 1 on the failure",
+     "result": "pass"
+    },
+    {
+     "check": "after-restore: no failures",
+     "result": "pass"
+    }
+   ],
+   "decision": "pass",
+   "evidence": "09-transitive-failure/helper-edit/result.json"
+  }
+ }
+}

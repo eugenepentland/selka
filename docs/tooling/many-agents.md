@@ -155,8 +155,12 @@ dependency explanations are described in [development loop measurements](develop
 The output distinguishes `reused`, `execute`, and `fresh`. Guardian, git-history
 checks, input-coverage membership checks, generated-output validation, and guest suites with execution-time effect
 decisions remain fresh. Guest suites retain their compiler-managed per-test
-receipts; fact/leak runs preserve their existing modes. `--force` discards prior
-action evidence and executes the full inventory. Filtered and explicit
+receipts (both receipt tiers of [guest tests](guest-tests.md#reusing-unaffected-results),
+so an unchanged request executes no guest test); fact/leak runs keep receipts
+under their own modes. `--force` discards prior action evidence and executes the
+full inventory. `--integration` is the integration gate: the complete request,
+then one forced fact/leak run and a shared-store mismatch check
+([integration gate](development-loop.md#integration-gate)). Filtered and explicit
 `-Dtest-rerun=true` requests cannot supply ordinary full-gate receipts.
 
 Keys include declared file membership/content, native artifacts, toolchain and
@@ -267,14 +271,22 @@ Its action keys hold no checkout path and ignore per-worktree placement such as
 still identified by its bytes (whose debug information names the checkout) stay
 distinct across worktrees, and `last-run.json` marks them `path_free: false`.
 
+On the shared development machine, `source ~/.config/mylang/dev-env.sh` in the
+worktree sets all of this: the pinned Zig, the worktree's own
+`ZIG_LOCAL_CACHE_DIR` (`<worktree>/.zig-cache`) and `TMPDIR`
+(`<worktree>/.tmp/work`), and `MYLANG_SLOT_DIR=~/.cache/mylang/slots`, the one
+admission directory every agent shares. Elsewhere, set the two directories
+yourself:
+
 ```bash
 export ZIG_LOCAL_CACHE_DIR=$HOME/.cache/mylang/zig-local-cache-<lane>
 export TMPDIR=$HOME/.cache/mylang-tmp/<lane>
 mkdir -p "$TMPDIR"
 ```
 
-- **One `ZIG_LOCAL_CACHE_DIR` per worktree.** Zig's configure cache ignores the
-  build root, so two trees sharing one cache once embedded the wrong runtime.
+- **One `ZIG_LOCAL_CACHE_DIR` per worktree.** The configure phase records the
+  build root's real path (`build_identity.zig`), so two trees sharing one cache
+  once embedded the wrong runtime.
 - **Test steps see a projected environment.** Every command `zig build` wraps
   (test roots, shards, Python and guest drivers) runs through `build-env
   project`, which passes only the keyed, host and placement variables of

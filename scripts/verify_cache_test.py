@@ -1531,6 +1531,115 @@ class VerificationCoordinator(unittest.TestCase):
             self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'execute'})
 
 
+class IntegrationGate(unittest.TestCase):
+    """`--integration`: D1 forced fact/leak run and D3 mismatch failure."""
+
+    METADATA = [{'id': 'language', 'steps': [
+        {'kind': 'run', 'original_label': 'mylang test tests/lang'},
+        {'kind': 'run', 'original_label': 'mylang test tests/lang --release --verify-facts (leak check)'},
+        {'kind': 'run', 'original_label': 'mylang test tests/ported --unoptimized'},
+        {'kind': 'run', 'original_label': 'mylang test tests/ported --release --verify-facts (leak check)'}]},
+        {'id': 'unit', 'steps': [{'kind': 'run', 'original_label': 'mylang test tests/x --release --verify-facts (leak check)'}]}]
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix='integration-', dir=REPOSITORY / '.tmp')
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.cache = self.root / 'cache'
+        self.cache.mkdir()
+        self.store = self.root / 'store'
+        (self.store / 'compiler-artifacts-v2').mkdir(parents=True)
+        self.env = {'MYLANG_COMPILER_SHARED_CACHE': str(self.store), 'MYLANG_TEST_SHARED_CACHE': ''}
+        self.calls, self.admissions = [], []
+
+    @contextlib.contextmanager
+    def admission(self, kind):
+        self.admissions.append(kind)
+        yield
+
+    def run_suite(self, cached=0, failed=0, status=0):
+        def run(argv, **options):
+            self.calls.append((argv, options))
+            report = {'passed': 3 - cached - failed, 'failed': failed, 'cached': cached, 'skipped': 0, 'unsupported': 0}
+            return subprocess.CompletedProcess(argv, status, json.dumps(report) + '\n', '')
+        return run
+
+    def log(self, lines):
+        (self.store / 'compiler-artifacts-v2' / 'mismatches.log').write_text(
+            ''.join('mismatch program %064x existing=%064x attempted=%064x\n' % (n, n, n + 1) for n in range(lines)))
+
+    def write_report(self):
+        coordinator.atomic_record(self.cache / 'last-run.json',
+                                  {'version': 1, 'success': True, 'status': 0, 'action_metadata': self.METADATA})
+
+    def test_fact_leak_suites_come_from_the_language_inventory(self):
+        self.assertEqual(coordinator.fact_leak_suites(self.METADATA), ['tests/lang', 'tests/ported'])
+        self.assertEqual(coordinator.fact_leak_suites([]), [])
+
+    def test_forced_run_is_fresh_private_and_admitted_once(self):
+        self.write_report()
+        status = coordinator.integrate(self.root, self.cache, 0, {}, self.env, run=self.run_suite(), admission=self.admission)
+        self.assertEqual(status, 0)
+        self.assertEqual(self.admissions, ['gate'])
+        self.assertEqual([call[0][2] for call in self.calls], ['tests/lang', 'tests/ported'])
+        for argv, options in self.calls:
+            self.assertIn('--force', argv)
+            self.assertIn('--verify-facts', argv)
+            self.assertEqual(options['env']['MYL_CORE_LEAKCHECK'], '1')
+            private = Path(argv[argv.index('--cache-dir') + 1])
+            self.assertTrue(private.is_relative_to(self.cache / 'integration'))
+            self.assertFalse(private.exists())
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertTrue(report['success'])
+        self.assertTrue(report['integration']['forced_fact_leak']['passed'])
+
+    def test_a_cached_or_failing_forced_run_fails_the_integration(self):
+        for run in (self.run_suite(cached=1), self.run_suite(failed=1, status=1)):
+            self.write_report()
+            self.assertEqual(coordinator.integrate(self.root, self.cache, 0, {}, self.env, run=run, admission=self.admission), 1)
+            self.assertFalse(coordinator.read_record(self.cache / 'last-run.json')['success'])
+
+    def test_mismatch_fails_with_a_distinct_status(self):
+        self.write_report()
+        before = coordinator.mismatch_counts(self.env)
+        self.assertEqual(before, {})
+        self.log(1)
+        status = coordinator.integrate(self.root, self.cache, 0, before, self.env, run=self.run_suite(), admission=self.admission)
+        self.assertEqual(status, coordinator.INTEGRATION_MISMATCH_STATUS)
+        integration = coordinator.read_record(self.cache / 'integration-last-run.json')
+        log = str(self.store / 'compiler-artifacts-v2' / 'mismatches.log')
+        self.assertEqual(integration['shared_mismatches']['grew'], {log: 1})
+        self.assertFalse(coordinator.read_record(self.cache / 'last-run.json')['success'])
+
+    def test_a_pre_existing_mismatch_still_fails_and_unused_stores_are_ignored(self):
+        self.log(2)
+        before = coordinator.mismatch_counts(self.env)
+        verdict = coordinator.mismatch_verdict(before, coordinator.mismatch_counts(self.env))
+        self.assertEqual((verdict['grew'], verdict['passed']), ({}, False))
+        self.assertEqual(coordinator.mismatch_counts({'MYLANG_COMPILER_SHARED_CACHE': ''}), {})
+        self.assertEqual(coordinator.mismatch_verdict({}, {})['passed'], True)
+
+    def test_store_roots_follow_the_compiler_resolution(self):
+        home = {'HOME': '/home/agent'}
+        self.assertEqual(coordinator.native_store_roots(home, False), [])
+        self.assertEqual(coordinator.native_store_roots(home, True),
+                         [Path('/home/agent/.cache/mylang/compiler-artifacts'), Path('/home/agent/.cache/mylang/native-tests')])
+        self.assertEqual(coordinator.native_store_roots(dict(home, XDG_CACHE_HOME='/x', MYLANG_TEST_SHARED_CACHE=''), True),
+                         [Path('/x/mylang/compiler-artifacts')])
+        self.assertEqual(coordinator.native_store_roots({'MYLANG_COMPILER_SHARED_CACHE': '/s'}, False), [Path('/s')])
+        self.assertIs(coordinator.native_default_sharing(REPOSITORY), False)
+
+    def test_a_failed_request_skips_the_forced_run_but_keeps_its_status(self):
+        self.write_report()
+        status = coordinator.integrate(self.root, self.cache, 1, {}, self.env, run=self.run_suite(), admission=self.admission)
+        self.assertEqual((status, self.calls), (1, []))
+
+    def test_integration_rejects_other_profiles_and_timing_windows(self):
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(coordinator.main(['--integration', '--profile', 'quick']), 2)
+            self.assertEqual(coordinator.main(['--integration', '--timing-window-seconds', '10']), 2)
+
+
 class CallerAuthentication(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory(prefix='helper-auth-', dir=REPOSITORY / '.tmp')

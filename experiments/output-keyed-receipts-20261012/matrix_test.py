@@ -193,6 +193,26 @@ class CoordinatorTest(unittest.TestCase):
         self.assertEqual({c["check"]: c["result"] for c in matrix.judge_two_worktrees(a, b)}["every action identity path-free"], matrix.PASS)
 
 
+class LandedFieldsTest(unittest.TestCase):
+    def test_admission_queue_seconds(self):
+        stderr = ("build-slot: FIFO ticket 1883, position 4; earlier build tickets must run first; waiting (0s so far)\n"
+                  "build-slot: build slot 1, FIFO ticket 1883 after 20s\n")
+        self.assertEqual(matrix.admission_queue_seconds(stderr), 20)
+        self.assertIsNone(matrix.admission_queue_seconds("no admission line"))
+
+    def test_execution_keys(self):
+        report = with_reason(fixture("tests-warm.json"), "cached", "exec-receipt-hit")
+        for index, test in enumerate(report["tests"]):
+            test["cache"]["execution_key"] = "%064x" % index
+        keys = matrix.execution_keys(report)
+        self.assertEqual(len(keys), 3)
+        self.assertEqual(matrix.execution_keys(fixture("tests-warm.json")), {})
+
+    def test_shared_mismatches_field_is_found(self):
+        report = {"version": "cache-report-v1", "program": "reused", "shared_mismatches": 1}
+        self.assertEqual(matrix.find_keys(report, "mismatch"), [("shared_mismatches", 1)])
+
+
 class AggregationTest(unittest.TestCase):
     def test_decide(self):
         p, f, n = (matrix.check("x", 1, 1, ok) for ok in (True, False, None))

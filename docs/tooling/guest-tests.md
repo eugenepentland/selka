@@ -635,7 +635,10 @@ actually ran instead of how it was produced:
   sanitizer, object format, optimize level, target and CPU, the toolchain digest,
   the digest of every linked object in order (the runtime object and `--link`
   objects included), `-lm` and the linker environment. It names no path and no
-  compiler identity;
+  compiler identity, but the objects' bytes are in it: an entry checked without
+  a project root (no `mylang.json`, as in `tests/lang`) still writes its
+  absolute path into the entry unit's debug information, so its execution key
+  differs between two checkouts even though its IR key does not;
 - **the runner identity** (RUNNER-IDENTITY-1): the build's `runner_identity`,
   covering the sources that build a test executable's driver, fork trials, apply
   budgets and judge outcomes. An edit to one of them misses every execution

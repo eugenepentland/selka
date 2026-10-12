@@ -94,9 +94,13 @@ run them directly. Do not wrap a timing coordinator in a build/gate slot.
   tests, each built by the new core and run in its own forked trial. A bare
   substring matches anywhere in the qualified name; `*`, `?` or `[` make it a glob.
   A directory runs every entry under it in parallel (`--jobs N`, `MYLANG_JOBS`).
-  Results are reused per test (receipts keyed by the test's Core IR), so an
-  unchanged rerun is near-free; `--force` reruns. The gate's second run is
-  `--release --verify-facts` with `MYL_CORE_LEAKCHECK=1`.
+  Results are reused per test in two tiers: receipts keyed by the test's Core IR,
+  then, after a compiler edit, receipts keyed by the linked program and the test
+  runner (`cache.reason` `exec-receipt-hit`, `--json` `exec_receipts`), so an
+  unchanged rerun is near-free and a comment edit under `src/` reruns only tests
+  whose program bytes changed (those calling `function_digest`, for one);
+  `--force` reruns. The gate's second run is `--release --verify-facts` with
+  `MYL_CORE_LEAKCHECK=1`, which keeps receipts of its own.
 - `zig build test-lang` — `tests/lang` and `tests/value_semantics` through
   `mylang test`, at debug and at release with the fact and leak checks.
 - `zig build test-docs` — executes every fenced documentation example.
@@ -142,8 +146,11 @@ the live environment (recorded as a digest), or one of the repository files it
 reads changes; those files are declared per step in
 `build_test_inputs.zig`, and `zig build test` fails (`test-inputs-coverage`) when a
 test names a repository path its step does not declare. An unchanged `zig build test`
-still reruns the core shards, and an unchanged complete verification through the
-coordinator takes about 34 to 37 s; a `.my` or doc edit re-runs only what reads it,
+still reruns the core shards. An unchanged complete verification through the
+coordinator took 34 to 37 s before the 12 October merge; since then the
+unregistered `build-env` tool step sends every request to the original complete
+gate (about 530 s; `coverage.unknown_actions` in `zig-out/verification/inventory.json`
+names it) until it is registered. A `.my` or doc edit re-runs only what reads it,
 and any `src/` edit reruns every step that runs the compiler. A cached step
 prints no test count, so the `Build Summary` total counts only what ran:
 `-Dtest-rerun=true` re-runs every test step (full counts, or to rule out a stale
@@ -191,8 +198,8 @@ of stack under the ceiling); a test defaults to 1,000,000 steps, 1,024 frames an
   `export ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache`. Zig locks it
   per entry, so concurrent builds are safe.
 - Never share `.zig-cache` (`ZIG_LOCAL_CACHE_DIR`) between worktrees. Zig would allow
-  it; the project's own absolute configure-time paths (the build root realpath in
-  `build_identity.zig`, the test option paths in `build.zig`) tie it to one tree.
+  it; the project's own absolute configure-time path (the build root realpath that
+  `build_identity.zig` passes) ties it to one tree.
   Never share a `.mylang-cache` between worktrees running
   different compilers: each compiler generation evicts the others' objects.
 - Reuse a merged, clean worktree for new work (`git switch -c <branch> main`) instead of
@@ -214,8 +221,13 @@ of stack under the ceiling); a test defaults to 1,000,000 steps, 1,024 frames an
   `ZIG_LOCAL_CACHE_DIR` in a staging directory removed when the build ends, so
   guest builds add nothing to `.zig-cache`. `scripts/prune-caches.sh` evicts the
   per-user store too. See `docs/tooling/native-build.md#the-caches`.
-- Optional shared compiler artifacts and native test receipts use v2 namespaces
-  with process leases and automatic hourly LRU retention (10 GiB compiler,
+- Shared compiler artifacts (`MYLANG_COMPILER_SHARED_CACHE`, namespace
+  `compiler-artifacts-v2`) and native test receipts (`MYLANG_TEST_SHARED_CACHE`,
+  `native-tests-v3`) are off unless a variable names a store; the per-user default
+  locations apply only once `default_sharing` in `src/shared_cache_policy.zig` is
+  turned on. A determinism mismatch is a miss, counted as `shared_mismatches` in
+  `--report` and logged to the namespace's `mismatches.log`. Both stores use
+  process leases and automatic hourly LRU retention (10 GiB compiler,
   256 MiB tests, 100,000 entries each). Use `mylang cache gc` to preview,
   `--apply` to collect, and `mylang cache configure` to persist policy. Old v1
   namespaces remain separate and require idle-only manual cleanup. See

@@ -66,6 +66,13 @@ INVENTORY_VERSION = 2
 # Evidence: experiments/telemetry-cache-invalidation-20261012/REPORT.md
 DECLARATIVE_CONFIG_SHA256 = "6e21ce1c64e0d3e82e2ce1fee75053579b67221706d4aeb46f128691049801c6"
 RETRY = 75
+# `--integration` (plan D3): a shared-store determinism mismatch fails the
+# integrated commit with its own status, distinct from a failing test (1).
+INTEGRATION_MISMATCH_STATUS = 5
+# The native shared stores whose `<namespace>/mismatches.log` the integration
+# check reads; only stores this request's environment selects are "used".
+NATIVE_SHARED_VARIABLES = ("MYLANG_COMPILER_SHARED_CACHE", "MYLANG_TEST_SHARED_CACHE")
+FACT_LEAK_MEMBER = re.compile(r"mylang test (\S+) --release --verify-facts \(leak check\)")
 MAX_RECORD = 32 * 1024 * 1024
 CONFIG_INPUTS = ["./*.zig", "build.zig.zon", ".zigversion", "guardian.toml",
                  "src/user_docs.zig", "selfhost/*.zig", "../guardian-zig/build.zig",
@@ -1345,6 +1352,162 @@ def parse_options(options: list[str]) -> list[str]:
     return options
 
 
+def native_default_sharing(root: Path = ROOT) -> bool:
+    """The compiler's rollout switch, `default_sharing` in src/shared_cache_policy.zig."""
+    try:
+        text = (root / "src/shared_cache_policy.zig").read_text()
+    except OSError:
+        return False
+    return re.search(r"^pub const default_sharing = true;", text, re.MULTILINE) is not None
+
+
+def native_store_roots(environment: Mapping[str, str], default_sharing: bool) -> list[Path]:
+    """The native shared store roots ENVIRONMENT selects, as the compiler resolves
+    them: a set variable names a store and an empty one disables it; an unset one
+    selects `$XDG_CACHE_HOME/mylang/<leaf>` or `~/.cache/mylang/<leaf>` only while
+    the compiler's default sharing is on."""
+    roots = []
+    for name, leaf in zip(NATIVE_SHARED_VARIABLES, ("compiler-artifacts", "native-tests")):
+        value = environment.get(name)
+        if value is not None:
+            if value:
+                roots.append(Path(value))
+            continue
+        if not default_sharing:
+            continue
+        base = environment.get("XDG_CACHE_HOME") or ""
+        if not os.path.isabs(base):
+            home = environment.get("HOME") or ""
+            base = os.path.join(home, ".cache") if os.path.isabs(home) else ""
+        if base:
+            roots.append(Path(base) / "mylang" / leaf)
+    return roots
+
+
+def mismatch_logs(environment: Mapping[str, str], default_sharing: bool = False) -> list[Path]:
+    """Every `mismatches.log` of the native shared stores ENVIRONMENT selects.
+
+A store logs one line per determinism mismatch in its namespace directory
+(`<root>/<namespace>/mismatches.log`).
+"""
+    logs = []
+    for root in native_store_roots(environment, default_sharing):
+        logs.extend(sorted(root.glob("*/mismatches.log")))
+    return logs
+
+
+def mismatch_counts(environment: Mapping[str, str], default_sharing: bool = False) -> dict[str, int]:
+    """Non-blank lines per mismatch log of the stores ENVIRONMENT selects."""
+    counts = {}
+    for path in mismatch_logs(environment, default_sharing):
+        try:
+            counts[str(path)] = sum(1 for line in path.read_text(errors="replace").splitlines() if line.strip())
+        except OSError:
+            counts[str(path)] = 0
+    return counts
+
+
+def mismatch_verdict(before: Mapping[str, int], after: Mapping[str, int]) -> dict:
+    """D3: fail when any used store's log grew during the request or is non-empty."""
+    grew = {path: count - before.get(path, 0) for path, count in after.items() if count > before.get(path, 0)}
+    nonzero = {path: count for path, count in after.items() if count}
+    return {"logs": dict(after), "grew": grew, "nonzero": nonzero, "passed": not grew and not nonzero}
+
+
+def fact_leak_suites(action_metadata: list) -> list[str]:
+    """The suites of the `language` action's fact-verification/leak-check members."""
+    suites = []
+    for action in action_metadata or []:
+        if not isinstance(action, dict) or action.get("id") != "language":
+            continue
+        for step in action.get("steps") or []:
+            label = step.get("original_label") if isinstance(step, dict) else None
+            found = FACT_LEAK_MEMBER.fullmatch(label) if isinstance(label, str) else None
+            if found and found.group(1) not in suites:
+                suites.append(found.group(1))
+    return suites
+
+
+def forced_fact_leak_run(root: Path, compiler: Path, suites: list[str], environment: Mapping[str, str],
+                         scratch: Path, run=subprocess.run, admission=None) -> dict:
+    """D1: one fresh fact-verification and leak-check run of every suite.
+
+The run uses `--force` and a private cache directory removed afterwards, so it
+neither reads nor replaces the receipts ordinary requests reuse. It holds one
+gate admission for all suites.
+"""
+    if admission is None:
+        import build_admission
+        admission = build_admission.admission
+    child = dict(environment, MYL_CORE_LEAKCHECK="1")
+    results = []
+    scratch.mkdir(parents=True, exist_ok=True)
+    private = Path(tempfile.mkdtemp(prefix="integration-fact-leak-", dir=scratch))
+    try:
+        with admission("gate"):
+            for suite in suites:
+                argv = [str(compiler), "test", suite, "--release", "--verify-facts", "--force", "--json",
+                        "--cache-dir", str(private / re.sub(r"[^A-Za-z0-9_.-]", "_", suite))]
+                completed = run(argv, cwd=root, env=child, capture_output=True, text=True, errors="replace")
+                counts = {}
+                for line in reversed(completed.stdout.splitlines()):
+                    if line.startswith("{"):
+                        try:
+                            parsed = json.loads(line)
+                        except json.JSONDecodeError:
+                            continue
+                        counts = {key: parsed.get(key) for key in ("passed", "failed", "cached", "skipped", "unsupported")}
+                        break
+                fresh = completed.returncode == 0 and counts.get("failed") == 0 and counts.get("cached") == 0
+                results.append({"suite": suite, "argv": argv[1:], "exit": completed.returncode, "counts": counts,
+                                "fresh_and_passed": fresh, "stderr_tail": completed.stderr[-2000:]})
+    finally:
+        shutil.rmtree(private, ignore_errors=True)
+    return {"suites": results, "passed": bool(results) and all(row["fresh_and_passed"] for row in results)}
+
+
+def integration_status(status: int, forced: dict | None, mismatches: dict) -> int:
+    """The request's status after the integration checks; a mismatch is distinct."""
+    if not mismatches["passed"]:
+        return INTEGRATION_MISMATCH_STATUS
+    if status != 0:
+        return status
+    return 0 if forced is not None and forced["passed"] else 1
+
+
+def integrate(root: Path, cache: Path, status: int, before: Mapping[str, int],
+              environment: Mapping[str, str], run=subprocess.run, admission=None) -> int:
+    """Apply D1 and D3 after a complete request; record them in last-run.json."""
+    report = read_record(cache / "last-run.json") or {}
+    forced = None
+    if status == 0:
+        suites = fact_leak_suites(report.get("action_metadata"))
+        if suites:
+            forced = forced_fact_leak_run(root, root / "zig-out/bin/mylang", suites, environment,
+                                          cache / "integration", run=run, admission=admission)
+        else:
+            forced = {"suites": [], "passed": False, "error": "inventory has no fact/leak language members"}
+    mismatches = mismatch_verdict(before, mismatch_counts(environment, native_default_sharing(root)))
+    final = integration_status(status, forced, mismatches)
+    integration = {"version": 1, "request_status": status, "status": final,
+                   "forced_fact_leak": forced, "shared_mismatches": mismatches}
+    if report:
+        report["integration"] = integration
+        report["success"] = report.get("success") is True and final == 0
+        report["status"] = final if final != 0 else report.get("status", 0)
+        diagnostic_record(cache / "last-run.json", report)
+    diagnostic_record(cache / "integration-last-run.json", integration)
+    if forced is not None:
+        for row in forced["suites"]:
+            print("verification: integration forced fact/leak %s: exit %d, %s" % (
+                row["suite"], row["exit"], json.dumps(row["counts"], sort_keys=True)), flush=True)
+    if not mismatches["passed"]:
+        print("verification: FAIL: shared-store determinism mismatches: " + json.dumps(mismatches["nonzero"], sort_keys=True),
+              file=sys.stderr)
+    print("verification: integration %s (status %d)" % ("PASS" if final == 0 else "FAIL", final), flush=True)
+    return final
+
+
 def main(argv: list[str]) -> int:
     if argv[:1] == ["--admitted"]:
         return admitted_child(int(argv[1]))
@@ -1364,8 +1527,14 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--budget-policy", type=Path, help="Optional v1/v2 report-only scoped policy; never changes reuse or pass/fail")
     parser.add_argument("--timing-window-seconds", type=float,
                         help="Own an exclusive bounded request measurement; run directly, never under a slot")
+    parser.add_argument("--integration", action="store_true",
+                        help="Integration gate: the complete profile, then one forced fact/leak run of the language "
+                             "members (D1), failing with status %d on any shared-store mismatch (D3)" % INTEGRATION_MISMATCH_STATUS)
     parser.add_argument("options", nargs=argparse.REMAINDER)
     args = parser.parse_args(argv)
+    if args.integration and (args.profile != "complete" or args.timing_window_seconds is not None):
+        print("verification: FAIL: --integration runs the complete profile without a timing window", file=sys.stderr)
+        return 2
     cancellation = 130
     def cancel(signum, _frame):
         nonlocal cancellation
@@ -1393,7 +1562,8 @@ def main(argv: list[str]) -> int:
                 if args.timing_window_seconds is not None:
                     stack.enter_context(verification_measurement.timing_window(
                         args.timing_window_seconds, coordinator_lock_wait_seconds=lock_wait))
-                return execute(ROOT, cache, Path(resolved).absolute(), parse_options(args.options), args.force, shared_cache_dir,
+                before = mismatch_counts(os.environ, native_default_sharing()) if args.integration else {}
+                status = execute(ROOT, cache, Path(resolved).absolute(), parse_options(args.options), args.force, shared_cache_dir,
                                build_timeout=args.build_timeout_seconds, gate_timeout=args.gate_timeout_seconds,
                                warn_after=args.warn_after_seconds, budget_policy=args.budget_policy,
                                profile=args.profile, quick_actions=args.quick_actions,
@@ -1402,6 +1572,9 @@ def main(argv: list[str]) -> int:
                                qualification_timeout=args.qualification_timeout,
                                qualification_fuzz_steps=args.qualification_fuzz_steps,
                                shared_cache_source=shared_cache_source)
+                if args.integration:
+                    status = integrate(ROOT, cache, status, before, os.environ)
+                return status
     except (verification_measurement.WindowExpired, verification_measurement.WindowLost) as error:
         expired = isinstance(error, verification_measurement.WindowExpired)
         status = 124 if expired else 2
