@@ -93,3 +93,13 @@ C2 qualification and coordinated actual C3 application, rerun the registered
 native fixture without the retired define, all affected five-mode public APIs and
 guest resources, owned keyed sorting, ABI/cache/package audits and the full gate.
 Final 120-export qualification still awaits the common compiler.
+
+## Borrowed-provider utility, coupled C3 change
+
+`borrowed-provider.patch` removes exactly two `!module.zero_rc` conditions from
+the newly integrated utility. It preserves declaration/signature validation and
+borrowed parameter provenance; mandatory `OWN1` ABI provenance replaces the
+retired mode choice through A07's new `ir.Module`/central validator API. The patch
+must land with that API and cannot weaken old-artifact rejection. Exact input
+hashes and required focused/native/cache reruns are in its separate manifest.
+No current source consumer is changed by this draft.

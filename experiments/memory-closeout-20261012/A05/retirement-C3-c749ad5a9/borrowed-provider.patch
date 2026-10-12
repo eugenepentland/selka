@@ -1,0 +1,20 @@
+--- a/src/core/borrowed_provider.zig
++++ b/src/core/borrowed_provider.zig
+@@ -103,7 +103,7 @@
+ pub fn declaration(module: *const ir.Module, function: *const ir.Function) Error!bool {
+     if (!std.mem.startsWith(u8, function.name, prefix)) return false;
+     const ty = markerType(function.name) orelse return error.UnsupportedInstruction;
+-    if (!module.zero_rc or !module.valid(ty)) return error.UnsupportedInstruction;
++    if (!module.valid(ty)) return error.UnsupportedInstruction;
+     if (module.kind(ty) != .record) return error.UnsupportedInstruction;
+     const fields = module.compound(ty).record;
+     if (fields.len == 0 or fields.len > max_fields) return error.UnsupportedInstruction;
+@@ -164,7 +164,7 @@
+ pub fn keepalive(module: *const ir.Module, function: *const ir.Function) Error!bool {
+     if (!std.mem.eql(u8, function.name, "myl_core_provider_keepalive")) return false;
+     const sig = function.signature;
+-    if (!module.zero_rc or function.span != 0 or sig.linkage != .runtime_c) return error.UnsupportedInstruction;
++    if (function.span != 0 or sig.linkage != .runtime_c) return error.UnsupportedInstruction;
+     if (sig.ret != .void or !std.mem.eql(ir.Type, sig.params, &.{.capability})) return error.UnsupportedInstruction;
+     if (sig.owned != 0 or sig.consumes != 0 or sig.views != 0) return error.UnsupportedInstruction;
+     if (function.blocks.items.len != 0 or function.insts.items.len != 0) return error.UnsupportedInstruction;

@@ -1,0 +1,15 @@
+{
+  "status": "C3 draft only; coupled to mandatory OWN1 ir.Module ABI and no mode selector",
+  "source_revision": "0a299d505e011380ac1d6ea3a3a6056bae4d93e8",
+  "support7_source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "path": "src/core/borrowed_provider.zig",
+  "before_sha256": "be8fc7a098659b5b84fbbea140621abda4249eeeaa3bb51f08b64c685bbbd6ee",
+  "after_sha256": "ad612bce24c23a493ca69e9779bd37b471c0cfb95dfd721e1ad97ee22703b013",
+  "changes": "Remove two legacy mode guards only; preserve exact declarations, roots, signatures and nonescaping uses",
+  "required_reruns": [
+    "borrowed provider focused tests including corrupt owning root cache rejection",
+    "unchanged entry Context and wide ABI fixture five modes",
+    "all nine borrowed context negatives",
+    "C3 old ABI rejection and common marker validation"
+  ]
+}

@@ -474,3 +474,13 @@ owned stdlib modules already match integration. The preview still defines the
 owned macro for unretired peer files; no active production retirement or C2
 promotion was applied. A07 received the remaining owned keyed-sort symbol
 selection contract; A02's direct layout callbacks remain required.
+
+Support7 preparation adds the original seventeenth public reference,
+`time_random_provider.my`, with an explicit deterministic native v7 provider.
+Its unmodified source exercises successful repeated scalar results; six provider
+error modes cover unavailable/denied/failed clock and entropy returns. The
+`run_matrix.py` orchestrator pins a complete compiler revision and hash and uses
+two-positive/ten-negative shared-admission batches. No Support7 build or native
+execution starts until the coordinator publishes its completed installation.
+The held C3 borrowed-provider utility patch removes exactly two legacy mode
+guards and remains coupled to A07's mandatory owned ABI provenance.

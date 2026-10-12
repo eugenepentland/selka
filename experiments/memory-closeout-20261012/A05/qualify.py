@@ -114,9 +114,10 @@ def main():
         sources[name]=(HERE/'negative'/filename,0)
     for name in ('sort','math','integer_extrema'):
         sources[name]=(ROOT/f'src/stdlib/fixtures/{name}.my',42)
-    for name in ('pool','time_random'):
-        sources[name]=(ROOT/f'src/stdlib/fixtures/{name}.my',0 if name=='time_random' else 42)
+    for name in ('pool','time_random','time_random_provider'):
+        sources[name]=(ROOT/f'src/stdlib/fixtures/{name}.my',42 if name=='pool' else 0)
     sources['memo_fixture']=(ROOT/'tests/lang/memo_cache.my',42)
+    sources['dictionary_get_readonly']=(HERE/'boundaries/dictionary_get_readonly.my',0)
     for name in ('application_cache','capability_fields','rc_capability_values','rc_contract_results','test_capabilities'):
         sources['guest_'+name]=(ROOT/'tests/lang'/str(name+'.my'),0)
     sources['guest_stdlib']=(ROOT/'tests/value_semantics/stdlib.my',0)
@@ -154,8 +155,11 @@ def main():
             if not a.ordinary_command: argv += ['--experimental-zero-rc']
             argv += ['--cache-dir',str(a.output/'cache')]
             if not source_only: argv += ['--zig',str(a.zig),*MODES[mode],'--counters','-o',str(binary),'--emit-llvm',str(llvm)]
+            linked_provider=HERE/'samples/time_random_native_provider.c' if name=='time_random_provider' else None
+            if linked_provider is not None and not source_only: argv += ['--link',str(linked_provider)]
             ran=run_command(([str(ROOT/'scripts/build-slot.sh'),'build'] if a.admit else [])+argv,cwd=ROOT,env=env,capture_output=True,text=True,timeout=1800)
             result={'original_source':str(source.relative_to(ROOT)),'original_sha256':digest(source),'source_sha256':digest(main),'argv':argv,'build_status':ran.returncode,'build_stdout':ran.stdout,'build_stderr':ran.stderr,'expected_status':expected,'passed':False}
+            if linked_provider is not None: result['linked_provider']={'path':str(linked_provider.relative_to(ROOT)),'sha256':digest(linked_provider)}
             (directory/'build.stdout').write_text(ran.stdout); (directory/'build.stderr').write_text(ran.stderr)
             result['source_files']={str(p.relative_to(project)):digest(p) for p in sorted(project.glob('*.my'))}
             if expected_refusal:
@@ -167,6 +171,7 @@ def main():
                 for sub in ('persistent','durable'): (runtime/sub).mkdir(exist_ok=True)
                 counts=directory/'counts.json'
                 run_env=dict(env,MYLANG_COUNTERS=str(counts))
+                if linked_provider is not None: run_env['A05_PROVIDER_MODE']='success'
                 provider=None
                 if name in ('network','network_values'):
                     provider,thread=network_provider(3 if name=='network' else 1)
@@ -185,6 +190,18 @@ def main():
                 code=llvm.read_text()
                 result['legacy_llvm']=[s for s in ('@myl_core_retain','@myl_core_release','@myl_core_share(','load atomic i32') if s in code]
                 result['passed']=ran.returncode==expected and not ran.stderr and result.get('audit',{}).get('observed_rc_free',False) and result['audit']['managed_leak_free'] and not result['legacy_symbols'] and not result['legacy_llvm']
+                if linked_provider is not None:
+                    result['provider_error_runs']={}
+                    for family in ('clock','random'):
+                        for status,expected_error in (('unavailable',43),('denied',42),('failed',44)):
+                            key=family+'_'+status
+                            error_counts=directory/(key+'-counts.json')
+                            error_run=run_command([str(binary)],cwd=runtime,env=dict(run_env,A05_PROVIDER_MODE=key,MYLANG_COUNTERS=str(error_counts)),capture_output=True,text=True,timeout=120)
+                            error_audit=audit.audit(error_counts) if error_counts.exists() else {}
+                            error_result={'expected_status':expected_error,'status':error_run.returncode,'stdout':error_run.stdout,'stderr':error_run.stderr,'audit':error_audit}
+                            error_result['passed']=error_run.returncode==expected_error and not error_run.stderr and error_audit.get('observed_rc_free',False) and error_audit.get('managed_leak_free',False)
+                            result['provider_error_runs'][key]=error_result
+                            result['passed'] &=error_result['passed']
                 if name=='stream_borrow':
                     result['expected_stdout_hex']='00ff4100ff4100ff4142'
                     result['passed'] &= raw_stdout.hex()==result['expected_stdout_hex']
