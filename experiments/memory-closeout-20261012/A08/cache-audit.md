@@ -70,3 +70,21 @@ The mode audit records fresh RC/zero-RC lowering separately and confirms matchin
 mode reuse. Whole-module LLVM emission rows have zero unit-emission counters and
 must not be reported as direct unit-cache qualification. Final compiler/default/
 retirement reruns and registered stage-cache gates remain required.
+
+
+## Numeric runtime object boundary
+
+`number_runtime.zig` embeds the prebuilt Zig object. Its Blake3 digest determines
+its object-store name and is passed explicitly into the native program key;
+`number_runtime.object` also compares cached bytes to the embedded payload before
+linking. A04's Unicode header correction changes this object and the C shim that
+clears the ASCII flag. The ordinary C0 object was found in the original shared
+store and matched byte-for-byte to its immutable compiler at offset 10,213,424;
+`C0-number-object-provenance.json` records its SHA-256 and exact original path.
+A03 and A09 independently confirmed the same 409,072-byte object.
+
+`numeric_object_cache.py` prepares a private old-object seeding/repair probe. The
+fixture checks both UTF-8 output and Unicode `len`/index behavior, since correct
+bytes alone do not expose a stale ASCII header. Its final candidate execution is
+pending the integrated A04 fix; no passing result is claimed for this preparation.
+The probe never modifies the old shared object or historical compiler/cache.

@@ -309,3 +309,25 @@ for atomic integration with that feature. Its archived draft SHA-256 is
 `24fb4db15c2997c8838a99e1e3f08e7090f76801dd3fd01fc985541056e9afda`.
 No duplicate test-only commit is needed from A08. The physical-type identity audit
 is in `cache-audit.md`; executable results await that integration.
+
+## Prepared next qualification inputs
+
+`diagnostic-sources.json` freezes six modules/generics cases at sizes 16/64/128
+(214 source files generated from the pinned A08 generator). A09 approved a bounded
+exclusive `diagnostic_scaling.py` run, but the no-op admission barrier was cancelled
+before admission when the coordinator prioritized Support6. No timing wrapper or
+compiler ran. This future command measures `dump-ir --facts`, including parsing,
+checking, eager ownership validation, Core lowering, release passes and IR/facts
+formatting. It excludes LLVM/native compilation/linking and does not establish
+runtime admission. The command has no per-stage timing report; one exploratory
+sample per case is explicitly distinct from whole-build timing. C0 native failures
+remain in the existing denominator. Final paired inputs must match this manifest.
+
+`numeric_object_cache.py` and `numeric-abi.my` prepare the final A04 numeric-header
+ABI check. `C0-number-object-provenance.json` pins the exact old object and its byte
+range inside the immutable C0 compiler, independently confirmed by A03/A09. The
+harness copies the object privately, checks the new Unicode formatting/length/index
+oracle, requires a different candidate object, and verifies repair after stale old
+bytes are placed at the candidate's disposable object path. These inputs only have
+Python parse/help checks so far; they await the integrated numeric fix and must not
+be counted as completed qualification. No historical shared artifact is mutated.

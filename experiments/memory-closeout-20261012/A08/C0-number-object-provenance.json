@@ -1,0 +1,12 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "objects": [
+    {
+      "path": "/home/epentland/.cache/mylang/core-runtime/core_number_text-c4c8f221a3ba0efc51b5396ff27829c4d16e680e635d92aa28a7be8666d9cbca.o",
+      "sha256": "f85642aaba0d26989f5201363adde207470e34e678c7ed45eb2dbbb900e00ae0",
+      "bytes": 409072,
+      "offset_in_C0_compiler": 10213424
+    }
+  ]
+}
