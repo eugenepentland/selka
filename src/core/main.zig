@@ -18,12 +18,14 @@ const cli_run = @import("cli_run.zig");
 
 /// The flag naming the build cache directory.
 const cache_dir_flag = "--cache-dir";
+const zero_rc_flag = "--experimental-zero-rc";
 const shared_cache_dir_flag = "--shared-cache-dir";
 
 const usage =
     \\usage: mylang build FILE.my -o OUT [--release | --unoptimized | --optimize-debug] [--link FILE.c]... [--emit-llvm PATH] [--no-facts | --verify-facts] [--stats] [--zig PATH] [--cache-dir DIR] [--verify-cache] [--cache-report]
     \\Default: optimized debug; --optimize-debug is a compatibility alias; --unoptimized disables optimization.
     \\Experimental: --experimental-single-owner or --experimental-zero-rc on build, run, check and dump-ir.
+    \\              --experimental-zero-rc also applies to test.
     \\       mylang check FILE.my [--typed] [--stats] [--timings=json] [--cache-dir DIR] [--no-cache]
     \\       mylang test FILE.my|DIR [options]   (`mylang test` alone lists them)
     \\       mylang coverage FILE.my...   (one line per function: ok with its checks, or the refusal reason)
@@ -38,6 +40,7 @@ const test_usage =
     \\Default: optimized debug; --optimize-debug and --mode Debug select the same mode.
     \\  --release | --unoptimized | --optimize-debug           --mode Debug|ReleaseFast
     \\  --no-facts | --verify-facts
+    \\  --experimental-zero-rc                checked moves and borrows, direct destruction
     \\  --affected --against REF                run only tests reaching a declaration changed since REF
     \\  --jobs N                                tests at once (default: CPUs, capped by free memory)
     \\  --max-steps N --max-frames N --max-memory SIZE --timeout-ms N   per-test budgets
@@ -78,7 +81,7 @@ pub fn developer(init: std.process.Init, args: []const []const u8) Error!u8 {
                 with_facts = true;
             } else if (std.mem.eql(u8, arg, "--experimental-single-owner")) {
                 single_owner = true;
-            } else if (std.mem.eql(u8, arg, "--experimental-zero-rc")) {
+            } else if (std.mem.eql(u8, arg, zero_rc_flag)) {
                 single_owner = true;
                 zero_rc = true;
             } else return 2;
@@ -207,7 +210,7 @@ pub fn buildCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
             options.mode.select(&explicit_mode, .release) catch return 2;
         } else if (std.mem.eql(u8, arg, "--experimental-single-owner")) {
             options.show.codegen.single_owner = true;
-        } else if (std.mem.eql(u8, arg, "--experimental-zero-rc")) {
+        } else if (std.mem.eql(u8, arg, zero_rc_flag)) {
             options.show.codegen.single_owner = true;
             options.show.codegen.zero_rc = true;
         } else if (std.mem.eql(u8, arg, "--optimize-debug")) {
@@ -309,19 +312,7 @@ pub fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
             no_cache = true;
         } else if (flagValue(args, &index, "--against")) |reference| {
             options.controls.against = reference;
-        } else if (std.mem.eql(u8, arg, "--release")) {
-            options.build.mode.select(&explicit_mode, .release) catch return testUsage(init, mode_conflict);
-        } else if (std.mem.eql(u8, arg, "--optimize-debug")) {
-            options.build.mode.select(&explicit_mode, .optimized_debug) catch return testUsage(init, mode_conflict);
-        } else if (std.mem.eql(u8, arg, "--unoptimized")) {
-            options.build.mode.select(&explicit_mode, .debug) catch return testUsage(init, mode_conflict);
-        } else if (std.mem.eql(u8, arg, "--json")) {
-            options.json = true;
-        } else if (std.mem.eql(u8, arg, "--no-facts")) {
-            options.build.facts = .off;
-        } else if (std.mem.eql(u8, arg, "--verify-facts")) {
-            options.build.facts = .verify;
-        } else if (std.mem.eql(u8, arg, "--link") and has_value) {
+        } else if (testBuildFlag(&options, arg, &explicit_mode) catch return testUsage(init, mode_conflict)) {} else if (std.mem.eql(u8, arg, "--link") and has_value) {
             index += 1;
             try links.append(init.arena.allocator(), args[index]);
         } else if (std.mem.eql(u8, arg, "--seed") and has_value) {
@@ -363,6 +354,26 @@ pub fn testCommand(init: std.process.Init, args: []const []const u8) Error!u8 {
     defer if (no_cache) cli_run.discard(init.io, options.build.cache);
     const compilation_init = try @import("compiler_sharing.zig").prepare(init, no_cache or options.build.show.verify_cache);
     return test_runner.run(compilation_init, options);
+}
+
+fn testBuildFlag(options: *test_runner.Options, arg: []const u8, explicit_mode: *bool) error{Usage}!bool {
+    if (std.mem.eql(u8, arg, "--release")) {
+        try options.build.mode.select(explicit_mode, .release);
+    } else if (std.mem.eql(u8, arg, "--optimize-debug")) {
+        try options.build.mode.select(explicit_mode, .optimized_debug);
+    } else if (std.mem.eql(u8, arg, "--unoptimized")) {
+        try options.build.mode.select(explicit_mode, .debug);
+    } else if (std.mem.eql(u8, arg, zero_rc_flag)) {
+        options.build.show.codegen.single_owner = true;
+        options.build.show.codegen.zero_rc = true;
+    } else if (std.mem.eql(u8, arg, "--json")) {
+        options.json = true;
+    } else if (std.mem.eql(u8, arg, "--no-facts")) {
+        options.build.facts = .off;
+    } else if (std.mem.eql(u8, arg, "--verify-facts")) {
+        options.build.facts = .verify;
+    } else return false;
+    return true;
 }
 
 fn propertyRuns(text: []const u8) ?u32 {

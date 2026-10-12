@@ -562,6 +562,7 @@ fn runCommand(init: Context, parsed: Parsed) !u8 {
         },
         else => return err,
     };
+    if (compilation.program) |program| if (!try ownershipCheck(init, parsed, program, compilation.src)) return 1;
     recordCheckWork(init, &counting, null, compilation.program);
     recordSemanticBypass(init, &counting, null);
     init.timings.counts.ast_nodes = compilation.syntax.?.nodes.items.len + compilation.syntax.?.statements.items.len;
@@ -671,7 +672,8 @@ fn recordUnitTypedNodes(init: Context, compilation: *const language.Compilation)
 fn checkUnit(parsed: Parsed, compilation: *language.Compilation, semantic: *language.semantic_cache.Cache) language.diagnostic.Error!void {
     const as_library = parsed.command == .check and !compilation.declaresMain();
     if (as_library) {
-        _ = try compilation.checkLibraryProgram();
+        const program = try compilation.checkLibraryProgram();
+        if (parsed.single_owner) compilation.program = program;
     } else try compilation.checkWithCache(semantic);
 }
 
@@ -825,6 +827,8 @@ const Parsed = struct {
     /// entry that declares no `main` is then checked as a library (`CHECK-LIBRARY-2`)
     /// instead of failing `E_MAIN`. A plain `check-project` keeps requiring `main`.
     library_fallback: bool = false,
+    single_owner: bool = false,
+    zero_rc: bool = false,
 };
 /// Whether any argument names the retired `--mutation-markers` switch. Every
 /// command rejects it before its own parser sees it, because no command selects
@@ -840,6 +844,21 @@ fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Pa
     var index: usize = 1;
     while (index < args.len) : (index += 1) {
         const arg = args[index];
+        if (std.mem.eql(u8, arg, "--experimental-single-owner") or std.mem.eql(u8, arg, "--experimental-zero-rc")) {
+            switch (command) {
+                .check, .@"check-project", .@"check-module" => {},
+                else => return error.Usage,
+            }
+            parser.single_owner = true;
+            parser.zero_rc = parser.zero_rc or std.mem.eql(u8, arg, "--experimental-zero-rc");
+            continue;
+        }
+        if (std.mem.eql(u8, arg, "--cache-dir")) {
+            if (parser.cache_dir != null or index + 1 >= args.len) return error.Usage;
+            index += 1;
+            parser.cache_dir = args[index];
+            continue;
+        }
         if (std.mem.startsWith(u8, arg, "--diagnostics=")) {
             if (parser.reporting.diagnostics != null) return error.Usage;
             parser.reporting.diagnostics = std.meta.stringToEnum(diagnostic_output.Format, arg["--diagnostics=".len..]) orelse return error.Usage;
@@ -883,6 +902,8 @@ fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Pa
 const ArgumentParser = struct {
     command: Command,
     schema_report: bool = false,
+    single_owner: bool = false,
+    zero_rc: bool = false,
     contracts: bool = false,
     cost: bool = false,
     inputs: [16][]const u8 = @splat(""),
@@ -1206,6 +1227,8 @@ const ArgumentParser = struct {
         try self.index.validate();
         return .{
             .schema_report = self.schema_report,
+            .single_owner = self.single_owner,
+            .zero_rc = self.zero_rc,
             .inputs = self.inputs,
             .input_count = self.input_count,
             .policy = self.policy,
@@ -2027,13 +2050,14 @@ fn earlyProjectCheck(init: Context, parsed: Parsed, compilation: *language.proje
 
 /// Check a library without recording an executable verdict or lowering its bodies.
 fn checkLibraryProject(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, files: *ModuleFiles, configured: *const ConfiguredPolicy) !u8 {
-    _ = compilation.checkLibraryProgram() catch |err| switch (err) {
+    const program = compilation.checkLibraryProgram() catch |err| switch (err) {
         error.SourceError => {
             try reportProject(init, compilation);
             return 1;
         },
         else => return err,
     };
+    if (!try ownershipCheck(init, parsed, program, compilation.src)) return 1;
     try reportProject(init, compilation);
     if (try enforceInterfaceFiles(init, parsed, configured, compilation.index, files.root)) |status| return status;
     return if (try projectWarningsDenied(init, compilation, configured)) 1 else 0;
@@ -2044,7 +2068,7 @@ fn checkLibraryProject(init: Context, parsed: Parsed, compilation: *language.pro
 /// complete receipts and uses none, and so does every command that inspects the
 /// checked program some other way.
 fn openSummaries(init: Context, parsed: Parsed, project: *const language.project.Project, functions: ?*language.semantic_cache.Cache, request: *language.semantic_summary.Request) !void {
-    if (parsed.reporting.explain_invalidation) return;
+    if (parsed.reporting.explain_invalidation or parsed.single_owner) return;
     if (parsed.command != .@"check-project") return;
     const cache = parsed.frontend orelse return;
     const semantic = functions orelse return;
@@ -2290,6 +2314,7 @@ fn declarationCommand(init: Context, project: *language.project.Project, parsed:
 /// project that did not check), and a project that opted into interface files
 /// rejects a stale one. Null lets the command continue.
 fn checkedCommand(init: Context, parsed: Parsed, compilation: *language.project_compile.Compilation, unchecked_reason: ?[]const u8, files: *ModuleFiles, configured: *const ConfiguredPolicy) !?u8 {
+    if (compilation.program) |program| if (!try ownershipCheck(init, parsed, program, compilation.src)) return 1;
     if (parsed.command == .context) {
         const status = try contextCommand(init, parsed, compilation, unchecked_reason, files);
         return status;
@@ -2419,6 +2444,7 @@ const Replayed = struct {
 /// A requested explanation must compare receipts, so it never replays a stored
 /// verdict before the checked compilation produces one.
 fn replayStoredVerdict(init: Context, parsed: Parsed, project: *const language.project.Project, stores: Replayed) !bool {
+    if (parsed.single_owner) return false;
     if (try replayCheck(init, parsed.command, project, stores.verdict)) return true;
     if (parsed.reporting.explain_invalidation) return false;
     return replayFrontendVerdict(init, parsed.command, project, stores.frontend);
@@ -3144,4 +3170,15 @@ fn featureReport(init: std.process.Init) !void {
     defer init.gpa.free(text);
     try std.Io.File.stdout().writeStreamingAll(init.io, text);
     try std.Io.File.stdout().writeStreamingAll(init.io, "\n");
+}
+
+/// Ownership checks inspect complete typed bodies even after an ordinary check cached success.
+fn ownershipCheck(init: Context, parsed: Parsed, program: language.typed.Program, source: language.source.Source) !bool {
+    if (!parsed.single_owner) return true;
+    var scratch = std.heap.ArenaAllocator.init(init.gpa);
+    defer scratch.deinit();
+    var messages: std.ArrayList(u8) = .empty;
+    const valid = try mylang_core.validateOwnership(scratch.allocator(), program, source, init.diagnostics, &messages, parsed.zero_rc);
+    try std.Io.File.stderr().writeStreamingAll(init.io, messages.items);
+    return valid;
 }

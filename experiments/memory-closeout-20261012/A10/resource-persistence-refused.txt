@@ -1,0 +1,7 @@
+tests/lang/application_cache.my
+tests/lang/capability_fields.my
+tests/lang/memo_cache.my
+tests/lang/rc_capability_values.my
+tests/lang/rc_contract_results.my
+tests/lang/test_capabilities.my
+tests/value_semantics/stdlib.my

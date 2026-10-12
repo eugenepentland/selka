@@ -60,6 +60,8 @@ pub fn portableSettings(context: Context, paths: PortablePaths) Error!Digest {
     field(&hash, &context.identity.tool.native_target);
     field(&hash, paths.entry);
     field(&hash, try std.json.Stringify.valueAlloc(context.arena, .{
+        .single_owner = context.options.build.show.codegen.single_owner,
+        .zero_rc = context.options.build.show.codegen.zero_rc,
         .mode = context.options.build.mode,
         .facts = context.options.build.facts,
         .vectors = context.options.build.show.codegen.generic_vectors,
@@ -105,6 +107,8 @@ fn settingsWithBudget(context: Context, inputs: *std.ArrayList(Dependency), doma
         field(&hash, context.case_bytes);
     }
     field(&hash, try std.json.Stringify.valueAlloc(a, .{
+        .single_owner = context.options.build.show.codegen.single_owner,
+        .zero_rc = context.options.build.show.codegen.zero_rc,
         .mode = context.options.build.mode,
         .facts = context.options.build.facts,
         .vectors = context.options.build.show.codegen.generic_vectors,
@@ -777,4 +781,30 @@ test "receipt campaignSettings excludes only indexed passing budget and binds se
     const provider = (try campaignSettings(context, &inputs)).?;
     context.case_bytes = "changed provider fixture";
     try std.testing.expect(!std.mem.eql(u8, &provider, &(try campaignSettings(context, &inputs)).?));
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CACHE-1
+test "zero RC test receipts isolate local portable and indexed ownership modes" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    var context = try fakeToolContext(a, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a), &environment);
+    var inputs: std.ArrayList(Dependency) = .empty;
+    context.options.properties.policy = .indexed_v1;
+    const plain = try settings(context, &inputs);
+    const portable_plain = try portableSettings(context, .{ .entry = "app.my" });
+    const indexed_plain = (try campaignSettings(context, &inputs)).?;
+    context.options.build.show.codegen.single_owner = true;
+    const single = try settings(context, &inputs);
+    try std.testing.expect(!std.mem.eql(u8, &plain, &single));
+    context.options.build.show.codegen.zero_rc = true;
+    const owned = try settings(context, &inputs);
+    try std.testing.expect(!std.mem.eql(u8, &single, &owned));
+    try std.testing.expect(!std.mem.eql(u8, &plain, &owned));
+    try std.testing.expect(!std.mem.eql(u8, &portable_plain, &try portableSettings(context, .{ .entry = "app.my" })));
+    try std.testing.expect(!std.mem.eql(u8, &indexed_plain, &(try campaignSettings(context, &inputs)).?));
 }

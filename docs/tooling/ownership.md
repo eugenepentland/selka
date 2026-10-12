@@ -107,8 +107,11 @@ copies and stack allocations.
 ## Experimental zero RC
 
 `--experimental-zero-rc` selects source moves, explicit copies, checked borrows
-and direct destruction. It applies to `build`, `run`, `check` and `dump-ir`;
-the guest `test` command does not accept it. `check` validates source ownership,
+and direct destruction. It applies to `build`, `run`, `run-project`, `check`,
+`dump-ir` and `test`. Tests use the same checked source ownership rules, including
+directory workers and property trials. Local, shared and indexed-property test
+receipts distinguish ownership modes; an ordinary RC success cannot satisfy a
+zero-RC request. `check` validates source ownership,
 while `build` also checks backend and runtime support. Unsupported operations
 fail compilation without an RC fallback. See the
 [supported features and measurements](../../experiments/zero-rc-final-20261011/README.md).

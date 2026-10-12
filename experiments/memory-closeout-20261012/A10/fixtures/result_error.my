@@ -1,0 +1,2 @@
+func main() -> Result[int, str]:
+    return Err("bad-" + str(7))

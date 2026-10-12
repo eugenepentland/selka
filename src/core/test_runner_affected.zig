@@ -32,6 +32,7 @@ pub const Request = struct {
     root: []const u8,
     entry: []const u8,
     reference: []const u8,
+    ownership: struct { single_owner: bool = false, zero_rc: bool = false } = .{},
 };
 
 /// Keep the `cases` (already filtered) that reach a declaration changed since
@@ -53,7 +54,7 @@ pub fn narrow(request: Request, checked: frontend.Checked, cases: []const discov
     var kept: std.ArrayList(discover.Case) = .empty;
     var skipped: std.ArrayList([]const u8) = .empty;
     for (cases) |case| {
-        if (everything or try reaches(request.backing, checked, case, changes)) {
+        if (everything or try reaches(request, checked, case, changes)) {
             try kept.append(a, case);
         } else try skipped.append(a, case.name);
     }
@@ -93,11 +94,17 @@ fn constant(bytes: []const u8, offset: usize) bool {
 
 /// Whether a function `case`'s Core IR build reaches is changed. A test the new core
 /// cannot build is kept, so the run reports why.
-fn reaches(backing: std.mem.Allocator, checked: frontend.Checked, case: discover.Case, changes: language.affected_tests.Changes) Error!bool {
-    var scratch = std.heap.ArenaAllocator.init(backing);
+fn reaches(request: Request, checked: frontend.Checked, case: discover.Case, changes: language.affected_tests.Changes) Error!bool {
+    var scratch = std.heap.ArenaAllocator.init(request.backing);
     defer scratch.deinit();
     var refusal: build.Refusal = .{};
-    const module = build.buildRootsSource(scratch.allocator(), checked.program, &.{case.function}, checked.src, &refusal) catch |err| switch (err) {
+    const input: build.Input = .{
+        .program = checked.program,
+        .source = checked.src,
+        .single_owner = request.ownership.single_owner,
+        .zero_rc = request.ownership.zero_rc,
+    };
+    const module = build.buildRootsCached(scratch.allocator(), &.{case.function}, input, &refusal, null) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         else => return true,
     };

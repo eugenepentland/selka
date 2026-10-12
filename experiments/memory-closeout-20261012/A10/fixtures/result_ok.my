@@ -1,0 +1,2 @@
+func main() -> Result[int, str]:
+    return Ok(0)

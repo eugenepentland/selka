@@ -1,0 +1,24 @@
+[
+  {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/libexec/mylang/components/cache-plan-14501451340ebbb82684c4108f35b9a71cc2d407333ed50f6f90bc321954261e",
+    "sha256": "14501451340ebbb82684c4108f35b9a71cc2d407333ed50f6f90bc321954261e",
+    "nm_status": 0,
+    "rc_symbols": [
+      "00000000010189c0 T myl_core_release",
+      "0000000001047580 T myl_core_release_slow",
+      "0000000001047500 T myl_core_retain_slow",
+      "00000000010186c0 T myl_core_share"
+    ]
+  },
+  {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/libexec/mylang/components/test-index-b3ad0140096fa33d2775a7f74bf4385b0750ee09ce885d5c0c23453a7d6c285e",
+    "sha256": "b3ad0140096fa33d2775a7f74bf4385b0750ee09ce885d5c0c23453a7d6c285e",
+    "nm_status": 0,
+    "rc_symbols": [
+      "000000000100d900 T myl_core_release",
+      "000000000103c4c0 T myl_core_release_slow",
+      "000000000103c440 T myl_core_retain_slow",
+      "000000000100d600 T myl_core_share"
+    ]
+  }
+]

@@ -11,6 +11,8 @@ const cli_run = @import("cli_run.zig");
 const pipeline = @import("pipeline.zig");
 const cost_command = @import("cost_command.zig");
 const juice_command = @import("juice/command.zig");
+/// Source ownership validation shared with the full front-end check command.
+pub const validateOwnership = @import("single_owner.zig").validateMode;
 
 /// What stops a command before it has a status: memory, an unwritable stream, or a
 /// test the runner cannot encode.
@@ -96,7 +98,9 @@ pub fn dispatch(init: std.process.Init, args: []const []const u8) Error!?u8 {
     }
     const rest = args[2..];
     if (std.mem.eql(u8, command, "check")) {
-        for (rest) |arg| if (std.mem.eql(u8, arg, "--experimental-single-owner") or std.mem.eql(u8, arg, "--experimental-zero-rc")) {
+        // Developer profiling keeps its dedicated output; ordinary checks retain
+        // the full front-end parser, library support and diagnostic options.
+        for (rest) |arg| if (std.mem.eql(u8, arg, "--typed") or std.mem.eql(u8, arg, "--stats")) {
             const result = try @import("check_command.zig").run(init, rest);
             return result;
         };

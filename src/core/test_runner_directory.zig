@@ -537,6 +537,7 @@ fn argv(a: std.mem.Allocator, fanout: Fanout, path: []const u8) Error![]const []
     try arguments.appendSlice(a, &.{ "--property-policy", opts.properties.policy.name() });
     if (opts.shared_cache) |directory| if (directory.len != 0)
         try arguments.appendSlice(a, &.{ "--shared-cache-dir", directory });
+    if (opts.build.show.codegen.zero_rc) try arguments.append(a, "--experimental-zero-rc");
     if (opts.build.mode == .release) try arguments.append(a, "--release");
     if (opts.build.mode == .debug) try arguments.append(a, "--unoptimized");
     if (opts.build.facts == .verify) try arguments.append(a, "--verify-facts");
@@ -962,4 +963,34 @@ test "explanation rejects malformed child cache metadata instead of preserving a
     try std.testing.expect(!try explanation(a, malformed, &item));
     try std.testing.expectEqual(report.Status.failed, item.status);
     try std.testing.expectEqualStrings("invalid cache explanation in test report", item.reason);
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CACHE-1
+test "zero RC directory children preserve the requested ownership ABI" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var fanout: Fanout = .{
+        .compiler = "mylang",
+        .directory = "unused",
+        .controls = .{ .path = "suite", .build = .{ .zig = "zig" } },
+        .jobs = 2,
+        .ticket = "unused",
+        .run_root = undefined,
+        .identity = undefined,
+    };
+    const ordinary = try argv(a, fanout, "suite/main.my");
+    try std.testing.expectEqual(@as(usize, 0), argumentCount(ordinary, "--experimental-zero-rc"));
+    fanout.controls.build.show.codegen.single_owner = true;
+    fanout.controls.build.show.codegen.zero_rc = true;
+    const owned = try argv(a, fanout, "suite/main.my");
+    try std.testing.expectEqual(@as(usize, 1), argumentCount(owned, "--experimental-zero-rc"));
+}
+
+fn argumentCount(arguments: []const []const u8, flag: []const u8) usize {
+    var found: usize = 0;
+    for (arguments) |argument| {
+        if (std.mem.eql(u8, argument, flag)) found += 1;
+    }
+    return found;
 }
