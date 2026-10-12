@@ -1,0 +1,18 @@
+# spec-case: NEW-CORE-S3-NUMERIC-1
+public func test_subtraction_and_multiplication_saturate_at_each_width() -> bool:
+    if saturating_sub(-128i8, 1i8) != -128i8 or saturating_sub(127i8, -128i8) != 127i8:
+        return False
+    if saturating_mul(-128i8, -1i8) != 127i8 or saturating_mul(-128i8, 2i8) != -128i8:
+        return False
+    if saturating_sub(0u8, 255u8) != 0u8 or saturating_mul(255u8, 255u8) != 255u8:
+        return False
+    if saturating_mul(65535u16, 65535u16) != 65535u16 or saturating_sub(-32768i16, 1i16) != -32768i16:
+        return False
+    if saturating_mul(2147483647i32, 2i32) != 2147483647i32 or saturating_mul(4294967295u32, 4294967295u32) != 4294967295u32:
+        return False
+    if saturating_mul(-9223372036854775808, -1) != 9223372036854775807 or saturating_sub(9223372036854775807, -1) != 9223372036854775807:
+        return False
+    return saturating_mul(18446744073709551615u64, 18446744073709551615u64) == 18446744073709551615u64 and saturating_sub(0u64, 1u64) == 0u64
+
+func main() -> int:
+    return if test_subtraction_and_multiplication_saturate_at_each_width() then 0 else 1

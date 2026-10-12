@@ -70,6 +70,7 @@ pub fn contract(symbol: []const u8) ?Contract {
     const readers = [_][]const u8{
         "myl_core_owned_same_block",
         "myl_core_round_float",
+        "myl_core_saturating_integer",
         "myl_core_parse_int_range",
         "myl_core_parse_float_range",
         "myl_core_text_bound",

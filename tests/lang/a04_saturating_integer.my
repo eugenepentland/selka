@@ -1,0 +1,97 @@
+# Runtime inputs keep every signedness/width path in the generated native code.
+
+func boundaries_i8(one: i8) -> bool:
+    const low = -128i8
+    const high = 127i8
+    if saturating_sub(low, one) != low or saturating_mul(high, one + one) != high:
+        return False
+    if saturating_mul(high, 0i8) != 0i8 or saturating_sub(high, one) != high - one:
+        return False
+    if saturating_mul(low, -one) != high or saturating_mul(low, one + one) != low:
+        return False
+    if saturating_sub(high, -one) != high or saturating_sub(low, -one) != low + one:
+        return False
+    return saturating_mul(high, high) == high
+
+func boundaries_i16(one: i16) -> bool:
+    const low = -32768i16
+    const high = 32767i16
+    if saturating_sub(low, one) != low or saturating_mul(high, one + one) != high:
+        return False
+    if saturating_mul(high, 0i16) != 0i16 or saturating_sub(high, one) != high - one:
+        return False
+    if saturating_mul(low, -one) != high or saturating_mul(low, one + one) != low:
+        return False
+    if saturating_sub(high, -one) != high or saturating_sub(low, -one) != low + one:
+        return False
+    return saturating_mul(high, high) == high
+
+func boundaries_i32(one: i32) -> bool:
+    const low = -2147483648i32
+    const high = 2147483647i32
+    if saturating_sub(low, one) != low or saturating_mul(high, one + one) != high:
+        return False
+    if saturating_mul(high, 0i32) != 0i32 or saturating_sub(high, one) != high - one:
+        return False
+    if saturating_mul(low, -one) != high or saturating_mul(low, one + one) != low:
+        return False
+    if saturating_sub(high, -one) != high or saturating_sub(low, -one) != low + one:
+        return False
+    return saturating_mul(high, high) == high
+
+func boundaries_i64(one: i64) -> bool:
+    const low = -9223372036854775808
+    const high = 9223372036854775807
+    if saturating_sub(low, one) != low or saturating_mul(high, one + one) != high:
+        return False
+    if saturating_mul(high, 0) != 0 or saturating_sub(high, one) != high - one:
+        return False
+    if saturating_mul(low, -one) != high or saturating_mul(low, one + one) != low:
+        return False
+    if saturating_sub(high, -one) != high or saturating_sub(low, -one) != low + one:
+        return False
+    return saturating_mul(high, high) == high
+
+func boundaries_u8(one: u8) -> bool:
+    const low = 0u8
+    const high = 255u8
+    if saturating_sub(low, one) != low or saturating_mul(high, one + one) != high:
+        return False
+    if saturating_mul(high, 0u8) != 0u8 or saturating_sub(high, one) != high - one:
+        return False
+    return saturating_mul(high, high) == high
+
+func boundaries_u16(one: u16) -> bool:
+    const low = 0u16
+    const high = 65535u16
+    if saturating_sub(low, one) != low or saturating_mul(high, one + one) != high:
+        return False
+    if saturating_mul(high, 0u16) != 0u16 or saturating_sub(high, one) != high - one:
+        return False
+    return saturating_mul(high, high) == high
+
+func boundaries_u32(one: u32) -> bool:
+    const low = 0u32
+    const high = 4294967295u32
+    if saturating_sub(low, one) != low or saturating_mul(high, one + one) != high:
+        return False
+    if saturating_mul(high, 0u32) != 0u32 or saturating_sub(high, one) != high - one:
+        return False
+    return saturating_mul(high, high) == high
+
+func boundaries_u64(one: u64) -> bool:
+    const low = 0u64
+    const high = 18446744073709551615u64
+    if saturating_sub(low, one) != low or saturating_mul(high, one + one) != high:
+        return False
+    if saturating_mul(high, 0u64) != 0u64 or saturating_sub(high, one) != high - one:
+        return False
+    return saturating_mul(high, high) == high
+
+# spec-case: NEW-CORE-S3-NUMERIC-1
+public func test_dynamic_saturating_boundaries() -> bool:
+    return boundaries_i8(1i8) and boundaries_i16(1i16) and boundaries_i32(1i32) and boundaries_i64(1i64) and boundaries_u8(1u8) and boundaries_u16(1u16) and boundaries_u32(1u32) and boundaries_u64(1u64)
+
+func main(args: str[]) -> int:
+    const one = len(args) + 1
+    return if boundaries_i8(i8(one)) and boundaries_i16(i16(one)) and boundaries_i32(i32(one)) and boundaries_i64(i64(one)) and boundaries_u8(u8(one)) and boundaries_u16(u16(one)) and boundaries_u32(u32(one)) and boundaries_u64(u64(one)) then 0 else 1
