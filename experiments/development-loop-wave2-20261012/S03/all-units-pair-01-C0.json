@@ -1,0 +1,93 @@
+{
+  "schema": "s03-paired-boundary-measurement-v1",
+  "cohort": "all-units",
+  "pair": 1,
+  "tier": "warm",
+  "compiler_mode": "controlled",
+  "label": "C0",
+  "elapsed_s": 64.96047287806869,
+  "rows": [
+    {
+      "name": "all-units-01-C0",
+      "command": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build",
+        "--build-file",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/C0/build.zig",
+        "prepare",
+        "-Dkind=all-units",
+        "-Dcompiler=/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/zig-out/bin/mylang",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/all-units-01-C0/local",
+        "--prefix",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/all-units-01-C0/install",
+        "-j4",
+        "--summary",
+        "all",
+        "-Dbaseline=true"
+      ],
+      "cwd": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03",
+      "status": 0,
+      "wall_s": 64.83824504585937,
+      "first_useful_feedback_s": null,
+      "feedback_scope": "observed supported whole-root PASS; individual-test feedback unknown; polling10ms",
+      "user_s": 68.44,
+      "system_s": 3.18,
+      "max_process_rss_kib": 1040404,
+      "sampled_command_rss_kib": 1040148,
+      "rss_scope": "GNU time maximum process RSS including waited children; sampled command excludes descendants",
+      "selected": [],
+      "verdicts": [],
+      "log_sha256": "152738ccd6d22ebf7f5dfe8317dc838a2bfcbd218e351021b2144ae12b60277d",
+      "env_cache_tiers": {
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/all-units-01-C0/local",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/all-units-01-C0/global",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/work",
+        "MYLANG_CORE_RUNTIME_CACHE": null
+      },
+      "cache_bytes_after": {
+        "ZIG_LOCAL_CACHE_DIR": 288666081,
+        "ZIG_GLOBAL_CACHE_DIR": 59964022
+      },
+      "label": "C0",
+      "pair": 1,
+      "artifact_count": 1,
+      "artifacts": [
+        {
+          "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/all-units-01-C0/install/bin/s03-replayed-tests",
+          "bytes": 222158434,
+          "sha256": "7752c372a100efba6c8002d51e179c55bd76a4b1d4702b830dc4a444cc82f241"
+        }
+      ],
+      "artifact_bytes": 222158434,
+      "selected_work": "compile only C0 broad1541 vs B0 broad1532+scalar9; no native test execution",
+      "cold_tiers": "fresh private Zig local and global, one replay graph invocation"
+    }
+  ],
+  "cpu_affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "harness_sha256": "143941721c2c9556870d6aa5cd940defa618c0e0f55b2da164db2bfc8ab4b8c9",
+  "recipe_sha256": "67b851edabeeee1da89bed3bfa8db1465c355b2d7f7f133e39b41cb7d9a39015",
+  "tool_authority_sha256": "075f8ebb2f79feaabc69af9ecbdd875472d384255a66933d606a036c1d77365f",
+  "estimator": "paired ratios and sample median/range; no stable p95 claim"
+}

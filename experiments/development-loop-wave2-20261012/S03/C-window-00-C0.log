@@ -1,0 +1,3 @@
+build-slot: FIFO ticket 32, position 1; waiting for memory-accounting settle delay or another measurement; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 32 after 5s
+{"cohort": "all-units", "pair": 0, "rows": 1, "elapsed_s": 65.91798684699461}
