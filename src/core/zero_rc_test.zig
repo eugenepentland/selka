@@ -1665,3 +1665,24 @@ test "zero RC builtin file results preserve named provider origins through helpe
         \\    return 0
     , "E_ZERO_RC_RESOURCE_ESCAPE");
 }
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC conditional branch storage transfers owners instead of receiver loans" {
+    try executes(std.testing.allocator,
+        \\func identity(text: str) -> str:
+        \\    return text.copy()
+        \\func called(text: str, take: bool) -> str:
+        \\    const ch = text[0]
+        \\    const result = identity(ch)
+        \\    return if (take) then (result) else ("!")
+        \\func main(out: Stream) -> int:
+        \\    out.print(called("éz", True), called("éz", False))
+        \\    return 0
+    , "é !\n");
+    try refuses(std.testing.allocator,
+        \\func main(args: str[]) -> int:
+        \\    const owner = "value-" + str(len(args))
+        \\    const selected = if (len(args) == 0) then (owner) else ("!")
+        \\    return len(owner) + len(selected)
+    , "E_SINGLE_OWNER_MOVED");
+}
