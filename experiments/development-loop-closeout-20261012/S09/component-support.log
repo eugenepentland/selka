@@ -16,4 +16,3 @@ test-component-support success
 component-builder success
 +- install generated to selka-components success
    +- compile exe selka-components safe native success 18s MaxRSS:546M
-
