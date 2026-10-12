@@ -993,24 +993,15 @@ fn consumedTemporaries(comptime Checker: type, self: *Checker, node: ast.Node, o
         // These forms check their contents in place; dictionary literals queue
         // every key and value, whether they construct a dictionary or a table.
         .list_literal, .set_literal, .format, .comprehension, .gather => return 0,
+        // Expression-receiver methods check every operand in place. A scalar
+        // `.copy()` may reuse its receiver's typed field/index/call node, whose
+        // operands were already consumed by that nested check.
+        .method_call => return 0,
         .dictionary_literal => |literal| return literal.len,
         .binary => |binary| return binaryTemporaries(binary),
         else => {},
     }
     if (node.data == .unary and node.data.unary.op == .is_none) return 1;
-    // An intrinsic `Option` method is checked in place: its receiver and its
-    // one argument are the call's own and never reached this stack, so
-    // neither the tag test nor the two-arm match consumes a temporary.
-    if (node.data == .method_call and option_flow.methodNamed(self.src.text(node.data.method_call.name)) != null) return 0;
-    // `print`/`write` through a `Stream` field checks its receiver and
-    // arguments in place, so none of them reached this stack either.
-    if (node.data == .method_call and (out.data == .print or out.data == .stream_write)) return 0;
-    // A capability method on an expression receiver checks the receiver and its
-    // arguments in place the same way.
-    if (node.data == .method_call) switch (out.data) {
-        .file_access, .restrict_resource, .dir_resource, .host_resource, .environment_get, .environment_only, .environment_names => return 0,
-        else => {},
-    };
     if (node.data == .index and out.data == .block_value) return 2;
     if (node.data == .length and out.data == .block_value) return 1;
     if (node.data == .call) if (try callTemporaries(Checker, self, node.data.call, out)) |count| return count;
