@@ -1,0 +1,337 @@
+diff --git a/src/core/check_command.zig b/src/core/check_command.zig
+--- a/src/core/check_command.zig
++++ b/src/core/check_command.zig
+@@ -88,11 +88,6 @@
+         const arg = args[index];
+         if (std.mem.eql(u8, arg, "--typed")) {
+             options.typed = true;
+-        } else if (std.mem.eql(u8, arg, "--experimental-single-owner")) {
+-            options.single_owner = true;
+-        } else if (std.mem.eql(u8, arg, "--experimental-zero-rc")) {
+-            options.single_owner = true;
+-            options.zero_rc = true;
+         } else if (std.mem.eql(u8, arg, "--stats")) {
+             options.stats = true;
+         } else if (std.mem.eql(u8, arg, "--timings=json")) {
+diff --git a/src/core/cli.zig b/src/core/cli.zig
+--- a/src/core/cli.zig
++++ b/src/core/cli.zig
+@@ -93,6 +93,9 @@
+ pub fn dispatch(init: std.process.Init, args: []const []const u8) Error!?u8 {
+     if (args.len < 2) return null;
+     const command = args[1];
++    if (core_main.retiredOwnershipFlag(args[2..])) |flag| {
++        return try refuse(init, command, try std.fmt.allocPrint(init.arena.allocator(), core_main.ownership_retired, .{flag}));
++    }
+     if (std.mem.eql(u8, command, "juice")) {
+         const status = try juice_command.run(init, args[2..]);
+         return status;
+diff --git a/src/core/cli_args.zig b/src/core/cli_args.zig
+--- a/src/core/cli_args.zig
++++ b/src/core/cli_args.zig
+@@ -166,11 +166,6 @@
+         const build = &self.request.build;
+         if (eql(arg, "--release")) {
+             try build.mode.select(&self.explicit_mode, .release);
+-        } else if (eql(arg, "--experimental-single-owner")) {
+-            build.show.codegen.single_owner = true;
+-        } else if (eql(arg, "--experimental-zero-rc")) {
+-            build.show.codegen.single_owner = true;
+-            build.show.codegen.zero_rc = true;
+         } else if (eql(arg, "--optimize-debug")) {
+             try build.mode.select(&self.explicit_mode, .optimized_debug);
+         } else if (eql(arg, "--unoptimized")) {
+diff --git a/src/core/cost_command.zig b/src/core/cost_command.zig
+--- a/src/core/cost_command.zig
++++ b/src/core/cost_command.zig
+@@ -15,7 +15,6 @@
+ const lowering_cache = @import("lowering_cache.zig");
+ const stage_metrics = @import("stage_metrics.zig");
+ const dynamic = @import("cost_dynamic.zig");
+-const zero_rc_flag = @import("mylang").zero_rc_flag;
+ 
+ /// A malformed request is rendered as usage, with exit 2.
+ pub const Request = struct {
+@@ -57,7 +56,7 @@
+         } else if (std.mem.eql(u8, arg, "--cache-dir")) {
+             if (request == null or index + 1 == args.len) return null;
+             index += 1;
+-        } else if (std.mem.eql(u8, arg, "--no-cache") or std.mem.eql(u8, arg, "--verify-cache") or std.mem.eql(u8, arg, "--cache-report") or std.mem.eql(u8, arg, zero_rc_flag)) {
++        } else if (std.mem.eql(u8, arg, "--no-cache") or std.mem.eql(u8, arg, "--verify-cache") or std.mem.eql(u8, arg, "--cache-report")) {
+             if (request == null) return null;
+         } else if (std.mem.startsWith(u8, arg, "--")) return null else if (request == null) {
+             request = .{ .path = arg };
+@@ -113,9 +112,6 @@
+                 options.verify = true;
+             } else if (std.mem.eql(u8, args[index], "--cache-report")) {
+                 options.report = true;
+-            } else if (std.mem.eql(u8, args[index], zero_rc_flag)) {
+-                options.codegen.single_owner = true;
+-                options.codegen.zero_rc = true;
+             }
+         }
+         return options;
+@@ -264,7 +260,7 @@
+     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+     defer arena.deinit();
+     const a = arena.allocator();
+-    const arguments = [_][]const u8{ "cost.my", zero_rc_flag };
++    const arguments = [_][]const u8{"cost.my"};
+     const request = parse(&arguments).?;
+     const policy = QueryOptions.parse(&arguments);
+     var unit = try @import("mylang").Compilation.init(a, "cost.my", "func main() -> int:\n    const value = \"value-\" + str(7)\n    return len(value)\n");
+diff --git a/src/core/main.zig b/src/core/main.zig
+--- a/src/core/main.zig
++++ b/src/core/main.zig
+@@ -18,8 +18,6 @@
+ 
+ /// The flag naming the build cache directory.
+ const cache_dir_flag = "--cache-dir";
+-const single_owner_flag = "--experimental-single-owner";
+-const zero_rc_flag = @import("mylang").zero_rc_flag;
+ const shared_cache_dir_flag = "--shared-cache-dir";
+ 
+ const usage =
+@@ -55,10 +53,35 @@
+ /// test the runner cannot encode.
+ pub const Error = test_runner.Error || std.Io.File.Writer.Error || frontend.Error || project_entry.Error || build.Error || error{ReadFailed};
+ 
++/// A retired ownership selector before the guest argument separator.
++pub fn retiredOwnershipFlag(args: []const []const u8) ?[]const u8 {
++    for (args) |arg| {
++        if (std.mem.eql(u8, arg, "--")) return null;
++        const name = arg[0 .. std.mem.indexOfScalar(u8, arg, '=') orelse arg.len];
++        if (std.mem.eql(u8, name, "--experimental-single-owner") or std.mem.eql(u8, name, "--experimental-zero-rc")) return name;
++    }
++    return null;
++}
++
++/// The command-line explanation for retired ownership selectors.
++pub const ownership_retired = "{s} was retired; checked ownership is the default; drop the flag";
++
++// spec-case: NEW-CORE-ZERO-RC-TEST-1
++test "retired ownership selectors preserve guest arguments after separator" {
++    try std.testing.expectEqualStrings("--experimental-zero-rc", retiredOwnershipFlag(&.{"--experimental-zero-rc"}).?);
++    try std.testing.expectEqualStrings("--experimental-single-owner", retiredOwnershipFlag(&.{"--experimental-single-owner=true"}).?);
++    try std.testing.expect(retiredOwnershipFlag(&.{ "--", "--experimental-zero-rc" }) == null);
++}
++
+ /// Dispatch one command; the process exit status is its result.
+ pub fn main(init: std.process.Init) !u8 {
+     const allocator = init.arena.allocator();
+     const args = try init.minimal.args.toSlice(allocator);
++    if (args.len >= 2) if (retiredOwnershipFlag(args[2..])) |flag| {
++        const message = try std.fmt.allocPrint(allocator, "mylang: " ++ ownership_retired ++ "\n", .{flag});
++        try std.Io.File.stderr().writeStreamingAll(init.io, message);
++        return 2;
++    };
+     if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return buildCommand(init, args[2..]);
+     if (args.len >= 2 and std.mem.eql(u8, args[1], "check")) return check_command.run(init, args[2..]);
+     if (args.len >= 3 and std.mem.eql(u8, args[1], "test")) return testCommand(init, args[2..]);
+@@ -73,19 +96,12 @@
+     if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-typed")) return dumpTyped(init, args[2], if (args.len >= 4) args[3] else null);
+     if (args.len >= 3 and std.mem.eql(u8, args[1], "dump-ir")) {
+         var with_facts = false;
+-        var single_owner = true;
+-        var zero_rc = true;
+         for (args[3..]) |arg| {
+             if (std.mem.eql(u8, arg, "--facts")) {
+                 with_facts = true;
+-            } else if (std.mem.eql(u8, arg, single_owner_flag)) {
+-                single_owner = true;
+-            } else if (std.mem.eql(u8, arg, zero_rc_flag)) {
+-                single_owner = true;
+-                zero_rc = true;
+             } else return 2;
+         }
+-        return dumpIr(init, args[2], with_facts, single_owner, zero_rc);
++        return dumpIr(init, args[2], with_facts, true, true);
+     }
+     if (args.len >= 3 and std.mem.eql(u8, args[1], "coverage")) return coverageCommand(init, args[2..]);
+     try std.Io.File.stderr().writeStreamingAll(init.io, usage);
+@@ -208,11 +224,6 @@
+         const has_value = index + 1 < args.len;
+         if (std.mem.eql(u8, arg, "--release")) {
+             options.mode.select(&explicit_mode, .release) catch return 2;
+-        } else if (std.mem.eql(u8, arg, single_owner_flag)) {
+-            options.show.codegen.single_owner = true;
+-        } else if (std.mem.eql(u8, arg, zero_rc_flag)) {
+-            options.show.codegen.single_owner = true;
+-            options.show.codegen.zero_rc = true;
+         } else if (std.mem.eql(u8, arg, "--optimize-debug")) {
+             options.mode.select(&explicit_mode, .optimized_debug) catch return 2;
+         } else if (std.mem.eql(u8, arg, "--unoptimized")) {
+@@ -363,9 +374,6 @@
+         try options.build.mode.select(explicit_mode, .optimized_debug);
+     } else if (std.mem.eql(u8, arg, "--unoptimized")) {
+         try options.build.mode.select(explicit_mode, .debug);
+-    } else if (std.mem.eql(u8, arg, zero_rc_flag)) {
+-        options.build.show.codegen.single_owner = true;
+-        options.build.show.codegen.zero_rc = true;
+     } else if (std.mem.eql(u8, arg, "--json")) {
+         options.json = true;
+     } else if (std.mem.eql(u8, arg, "--no-facts")) {
+@@ -478,17 +486,9 @@
+ /// the stack), `refused REASON\tNAME` or
+ /// `frontend FILE` per line.
+ fn coverageCommand(init: std.process.Init, arguments: []const []const u8) !u8 {
+-    var codegen: pipeline.Codegen = .{};
+-    var paths: usize = 0;
+-    for (arguments) |arg| {
+-        if (std.mem.eql(u8, arg, zero_rc_flag)) {
+-            codegen.single_owner = true;
+-            codegen.zero_rc = true;
+-        } else if (std.mem.eql(u8, arg, single_owner_flag)) {
+-            codegen.single_owner = true;
+-        } else if (std.mem.startsWith(u8, arg, "--")) return 2 else paths += 1;
+-    }
+-    if (paths == 0) return 2;
++    const codegen: pipeline.Codegen = .{};
++    if (arguments.len == 0) return 2;
++    for (arguments) |arg| if (std.mem.startsWith(u8, arg, "--")) return 2;
+     var refused = false;
+     var out: std.ArrayList(u8) = .empty;
+     for (arguments) |path| {
+diff --git a/src/core/test_runner_directory.zig b/src/core/test_runner_directory.zig
+--- a/src/core/test_runner_directory.zig
++++ b/src/core/test_runner_directory.zig
+@@ -537,7 +537,6 @@
+     try arguments.appendSlice(a, &.{ "--property-policy", opts.properties.policy.name() });
+     if (opts.shared_cache) |directory| if (directory.len != 0)
+         try arguments.appendSlice(a, &.{ "--shared-cache-dir", directory });
+-    if (opts.build.show.codegen.zero_rc) try arguments.append(a, "--experimental-zero-rc");
+     if (opts.build.mode == .release) try arguments.append(a, "--release");
+     if (opts.build.mode == .debug) try arguments.append(a, "--unoptimized");
+     if (opts.build.facts == .verify) try arguments.append(a, "--verify-facts");
+@@ -966,11 +965,11 @@
+ }
+ 
+ // spec-case: NEW-CORE-ZERO-RC-CACHE-1
+-test "zero RC directory children preserve the requested ownership ABI" {
+-    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+-    defer arena.deinit();
+-    const a = arena.allocator();
+-    var fanout: Fanout = .{
++test "zero RC directory children inherit checked ownership without a selector" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    const fanout: Fanout = .{
+         .compiler = "mylang",
+         .directory = "unused",
+         .controls = .{ .path = "suite", .build = .{ .zig = "zig" } },
+@@ -981,10 +980,8 @@
+     };
+     const ordinary = try argv(a, fanout, "suite/main.my");
+     try std.testing.expectEqual(@as(usize, 0), argumentCount(ordinary, "--experimental-zero-rc"));
+-    fanout.controls.build.show.codegen.single_owner = true;
+-    fanout.controls.build.show.codegen.zero_rc = true;
+-    const owned = try argv(a, fanout, "suite/main.my");
+-    try std.testing.expectEqual(@as(usize, 1), argumentCount(owned, "--experimental-zero-rc"));
++    try std.testing.expect(fanout.controls.build.show.codegen.single_owner);
++    try std.testing.expect(fanout.controls.build.show.codegen.zero_rc);
+ }
+ 
+ fn argumentCount(arguments: []const []const u8, flag: []const u8) usize {
+diff --git a/src/doctest_command.zig b/src/doctest_command.zig
+--- a/src/doctest_command.zig
++++ b/src/doctest_command.zig
+@@ -46,7 +46,6 @@
+ const legacy_prefix = "docs/legacy/";
+ /// `--filter` option prefix, shared by its spaced and `=` spellings.
+ const filter_prefix = "--filter=";
+-const zero_rc_flag = @import("compiler_root").compiler_language.zero_rc_flag;
+ /// `--report` option prefix, shared by its spaced and `=` spellings.
+ const report_prefix = "--report=";
+ /// `--jobs` option prefix, shared by its spaced and `=` spellings.
+@@ -157,7 +156,6 @@
+     report: ?[]const u8 = null,
+     jobs: ?usize = null,
+     verbose: bool = false,
+-    zero_rc: bool = false,
+ };
+ 
+ /// Runtime context one unit needs to be executed. Copied into every worker, so
+@@ -169,7 +167,6 @@
+     compiler: []const u8,
+     fixtures: []const u8,
+     output: *std.Io.Mutex,
+-    zero_rc: bool = false,
+ };
+ 
+ /// Parse the subcommand arguments, rejecting unknown options and extra roots.
+@@ -181,8 +178,6 @@
+         const arg = args[index];
+         if (std.mem.eql(u8, arg, "--verbose")) {
+             options.verbose = true;
+-        } else if (std.mem.eql(u8, arg, zero_rc_flag)) {
+-            options.zero_rc = true;
+         } else if (std.mem.eql(u8, arg, "--filter")) {
+             if (options.filter != null or index + 1 >= args.len) return error.Usage;
+             index += 1;
+@@ -282,7 +277,6 @@
+         .compiler = compiler,
+         .fixtures = fixtures,
+         .output = &output,
+-        .zero_rc = options.zero_rc,
+     };
+     try runUnits(session, units, workspace, width(process.io, requested, units.len));
+     var table: std.StringHashMapUnmanaged(Counts) = .empty;
+@@ -861,10 +855,9 @@
+ 
+ /// The options a unit's command is run with: value semantics is always on in the
+ /// new core, which refuses the retired `--value-semantics` switch (NEW-CORE-S5-DOCTEST-1).
+-fn invokedOptions(allocator: std.mem.Allocator, options: []const []const u8, zero_rc: bool) ![]const []const u8 {
++fn invokedOptions(allocator: std.mem.Allocator, options: []const []const u8) ![]const []const u8 {
+     var kept: std.ArrayList([]const u8) = .empty;
+     for (options) |option| if (!eql(option, "--value-semantics")) try kept.append(allocator, option);
+-    if (zero_rc) try kept.append(allocator, zero_rc_flag);
+     return kept.toOwnedSlice(allocator);
+ }
+ 
+@@ -994,7 +987,7 @@
+     const written = try write(session.allocator, session.io, unit, unit_dir);
+     const project = unit.members.items.len > 1 or moduleLine(written.entry_source) != null;
+     const subcommand = commandFor(decided.action, project);
+-    const extra = try invokedOptions(session.allocator, try commandOptions(session.allocator, unit, subcommand, session.fixtures), session.zero_rc);
++    const extra = try invokedOptions(session.allocator, try commandOptions(session.allocator, unit, subcommand, session.fixtures));
+     const invocation = invoke(session.allocator, session.io, session.compiler, subcommand, written.entry, extra) catch |err| switch (err) {
+         error.Timeout => {
+             unit.status = .failed;
+@@ -1709,12 +1702,10 @@
+ }
+ 
+ // spec-case: NEW-CORE-ZERO-RC-TEST-1
+-test "zero RC doctest preserves ownership selection through command options" {
++test "zero RC doctest inherits the ordinary checked command contract" {
+     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+     defer arena.deinit();
+-    const options = try parseOptions(&.{ zero_rc_flag, "--jobs", "2" });
+-    try std.testing.expect(options.zero_rc);
+-    const forwarded = try invokedOptions(arena.allocator(), &.{"--value-semantics"}, options.zero_rc);
+-    try std.testing.expectEqual(@as(usize, 1), forwarded.len);
+-    try std.testing.expectEqualStrings(zero_rc_flag, forwarded[0]);
+-}
++    try std.testing.expectError(error.Usage, parseOptions(&.{"--experimental-zero-rc"}));
++    const forwarded = try invokedOptions(arena.allocator(), &.{"--value-semantics"});
++    try std.testing.expectEqual(@as(usize, 0), forwarded.len);
++}
+diff --git a/src/main.zig b/src/main.zig
+--- a/src/main.zig
++++ b/src/main.zig
+@@ -848,15 +848,6 @@
+     var index: usize = 1;
+     while (index < args.len) : (index += 1) {
+         const arg = args[index];
+-        if (std.mem.eql(u8, arg, "--experimental-single-owner") or std.mem.eql(u8, arg, "--experimental-zero-rc")) {
+-            switch (command) {
+-                .check, .@"check-project", .@"check-module", .@"check-session", .lint => {},
+-                else => return error.Usage,
+-            }
+-            parser.single_owner = true;
+-            parser.zero_rc = parser.zero_rc or std.mem.eql(u8, arg, "--experimental-zero-rc");
+-            continue;
+-        }
+         if (std.mem.eql(u8, arg, "--cache-dir")) {
+             if (parser.cache_dir != null or index + 1 >= args.len) return error.Usage;
+             index += 1;

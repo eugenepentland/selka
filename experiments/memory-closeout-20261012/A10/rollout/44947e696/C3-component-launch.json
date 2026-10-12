@@ -1,0 +1,20 @@
+{
+  "status": "UNAPPLIED; requires qualified checked-default owned package and fixture migrations",
+  "source_revision": "44947e6967d8eb0deeaa86b25ca2bb44bc58803d",
+  "patch_sha256": "14559fa929bb119a4b87eb5d87a438f63dce90a00d7c28397948a8071d040f0b",
+  "files": {
+    "src/component_launch.zig": {
+      "base_sha256": "35d818af72af9f290652478ab853bc0a3ff6f7d8db631a8d6a4c0bbfb9ab32e6",
+      "draft_sha256": "a29994bc07587ed0424c7be5a181bb3bc0ec3bd94580edc472aa2a8d480d59dd"
+    },
+    "src/component_protocol_test.zig": {
+      "base_sha256": "a1ce246faaf2a3c469e791b3146b59ee057970c0c32459f9300db529338c9d6e",
+      "draft_sha256": "3bcf81cedb066dd70bcd34a472997a8c25716c4726a02764c923c922e37a6027"
+    },
+    "src/cache_plan_protocol_test.zig": {
+      "base_sha256": "fafd6b2aa050642c1ef310b500c923a91310806d85ffa749d1b986e4a40ecfce",
+      "draft_sha256": "8c70903335ae37284c0c6fbbf36a0412562f535ce4b2e51cc5d9f5104565bfc5"
+    }
+  },
+  "qualification": "Synthetic deployment parser/admission tests do not establish guest binary ABI correctness."
+}

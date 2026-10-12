@@ -1,0 +1,182 @@
+[
+  {
+    "name": "format",
+    "argv": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "fmt",
+      "--check",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/component-retirement-44947e696/selfhost",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/launch-retirement-44947e696/src/component_launch.zig",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/launch-retirement-44947e696/src/component_protocol_test.zig",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/launch-retirement-44947e696/src/cache_plan_protocol_test.zig"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-A10",
+    "status": 0,
+    "elapsed_seconds": 0.007847674889490008,
+    "log": "format.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "C2-apply",
+    "argv": [
+      "git",
+      "apply",
+      "--check",
+      "--directory=.tmp/memory-closeout/A10/rollout-draft/base",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/44947e696/C2-default.patch"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-A10",
+    "status": 0,
+    "elapsed_seconds": 0.002614151919260621,
+    "log": "C2-apply.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "C3-cli-apply",
+    "argv": [
+      "git",
+      "apply",
+      "--check",
+      "--directory=.tmp/memory-closeout/A10/rollout-draft/C2",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/44947e696/C3-cli-selector-retirement.patch"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-A10",
+    "status": 0,
+    "elapsed_seconds": 0.0034222768153995275,
+    "log": "C3-cli-apply.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "C3-package-reverse",
+    "argv": [
+      "git",
+      "apply",
+      "--check",
+      "--directory=.tmp/memory-closeout/A10/component-retirement-44947e696",
+      "--reverse",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/44947e696/C3-component-retirement.patch"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-A10",
+    "status": 0,
+    "elapsed_seconds": 0.00261707603931427,
+    "log": "C3-package-reverse.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "C3-launch-reverse",
+    "argv": [
+      "git",
+      "apply",
+      "--check",
+      "--directory=.tmp/memory-closeout/A10/launch-retirement-44947e696",
+      "--reverse",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/44947e696/C3-component-launch.patch"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-A10",
+    "status": 0,
+    "elapsed_seconds": 0.0020484488923102617,
+    "log": "C3-launch-reverse.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "C3-verification-reverse",
+    "argv": [
+      "git",
+      "apply",
+      "--check",
+      "--directory=.tmp/memory-closeout/A10/verification-retirement-44947e696",
+      "--reverse",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/44947e696/C3-verification-package-request.patch"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-A10",
+    "status": 0,
+    "elapsed_seconds": 0.002201792085543275,
+    "log": "C3-verification-reverse.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "component-builder",
+    "argv": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "build-exe",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/component-retirement-44947e696/selfhost/components.zig",
+      "-OReleaseSafe",
+      "-fllvm",
+      "-flld",
+      "-femit-bin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/component-retirement-44947e696/selka-components"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-A10",
+    "status": 0,
+    "elapsed_seconds": 12.70740786101669,
+    "log": "component-builder.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "component-orchestration",
+    "argv": [
+      "python3",
+      "-B",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/component-retirement-44947e696/selfhost/test_components.py",
+      "--builder",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/component-retirement-44947e696/selka-components",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "-v"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-A10",
+    "status": 0,
+    "elapsed_seconds": 1.1141725038178265,
+    "log": "component-orchestration.log",
+    "log_sha256": "dd0e215ded9144651a4f901582aaa987fdb237b633dad6b43716d67b1c925e08"
+  },
+  {
+    "name": "index-protocol",
+    "argv": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "test",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/launch-retirement-44947e696/src/component_protocol_test.zig",
+      "-femit-bin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/launch-retirement-44947e696/index-all-tests"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-A10",
+    "status": 0,
+    "elapsed_seconds": 0.624799476005137,
+    "log": "index-protocol.log",
+    "log_sha256": "298a50277bcd1199301b8ed6029c85175b0c9e04082c05c8d24f7f469994d8b3"
+  },
+  {
+    "name": "planner-protocol",
+    "argv": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "test",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/launch-retirement-44947e696/src/cache_plan_protocol_test.zig",
+      "-femit-bin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/launch-retirement-44947e696/planner-all-tests"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-A10",
+    "status": 0,
+    "elapsed_seconds": 0.693525335052982,
+    "log": "planner-protocol.log",
+    "log_sha256": "e749cd58822bb9b2eedc47c1a86116a5d369f15b659d44db096be753e5a24b40"
+  },
+  {
+    "name": "verification-package",
+    "argv": [
+      "python3",
+      "-B",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/verification-retirement-44947e696/scripts",
+      "-p",
+      "verify_cache_test.py",
+      "-k",
+      "CheckedComponentPackage",
+      "-v"
+    ],
+    "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012-A10",
+    "status": 0,
+    "elapsed_seconds": 0.1132604971062392,
+    "log": "verification-package.log",
+    "log_sha256": "670aecd1c70ce3b9e10819fe2c34636f450a21fbd896756308877d12cbf3b04e"
+  }
+]

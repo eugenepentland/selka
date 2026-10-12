@@ -1,0 +1,38 @@
+{
+  "status": "UNAPPLIED; no default/retirement qualification claimed",
+  "source_revision": "44947e6967d8eb0deeaa86b25ca2bb44bc58803d",
+  "source_files": {
+    "src/core/pipeline.zig": "5b75d0f8920d74b0d12fa47fbced5a537309d41cd0396ca66de3bc38e104b4b4",
+    "src/core/check_command.zig": "3408609f5797b0bd0f003dcd9df88c98f8bf0b8eadaa6903df0aa87e18a795c5",
+    "src/core/main.zig": "3f77f361cd8479682771c31dee7ac1b36213d83dfc9b0a6000370dbd612ac671",
+    "src/main.zig": "0e1a63bfbfea6872b854f5067dee490b8a6aed0e69ae41092ff1a071d279f796",
+    "src/core/cli.zig": "fc511cc1a78e98bbcf2f2e18f314dee47a061dcd6eff58f6738838626dd9e29d",
+    "src/core/cli_args.zig": "460d98917dbd583a3b1ca919cba7e3376f1a154b57ddb31467485ab9e40a4789",
+    "src/core/test_runner_directory.zig": "12da6dbcb7f76476baed2dccfd2db151ad7a4ca7ebd2aacd99d9978975c6f046",
+    "src/doctest_command.zig": "5ae52902003eaed6144a4eb09f75bc8b2ed2e1a28cf7bd589ee3a225a36dc450",
+    "src/core/cost_command.zig": "a97bf8b960e0b9f148ce9542afc57ba69ed33a73c8f0eec6cf9de9f4c5580632"
+  },
+  "C2_files": [
+    "src/core/check_command.zig",
+    "src/core/cli.zig",
+    "src/core/cost_command.zig",
+    "src/core/main.zig",
+    "src/core/pipeline.zig",
+    "src/doctest_command.zig",
+    "src/main.zig"
+  ],
+  "C3_files": [
+    "src/core/check_command.zig",
+    "src/core/cli.zig",
+    "src/core/cli_args.zig",
+    "src/core/cost_command.zig",
+    "src/core/main.zig",
+    "src/core/test_runner_directory.zig",
+    "src/doctest_command.zig",
+    "src/main.zig"
+  ],
+  "patch_hashes": {
+    "C2-default.patch": "950a38ef40914ece9f40bc65f8a8d5546e1174c945d05edf860826d3fbfe722e",
+    "C3-cli-selector-retirement.patch": "7921b323d836519bce0d147197b480c4c0ad224a57ad7e95c038068e1797c979"
+  }
+}

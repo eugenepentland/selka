@@ -1,0 +1,305 @@
+diff --git a/selfhost/components.zig b/selfhost/components.zig
+--- a/selfhost/components.zig
++++ b/selfhost/components.zig
+@@ -8,13 +8,13 @@
+ const Field = files.Field;
+ const cwd = std.Io.Dir.cwd;
+ 
+-const Bootstrap = struct { source: ?[]const u8 = null, owned_pin: ?[]const u8 = null };
++const Bootstrap = struct { source: ?[]const u8 = null, owned_pin: []const u8 };
+ const Config = struct {
+     root: []const u8,
+     zig: []const u8,
+     cache: []const u8,
+     install: []const u8,
+-    bootstrap: Bootstrap = .{},
++    bootstrap: Bootstrap,
+     uncached: bool = false,
+     seed_only: bool = false,
+ };
+@@ -90,11 +90,21 @@
+     return after[0..end];
+ }
+ 
+-const Seed = struct { binary: []const u8, qualification: Value, owned: bool };
+-
+-/// The optional final-component compiler has a separate immutable source pin.
++const Seed = struct { binary: []const u8, qualification: Value };
++
++/// The checked-default component compiler has a separate immutable source pin.
+ /// It must build independently of the components that its guest output replaces.
+ fn ownedPin(ctx: *Context, pin: Value) !void {
++    const selection = text(get(pin, "ownership_selection") catch
++        return ctx.fail("component compiler pin requires checked-default-v1 ownership selection")) catch
++        return ctx.fail("component compiler pin requires checked-default-v1 ownership selection");
++    if (!std.mem.eql(u8, selection, "checked-default-v1"))
++        return ctx.fail("component compiler pin requires checked-default-v1 ownership selection");
++    const abi = text(get(pin, "guest_abi") catch
++        return ctx.fail("component compiler pin requires mylang-checked-owned-v1 guest ABI")) catch
++        return ctx.fail("component compiler pin requires mylang-checked-owned-v1 guest ABI");
++    if (!std.mem.eql(u8, abi, "mylang-checked-owned-v1"))
++        return ctx.fail("component compiler pin requires mylang-checked-owned-v1 guest ABI");
+     const recipe = try get(pin, "recipe");
+     if (!std.mem.eql(u8, try text(try get(pin, "memory_mode")), "zero-rc-v1") or
+         !std.mem.eql(u8, try text(try get(recipe, "step")), "seed-compiler") or
+@@ -117,9 +127,8 @@
+ }
+ 
+ fn qualifySeed(ctx: *Context, config: Config) !Seed {
+-    const owned = config.bootstrap.owned_pin != null;
+-    const pin = try ctx.metadata(config.bootstrap.owned_pin orelse try ctx.path(&.{ config.root, "selfhost", "component-seed.json" }));
+-    if (owned) try ownedPin(ctx, pin);
++    const pin = try ctx.metadata(config.bootstrap.owned_pin);
++    try ownedPin(ctx, pin);
+     const expected_version = try text(try get(pin, "zig"));
+     const version = try ctx.checked(&.{ config.zig, "version" }, null, null);
+     if (!std.mem.eql(u8, std.mem.trim(u8, version, "\r\n \t"), expected_version)) return ctx.fail("seed requires the pinned Zig version");
+@@ -151,7 +160,7 @@
+     if (try files.exists(ctx.io, receipt)) {
+         const qualification = try ctx.metadata(receipt);
+         if (!try equals(ctx.a, try get(qualification, "recipe"), recipe) or !try digestEquals(ctx.io, binary, try text(try get(qualification, "sha256")))) return ctx.fail("qualified seed digest mismatch; remove corrupt seed cache and rebuild");
+-        return .{ .binary = binary, .qualification = qualification, .owned = owned };
++        return .{ .binary = binary, .qualification = qualification };
+     }
+     try files.remove(ctx.io, directory);
+     try cwd().createDirPath(ctx.io, source);
+@@ -173,7 +182,7 @@
+     try cwd().symLink(ctx.io, guardian_real, try ctx.path(&.{ directory, "guardian-zig" }), .{ .is_directory = true });
+     var build_environment = try seedEnvironment(ctx, source);
+     defer build_environment.deinit();
+-    const output = try ctx.checked(&.{ config.zig, "build", if (owned) "seed-compiler" else "affected-compiler", "-Doptimize=ReleaseFast", "-j1" }, source, &build_environment);
++    const output = try ctx.checked(&.{ config.zig, "build", "seed-compiler", "-Doptimize=ReleaseFast", "-j1" }, source, &build_environment);
+     if (output.len != 0) try std.Io.File.stderr().writeStreamingAll(ctx.io, output);
+     const qualification = try files.object(ctx.a, &.{
+         .{ .name = "recipe", .value = recipe },
+@@ -181,7 +190,7 @@
+         .{ .name = "source_identity", .value = try files.tree(ctx.a, ctx.io, try ctx.path(&.{ source, "src" })) },
+     });
+     try files.atomicJson(ctx.a, ctx.io, receipt, qualification, 0o600);
+-    return .{ .binary = binary, .qualification = qualification, .owned = owned };
++    return .{ .binary = binary, .qualification = qualification };
+ }
+ 
+ fn nativeTarget(ctx: *Context) !Value {
+@@ -240,7 +249,9 @@
+     try flags.append(files.string("debug"));
+     try flags.append(files.string("fresh-private-cache"));
+     try flags.append(files.string("private-zig-global-v1"));
+-    if (seed.owned) try flags.append(files.string("zero-rc-v1"));
++    try flags.append(files.string("zero-rc-v1"));
++    try flags.append(files.string("checked-default-v1"));
++    try flags.append(files.string("mylang-checked-owned-v1"));
+     const identity = try files.object(ctx.a, &.{
+         .{ .name = "format", .value = files.integer(2) },
+         .{ .name = "component", .value = files.string(descriptor.name) },
+@@ -291,7 +302,6 @@
+         try environment.put("ZIG_GLOBAL_CACHE_DIR", try ctx.path(&.{ work, "cache", "zig-global" }));
+         var arguments: std.ArrayList([]const u8) = .empty;
+         try arguments.appendSlice(ctx.a, &.{ seed.binary, "build", try ctx.path(&.{ copied, "main.my" }), "-o", output, "--cache-dir", try ctx.path(&.{ work, "cache" }) });
+-        if (seed.owned) try arguments.append(ctx.a, "--experimental-zero-rc");
+         const compile_output = try ctx.checked(arguments.items, work, &environment);
+         if (compile_output.len != 0) try std.Io.File.stderr().writeStreamingAll(ctx.io, compile_output);
+         const fresh = try files.object(ctx.a, &.{ .{ .name = "identity", .value = identity }, .{ .name = "sha256", .value = try ctx.hashValue(output) } });
+@@ -318,12 +328,14 @@
+     if (try files.exists(ctx.io, installed)) {
+         if (!try digestEquals(ctx.io, installed, expected)) return ctx.fail("installed component digest mismatch");
+     } else try files.copy(ctx.io, executable, installed, 0o555);
+-    const manifest = try files.object(ctx.a, &.{
++    var manifest = try files.object(ctx.a, &.{
+         .{ .name = "format", .value = files.integer(1) },                    .{ .name = "component", .value = files.string(descriptor.name) },
+         .{ .name = "protocol", .value = files.integer(version) },            .{ .name = "schema", .value = files.integer(version) },
+         .{ .name = "artifact", .value = files.string(name) },                .{ .name = "sha256", .value = files.string(expected) },
+-        .{ .name = "key", .value = files.string(try ctx.a.dupe(u8, &key)) }, .{ .name = "memory_mode", .value = files.string(if (seed.owned) "zero-rc-v1" else "legacy-rc") },
++        .{ .name = "key", .value = files.string(try ctx.a.dupe(u8, &key)) }, .{ .name = "memory_mode", .value = files.string("zero-rc-v1") },
+     });
++    try manifest.object.put(ctx.a, "ownership_selection", files.string("checked-default-v1"));
++    try manifest.object.put(ctx.a, "guest_abi", files.string("mylang-checked-owned-v1"));
+     try files.atomicJson(ctx.a, ctx.io, try ctx.path(&.{ config.install, try std.fmt.allocPrint(ctx.a, "{s}.json", .{descriptor.name}) }), manifest, 0o644);
+     return ctx.a.dupe(u8, &key);
+ }
+@@ -351,7 +363,7 @@
+     while (index < args.len) : (index += 1) {
+         const arg = args[index];
+         if (std.mem.eql(u8, arg, "--help") or std.mem.eql(u8, arg, "-h")) {
+-            try std.Io.File.stdout().writeStreamingAll(ctx.io, "usage: selka-components [--root DIR] [--zig PATH] [--cache-dir DIR] [--install-dir DIR] [--seed-source TAR] [--owned-compiler-pin FILE] [--uncached] [--seed-only]\n");
++            try std.Io.File.stdout().writeStreamingAll(ctx.io, "usage: selka-components [--root DIR] [--zig PATH] [--cache-dir DIR] [--install-dir DIR] [--seed-source TAR] --owned-compiler-pin FILE [--uncached] [--seed-only]\n");
+             return;
+         }
+         if (std.mem.eql(u8, arg, "--uncached")) {
+@@ -366,6 +378,7 @@
+         if (index >= args.len) return ctx.fail("option requires a value");
+         if (std.mem.eql(u8, arg, "--root")) root = args[index] else if (std.mem.eql(u8, arg, "--zig")) zig = args[index] else if (std.mem.eql(u8, arg, "--cache-dir")) cache = args[index] else if (std.mem.eql(u8, arg, "--install-dir")) install = args[index] else if (std.mem.eql(u8, arg, "--seed-source")) source_archive = args[index] else if (std.mem.eql(u8, arg, "--owned-compiler-pin")) owned_pin = args[index] else return ctx.fail("unknown coordinator option");
+     }
++    const selected_pin = owned_pin orelse return ctx.fail("--owned-compiler-pin is required; historical RC component compilation is retired");
+     root = try cwd().realPathFileAlloc(ctx.io, root, ctx.a);
+     const home = ctx.environ.get("HOME") orelse if (cache == null) return ctx.fail("HOME is unset; supply --cache-dir") else current;
+     const config: Config = .{
+@@ -375,7 +388,7 @@
+         .install = try std.fs.path.resolve(ctx.a, &.{ current, install orelse try ctx.path(&.{ root, "zig-out", "libexec", "mylang", "components" }) }),
+         .bootstrap = .{
+             .source = if (source_archive) |path_name| try cwd().realPathFileAlloc(ctx.io, path_name, ctx.a) else null,
+-            .owned_pin = if (owned_pin) |path_name| try cwd().realPathFileAlloc(ctx.io, path_name, ctx.a) else null,
++            .owned_pin = try cwd().realPathFileAlloc(ctx.io, selected_pin, ctx.a),
+         },
+         .uncached = uncached,
+         .seed_only = seed_only,
+diff --git a/selfhost/test_component_native.py b/selfhost/test_component_native.py
+--- a/selfhost/test_component_native.py
++++ b/selfhost/test_component_native.py
+@@ -34,12 +34,11 @@
+     parser.add_argument("--zig", required=True)
+     parser.add_argument("--builder", type=Path, required=True)
+     parser.add_argument("--component-dir", type=Path, required=True)
+-    parser.add_argument("--owned-compiler-pin", type=Path)
++    parser.add_argument("--owned-compiler-pin", type=Path, required=True)
+     parser.add_argument("--seed-source", type=Path)
+     args = parser.parse_args()
+-    pin_flags = ["--owned-compiler-pin", args.owned_compiler_pin] if args.owned_compiler_pin else []
++    pin_flags = ["--owned-compiler-pin", args.owned_compiler_pin]
+     archive_flags = ["--seed-source", args.seed_source] if args.seed_source else []
+-    guest_flags = ["--experimental-zero-rc"] if args.owned_compiler_pin else []
+     output = subprocess.check_output([args.builder, "--root", ROOT,
+         "--zig", args.zig, "--seed-only", *pin_flags, *archive_flags], text=True)
+     seed = Path(output.strip().splitlines()[-1])
+@@ -52,7 +51,7 @@
+     installed = {}
+     for name in ("test-index", "cache-plan"):
+         manifest = json.loads((args.component_dir / f"{name}.json").read_text())
+-        if args.owned_compiler_pin and manifest.get("memory_mode") != "zero-rc-v1":
++        if manifest.get("memory_mode") != "zero-rc-v1" or manifest.get("ownership_selection") != "checked-default-v1" or manifest.get("guest_abi") != "mylang-checked-owned-v1":
+             raise RuntimeError(f"{name}: installed component is not qualified with checked ownership")
+         artifact = manifest["artifact"]
+         if not isinstance(artifact, str) or Path(artifact).name != artifact:
+@@ -67,14 +66,14 @@
+         with tempfile.TemporaryDirectory(prefix="selka-component-tests-") as temporary:
+             for flags in ([], ["--release"]):
+                 output = subprocess.check_output([seed, "test", ROOT / f"selfhost/components/{source}/tests.my",
+-                    "--json", "--no-cache", "--cache-dir", temporary, "--verify-facts", *flags, *guest_flags],
++                    "--json", "--no-cache", "--cache-dir", temporary, "--verify-facts", *flags],
+                     env=environment, text=True)
+                 print(output, end="")
+                 require_completed_tests(output)
+             release = Path(temporary) / f"{name}-release"
+             subprocess.run([seed, "build", ROOT / f"selfhost/components/{source}/main.my",
+                 "--release", "--verify-facts", "--no-cache", "--cache-dir", temporary,
+-                "-o", release, *guest_flags], env=environment, check=True)
++                "-o", release], env=environment, check=True)
+             subprocess.run([sys.executable, oracle, "--component", release],
+                 env=environment, check=True)
+         subprocess.run([sys.executable, oracle,
+diff --git a/selfhost/test_components.py b/selfhost/test_components.py
+--- a/selfhost/test_components.py
++++ b/selfhost/test_components.py
+@@ -51,7 +51,7 @@
+             "#!/bin/sh\n"
+             "case \"$ZIG_GLOBAL_CACHE_DIR\" in */cache/zig-global) ;; *) exit 12;; esac\n"
+             "printf 'component\\n' >> \"$COMPONENT_FIXTURE_LOG\"\n"
+-            "case \" $* \" in *' --experimental-zero-rc '*) printf 'owned\\n' >> \"$COMPONENT_FIXTURE_LOG\";; esac\n"
++            "case \" $* \" in *' --experimental-zero-rc '*|*' --experimental-single-owner '*) exit 13;; esac\n"
+             "test \"${COMPONENT_FIXTURE_FAIL:-0}\" = 0 || exit 7\n"
+             "while test $# -gt 0; do\n"
+             "  if test \"$1\" = -o; then shift; printf '%s' \"${COMPONENT_FIXTURE_OUTPUT:-native-component}\" > \"$1\"; exit 0; fi\n"
+@@ -89,7 +89,9 @@
+         pin = {"zig": self.version, "commit": "immutable-commit", "archive_sha256": digest(self.archive)}
+         (self.root / "selfhost/component-seed.json").write_text(json.dumps(pin))
+ 
+-    def invoke(self, *flags, success=True, umask=-1):
++    def invoke(self, *flags, success=True, umask=-1, no_pin=False):
++        if not no_pin and "--owned-compiler-pin" not in flags:
++            flags = (*flags, "--owned-compiler-pin", str(self.owned_pin()))
+         command = [BUILDER, "--root", str(self.root), "--zig", str(self.zig),
+                    "--cache-dir", str(self.cache), "--install-dir", str(self.install),
+                    "--seed-source", str(self.archive), *flags]
+@@ -108,28 +110,59 @@
+ 
+     def owned_pin(self):
+         pin = json.loads((self.root / "selfhost/component-seed.json").read_text())
+-        pin.update(memory_mode="zero-rc-v1", recipe={
++        pin.update(memory_mode="zero-rc-v1", ownership_selection="checked-default-v1", guest_abi="mylang-checked-owned-v1", recipe={
+             "step": "seed-compiler", "optimize": "ReleaseFast", "target": "native"})
+         path = self.root / "selfhost/component-owned-compiler.json"
+         path.write_text(json.dumps(pin))
+         return path
+ 
+-    def test_owned_route_builds_independent_compiler_and_separates_component_cache(self):
++    def test_owned_default_route_builds_independent_compiler_without_selectors(self):
+         pin = self.owned_pin()
+         historical_pin = self.root / "selfhost/component-seed.json"
+         before = historical_pin.read_bytes()
+-        legacy = self.invoke()
+         owned = self.invoke("--owned-compiler-pin", str(pin))
+-        self.assertNotEqual(legacy, owned)
+-        self.assertEqual(self.calls("step:affected-compiler"), 1)
++        self.assertEqual(self.calls("step:affected-compiler"), 0)
+         self.assertEqual(self.calls("step:seed-compiler"), 1)
+-        self.assertEqual(self.calls("owned"), 2)
+         receipt = json.loads((self.cache / "artifacts" / owned / "receipt.json").read_text())
+         self.assertIn("zero-rc-v1", receipt["identity"]["flags"])
+-        self.assertEqual(json.loads((self.install / "test-index.json").read_text())["memory_mode"], "zero-rc-v1")
++        self.assertIn("checked-default-v1", receipt["identity"]["flags"])
++        self.assertIn("mylang-checked-owned-v1", receipt["identity"]["flags"])
++        manifest = json.loads((self.install / "test-index.json").read_text())
++        self.assertEqual(manifest["memory_mode"], "zero-rc-v1")
++        self.assertEqual(manifest["ownership_selection"], "checked-default-v1")
++        self.assertEqual(manifest["guest_abi"], "mylang-checked-owned-v1")
+         self.assertEqual(owned, self.invoke("--owned-compiler-pin", str(pin)))
+-        self.assertEqual(self.calls("component"), 4)
++        self.assertEqual(self.calls("component"), 2)
+         self.assertEqual(before, historical_pin.read_bytes())
++
++    def test_missing_owned_pin_never_falls_back_to_historical_seed(self):
++        self.assertTrue((self.root / "selfhost/component-seed.json").exists())
++        self.assertIn("historical RC component compilation is retired", self.invoke(no_pin=True, success=False))
++        self.assertFalse(self.log.exists())
++
++    def test_optin_or_malformed_pin_cannot_select_an_ordinary_owned_recipe(self):
++        for value in (None, "explicit-zero-rc-v1", False, 1):
++            path = self.owned_pin()
++            pin = json.loads(path.read_text())
++            if value is None:
++                del pin["ownership_selection"]
++            else:
++                pin["ownership_selection"] = value
++            path.write_text(json.dumps(pin))
++            self.assertIn("checked-default-v1", self.invoke("--owned-compiler-pin", str(path), success=False))
++        self.assertFalse(self.log.exists())
++
++    def test_missing_or_foreign_guest_abi_never_builds_a_component(self):
++        for value in (None, "legacy-rc", "mylang-checked-owned-v2", False, 1):
++            path = self.owned_pin()
++            pin = json.loads(path.read_text())
++            if value is None:
++                del pin["guest_abi"]
++            else:
++                pin["guest_abi"] = value
++            path.write_text(json.dumps(pin))
++            self.assertIn("mylang-checked-owned-v1", self.invoke("--owned-compiler-pin", str(path), success=False))
++        self.assertFalse(self.log.exists())
+ 
+     def test_owned_route_refuses_component_dependent_seed_recipe(self):
+         path = self.owned_pin()
+@@ -359,7 +392,7 @@
+                 artifact = directory / name
+                 artifact.write_bytes(name.encode())
+                 (directory / f"{name}.json").write_text(json.dumps(dict(
+-                    artifact=name, sha256=digest(artifact), memory_mode="zero-rc-v1")))
++                    artifact=name, sha256=digest(artifact), memory_mode="zero-rc-v1", ownership_selection="checked-default-v1", guest_abi="mylang-checked-owned-v1")))
+             pin, archive = directory / "owned-pin.json", directory / "source.tar"
+             args = ["test_component_native.py", "--zig", "pinned-zig", "--builder", "independent-builder",
+                     "--component-dir", str(directory), "--owned-compiler-pin", str(pin), "--seed-source", str(archive)]
+@@ -373,11 +406,14 @@
+             self.assertEqual(request[request.index("--owned-compiler-pin") + 1], pin)
+             self.assertEqual(request[request.index("--seed-source") + 1], archive)
+             for call in checked.call_args_list[1:]:
+-                self.assertIn("--experimental-zero-rc", call.args[0])
++                self.assertNotIn("--experimental-zero-rc", call.args[0])
++                self.assertNotIn("--experimental-single-owner", call.args[0])
+                 self.assertIn("--json", call.args[0])
+                 self.assertEqual(call.kwargs["env"]["MYLANG_COMPONENT_DIR"], str(directory))
+             self.assertEqual(executed.call_count, 6)
+             for call in executed.call_args_list:
++                self.assertNotIn("--experimental-zero-rc", call.args[0])
++                self.assertNotIn("--experimental-single-owner", call.args[0])
+                 self.assertEqual(call.kwargs["env"]["MYLANG_COMPONENT_DIR"], str(directory))
+ 
+ 

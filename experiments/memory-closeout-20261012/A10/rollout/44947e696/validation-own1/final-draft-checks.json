@@ -1,0 +1,29 @@
+{
+  "status": "PASS final draft apply/format checks; package/launch/verification native-tested patch hashes unchanged from validation-own1/validation.json",
+  "source_revision": "44947e6967d8eb0deeaa86b25ca2bb44bc58803d",
+  "patch_hashes": {
+    "C2-default.patch": "950a38ef40914ece9f40bc65f8a8d5546e1174c945d05edf860826d3fbfe722e",
+    "C3-component-retirement.patch": "c1f3ed29f832f7949f63036b7f6b93e3e83fea689ace1e0ec35058c9c429c0d5",
+    "C3-cli-selector-retirement.patch": "7921b323d836519bce0d147197b480c4c0ad224a57ad7e95c038068e1797c979",
+    "C3-verification-package-request.patch": "8b4ecd25a4cdfe5516e07f14dec9476bdfe49d0ca8e1df8a8afa6b681cdb961e",
+    "C3-component-launch.patch": "14559fa929bb119a4b87eb5d87a438f63dce90a00d7c28397948a8071d040f0b",
+    "C3-root-component-default-request.patch": "fc7d73ae7b491f189d96989fc07ae8708cf3d1a1d4054dc164dc78e256d62f79"
+  },
+  "native_validated_unchanged_patches": [
+    "C3-component-retirement.patch",
+    "C3-component-launch.patch",
+    "C3-verification-package-request.patch"
+  ],
+  "new_after_native_validation": [
+    "C2 help text removes prototype flags from cost/doctest usage",
+    "Separate root default forwarding request; real pin still absent"
+  ],
+  "checks": [
+    "Zig fmt --check on C2/C3 command drafts and root default draft",
+    "git apply --check C2 on exact44947 source mirror",
+    "git apply --check C3 CLI on C2 mirror",
+    "git apply --check --reverse root request on generated draft"
+  ],
+  "runtime_or_default_application": false,
+  "component_build_lock_preserved_exactly": true
+}

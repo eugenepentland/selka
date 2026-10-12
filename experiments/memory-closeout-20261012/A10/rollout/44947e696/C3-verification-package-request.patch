@@ -1,0 +1,157 @@
+diff --git a/scripts/verify_cache.py b/scripts/verify_cache.py
+--- a/scripts/verify_cache.py
++++ b/scripts/verify_cache.py
+@@ -513,6 +513,33 @@
+                 stream.close()
+ 
+ 
++def component_manifest(root: Path, name: str) -> tuple[Path, dict]:
++    """Bind the installed checked-owned package before snapshot/replay admission."""
++    path = root / "zig-out/libexec/mylang/components" / (name + ".json")
++    manifest = read_record(path)
++    version = 2 if name == "cache-plan" else 1
++    if (not manifest or manifest.get("format") != 1 or manifest.get("component") != name
++            or manifest.get("protocol") != version or manifest.get("schema") != version
++            or manifest.get("memory_mode") != "zero-rc-v1"
++            or manifest.get("ownership_selection") != "checked-default-v1"
++            or manifest.get("guest_abi") != "mylang-checked-owned-v1"):
++        raise VerificationError("component manifest does not select checked ownership: " + name)
++    artifact = manifest.get("artifact")
++    expected = manifest.get("sha256")
++    if (not isinstance(artifact, str) or not artifact or artifact in (".", "..")
++            or "/" in artifact or "\\" in artifact
++            or not isinstance(expected, str) or not re.fullmatch(r"[0-9a-fA-F]{64}", expected)):
++        raise VerificationError("invalid component artifact identity: " + name)
++    try:
++        with (path.parent / artifact).open("rb") as stream:
++            actual = hashlib.file_digest(stream, "sha256").hexdigest()
++    except OSError as error:
++        raise VerificationError("component artifact is unavailable: " + name) from error
++    if actual != expected.lower():
++        raise VerificationError("component artifact differs from manifest: " + name)
++    return path, manifest
++
++
+ def artifact_paths(root: Path) -> list[Path]:
+     record = read_record(root / "zig-out/verification/artifacts.json")
+     if not record or record.get("version") != 1 or not isinstance(record.get("artifacts"), dict):
+@@ -525,10 +552,7 @@
+     paths = [Path(p) for p in artifacts.values()]
+     paths.extend([root / "zig-out/bin/mylang", root / "zig-out/verification/artifacts.json"])
+     for name in ("test-index", "cache-plan"):
+-        path = root / "zig-out/libexec/mylang/components" / (name + ".json")
+-        manifest = read_record(path)
+-        if not manifest or not isinstance(manifest.get("artifact"), str) or Path(manifest["artifact"]).name != manifest["artifact"]:
+-            raise VerificationError("invalid component manifest: " + name)
++        path, manifest = component_manifest(root, name)
+         paths.extend([path, path.parent / manifest["artifact"]])
+     return sorted(set(paths))
+ 
+@@ -542,10 +566,7 @@
+     paths["mylang"].append(root / "zig-out/bin/mylang")
+     paths["components"] = []
+     for name in ("test-index", "cache-plan"):
+-        manifest_path = root / "zig-out/libexec/mylang/components" / (name + ".json")
+-        manifest = read_record(manifest_path)
+-        if not manifest or not isinstance(manifest.get("artifact"), str):
+-            raise VerificationError("component manifest changed during provider selection")
++        manifest_path, manifest = component_manifest(root, name)
+         paths["components"].extend([manifest_path, manifest_path.parent / manifest["artifact"]])
+     files = {os.path.abspath(root / item["path"]): item for item in snapshot.identity["files"]}
+     providers = {}
+diff --git a/scripts/verify_cache_test.py b/scripts/verify_cache_test.py
+--- a/scripts/verify_cache_test.py
++++ b/scripts/verify_cache_test.py
+@@ -1,6 +1,7 @@
+ #!/usr/bin/env python3
+ """Adversarial verification coordinator tests with a tiny fake build driver."""
+ import contextlib
++import hashlib
+ import copy
+ import fcntl
+ import io
+@@ -25,7 +26,7 @@
+ REPOSITORY = Path(__file__).resolve().parents[1]
+ REAL_PREPARE_INPUTS = tuple(coordinator.PREPARE_INPUTS)
+ FAKE_ZIG = '''#!{python}
+-import json,sys
++import hashlib,json,sys
+ from pathlib import Path
+ root=Path.cwd(); args=sys.argv[1:]
+ events=root/'.events.json'
+@@ -45,7 +46,10 @@
+     package=root/'zig-out/libexec/mylang/components'; package.mkdir(parents=True,exist_ok=True)
+     for name in ['test-index','cache-plan']:
+         (package/name).write_bytes(b'fake-component'+values.get('component:'+name,'').encode())
+-        (package/(name+'.json')).write_text(json.dumps({{'artifact':name}}))
++        version = 2 if name == 'cache-plan' else 1
++        (package/(name+'.json')).write_text(json.dumps({{'format':1,'component':name,'protocol':version,'schema':version,
++            'artifact':name,'sha256':hashlib.sha256((package/name).read_bytes()).hexdigest(),
++            'memory_mode':'zero-rc-v1','ownership_selection':'checked-default-v1','guest_abi':'mylang-checked-owned-v1'}}))
+ elif (root/'.failure').exists():
+     raise SystemExit(int((root/'.failure').read_text()))
+ elif (root/'.hang-gate').exists():
+@@ -1019,6 +1023,63 @@
+         self.assertEqual(list((slots / 'queue-gate').glob('*.wait')), [])
+ 
+ 
++class CheckedComponentPackage(unittest.TestCase):
++    """Synthetic manifest admission tests; real component ABI needs native proof."""
++    def setUp(self):
++        self.temporary = tempfile.TemporaryDirectory()
++        self.addCleanup(self.temporary.cleanup)
++        self.root = Path(self.temporary.name)
++        self.directory = self.root / "zig-out/libexec/mylang/components"
++        self.directory.mkdir(parents=True)
++        self.manifests = {}
++        for name in ("test-index", "cache-plan"):
++            contents = ("fixture:" + name).encode()
++            (self.directory / name).write_bytes(contents)
++            version = 2 if name == "cache-plan" else 1
++            self.manifests[name] = dict(format=1, component=name, protocol=version, schema=version,
++                artifact=name, sha256=hashlib.sha256(contents).hexdigest(),
++                memory_mode="zero-rc-v1", ownership_selection="checked-default-v1", guest_abi="mylang-checked-owned-v1")
++            self.write(name, self.manifests[name])
++
++    def write(self, name, value):
++        (self.directory / (name + ".json")).write_text(json.dumps(value))
++
++    def test_owned_manifests_bind_both_component_artifacts(self):
++        for name in self.manifests:
++            path, manifest = coordinator.component_manifest(self.root, name)
++            self.assertEqual(path, self.directory / (name + ".json"))
++            self.assertEqual(manifest, self.manifests[name])
++
++    def test_missing_legacy_optin_and_malformed_ownership_markers_refuse(self):
++        for name, valid in self.manifests.items():
++            for field, value in (("memory_mode", None), ("ownership_selection", None),
++                    ("memory_mode", "legacy-rc"), ("memory_mode", False),
++                    ("ownership_selection", "explicit-zero-rc-v1"), ("guest_abi", None),
++                    ("guest_abi", "mylang-checked-owned-v2"), ("guest_abi", 0)):
++                with self.subTest(name=name, field=field, value=value):
++                    bad = dict(valid)
++                    if value is None:
++                        del bad[field]
++                    else:
++                        bad[field] = value
++                    self.write(name, bad)
++                    with self.assertRaisesRegex(coordinator.VerificationError, "checked ownership"):
++                        coordinator.component_manifest(self.root, name)
++            self.write(name, valid)
++
++    def test_owned_marker_does_not_authorize_foreign_protocol_or_bad_binary(self):
++        for name, valid in self.manifests.items():
++            for field, value in (("protocol", 99), ("artifact", "../escape"), ("sha256", "0" * 64)):
++                with self.subTest(name=name, field=field):
++                    self.write(name, dict(valid, **{field: value}))
++                    with self.assertRaises(coordinator.VerificationError):
++                        coordinator.component_manifest(self.root, name)
++            self.write(name, valid)
++            (self.directory / name).write_bytes(b"replaced")
++            with self.assertRaisesRegex(coordinator.VerificationError, "differs from manifest"):
++                coordinator.component_manifest(self.root, name)
++
++
+ REAL_ADMISSION = coordinator.run_admitted
+ 
+ 

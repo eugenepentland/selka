@@ -1,5 +1,14 @@
 # A10 command-support handoff (later milestones pending)
 
+Latest preparation: `rollout/44947e696/README.md` audits integration
+`44947e6967d8eb0deeaa86b25ca2bb44bc58803d` with per-owner source/hunk inventories,
+all internal API callers and registered legacy-control/selector obligations.
+The coordinator fixed the C3 OWN1 ABI contract; all drafts remain unapplied.
+Prepared package launcher and verification-inventory checks close the additional
+legacy `MYLANG_COMPONENT_DIR` manifest path. Isolated validation passes 29 builder
+tests, 30 executed protocol tests and three verification-package tests. A real
+ordinary-owned C3 source pin and final installed qualification remain required.
+
 Base C0: fbfcaa7a923186a8e773c3760f81c10aa345a432.
 Worker branch: codex/memory-closeout-20261012-A10.
 Proposed command-support commit: this changeset; packaging/default/retirement remain separate.

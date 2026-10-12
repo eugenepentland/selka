@@ -43,6 +43,8 @@ c2['src/core/main.zig']=replace(c2['src/core/main.zig'],'    \\\\Experimental: -
 c2['src/core/main.zig']=replace(c2['src/core/main.zig'],'    \\\\  --experimental-zero-rc                checked moves and borrows, direct destruction\n','')
 c2['src/core/cli.zig']=replace(c2['src/core/cli.zig'],'one-count reference counting is the only memory model','checked ownership is the default memory model')
 c2['src/core/cli.zig']=replace(c2['src/core/cli.zig'],'    \\\\       [--experimental-single-owner]    prototype: lists move; calls borrow; .copy() duplicates\n    \\\\                                        .snapshot() opts a list family into copy-on-write\n    \\\\       [--experimental-zero-rc]         prototype: strings/bytes also move; no sharing or RC','    \\\\Checked ownership is the default: assignments move, parameters borrow, and .copy() duplicates storage.')
+for path in ['src/core/cost_command.zig', 'src/doctest_command.zig']:
+    c2[path]=replace(c2[path],' [--experimental-zero-rc]\\n','\\n')
 c2files=patch(base,c2,'C2-default.patch')
 c3=dict(c2)
 # Refuse selectors at both public dispatch boundaries, including early profiling check.
