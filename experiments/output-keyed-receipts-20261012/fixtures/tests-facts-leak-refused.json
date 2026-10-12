@@ -1,0 +1,52 @@
+{
+ "cached": 0,
+ "failed": 0,
+ "passed": 3,
+ "skipped": 0,
+ "sources": [
+  "tests/lang/frontend_numbers.my"
+ ],
+ "tests": [
+  {
+   "at": "",
+   "cache": {
+    "action": "execute",
+    "component": "14255081d661ee643c33315550ee623aff8552b182e4624598dd8fc6a5e3c25f",
+    "key": "57681152e212c88ca67d1accf14796d5c03b7776202481b469231979398bb561",
+    "key_method": "canonical-facts",
+    "reason": "verify-facts"
+   },
+   "name": "frontend_numbers::test_frontend_generic_parsing",
+   "reason": "",
+   "status": "passed"
+  },
+  {
+   "at": "",
+   "cache": {
+    "action": "execute",
+    "component": "14255081d661ee643c33315550ee623aff8552b182e4624598dd8fc6a5e3c25f",
+    "key": "e12f5e9b01b442d4468c11adbb549c5416a54737bde4072d0cbd5eb1c5396cfa",
+    "key_method": "canonical-facts",
+    "reason": "verify-facts"
+   },
+   "name": "frontend_numbers::test_frontend_numeric_conversion",
+   "reason": "",
+   "status": "passed"
+  },
+  {
+   "at": "",
+   "cache": {
+    "action": "execute",
+    "component": "14255081d661ee643c33315550ee623aff8552b182e4624598dd8fc6a5e3c25f",
+    "key": "ed46ac571d31bbcc17b00b93cda6e700c74bb3abc57913cffbb31d32f007892c",
+    "key_method": "canonical-facts",
+    "reason": "verify-facts"
+   },
+   "name": "frontend_numbers::test_frontend_text_parsing",
+   "reason": "",
+   "status": "passed"
+  }
+ ],
+ "unsupported": 0,
+ "version": "native-tests-v1"
+}

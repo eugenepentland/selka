@@ -1,0 +1,52 @@
+{
+ "cached": 3,
+ "failed": 0,
+ "passed": 0,
+ "skipped": 0,
+ "sources": [
+  "tests/lang/frontend_numbers.my"
+ ],
+ "tests": [
+  {
+   "at": "",
+   "cache": {
+    "action": "reuse",
+    "component": "14255081d661ee643c33315550ee623aff8552b182e4624598dd8fc6a5e3c25f",
+    "key": "e6ed06e2f08e0858677f8471f56f47a4eb8299e4cf681bd298685cd0c037f13d",
+    "key_method": "checked-file-manifest",
+    "reason": "whole-report-hit"
+   },
+   "name": "frontend_numbers::test_frontend_generic_parsing",
+   "reason": "",
+   "status": "cached"
+  },
+  {
+   "at": "",
+   "cache": {
+    "action": "reuse",
+    "component": "14255081d661ee643c33315550ee623aff8552b182e4624598dd8fc6a5e3c25f",
+    "key": "44c70df0e0819d66e592bc0636bc72aabcccef0054e8e972b465b9c6966f28ce",
+    "key_method": "checked-file-manifest",
+    "reason": "whole-report-hit"
+   },
+   "name": "frontend_numbers::test_frontend_numeric_conversion",
+   "reason": "",
+   "status": "cached"
+  },
+  {
+   "at": "",
+   "cache": {
+    "action": "reuse",
+    "component": "14255081d661ee643c33315550ee623aff8552b182e4624598dd8fc6a5e3c25f",
+    "key": "14303b8b1243c35079e3cbf05e36864074266700fa3cfbb44aa3847fcb472900",
+    "key_method": "checked-file-manifest",
+    "reason": "whole-report-hit"
+   },
+   "name": "frontend_numbers::test_frontend_text_parsing",
+   "reason": "",
+   "status": "cached"
+  }
+ ],
+ "unsupported": 0,
+ "version": "native-tests-v1"
+}
