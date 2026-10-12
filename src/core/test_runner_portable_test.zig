@@ -112,7 +112,8 @@ fn shared(result: Outcome, name: []const u8) !void {
     try verdict(result, name, "cached");
     const cache = value.get(try item(result.report, name), "cache");
     try std.testing.expectEqualStrings("shared-receipt-hit", value.text(value.get(cache, "reason")));
-    try std.testing.expectEqualStrings("portable-reachable-ir", value.text(value.get(cache, "key_method")));
+    // The shared store holds the private store's own root-relative key (RECEIPT-PATHS-1).
+    try std.testing.expectEqual(@as(usize, 64), value.text(value.get(cache, "key")).len);
 }
 
 fn bothShared(result: Outcome) !void {
@@ -211,7 +212,7 @@ const environment_query = "public func test_environment(env: Environment) -> boo
 const host_query = "extern func stamp(host: Host) -> int effects(host)\n\npublic func test_host(host: Host) -> bool:\n    return stamp(host) > 0\n";
 
 // spec-case: NEW-CORE-TEST-SHARED-1
-test "portable shared receipts refuse introspection environment authority and unsupported Host input" {
+test "portable shared receipts share capability stand-ins but refuse introspection and unsupported Host input" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     var temporary = std.testing.tmpDir(.{});
@@ -219,13 +220,16 @@ test "portable shared receipts refuse introspection environment authority and un
     var projects = try Projects.init(arena.allocator(), try temporary.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator()));
     defer projects.environment.deinit();
     try boundaryMatrix(&projects);
-    try std.testing.expectEqual(@as(u64, 0), try receiptCount(projects));
+    try std.testing.expectEqual(@as(u64, 1), try receiptCount(projects));
 }
 
 fn boundaryMatrix(projects: *Projects) !void {
-    const boundaries = [_]struct { source: []const u8, name: []const u8 }{
-        .{ .source = identity_query, .name = "app::test_identity" },
-        .{ .source = environment_query, .name = "app::test_environment" },
+    // A function digest has no IR key to share; an `Environment` parameter receives
+    // the trial's empty stand-in, so its test has no live effect and shares like any
+    // other (it keeps a private receipt too).
+    const boundaries = [_]struct { source: []const u8, name: []const u8, receiving: []const u8 }{
+        .{ .source = identity_query, .name = "app::test_identity", .receiving = "passed" },
+        .{ .source = environment_query, .name = "app::test_environment", .receiving = "cached" },
     };
     for (boundaries) |boundary| {
         try projects.write("a", "app.my", boundary.source);
@@ -235,7 +239,7 @@ fn boundaryMatrix(projects: *Projects) !void {
         try status(left, 0);
         try status(right, 0);
         try verdict(left, boundary.name, "passed");
-        try verdict(right, boundary.name, "passed");
+        try verdict(right, boundary.name, boundary.receiving);
     }
     try projects.write("a", "app.my", host_query);
     try projects.write("b", "app.my", host_query);
@@ -249,7 +253,7 @@ fn boundaryMatrix(projects: *Projects) !void {
 }
 
 fn receiptCount(projects: Projects) !u64 {
-    const path_name = try projects.path(&.{ "shared", "native-tests-v2", "receipts" });
+    const path_name = try projects.path(&.{ "shared", "native-tests-v3", "receipts" });
     var directory = std.Io.Dir.cwd().openDir(std.testing.io, path_name, .{ .iterate = true }) catch |err| {
         if (err == error.FileNotFound) return 0;
         return err;
@@ -308,7 +312,7 @@ test "portable shared receipts forward through directory fanout without private 
 }
 
 fn damageReceipts(projects: Projects) !void {
-    var directory = try std.Io.Dir.cwd().openDir(std.testing.io, try projects.path(&.{ "shared", "native-tests-v2", "receipts" }), .{ .iterate = true });
+    var directory = try std.Io.Dir.cwd().openDir(std.testing.io, try projects.path(&.{ "shared", "native-tests-v3", "receipts" }), .{ .iterate = true });
     defer directory.close(std.testing.io);
     var iterator = directory.iterate();
     var damaged: usize = 0;
@@ -452,7 +456,7 @@ test "portable validateShared rejects a bad configured format before warm privat
     var projects = try Projects.init(arena.allocator(), try temporary.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator()));
     defer projects.environment.deinit();
     try status(try projects.run(.{ .project = "a" }), 0);
-    try projects.write("shared", "native-tests-v2/format", "unknown shared format");
+    try projects.write("shared", "native-tests-v3/format", "unknown shared format");
     const rejected = try projects.run(.{ .project = "a" });
     try std.testing.expectEqual(@as(u8, 2), rejected.status);
     try std.testing.expect(std.mem.indexOf(u8, rejected.stderr, "ReadFailed") != null);

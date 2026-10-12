@@ -71,10 +71,10 @@ const Project = struct {
     }
 
     fn removeCoarse(self: Project) !void {
-        std.Io.Dir.cwd().deleteTree(std.testing.io, try self.path("cache/tests/receipts-v2")) catch |err| {
+        std.Io.Dir.cwd().deleteTree(std.testing.io, try self.path("cache/tests/receipts-v3")) catch |err| {
             if (err != error.FileNotFound) return err;
         };
-        std.Io.Dir.cwd().deleteTree(std.testing.io, try self.path("cache/tests/manifests-v2")) catch |err| {
+        std.Io.Dir.cwd().deleteTree(std.testing.io, try self.path("cache/tests/manifests-v3")) catch |err| {
             if (err != error.FileNotFound) return err;
         };
     }

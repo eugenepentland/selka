@@ -11,7 +11,7 @@ pub const Claim = work.Claim;
 pub const Digest = [32]u8;
 /// Explicitly configured storage must be usable; damaged receipts remain misses.
 pub const Error = error{ OutOfMemory, ReadFailed, WriteFailed };
-const format = "selka-native-test-store-v2\n";
+const format = "selka-native-test-store-v3\n";
 const maximum_record = 512;
 
 /// A dedicated namespace beneath the caller's shared cache directory.
@@ -23,7 +23,7 @@ pub const Store = struct {
     /// Create or validate the versioned namespace without changing another cache format.
     pub fn open(a: std.mem.Allocator, io: std.Io, directory: []const u8) Error!Store {
         if (directory.len == 0) return error.WriteFailed;
-        const self: Store = .{ .arena = a, .io = io, .root = try std.fs.path.join(a, &.{ directory, "native-tests-v2" }) };
+        const self: Store = .{ .arena = a, .io = io, .root = try std.fs.path.join(a, &.{ directory, "native-tests-v3" }) };
         std.Io.Dir.cwd().createDirPath(io, self.root) catch return error.WriteFailed;
         try self.initialize();
         self.retentionContext().automatic();

@@ -78,8 +78,52 @@ pub fn isolated(environment: *const std.process.Environ.Map) bool {
     return std.mem.eql(u8, environment.get("MYLANG_TEST_ISOLATE") orelse "", "1");
 }
 
+/// What the execution tier looks receipts up under: the run's receipt context and
+/// the built program's exact key (`driver.Outcome.program_key`).
+pub const Linked = struct { context: receipt.Context, program_key: [32]u8 };
+
+/// One built program's execution-tier keys (EXEC-RECEIPT-1): each consulted test's
+/// position in the run's selection and its key, and the whole-program key over all
+/// of them (EXEC-RECEIPT-3).
+pub const Executed = struct { positions: []const usize, keys: []const [32]u8, whole: [32]u8 };
+
+/// Before the first trial of a linked program, look up the whole-program execution
+/// receipt and then each test's for `chosen[positions]` (tests without live effects).
+/// A hit is `cached` with `whole-exec-receipt-hit` or `exec-receipt-hit` and runs no
+/// trial. Null when the execution tier is not admitted: forced, `--link`, loader
+/// overrides, an unproved toolchain or an indexed property campaign.
+pub fn reuse(linked: Linked, chosen: []Selected, positions: []const usize) Error!?Executed {
+    const context = linked.context;
+    if (positions.len == 0 or context.options.properties.policy != .legacy or !receipt.executionReusable(context)) return null;
+    const a = context.arena;
+    const settings = try receipt.executionSettings(context);
+    const keys = try a.alloc([32]u8, positions.len);
+    const names = try a.alloc([]const u8, positions.len);
+    for (positions, keys, names) |position, *key, *name| {
+        name.* = chosen[position].case.name;
+        key.* = try receipt.executionKey(context, .{ .program_key = linked.program_key, .name = name.*, .settings = settings });
+    }
+    const whole = try receipt.wholeExecutionKey(context, linked.program_key, names, settings);
+    const every = try receipt.executionHit(context, whole);
+    for (positions, keys) |position, key| {
+        const reason = if (every) "whole-exec-receipt-hit" else if (try receipt.executionHit(context, key)) "exec-receipt-hit" else continue;
+        const item = &chosen[position];
+        item.verdict = .{ .name = item.case.name, .status = .cached };
+        item.ready = false;
+        item.cache_reason = reason;
+    }
+    return .{ .positions = positions, .keys = keys, .whole = whole };
+}
+
+/// Whether `reason` names an execution-tier hit.
+pub fn executionHit(reason: ?[]const u8) bool {
+    const found = reason orelse return false;
+    return std.mem.eql(u8, found, "exec-receipt-hit") or std.mem.eql(u8, found, "whole-exec-receipt-hit");
+}
+
 /// Run `chosen[positions]` with `workers`. The test at `positions[i]` is row `i` of the
-/// executable's dispatch table.
+/// executable's dispatch table; a test no longer `ready` (an execution receipt
+/// answered it) keeps its row and runs no trial.
 pub fn run(resources: Resources, options: Options, executable: Executable, chosen: []Selected, positions: []const usize, workers: Workers) Error!void {
     const a = resources.arena;
     const shared: Shared = .{
@@ -99,9 +143,11 @@ pub fn run(resources: Resources, options: Options, executable: Executable, chose
     var plains: std.ArrayList(Pending) = .empty;
     for (positions, 0..) |position, row| {
         const selected = &chosen[position];
+        if (!selected.ready) continue;
         const pending = try shared.prepare(selected, row) orelse continue;
         try (if (pending.search) &searches else &plains).append(a, pending);
     }
+    if (searches.items.len + plains.items.len == 0) return;
     const width = @max(1, @min(workers.width, searches.items.len + plains.items.len));
     var queue: Queue = .{ .shared = &shared, .searches = searches.items, .plains = plains.items, .workers = .{ .width = width, .batch = @max(1, workers.batch), .permits = workers.permits } };
     // NEW-CORE-TEST-QUEUE-1: each thread takes the next work as soon as its last ends.

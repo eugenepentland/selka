@@ -92,6 +92,11 @@ pub const Outcome = struct {
     foreign: ?[]const unit_cache.Dependency = &.{},
     /// The toolchain identity the build ran under.
     tool: tool_identity.Identity,
+    /// The linked program's exact key (`programKey`): toolchain, target, every object
+    /// and the linker environment, with no path and no compiler identity. Set on
+    /// every successful link, whether the program was linked, reused or restored;
+    /// test execution receipts bind it (EXEC-RECEIPT-1).
+    program_key: ?Digest = null,
 };
 
 /// A whole-program LLVM text as the one unit of a build.
@@ -197,6 +202,7 @@ pub fn linkWithScratch(allocator: std.mem.Allocator, backing: ?std.mem.Allocator
     outcome.foreign = try foreignObjects(native, places, settings, request.links, &objects);
     const sanitizer = linkSanitizer(request.mode == .release, request.links.len);
     const program_key = programKey(settings, objects.items, needs.math, sanitizer, environ);
+    outcome.program_key = program_key;
     const programs: unit_cache.Store = .{ .directory = try std.fs.path.join(allocator, &.{ places.local, "programs-v1" }) };
     var shared = try SharedProgram.open(native, request, program_key);
     defer if (shared) |*store| store.store.deinit();
@@ -283,10 +289,12 @@ const SharedProgram = struct {
     }
 };
 
+/// The shared store's key for a linked program (SHARED-PROGRAM-2): the exact program
+/// key and the linker environment. The objects determine the bytes, so it binds no
+/// compiler identity, and the store's byte verification guards the rest.
 fn sharedProgramKey(exact: Digest, environment: *const std.process.Environ.Map) Digest {
     var hash = std.crypto.hash.Blake3.init(.{});
-    unit_cache.field(&hash, "core-shared-program-v1");
-    unit_cache.field(&hash, @import("build_identity").compiler_identity);
+    unit_cache.field(&hash, "core-shared-program-v2");
     unit_cache.field(&hash, &exact);
     linkEnvironmentInto(&hash, environment);
     var digest: Digest = undefined;
@@ -315,6 +323,39 @@ test "shared program identity retains exact native inputs and linker environment
     const explicit = sharedProgramKey(@splat(1), &environment);
     _ = environment.swapRemove("ZERO_AR_DATE");
     try std.testing.expect(!std.mem.eql(u8, &explicit, &sharedProgramKey(@splat(1), &environment)));
+}
+
+/// `sharedProgramKey` as the version-1 domain computed it, with the compiler identity.
+fn compilerBoundProgramKey(exact: Digest, environment: *const std.process.Environ.Map) Digest {
+    var hash = std.crypto.hash.Blake3.init(.{});
+    unit_cache.field(&hash, "core-shared-program-v1");
+    unit_cache.field(&hash, @import("build_identity").compiler_identity);
+    unit_cache.field(&hash, &exact);
+    linkEnvironmentInto(&hash, environment);
+    var digest: Digest = undefined;
+    hash.final(&digest);
+    return digest;
+}
+
+// spec: SHARED-PROGRAM-2
+test "shared program keys bind the exact program and linker environment, not the compiler identity" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var environment: std.process.Environ.Map = .init(arena.allocator());
+    defer environment.deinit();
+    const exact: Digest = @splat(3);
+    const key = sharedProgramKey(exact, &environment);
+    var expected_hash = std.crypto.hash.Blake3.init(.{});
+    unit_cache.field(&expected_hash, "core-shared-program-v2");
+    unit_cache.field(&expected_hash, &exact);
+    linkEnvironmentInto(&expected_hash, &environment);
+    var expected: Digest = undefined;
+    expected_hash.final(&expected);
+    try std.testing.expectEqual(expected, key);
+    try std.testing.expect(!std.mem.eql(u8, &key, &compilerBoundProgramKey(exact, &environment)));
+    try std.testing.expect(!std.mem.eql(u8, &key, &sharedProgramKey(@splat(4), &environment)));
+    try environment.put("SOURCE_DATE_EPOCH", "1");
+    try std.testing.expect(!std.mem.eql(u8, &key, &sharedProgramKey(exact, &environment)));
 }
 
 const Dependencies = @import("emission_cache.zig").Dependencies;
