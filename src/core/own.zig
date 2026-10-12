@@ -135,6 +135,7 @@ pub fn functionWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator,
     var work = std.heap.ArenaAllocator.init(backing);
     defer work.deinit();
     const scratch = work.allocator();
+    _ = try @import("phi_cleanup.zig").run(backing, f);
     var stats: Stats = .{};
     var marks: Marks = .{ .origin = if (options.provenance) |table| table.context(options.function_index) else null };
     if (options.facts) |known| {

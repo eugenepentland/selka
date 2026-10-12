@@ -1,0 +1,13 @@
+build-slot: FIFO ticket 385, position 15; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 385, position 13; earlier build tickets must run first; waiting (61s so far)
+build-slot: FIFO ticket 385, position 10; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 385, position 10; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 385, position 5; earlier build tickets must run first; waiting (241s so far)
+build-slot: build slot 1, FIFO ticket 385 after 292s
+guardian/test: 4 test(s) selected by filter: "zero RC phi cleanup"
+guardian/test: SLOW  8.79s  phi_cleanup_test.test.zero RC phi cleanup preserves dead-edge ambiguity and escaping owned storage
+All 4 tests passed.
+guardian/test: test wall 8.85s; slowest over 50ms:
+guardian/test:   8.79s  phi_cleanup_test.test.zero RC phi cleanup preserves dead-edge ambiguity and escaping owned storage
+guardian/test: PASS — 4 passed
+guardian/test: RESULT {"passed":4,"failed":0,"skipped":0}
