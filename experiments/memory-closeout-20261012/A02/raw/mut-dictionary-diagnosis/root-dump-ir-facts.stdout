@@ -1,0 +1,74 @@
+fn main(cap) -> i64
+b0:
+  %2 = dict_new dict[i64, i64] 1:u64
+  %5 = dict_find i64 %2, 1:i64
+  %7 = cmp.ge bool %5, 0:i64
+  branch %7, b1, b2
+b1: ; preds b0
+  %9 = dict_set_value dict[i64, i64] %2, %5, 7:i64
+  jump b3
+b2: ; preds b0
+  %11 = dict_insert dict[i64, i64] %2, %5, 1:i64, 7:i64
+  jump b3
+b3: ; preds b1 b2
+  %13 = phi dict[i64, i64] %9, %11
+  jump b7
+b4: ; preds b6
+  %22 = dict_entry_value i64 %44, %17
+  release %44
+  print param0, %22
+  ret 0:i64
+b5: ; preds b6
+  unreachable
+b6: ; preds b12
+  %17 = dict_find i64 %44, 1:i64
+  %19 = cmp.ge bool %17, 0:i64
+  branch %19, b4, b5
+b7: ; preds b3
+  %27 = dict_find i64 %13, 1:i64
+  %29 = cmp.ge bool %27, 0:i64
+  branch %29, b8, b9
+b8: ; preds b7
+  %32 = dict_entry_value i64 %13, %27
+  %34 = add.proven i64 %32, 1:i64
+  %36 = dict_find i64 %13, 1:i64
+  %38 = cmp.ge bool %36, 0:i64
+  branch %38, b10, b11
+b9: ; preds b7
+  unreachable
+b10: ; preds b8
+  %40 = dict_set_value dict[i64, i64] %13, %36, %34
+  jump b12
+b11: ; preds b8
+  %42 = dict_insert dict[i64, i64] %13, %36, 1:i64, %34
+  jump b12
+b12: ; preds b10 b11
+  %44 = phi dict[i64, i64] %40, %42
+  jump b6
+fn update(dict[i64, i64]) -> dict[i64, i64]
+b0:
+  %2 = dict_find i64 param0, 1:i64
+  %4 = cmp.ge bool %2, 0:i64
+  branch %4, b1, b2
+b1: ; preds b0
+  %7 = dict_entry_value i64 param0, %2
+  %9 = add.exact i64 %7, 1:i64
+  %11 = dict_find i64 param0, 1:i64
+  %13 = cmp.ge bool %11, 0:i64
+  branch %13, b3, b4
+b2: ; preds b0
+  unreachable
+b3: ; preds b1
+  %15 = dict_set_value dict[i64, i64] param0, %11, %9
+  jump b5
+b4: ; preds b1
+  %17 = dict_insert dict[i64, i64] param0, %11, 1:i64, %9
+  jump b5
+b5: ; preds b3 b4
+  %19 = phi dict[i64, i64] %15, %17
+  ret %19
+facts main: %5=[-9223372036854775808,9223372036854775807] %7=[0,1] %17=[-9223372036854775808,9223372036854775807] %19=[0,1] %22=[7,8] %27=[-9223372036854775808,9223372036854775807] %29=[0,1] %32=[7,7] %34=[8,8] %36=[-9223372036854775808,9223372036854775807] %38=[0,1]
+list main %13: settled=true length=%-1
+list main %44: settled=true length=%-1
+facts update: %2=[-9223372036854775808,9223372036854775807] %4=[0,1] %7=[-9223372036854775808,9223372036854775807] %9=[-9223372036854775807,9223372036854775807] %11=[-9223372036854775808,9223372036854775807] %13=[0,1]
+list update %19: settled=true length=%-1

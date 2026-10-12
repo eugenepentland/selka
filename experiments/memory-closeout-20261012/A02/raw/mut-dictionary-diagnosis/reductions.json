@@ -1,0 +1,224 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+  "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "commands": [
+    {
+      "source": "returned-child",
+      "mode": "check",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/returned-child.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "seconds": 0.015204283175989985
+    },
+    {
+      "source": "returned-child",
+      "mode": "dump-ir-facts",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/returned-child.my",
+        "--experimental-zero-rc",
+        "--facts"
+      ],
+      "status": 0,
+      "seconds": 0.007464447990059853
+    },
+    {
+      "source": "returned-list-child",
+      "mode": "check",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/returned-list-child.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "seconds": 0.007181107997894287
+    },
+    {
+      "source": "returned-list-child",
+      "mode": "dump-ir-facts",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/returned-list-child.my",
+        "--experimental-zero-rc",
+        "--facts"
+      ],
+      "status": 0,
+      "seconds": 0.0071500560734421015
+    },
+    {
+      "source": "returned-root",
+      "mode": "check",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/returned-root.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "seconds": 0.0066943110432475805
+    },
+    {
+      "source": "returned-root",
+      "mode": "dump-ir-facts",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/returned-root.my",
+        "--experimental-zero-rc",
+        "--facts"
+      ],
+      "status": 0,
+      "seconds": 0.007433619815856218
+    },
+    {
+      "source": "returned-child",
+      "mode": "release",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/returned-child.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-dictionary-diagnosis/cache",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--release",
+        "--counters",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-dictionary-diagnosis/returned-child-release.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-dictionary-diagnosis/returned-child-release"
+      ],
+      "status": 1,
+      "seconds": 0.023421506863087416
+    },
+    {
+      "source": "returned-child",
+      "mode": "debug",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/returned-child.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-dictionary-diagnosis/cache",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--unoptimized",
+        "--counters",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-dictionary-diagnosis/returned-child-debug.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-dictionary-diagnosis/returned-child-debug"
+      ],
+      "status": 1,
+      "seconds": 0.012477107113227248
+    },
+    {
+      "source": "child",
+      "mode": "debug",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/child.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-dictionary-diagnosis/cache",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--unoptimized",
+        "--counters",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-dictionary-diagnosis/child-debug.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-dictionary-diagnosis/child-debug"
+      ],
+      "status": 1,
+      "seconds": 0.014382166089490056
+    },
+    {
+      "source": "list-child",
+      "mode": "debug",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/list-child.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-dictionary-diagnosis/cache",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--unoptimized",
+        "--counters",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-dictionary-diagnosis/list-child-debug.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-dictionary-diagnosis/list-child-debug"
+      ],
+      "status": 1,
+      "seconds": 0.030257441103458405
+    },
+    {
+      "source": "returned-list-child",
+      "mode": "release",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/returned-list-child.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-dictionary-diagnosis/cache",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--release",
+        "--counters",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-dictionary-diagnosis/returned-list-child-release.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-dictionary-diagnosis/returned-list-child-release"
+      ],
+      "status": 1,
+      "seconds": 0.019268868025392294
+    },
+    {
+      "source": "returned-root",
+      "mode": "release",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/experiments/memory-closeout-20261012/A02/raw/mut-dictionary-diagnosis/returned-root.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-dictionary-diagnosis/cache",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--release",
+        "--counters",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-dictionary-diagnosis/returned-root-release.ll",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-dictionary-diagnosis/returned-root-release"
+      ],
+      "status": 0,
+      "seconds": 0.18793223495595157
+    },
+    {
+      "source": "returned-root",
+      "mode": "release-run",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/mut-dictionary-diagnosis/returned-root-release"
+      ],
+      "status": 0,
+      "stdout": "7\n7\n",
+      "stderr": "",
+      "binary_sha256": "bb946fa126489109f1f9c18378dabd11f9d1ef42320c0913ab2372af75441a84"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "status": "blocked: source-admitted interior mut call receives borrowed child instead of transferred slot",
+  "owner": "A07 Core build.zig callTarget/readPlace/writeBack, coordinated by root",
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+    "sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+    "source": "5167c588be79dd43d21d5013c36db15110bf239b"
+  },
+  "production_edits": false,
+  "check_admitted": 7,
+  "native_builds": {
+    "refused": 5,
+    "passed": 1
+  },
+  "positive_control": {
+    "source": "returned-root.my",
+    "mode": "release",
+    "stdout": "7\n7\n",
+    "rc_events": 0,
+    "release_unique_sites": 3,
+    "live_bytes_at_exit": 0,
+    "binary_sha256": "bb946fa126489109f1f9c18378dabd11f9d1ef42320c0913ab2372af75441a84",
+    "llvm_sha256": "193c9d432fdfdfab2c7c1b62b4e36d57a29aad4e364744af8b6087af1c536910",
+    "symbols_clean": true,
+    "llvm_clean": true,
+    "forbidden_symbols": [],
+    "forbidden_llvm": []
+  },
+  "source_sha256": {
+    "child.my": "bbd9a7adaea508d93d9a5474b29c791d02d8c245d72f21197e45881c9eea05d1",
+    "list-child.my": "36d8ff0b0aaf9d4fae26c1152387e1330159d902d241968b96a8863a2f6b71b4",
+    "original.my": "414a084b0e9b669dfac29418bb697dccc038db159ad1b73bc30fe58908f054c4",
+    "returned-child.my": "d809790c1b9826ac72ba014f09bb2b445ce2c70e23dde4bca19313c838457d93",
+    "returned-list-child.my": "ef02d814cce2014b2dffdf36ebc2d2d148f4d091d25c2aa758c3159c8ca66205",
+    "returned-root.my": "4471d550b9eb89a9c9b685be34602c1fef532be1bca74edf26f78a30a7809346",
+    "root.my": "86d6446d2efe024046de69efacededb5801f2f042fd43a9284154dfa5274cd66"
+  },
+  "admission": [
+    {
+      "ticket": 750,
+      "kind": "build",
+      "wait_seconds": 60,
+      "slot": 1,
+      "commands": "inspect.py"
+    },
+    {
+      "ticket": 761,
+      "kind": "build",
+      "wait_seconds": 20,
+      "slot": 3,
+      "commands": "reduce.py"
+    }
+  ],
+  "runtime_or_RSS_claim": null,
+  "required_regression": "Original source plus direct/indirect, unit/managed-result, list/dict child and deeper mixed paths; all five counted modes after owner patch, RC0/live0, exact once cleanup and structural checks."
+}

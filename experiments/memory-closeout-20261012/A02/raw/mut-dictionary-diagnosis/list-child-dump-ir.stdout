@@ -1,0 +1,70 @@
+fn main(cap) -> i64
+b0:
+  %2 = list_new list[dict[i64, i64]] 1:i64
+  %4 = dict_new dict[i64, i64] 1:u64
+  %7 = dict_find i64 %4, 1:i64
+  %9 = cmp.ge bool %7, 0:i64
+  branch %9, b1, b2
+b1: ; preds b0
+  %11 = dict_set_value dict[i64, i64] %4, %7, 7:i64
+  jump b3
+b2: ; preds b0
+  %13 = dict_insert dict[i64, i64] %4, %7, 1:i64, 7:i64
+  jump b3
+b3: ; preds b1 b2
+  %15 = phi dict[i64, i64] %11, %13
+  %17 = list_push list[dict[i64, i64]] %2, %15
+  %20 = cmp.lt bool 0:i64, 0:i64
+  branch %20, b4, b5
+b4: ; preds b3
+  %22 = list_len u64 %17
+  %23 = convert.exact i64 %22
+  %24 = add.exact i64 %23, 0:i64
+  jump b5
+b5: ; preds b3 b4
+  %26 = phi i64 0:i64, %24
+  %28 = list_get.exact dict[i64, i64] %17, %26
+  %31 = list_get.exact dict[i64, i64] %17, %26
+  %32 = call dict[i64, i64] update(%31)
+  %33 = list_set.exact list[dict[i64, i64]] %17, %26, %32
+  %38 = cmp.lt bool 0:i64, 0:i64
+  branch %38, b6, b7
+b6: ; preds b5
+  %40 = list_len u64 %33
+  %41 = convert.exact i64 %40
+  %42 = add.exact i64 %41, 0:i64
+  jump b7
+b7: ; preds b5 b6
+  %44 = phi i64 0:i64, %42
+  %46 = list_get.exact dict[i64, i64] %33, %44
+  %48 = dict_find i64 %46, 1:i64
+  %50 = cmp.ge bool %48, 0:i64
+  branch %50, b8, b9
+b8: ; preds b7
+  %53 = dict_entry_value i64 %46, %48
+  print param0, %53
+  ret 0:i64
+b9: ; preds b7
+  unreachable
+fn update(dict[i64, i64]) -> dict[i64, i64]
+b0:
+  %2 = dict_find i64 param0, 1:i64
+  %4 = cmp.ge bool %2, 0:i64
+  branch %4, b1, b2
+b1: ; preds b0
+  %7 = dict_entry_value i64 param0, %2
+  %9 = add.exact i64 %7, 1:i64
+  %11 = dict_find i64 param0, 1:i64
+  %13 = cmp.ge bool %11, 0:i64
+  branch %13, b3, b4
+b2: ; preds b0
+  unreachable
+b3: ; preds b1
+  %15 = dict_set_value dict[i64, i64] param0, %11, %9
+  jump b5
+b4: ; preds b1
+  %17 = dict_insert dict[i64, i64] param0, %11, 1:i64, %9
+  jump b5
+b5: ; preds b3 b4
+  %19 = phi dict[i64, i64] %15, %17
+  ret %19
