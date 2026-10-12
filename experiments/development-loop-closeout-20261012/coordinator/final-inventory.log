@@ -1,0 +1,8 @@
+build-slot: FIFO ticket 156, position 8; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 156, position 3; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 156 after 95s
+Build Summary: 3/3 steps succeeded
+verification-plan success
++- install generated to inventory.json success
+   +- WriteFile verification-inventory.json success
+

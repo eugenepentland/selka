@@ -14,7 +14,7 @@ SPEC.loader.exec_module(focused)
 
 class ValidationTests(unittest.TestCase):
     def test_focused_filter_is_required(self):
-        for target in ('units', 'cli', 'golden'):
+        for target in ('units', 'cli', 'golden', 'tooling', 'text-scalar'):
             with self.assertRaises(focused.FilterError):
                 focused.validate(target, None)
             with self.assertRaises(focused.FilterError):
@@ -62,6 +62,11 @@ class CommandTests(unittest.TestCase):
 
     def test_full_command_has_no_filter(self):
         self.assertEqual(focused.command('full', None), [focused.zig_program(), 'build', 'test', '--summary', 'all'])
+
+    def test_text_scalar_target_preserves_explicit_filter(self):
+        self.assertEqual(focused.command('text-scalar', 'number grammar'),
+                         [focused.zig_program(), 'build', 'test-text-scalar-units',
+                          '--summary', 'all', '-Dtest-filter=number grammar'])
 
 
 class OutputTests(unittest.TestCase):

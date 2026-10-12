@@ -33,6 +33,13 @@ pub const tooling_unit = [_][]const u8{
     "src/invalidation_test.zig", "src/invalidation.zig",
 };
 
+/// Complete scalar-text implementation and embedded oracle closure.
+pub const text_scalar_unit = [_][]const u8{
+    "src/text_scalar_root_test.zig", "src/number_text.zig", "src/number_text_test.zig",
+    "src/number_grammar.txt",        "src/format_spec.zig", "src/format_spec_test.zig",
+    "src/format_spec_cases.tsv",
+};
+
 /// The independently gated named byte-ceiling module.
 pub const memory_budget = [_][]const u8{"src/memory_budget.zig"};
 
@@ -165,19 +172,51 @@ pub const coverage_self = [_][]const u8{"tests/test_inputs_coverage.py"};
 
 /// Receipt admission and immutable-snapshot adversarial tests use fake actions.
 pub const verification_cache = [_][]const u8{
+    "build_test_inputs.zig",
+    // Producer tests copy these real closures into isolated mutation fixtures.
+    "src/doc_coverage.zig",
+    "src/doc_coverage_test.zig",
+    "src/fix_plan.zig",
+    "src/fix_plan_test.zig",
+    "src/format_spec.zig",
+    "src/format_spec_cases.tsv",
+    "src/format_spec_test.zig",
+    "src/input_probe.zig",
+    "src/input_probe_test.zig",
+    "src/invalidation.zig",
+    "src/invalidation_test.zig",
+    "src/number_grammar.txt",
+    "src/number_text.zig",
+    "src/number_text_test.zig",
+    "src/text_scalar_root_test.zig",
+    "src/timings.zig",
+    "src/timings_test.zig",
+    "src/tooling_root_test.zig",
+    "scripts/verification_profiles_test.py",
+    "scripts/development_loop_workloads_test.py",
+    "experiments/development-loop-closeout-20261012/S05/C0-inventory.json",
+    "experiments/development-loop-closeout-20261012/S05/workloads/oracle.py",
     "scripts/cache_session.py",
     "scripts/fuzz_campaign_store.py",
     "scripts/verify_cache.py",
+    "scripts/verification_profiles.py",
+    "scripts/verification_producers.py",
+    "scripts/verification_telemetry.py",
     "scripts/verification_snapshot.py",
     "scripts/verification_process.py",
     "scripts/verification_process_test.py",
     "scripts/verification_report.py",
     "scripts/verification_budgets.py",
+    "scripts/verification_policy.py",
     "scripts/verification_report_test.py",
     "scripts/verification_budgets_test.py",
+    "scripts/verification_policy_test.py",
     "scripts/verification_artifacts.py",
+    "scripts/verification_producers_test.py",
+    "scripts/verification_telemetry_test.py",
     "scripts/verify_cache_test.py",
     "scripts/verification_snapshot_test.py",
+    "scripts/verification_snapshot_profile.py",
     "scripts/build-slot.sh",
     "scripts/build_admission.py",
     "scripts/build_slot_test.py",
@@ -201,10 +240,14 @@ pub const fuzz_campaign = [_][]const u8{
     "scripts/fuzz_coverage.py",
     "scripts/fuzz_coverage_test.py",
     "scripts/verify_cache.py",
+    "scripts/verification_profiles.py",
+    "scripts/verification_producers.py",
+    "scripts/verification_telemetry.py",
     "scripts/verification_snapshot.py",
     "scripts/verification_process.py",
     "scripts/verification_report.py",
     "scripts/verification_budgets.py",
+    "scripts/verification_policy.py",
     "scripts/build-slot.sh",
     "tests/differential_corpus.py",
     "tests/test_differential_corpus.py",
@@ -231,10 +274,14 @@ pub const juice_cache = [_][]const u8{
     "scripts/fuzz_campaign_identity.py",
     "scripts/fuzz_campaign_store.py",
     "scripts/verify_cache.py",
+    "scripts/verification_profiles.py",
+    "scripts/verification_producers.py",
+    "scripts/verification_telemetry.py",
     "scripts/verification_snapshot.py",
     "scripts/verification_process.py",
     "scripts/verification_report.py",
     "scripts/verification_budgets.py",
+    "scripts/verification_policy.py",
     "scripts/build-slot.sh",
 };
 

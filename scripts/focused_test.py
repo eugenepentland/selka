@@ -38,7 +38,7 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 LOG_DIR = ROOT / ".mylang-cache" / "focused-tests"
 # Targets that honour `-Dtest-filter`. `full` is the whole gate, which does not.
-FOCUSED = {"units": "test-units", "cli": "test-cli", "golden": "test-golden", "tooling": "test-tooling-units"}
+FOCUSED = {"text-scalar": "test-text-scalar-units", "units": "test-units", "cli": "test-cli", "golden": "test-golden", "tooling": "test-tooling-units"}
 FULL = "full"
 SELECTED = re.compile(r"(\d+)\s+test\(s\) selected")
 RESULT = re.compile(r"guardian/test: RESULT (\{.*\})")
@@ -157,7 +157,7 @@ def log_path(root: str, filt: str | None) -> Path:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("target", help="units, tooling, cli, golden, or full")
+    parser.add_argument("target", help="units, tooling, text-scalar, cli, golden, or full")
     parser.add_argument("filter", nargs="?", help="non-empty substring for a focused target")
     parser.add_argument("--tail", type=int, default=60, help="log lines to show after a failure (default 60)")
     args = parser.parse_args(argv)
@@ -172,7 +172,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.target == "units":
         message = ("routing explicit helper namespace to independent tooling root"
                    if "test-tooling-units" in argv else
-                   "units filters select the compiler root; independent helpers use tooling")
+                   "units filters select the compiler root; independent helpers use tooling or text-scalar")
         print("focused tests: " + message, file=sys.stderr)
     started = time.time()
     completed = subprocess.run(argv, cwd=str(ROOT), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)

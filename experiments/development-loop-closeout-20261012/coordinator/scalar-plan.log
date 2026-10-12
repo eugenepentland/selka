@@ -1,0 +1,20 @@
+build-slot: FIFO ticket 103, position 8; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 103, position 1; waiting for measurement or memory-accounting settle delay; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 103 after 65s
+test-text-scalar-units
++- run test text-scalar-unit-tests w
+guardian/test: 9 test(s) selected
+guardian/test: test wall 0.08s; slowest over 50ms:
+guardian/test:   0.06s  format_spec_test.test.float format specifications render every CPython oracle row exactly
+guardian/test: PASS — 9 passed
+guardian/test: RESULT {"passed":9,"failed":0,"skipped":0}
+failed command: cd . && ./.zig-cache/o/c97f8a3001b35f1c023916ea815df301/text-scalar-unit-tests --cache-dir=./.zig-cache --seed=0x82fa2f07 --listen=-
+
+Build Summary: 6/6 steps succeeded; 9/9 tests passed
+test-text-scalar-units success
++- run test text-scalar-unit-tests 9 pass (9 total) 90ms MaxRSS:5M
+   +- compile test text-scalar-unit-tests debug native success 457ms MaxRSS:164M
+verification-plan success
++- install generated to inventory.json success
+   +- WriteFile verification-inventory.json success
+

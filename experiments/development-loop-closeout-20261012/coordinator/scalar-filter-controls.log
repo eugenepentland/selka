@@ -1,0 +1,37 @@
+build-slot: FIFO ticket 171, position 4; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 171 after 41s
+test-text-scalar-units
++- run test text-scalar-unit-tests w
+guardian/test: 2 test(s) selected by filter: "float format" — 1 match by name, 1 unnamed test block(s) run regardless
+guardian/test: test wall 0.07s; slowest over 50ms:
+guardian/test:   0.07s  format_spec_test.test.float format specifications render every CPython oracle row exactly
+guardian/test: PASS — 2 passed
+guardian/test: RESULT {"passed":2,"failed":0,"skipped":0}
+failed command: cd . && ./.zig-cache/o/52a270953f1a3c33a9f65d397ee91224/text-scalar-unit-tests "--guardian-filter=float format" --cache-dir=./.zig-cache --seed=0xc6089b33 --listen=-
+
+Build Summary: 3/3 steps succeeded; 2/2 tests passed
+test-text-scalar-units success
++- run test text-scalar-unit-tests 2 pass (2 total) 78ms MaxRSS:5M
+   +- compile test text-scalar-unit-tests debug native success 403ms MaxRSS:158M
+
+test-text-scalar-units
++- run test text-scalar-unit-tests failure
+guardian/test: 1 test(s) selected by filter: "s03-guaranteed-absent-filter" — 0 match by name, 1 unnamed test block(s) run regardless
+  NOTHING YOU ASKED FOR RAN. A zero-match filter proves nothing: Zig applies
+  --test-filter in the compiler, so the tests it skipped were never analyzed,
+  never linked, and never reached this runner. Exiting 0 here would be
+  indistinguishable from a green suite, so this run fails instead.
+  fix: correct the filter text (`guardian-check test-filter . --args` derives
+  one from your diff), or drop the filter and run the whole suite.
+  opt out (a project that genuinely has no tests yet): GUARDIAN_TEST_ALLOW_EMPTY=1
+guardian/test: FAIL — nothing the filter named ran
+guardian/test: RESULT {"passed":0,"failed":0,"skipped":0,"aborted":true}
+error: test process unexpectedly exited with code 1
+failed command: cd . && ./.zig-cache/o/ac0fcfcbd9404fd08294b1425edf461e/text-scalar-unit-tests --guardian-filter=s03-guaranteed-absent-filter --cache-dir=./.zig-cache --seed=0x953946a5 --listen=-
+
+Build Summary: 1/3 steps succeeded (1 failed)
+test-text-scalar-units transitive failure
++- run test text-scalar-unit-tests failure
+   +- compile test text-scalar-unit-tests debug native success 530ms MaxRSS:153M
+
+[{"filter": "float format", "status": 0, "expected": 0}, {"filter": "s03-guaranteed-absent-filter", "status": 1, "expected": 1}]

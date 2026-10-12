@@ -600,6 +600,18 @@ pub fn build(b: *std.Build) void {
         }),
     });
     guardian.enableTestDiagnostics(tooling_unit.root_module);
+    const text_scalar_unit = b.addTest(.{
+        .name = "text-scalar-unit-tests",
+        .max_rss = rss.compile,
+        .test_runner = guardian.testRunner(guardian_dep),
+        .filters = test_filters,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/text_scalar_root_test.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    guardian.enableTestDiagnostics(text_scalar_unit.root_module);
     const unit = b.addTest(.{
         .max_rss = rss.compile,
         .test_runner = guardian.testRunner(guardian_dep),
@@ -672,6 +684,22 @@ pub fn build(b: *std.Build) void {
     focused_tooling.has_side_effects = true;
     forwardFilters(b, focused_tooling, test_filters);
     b.step("test-tooling-units", "Run independent pure tooling tests, honouring -Dtest-filter").dependOn(&focused_tooling.step);
+    const run_text_scalar_unit = b.addRunArtifact(text_scalar_unit);
+    run_text_scalar_unit.step.max_rss = rss.script;
+    run_text_scalar_unit.setCwd(b.path("."));
+    run_text_scalar_unit.has_side_effects = test_rerun;
+    run_text_scalar_unit.addFileInput(input_manifests.?.path(b, "text_scalar_unit.txt"));
+    run_text_scalar_unit.addFileInput(environment_manifest.?);
+    forwardFilters(b, run_text_scalar_unit, test_filters);
+    verification_registry.?.declared(&run_text_scalar_unit.step, "text_scalar_unit");
+    test_step.dependOn(&run_text_scalar_unit.step);
+    compile_tests.dependOn(&text_scalar_unit.step);
+    const focused_text_scalar = b.addRunArtifact(text_scalar_unit);
+    focused_text_scalar.step.max_rss = rss.script;
+    focused_text_scalar.setCwd(b.path("."));
+    focused_text_scalar.has_side_effects = true;
+    forwardFilters(b, focused_text_scalar, test_filters);
+    b.step("test-text-scalar-units", "Run independent scalar text tests, honouring -Dtest-filter").dependOn(&focused_text_scalar.step);
     const run_budget_unit = bounded(b.addRunArtifact(budget_unit), rss.driver);
     cached(run_budget_unit, "memory_budget");
     const budget_step = b.step("test-memory-budget", "Verify guest byte ceilings, kernel guards and fan-out bounds");
@@ -693,6 +721,7 @@ pub fn build(b: *std.Build) void {
     const units_step = b.step("test-units", "Run compiler and pure tooling units; filters select the compiler root");
     units_step.dependOn(&run_unit.step);
     if (test_filters.len == 0) units_step.dependOn(&focused_tooling.step);
+    if (test_filters.len == 0) units_step.dependOn(&focused_text_scalar.step);
     b.step("test-cli", "Run only test/integration.zig, honouring -Dtest-filter").dependOn(&run_integration.step);
     // The same focused runs split into `-Dtest-shards` concurrent processes even
     // under a filter, for `scripts/affected_tests.py`: its selections can name a
@@ -700,6 +729,7 @@ pub fn build(b: *std.Build) void {
     // cached, so every run reports what it selected.
     const units_sharded = b.step("test-units-sharded", "Run src/root_test.zig split into -Dtest-shards processes, honouring -Dtest-filter");
     if (test_filters.len == 0) units_sharded.dependOn(&focused_tooling.step);
+    if (test_filters.len == 0) units_sharded.dependOn(&focused_text_scalar.step);
     const cli_sharded = b.step("test-cli-sharded", "Run test/integration.zig split into -Dtest-shards/2 processes, honouring -Dtest-filter");
     dependOnAll(units_sharded, shardRuns(b, unit, .{ .count = requested_shards, .bytes = rss.shard_unit, .inputs = "", .whole = run_unit, .filters = test_filters, .cache = false }));
     dependOnAll(cli_sharded, shardRuns(b, integration, .{ .count = @max(1, requested_shards / 2), .bytes = rss.shard_cli, .inputs = "", .whole = run_integration, .filters = test_filters, .cache = false }));
@@ -708,6 +738,7 @@ pub fn build(b: *std.Build) void {
     guardian.addAllChecks(b, guardian_exe, audit_runtime, .{});
     boundedChecks(audit_runtime);
     audit_runtime.dependOn(&focused_tooling.step);
+    audit_runtime.dependOn(&focused_text_scalar.step);
     dependOnAll(audit_runtime, unit_runs);
     dependOnAll(audit_runtime, cli_runs);
     const intent_step = b.step("test-intent", "Verify requirement links, revisions and source-pinned evidence");
@@ -912,9 +943,10 @@ pub fn build(b: *std.Build) void {
     coverage_step.dependOn(&coverage_run.step);
     test_step.dependOn(coverage_step);
     const verification_tests = b.step("test-verification-cache", "Verify action receipt admission and immutable input snapshots");
-    for ([_][]const u8{ "scripts/verify_cache_test.py", "scripts/verification_snapshot_test.py", "scripts/verification_process_test.py", "scripts/verification_report_test.py", "scripts/verification_budgets_test.py", "scripts/build_slot_test.py" }) |script| {
+    for ([_][]const u8{ "scripts/verify_cache_test.py", "scripts/verification_snapshot_test.py", "scripts/verification_process_test.py", "scripts/verification_report_test.py", "scripts/verification_budgets_test.py", "scripts/build_slot_test.py", "scripts/verification_telemetry_test.py", "scripts/verification_producers_test.py", "scripts/verification_policy_test.py", "scripts/verification_profiles_test.py", "scripts/development_loop_workloads_test.py" }, 0..) |script, member| {
         const verification_run = driver(b, b.fmt("python3 {s}", .{script}), rss.script, "verification_cache");
-        verification_run.addArgs(&.{ "python3", script });
+        const module = std.fs.path.stem(script);
+        verification_run.addArgs(&.{ "python3", "scripts/verification_telemetry.py", "--action-id", "verification_cache", "--member", b.fmt("{d}", .{member}), "--output-directory-env", "MYLANG_TEST_TELEMETRY_DIR", module });
         verification_tests.dependOn(&verification_run.step);
     }
     test_step.dependOn(verification_tests);
@@ -1044,6 +1076,7 @@ pub fn build(b: *std.Build) void {
         .{ .label = "mylang", .binary = exe },
         .{ .label = "units", .binary = unit },
         .{ .label = "tooling-units", .binary = tooling_unit },
+        .{ .label = "text-scalar-units", .binary = text_scalar_unit },
         .{ .label = "cli", .binary = integration },
         .{ .label = "core", .binary = verification_core_binary.? },
         .{ .label = "golden", .binary = golden_unit },
@@ -1059,6 +1092,7 @@ pub fn build(b: *std.Build) void {
         verification_registry.?.artifactDependencies(id, &.{});
     }
     verification_registry.?.artifactDependencies("tooling_unit", &.{"tooling-units"});
+    verification_registry.?.artifactDependencies("text_scalar_unit", &.{"text-scalar-units"});
     verification_registry.?.artifactDependencies("memory_budget", &.{ "memory-budget", "components" });
     verification_registry.?.artifactDependencies("component-support", &.{"component-support"});
     verification_registry.?.artifactDependencies("component_builder", &.{ "component-builder", "components" });

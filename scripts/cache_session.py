@@ -38,6 +38,7 @@ COMMANDS = {"verify": "verify_cache", "fuzz": "fuzz_campaign", "perf": "juice_ca
 DISPATCH_MODULES = frozenset((*COMMANDS.values(), "fuzz_campaign_identity",
                             "fuzz_campaign_store", "verification_artifacts",
                             "verification_process", "verification_report", "verification_budgets",
+                            "verification_producers", "verification_telemetry", "verification_policy", "verification_profiles",
                             "juice_evidence", "juice_provider", "juice_worker", "juice_tool"))
 
 
@@ -211,9 +212,13 @@ class RuntimeGuard:
     def check(self):
         try:
             if not self.snapshot.unchanged():
-                raise RestartRequired("startup runtime changed; restart required")
+                reasons = self.snapshot.stability_diagnostics("session_runtime")
+                raise RestartRequired("startup runtime changed; restart required: " +
+                                      json.dumps(reasons, ensure_ascii=True, separators=(',', ':'))[:768])
             if self.library_snapshot is not None and not self.library_snapshot.unchanged():
-                raise RestartRequired("loaded libraries changed; restart required")
+                reasons = self.library_snapshot.stability_diagnostics("session_libraries")
+                raise RestartRequired("loaded libraries changed; restart required: " +
+                                      json.dumps(reasons, ensure_ascii=True, separators=(',', ':'))[:768])
         except SnapshotError as error:
             raise RestartRequired("startup watcher lost; restart required: " + str(error)) from error
         if self._runtime_sealed and self._mapped_libraries() - self._libraries:

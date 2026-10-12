@@ -185,9 +185,16 @@ pub fn prepare(b: *std.Build, artifacts: []const Artifact, known_outputs: []cons
     identified.appendSlice(b.allocator, known_outputs) catch @panic("verification allocation");
     const run = b.addSystemCommand(&.{"python3"});
     run.addFileArg(b.path("scripts/verification_artifacts.py"));
+    run.addFileInput(b.path("scripts/verification_producers.py"));
+    run.addFileInput(b.path("scripts/verification_snapshot.py"));
     run.setCwd(b.path("."));
     const paths = run.addOutputFileArg("artifacts.json");
     for (artifacts) |artifact| {
+        if (std.mem.eql(u8, artifact.label, "tooling-units") or std.mem.eql(u8, artifact.label, "text-scalar-units")) {
+            run.addArgs(&.{ "--qualify", artifact.label, @tagName(artifact.binary.root_module.optimize.?) });
+            const inputs: []const []const u8 = if (std.mem.eql(u8, artifact.label, "tooling-units")) &test_inputs.tooling_unit else &test_inputs.text_scalar_unit;
+            for (inputs) |input| run.addFileInput(b.path(input));
+        }
         identified.append(b.allocator, &artifact.binary.step) catch @panic("verification allocation");
         run.addArg(artifact.label);
         run.addFileArg(artifact.binary.getEmittedBin());

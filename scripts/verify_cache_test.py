@@ -297,6 +297,36 @@ class VerificationCoordinator(unittest.TestCase):
         self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
         self.assertEqual([len(self.events(phase)) for phase in ['plan', 'prepare', 'gate']], [1, 1, 1])
 
+    def test_quick_then_complete_preserves_receipts_and_reports_exact_remaining_work(self):
+        self.assertEqual(self.execute(profile='quick', quick_actions=1), 3)
+        partial = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertFalse(partial['success'])
+        self.assertTrue(partial['selected_success'])
+        self.assertFalse(partial['profile_coverage']['complete_verification'])
+        self.assertEqual(partial['profile_coverage']['counts']['outstanding'], 1)
+        self.assertEqual(len(self.receipts()), 1)
+        self.assertEqual(self.execute(profile='complete'), 0)
+        complete = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertTrue(complete['profile_coverage']['complete_verification'])
+        self.assertEqual(complete['profile_coverage']['counts'],
+                         {'required': 2, 'reused': 1, 'executed': 1, 'outstanding': 0})
+        self.assertEqual(self.execute(profile='quick'), 3)
+        self.assertEqual(len(self.receipts()), 2)
+
+    def test_long_profile_cannot_certify_missing_qualification(self):
+        self.assertEqual(self.execute(profile='long-qualification'), 3)
+        coverage = coordinator.read_record(self.cache / 'last-run.json')['profile_coverage']
+        self.assertTrue(coverage['complete_verification'])
+        self.assertFalse(coverage['complete_qualification'])
+        self.assertEqual(coverage['qualification_outstanding'], ['fuzz', 'wall-clock-performance'])
+
+    def test_invalid_profile_controls_fail_before_preparation(self):
+        with self.assertRaises(ValueError):
+            self.execute(profile='unsupported')
+        with self.assertRaises(ValueError):
+            self.execute(quick_actions=0)
+        self.assertEqual(self.admissions, [])
+
     def test_fixture_invalidation_names_changed_dependency(self):
         self.assertEqual(self.execute(), 0)
         first = coordinator.read_record(self.cache / 'last-run.json')
@@ -319,6 +349,44 @@ class VerificationCoordinator(unittest.TestCase):
         report = coordinator.read_record(self.cache / 'last-run.json')
         self.assertTrue(report['loop_budget']['exceeded'])
         self.assertFalse(report['loop_budget']['enforced'])
+
+    def test_advisory_policy_changes_reuse_and_missing_test_telemetry_is_explicit(self):
+        policy = self.write('policy.json', json.dumps({'version': 1, 'mode': 'report_only', 'entries': []}))
+        self.assertEqual(self.execute(budget_policy=policy), 0)
+        first = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertEqual(first['action_coverage']['counts']['executed'], 2)
+        self.assertEqual(first['actions'][0]['test_telemetry'][0]['status'], 'unknown')
+        policy.write_text('malformed advisory data')
+        self.assertEqual(self.execute(budget_policy=policy), 0)
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertEqual(report['scoped_policy']['status'], 'unavailable')
+        self.assertEqual(report['action_coverage']['counts']['reused'], 2)
+
+    def test_qualified_producer_metadata_narrows_only_with_current_source_and_mode(self):
+        helper = coordinator.verification_producers
+        label = 'text-scalar-units'
+        for name in helper.CLOSURES[label]:
+            self.write(name, 'reviewed source fixture')
+        binary = self.write('native-scalar', 'binary fixture')
+        record = {'version': 2, 'producers': {label: helper.producer_metadata(self.root, label, binary, 'Debug')}}
+        pure = group('text_scalar_unit', list(helper.CLOSURES[label]))
+        pure['artifacts'] = [label]
+        common = {'artifacts': 'whole-artifact-fallback', 'build_configuration': 'a' * 64,
+                  'tools': 'b' * 64, 'options': [], 'action_controls': {'optimize': 'Debug'}}
+        with Snapshot(self.root, pure['inputs']) as sources, Snapshot(self.root, [], [binary]) as artifact:
+            providers = {label: artifact.identity['files']}
+            accepted = coordinator.action_payload(pure, sources, common, self.root, providers, producer_manifest=record)
+            self.assertIn('producer', accepted['common']['artifacts'][label])
+            fallback = coordinator.action_payload(pure, sources, common, self.root, providers)
+            self.assertEqual(fallback['common']['artifacts'], 'whole-artifact-fallback')
+            incompatible = copy.deepcopy(record)
+            incompatible['producers'][label]['mode'] = 'ReleaseFast'
+            fallback = coordinator.action_payload(pure, sources, common, self.root, providers, producer_manifest=incompatible)
+            self.assertEqual(fallback['common']['artifacts'], 'whole-artifact-fallback')
+        self.write('src/number_grammar.txt', 'changed embedded semantics')
+        with Snapshot(self.root, pure['inputs']) as sources:
+            fallback = coordinator.action_payload(pure, sources, common, self.root, providers, producer_manifest=record)
+            self.assertEqual(fallback['common']['artifacts'], 'whole-artifact-fallback')
 
     def test_execution_deadline_change_invalidates_success_and_is_explained(self):
         self.assertEqual(self.execute(gate_timeout=60), 0)
@@ -812,10 +880,13 @@ class VerificationCoordinator(unittest.TestCase):
     def test_filtered_inventory_never_reuses_or_publishes_complete_action_success(self):
         self.plan['configuration'] = {'filtered': True}
         self.save_plan()
-        self.assertEqual(self.execute(), 0)
-        self.assertEqual(self.execute(), 0)
+        self.assertEqual(self.execute(), 3)
+        self.assertEqual(self.execute(), 3)
         self.assertEqual(self.states(), {'unit': 'fresh', 'docs': 'fresh'})
         self.assertEqual(self.receipts(), [])
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertFalse(report['success'])
+        self.assertTrue(report['profile_coverage']['filtered_inventory'])
 
     def test_untracked_environment_override_executes_and_does_not_publish(self):
         with patch.dict(os.environ, {'CPATH': str(self.root / 'undeclared-includes')}):
@@ -863,6 +934,34 @@ class VerificationCoordinator(unittest.TestCase):
         self.assertEqual(self.execute(), coordinator.RETRY)
         self.assertEqual(len(self.events('gate')), 1)
         self.assertEqual(self.receipts(), [])
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        diagnostic = report['stability_diagnostics']
+        self.assertEqual(diagnostic['status'], 'observed')
+        self.assertTrue(any('fixture.txt' in reason['name'] for reason in diagnostic['reasons']))
+        self.assertTrue(any(reason['role'] == 'action_inputs' for reason in diagnostic['reasons']))
+
+    def test_failed_gate_preserves_failure_and_stability_diagnostics(self):
+        self.write('.failure', '17')
+        self.after_gate = lambda: self.input.write_text('changed during failed execution')
+        self.assertEqual(self.execute(), 17)
+        self.assertEqual(self.receipts(), [])
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertFalse(report['inputs_stable'])
+        self.assertTrue(any('fixture.txt' in reason['name']
+                            for reason in report['stability_diagnostics']['reasons']))
+
+    def test_producer_fixture_closures_are_declared_verification_inputs(self):
+        spec = importlib.util.spec_from_file_location(
+            'producer_input_coverage', REPOSITORY / 'tests/test_inputs_coverage.py')
+        coverage = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(coverage)
+        declared = coverage.declared_lists((REPOSITORY / 'build_test_inputs.zig').read_text())
+        entries = declared['verification_cache']
+        for closure in coordinator.verification_producers.CLOSURES.values():
+            for path in closure:
+                self.assertTrue(coverage.covered(path, entries), path)
+                narrowed = [entry for entry in entries if entry != path]
+                self.assertFalse(coverage.covered(path, narrowed), path)
 
     def test_mutation_during_publication_rolls_back_all_new_success_receipts(self):
         save = coordinator.save_receipt
@@ -874,6 +973,17 @@ class VerificationCoordinator(unittest.TestCase):
         with patch.object(coordinator, 'save_receipt', side_effect=changed_publication):
             self.assertEqual(self.execute(), coordinator.RETRY)
         self.assertEqual(self.receipts(), [])
+
+    def test_publication_exception_replaces_prior_success_report(self):
+        self.assertEqual(self.execute(), 0)
+        self.input.write_text('changed source')
+        with patch.object(coordinator, 'save_receipt', side_effect=SnapshotError('lost publication authority')):
+            with self.assertRaises(SnapshotError):
+                self.execute()
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertFalse(report['success'])
+        self.assertEqual(report['stage'], 'publication')
+        self.assertEqual(report['status'], coordinator.RETRY)
 
     def test_publish_checked_removes_written_receipt_when_snapshot_validation_raises(self):
         receipt = self.root / '.preparation-receipt.json'

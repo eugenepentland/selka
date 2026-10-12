@@ -1,0 +1,10 @@
+..build-slot: gate slot 1, FIFO ticket 1 after 0s
+build-slot: gate slot 1, FIFO ticket 1 after 0s
+......................build-slot: gate slot 1, FIFO ticket 1 after 0s
+....................build-slot: gate slot 1, FIFO ticket 1 after 0s
+....build-slot: gate slot 1, FIFO ticket 1 after 0s
+..........................
+----------------------------------------------------------------------
+Ran 74 tests in 46.971s
+
+OK

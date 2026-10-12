@@ -73,6 +73,14 @@ TOKEN_LIMIT = 40
 # Paths owned by one build step. Checked in order; the first prefix that
 # matches a changed path owns it.
 HOST_STEPS = (
+    ("src/text_scalar_root_test.zig", "test-text-scalar-units"),
+    ("src/number_text.zig", "test-text-scalar-units"),
+    ("src/number_text_test.zig", "test-text-scalar-units"),
+    ("src/number_grammar.txt", "test-text-scalar-units"),
+    ("src/format_spec.zig", "test-text-scalar-units"),
+    ("src/format_spec_test.zig", "test-text-scalar-units"),
+    ("src/format_spec_cases.tsv", "test-text-scalar-units"),
+
     ("scripts/juice", "test-juice"),
     ("tests/test_juice.py", "test-juice"),
     ("tests/test_juice_native.py", "test-juice"),

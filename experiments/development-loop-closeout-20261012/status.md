@@ -1,31 +1,87 @@
 # Development-loop closeout status — 2026-10-12
 
 C0: `fbfcaa7a923186a8e773c3760f81c10aa345a432` (local main = fetched origin/development).
-Integration: `codex/dl-closeout-20261012-integration`. Existing dirty checkouts are preserved.
-Bootstrap: `codex/selka-bootstrap-20261011` at `dff9304b9cd7bc72e66f9feb20f1b05281d67333`, read-only.
-Memory owner: `codex/memory-closeout-20261012`, ledger `experiments/memory-closeout-20261012/ledger.json`; A07 owns ABI/ownership, A08 cache scaling, A09 timing, A10 rollout. No ownership transfer received.
+Integration: `codex/dl-closeout-20261012-integration`, in the isolated
+`/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration` worktree.
+The original dirty checkouts and published origin/main lineage are preserved.
+Publishing or updating main is outside this execution; this branch is the reviewable result.
 
-Capacity: coordinator plus 10 workers, Sol 6.1. Shared native admission remains mandatory.
-Coordinator exclusively owns shared build/registration/input/inventory/CLI files, verify_cache.py/tests, cache_session.py/tests, config pins, final docs and this ledger.
+Bootstrap: `codex/selka-bootstrap-20261011` at
+`dff9304b9cd7bc72e66f9feb20f1b05281d67333`, inspected read-only.
+Memory owner: `codex/memory-closeout-20261012`, ledger
+`experiments/memory-closeout-20261012/ledger.json`; A07 owns ABI/ownership,
+A08 cache scaling, A09 timing, A10 rollout. No ownership transfer received.
+Direct owner communication was unavailable; S09 archives patch requests.
+No memory mode, ABI, seed or compiler port was taken over.
 
-| Worker | Assignment | Claimed files | State / proposed commits | Dependencies / evidence |
-| --- | --- | --- | --- | --- |
-| S01 | Telemetry and explanations | scripts/verification_report.py and tests; new telemetry helpers; S01 experiment directory | starting; no commits yet | C0; follow plan contracts |
-| S02 | Budgets and cancellation | scripts/verification_budgets.py, verification_process.py and tests; new policy helper; S02 experiment directory | starting; no commits yet | C0; follow plan contracts |
-| S03 | Independent native roots | new native roots and explicitly reserved modules; existing root imports via coordinator; S03 experiment directory | starting; no commits yet | C0; follow plan contracts |
-| S04 | Qualified producer identities | scripts/verification_artifacts.py and new producer helpers/tests; S04 experiment directory | starting; no commits yet | C0; follow plan contracts |
-| S05 | Profiles and work budgets | scripts/verification_profiles.py; scripts/fuzz_campaign.py and juice_cache.py adapters/tests; S05 experiment directory | starting; no commits yet | C0; follow plan contracts |
-| S06 | Fresh guest execution | new profiling fixtures; runner source changes pending overlap review; S06 experiment directory | starting; no commits yet | C0; follow plan contracts |
-| S07 | Golden/component setup | test/golden_parity.zig; new fixtures; component harnesses pending ownership review; S07 experiment directory | starting; no commits yet | C0; follow plan contracts |
-| S08 | Snapshot validation | scripts/verification_snapshot.py and tests; S08 experiment directory | starting; no commits yet | C0; follow plan contracts |
-| S09 | Bootstrap handoff | new bridge fixtures and bootstrap handoff documents; S09 experiment directory | starting; no commits yet | C0; follow plan contracts |
-| S10 | Independent qualification | baseline/final harnesses, evidence, timing schedule and acceptance report; S10 experiment directory | starting; no commits yet | C0; follow plan contracts |
+Coordinator plus ten Sol 6.1 workers ran concurrently in private worktrees at C0.
+All use the pinned Zig, private local caches and on-disk temporary directories,
+shared global cache and shared admission. Native tests use build admission;
+S10 owns complete gates and exclusive timing. No slot limits or shared caches were reset.
+No Guardian feedback entries were written. Normal worker commits passed Guardian hooks.
 
-## Candidate and requirements
+The coordinator exclusively owns shared build/registration/input/inventory/CLI
+files, verify_cache.py/tests, cache_session.py/tests, configuration pins, final
+docs and this ledger. Shared patch requests were applied serially.
 
-R0 baseline acquisition in progress. All DL1–DL8 acceptance requirements are initially not qualified on C0.
-No new hard deadlines or latency/p95 claims are authorized by historical samples.
-Configuration projection is disabled conservatively pending coordinator/S04 consumer audit; never auto-refresh its pin.
-DL7 full self-hosting, seed stages and ≤1.5× per-workload median/p95 remain open.
-Final required complete gate and formatting must run on a frozen integrated candidate.
-Publishing/main update has not been requested; deliver a reviewable integration branch.
+| Worker | Exclusive implementation scope | Integrated commits | Evidence and remaining dependency |
+| --- | --- | --- | --- |
+| S01 | verification_report, telemetry helper/tests | c7ee0f716, ce3e72c8c, 0b2daa25d, 10d88952e | Python selected-test telemetry, bounded malformed-output handling; native/guest timing hooks remain unknown. [Handoff](S01/handoff.md) |
+| S02 | verification_budgets/process/policy and tests | 2da4d4f8f, 7466accc9 | Process-tree adversarial checks; policy remains report-only. Concurrent subscriber acceptance and calibrated enforcement open. [Handoff](S02/handoff.md) |
+| S03 | text_scalar_root_test and exact existing scalar tests/oracles | 45f7676ef, c246edc13 | Nine native tests pass; embedded semantic mutation fails. Root authored existing imports/build/Guardian changes. Paired cold/RSS cost open. [Handoff](S03/handoff.md) |
+| S04 | verification_artifacts/producers and tests | 8fd2eb10e, a0b515753, 3ab3bb15c, 2b61af2d8, 82bf79ce5, ec4aed4e1 | Two independent roots adopted; actual lowercase Zig mode fixed. Coordinator/S04 final configuration review required. [Review](S04/final-review.md) |
+| S05 | profiles, fuzz_campaign, juice_cache and adapter tests | 88a7a46bb, 3223f2735 | Explicit quick partial status; bounded fuzz work; long profile lists outstanding external obligations. Long orchestration/counter qualification open. [Handoff](S05/handoff.md) |
+| S06 | guest profiling/controls; discover candidate only after overlap review | b5919178a, f605f3bde | Eighteen mandatory cold/warm actions and eight controls pass; production indexing rejected, source and SPEC unchanged. [Profile](S06/PROFILE.md) |
+| S07 | test/golden_parity.zig | 0713e4a8e | All 222 compiler checks retained, 165 distinct source preparations; mutable cwd remains per case. Full golden passes. Paired latency/RSS open. [Handoff](S07/handoff.md) |
+| S08 | verification_snapshot and profiling helpers/tests | 05a9746e4, 79ec85e79 | Bounded sticky invalidation reasons; 74 tests. Cross-snapshot stat memoization rejected. Warm validation savings not claimed. [Handoff](S08/handoff.md) |
+| S09 | bootstrap matrix and uniquely named bridge fixtures | 4c4833b54, a1bd6bef7 | Schema11 refreshed, component support checks pass; no port edits. Real stages/seeds/bootstrap and strict performance acceptance open. [Handoff](S09/handoff.md) |
+| S10 | frozen baseline/final harnesses, edit matrix and timing evidence | baseline capture complete; final candidate pending | C0 full gate passes, exact 45 groups/95 members; final qualification owns later acceptance. |
+
+## Integrated contracts
+
+The shared coordinator registers the new native root and Python suites, collects
+request-specific telemetry, validates qualified producer source and artifact
+metadata, and dispatches quick/complete/long-qualification profiles over one
+inventory. Quick always reports partial status 3; missing long obligations cannot
+become success. Advisory budget changes do not impose deadlines. Runtime source
+watching covers dispatch helpers. Source mutation diagnostics persist even when
+execution also fails, and exceptions replace stale success reports.
+
+Producer fixture tests declare all copied source/oracle files and their own
+build_test_inputs declaration dependency. Missing or incompatible producer data
+retains whole-artifact identity; existing reviewed selectors are preserved.
+Arbitrary configuration still invalidates broadly. The configuration pin is only
+updated after S04's consumer audit, regression evidence and actual writer check;
+it is never refreshed automatically.
+
+## Candidate and acceptance
+
+C0 baseline complete verification passed with stable inputs, 45 selected groups,
+95 registered required members and no unknown members. Gate admission occupancy
+was 1034.160 seconds; this is operational evidence, not isolated compiler timing.
+Historical 34/45 reuse and 28–37 second warm figures are not current acceptance.
+
+The coordinator and S04 explicitly qualified configuration pin `68663185…b655`
+after the consumer audit, actual writer/caller checks and regression evidence.
+Current exported inventory has 46 groups, 101 required/registered members and no
+unknown members. Focused coordinator74/process33/session15 checks pass.
+
+The final integrated source candidate and final complete/retained qualification
+will be recorded here after focused checks and a normal commit hook. It stays
+frozen during S10 execution; evidence-only commits identify the tested source SHA.
+
+| Requirement | Current status | Concrete remaining work |
+| --- | --- | --- |
+| DL1 complete observability | Not fully qualified | Verify final inventory/report parity; obtain supported native and guest individual timing hooks from runner owners. |
+| DL2 calibrated limits/cancellation | Partial implementation, acceptance open | Archive compatible headroom and concurrent subscriber lifecycle evidence before enforced action limits. |
+| DL3 independent boundaries | Implemented, final qualification pending | Complete candidate gate and paired warm/cold/RSS tradeoff for scalar split. |
+| DL4 real qualified producer | Implemented, final qualification pending | Reviewed pin and actual writer/caller checks passed; broader store and compatible-worktree matrix remains open. |
+| DL5 fresh execution cost | Partial implementation, target not qualified | Measure golden preparation end-to-end; obtain supported guest phase spans. Indexing and stat memo candidates rejected. |
+| DL6 supported profiles/work budgets | Partial implementation | Quick/complete contracts and work caps pass focused checks; authenticated long qualification orchestration/counters remain open. |
+| DL7 self-hosting integration | Open | Active port owner supplies qualified stage/ABI/seed milestones and full bootstrap/per-workload median and p95 at most 1.5× frozen Zig reference. |
+| DL8 final correctness/performance | In progress | S10 exact frozen candidate gate, retained/one-shot checks and edit/failure matrix; latency/p95 targets remain unqualified until sufficient samples. |
+
+The development-loop milestone is not declared closed while required acceptance
+remains open. The independent self-hosting milestone remains open. Useful checked
+feedback within five seconds and fifteen-second p95 are targets, not watchdogs;
+no hard policy is inferred from a few observations or an instruction-count proxy.
