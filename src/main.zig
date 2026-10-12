@@ -343,14 +343,12 @@ fn run(init: Context, parsed: Parsed) !u8 {
     defer if (friction) |recorder| recorder.deinit();
     var shared_store: ?language.shared_artifact_store.Store = null;
     if (!parsed.no_cache) {
-        if (language.shared_artifact_store.selected(init.environ)) |directory| {
-            shared_store = language.shared_artifact_store.Store.open(init.gpa, init.io, directory) catch |err| {
-                const message = try std.fmt.allocPrint(init.gpa, "error: shared compiler cache: {s}\n", .{@errorName(err)});
-                defer init.gpa.free(message);
-                try init.text(message);
-                return err;
-            };
-        }
+        shared_store = language.shared_artifact_store.openSelected(init.gpa, init.io, init.environ) catch |err| {
+            const message = try std.fmt.allocPrint(init.gpa, "error: shared compiler cache: {s}\n", .{@errorName(err)});
+            defer init.gpa.free(message);
+            try init.text(message);
+            return err;
+        };
     }
     defer if (shared_store) |*store| store.deinit();
     var frontend_cache = openFrontendCache(init, parsed);

@@ -15,6 +15,14 @@ import cache_retention
 from fuzz_campaign_store import Store
 
 
+def hermetic(**overrides):
+    """The live environment without any configured shared native store."""
+    environment = {key: value for key, value in os.environ.items()
+                   if key not in ('MYLANG_COMPILER_SHARED_CACHE', 'MYLANG_TEST_SHARED_CACHE')}
+    environment.update(overrides)
+    return environment
+
+
 class RetentionCLI(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix='retention-cli-')
@@ -76,8 +84,8 @@ class RetentionCLI(unittest.TestCase):
         expendable = repo / '.tmp-unmanaged' / 'build-cache'
         expendable.mkdir(parents=True)
         (expendable / 'object.o').write_bytes(b'disposable')
-        environment = dict(os.environ, MYLANG_CORE_RUNTIME_CACHE=str(self.root / 'objects'),
-                           XDG_CACHE_HOME=str(self.root / 'xdg'))
+        environment = hermetic(MYLANG_CORE_RUNTIME_CACHE=str(self.root / 'objects'),
+                               XDG_CACHE_HOME=str(self.root / 'xdg'))
         result = subprocess.run([
             'bash', str(Path(__file__).with_name('prune-caches.sh')),
             '--repo', str(repo), '--include-primary', '--idle-days', '0',
@@ -105,7 +113,8 @@ class RetentionCLI(unittest.TestCase):
         foreign.touch()
         command = ['bash', str(Path(__file__).with_name('prune-caches.sh')),
                    '--repo', str(repo), '--store-days', '0', '--exclude', '*', '--apply']
-        environment = dict(os.environ, MYLANG_CORE_RUNTIME_CACHE=str(objects))
+        environment = hermetic(MYLANG_CORE_RUNTIME_CACHE=str(objects),
+                               XDG_CACHE_HOME=str(self.root / 'xdg'))
         for directory in (objects, units):
             with (directory / '.retention.lock').open('a') as lease:
                 fcntl.flock(lease.fileno(), fcntl.LOCK_SH)
@@ -120,6 +129,37 @@ class RetentionCLI(unittest.TestCase):
         self.assertTrue(foreign.exists())
         self.assertTrue((objects / '.retention.lock').exists())
         self.assertTrue((units / '.retention.lock').exists())
+
+    def test_pruner_collects_shared_stores_only_through_their_collector(self):
+        repo = self.root / 'checkout'
+        subprocess.run(['git', 'init', '-q', str(repo)], check=True)
+        configured = self.root / 'configured'
+        (configured / 'compiler-artifacts-v2').mkdir(parents=True)
+        (configured / 'compiler-artifacts-v2' / 'format').write_bytes(b'marker')
+        default = self.root / 'xdg' / 'mylang' / 'native-tests' / 'native-tests-v2'
+        default.mkdir(parents=True)
+        (default / 'format').write_bytes(b'marker')
+        calls = self.root / 'calls'
+        fake = self.root / 'mylang'
+        fake.write_text('#!/bin/sh\necho "$@" >> "%s"\necho collected\n' % calls)
+        fake.chmod(0o755)
+        command = ['bash', str(Path(__file__).with_name('prune-caches.sh')),
+                   '--repo', str(repo), '--exclude', '*', '--mylang', str(fake)]
+        environment = hermetic(MYLANG_CORE_RUNTIME_CACHE='', XDG_CACHE_HOME=str(self.root / 'xdg'),
+                               MYLANG_COMPILER_SHARED_CACHE=str(configured))
+        preview = subprocess.run(command, env=environment, capture_output=True, text=True, check=True)
+        self.assertIn('shared    %s/compiler-artifacts-v2  (collected )' % configured, preview.stdout)
+        subprocess.run(command + ['--apply'], env=environment, capture_output=True, check=True)
+        self.assertEqual(calls.read_text().splitlines(), [
+            'cache gc --shared-cache-dir %s --kind compiler' % configured,
+            'cache gc --shared-cache-dir %s --kind tests' % default.parent,
+            'cache gc --shared-cache-dir %s --kind compiler --apply' % configured,
+            'cache gc --shared-cache-dir %s --kind tests --apply' % default.parent,
+        ])
+        environment['MYLANG_TEST_SHARED_CACHE'] = ''
+        calls.unlink()
+        subprocess.run(command, env=environment, capture_output=True, check=True)
+        self.assertEqual(len(calls.read_text().splitlines()), 1)
 
 
 if __name__ == '__main__':

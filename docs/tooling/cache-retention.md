@@ -57,9 +57,15 @@ for eligibility and [native builds](native-build.md#shared-compiler-artifacts)
 for usage. The same root may hold `native-tests-v2`; budgets are per namespace.
 
 Native compiler artifacts are bounded to 128 MiB per payload and protected by
-checksummed records and atomic rename. Staging/hashing precedes a per-key
-publication lock, which covers comparison and replacement. A conflicting valid
-same-key result raises `DeterminismMismatch` and preserves the existing record.
+checksummed records and atomic rename. A per-key publication lock covers
+comparison, staging and replacement. An existing verified record is compared by
+hashing the new bytes in place, so republishing identical bytes writes no
+staging copy and renames nothing. A conflicting valid same-key result is a miss:
+the existing record is preserved, nothing is published, and one line
+`mismatch <kind> <key> existing=<digest> attempted=<digest>` is appended to the
+namespace's `mismatches.log`. Builds count program mismatches as
+`shared_mismatches` in their cache report. Native test receipts follow the same
+rule with kind `receipt`.
 Retention does not implement the developer evidence store's conflict poisoning
 or pins. These are disposable caches for trusted local producers, with no
 application-journal or power-loss durability guarantee.
@@ -86,12 +92,32 @@ records for eviction. Format, policy and permanent-lock overhead is outside the
 record budget. Abandoned staging files and unused per-key lock files can be
 reclaimed while the collector has exclusive access.
 
-Every storage operation owns a shared process lease before it reads or stages
-records, including while waiting for a publication lock. Collection acquires an
-exclusive nonblocking lease and skips active users. Compilation and test
-execution hold no exclusive retention lock. The collector requires no server
-build/gate slot. Process termination releases its lease automatically. Permanent
-`.lock` and `.retention.lock` files are never removed by collection.
+Every write owns a shared process lease before it stages records, including
+while waiting for a publication lock, and every work claim holds one through its
+work. Writers and claims take the lease without waiting: while a collection
+holds the namespace, a publication is skipped and a claim is not taken, so the
+build or test runs unclaimed and publishes nothing. Opening a namespace whose
+format marker exists takes no lock; the exclusive `.lock` is taken only while the
+marker is first created. Lookups and restores hold no lease: records are
+immutable files replaced only by rename, so a record a collection evicts is
+either read whole through its open handle or missed. No open, lookup or restore
+waits on a collection. Collection acquires an exclusive nonblocking lease and
+skips active users. Compilation and test execution hold no exclusive retention
+lock. The collector requires no server build/gate slot. Process termination
+releases its lease automatically. Permanent `.lock` and `.retention.lock` files
+and `mismatches.log` are never removed by collection.
+
+The automatic collection runs in the opening process, at most once per interval,
+and only when it wins the exclusive lease at that moment. `scripts/prune-caches.sh`
+also runs `mylang cache gc` for the shared namespaces it finds (the configured
+`MYLANG_COMPILER_SHARED_CACHE` and `MYLANG_TEST_SHARED_CACHE` roots, else the
+default roots below), so busy stores are still collected.
+
+The default roots are `$XDG_CACHE_HOME/mylang/compiler-artifacts` and
+`$XDG_CACHE_HOME/mylang/native-tests` when `XDG_CACHE_HOME` is absolute, else
+the same names under `~/.cache/mylang`. They are used for an unset variable only
+when the `default_sharing` switch in `src/shared_cache_policy.zig` is on; it is
+off. Sharing is for the same user on the same machine.
 
 Inspect the installed native command without requiring Python:
 

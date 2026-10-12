@@ -72,8 +72,10 @@ const SelectionContext = struct { receipt: receipt.Context, base: [32]u8, permit
 /// the process exit status: 0 ok, 1 a test failed or the file does not check, 2 unreadable
 /// or an invalid cases file or provider fixture, 3 nothing selected or every selected test skipped.
 pub fn run(init: std.process.Init, requested: Options) Error!u8 {
+    var options = requested;
+    options.shared_cache = try options_module.resolveShared(init, requested.shared_cache);
     const compilation_init = try @import("compiler_sharing.zig").prepare(init, requested.build.show.verify_cache or requested.build.show.compiler_cache_disabled);
-    return runRequested(compilation_init, requested) catch |err| {
+    return runRequested(compilation_init, options) catch |err| {
         if (err == error.ComponentUnavailable) return 2;
         if (err == error.SourceChanged) {
             try writeAll(init, std.Io.File.stderr(), "error: SourceChanged: a property campaign input changed during execution\n");
@@ -443,11 +445,14 @@ const PortableRun = struct {
         var previous: ?[32]u8 = null;
         for (keys.items) |position| {
             if (previous == null or !std.mem.eql(u8, &previous.?, &position.key)) {
-                var claim = try shared.claim(position.key);
-                held.claims.append(a, claim) catch {
-                    claim.deinit();
-                    return error.OutOfMemory;
-                };
+                // A running sweep yields no claim: the test runs unclaimed rather than waiting.
+                if (try shared.claim(position.key)) |owned| {
+                    var claim = owned;
+                    held.claims.append(a, claim) catch {
+                        claim.deinit();
+                        return error.OutOfMemory;
+                    };
+                }
                 previous = position.key;
                 // Waiting for another worktree must not admit an obsolete source snapshot.
                 if (!try self.guard.unchanged()) return error.SourceChanged;
@@ -477,7 +482,9 @@ const PortableRun = struct {
         }
         if (identities.items.len == 0) return;
         if (!try self.guard.unchanged()) return error.SourceChanged;
-        for (identities.items) |identity| try shared.save(identity);
+        // A mismatch keeps the other receipt and is logged by the store; this
+        // run's verdict stands and no receipt of its own is published.
+        for (identities.items) |identity| _ = try shared.save(identity);
     }
 };
 

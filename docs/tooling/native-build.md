@@ -305,14 +305,43 @@ configured invalid store fails before a private replay can hide it. Corrupt
 individual records instead cause correct fresh work. See
 [retention](cache-retention.md#native-compiler-artifacts) before deleting entries.
 
+**Mismatches.** When a build publishes its linked program and the store already
+holds a verified program with different bytes under the same key, the build
+keeps its own program and goes on: the shared record is not replaced, nothing
+is published, and the store appends one line to
+`compiler-artifacts-v2/mismatches.log`:
+
+```text
+mismatch program <key> existing=<digest> attempted=<digest>
+```
+
+The build counts it as `shared_mismatches` in its report (see
+[Reports](#reports)). Syntax and typed records follow the same rule and log the
+same line with their own kind; only linked programs are counted in the report.
+A non-zero count means two producers built different bytes from one key, which
+is a determinism bug to investigate.
+
+**Default location.** A non-empty `MYLANG_COMPILER_SHARED_CACHE` names an
+explicit store and an empty value disables sharing. The compiler also knows a
+per-user default, `$XDG_CACHE_HOME/mylang/compiler-artifacts` (when
+`XDG_CACHE_HOME` is absolute) or `~/.cache/mylang/compiler-artifacts`, used for
+an unset variable only when the `default_sharing` switch in
+`src/shared_cache_policy.zig` is on. It is off, so sharing stays opt-in. With
+the switch on, a default store that cannot be created or opened prints one
+`warning:` line and the command builds without sharing; an explicit store that
+cannot be opened still fails the command.
+
 ## Reports
 
 - **`--report`** (on `build`, `build --run`, `run` and `run-project`) prints one
   `cache-report-v1` JSON line on stderr: the units linked, served by the object
   store, compiled and verified, the tool processes started, and whether the program
   was `linked`, `reused` from the program store or `replayed` (every count 0).
-  `program_shared` identifies an actual shared linked-program restore.
+  `program_shared` identifies an actual shared linked-program restore, and
+  `shared_mismatches` counts shared program records that held different bytes
+  for this build's key (a miss, logged in the store; normally 0).
 - **`--cache-report`** prints the same as one `mylang-core: cache:` text line.
+  It ends with `; N shared mismatches` only when that count is not zero.
 - **`--stats`** prints what the release passes did: calls inlined, loops unswitched,
   versioned and vectorized, checks proved, and the ownership plan's in-place
   updates, copies, retains and releases.

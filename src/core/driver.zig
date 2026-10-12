@@ -75,6 +75,9 @@ pub const Counts = struct {
     processes: u32 = 0,
     /// Wall time inside the native linker process, zero on program cache hits.
     link_ns: u64 = 0,
+    /// Shared program publications that found a verified record with different
+    /// bytes under the same key: a miss, logged in the store's `mismatches.log`.
+    shared_mismatches: u32 = 0,
 };
 
 /// The result of a successful `link`.
@@ -256,8 +259,7 @@ const SharedProgram = struct {
     fn claim(self: ?SharedProgram, enabled: bool) Error!?work_claim.Claim {
         if (!enabled) return null;
         const present = self orelse return null;
-        const owned = try present.store.claim(.program, present.key);
-        return owned;
+        return present.store.claim(.program, present.key);
     }
 
     fn open(native: Native, request: Request, exact: Digest) Error!?SharedProgram {
@@ -271,15 +273,18 @@ const SharedProgram = struct {
         return self.store.restore(.program, self.key, destination) catch |err| return failed(native, err);
     }
 
+    // A mismatch keeps the other record, publishes nothing and counts; the build
+    // goes on with its own program.
     fn publish(self: *SharedProgram, native: Native, path: []const u8) Error!void {
         try native.guard.check(native.log);
-        _ = self.store.publishFile(.program, self.key, path) catch |err| return failed(native, err);
+        const published = self.store.publishFile(.program, self.key, path) catch |err| return failed(native, err);
+        if (published == .mismatch) native.counts.shared_mismatches += 1;
     }
 
     fn failed(native: Native, err: anyerror) Error {
         if (err == error.OutOfMemory) return error.OutOfMemory;
         native.log.print(native.arena, "error: compiler shared program cache: {s}\n", .{@errorName(err)}) catch return error.OutOfMemory;
-        return if (err == error.DeterminismMismatch) error.ToolFailed else error.WriteFailed;
+        return error.WriteFailed;
     }
 };
 

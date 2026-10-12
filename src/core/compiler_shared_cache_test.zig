@@ -458,3 +458,53 @@ test "shared compiler frontend commands reuse syntax and reject format before pr
     try frontendCommands(&projects);
     try t.expect(projects.environment.get(shared_variable) != null);
 }
+
+// The shared program records' count and the last one's key, from file names.
+const Programs = struct { count: usize = 0, key: [32]u8 = @splat(0) };
+
+fn programs(projects: *const Projects) !Programs {
+    var directory = try cwd.openDir(io, try projects.path(&.{ "shared", "compiler-artifacts-v2", "program" }), .{ .iterate = true });
+    defer directory.close(io);
+    var entries = directory.iterate();
+    var found: Programs = .{};
+    while (try entries.next(io)) |entry| {
+        if (!std.mem.endsWith(u8, entry.name, ".blob")) continue;
+        _ = try std.fmt.hexToBytes(&found.key, entry.name[0..64]);
+        found.count += 1;
+    }
+    return found;
+}
+
+// spec-case: SHARED-STORE-3
+test "a shared program mismatch is a counted logged miss and the build proceeds" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    var projects = try Projects.init(a, try temporary.dir.realPathFileAlloc(io, ".", a));
+    defer projects.environment.deinit();
+    const cold = try projects.run(.{ .project = "a" });
+    try freshProgram(cold);
+    try t.expectEqual(@as(i64, 0), try number(cold.report, "shared_mismatches"));
+    const stored = try programs(&projects);
+    try t.expectEqual(@as(usize, 1), stored.count);
+    const key = stored.key;
+    const artifacts = @import("mylang").shared_artifact_store;
+    var store = try artifacts.Store.open(a, io, try projects.path(&.{"shared"}));
+    defer store.deinit();
+    try cwd.deleteFile(io, try store.artifactPath(.program, key));
+    try t.expectEqual(artifacts.Publication.stored, try store.save(.program, key, "another producer's program"));
+    try cwd.deleteTree(io, try projects.path(&.{ "a", "private", "replay-v1" }));
+    const rebuilt = try projects.run(.{ .project = "a" });
+    try built(rebuilt);
+    try t.expectEqualStrings("reused", (try field(rebuilt.report, "program")).string);
+    try t.expect(!(try field(rebuilt.report, "program_shared")).bool);
+    try t.expectEqual(@as(i64, 1), try number(rebuilt.report, "shared_mismatches"));
+    try output(&projects, "a", "3\n");
+    try t.expectEqualStrings("another producer's program", (try store.load(a, .program, key)).?);
+    const log = try cwd.readFileAlloc(io, try projects.path(&.{ "shared", "compiler-artifacts-v2", "mismatches.log" }), a, .limited(4096));
+    const prefix = try std.fmt.allocPrint(a, "mismatch program {s} existing=", .{std.fmt.bytesToHex(key, .lower)});
+    try t.expect(std.mem.startsWith(u8, log, prefix));
+    try t.expectEqual(@as(usize, 1), std.mem.count(u8, log, "\n"));
+}

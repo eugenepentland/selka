@@ -3,13 +3,27 @@ const std = @import("std");
 const storage = @import("shared_artifact_io.zig");
 const retention = @import("native_cache_retention.zig");
 const work = @import("native_cache_work.zig");
+const policy = @import("shared_cache_policy.zig");
 
 /// Explicit opt-in, independent of private caches and shared test-success receipts.
 pub const environment_variable = "MYLANG_COMPILER_SHARED_CACHE";
 /// Per-artifact bound; oversized entries use the ordinary private compilation path.
 pub const maximum_payload = 128 * 1024 * 1024;
-/// Storage failures; corruption is a miss, conflicting valid outputs are errors.
+/// Storage failures; corruption is a miss and conflicting valid outputs are a
+/// logged `Publication.mismatch`, never an error.
 pub const Error = storage.Error;
+/// What one publication did. Only `stored` wrote a record.
+pub const Publication = enum {
+    /// The bytes were staged and renamed into place.
+    stored,
+    /// A verified record already held exactly these bytes; nothing was written.
+    present,
+    /// Nothing was published: the payload is oversized or a collection holds the store.
+    skipped,
+    /// A verified record holds different bytes for this key. It is kept, nothing
+    /// is published, and the pair of digests is appended to `mismatches.log`.
+    mismatch,
+};
 /// Independent serializer domains under one versioned storage namespace.
 pub const Kind = enum(u8) { syntax = 1, typed = 2, program = 3 };
 /// Complete producer key supplied by the syntax, semantic or native layer.
@@ -24,6 +38,26 @@ pub fn selected(environment: *const std.process.Environ.Map) ?[]const u8 {
     return if (root.len == 0) null else root;
 }
 
+/// Open the store a command uses. An explicit setting opens it or fails; an unset
+/// variable opens the per-user default only while `default_sharing` is on, and a
+/// default store that cannot be opened prints one warning and yields null.
+pub fn openSelected(a: std.mem.Allocator, io: std.Io, environment: *const std.process.Environ.Map) Error!?Store {
+    return openSelectedWith(a, io, environment, policy.default_sharing);
+}
+
+fn openSelectedWith(a: std.mem.Allocator, io: std.Io, environment: *const std.process.Environ.Map, sharing: bool) Error!?Store {
+    const selection = try policy.resolveWith(a, environment, .compiler, null, sharing) orelse return null;
+    defer if (selection.origin == .default) a.free(selection.path);
+    const store = Store.open(a, io, selection.path) catch |err| {
+        if (err == error.OutOfMemory or selection.origin == .explicit) return err;
+        var buffer: [512]u8 = undefined;
+        const warning = std.fmt.bufPrint(&buffer, "warning: shared compiler cache {s}: {s}; sharing disabled\n", .{ selection.path, @errorName(err) }) catch "warning: shared compiler cache unusable; sharing disabled\n";
+        std.Io.File.stderr().writeStreamingAll(io, warning) catch return null;
+        return null;
+    };
+    return store;
+}
+
 /// A bounded immutable store with independent exact-key work claims.
 pub const Store = struct {
     allocator: std.mem.Allocator,
@@ -32,6 +66,9 @@ pub const Store = struct {
     serial: std.atomic.Value(u64) = .init(0),
 
     /// Create or validate a dedicated namespace. Release the owned path with deinit.
+    /// An existing namespace is validated without any lock, and the throttled
+    /// sweep that follows only tries its exclusive admission, so no open waits on
+    /// another process's sweep.
     pub fn open(a: std.mem.Allocator, io: std.Io, directory: []const u8) Error!Store {
         if (directory.len == 0) return error.WriteFailed;
         const self: Store = .{ .allocator = a, .io = io, .root = try std.fs.path.join(a, &.{ directory, "compiler-artifacts-v2" }) };
@@ -47,39 +84,50 @@ pub const Store = struct {
         return retention.Context.init(self.allocator, self.io, self.root, .compiler);
     }
 
+    // A present marker is checked without any lock. Only first creation takes the
+    // exclusive `.lock`, and it re-reads the marker under it. No sweep can run
+    // before the marker exists, so creation needs no retention lease.
     fn initialize(self: *const Store) Error!void {
+        if (!try self.marked()) {
+            const lock_path = try self.path(".lock");
+            defer self.allocator.free(lock_path);
+            const guard = try storage.lock(self.allocator, self.io, lock_path);
+            defer guard.close(self.io);
+            if (!try self.marked()) try self.writeMarker();
+        }
+        _ = try self.retentionContext().policy();
+    }
+
+    fn marked(self: *const Store) Error!bool {
+        const marker = try self.path("format");
+        defer self.allocator.free(marker);
+        const bytes = try storage.bounded(self.allocator, self.io, marker, 128) orelse return false;
+        defer self.allocator.free(bytes);
+        if (!std.mem.eql(u8, bytes, format)) return error.ReadFailed;
+        return true;
+    }
+
+    fn writeMarker(self: *const Store) Error!void {
         const a = self.allocator;
         const io = self.io;
         const cwd = std.Io.Dir.cwd();
-        const lease = try self.retentionContext().lease();
-        defer lease.close(io);
-        const lock_path = try self.path(".lock");
-        defer a.free(lock_path);
-        const guard = try storage.lock(a, io, lock_path);
-        defer guard.close(io);
+        var directory_handle = cwd.openDir(io, self.root, .{ .iterate = true }) catch return error.ReadFailed;
+        defer directory_handle.close(io);
+        var entries = directory_handle.iterate();
+        while (entries.next(io) catch return error.ReadFailed) |entry| {
+            if (std.mem.eql(u8, entry.name, ".retention.lock") or std.mem.eql(u8, entry.name, ".lock") or std.mem.eql(u8, entry.name, "format.partial")) continue;
+            return error.ReadFailed;
+        }
         const marker = try self.path("format");
         defer a.free(marker);
-        if (try storage.bounded(a, io, marker, 128)) |bytes| {
-            defer a.free(bytes);
-            if (!std.mem.eql(u8, bytes, format)) return error.ReadFailed;
-        } else {
-            var directory_handle = cwd.openDir(io, self.root, .{ .iterate = true }) catch return error.ReadFailed;
-            defer directory_handle.close(io);
-            var entries = directory_handle.iterate();
-            while (entries.next(io) catch return error.ReadFailed) |entry| {
-                if (std.mem.eql(u8, entry.name, ".retention.lock") or std.mem.eql(u8, entry.name, ".lock") or std.mem.eql(u8, entry.name, "format.partial")) continue;
-                return error.ReadFailed;
-            }
-            const temporary = try self.path("format.partial");
-            defer a.free(temporary);
-            storage.remove(io, temporary);
-            defer storage.remove(io, temporary);
-            const file = cwd.createFile(io, temporary, .{ .exclusive = true }) catch return error.WriteFailed;
-            defer file.close(io);
-            file.writeStreamingAll(io, format) catch return error.WriteFailed;
-            cwd.rename(temporary, cwd, marker, io) catch return error.WriteFailed;
-        }
-        _ = try self.retentionContext().policy();
+        const temporary = try self.path("format.partial");
+        defer a.free(temporary);
+        storage.remove(io, temporary);
+        defer storage.remove(io, temporary);
+        const file = cwd.createFile(io, temporary, .{ .exclusive = true }) catch return error.WriteFailed;
+        defer file.close(io);
+        file.writeStreamingAll(io, format) catch return error.WriteFailed;
+        cwd.rename(temporary, cwd, marker, io) catch return error.WriteFailed;
     }
 
     /// Release the path; committed artifacts and permanent lock files remain.
@@ -95,9 +143,10 @@ pub const Store = struct {
     }
 
     /// Load verified bytes into the caller's allocator; damaged records miss.
+    /// Reads hold no lease: records are immutable inodes replaced only by rename,
+    /// so an entry a sweep evicts is either read whole through its open handle or
+    /// missed.
     pub fn load(self: *const Store, a: std.mem.Allocator, kind: Kind, key: Key) Error!?[]u8 {
-        const lease = try self.retentionContext().lease();
-        defer lease.close(self.io);
         const entry = try self.record(kind, key) orelse return null;
         defer entry.file.close(self.io);
         const bytes = try a.alloc(u8, entry.content.size);
@@ -118,24 +167,23 @@ pub const Store = struct {
     }
 
     /// Retain exact serialized bytes; valid same-key disagreement is never overwritten.
-    pub fn save(self: *Store, kind: Kind, key: Key, bytes: []const u8) Error!bool {
-        if (bytes.len > maximum_payload) return false;
+    pub fn save(self: *Store, kind: Kind, key: Key, bytes: []const u8) Error!Publication {
+        if (bytes.len > maximum_payload) return .skipped;
         return self.publish(kind, key, .{ .bytes = bytes }, bytes.len);
     }
 
     /// Stream a private artifact into shared storage without allocating its contents.
-    pub fn publishFile(self: *Store, kind: Kind, key: Key, source: []const u8) Error!bool {
+    pub fn publishFile(self: *Store, kind: Kind, key: Key, source: []const u8) Error!Publication {
         const file = try storage.regular(self.allocator, self.io, source) orelse return error.ReadFailed;
         defer file.close(self.io);
         const size = (file.stat(self.io) catch return error.ReadFailed).size;
-        if (size > maximum_payload) return false;
+        if (size > maximum_payload) return .skipped;
         return self.publish(kind, key, .{ .file = file }, @intCast(size));
     }
 
-    /// Stream verified bytes to a new private staging file; a corrupt copy is removed.
+    /// Stream verified bytes to a new private staging file; a corrupt, truncated or
+    /// vanished record is a miss and its partial copy is removed. Holds no lease.
     pub fn restore(self: *const Store, kind: Kind, key: Key, destination: []const u8) Error!bool {
-        const lease = try self.retentionContext().lease();
-        defer lease.close(self.io);
         const entry = try self.record(kind, key) orelse return false;
         defer entry.file.close(self.io);
         const output = std.Io.Dir.cwd().createFile(self.io, destination, .{ .exclusive = true }) catch return error.WriteFailed;
@@ -153,14 +201,15 @@ pub const Store = struct {
         return true;
     }
 
-    /// Coordinate expensive native work while retaining the namespace lease.
-    pub fn claim(self: *const Store, kind: Kind, key: Key) work.Error!work.Claim {
+    /// Coordinate expensive native work while retaining the namespace lease; null
+    /// while a collection holds the store, so the caller works unclaimed.
+    pub fn claim(self: *const Store, kind: Kind, key: Key) work.Error!?work.Claim {
         var hash = std.crypto.hash.Blake3.init(.{});
         hash.update(@tagName(kind));
         hash.update(&key);
         var work_key: Key = undefined;
         hash.final(&work_key);
-        return work.Claim.acquire(self.allocator, self.io, self.root, work_key);
+        return work.Claim.attempt(self.allocator, self.io, self.root, work_key);
     }
 
     /// The immutable record path, useful for storage inspection and corruption tests.
@@ -197,8 +246,26 @@ pub const Store = struct {
         return .{ .file = file, .content = content };
     }
 
-    fn publish(self: *Store, kind: Kind, key: Key, input: Input, size: usize) Error!bool {
-        const lease = try self.retentionContext().lease();
+    // A record for the key whose payload matches its header; null when absent or damaged.
+    fn verified(self: *const Store, kind: Kind, key: Key) Error!?Record {
+        const entry = try self.record(kind, key) orelse return null;
+        var keep = false;
+        defer if (!keep) entry.file.close(self.io);
+        const actual = storage.transfer(self.io, entry.file, null, header_size, entry.content.size) catch |err| {
+            if (err == error.InputChanged) return null;
+            return err;
+        };
+        if (!std.mem.eql(u8, &actual.digest, &entry.content.digest)) return null;
+        keep = true;
+        return entry;
+    }
+
+    // One per-key lock covers comparison, staging and replacement. An existing
+    // verified record is compared by hashing the input in place, so a repeated
+    // publication stages nothing and renames nothing; only an absent or damaged
+    // record is staged. The lease is only tried: a running sweep skips publication.
+    fn publish(self: *Store, kind: Kind, key: Key, input: Input, size: usize) Error!Publication {
+        const lease = try self.retentionContext().tryLease() orelse return .skipped;
         defer lease.close(self.io);
         try self.validate();
         const a = self.allocator;
@@ -206,32 +273,29 @@ pub const Store = struct {
         defer a.free(directory);
         const cwd = std.Io.Dir.cwd();
         cwd.createDirPath(self.io, directory) catch return error.WriteFailed;
-        const staged = try stage(self, directory);
-        defer a.free(staged.path);
-        defer storage.remove(self.io, staged.path);
-        const content = try stageContents(self.io, staged.file, input, .{ .kind = kind, .key = key, .size = size });
         const target = try self.artifactPath(kind, key);
         defer a.free(target);
         const lock_name = try std.fmt.allocPrint(a, "{s}.lock", .{target});
         defer a.free(lock_name);
         const guard = try storage.lock(a, self.io, lock_name);
         defer guard.close(self.io);
-        // Only this key is serialized. All staging and its hashing precede admission.
-        if (try self.record(kind, key)) |previous| {
+        if (try self.verified(kind, key)) |previous| {
             defer previous.file.close(self.io);
-            const actual: ?storage.Content = storage.transfer(self.io, previous.file, null, header_size, previous.content.size) catch |err| previous_missing: {
-                if (err == error.InputChanged) break :previous_missing null;
-                return err;
-            };
-            if (actual) |verified| if (std.mem.eql(u8, &verified.digest, &previous.content.digest)) {
-                if (content.size != verified.size or !std.mem.eql(u8, &content.digest, &verified.digest)) return error.DeterminismMismatch;
+            const attempted = try measure(self.io, input, size);
+            if (attempted.size == previous.content.size and std.mem.eql(u8, &attempted.digest, &previous.content.digest)) {
                 self.retentionContext().touch(previous.file);
-                return true;
-            };
+                return .present;
+            }
+            self.retentionContext().mismatch(.{ .kind = @tagName(kind), .key = key, .existing = previous.content.digest, .attempted = attempted.digest });
+            return .mismatch;
         }
+        const staged = try stage(self, directory);
+        defer a.free(staged.path);
+        defer storage.remove(self.io, staged.path);
+        _ = try stageContents(self.io, staged.file, input, .{ .kind = kind, .key = key, .size = size });
         try self.validate();
         cwd.rename(staged.path, cwd, target, self.io) catch return error.WriteFailed;
-        return true;
+        return .stored;
     }
 };
 
@@ -253,6 +317,22 @@ fn stage(store: *Store, directory: []const u8) Error!Staged {
         return .{ .file = file, .path = path };
     }
     return error.WriteFailed;
+}
+
+// The input's length and digest, read in place without writing a copy.
+fn measure(io: std.Io, input: Input, size: usize) Error!storage.Content {
+    switch (input) {
+        .bytes => |bytes| {
+            var digest: Key = undefined;
+            std.crypto.hash.Blake3.hash(bytes, &digest, .{});
+            return .{ .size = bytes.len, .digest = digest };
+        },
+        .file => |source| {
+            const result = try storage.transfer(io, source, null, 0, size);
+            if ((source.stat(io) catch return error.ReadFailed).size != size) return error.InputChanged;
+            return result;
+        },
+    }
 }
 
 fn stageContents(io: std.Io, file: std.Io.File, input: Input, address: Address) Error!storage.Content {
@@ -292,4 +372,31 @@ fn decode(bytes: *const [header_size]u8, kind: Kind, key: Key) ?storage.Content 
     const size = std.mem.readInt(u64, bytes[magic.len + 33 ..][0..8], .little);
     if (size > maximum_payload) return null;
     return .{ .size = @intCast(size), .digest = bytes[magic.len + 41 ..][0..32].* };
+}
+
+// spec-case: SHARED-STORE-4
+test "openSelected fails an explicit unusable store and skips an unusable default one" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const io = std.testing.io;
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(io, ".", a);
+    try temporary.dir.writeFile(io, .{ .sub_path = ".cache", .data = "a file where the cache directory belongs" });
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    try environment.put("HOME", root);
+    try std.testing.expect((try openSelectedWith(a, io, &environment, false)) == null);
+    try std.testing.expect((try openSelectedWith(a, io, &environment, true)) == null);
+    try temporary.dir.deleteFile(io, ".cache");
+    var default = (try openSelectedWith(a, io, &environment, true)).?;
+    defer default.deinit();
+    try std.testing.expect(std.mem.endsWith(u8, default.root, ".cache/mylang/compiler-artifacts/compiler-artifacts-v2"));
+    try temporary.dir.writeFile(io, .{ .sub_path = "blocked", .data = "not a directory" });
+    try environment.put(environment_variable, try std.fs.path.join(a, &.{ root, "blocked" }));
+    try std.testing.expectError(error.WriteFailed, openSelectedWith(a, io, &environment, true));
+    try std.testing.expectError(error.WriteFailed, openSelected(a, io, &environment));
+    try environment.put(environment_variable, "");
+    try std.testing.expect((try openSelected(a, io, &environment)) == null);
 }
