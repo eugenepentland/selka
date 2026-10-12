@@ -1,0 +1,643 @@
+{
+  "source_commit": "444465eb82290233c68c68b7f201148a8bf3eae4",
+  "compiler_sha256": "ec423f5ff7dba37f5d39489fec12b9c851754c0ad69125fc8aaafe85e31ea44e",
+  "gate": "coordinator/gate-03/last-run.json",
+  "success": true,
+  "inputs_stable": true,
+  "build_steps": {
+    "passed": 135,
+    "total": 135
+  },
+  "registered_tests": {
+    "executed_passed": 3083,
+    "failed": 0,
+    "shard_selection_skips": 26964
+  },
+  "actions": [
+    {
+      "action_key": "005d67087f76791a887b88ac66c19c6a7a80126285e2cab56123ab4ea11a229a",
+      "id": "component-preparation",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "component manifests and installed outputs require validation",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "component manifests and installed outputs require validation",
+      "state": "fresh"
+    },
+    {
+      "action_key": "2f88b6b8823febed390d5c092164a57d37d7c18d6bcc87e882c1f26700ce28a8",
+      "id": "input-discovery",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "directory membership must be discovered at execution time",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "directory membership must be discovered at execution time",
+      "state": "fresh"
+    },
+    {
+      "action_key": "9c7c0f8a3ab54a69116e316c0c5d6fc79ba46f39efd2e9474cc673749bb506d6",
+      "id": "environment-discovery",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "live inherited environment must be discovered at execution time",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "live inherited environment must be discovered at execution time",
+      "state": "fresh"
+    },
+    {
+      "action_key": "57fd4ef295aeffffa7f29e201ded7ac03d1d3e409180a6b993df25886179f172",
+      "id": "core",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "5628ee15859aef216340926387b5eb052be9458dcb736bd78a95df13a9eb1c00",
+      "id": "tooling_unit",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "391e1013bda86b01b3dbeb7076e665832f4d0e506363ab5d0ea87cc939196a44",
+      "id": "memory_budget",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "88259f365ceea623d7301e5d11f748fbc5195af6390b65eb7e5aaed796f266a4",
+      "id": "unit",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "3cf178621f9794415edbeae116a1e3d4880dff995954f7fef51f0c0f465d2efe",
+      "id": "cli",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "844c315d999421fe4867651a0e88df0f1ce3b50d6cf2090650c02bb2367ed400",
+      "id": "golden",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "aef38092eea05e306cfdace322c16f67130fc331be5f30922ee61bfa49c8514f",
+      "id": "idioms_self",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "6e88a570dcf7e438b7584f9fdbb6e93e032f11f784156a9a47da6acb0717c89b",
+      "id": "idioms",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "a3c1e5219e4adc41c631ab0f4c66494cb7d9d5c9eaed4088954bfccff85f186f",
+      "id": "incremental",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "da22f148feaf7512f048207eed4b2a85d61e9fb3912bd72878e52f5553c49840",
+      "id": "interfaces",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "8f1c0fde6e512763b19815b817bbd34f44153dd5b4fcde1c729f308a312ee063",
+      "id": "interface_oracle",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "c7dfc026e1d9f6d2e768fcf29f2868a90150182f069aaae4416f9db6c3682428",
+      "id": "parser_hints",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "19aa62a8c67f93cc6c25a21c0dce94785b5bf9a44dabfa44592fd1045f6e014d",
+      "id": "friction",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "46038956f580c3a8ce0be3acc367ebfec05ae2bf8e94bd2b4c1082610ec1c00b",
+      "id": "tooling_isolation",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "80a2ec15678e32c95838394d660ad6d2373759298b39312d02b5581a83fdb9cc",
+      "id": "application_cache",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "38392ace88a378a5c85eb421cf52e7bc70f6019399553e2708100ab730c9893d",
+      "id": "component_builder",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "a11513778fb4fba77fa19d3447a79827a531b46a957e996e00b0582327d864a2",
+      "id": "component_native",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "f43f6b18b9e097b307b0a7085879475e85b47f963b88ae8a7b73244aebb8e206",
+      "id": "component-support",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "963c46daf3952da1534af172489845da4b7fbd6838b05b4e656c951930a7c6b5",
+      "id": "selfhost_numeric",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "c8148203950afcd63ebdbabd2cbd49cbc35094ab2f8bab933f9bead226dd549b",
+      "id": "spec-history",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "SPEC replay reads git history and creates repositories",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "SPEC replay reads git history and creates repositories",
+      "state": "fresh"
+    },
+    {
+      "action_key": "09643e9c4669c46c15a6ad54757353cde0a4fbbede56ec9e07e079f53e82b960",
+      "id": "juice_pure",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "4e6eb8a60da05553c7c4dc3b6730c68289e18da5f0e5f2229ee5c5d92c6b6919",
+      "id": "juice",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "native performance collectors and host state require fresh execution",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "native performance collectors and host state require fresh execution",
+      "state": "fresh"
+    },
+    {
+      "action_key": "d9d52b44d63f832f584b40afcad61447ba1ad6730611a50c3e4cc94066737a95",
+      "id": "juice-runtime",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "runtime collectors observe CPU, scheduler and current host state",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "runtime collectors observe CPU, scheduler and current host state",
+      "state": "fresh"
+    },
+    {
+      "action_key": "ce4b78b452c188b82c6190b4d2cc15cb5a7cf637022f1f05a02b2a29733f06c3",
+      "id": "identity-qualification",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "compiler identity qualification produces temporary compiler artifacts",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "compiler identity qualification produces temporary compiler artifacts",
+      "state": "fresh"
+    },
+    {
+      "action_key": "8a6dda8021189ce858f2e66422419220dc3d10829ab42ac3e9d60e16d1837508",
+      "id": "affected",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "c6ab7a15e89a4128b7531d3916da3092f8bbd203cf43a7a048f11314b0635182",
+      "id": "coverage_self",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "55772fb0d765cb432d20aa63a43f0d83789bb4743f04511c1c16c2d5d9784eee",
+      "id": "coverage",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "fixture membership and negative path lookups outside source recipes require freshness",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "fixture membership and negative path lookups outside source recipes require freshness",
+      "state": "fresh"
+    },
+    {
+      "action_key": "63975ee8dc6714103cb018f0c4a067fb020c0e03c8fe41168217aff818a94df3",
+      "id": "manifest_self",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "ab6450bcf2f84e4dca51509ab2cf584de5a0f3fcfd37747077b8d2c680092702",
+      "id": "verification_cache",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "b6f56938bb05693cb93466878fbbc7ce7111a112f8bc7a2bff01b64de7bcef0f",
+      "id": "verification_session",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "d5b0d4542df25b415d579fc35df670dfe23e9ae501d6ca22c9bbf20626ce63f4",
+      "id": "fuzz_campaign",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "43889ae39ca26e88fb279b33dcdedc996d1c4d16ed75d0b2a8d47640fb8c111b",
+      "id": "juice_cache",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "22d8fbbbbf05a82fa83a61d6668995f2398ca2a6f8ee91b6c15cffe0a80fde89",
+      "id": "doc-coverage",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "7369f7d9ba4c025340756a4ef38fe2c81aaa5a4e17a1c1ca81571f3f36212d24",
+      "id": "guest",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "guest Host and external-effect eligibility remains compiler-authoritative",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "guest Host and external-effect eligibility remains compiler-authoritative",
+      "state": "fresh"
+    },
+    {
+      "action_key": "f4f098a0dab63958e121837eab175a604348c036388bc4b91a85390a4a9a4ccd",
+      "id": "language",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "guest Host and external-effect eligibility requires execution-time admission",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "guest Host and external-effect eligibility requires execution-time admission",
+      "state": "fresh"
+    },
+    {
+      "action_key": "0bd37754ccb33c7328f61e290c7366ab8c73e2f33925d12615af2a48d12924e3",
+      "id": "doctest",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "2787c311ebf203c68cfb1f1da9a5e5f4ec78cd8e0b9ff1246881a7c3acbdf31d",
+      "id": "zig-format",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "990013f5ddf48450557bf66a90a199cd662d730d4a3847afebfb5a72bfa522ec",
+      "id": "my_format",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "464e90e407f13eb2dfd1feda9a0819da1f712ea7657aabb7e48d2511482c6ca6",
+      "id": "my_format_self",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "d794e6ebda0340ebfa49b7cbfffb63719945d29487bd73234729ccd1cbf9b75e",
+      "id": "noalloc_lint",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "e1da45c56362dda3ba6f9f6444a83171845fd865bf8f15eb97c898498eb86ee3",
+      "id": "embedded_migration",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency summaries unchanged; receipt or policy cause unknown",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute"
+    },
+    {
+      "action_key": "36269bef417a80b9b237086ff5b29ded10f3b47d1b048418f90678052a2aaef6",
+      "id": "guardian",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "Guardian source, git scope and mutable policy validation require freshness",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "Guardian source, git scope and mutable policy validation require freshness",
+      "state": "fresh"
+    }
+  ],
+  "action_states": {
+    "fresh": 11,
+    "execute": 34
+  },
+  "coordinator_seconds": 475.38564198999666,
+  "gate_seconds": 454.30370816984214,
+  "guardian": {
+    "checks_passed": 88,
+    "scope": "Diff scoped vs fbfcaa7a923186a8e773c3760f81c10aa345a432; 144 of 727 source files for 50 per-file checks; 38 whole-tree checks. Full-tree commit hook remains required."
+  },
+  "history": [
+    {
+      "gate": "gate-01",
+      "outcome": "Only .my formatting failed; fixed whitespace in test/core/gap_words.my at 444465eb8."
+    },
+    {
+      "gate": "gate-02",
+      "outcome": "Language verified-release command aborted without diagnostic; all 3083 registered tests passed. No cause established."
+    },
+    {
+      "gate": "gate-03",
+      "outcome": "Green on unchanged source; failed language command also passed in five independent re-executions."
+    }
+  ],
+  "performance_harness": {
+    "origin": "experiments/micro-ownership-20261012/tools",
+    "adaptation": "Copy with deterministic strict alternating arm order for warmups, samples and RSS. Historical harness unchanged.",
+    "tests": "5 existing measurement contract tests passed",
+    "files": {
+      "experiments/micro-gaps-20261012/tools/measure.py": "3b46106c5b8b2548bfddb9d00293bb024f4307d2f0afc2b65d79a8408be7b304",
+      "experiments/micro-gaps-20261012/tools/schedule.py": "7d641f99ac5596987ba5a2e1498530a4451835a1b38efaffa473926fdd40acbb",
+      "experiments/micro-gaps-20261012/tools/test_measure.py": "b84111f1eadb2c6af0fe25975c37298bd33dcdf0c3ff709a2a86a68cab1e12e2"
+    }
+  },
+  "limitations": [
+    "Full gate used the previously qualified owned component pin/archive recorded in component-route.json. Default historical seed link failure on this host remains unchanged.",
+    "The one earlier abort remains unexplained; subsequent green gate is not a root-cause fix.",
+    "Verified-release directory test reports one existing unsupported case; it remains inventoried.",
+    "No default-promotion or active legacy-RC-retirement claim is made by this four-gap batch."
+  ]
+}

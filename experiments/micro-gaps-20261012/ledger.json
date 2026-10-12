@@ -1,0 +1,124 @@
+{
+  "integration_branch": "codex/micro-gaps-20261012",
+  "production_revision": "444465eb82290233c68c68b7f201148a8bf3eae4",
+  "qualified_compiler_sha256": "ec423f5ff7dba37f5d39489fec12b9c851754c0ad69125fc8aaafe85e31ea44e",
+  "gate": "coordinator/qualification.json",
+  "measurements": "coordinator/measurement-validation.json",
+  "items": [
+    {
+      "id": "dict",
+      "title": "Dictionary string-key updates",
+      "status": "shipped",
+      "implementation_commit": "ffb8671cb1e6601e973dae0a16fb3070f5710bf2",
+      "owner": "dict",
+      "primary_cell": "parity/dict_count",
+      "candidate_over_baseline": {
+        "ratio": 0.27543338546203877,
+        "ci95": [
+          0.272452060813739,
+          0.28904674810788666
+        ],
+        "paired_rounds": 9,
+        "bootstrap_repetitions": 5000,
+        "estimator": "ratio of medians; matched round indices resampled jointly"
+      },
+      "notes": "Scoped compiler proof removes copies on hits; misses retain independent stored keys.",
+      "handoff": "dict/handoff.md",
+      "remaining_work": "No further implementation in this batch. Performance follow-up is user-directed."
+    },
+    {
+      "id": "words",
+      "title": "Word counting/tokenization",
+      "status": "shipped",
+      "implementation_commit": "c504723f21e5a11712f8953d7651485a113ff54c",
+      "owner": "words",
+      "primary_cell": "expanded/word_count/large",
+      "candidate_over_baseline": {
+        "ratio": 0.24518706022701076,
+        "ci95": [
+          0.24264412071419494,
+          0.24607518438807338
+        ],
+        "paired_rounds": 15,
+        "bootstrap_repetitions": 5000,
+        "estimator": "ratio of medians; matched round indices resampled jointly"
+      },
+      "notes": "Private split views remain borrowed through iteration; stored keys become independent.",
+      "handoff": "words/handoff.md",
+      "remaining_work": "No further implementation in this batch. Performance follow-up is user-directed."
+    },
+    {
+      "id": "sort",
+      "title": "Owned keyed record sorting",
+      "status": "shipped",
+      "implementation_commit": "1d72980f9a02cca1c862a55796a6a6ff4e469319",
+      "owner": "sort",
+      "primary_cell": "expanded/sort_records/large",
+      "candidate_over_baseline": {
+        "ratio": 0.4773157351345123,
+        "ci95": [
+          0.4715029410315771,
+          0.48863198599972785
+        ],
+        "paired_rounds": 15,
+        "bootstrap_repetitions": 5000,
+        "estimator": "ratio of medians; matched round indices resampled jointly"
+      },
+      "notes": "Optional raw scratch improves locality; native memory cost 98,304 bytes per large sort, outside managed counters.",
+      "handoff": "sort/handoff.md",
+      "remaining_work": "No further implementation in this batch. Performance follow-up is user-directed."
+    },
+    {
+      "id": "encode",
+      "title": "Local text encoding",
+      "status": "shipped",
+      "implementation_commit": "ec3e7f350d3c4f2555b47f91ac3ba1f35f72599f",
+      "owner": "encode",
+      "primary_cell": "expanded/int_format/large",
+      "candidate_over_baseline": {
+        "ratio": 0.5967641788682291,
+        "ci95": [
+          0.5942888734966234,
+          0.601796513964747
+        ],
+        "paired_rounds": 15,
+        "bootstrap_repetitions": 5000,
+        "estimator": "ratio of medians; matched round indices resampled jointly"
+      },
+      "notes": "Non-escaping read-only encodings borrow spans; escaping values still allocate independent owners.",
+      "handoff": "encode/handoff.md",
+      "remaining_work": "No further implementation in this batch. Performance follow-up is user-directed."
+    },
+    {
+      "id": "gate02-abort",
+      "status": "unresolved_observation",
+      "owner": "coordinator",
+      "reproducer": "MYL_CORE_LEAKCHECK=1 zig-out/bin/mylang test tests/lang --release --verify-facts --cache-dir .mylang-cache/lang-tests-release (pinned MYLANG_ZIG and installed component directory as gate request)",
+      "evidence": "dict/gate02-diagnosis/diagnosis.json",
+      "outcome": "One gate aborted; five direct/private executions and unchanged final full gate passed. Cause not established."
+    },
+    {
+      "id": "component-default-seed",
+      "status": "outside_batch_unresolved",
+      "owner": "component/self-host packaging",
+      "evidence": "coordinator/component-route.json",
+      "outcome": "Final full gate uses prior qualified owned pin/archive. Default historical seed link failure on this host remains unchanged; no seed repin."
+    },
+    {
+      "id": "lox-micro-slowdown",
+      "status": "measured_tradeoff",
+      "owner": "performance follow-up",
+      "cells": [
+        "expanded/lox_eval/small",
+        "expanded/lox_eval/large"
+      ],
+      "outcome": "3.5\u20134.6% median slowdown, intervals exclude parity; cause not attributed. No tuning after green gate."
+    }
+  ],
+  "milestones": {
+    "four_gap_implementation": "qualified and locally committed",
+    "ordinary_zero_rc_default": "not promoted by this batch",
+    "legacy_guest_rc_retirement": "not completed by this batch"
+  },
+  "publication": "Local commits only; no push authorized."
+}

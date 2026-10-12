@@ -1,0 +1,2 @@
+build-slot: timing slot 1, FIFO ticket 358 after 0s
+micro-gaps/parity/intloop {'baseline-zero-rc': True, 'mylang-zero-rc': True}

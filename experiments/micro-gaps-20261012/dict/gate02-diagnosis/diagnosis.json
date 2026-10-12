@@ -1,0 +1,116 @@
+{
+  "gate": "gate-02",
+  "failure": "language member2 terminated with SIGABRT without stack/diagnostic",
+  "compiler_sha256": "ec423f5ff7dba37f5d39489fec12b9c851754c0ad69125fc8aaafe85e31ea44e",
+  "cwd": "/home/epentland/ai/canopy/mylang-memory-20261012",
+  "source": "tests/lang",
+  "flags": [
+    "--release",
+    "--verify-facts"
+  ],
+  "leakcheck": true,
+  "warm_snapshot": {
+    "files": 12474,
+    "bytes": 215549816,
+    "content_inventory_sha256": "9b4fe047e68ced9e5fc9ac463826bdcd48e26350049cbad9a39759ff3e7b1f1b"
+  },
+  "runs": [
+    {
+      "run": 1,
+      "exit_code": 0,
+      "traced_signals_only": true,
+      "cache": "warm-1",
+      "summary": "1578 passed, 0 cached, 0 failed, 0 skipped, 1 unsupported",
+      "stdout": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/.tmp/micro-gaps/dict/gate02-diagnosis/run-1.stdout",
+      "stdout_sha256": "52b8cd5f4ca69458145579e91318ba4f23eeb8b331cfb5973609715137c69059",
+      "stderr": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/.tmp/micro-gaps/dict/gate02-diagnosis/run-1.stderr",
+      "stderr_sha256": "4fd0448440f2dc1883f0bf69a378cc9b14863dec8036e20e57f24f86b1c939a5",
+      "stdout_artifact": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/experiments/micro-gaps-20261012/dict/gate02-diagnosis/run-1.stdout.gz",
+      "stdout_artifact_sha256": "c4d446c170d99e8578171f7fd599380c7a727e531fbc8d025e13b8695343553b",
+      "stderr_artifact": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/experiments/micro-gaps-20261012/dict/gate02-diagnosis/run-1.stderr.gz",
+      "stderr_artifact_sha256": "ac0f73de57d6dcd951a5bac493012bca98ac0d46120c23f37f1375e6d4af479c"
+    },
+    {
+      "run": 2,
+      "exit_code": 0,
+      "traced_signals_only": false,
+      "cache": "warm-2",
+      "summary": "1578 passed, 0 cached, 0 failed, 0 skipped, 1 unsupported",
+      "stdout": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/.tmp/micro-gaps/dict/gate02-diagnosis/run-2.stdout",
+      "stdout_sha256": "52b8cd5f4ca69458145579e91318ba4f23eeb8b331cfb5973609715137c69059",
+      "stderr": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/.tmp/micro-gaps/dict/gate02-diagnosis/run-2.stderr",
+      "stderr_sha256": "e4a6eb4ed1403937f50ceaeed75d0d183e1c3b6f766969c1090ac7fd277f1f27",
+      "stdout_artifact": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/experiments/micro-gaps-20261012/dict/gate02-diagnosis/run-2.stdout.gz",
+      "stdout_artifact_sha256": "c4d446c170d99e8578171f7fd599380c7a727e531fbc8d025e13b8695343553b",
+      "stderr_artifact": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/experiments/micro-gaps-20261012/dict/gate02-diagnosis/run-2.stderr.gz",
+      "stderr_artifact_sha256": "0891028e9e65332e6c149c544fe7982f6432a60455697e0e10a27a78f35e84d7"
+    },
+    {
+      "run": 3,
+      "exit_code": 0,
+      "traced_signals_only": false,
+      "cache": "warm-2",
+      "summary": "1578 passed, 0 cached, 0 failed, 0 skipped, 1 unsupported",
+      "stdout": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/.tmp/micro-gaps/dict/gate02-diagnosis/run-3.stdout",
+      "stdout_sha256": "52b8cd5f4ca69458145579e91318ba4f23eeb8b331cfb5973609715137c69059",
+      "stderr": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/.tmp/micro-gaps/dict/gate02-diagnosis/run-3.stderr",
+      "stderr_sha256": "67137a48f3fdc9cc17f880d4935147f3e2b9ae6a95417f2867d30782f89d7fe6",
+      "stdout_artifact": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/experiments/micro-gaps-20261012/dict/gate02-diagnosis/run-3.stdout.gz",
+      "stdout_artifact_sha256": "c4d446c170d99e8578171f7fd599380c7a727e531fbc8d025e13b8695343553b",
+      "stderr_artifact": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/experiments/micro-gaps-20261012/dict/gate02-diagnosis/run-3.stderr.gz",
+      "stderr_artifact_sha256": "2a6cca37166f211a1e7e9c35bcfa86b7382a93751bb535b8c5fcc3d3395bad9e"
+    },
+    {
+      "run": 4,
+      "exit_code": 0,
+      "traced_signals_only": false,
+      "cache": "warm-2",
+      "summary": "1578 passed, 0 cached, 0 failed, 0 skipped, 1 unsupported",
+      "stdout": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/.tmp/micro-gaps/dict/gate02-diagnosis/run-4.stdout",
+      "stdout_sha256": "52b8cd5f4ca69458145579e91318ba4f23eeb8b331cfb5973609715137c69059",
+      "stderr": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/.tmp/micro-gaps/dict/gate02-diagnosis/run-4.stderr",
+      "stderr_sha256": "63532e68d8095f791c8f5c7e867ceca183feeacfb5c099300f893cd7dc2a4bac",
+      "stdout_artifact": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/experiments/micro-gaps-20261012/dict/gate02-diagnosis/run-4.stdout.gz",
+      "stdout_artifact_sha256": "c4d446c170d99e8578171f7fd599380c7a727e531fbc8d025e13b8695343553b",
+      "stderr_artifact": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-dict/experiments/micro-gaps-20261012/dict/gate02-diagnosis/run-4.stderr.gz",
+      "stderr_artifact_sha256": "8d8e2f61bb217d82b5c8f9de4e7fd898a522dd896e6cfbd062749ddacd81ed1a"
+    }
+  ],
+  "crash_reports_after_gate_request": 0,
+  "conclusion": "Unreproduced in four private runs, including two repeated warm producer reuses. Cause unresolved. No evidence supports a deterministic source regression or a specific transient cause. Root cache/source were not modified.",
+  "copied_warm_receipt_metadata": {
+    "note": "These legacy per-root directory JSON files retain original gate-02 timestamps; current together/in-process executions do not rewrite them. They demonstrate original warm producer reuse, not private per-run work counts. Coverage is the 871 copied test receipts, not all 1579 tests.",
+    "summary": {
+      "status": {
+        "passed": 870,
+        "unsupported": 1
+      },
+      "actions": {
+        "('execute', 'verify-facts')": 870,
+        "('refuse', 'unsupported')": 1
+      },
+      "producer_per_root": {
+        "facts.fresh": 541,
+        "facts.reused": 2084,
+        "facts.fallback": 0,
+        "facts.decoded": 2084,
+        "lowering.fresh": 0,
+        "lowering.reused": 2084,
+        "lowering.materialized": 0
+      },
+      "planner_per_root": {
+        "index_nodes": 18369,
+        "index_edges": 17266,
+        "affected_nodes": 45,
+        "closure_nodes": 0,
+        "closure_edges": 0,
+        "reused_tests": 868,
+        "planned_tests": 0
+      }
+    }
+  },
+  "repeat_scope": "Runs 3 and 4 rerun the same populated private warm-2 cache after successful run 2. Verify-facts forces test execution, so zero cached test results does not imply cold producers.",
+  "traced_abort_signal_count": 0,
+  "stack": "No abort reproduced, so no stack available. No new mylang apport crash report was found after the gate request. Diagnostic shell core limit was zero.",
+  "source_changes": "None. Root source/cache read-only throughout agent diagnosis; only copied private caches and own evidence were written."
+}

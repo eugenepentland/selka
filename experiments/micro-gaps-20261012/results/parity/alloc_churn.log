@@ -1,0 +1,3 @@
+build-slot: FIFO ticket 352, position 1; draining active work (build1.lock); waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 352 after 10s
+micro-gaps/parity/alloc_churn {'baseline-zero-rc': True, 'mylang-zero-rc': True}
