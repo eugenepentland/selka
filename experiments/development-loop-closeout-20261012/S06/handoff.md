@@ -7,6 +7,9 @@ commit: `3a2e7373079e48490f750ab0057d01d1932265ef`. These two unpublished
 worker-only commits were replaced with a C0-based evidence-only commit by explicit
 coordinator authorization; the exact rejected source remains archived here.
 
+Integration commit (evidence only, direct parent C0):
+`79477b14da6acf2bbb97a518cc052a003c42b88f`.
+
 Status: **fresh guest-loop reduction remains open; production indexing rejected**.
 C0 production discovery is retained. Exact rejected source is archived in
 `rejected_discovery.zig` (SHA-256 `578dd98f5d8b9380c9a6fdc63f71e1e11326e598c7469a1de4d19bfe508edfab`).
@@ -42,7 +45,8 @@ on exhaustion. No persistent data/schema/receipt/producer identity changes occur
 The paired RF fixture calls exact C0 versus candidate `discover`/`within` on the
 same real checked-program types. Largest 128×128 inventory replaces 2,097,152
 module and 1,056,768 declaration equality comparisons with 32,768 hash lookups.
-Those are algorithm-level operation counts, not instruction/CPU counts; scanning,
+Those are selection-lookup operation counts, not total map operations or
+instruction/CPU counts; scanning,
 map construction, allocation, sorting and hash byte work remain in measured
 component intervals. All-module cases compare exact names/IDs/shapes/parameter
 families; the realistic shared-program case checks per-root selected count.
@@ -63,7 +67,10 @@ point with cleanup, and selected visibility/shape/function identity behavior.
 `zig fmt --check` for changed Zig sources and `git diff --check` passed.
 Python profiler/control helpers passed `python3 -m py_compile`.
 
-Normal commit hook passed all 88 Guardian checks. Its first attempt failed
+Normal commit hooks passed all 88 Guardian checks, including the evidence-only
+replacement. After restoration, the archived-source focused tests again passed
+all three (exit 0; `archived-discovery-tests.log`). `git diff C0 -- src SPEC.md`
+was empty. The final worktree is clean after the report commit. Its first attempt failed
 because three `// spec:` declarations duplicated one ID; later related test
 markers now use `// spec-case:`. No Guardian feedback entry was written.
 
