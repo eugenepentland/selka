@@ -44,7 +44,7 @@ def main():
             '--max-memory', '2G', '--timeout-ms', '120000', '--cache-dir', str(work / 'cache'), '--json']
     run('checked-tests', unit)
     tests = json.loads((dest / 'checked-tests.stdout').read_text())
-    assert tests['passed'] >= (65 if app == 'lox' else 310)
+    assert tests['passed'] == (69 if app == 'lox' else 317), 'integrated unit-test denominator changed'
     assert all(tests[key] == 0 for key in ('failed', 'skipped', 'unsupported'))
     if app == 'lox':
         harness = Path('/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/harness/lox_bench.py')

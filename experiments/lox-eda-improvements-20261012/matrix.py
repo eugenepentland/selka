@@ -75,7 +75,7 @@ def main():
             rows[mode + '-units'] = {'reused_qualification': str(verified), 'sha256': sha(verified),
                                     'result': json.loads(verified.read_text())}
         else:
-            run(mode + '-units', [compiler, 'test', source['root'], *options], minimum=65 if app == 'lox' else 310)
+            run(mode + '-units', [compiler, 'test', source['root'], *options], expected=69 if app == 'lox' else 317)
         if app == 'lox':
             for name, cases, count in [('driver', Path(source['root']) / 'driver_cases.json', 13),
                                        ('p2_tree', HERE / 'P2/cases.json', 6)]:
