@@ -1,0 +1,121 @@
+{
+  "environment": [
+    "source ~/.config/mylang/dev-env.sh",
+    "TMPDIR=$PWD/.tmp/lox-eda-improvements/P2/tmp",
+    "MYLANG_SLOT_DIR=/home/epentland/.cache/mylang/slots"
+  ],
+  "commands": [
+    {
+      "name": "release-build",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+        "build",
+        "experiments/lox-eda-improvements-20261012/source/lox/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--cache-dir",
+        ".tmp/lox-eda-improvements/P2/cache",
+        "-o",
+        ".tmp/lox-eda-improvements/P2/tree-before-query",
+        "--emit-llvm",
+        ".tmp/lox-eda-improvements/P2/tree-before-query.ll"
+      ],
+      "log": "build-before-query.log",
+      "note": "Historical output label; includes final P2 query migrations completed before native admission.",
+      "returncode": 0
+    },
+    {
+      "name": "baseline-tiny-counters",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "python3",
+        "-B",
+        "experiments/lox-eda-improvements-20261012/P2/run_probes.py",
+        "baseline",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-rerun-20261012/lox/zero-rc-counted"
+      ],
+      "log": "baseline-probes.log",
+      "returncode": 0
+    },
+    {
+      "name": "verified-focused-tests",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+        "test",
+        "experiments/lox-eda-improvements-20261012/source/lox/p2_tree_tests.my",
+        "--cases",
+        "experiments/lox-eda-improvements-20261012/P2/cases.json",
+        "--experimental-zero-rc",
+        "--release",
+        "--verify-facts",
+        "--jobs",
+        "4",
+        "--max-steps",
+        "1000000000",
+        "--max-frames",
+        "40000",
+        "--max-memory",
+        "2G",
+        "--timeout-ms",
+        "120000",
+        "--cache-dir",
+        ".tmp/lox-eda-improvements/P2/test-cache",
+        "--json"
+      ],
+      "log": "focused-tests.log",
+      "returncode": 0
+    },
+    {
+      "name": "counted-build",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+        "build",
+        "experiments/lox-eda-improvements-20261012/source/lox/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--counters",
+        "--cache-dir",
+        ".tmp/lox-eda-improvements/P2/count-cache",
+        "-o",
+        ".tmp/lox-eda-improvements/P2/tree-counted"
+      ],
+      "log": "build-counted.log",
+      "returncode": 0
+    },
+    {
+      "name": "candidate-tiny-counters",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "python3",
+        "-B",
+        "experiments/lox-eda-improvements-20261012/P2/run_probes.py",
+        "candidate",
+        ".tmp/lox-eda-improvements/P2/tree-counted"
+      ],
+      "log": "candidate-probes.log",
+      "returncode": 0
+    },
+    {
+      "name": "implementation-guardian-commit",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "git",
+        "commit",
+        "-m",
+        "perf(lox): borrow resolved tree program during execution"
+      ],
+      "returncode": 0,
+      "log": "implementation-guardian.log",
+      "commit": "6174c448f78af97809be3485897ff8333a8a7a36"
+    }
+  ]
+}

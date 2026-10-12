@@ -1,0 +1,22 @@
+{
+  "source_identity": "first-build-source.json",
+  "source_bytes_unchanged_after_build_and_tests": true,
+  "outputs": {
+    "release": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p2/.tmp/lox-eda-improvements/P2/tree-before-query",
+      "sha256": "7e7d71a7485cd402939cea25a66f1963ff9fdcc8ecc3b6cf974b4cccd0b8b053",
+      "bytes": 861744
+    },
+    "counted": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p2/.tmp/lox-eda-improvements/P2/tree-counted",
+      "sha256": "ce58c8d2e3a09772ae49b88ea99d4c4e237438a2b3e0f7c9c46ba4316f344e49",
+      "bytes": 1384976
+    },
+    "llvm": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p2/.tmp/lox-eda-improvements/P2/tree-before-query.ll",
+      "sha256": "d1576b8539113579e13afdc5cc4d5e13a53863f65140d4dde795034d75d5a42b",
+      "bytes": 3533798
+    }
+  },
+  "cases_sha256": "b04ba17d4a2af77673fd1d0a71cd5db209aba1dcc12c36a4d45ed325a964216f"
+}

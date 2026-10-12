@@ -1,0 +1,52 @@
+{
+  "path": "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p2/.tmp/lox-eda-improvements/P2/tree-before-query.ll",
+  "sha256": "d1576b8539113579e13afdc5cc4d5e13a53863f65140d4dde795034d75d5a42b",
+  "functions": {
+    "evaluate": {
+      "memory_calls": [],
+      "copy_call_sites": 0,
+      "rc_calls": []
+    },
+    "execute": {
+      "memory_calls": [
+        "my.heap::allocate",
+        "myl_core_drop_owned"
+      ],
+      "copy_call_sites": 0,
+      "rc_calls": []
+    },
+    "run_block": {
+      "memory_calls": [],
+      "copy_call_sites": 0,
+      "rc_calls": []
+    },
+    "run_body": {
+      "memory_calls": [],
+      "copy_call_sites": 0,
+      "rc_calls": []
+    },
+    "call_expr": {
+      "memory_calls": [
+        "myl_core_drop_owned"
+      ],
+      "copy_call_sites": 0,
+      "rc_calls": []
+    },
+    "class_declaration": {
+      "memory_calls": [
+        "my.heap::allocate",
+        "myl_core_drop_owned",
+        "myl_core_list_copy"
+      ],
+      "copy_call_sites": 2,
+      "rc_calls": []
+    },
+    "interpret": {
+      "memory_calls": [
+        "myl_core_drop_owned"
+      ],
+      "copy_call_sites": 0,
+      "rc_calls": []
+    }
+  }
+}

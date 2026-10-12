@@ -1,0 +1,74 @@
+{
+  "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-rerun-20261012/lox/zero-rc.ll",
+  "sha256": "da6ff3acbbbe7dc2cbd02be056f9a4d5937a9487749d70b73dd1b983a55ec0ac",
+  "functions": {
+    "evaluate": {
+      "memory_calls": [
+        "myl_core_drop_owned",
+        "myl_core_list_copy",
+        "myl_core_owned_octets_copy"
+      ],
+      "copy_call_sites": 13,
+      "rc_calls": []
+    },
+    "execute": {
+      "memory_calls": [
+        "my.heap::allocate",
+        "myl_core_drop_owned",
+        "myl_core_list_copy",
+        "myl_core_owned_copy_114",
+        "myl_core_owned_copy_52",
+        "myl_core_owned_copy_56",
+        "myl_core_owned_octets_copy"
+      ],
+      "copy_call_sites": 19,
+      "rc_calls": []
+    },
+    "run_block": {
+      "memory_calls": [
+        "myl_core_drop_owned",
+        "myl_core_list_copy",
+        "myl_core_owned_octets_copy"
+      ],
+      "copy_call_sites": 5,
+      "rc_calls": []
+    },
+    "run_body": {
+      "memory_calls": [
+        "myl_core_drop_owned",
+        "myl_core_list_copy"
+      ],
+      "copy_call_sites": 1,
+      "rc_calls": []
+    },
+    "call_expr": {
+      "memory_calls": [
+        "myl_core_drop_owned"
+      ],
+      "copy_call_sites": 0,
+      "rc_calls": []
+    },
+    "class_declaration": {
+      "memory_calls": [
+        "my.heap::allocate",
+        "myl_core_drop_owned",
+        "myl_core_list_copy",
+        "myl_core_owned_copy_114",
+        "myl_core_owned_octets_copy"
+      ],
+      "copy_call_sites": 5,
+      "rc_calls": []
+    },
+    "interpret": {
+      "memory_calls": [
+        "myl_core_buffer_copy",
+        "myl_core_drop_owned",
+        "myl_core_list_copy",
+        "myl_core_owned_copy_52",
+        "myl_core_owned_copy_56"
+      ],
+      "copy_call_sites": 40,
+      "rc_calls": []
+    }
+  }
+}

@@ -1,0 +1,13 @@
+build-slot: FIFO ticket 2510, position 8; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 3, FIFO ticket 2510 after 45s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10579 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/lox-eda-improve-20261012-p2 6174c448f] perf(lox): borrow resolved tree program during execution
+ 3 files changed, 303 insertions(+), 261 deletions(-)
+ create mode 100644 experiments/lox-eda-improvements-20261012/P2/cases.json
+ create mode 100644 experiments/lox-eda-improvements-20261012/source/lox/p2_tree_tests.my

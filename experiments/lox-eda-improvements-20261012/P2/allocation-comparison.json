@@ -1,0 +1,197 @@
+{
+  "label": "bounded tiny allocation probes, P2 plus initial P3 helper dependency; no full runtime/RSS claim",
+  "rows": [
+    {
+      "name": "equality-tiny-100",
+      "baseline_traffic_bytes": 2954552,
+      "candidate_traffic_bytes": 1676744,
+      "traffic_reduction_percent": 43.248790341141394,
+      "baseline_peak_live_bytes": 851000,
+      "candidate_peak_live_bytes": 838072,
+      "live_bytes_at_exit": 0,
+      "baseline_function_traffic": {
+        "evaluate": 83584,
+        "execute": 295160,
+        "run_block": 6400,
+        "run_body": 0,
+        "interpret": 830760
+      },
+      "candidate_function_traffic": {
+        "evaluate": 0,
+        "execute": 0,
+        "run_block": 0,
+        "run_body": 0,
+        "interpret": 0
+      }
+    },
+    {
+      "name": "equality-tiny-100-stress",
+      "baseline_traffic_bytes": 2950720,
+      "candidate_traffic_bytes": 1690528,
+      "traffic_reduction_percent": 42.70794924628565,
+      "baseline_peak_live_bytes": 842120,
+      "candidate_peak_live_bytes": 838136,
+      "live_bytes_at_exit": 0,
+      "baseline_function_traffic": {
+        "evaluate": 83584,
+        "execute": 286352,
+        "run_block": 6400,
+        "run_body": 0,
+        "interpret": 821952
+      },
+      "candidate_function_traffic": {
+        "evaluate": 0,
+        "execute": 0,
+        "run_block": 0,
+        "run_body": 0,
+        "interpret": 0
+      }
+    },
+    {
+      "name": "equality-tiny-20",
+      "baseline_traffic_bytes": 2802744,
+      "candidate_traffic_bytes": 1662088,
+      "traffic_reduction_percent": 40.697830411910616,
+      "baseline_peak_live_bytes": 842056,
+      "candidate_peak_live_bytes": 838072,
+      "live_bytes_at_exit": 0,
+      "baseline_function_traffic": {
+        "evaluate": 17024,
+        "execute": 282904,
+        "run_block": 1280,
+        "run_body": 0,
+        "interpret": 823624
+      },
+      "candidate_function_traffic": {
+        "evaluate": 0,
+        "execute": 0,
+        "run_block": 0,
+        "run_body": 0,
+        "interpret": 0
+      }
+    },
+    {
+      "name": "equality-tiny-20-stress",
+      "baseline_traffic_bytes": 2802240,
+      "candidate_traffic_bytes": 1664928,
+      "traffic_reduction_percent": 40.58581706063721,
+      "baseline_peak_live_bytes": 842120,
+      "candidate_peak_live_bytes": 838136,
+      "live_bytes_at_exit": 0,
+      "baseline_function_traffic": {
+        "evaluate": 17024,
+        "execute": 281232,
+        "run_block": 1280,
+        "run_body": 0,
+        "interpret": 821952
+      },
+      "candidate_function_traffic": {
+        "evaluate": 0,
+        "execute": 0,
+        "run_block": 0,
+        "run_body": 0,
+        "interpret": 0
+      }
+    },
+    {
+      "name": "equality-tiny-300",
+      "baseline_traffic_bytes": 3326328,
+      "candidate_traffic_bytes": 1705736,
+      "traffic_reduction_percent": 48.72015026780282,
+      "baseline_peak_live_bytes": 890936,
+      "candidate_peak_live_bytes": 838072,
+      "live_bytes_at_exit": 0,
+      "baseline_function_traffic": {
+        "evaluate": 249984,
+        "execute": 325752,
+        "run_block": 19200,
+        "run_body": 0,
+        "interpret": 848552
+      },
+      "candidate_function_traffic": {
+        "evaluate": 0,
+        "execute": 0,
+        "run_block": 0,
+        "run_body": 0,
+        "interpret": 0
+      }
+    },
+    {
+      "name": "equality-tiny-300-stress",
+      "baseline_traffic_bytes": 3321920,
+      "candidate_traffic_bytes": 1754528,
+      "traffic_reduction_percent": 47.18331567286389,
+      "baseline_peak_live_bytes": 842120,
+      "candidate_peak_live_bytes": 838136,
+      "live_bytes_at_exit": 0,
+      "baseline_function_traffic": {
+        "evaluate": 249984,
+        "execute": 299152,
+        "run_block": 19200,
+        "run_body": 0,
+        "interpret": 821952
+      },
+      "candidate_function_traffic": {
+        "evaluate": 0,
+        "execute": 0,
+        "run_block": 0,
+        "run_body": 0,
+        "interpret": 0
+      }
+    },
+    {
+      "name": "recursive-tiny",
+      "baseline_traffic_bytes": 3284144,
+      "candidate_traffic_bytes": 1699432,
+      "traffic_reduction_percent": 48.25342615914528,
+      "baseline_peak_live_bytes": 861560,
+      "candidate_peak_live_bytes": 841016,
+      "live_bytes_at_exit": 0,
+      "baseline_function_traffic": {
+        "evaluate": 85504,
+        "execute": 592752,
+        "run_block": 0,
+        "run_body": 8576,
+        "interpret": 838088
+      },
+      "candidate_function_traffic": {
+        "evaluate": 0,
+        "execute": 0,
+        "run_block": 0,
+        "run_body": 0,
+        "interpret": 0
+      }
+    },
+    {
+      "name": "recursive-tiny-stress",
+      "baseline_traffic_bytes": 3287736,
+      "candidate_traffic_bytes": 1741224,
+      "traffic_reduction_percent": 47.03881333537729,
+      "baseline_peak_live_bytes": 845064,
+      "candidate_peak_live_bytes": 841080,
+      "live_bytes_at_exit": 0,
+      "baseline_function_traffic": {
+        "evaluate": 85504,
+        "execute": 569984,
+        "run_block": 0,
+        "run_body": 8576,
+        "interpret": 822656
+      },
+      "candidate_function_traffic": {
+        "evaluate": 0,
+        "execute": 0,
+        "run_block": 0,
+        "run_body": 0,
+        "interpret": 0
+      }
+    }
+  ],
+  "normal_20_to_300_traffic_slope_bytes_per_iteration": {
+    "baseline": 1869.942857142857,
+    "candidate": 155.88571428571427
+  },
+  "normal_evaluate_20_to_300_traffic_slope_bytes_per_iteration": {
+    "baseline": 832.0,
+    "candidate": 0
+  }
+}

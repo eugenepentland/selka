@@ -1,0 +1,12 @@
+build-slot: FIFO ticket 2504, position 7; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 3, FIFO ticket 2504 after 45s
+{
+  "equality-tiny-100": 1676744,
+  "equality-tiny-100-stress": 1690528,
+  "equality-tiny-20": 1662088,
+  "equality-tiny-20-stress": 1664928,
+  "equality-tiny-300": 1705736,
+  "equality-tiny-300-stress": 1754528,
+  "recursive-tiny": 1699432,
+  "recursive-tiny-stress": 1741224
+}

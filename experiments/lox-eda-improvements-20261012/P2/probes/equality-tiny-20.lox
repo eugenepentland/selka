@@ -1,0 +1,1 @@
+var i = 0; var yes = true; while (i < 20) { yes = yes == (i == i); i = i + 1; } print i;
