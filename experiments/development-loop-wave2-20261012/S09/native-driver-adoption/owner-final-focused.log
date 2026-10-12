@@ -1,0 +1,12 @@
+build-slot: build slot 1, FIFO ticket 334 after 0s
+f20517e635ca2a8f6c81a5214eb33872f137ebca4ce57dd53fcbf5086fd52360
+d144d9b7a03164be1d63daccb1b8366c6fdc0f7d8c72146628287f20983a4058
+test-core
++- verification action core member 0 w
+guardian/test: 2 test(s) selected by filter: "A01 uncached", "linkNative refuses unproved"
+guardian/test: test wall 0.54s; slowest over 50ms:
+guardian/test:   0.28s  a01_native_driver_test.test.A01 uncached native multiunit objects survive link and clean after success and failure
+guardian/test:   0.26s  driver_native_cache_test.test.linkNative refuses unproved tool native reuse and cleans private caches after ToolFailed
+guardian/test: PASS — 2 passed
+guardian/test: RESULT {"passed":2,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A01/zig-out/libexec/mylang/components ./.zig-cache/o/487f7209b30b0ab5c14443ca9e656314/test "--guardian-filter=A01 uncached" "--guardian-filter=linkNative refuses unproved" --cache-dir=./.zig-cache --seed=0x2c50ebe6 --listen=-
