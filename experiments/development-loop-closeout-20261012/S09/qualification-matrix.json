@@ -1,0 +1,21 @@
+{
+  "schema": "s09-bridge-qualification-matrix-v1",
+  "scope": "adopted C0 test-index/cache-plan and external frontend admission requests",
+  "rows": [
+    {"case": "unchanged coordinator", "required": "same source/seed/recipe keys and artifact hashes, no component compilation", "entry": "selfhost/test_components.py:test_unchanged_cache_and_source_change"},
+    {"case": "component source edit", "required": "responsible artifact rebuilt, independent artifacts preserved", "entry": "selfhost/test_components.py:test_planner_change_is_independent_of_test_index"},
+    {"case": "embedded input edit", "required": "producer identity changes", "entry": "selfhost/test_components.py:test_identity_covers_embedded_input_bytes"},
+    {"case": "seed/tool library replacement", "required": "seed requalified and downstream producer key changes", "entry": "selfhost/test_components.py:test_toolchain_library_change_requalifies_seed"},
+    {"case": "corrupt or missing artifact", "required": "reuse and uncached verification both fail", "entry": "selfhost/test_components.py:test_corrupt_artifact_rejected_including_uncached"},
+    {"case": "build failure", "required": "failure returned; previous installation not represented as edited success", "entry": "selfhost/test_components.py:test_failed_build_preserves_selected_installation"},
+    {"case": "schema/mode change", "required": "producer/consumer identity invalidation and old manifest refusal", "status": "external frontend tests; not freshly qualified in S09"},
+    {"case": "source mutation during lookup/publication", "required": "snapshot or publication barrier rejects stale success", "status": "needs adopted-boundary integrated qualification"},
+    {"case": "revert and second worktree", "required": "exact compatible identities may reuse with no path/ABI/flags confusion", "status": "not qualified; cache-root contract must be retained"},
+    {"case": "installed commands empty PATH", "required": "Python-free source install and installed compiler commands", "entry": "test/integration.zig:USE-WITHOUT-PYTHON-1", "status": "final integrated gate required"},
+    {"case": "fact/leak parity", "required": "same complete selected test inventory runs debug and release verified", "entry": "selfhost/test_component_native.py", "status": "native seed/deployment qualification still required"},
+    {"case": "full bootstrap", "required": "seed to stage1 to stage2 to stage3 with artifact parity and ownership closure", "status": "open"},
+    {"case": "strict performance", "required": "every median and p95 <=1.5 times frozen Zig, every mandatory workload", "status": "open; admission migration required"}
+  ],
+  "admission_fixture_verdict": "seven synthetic failure-injection tests passed; production migration not accepted",
+  "complete_verdict": "not qualified"
+}

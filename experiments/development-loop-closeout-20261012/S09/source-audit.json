@@ -1,0 +1,128 @@
+{
+  "acceptance": "source inventory only",
+  "full_bootstrap": "not qualified",
+  "overlap_changes": [
+    "selfhost/components.zig",
+    "selfhost/test_components.py",
+    "docs/tooling/selfhost-components.md",
+    "scripts/build-slot.sh",
+    "src/core/test_runner_directory.zig"
+  ],
+  "schema": "s09-frozen-source-audit-v1",
+  "snapshots": {
+    "C0": {
+      "commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+      "component_coordinator_test_cases": [
+        "test_unchanged_cache_and_source_change",
+        "test_planner_change_is_independent_of_test_index",
+        "test_identity_covers_embedded_input_bytes",
+        "test_toolchain_library_change_requalifies_seed",
+        "test_seed_qualification_changes_key",
+        "test_installed_resources_readable_and_receipt_private",
+        "test_corrupt_artifact_rejected_including_uncached",
+        "test_missing_artifact_rejected_including_uncached",
+        "test_installed_artifact_corruption_does_not_replace_selection",
+        "test_failed_build_preserves_selected_installation",
+        "test_failed_planner_build_preserves_each_selected_installation",
+        "test_caller_zig_global_cache_does_not_reach_component_builds",
+        "test_uncached_build_checks_reproducibility",
+        "test_abandoned_seed_recovers_and_requalifies",
+        "test_malformed_component_receipt_fails_concisely",
+        "test_seed_archive_digest_mismatch_fails_concisely",
+        "test_malformed_seed_receipt_fails_concisely",
+        "test_qualified_seed_digest_mismatch_fails_concisely"
+      ],
+      "files": {
+        ".zigversion": "55514671f203f691ba0fae90c7b7d8740256222cfa6f7512b71b04cd1316eb2d",
+        "docs/tooling/selfhost-components.md": "7de32988c73ecfb685b897d4ee1713b98a842ea135c06bf75d9a386c84bda078",
+        "scripts/build-slot.sh": "9d20bcc3a62576c7c04c5686eb8865121b41a1f1d7824af6f3c626fbfbb5ebee",
+        "selfhost/component-seed.json": "a2e02f86f24b139c1b3b71c035ad0f376246f43b12081f3f5beac1bbc007da1c",
+        "selfhost/component_archive.zig": "d8adb175b1399e0a93ad856456be5cdd8b29df57af27e223baf357f33feb3aed",
+        "selfhost/component_files.zig": "5abb3f52b1bd2cec6c7911d153aa93f34a90eb7209946ea77ecf347480c88def",
+        "selfhost/component_support_test.zig": "e6adb0c37bf79fbc42034c898f70d05271e75e600ce1267b6aef4ea746c2615a",
+        "selfhost/components.zig": "b3cda593a1a828038d43fe9d89438ace719a09b3d3b16f7f46b5a7acd973fde7",
+        "selfhost/test_component_native.py": "9579e5e5cb03b564cdad5176eaf62e4bc28ba6699423440e8e63059809d08779",
+        "selfhost/test_components.py": "0bf370ba3175fbc3c47447843d03ca52ffb1744785229862d15e4801c5cb153f",
+        "src/core/test_runner_batch.zig": "6633e0f9da0c5d98dbaae03c11adea97ac1c6d85f5b0e7dad0d56df7ad0c3759",
+        "src/core/test_runner_directory.zig": "98787c7030e46a41abd47d54af9c4110b5d99576880ab4dd8b6ad6d360c7cd0e",
+        "src/core/test_runner_discover.zig": "fbb55c3e1a7a4fb6ef9e1d2f3cc1173bb796636f95a7e01bc2adbe21e058590d",
+        "src/core/test_runner_work.zig": "2b8280f336ea4edca1782bec6ccf8121d417fdee23df1466d6d473f52e3f88ae"
+      },
+      "seed_pin": {
+        "archive_sha256": "f7771acebf47c56f8436aaca8e44c5cabccb27d378e0c5535338c8db6e5b4c5c",
+        "commit": "0689d3407c17df34915aeb2a92e309af3a04921c",
+        "format": 1,
+        "qualification": "Local receipt binds complete source/runtime/library identity, Zig executable digest and built compiler digest; it is verified before every use.",
+        "recipe": {
+          "optimize": "ReleaseFast",
+          "step": "affected-compiler",
+          "target": "native"
+        },
+        "zig": "0.17.0-dev.1683+5ceec001b"
+      }
+    },
+    "port": {
+      "commit": "dff9304b9cd7bc72e66f9feb20f1b05281d67333",
+      "component_coordinator_test_cases": [
+        "test_unchanged_cache_and_source_change",
+        "test_planner_change_is_independent_of_test_index",
+        "test_declaration_change_preserves_other_component_receipts",
+        "test_type_interface_change_preserves_other_component_receipts",
+        "test_body_change_preserves_other_component_receipts",
+        "test_frontend_profile_is_versioned_in_manifest_and_build_receipt",
+        "test_only_body_guest_uses_release_and_receipt_binds_exact_flags",
+        "test_body_receipt_with_default_guest_flags_cannot_be_reused",
+        "test_identity_covers_embedded_input_bytes",
+        "test_parser_identity_tracks_shared_lexer_source_through_file_link",
+        "test_toolchain_library_change_requalifies_seed",
+        "test_seed_qualification_changes_key",
+        "test_installed_resources_readable_and_receipt_private",
+        "test_corrupt_artifact_rejected_including_uncached",
+        "test_missing_artifact_rejected_including_uncached",
+        "test_installed_artifact_corruption_does_not_replace_selection",
+        "test_failed_build_preserves_selected_installation",
+        "test_failed_planner_build_preserves_each_selected_installation",
+        "test_caller_zig_global_cache_does_not_reach_component_builds",
+        "test_uncached_build_checks_reproducibility",
+        "test_abandoned_seed_recovers_and_requalifies",
+        "test_malformed_component_receipt_fails_concisely",
+        "test_seed_archive_digest_mismatch_fails_concisely",
+        "test_malformed_seed_receipt_fails_concisely",
+        "test_qualified_seed_digest_mismatch_fails_concisely"
+      ],
+      "files": {
+        ".zigversion": "55514671f203f691ba0fae90c7b7d8740256222cfa6f7512b71b04cd1316eb2d",
+        "docs/tooling/selfhost-components.md": "28f05c4c12622f975c92bed7e0a0bee9ea2eb86fabfeb3d9bf4efe9677f1a667",
+        "scripts/build-slot.sh": "b7af91659a0b0d75b20d2080432dc1c4884a3161fcc083c8f148295a644a9489",
+        "selfhost/component-seed.json": "a2e02f86f24b139c1b3b71c035ad0f376246f43b12081f3f5beac1bbc007da1c",
+        "selfhost/component_archive.zig": "d8adb175b1399e0a93ad856456be5cdd8b29df57af27e223baf357f33feb3aed",
+        "selfhost/component_files.zig": "5abb3f52b1bd2cec6c7911d153aa93f34a90eb7209946ea77ecf347480c88def",
+        "selfhost/component_support_test.zig": "e6adb0c37bf79fbc42034c898f70d05271e75e600ce1267b6aef4ea746c2615a",
+        "selfhost/components.zig": "07eb18f4d2fae45d80f15fee0a70885179da9d7309a898a32fbdd2fb991b07f8",
+        "selfhost/test_component_native.py": "9579e5e5cb03b564cdad5176eaf62e4bc28ba6699423440e8e63059809d08779",
+        "selfhost/test_components.py": "b506ae76f84bf66ebac981ea837594d446d39a00fb169b86847903c5644a95e0",
+        "selfhost/tests/measure_performance_ratio.py": "e65b0fce7bdcab52db3c3b866424e18a8f3d68d48e2f3bf282bf9089510b68dc",
+        "src/body_check_component.zig": "c6d9e1ce5798c95a59f922699366021d6c267ba423e19ea90f431416206fe957",
+        "src/body_check_protocol.zig": "223b4e6240119995bcdb9f5130aacf7469bf78fc563424659b5804f067370f65",
+        "src/core/test_runner_batch.zig": "6633e0f9da0c5d98dbaae03c11adea97ac1c6d85f5b0e7dad0d56df7ad0c3759",
+        "src/core/test_runner_directory.zig": "5aabc911f5f5db7072788e5ca155778d6566dcb77e36c92a76e1e805b04656a8",
+        "src/core/test_runner_discover.zig": "fbb55c3e1a7a4fb6ef9e1d2f3cc1173bb796636f95a7e01bc2adbe21e058590d",
+        "src/core/test_runner_work.zig": "2b8280f336ea4edca1782bec6ccf8121d417fdee23df1466d6d473f52e3f88ae",
+        "src/frontend_runtime.zig": "98ad2e75acbc602f260786c5f4db6de03b0e26c788cc8bbc3ba8eddb6d76d0b5"
+      },
+      "seed_pin": {
+        "archive_sha256": "f7771acebf47c56f8436aaca8e44c5cabccb27d378e0c5535338c8db6e5b4c5c",
+        "commit": "0689d3407c17df34915aeb2a92e309af3a04921c",
+        "format": 1,
+        "qualification": "Local receipt binds complete source/runtime/library identity, Zig executable digest and built compiler digest; it is verified before every use.",
+        "recipe": {
+          "optimize": "ReleaseFast",
+          "step": "affected-compiler",
+          "target": "native"
+        },
+        "zig": "0.17.0-dev.1683+5ceec001b"
+      }
+    }
+  },
+  "strict_performance": "not qualified"
+}

@@ -1,0 +1,46 @@
+{
+  "bootstrap_stage1_stage2_stage3": "not qualified",
+  "cold_warm_edit_comparison": "not qualified",
+  "commands": [
+    {
+      "exit_status": 0,
+      "name": "timing_bridge_test",
+      "passed": 7,
+      "scope": "synthetic inherited lock contract"
+    },
+    {
+      "exit_status": 0,
+      "name": "audit_snapshot_and_cmp",
+      "scope": "immutable git source only"
+    },
+    {
+      "build_queue_seconds": 31,
+      "coordinator_compile_peak_rss_mib": 546,
+      "coordinator_compile_seconds": 18,
+      "exit_status": 0,
+      "name": "component_builder_and_support",
+      "scope": "operational native support qualification",
+      "steps_passed": 6,
+      "support_action_ms": 392,
+      "support_process_peak_rss_mib": 5,
+      "tests_passed": 10
+    },
+    {
+      "exit_status": 0,
+      "name": "component_coordinator_tests",
+      "scope": "mocked seed/toolchain fixture suite",
+      "tests_passed": 18
+    }
+  ],
+  "full_gate": "required on integrated candidate",
+  "native_builder": {
+    "backend": "LLVM",
+    "optimize": "ReleaseSafe",
+    "sha256": "dc06d1a1c7c5f9b0430a6bbb8f87da17fd14564bdd54a4dfad844edbaeef59ba",
+    "target": "native"
+  },
+  "production_port_migration": "patch request only",
+  "real_seed_deployment_parity": "not qualified",
+  "source_commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "strict_median_and_p95_ratio": "not qualified"
+}
