@@ -1,0 +1,157 @@
+build-slot: FIFO ticket 638, position 10; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 638, position 3; earlier build tickets must run first; waiting (61s so far)
+build-slot: build slot 1, FIFO ticket 638 after 96s
+guardian/test: 1100 test(s) selected by filter: "aggregate provider", "zero RC provider", "provider lifetime" — 6 match by name, 1094 unnamed test block(s) run regardless
+guardian/test: SLOW  7.91s  a01_parallel_map_test.test.A01 zero RC scheduler million-submit stress has no ThreadSanitizer reports
+guardian/test: SLOW  6.73s  a02_capacity_test.test.A02 capacity rejects arithmetic overflow and preserves ordinary owned growth
+nested writeback build: /home/epentland/ai/canopy/mylang-memory-20261012/.zig-cache/tmp/OyX5kvFiDIrUFKhg/nested.my:11:5: error[E_SINGLE_OWNER_BORROW]: an indexed value is borrowed; use .copy() or pop() to obtain an owned value
+      cells[index].value = 9
+      ^
+
+19 a06_nested_write_test.test.zero RC fixed array writeback captures a dynamic signed index once...FAIL (TestUnexpectedResult)
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x151b079 in expect (std.zig)
+    if (!ok) return error.TestUnexpectedResult;
+             ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/a06_nested_write_test.zig:141:9: 0x3993dba in counted (root_test.zig)
+        try std.testing.expect(built.term == .exited and built.term.exited == 0);
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/a06_nested_write_test.zig:180:5: 0x3997b95 in test.zero RC fixed array writeback captures a dynamic signed index once (root_test.zig)
+    try counted(std.testing.allocator, slot_records ++
+    ^
+20 a06_nested_write_test.test.zero RC array transfer analysis preserves unknown index and conditional live borrows...FAIL (TestUnexpectedResult)
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x151b079 in expect (std.zig)
+    if (!ok) return error.TestUnexpectedResult;
+             ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/a06_nested_write_test.zig:212:5: 0x3997804 in test.zero RC array transfer analysis preserves unknown index and conditional live borrows (root_test.zig)
+    try std.testing.expect(std.mem.indexOf(u8, unknown, "retain") != null);
+    ^
+nested writeback build: /home/epentland/ai/canopy/mylang-memory-20261012/.zig-cache/tmp/Y7d5JODUytb0bwHZ/nested.my:10:5: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+      rows[0].inner.value = 7
+      ^
+
+22 a06_nested_write_test.test.zero RC list slot nested writeback preserves exact owner and index...FAIL (TestUnexpectedResult)
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x151b079 in expect (std.zig)
+    if (!ok) return error.TestUnexpectedResult;
+             ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/a06_nested_write_test.zig:141:9: 0x3993dba in counted (root_test.zig)
+        try std.testing.expect(built.term == .exited and built.term.exited == 0);
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/a06_nested_write_test.zig:256:5: 0x39972a5 in test.zero RC list slot nested writeback preserves exact owner and index (root_test.zig)
+    try counted(std.testing.allocator, slot_records ++
+    ^
+nested writeback build: thread 3112104 panic: attempt to use null value
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema_expressions.zig:76:88: 0x22694f4 in hintBufferArguments__anon_148388 (compiler.zig)
+            const element = self.catalog.records[owner_type.recordIndex()].shape.buffer.?;
+                                                                                       ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema_expressions.zig:440:36: 0x22500ff in queueExpression__anon_122797 (compiler.zig)
+            try hintBufferArguments(Checker, self, operation);
+                                   ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema_expressions.zig:1093:36: 0x1e9bbce in expressionWithTemporaries__anon_122656 (compiler.zig)
+            if (try queueExpression(Checker, self, &work, task.id)) continue;
+                                   ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema_expressions.zig:57:50: 0x1e99af3 in expressionWithTemporaries (compiler.zig)
+            return impl.expressionWithTemporaries(Checker, self, root, inherited, false);
+                                                 ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema.zig:971:46: 0x1e9951b in expression (compiler.zig)
+        return self.expressionWithTemporaries(root, &.{});
+                                             ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema.zig:1095:42: 0x1e98188 in expressionExpected (compiler.zig)
+        const value = try self.expression(id);
+                                         ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/frontend_failures.zig:33:46: 0x21c1db9 in checkReturn__anon_145498 (compiler.zig)
+    const value = try self.expressionExpected(expression, expected);
+                                             ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema_statements.zig:562:52: 0x21be4cc in statementRet__anon_143956 (compiler.zig)
+    const value = try frontend_failures.checkReturn(Checker, self, expr, stmt.span);
+                                                   ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema_statements.zig:662:40: 0x2160bc4 in statement__anon_143559 (compiler.zig)
+        .ret => |expr| try statementRet(Checker, self, stmt, expr, &flow),
+                                       ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema_statements.zig:124:37: 0x21c706c in statementBlock__anon_143921 (compiler.zig)
+        const result = try statement(Checker, self, child);
+                                    ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema_statements.zig:657:48: 0x216060d in statement__anon_143559 (compiler.zig)
+        .block => |children| try statementBlock(Checker, self, stmt, children, &flow),
+                                               ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema_statements.zig:45:34: 0x21b5bc3 in statement (compiler.zig)
+            return impl.statement(Checker, self, statement_id);
+                                 ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema.zig:336:38: 0x2292876 in checkFunction (compiler.zig)
+        var body = try self.statement(function.body);
+                                     ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema.zig:1572:57: 0x228b2cb in checkInstance (compiler.zig)
+    const function = reused orelse checker.checkFunction(i) catch |err| switch (err) {
+                                                        ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema.zig:1604:48: 0x1e80491 in checkBodies (compiler.zig)
+            const function = (try checkInstance(step)) orelse {
+                                               ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema.zig:1846:34: 0x1c709a0 in checkProgram (compiler.zig)
+    const functions = checkBodies(.{
+                                 ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema.zig:1747:33: 0x1c482d2 in checkCore (compiler.zig)
+    const checked = checkProgram(allocator, src, program, sink, options) catch |err| {
+                                ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/sema.zig:1708:21: 0x1c47a84 in checkCached (compiler.zig)
+    return checkCore(allocator, src, program, sink, .{ .names = module_names, .cache = cache });
+                    ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/compiler.zig:215:44: 0x2ba6caa in checkWithCache (compiler.zig)
+        self.program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, cache);
+                                           ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/frontend.zig:243:32: 0x2ba60ba in checkSingle (cli.zig)
+        try unit.checkWithCache(self.semanticCache());
+                               ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/frontend.zig:210:25: 0x2ba3545 in checkFile (cli.zig)
+        self.checkSingle(unit) catch |err| switch (err) {
+                        ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/pipeline.zig:174:42: 0x3627601 in buildAttempt (cli.zig)
+        const checked = session.checkFile(allocator, if (options.show.diagnostics == .errors) entry.path else path, report) catch |err| switch (err) {
+                                         ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/pipeline.zig:134:28: 0x36252c2 in attempt (cli.zig)
+        return buildAttempt(self.init, self.path, self.options, self.budget, self.report, lazy);
+                           ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/build_retry.zig:7:19: 0x3624b43 in run__anon_363604 (cli.zig)
+    return attempt(context, true) catch |err| {
+                  ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/pipeline.zig:123:42: 0x3623e0d in buildWith (cli.zig)
+    return @import("build_retry.zig").run(request, report, BuildRequest.attempt);
+                                         ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/pipeline.zig:106:21: 0x367e88d in build (cli.zig)
+    return buildWith(init, path, options, null, report);
+                    ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/cli.zig:180:34: 0x367dd78 in buildCommand (cli.zig)
+    const status = pipeline.build(compilation_init, request.path, options, &report) catch |err| switch (err) {
+                                 ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/cli.zig:112:148: 0x32597d2 in dispatch (cli.zig)
+        if (std.mem.eql(u8, command, "build")) break :status if (developerBuild(rest)) try core_main.buildCommand(init, rest) else try buildCommand(init, rest);
+                                                                                                                                                   ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/main.zig:263:33: 0x14765f8 in dispatch (main.zig)
+    if (try mylang_core.dispatch(process, args)) |status| return status;
+                                ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/main.zig:159:28: 0x1479408 in dispatchCommandLine (main.zig)
+    const status = dispatch(init) catch |err| status: {
+                           ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/wiring/process_start.zig:41:9: 0x14352fa in run__anon_32054 (main.zig)
+    body(.{ .minimal = minimal, .arena = &arena, .gpa = gpa, .io = threaded.io(), .environ_map = &environ_map, .preopens = preopens });
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/main.zig:148:22: 0x1434f11 in main (main.zig)
+    process_start.run(minimal, dispatchCommandLine);
+                     ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x143480f in callMain (std.zig)
+    if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                       ^
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x14341e1 in _start (std.zig)
+    asm volatile (switch (native_arch) {
+    ^
+
+23 a06_nested_write_test.test.zero RC explicit tuple copy owns every managed child...FAIL (TestUnexpectedResult)
+/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x151b079 in expect (std.zig)
+    if (!ok) return error.TestUnexpectedResult;
+             ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/a06_nested_write_test.zig:141:9: 0x3993dba in counted (root_test.zig)
+        try std.testing.expect(built.term == .exited and built.term.exited == 0);
+        ^
+/home/epentland/ai/canopy/mylang-memory-20261012/src/core/a06_nested_write_test.zig:295:5: 0x3995fe5 in test.zero RC explicit tuple copy owns every managed child (root_test.zig)
+    try counted(std.testing.allocator,
+    ^
+guardian/test: SLOW  5.21s  zero_rc_task_test.test.zero RC task captures and results are free from ThreadSanitizer reports
+guardian/test: SLOW  5.83s  task_ir_test.test.emitted mixed capture tasks have no ThreadSanitizer reports

@@ -71,6 +71,10 @@ pub fn verifyModule(arena: std.mem.Allocator, module: *const ir.Module, failure:
         }
     }
     for (module.functions.items) |*f| {
+        _ = @import("aggregate_provider.zig").marker(module, f) catch {
+            failure.* = .{ .function = f.name, .reason = "invalid compiler-only provider lifetime marker" };
+            return error.InvalidIr;
+        };
         for (f.signature.params, 0..) |param, i| {
             const span = i < 64 and f.signature.views & (@as(u64, 1) << @intCast(i)) != 0;
             const invalid_span = span and !Verifier.admittedView(f.signature, i);

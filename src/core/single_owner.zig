@@ -6,6 +6,7 @@ const language = @import("mylang");
 const typed = language.typed;
 const ir = @import("ir.zig");
 const resources = @import("single_owner_resource.zig");
+const providers = @import("aggregate_provider.zig");
 const Span = language.source.Span;
 const none = std.math.maxInt(usize);
 const zero_unsupported = "E_ZERO_RC_UNSUPPORTED";
@@ -79,6 +80,8 @@ pub fn check(a: std.mem.Allocator, program: typed.Program, failure: *Failure) Er
 
 /// Zero-RC extends the move contract to every admitted owning leaf.
 pub fn checkMode(a: std.mem.Allocator, program: typed.Program, failure: *Failure, zero_rc: bool) Error!void {
+    const provider_types = try providers.classify(a, program);
+    defer a.free(provider_types);
     const linear = try a.alloc(bool, program.records.len);
     @memset(linear, false);
     var changed = true;
@@ -110,6 +113,7 @@ pub fn checkMode(a: std.mem.Allocator, program: typed.Program, failure: *Failure
             .program = program,
             .function = function,
             .linear = linear,
+            .provider_types = provider_types,
             .zero_rc = zero_rc,
             .failure = failure,
             .state = try work.allocator().alloc(State, function.scope.locals.len),
@@ -171,6 +175,7 @@ const Checker = struct {
     program: typed.Program,
     function: typed.Function,
     linear: []const bool,
+    provider_types: []const bool,
     zero_rc: bool,
     failure: *Failure,
     state: []State,
@@ -202,7 +207,13 @@ const Checker = struct {
     }
 
     fn supported(c: *Checker, ty: typed.Type, span: Span, depth: usize) Error!void {
-        if (c.zero_rc and depth != 0) if (ty.isFile() or owningCapability(ty)) return c.reject(span, zero_unsupported, "store resource owners in named local scopes in the zero-RC prototype");
+        if (c.zero_rc and depth != 0) {
+            if (ty.isFile()) return c.reject(span, zero_unsupported, "store file owners in named local scopes");
+            if (owningCapability(ty)) for (c.type_path.items) |parent| {
+                if (!providers.plainRecord(c.program.records[parent.recordIndex()]))
+                    return c.reject(span, zero_unsupported, "owning providers can be stored only in ordinary records or tuples");
+            };
+        }
         if (typed.isBorrowedView(c.program.records, ty)) {
             if (!c.zero_rc or depth != 0) return c.reject(span, view_escape, "borrowed views require zero-RC mode and cannot be stored inside aggregates");
             return;
@@ -606,9 +617,9 @@ const Checker = struct {
 
     fn resourceAccess(c: *Checker, slot: usize, root: usize, write: bool, span: Span) Error!void {
         const dependency = c.state[slot].dependency;
-        if (dependency != none and resources.provider(c.function.scope.locals[dependency].ty) and !c.state[dependency].available)
+        if (dependency != none and providers.contains(c.provider_types, c.function.scope.locals[dependency].ty) and !c.state[dependency].available)
             return c.reject(span, resource_escape, "the resource's provider is no longer available");
-        if (!write or !resources.provider(c.function.scope.locals[root].ty)) return;
+        if (!write or !providers.contains(c.provider_types, c.function.scope.locals[root].ty)) return;
         for (c.state, c.function.scope.locals, 0..) |state, local, other| {
             if (state.available and c.state[c.rootOf(other)].available and state.dependency == root and resources.dependent(c.program, local.ty))
                 return c.reject(span, resource_escape, "a provider cannot move or change while a dependent resource is live");
@@ -620,7 +631,11 @@ const Checker = struct {
         if (c.zero_rc and (operation.kind == .snapshot or operation.kind == .view))
             return c.reject(node.span, zero_unsupported, "shared snapshots and retained views are unsupported; use .borrow() for a checked view or .copy() for ownership");
         const owner = @backingInt(operation.owner);
-        if (operation.kind == .copy) return c.checkLocal(owner, .read, node.span);
+        if (operation.kind == .copy) {
+            if (c.zero_rc and providers.contains(c.provider_types, c.function.scope.locals[owner].ty))
+                return c.reject(node.span, zero_unsupported, "provider owners cannot be copied; borrow the enclosing record or move it");
+            return c.checkLocal(owner, .read, node.span);
+        }
         const linear = c.tracked(c.function.scope.locals[owner].ty);
         if (linear and operation.kind == .iteration_check) {
             try c.checkLocal(owner, .read, node.span);
@@ -815,7 +830,7 @@ const Checker = struct {
                 const source = scope.resource orelse return c.reject(statement.span, zero_unsupported, "zero-RC scopes require an explicit file owner");
                 const node = c.program.nodes[@backingInt(source)];
                 const provider = @import("build_cap.zig").scopeProvider(c.program, source) orelse return c.reject(statement.span, zero_unsupported, "open a dependent scope directly from a named provider in this prototype");
-                if (c.program.nodes[@backingInt(provider)].data != .local) return c.reject(statement.span, zero_unsupported, "bind the provider to a local before opening a scoped file");
+                if (providers.root(c.program, provider) == null) return c.reject(statement.span, zero_unsupported, "bind the provider or its enclosing record to a local before opening a scope");
                 if (node.data == .file_access or node.data == .propagate) {
                     try c.expression(source, .read);
                 } else {

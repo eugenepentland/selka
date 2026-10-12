@@ -1,0 +1,17 @@
+build-slot: FIFO ticket 498, position 8; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 498, position 2; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 2, FIFO ticket 498 after 80s
+Build Summary: 11/11 steps succeeded
+component-builder success
++- install generated to selka-components success
+   +- compile exe selka-components safe native success 16s MaxRSS:530M
+seed-compiler success
++- install generated to mylang success
+   +- compile exe mylang debug native success 5s MaxRSS:590M
+      +- run exe build-identity (build_identity) success 55ms
+      |  +- compile exe build-identity debug native success 383ms MaxRSS:147M
+      +- WriteFile success
+      +- compile obj juice_bytes_hash fast native success 117ms MaxRSS:111M
+      +- compile obj juice_bytes_hash fast native (reused)
+      +- compile obj core_number_text fast x86_64-linux-gnu.2.31 success 1s MaxRSS:150M
+

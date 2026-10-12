@@ -1,0 +1,24 @@
+build-slot: gate slot 1, FIFO ticket 181 after 0s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10153 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 5/88 failed (spec, error-discipline, cognitive-complexity, allocator-hygiene, bool-ops-per-condition)
+guardian: failures grouped by check (5):
+  spec (1 finding)
+    - unverified: Readable frontend - [NEW-CORE-ZERO-RC-PROVIDER-FIELDS-1] Owning provider values may occupy ordinary record and tuple fields. Field operations borrow the entire enclosing root through dependent scopes and local resources; root moves or replacement are forbidden while those borrows remain live. The enclosing value cannot be explicitly copied. Aggregate parameters borrow, and returned dependent resources still require the existing single direct provider/resource input contract. Lists, dictionaries, fixed arrays, variants, boxed provider storage and arbitrary partial moves remain unsupported. Compiler-only lifetime markers preserve direct cleanup order without heap wrappers or runtime reference counts.
+  error-discipline (1 finding)
+    - src/core/aggregate_provider.zig: pub fn classify uses inferred error set `!T` (use `MyErr!T`)
+      fix: declare an explicit error set — `pub const MyError = error{ Foo, Bar };` — and return `MyError!void`.
+  cognitive-complexity (1 finding)
+    - src/core/emit_llvm.zig: fn call cognitive complexity 26 (limit: 25)
+      fix: extract helpers; reduce nested control flow.
+  allocator-hygiene (1 finding)
+    - src/core/a08_provider_cache_test.zig:53: hardcoded std.testing.allocator outside test block
+      fix: thread the allocator through as a parameter instead of hardcoding a global.
+  bool-ops-per-condition (2 findings)
+    - src/core/aggregate_provider.zig:91: condition has 7 boolean ops (cap 3)
+      fix: split into nested/sequential ifs, or extract into a named bool.
+    - src/core/aggregate_provider.zig:115: condition has 7 boolean ops (cap 3)
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

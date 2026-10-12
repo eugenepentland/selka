@@ -453,6 +453,7 @@ const ModuleState = struct {
     }
 
     fn external(self: *ModuleState, function: *const ir.Function, name: []const u8) !void {
+        if (try @import("aggregate_provider.zig").marker(self.module, function)) return;
         if (self.local.selection == null and try emit_values.adapter(self.allocator, &self.externs, function)) return;
         // Several signatures of one runtime function (`myl_core_list_sort` over lists of different
         // elements) are one declaration.
@@ -3812,6 +3813,14 @@ const FunctionEmitter = struct {
         if (inst.ty != .void) try out.print(self.a(), "  {s} = freeze {s} poison\n", .{ name, try self.ty(inst.ty) });
     }
 
+    fn specialRuntimeCall(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!bool {
+        if (try @import("aggregate_provider.zig").call(self.state.module, inst)) return true;
+        if (try @import("emit_render.zig").runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return true;
+        if (try emit_bytes.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return true;
+        if (try emit_text.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return true;
+        return emit_text_split.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst);
+    }
+
     /// Emit a direct or indirect call under the internal aggregate ABI.
     pub fn call(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!void {
         const m = self.state.module;
@@ -3822,10 +3831,7 @@ const FunctionEmitter = struct {
             try self.state.dependency(@intCast(inst.a.index()));
             try emit_cap.beforeCall(@TypeOf(self), self, out, inst);
         }
-        if (try @import("emit_render.zig").runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
-        if (try emit_bytes.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
-        if (try emit_text.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
-        if (try emit_text_split.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
+        if (try self.specialRuntimeCall(out, name, inst)) return;
         const borrowed_bytes = external and signature.ret == .bytes and signature.owned == 0;
         const text_parameter = signature.params.len == 1 and signature.params[0] == .str;
         // Zero-RC encode returns fresh owned bytes; only the RC ABI aliases text.

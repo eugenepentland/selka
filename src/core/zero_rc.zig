@@ -124,6 +124,7 @@ fn transferContract(symbol: []const u8) ?Contract {
 // These adapters synchronously borrow every input. A completion either closes
 // its native handle or leaves the owner available for the emitted failure move.
 fn providerContract(symbol: []const u8) ?Contract {
+    if (@import("aggregate_provider.zig").markerType(symbol) != null) return .{};
     const readers = [_][]const u8{ "myl_core_provider_keepalive", "myl_core_resource_complete", "myl_core_stream_write_bytes", "myl_core_stream_write_buffer" };
     for (readers) |name| if (std.mem.eql(u8, symbol, name)) return .{};
     const constructors = [_][]const u8{

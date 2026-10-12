@@ -40,10 +40,30 @@ library snapshots, borrowed comprehensions and sorting, repetition, bounded affi
 resource lifetimes, and compiler regressions found by the larger survey. Focused
 worker results identify their own revisions; they do not certify a later binary.
 
-The user expanded this run to support Result lists. That implementation is still
-in progress, along with remaining migrations and ownership paths. A frozen early
-integration snapshot is undergoing the full verification coordinator to expose
-cross-feature defects before C1. Normal defaults, active RC retirement and the
-real independent component compiler pin remain pending.
+The user-expanded Result-list implementation is integrated. Support5 passes its
+release/ThreadSanitizer Result-map cases at 1/2/8 workers. These results identify
+their actual source and binary; they do not qualify a final candidate.
 
-The exploratory full gate on `245e892f8518943ee44a0cc6009ab4b4fa6bca43` failed after 45 fresh selected actions (no reuse). Raw output is in `coordinator/exploratory-verify-01/`; dictionary snapshot crashes explain the language, interface, no-allocation and Core dictionary failures. The newer scalar snapshot fix still requires integrated reruns, including the CLI fix case. Support3 is source `0d17e4e130706639c0f49e78b60502bfb2151ebc`, binary SHA256 `7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7`. Native API testing exposed a preexisting uncacheable unit-object lifetime bug, reproduced independently with C0; A01 is fixing it. This installation is not C1.
+Support5 is source `a1f19edf255c8c0886731d8d7cce450d5f657720`, compiler SHA256
+`8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789`. The native
+object-lifetime bug is fixed and the host loader-cache change was independently
+reviewed. Installed components still use the historical RC-seed package, which
+remains an explicit package blocker.
+
+The original 30 release sanity run on Support5 passes all 30 cases and 72 counted
+executions: 23 allocating, 7 allocation-free, zero RC events and zero managed
+exit-live bytes. All 72 source/input matched comparisons have identical allocation
+traffic and managed peaks to freshly built C0. Final five-mode qualification is
+pending.
+
+Public-library and four-application fixtures have passing intermediate matrices;
+Support5 passes 40 cache probes and 52 command/analysis/cost rows. Each worker
+report identifies its artifact and refused cases. Installed cache-plan ownership,
+record-home cleanup, dictionary borrowing, numeric formatter ABI and aggregate
+provider qualification remain tracked work.
+
+The exploratory full gate on `245e892f8518943ee44a0cc6009ab4b4fa6bca43` failed
+after 45 fresh actions (no reuse). Raw evidence remains in
+`coordinator/exploratory-verify-01/`. The dictionary snapshot defect is fixed in
+later sources, but complete verification must still pass on frozen final inputs.
+Focused tests do not replace that gate.

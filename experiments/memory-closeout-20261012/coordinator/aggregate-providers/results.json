@@ -1,0 +1,19 @@
+{
+  "base": "611c78b6ab7f06f8e471d277d80d53b0c429ed74",
+  "patch_sha256": "225218aaff2a55cd0e67d35d1c7c60991da088cec2940bb83bddbebe6bf07bc7",
+  "source_hashes": {
+    "src/core/aggregate_provider.zig": "7c4ab24485770ee1b5956405c1d96a8be1a08238731e24cea60b1fd2e067949e",
+    "src/core/a08_provider_cache_test.zig": "d8075238fc55055e41ce4802fb6d018455c83c67317d6c7769919d0f0d55ad8c",
+    "src/core/provider_store_test.zig": "581c4e70777acedc9ccfa3a3e3f492d47bac7f00cb9de3048ba62296d86ed055"
+  },
+  "test_binary_sha256": "e1aba2a6e9213d2ca534ea4d8745b5bfb68c27a589f76f54700d353083ba31af",
+  "tests": {
+    "passed": 6,
+    "failed": 0
+  },
+  "first_run": "5/6: cold native/cache/cost checks passed; source-negative harness did not resolve imports",
+  "second_run": "Stopped own process tree: omitted compile filters caused unrelated tests to run; preserved observed pre-existing failures, no qualification claim",
+  "final_run": "Six passed after explicit allocator/error contracts and emitter extraction required by Guardian. Native artifacts reused; cold execution evidence in first run.",
+  "scope": "Checked provider ownership in ordinary records/tuples, whole-root lexical lifetime. Final A05 five-mode inventory pending; no default or RC retirement claim.",
+  "guardian_first": "Five checks rejected initial organization; corrected spec test linkage, explicit error set, allocator threading, bounded conditions and helper extraction. Recheck required."
+}

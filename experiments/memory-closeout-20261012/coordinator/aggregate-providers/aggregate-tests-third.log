@@ -1,0 +1,9 @@
+build-slot: FIFO ticket 653, position 6; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 653, position 1; waiting for measurement or memory-accounting settle delay; waiting (61s so far)
+build-slot: build slot 1, FIFO ticket 653 after 66s
+guardian/test: 6 test(s) selected by filter: "aggregate provider", "zero RC provider", "provider lifetime"
+All 6 tests passed.
+guardian/test: test wall 0.11s; slowest over 50ms:
+guardian/test:   0.11s  a08_provider_cache_test.test.zero RC A08 aggregate provider pins survive cache replay and earlier type discovery edits
+guardian/test: PASS — 6 passed
+guardian/test: RESULT {"passed":6,"failed":0,"skipped":0}

@@ -29,6 +29,7 @@ const build_values = @import("build_values.zig");
 const single_owner_copy = @import("single_owner_copy.zig");
 const build_capture = @import("build_capture.zig");
 const lowering_cache = @import("lowering_cache.zig");
+const aggregate_provider = @import("aggregate_provider.zig");
 
 /// Refusal reasons several constructs share.
 const refuse_payload = "match payload";
@@ -95,6 +96,7 @@ fn buildRootsInput(allocator: std.mem.Allocator, roots: []const typed.FunctionId
 pub fn buildRootsCached(allocator: std.mem.Allocator, roots: []const typed.FunctionId, input: Input, refusal: *Refusal, cache: ?*lowering_cache.Cache) CachedError!ir.Module {
     const program = input.program;
     var mb: ModuleBuilder = .{ .allocator = allocator, .input = input, .refusal = refusal, .discovery = .{ .enabled = cache != null } };
+    defer if (mb.provider_types) |facts| allocator.free(facts);
     mb.module.single_owner = input.single_owner or input.zero_rc;
     mb.module.zero_rc = input.zero_rc;
     defer mb.discovery.ids.deinit(allocator);
@@ -188,6 +190,7 @@ pub fn coverageInput(allocator: std.mem.Allocator, input: Input) Error![]Outcome
         }
         var refusal: Refusal = .{};
         var mb: ModuleBuilder = .{ .allocator = allocator, .input = input, .refusal = &refusal };
+        defer if (mb.provider_types) |facts| allocator.free(facts);
         mb.module.single_owner = input.single_owner or input.zero_rc;
         mb.module.zero_rc = input.zero_rc;
         const index = mb.functionIndex(function.id) catch |err| switch (err) {
@@ -234,6 +237,12 @@ const ModuleBuilder = struct {
     /// Checked record and union type → IR type. An entry is made before the type's fields
     /// are mapped, so a recursive type (through a boxed field) finds itself.
     types: std.AutoHashMapUnmanaged(typed.Type, ir.Type) = .empty,
+    provider_types: ?[]bool = null,
+
+    fn hasProvider(self: *ModuleBuilder, ty: typed.Type) Error!bool {
+        if (self.provider_types == null) self.provider_types = try aggregate_provider.classify(self.allocator, self.input.program);
+        return aggregate_provider.contains(self.provider_types.?, ty);
+    }
 
     fn lowering(self: *ModuleBuilder) lowering_cache.Context {
         return .{ .arena = self.allocator, .input = .{ .program = self.input.program, .source = self.input.source, .drop_debug = self.input.drop_debug }, .module = &self.module, .discovery = &self.discovery, .types = &self.types };
@@ -780,15 +789,16 @@ const FnBuilder = struct {
     }
 
     fn providerStore(self: *FnBuilder, store: typed.Store, place: ?Place, value: ir.Ref, assign: bool, span: u32) Error!void {
-        if (!self.module().zero_rc or self.function.resolve(value) == .none or self.typeOfRef(value) != .capability) return;
+        if (!self.module().zero_rc or self.function.resolve(value) == .none) return;
+        if (!try self.mb.hasProvider(self.checked.scope.locals[self.local(store.slot)].ty)) return;
         const slot = self.local(store.slot);
         const info = self.checked.scope.locals[slot];
         if (std.mem.startsWith(u8, info.name, "<")) return;
-        if (assign) _ = try self.effectCall("myl_core_provider_keepalive", &.{.capability}, .void, &.{try self.read(slot, self.current.?)}, span);
+        if (assign) try aggregate_provider.keepalive(@TypeOf(self), self, try self.read(slot, self.current.?), span);
         // Source moves invalidate the old binding. Its lexical pin must read
         // null on this path, not borrow an already-transferred SSA owner.
         if (place) |source| if (source.steps.len == 0 and source.root != slot) {
-            const empty = try self.detached(.{ .op = .undef, .ty = .capability });
+            const empty = try self.detached(.{ .op = .undef, .ty = self.typeOfRef(value) });
             try self.write(source.root, self.current.?, empty);
         };
         if (!assign) try self.ssa.resources.append(self.allocator(), .{ .owner = .none, .depth = self.loops.items.len, .pin = slot });
@@ -2553,7 +2563,7 @@ fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Funct
         const param = try b.detached(.{ .op = .param, .ty = ty, .data = passed });
         passed += 1;
         try b.write(@intCast(i), entry, param);
-        if (mb.module.zero_rc and ty == .capability) try b.ssa.resources.append(mb.allocator, .{ .owner = .none, .depth = 0, .pin = @intCast(i) });
+        if (mb.module.zero_rc and try mb.hasProvider(local.ty)) try b.ssa.resources.append(mb.allocator, .{ .owner = .none, .depth = 0, .pin = @intCast(i) });
     }
     try b.statement(checked.scope.body);
     if (b.current != null) {

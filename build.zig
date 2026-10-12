@@ -446,6 +446,8 @@ fn addCore(b: *std.Build, inputs: CoreInputs) *std.Build.Step {
         module.addAnonymousImport("core_number_text_object", .{ .root_source_file = number_text.getEmittedBin() });
     }
     const step = b.step("test-core", "Run the new core's unit tests and its end-to-end slice");
+    const test_binary = b.addInstallFileWithDir(unit.getEmittedBin(), .{ .custom = "focus" }, "core-tests");
+    b.step("core-test-binary", "Compile the registered Core tests without provisioning components").dependOn(&test_binary.step);
     // Most of the root's time is end-to-end builds of guest programs, so shards
     // of the one binary run concurrently; each test uses its own temporary tree.
     const requested = b.option(usize, "core-shards", "test-core: concurrent shards of the core test root (default 8)") orelse 8;

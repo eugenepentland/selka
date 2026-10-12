@@ -1,0 +1,714 @@
+diff --git a/SPEC.md b/SPEC.md
+index 2b15ead97..de030b15c 100644
+--- a/SPEC.md
++++ b/SPEC.md
+@@ -1642,7 +1642,7 @@ The separate `mylang-core` executable (`zig build core`, `docs/design/new-core-i
+ - [NEW-CORE-ZERO-RC-PAYLOAD-TRANSFER-1] In the zero-RC prototype `try` consumes its Result/Option and transfers the active payload without an implicit deep copy or retain. Recursive payloads are loaded into an independent value home before freeing only their box shell; their owned descendants move with the value. The rule covers success, propagated errors, options, loop-carried values and mutable-call writebacks. Borrowed pattern bindings remain borrowed and explicit `.copy()` still creates independent owned storage. The internal consuming extraction is rejected under the ordinary RC ABI.
+ - [NEW-CORE-ZERO-RC-MATCH-TRANSFER-1] In the zero-RC prototype a `match` directly on a call, callback invocation, variant construction, collection `.copy()`/`.pop()`, or a built-in text/byte decoder, scalar counter or numeric parser consumes that fresh union and transfers its active payload binding. Compiler-generated expression blocks preserve this classification. Bindings can move into returns, locals and containers exactly once; ignored payloads are destroyed. Matching a named value or a field/index projection continues to borrow, even at its last use. A fielded pattern splits its whole fresh payload under NEW-CORE-ZERO-RC-RECORD-UNPACK-1. Checking and lowering share this syntactic rule; no last-use inference or ownership annotation is required. Ordinary RC builds retain their existing match semantics.
+ - [NEW-CORE-ZERO-RC-RECORD-UNPACK-1] In the zero-RC prototype, a named-field pattern on a fresh owned enum match splits its entire hidden payload record before entering the arm. Each binding receives independent ownership of its field exactly once; discarded or unused fields are destroyed. The hidden whole record cannot be used again. Recursive boxed fields transfer their contents into an independent value home before freeing the box shell. Returning, storing or propagating bound values needs no deep copy. Named or projected matches still borrow, ordinary record-field access cannot move an individual field, and ordinary RC builds keep their existing pattern semantics. Nested patterns continue to borrow their internally named intermediate value. This rule requires neither source lifetime annotations nor partial-move tracking.
+-- [NEW-CORE-ZERO-RC-RESOURCE-SCOPES-1] In the zero-RC prototype a dependent Filesystem, Network or Environment capability is bound by `with parent.dir(...)`, `with parent.host(...)`, `with parent.read_only()` or `with parent.only(...)`; the parent must be a named local. The scope borrows the parent and prevents moves/replacement through every exit. Scoped capabilities and files cannot be moved or returned. Cleanup consumes the child while borrowing its parent, innermost first, including return, `try`, break and continue. Root capabilities own their provider; dependent capabilities own only their copied scope bytes. Scoped read-only files release their handle without requesting completion rights. Direct C extern calls remain scalar-only; native provider callbacks borrow call buffers, successful acquisition transfers one handle, successful completion consumes it, and release consumes an uncompleted handle. Zero-RC propagation transfers an owned active payload from its Result/Option wrapper (NEW-CORE-ZERO-RC-PAYLOAD-TRANSFER-1).
++- [NEW-CORE-ZERO-RC-RESOURCE-SCOPES-1] In the zero-RC prototype a dependent Filesystem, Network or Environment capability is bound by `with parent.dir(...)`, `with parent.host(...)`, `with parent.read_only()` or `with parent.only(...)`; the parent must be a named local or an ordinary record/tuple field rooted in a named local. The scope borrows the whole enclosing owner and prevents moves/replacement through every exit. Scoped capabilities and files cannot be moved or returned. Cleanup consumes the child while borrowing its parent, innermost first, including return, `try`, break and continue. Root capabilities own their provider; dependent capabilities own only their copied scope bytes. Scoped read-only files release their handle without requesting completion rights. Direct C extern calls remain scalar-only; native provider callbacks borrow call buffers, successful acquisition transfers one handle, successful completion consumes it, and release consumes an uncompleted handle. Zero-RC propagation transfers an owned active payload from its Result/Option wrapper (NEW-CORE-ZERO-RC-PAYLOAD-TRANSFER-1).
+ - [NEW-CORE-ZERO-RC-TASKS-1] At the experimental Core task boundary, a scoped group receives each capture box by move. A task borrows its capture during execution and publishes an independent owned result; completion destroys the capture. Taking a result transfers it out of the group. Ending or dropping a group joins all pending tasks before destroying untaken results and handles. The group cannot escape into a capture. The legacy borrowed-capture and retained-result helpers are not admitted in zero-RC mode. Scheduler synchronization atomics remain; memory ownership uses no reference counts. Source task syntax and borrowed task captures are outside this initial backend prototype.
+ - [NEW-CORE-ZERO-RC-TASKS-2] The reserved `parallel.map(values, function)` standard function borrows distinct input elements for scoped tasks in zero-RC mode. Callbacks accept a read-only input and return an independent storable value. Map preserves input order and joins every task before returning the owned output list; no handles or borrows escape. Contiguous chunks bound scheduler captures, handles and result containers to at most four per configured worker (one for a single worker), while output and temporary chunk element storage scale with input length. Trap diagnostics retain the original input index. Ordinary builds use a sequential implementation. Unit elements and general closure captures are outside this prototype.
+ - [NEW-CORE-ZERO-RC-ABI-1] The zero-RC runtime ABI has no reference-count field: its kind occupies byte offset zero, and alignment keeps the complete header at 32 bytes. Its runtime excludes legacy retain, release, publication and count-dependent COW implementations at compile time, and poisons their identifiers to reject accidental references. Emitted LLVM contains neither RC declarations nor operations. Static storage uses a kind bit. Unique owners are destroyed directly; allocator and scheduler synchronization remains permitted.
+@@ -1656,6 +1656,7 @@ The separate `mylang-core` executable (`zig build core`, `docs/design/new-core-i
+ - [OWNED-LIST-MUTATION-1] Checked zero-RC list insert, reverse, indexed pop and remove move existing element storage without duplicating child owners. Order and original index diagnostics are preserved. Popped values transfer ownership; discarded or removed managed children are destroyed exactly once.
+ 
+ - [NEW-CORE-ZERO-RC-AFFINE-RESOURCES-1] Affine resource parameters consume one owner; whole affine Results and records move through calls, returns and owned match or unpack. A function returning a dependent resource carrier has exactly one capability or resource input and preserves that provider origin. Local-provider escape, ambiguous origins and provider replacement or movement while dependent owners remain live refuse. Named provider values remain alive through lexical cleanup on normal, early, propagated-error and loop exits; moves clear the former binding before subsequent lifetime uses. Native acquisition and I/O return independent result storage; completion success destroys the owner and failure transfers it exactly once.
++- [NEW-CORE-ZERO-RC-PROVIDER-FIELDS-1] Owning provider values may occupy ordinary record and tuple fields. Field operations borrow the entire enclosing root through dependent scopes and local resources; root moves or replacement are forbidden while those borrows remain live. The enclosing value cannot be explicitly copied. Aggregate parameters borrow, and returned dependent resources still require the existing single direct provider/resource input contract. Lists, dictionaries, fixed arrays, variants, boxed provider storage and arbitrary partial moves remain unsupported. Compiler-only lifetime markers preserve direct cleanup order without heap wrappers or runtime reference counts.
+ 
+ - [OWNED-LIST-COPYING-1] In checked zero-RC mode, list slices and extension of copyable elements produce independent destination children. Self-extension reads the finite original prefix through any destination growth. Pending Results and resource owners are never implicitly duplicated by slicing or extension.
+ 
+diff --git a/build.zig b/build.zig
+index 89d765b75..7d48d71ed 100644
+--- a/build.zig
++++ b/build.zig
+@@ -446,6 +446,8 @@ fn addCore(b: *std.Build, inputs: CoreInputs) *std.Build.Step {
+         module.addAnonymousImport("core_number_text_object", .{ .root_source_file = number_text.getEmittedBin() });
+     }
+     const step = b.step("test-core", "Run the new core's unit tests and its end-to-end slice");
++    const test_binary = b.addInstallFileWithDir(unit.getEmittedBin(), .{ .custom = "focus" }, "core-tests");
++    b.step("core-test-binary", "Compile the registered Core tests without provisioning components").dependOn(&test_binary.step);
+     // Most of the root's time is end-to-end builds of guest programs, so shards
+     // of the one binary run concurrently; each test uses its own temporary tree.
+     const requested = b.option(usize, "core-shards", "test-core: concurrent shards of the core test root (default 8)") orelse 8;
+diff --git a/src/core/a08_provider_cache_test.zig b/src/core/a08_provider_cache_test.zig
+new file mode 100644
+index 000000000..54cf2df87
+--- /dev/null
++++ b/src/core/a08_provider_cache_test.zig
+@@ -0,0 +1,141 @@
++//! Provider pin identities stay exact across durable lowering and catalog edits.
++const std = @import("std");
++const language = @import("mylang");
++const ir = @import("ir.zig");
++const build = @import("build.zig");
++const lowering = @import("lowering_cache.zig");
++const stage = @import("stage_store.zig");
++const provider = @import("aggregate_provider.zig");
++const ownership = @import("single_owner.zig");
++const support = @import("test_support.zig");
++const passes = @import("passes.zig");
++
++const source =
++    \\import filesystem
++    \\record Providers:
++    \\    fs: Filesystem
++    \\    label: str
++    \\func inspect(value: Providers) -> int:
++    \\    with value.fs.read_only() as frozen:
++    \\        if frozen.exists("absent"):
++    \\            return 1
++    \\        return 42
++    \\func main(out: Stream) -> int:
++    \\    const value = Providers(fs=filesystem.memory(), label="owner-" + str(1))
++    \\    out.print(inspect(value))
++    \\    return 0
++;
++
++const Entry = struct {
++    bytes: []const u8,
++    fn read(context: ?*anyopaque, a: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
++        const self: *Entry = @ptrCast(@alignCast(context.?));
++        if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
++        return a.dupe(u8, self.bytes);
++    }
++};
++
++const Evidence = struct { lowered: usize, reused: usize, physical: ir.Type };
++
++fn pinType(module: *const ir.Module) !ir.Type {
++    var found: ?ir.Type = null;
++    for (module.functions.items) |function| {
++        if (!try provider.marker(module, &function)) continue;
++        const actual = provider.markerType(function.name).?;
++        try std.testing.expectEqual(actual, function.signature.params[0]);
++        if (found) |previous| try std.testing.expectEqual(previous, actual);
++        found = actual;
++    }
++    return found orelse error.TestUnexpectedResult;
++}
++
++fn compare(parent: std.mem.Allocator, store: *stage.Store, text: []const u8, execute: bool) !Evidence {
++    var arena = std.heap.ArenaAllocator.init(parent);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var entry: Entry = .{ .bytes = text };
++    var project: language.embedded_project.Program = undefined;
++    try project.init(a, .{ .context = &entry, .read = Entry.read });
++    const program = project.compilation.program.?;
++    var failure: ownership.Failure = .{};
++    try ownership.checkMode(a, program, &failure, true);
++    const input: build.Input = .{ .program = program, .source = project.compilation.src, .single_owner = true, .zero_rc = true };
++    var refusal: build.Refusal = .{};
++    var cache = lowering.Cache.init(store);
++    var cached = try build.buildExecutableCached(a, input, &refusal, &cache);
++    const fresh = try build.buildExecutable(a, input, &refusal);
++    try std.testing.expectEqualDeep(fresh.compounds.items, cached.compounds.items);
++    try std.testing.expectEqual(fresh.functions.items.len, cached.functions.items.len);
++    for (fresh.functions.items, cached.functions.items) |expected, actual| {
++        try std.testing.expectEqualStrings(expected.name, actual.name);
++        try std.testing.expectEqualDeep(expected.signature, actual.signature);
++    }
++    try std.testing.expectEqualStrings(try @import("print.zig").module(a, &fresh), try @import("print.zig").module(a, &cached));
++    const physical = try pinType(&cached);
++    try std.testing.expectEqual(try pinType(&fresh), physical);
++    if (execute) {
++        const result = try passes.debug(a, &cached);
++        try ownership.verifyLowered(&cached, &failure);
++        try support.verified(a, &cached, result.plans);
++        const out = program.functions[@backingInt(program.main)].scope.locals[0].ty.capabilityIndex().?;
++        const run = try support.runOwned(a, &cached, .{ .own = false, .analysis = support.analysis(&result), .main = .{ .parameters = &.{"out"}, .capabilities = &.{out} } });
++        try std.testing.expectEqual(@as(u8, 0), run.status);
++        try std.testing.expectEqualStrings("42\n", run.stdout);
++        try std.testing.expectEqualStrings("", run.stderr);
++        try std.testing.expect(@import("zero_rc.zig").emittedClean(run.llvm));
++        try std.testing.expect(std.mem.indexOf(u8, run.llvm, provider.prefix) == null);
++    }
++    return .{ .lowered = cache.lowered, .reused = cache.reused, .physical = physical };
++}
++
++// spec-case: NEW-CORE-ZERO-RC-ABI-1
++// spec-case: NEW-CORE-STAGE-CACHE-3
++// spec-case: NEW-CORE-ZERO-RC-PROVIDER-FIELDS-1
++test "zero RC A08 aggregate provider pins survive cache replay and earlier type discovery edits" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var temporary = std.testing.tmpDir(.{});
++    defer temporary.cleanup();
++    var store = try stage.Store.init(std.testing.allocator, std.testing.io, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a));
++    defer store.deinit();
++    const declarations = try std.mem.replaceOwned(u8, a, source, "record Providers:", "record Earlier:\n    values: bytes[]\nrecord Providers:");
++    const edited = try std.mem.replaceOwned(u8, a, declarations, "    const value = Providers", "    const earlier = Earlier(values=[b\"a\", b\"b\"])\n    assert len(earlier.values) == 2\n    const value = Providers");
++    var types: [2]ir.Type = undefined;
++    for ([_][]const u8{ source, edited }, 0..) |text, index| {
++        const cold = try compare(std.testing.allocator, &store, text, false);
++        const warm = try compare(std.testing.allocator, &store, text, true);
++        try std.testing.expect(cold.lowered > 0);
++        try std.testing.expectEqual(@as(usize, 0), warm.lowered);
++        try std.testing.expect(warm.reused > 0);
++        try std.testing.expectEqual(cold.physical, warm.physical);
++        types[index] = cold.physical;
++    }
++    try std.testing.expect(types[0] != types[1]);
++}
++
++// spec-case: NEW-CORE-ZERO-RC-ABI-1
++test "zero RC A08 aggregate provider pins refuse stale physical type and ownership signatures" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var module: ir.Module = .{ .zero_rc = true, .single_owner = true };
++    const first = try module.intern(a, .{ .record = &.{ .capability, .str } });
++    const second = try module.intern(a, .{ .record = &.{ .capability, .i64 } });
++    var function: ir.Function = .{ .name = try std.fmt.allocPrint(a, "{s}{d}", .{ provider.prefix, @backingInt(first) }), .signature = .{ .params = &.{first}, .ret = .void, .linkage = .runtime_c } };
++    try std.testing.expect(try provider.marker(&module, &function));
++    const valid = function.signature;
++    const invalid = [_]ir.Signature{
++        .{ .params = &.{second}, .ret = .void, .linkage = .runtime_c },
++        .{ .params = &.{first}, .ret = .void, .linkage = .runtime_c, .owned = 1 },
++        .{ .params = &.{first}, .ret = .void, .linkage = .runtime_c, .consumes = 1 },
++        .{ .params = &.{first}, .ret = .void, .linkage = .runtime_c, .views = 1 },
++    };
++    for (invalid) |signature| {
++        function.signature = signature;
++        try std.testing.expectError(error.UnsupportedInstruction, provider.marker(&module, &function));
++    }
++    function.signature = valid;
++    module.zero_rc = false;
++    try std.testing.expectError(error.UnsupportedInstruction, provider.marker(&module, &function));
++}
+diff --git a/src/core/aggregate_provider.zig b/src/core/aggregate_provider.zig
+new file mode 100644
+index 000000000..3993d3149
+--- /dev/null
++++ b/src/core/aggregate_provider.zig
+@@ -0,0 +1,133 @@
++//! Provider lifetimes follow an enclosing owned record, with no field-sensitive loans.
++const std = @import("std");
++const typed = @import("mylang").typed;
++const ir = @import("ir.zig");
++const none = std.math.maxInt(usize);
++
++/// Compiler-only borrowed marker; its physical type is part of the exact identity.
++pub const prefix = "myl_core_provider_pin_";
++
++/// Streams and Host are scalar tokens; other capabilities own native provider state.
++pub fn leaf(ty: typed.Type) bool {
++    return ty.capabilityIndex() != null and !ty.isStream() and ty != .host_cap;
++}
++
++const Edge = struct { parent: usize, next: usize };
++const Graph = struct {
++    allocator: std.mem.Allocator,
++    heads: []usize,
++    marked: []bool,
++    edges: std.ArrayList(Edge) = .empty,
++
++    fn add(self: *Graph, parent: usize, child: typed.Type) !void {
++        if (leaf(child)) {
++            self.marked[parent] = true;
++        } else if (child.isAggregate()) {
++            const index = child.recordIndex();
++            try self.edges.append(self.allocator, .{ .parent = parent, .next = self.heads[index] });
++            self.heads[index] = self.edges.items.len - 1;
++        }
++    }
++
++    fn record(self: *Graph, parent: usize, value: typed.Record) !void {
++        for (value.fields) |field| try self.add(parent, field.ty);
++        if (value.shape.buffer) |element| try self.add(parent, element);
++        if (value.collection.key) |key| try self.add(parent, key);
++        if (value.shape.array) |array| try self.add(parent, array.element);
++        if (value.shape.variants) |variants| for (variants.cases) |variant| {
++            if (variant.payload) |payload| try self.add(parent, payload);
++        };
++        if (value.shape.domain) |wire| try self.add(parent, wire);
++    }
++};
++
++/// Find provider-containing source types once, in O(types + storage edges).
++/// Cycles cannot cache an incomplete false result: seeds propagate over reverse edges.
++pub fn classify(a: std.mem.Allocator, program: typed.Program) std.mem.Allocator.Error![]bool {
++    const marked = try a.alloc(bool, program.records.len);
++    errdefer a.free(marked);
++    @memset(marked, false);
++    const heads = try a.alloc(usize, marked.len);
++    defer a.free(heads);
++    @memset(heads, none);
++    var graph: Graph = .{ .allocator = a, .heads = heads, .marked = marked };
++    defer graph.edges.deinit(a);
++    for (program.records, 0..) |record, parent| try graph.record(parent, record);
++    var queue: std.ArrayList(usize) = .empty;
++    defer queue.deinit(a);
++    for (marked, 0..) |present, index| if (present) try queue.append(a, index);
++    var cursor: usize = 0;
++    while (cursor < queue.items.len) : (cursor += 1) {
++        var edge = heads[queue.items[cursor]];
++        while (edge != none) {
++            const item = graph.edges.items[edge];
++            if (!marked[item.parent]) {
++                marked[item.parent] = true;
++                try queue.append(a, item.parent);
++            }
++            edge = item.next;
++        }
++    }
++    return marked;
++}
++
++/// Query the completed source-type facts without traversing another type graph.
++pub fn contains(facts: []const bool, ty: typed.Type) bool {
++    return leaf(ty) or (ty.isAggregate() and facts[ty.recordIndex()]);
++}
++
++/// Scoped field providers must be projections of a named local, not temporaries.
++pub fn root(program: typed.Program, source: typed.NodeId) ?typed.LocalId {
++    var cursor = source;
++    while (true) switch (program.nodes[@backingInt(cursor)].data) {
++        .local => |slot| return slot,
++        .field => |field| cursor = field.base,
++        else => return null,
++    };
++}
++
++/// Admit provider ownership only through ordinary record fields in this closeout.
++pub fn plainRecord(record: typed.Record) bool {
++    if (record.managed or record.collection.box or record.isCollection()) return false;
++    if (record.shape.array != null or record.shape.variants != null or record.shape.resource != null) return false;
++    if (record.shape.domain != null or record.contract.callback != null) return false;
++    for (record.fields) |field| if (field.boxed) return false;
++    return true;
++}
++
++/// Parse only a canonical generated physical-type identity, never an open prefix.
++pub fn markerType(symbol: []const u8) ?ir.Type {
++    if (!std.mem.startsWith(u8, symbol, prefix)) return null;
++    const number = symbol[prefix.len..];
++    if (number.len == 0 or number[0] == '0') return null;
++    for (number) |byte| if (byte < '0' or byte > '9') return null;
++    const id = std.fmt.parseInt(u32, number, 10) catch return null;
++    const ty: ir.Type = @fromBackingInt(id);
++    return if (ty.isCompound()) ty else null;
++}
++
++/// Validate the complete borrowed compiler marker before omitting its machine code.
++pub fn marker(module: *const ir.Module, function: *const ir.Function) error{UnsupportedInstruction}!bool {
++    if (!std.mem.startsWith(u8, function.name, prefix)) return false;
++    if (!module.zero_rc) return error.UnsupportedInstruction;
++    const ty = markerType(function.name) orelse return error.UnsupportedInstruction;
++    if (@backingInt(ty) - ir.Type.first_compound >= module.compounds.items.len) return error.UnsupportedInstruction;
++    const signature = function.signature;
++    if (module.kind(ty) != .record or signature.linkage != .runtime_c or signature.ret != .void) return error.UnsupportedInstruction;
++    if (signature.params.len != 1 or signature.params[0] != ty) return error.UnsupportedInstruction;
++    if (signature.owned != 0 or signature.consumes != 0 or signature.views != 0) return error.UnsupportedInstruction;
++    return true;
++}
++
++/// Core observes this borrow until lexical cleanup; emitted code needs no operation.
++pub fn call(module: *const ir.Module, inst: ir.Inst) error{UnsupportedInstruction}!bool {
++    if (inst.op != .call) return false;
++    return marker(module, &module.functions.items[inst.a.index()]);
++}
++
++/// Pin the current SSA owner without copying, retaining or inspecting its children.
++pub fn keepalive(comptime Context: type, builder: Context, value: ir.Ref, span: u32) error{ OutOfMemory, Unsupported }!void {
++    const ty = builder.typeOfRef(value);
++    const symbol = if (ty == .capability) "myl_core_provider_keepalive" else try std.fmt.allocPrint(builder.allocator(), "{s}{d}", .{ prefix, @backingInt(ty) });
++    _ = try builder.effectCall(symbol, &.{ty}, .void, &.{value}, span);
++}
+diff --git a/src/core/build.zig b/src/core/build.zig
+index e72bd19e9..ccbcab17d 100644
+--- a/src/core/build.zig
++++ b/src/core/build.zig
+@@ -29,6 +29,7 @@ const build_values = @import("build_values.zig");
+ const single_owner_copy = @import("single_owner_copy.zig");
+ const build_capture = @import("build_capture.zig");
+ const lowering_cache = @import("lowering_cache.zig");
++const aggregate_provider = @import("aggregate_provider.zig");
+ 
+ /// Refusal reasons several constructs share.
+ const refuse_payload = "match payload";
+@@ -95,6 +96,7 @@ fn buildRootsInput(allocator: std.mem.Allocator, roots: []const typed.FunctionId
+ pub fn buildRootsCached(allocator: std.mem.Allocator, roots: []const typed.FunctionId, input: Input, refusal: *Refusal, cache: ?*lowering_cache.Cache) CachedError!ir.Module {
+     const program = input.program;
+     var mb: ModuleBuilder = .{ .allocator = allocator, .input = input, .refusal = refusal, .discovery = .{ .enabled = cache != null } };
++    defer if (mb.provider_types) |facts| allocator.free(facts);
+     mb.module.single_owner = input.single_owner or input.zero_rc;
+     mb.module.zero_rc = input.zero_rc;
+     defer mb.discovery.ids.deinit(allocator);
+@@ -188,6 +190,7 @@ pub fn coverageInput(allocator: std.mem.Allocator, input: Input) Error![]Outcome
+         }
+         var refusal: Refusal = .{};
+         var mb: ModuleBuilder = .{ .allocator = allocator, .input = input, .refusal = &refusal };
++        defer if (mb.provider_types) |facts| allocator.free(facts);
+         mb.module.single_owner = input.single_owner or input.zero_rc;
+         mb.module.zero_rc = input.zero_rc;
+         const index = mb.functionIndex(function.id) catch |err| switch (err) {
+@@ -234,6 +237,12 @@ const ModuleBuilder = struct {
+     /// Checked record and union type → IR type. An entry is made before the type's fields
+     /// are mapped, so a recursive type (through a boxed field) finds itself.
+     types: std.AutoHashMapUnmanaged(typed.Type, ir.Type) = .empty,
++    provider_types: ?[]bool = null,
++
++    fn hasProvider(self: *ModuleBuilder, ty: typed.Type) Error!bool {
++        if (self.provider_types == null) self.provider_types = try aggregate_provider.classify(self.allocator, self.input.program);
++        return aggregate_provider.contains(self.provider_types.?, ty);
++    }
+ 
+     fn lowering(self: *ModuleBuilder) lowering_cache.Context {
+         return .{ .arena = self.allocator, .input = .{ .program = self.input.program, .source = self.input.source, .drop_debug = self.input.drop_debug }, .module = &self.module, .discovery = &self.discovery, .types = &self.types };
+@@ -780,15 +789,16 @@ const FnBuilder = struct {
+     }
+ 
+     fn providerStore(self: *FnBuilder, store: typed.Store, place: ?Place, value: ir.Ref, assign: bool, span: u32) Error!void {
+-        if (!self.module().zero_rc or self.function.resolve(value) == .none or self.typeOfRef(value) != .capability) return;
++        if (!self.module().zero_rc or self.function.resolve(value) == .none) return;
++        if (!try self.mb.hasProvider(self.checked.scope.locals[self.local(store.slot)].ty)) return;
+         const slot = self.local(store.slot);
+         const info = self.checked.scope.locals[slot];
+         if (std.mem.startsWith(u8, info.name, "<")) return;
+-        if (assign) _ = try self.effectCall("myl_core_provider_keepalive", &.{.capability}, .void, &.{try self.read(slot, self.current.?)}, span);
++        if (assign) try aggregate_provider.keepalive(@TypeOf(self), self, try self.read(slot, self.current.?), span);
+         // Source moves invalidate the old binding. Its lexical pin must read
+         // null on this path, not borrow an already-transferred SSA owner.
+         if (place) |source| if (source.steps.len == 0 and source.root != slot) {
+-            const empty = try self.detached(.{ .op = .undef, .ty = .capability });
++            const empty = try self.detached(.{ .op = .undef, .ty = self.typeOfRef(value) });
+             try self.write(source.root, self.current.?, empty);
+         };
+         if (!assign) try self.ssa.resources.append(self.allocator(), .{ .owner = .none, .depth = self.loops.items.len, .pin = slot });
+@@ -2553,7 +2563,7 @@ fn buildFunction(mb: *ModuleBuilder, checked: typed.Function, declared: ir.Funct
+         const param = try b.detached(.{ .op = .param, .ty = ty, .data = passed });
+         passed += 1;
+         try b.write(@intCast(i), entry, param);
+-        if (mb.module.zero_rc and ty == .capability) try b.ssa.resources.append(mb.allocator, .{ .owner = .none, .depth = 0, .pin = @intCast(i) });
++        if (mb.module.zero_rc and try mb.hasProvider(local.ty)) try b.ssa.resources.append(mb.allocator, .{ .owner = .none, .depth = 0, .pin = @intCast(i) });
+     }
+     try b.statement(checked.scope.body);
+     if (b.current != null) {
+diff --git a/src/core/build_cap.zig b/src/core/build_cap.zig
+index 2b7533d99..47531ecbe 100644
+--- a/src/core/build_cap.zig
++++ b/src/core/build_cap.zig
+@@ -302,7 +302,7 @@ pub fn scopeProvider(program: typed.Program, source: typed.NodeId) ?typed.NodeId
+ /// Close and drop a scoped handle while its provider is still a borrowed argument.
+ pub fn closeScope(comptime Context: type, c: Context, scope: Scope, span: u32) Error!void {
+     if (scope.pin) |slot| {
+-        _ = try c.effectCall("myl_core_provider_keepalive", &.{.capability}, .void, &.{try c.read(slot, c.current.?)}, span);
++        try @import("aggregate_provider.zig").keepalive(Context, c, try c.read(slot, c.current.?), span);
+         return;
+     }
+     if (c.module().zero_rc) {
+diff --git a/src/core/cost.zig b/src/core/cost.zig
+index a5dbe00a5..e39b2aff8 100644
+--- a/src/core/cost.zig
++++ b/src/core/cost.zig
+@@ -32,6 +32,7 @@ pub fn allocation(module: *const ir.Module, function: *const ir.Function, inst:
+ }
+ 
+ fn calleeAllocation(module: *const ir.Module, callee: *const ir.Function) Allocation {
++    if (@import("aggregate_provider.zig").marker(module, callee) catch return .unresolved) return .never;
+     const allocation_free = runtimeAllocationFree(callee.name) or (!module.zero_rc and std.mem.eql(u8, callee.name, "myl_core_text_encode"));
+     return switch (callee.signature.linkage) {
+         .internal => .never,
+diff --git a/src/core/cost_command.zig b/src/core/cost_command.zig
+index b75785f2f..1c967de11 100644
+--- a/src/core/cost_command.zig
++++ b/src/core/cost_command.zig
+@@ -355,3 +355,40 @@ test "zero RC allocation contracts audit borrowed identity queries without sourc
+     try std.testing.expectError(error.SourceError, foreign.checkLibraryProgram());
+     try std.testing.expectEqualStrings("E_EXTERN_SYMBOL", foreign.diagnostics.items[0].code);
+ }
++
++// spec-case: FRONTEND-CORE-NOALLOC-1
++test "zero RC allocation contracts require validated aggregate provider pin markers" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var module: ir.Module = .{ .single_owner = true, .zero_rc = true };
++    const record = try module.intern(a, .{ .record = &.{ .i64, .capability } });
++    const canonical = try std.fmt.allocPrint(a, "{s}{d}", .{ @import("aggregate_provider.zig").prefix, @backingInt(record) });
++    const marker: ir.Function = .{ .name = canonical, .signature = .{ .params = &.{record}, .ret = .void, .linkage = .runtime_c } };
++    try module.functions.append(a, marker);
++    const call: ir.Inst = .{ .op = .call, .a = @fromBackingInt(0), .ty = .void };
++    try std.testing.expectEqual(cost.Allocation.never, cost.allocation(&module, &module.functions.items[0], call));
++    module.zero_rc = false;
++    try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, &module.functions.items[0], call));
++    module.zero_rc = true;
++    for (0..9) |invalid| {
++        module.functions.items[0] = marker;
++        const callee = &module.functions.items[0];
++        switch (invalid) {
++            0 => callee.signature.params = &.{.i64},
++            1 => callee.signature.ret = .i64,
++            2 => callee.signature.owned = 1,
++            3 => callee.signature.consumes = 1,
++            4 => callee.signature.views = 1,
++            5 => {
++                callee.signature.linkage = .extern_c;
++                callee.span = 13;
++            },
++            6 => callee.name = try std.fmt.allocPrint(a, "{s}0{d}", .{ @import("aggregate_provider.zig").prefix, @backingInt(record) }),
++            7 => callee.name = "myl_core_provider_pin_4294967295",
++            8 => callee.signature.params = &.{},
++            else => unreachable,
++        }
++        try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, callee, call));
++    }
++}
+diff --git a/src/core/emit_llvm.zig b/src/core/emit_llvm.zig
+index 1242e0bf1..e67e97e59 100644
+--- a/src/core/emit_llvm.zig
++++ b/src/core/emit_llvm.zig
+@@ -453,6 +453,7 @@ const ModuleState = struct {
+     }
+ 
+     fn external(self: *ModuleState, function: *const ir.Function, name: []const u8) !void {
++        if (try @import("aggregate_provider.zig").marker(self.module, function)) return;
+         if (self.local.selection == null and try emit_values.adapter(self.allocator, &self.externs, function)) return;
+         // Several signatures of one runtime function (`myl_core_list_sort` over lists of different
+         // elements) are one declaration.
+@@ -3812,6 +3813,14 @@ const FunctionEmitter = struct {
+         if (inst.ty != .void) try out.print(self.a(), "  {s} = freeze {s} poison\n", .{ name, try self.ty(inst.ty) });
+     }
+ 
++    fn specialRuntimeCall(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!bool {
++        if (try @import("aggregate_provider.zig").call(self.state.module, inst)) return true;
++        if (try @import("emit_render.zig").runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return true;
++        if (try emit_bytes.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return true;
++        if (try emit_text.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return true;
++        return emit_text_split.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst);
++    }
++
+     /// Emit a direct or indirect call under the internal aggregate ABI.
+     pub fn call(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!void {
+         const m = self.state.module;
+@@ -3822,10 +3831,7 @@ const FunctionEmitter = struct {
+             try self.state.dependency(@intCast(inst.a.index()));
+             try emit_cap.beforeCall(@TypeOf(self), self, out, inst);
+         }
+-        if (try @import("emit_render.zig").runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
+-        if (try emit_bytes.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
+-        if (try emit_text.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
+-        if (try emit_text_split.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return;
++        if (try self.specialRuntimeCall(out, name, inst)) return;
+         const borrowed_bytes = external and signature.ret == .bytes and signature.owned == 0;
+         const text_parameter = signature.params.len == 1 and signature.params[0] == .str;
+         // Zero-RC encode returns fresh owned bytes; only the RC ABI aliases text.
+diff --git a/src/core/provider_store_test.zig b/src/core/provider_store_test.zig
+index fdc23042b..6e2cdb36b 100644
+--- a/src/core/provider_store_test.zig
++++ b/src/core/provider_store_test.zig
+@@ -38,6 +38,12 @@ test "zero RC provider stores skip Unit bindings and discarded set insertion" {
+         \\    _ = unit
+         \\    return len(values)
+     );
++    try lowers(std.testing.allocator,
++        \\func main() -> int:
++        \\    mut values: set[str] = set()
++        \\    values.add("x")
++        \\    return len(values)
++    );
+ }
+ 
+ // spec-case: NEW-CORE-ZERO-RC-ABI-1
+@@ -50,3 +56,72 @@ test "zero RC provider restrictions borrow a named parent inside their scope" {
+         \\        return 0
+     );
+ }
++
++const Entry = struct {
++    bytes: []const u8,
++    fn read(context: ?*anyopaque, a: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
++        const self: *Entry = @ptrCast(@alignCast(context.?));
++        if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
++        return a.dupe(u8, self.bytes);
++    }
++};
++
++fn refuses(parent: std.mem.Allocator, source: []const u8, code: []const u8) !void {
++    var arena = std.heap.ArenaAllocator.init(parent);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var entry: Entry = .{ .bytes = source };
++    var project: language.embedded_project.Program = undefined;
++    try project.init(a, .{ .context = &entry, .read = Entry.read });
++    var failure: ownership.Failure = .{};
++    try std.testing.expectError(error.Rejected, ownership.checkMode(a, project.compilation.program.?, &failure, true));
++    try std.testing.expectEqualStrings(code, failure.code);
++}
++
++// spec-case: CAPABILITY-FIELD-METHOD-1
++// spec-case: NEW-CORE-ZERO-RC-AFFINE-RESOURCES-1
++// spec-case: NEW-CORE-ZERO-RC-PROVIDER-FIELDS-1
++test "zero RC aggregate provider roots cannot copy or invalidate active field scopes" {
++    try refuses(std.testing.allocator,
++        \\# spec-case: CAPABILITY-FIELD-METHOD-1
++        \\import filesystem
++        \\
++        \\record Store:
++        \\    fs: Filesystem
++        \\
++        \\func main() -> int:
++        \\    const root = Store(fs=filesystem.memory())
++        \\    const copied = root.copy()
++        \\    assert not root.fs.exists("note") and not copied.fs.exists("note")
++        \\    return 0
++    , "E_ZERO_RC_UNSUPPORTED");
++    try refuses(std.testing.allocator,
++        \\# spec-case: CAPABILITY-FIELD-METHOD-1
++        \\import filesystem
++        \\
++        \\record Store:
++        \\    fs: Filesystem
++        \\
++        \\func main() -> int:
++        \\    const root = Store(fs=filesystem.memory())
++        \\    with root.fs.open("note", "w") as file:
++        \\        const moved = root
++        \\        _ = file.write("still live")
++        \\        assert moved.fs.exists("note")
++        \\    return 0
++    , "E_SINGLE_OWNER_OVERLAP");
++    try refuses(std.testing.allocator,
++        \\# spec-case: CAPABILITY-FIELD-METHOD-1
++        \\import filesystem
++        \\
++        \\record Store:
++        \\    fs: Filesystem
++        \\
++        \\func main() -> int:
++        \\    mut root = Store(fs=filesystem.memory())
++        \\    with root.fs.open("note", "w") as file:
++        \\        root = Store(fs=filesystem.memory())
++        \\        _ = file.write("still live")
++        \\    return 0
++    , "E_SINGLE_OWNER_OVERLAP");
++}
+diff --git a/src/core/root_test.zig b/src/core/root_test.zig
+index f50fb2689..9b3eeefb6 100644
+--- a/src/core/root_test.zig
++++ b/src/core/root_test.zig
+@@ -2,6 +2,7 @@
+ //! each stage, then the end-to-end slice programs under `test/core`.
+ comptime {
+     _ = @import("provider_store_test.zig");
++    _ = @import("a08_provider_cache_test.zig");
+     _ = @import("a01_parallel_map_test.zig");
+     _ = @import("a02_capacity_test.zig");
+     _ = @import("a02_list_methods_test.zig");
+diff --git a/src/core/single_owner.zig b/src/core/single_owner.zig
+index 29abe1822..d2f398e5a 100644
+--- a/src/core/single_owner.zig
++++ b/src/core/single_owner.zig
+@@ -6,6 +6,7 @@ const language = @import("mylang");
+ const typed = language.typed;
+ const ir = @import("ir.zig");
+ const resources = @import("single_owner_resource.zig");
++const providers = @import("aggregate_provider.zig");
+ const Span = language.source.Span;
+ const none = std.math.maxInt(usize);
+ const zero_unsupported = "E_ZERO_RC_UNSUPPORTED";
+@@ -79,6 +80,8 @@ pub fn check(a: std.mem.Allocator, program: typed.Program, failure: *Failure) Er
+ 
+ /// Zero-RC extends the move contract to every admitted owning leaf.
+ pub fn checkMode(a: std.mem.Allocator, program: typed.Program, failure: *Failure, zero_rc: bool) Error!void {
++    const provider_types = try providers.classify(a, program);
++    defer a.free(provider_types);
+     const linear = try a.alloc(bool, program.records.len);
+     @memset(linear, false);
+     var changed = true;
+@@ -110,6 +113,7 @@ pub fn checkMode(a: std.mem.Allocator, program: typed.Program, failure: *Failure
+             .program = program,
+             .function = function,
+             .linear = linear,
++            .provider_types = provider_types,
+             .zero_rc = zero_rc,
+             .failure = failure,
+             .state = try work.allocator().alloc(State, function.scope.locals.len),
+@@ -171,6 +175,7 @@ const Checker = struct {
+     program: typed.Program,
+     function: typed.Function,
+     linear: []const bool,
++    provider_types: []const bool,
+     zero_rc: bool,
+     failure: *Failure,
+     state: []State,
+@@ -202,7 +207,13 @@ const Checker = struct {
+     }
+ 
+     fn supported(c: *Checker, ty: typed.Type, span: Span, depth: usize) Error!void {
+-        if (c.zero_rc and depth != 0) if (ty.isFile() or owningCapability(ty)) return c.reject(span, zero_unsupported, "store resource owners in named local scopes in the zero-RC prototype");
++        if (c.zero_rc and depth != 0) {
++            if (ty.isFile()) return c.reject(span, zero_unsupported, "store file owners in named local scopes");
++            if (owningCapability(ty)) for (c.type_path.items) |parent| {
++                if (!providers.plainRecord(c.program.records[parent.recordIndex()]))
++                    return c.reject(span, zero_unsupported, "owning providers can be stored only in ordinary records or tuples");
++            };
++        }
+         if (typed.isBorrowedView(c.program.records, ty)) {
+             if (!c.zero_rc or depth != 0) return c.reject(span, view_escape, "borrowed views require zero-RC mode and cannot be stored inside aggregates");
+             return;
+@@ -606,9 +617,9 @@ const Checker = struct {
+ 
+     fn resourceAccess(c: *Checker, slot: usize, root: usize, write: bool, span: Span) Error!void {
+         const dependency = c.state[slot].dependency;
+-        if (dependency != none and resources.provider(c.function.scope.locals[dependency].ty) and !c.state[dependency].available)
++        if (dependency != none and providers.contains(c.provider_types, c.function.scope.locals[dependency].ty) and !c.state[dependency].available)
+             return c.reject(span, resource_escape, "the resource's provider is no longer available");
+-        if (!write or !resources.provider(c.function.scope.locals[root].ty)) return;
++        if (!write or !providers.contains(c.provider_types, c.function.scope.locals[root].ty)) return;
+         for (c.state, c.function.scope.locals, 0..) |state, local, other| {
+             if (state.available and c.state[c.rootOf(other)].available and state.dependency == root and resources.dependent(c.program, local.ty))
+                 return c.reject(span, resource_escape, "a provider cannot move or change while a dependent resource is live");
+@@ -620,7 +631,11 @@ const Checker = struct {
+         if (c.zero_rc and (operation.kind == .snapshot or operation.kind == .view))
+             return c.reject(node.span, zero_unsupported, "shared snapshots and retained views are unsupported; use .borrow() for a checked view or .copy() for ownership");
+         const owner = @backingInt(operation.owner);
+-        if (operation.kind == .copy) return c.checkLocal(owner, .read, node.span);
++        if (operation.kind == .copy) {
++            if (c.zero_rc and providers.contains(c.provider_types, c.function.scope.locals[owner].ty))
++                return c.reject(node.span, zero_unsupported, "provider owners cannot be copied; borrow the enclosing record or move it");
++            return c.checkLocal(owner, .read, node.span);
++        }
+         const linear = c.tracked(c.function.scope.locals[owner].ty);
+         if (linear and operation.kind == .iteration_check) {
+             try c.checkLocal(owner, .read, node.span);
+@@ -815,7 +830,7 @@ const Checker = struct {
+                 const source = scope.resource orelse return c.reject(statement.span, zero_unsupported, "zero-RC scopes require an explicit file owner");
+                 const node = c.program.nodes[@backingInt(source)];
+                 const provider = @import("build_cap.zig").scopeProvider(c.program, source) orelse return c.reject(statement.span, zero_unsupported, "open a dependent scope directly from a named provider in this prototype");
+-                if (c.program.nodes[@backingInt(provider)].data != .local) return c.reject(statement.span, zero_unsupported, "bind the provider to a local before opening a scoped file");
++                if (providers.root(c.program, provider) == null) return c.reject(statement.span, zero_unsupported, "bind the provider or its enclosing record to a local before opening a scope");
+                 if (node.data == .file_access or node.data == .propagate) {
+                     try c.expression(source, .read);
+                 } else {
+diff --git a/src/core/verify_ir.zig b/src/core/verify_ir.zig
+index f2a0fbf3e..fadbef8fc 100644
+--- a/src/core/verify_ir.zig
++++ b/src/core/verify_ir.zig
+@@ -71,6 +71,10 @@ pub fn verifyModule(arena: std.mem.Allocator, module: *const ir.Module, failure:
+         }
+     }
+     for (module.functions.items) |*f| {
++        _ = @import("aggregate_provider.zig").marker(module, f) catch {
++            failure.* = .{ .function = f.name, .reason = "invalid compiler-only provider lifetime marker" };
++            return error.InvalidIr;
++        };
+         for (f.signature.params, 0..) |param, i| {
+             const span = i < 64 and f.signature.views & (@as(u64, 1) << @intCast(i)) != 0;
+             const invalid_span = span and !Verifier.admittedView(f.signature, i);
+diff --git a/src/core/zero_rc.zig b/src/core/zero_rc.zig
+index 8667b4763..1a198feab 100644
+--- a/src/core/zero_rc.zig
++++ b/src/core/zero_rc.zig
+@@ -124,6 +124,7 @@ fn transferContract(symbol: []const u8) ?Contract {
+ // These adapters synchronously borrow every input. A completion either closes
+ // its native handle or leaves the owner available for the emitted failure move.
+ fn providerContract(symbol: []const u8) ?Contract {
++    if (@import("aggregate_provider.zig").markerType(symbol) != null) return .{};
+     const readers = [_][]const u8{ "myl_core_provider_keepalive", "myl_core_resource_complete", "myl_core_stream_write_bytes", "myl_core_stream_write_buffer" };
+     for (readers) |name| if (std.mem.eql(u8, symbol, name)) return .{};
+     const constructors = [_][]const u8{

@@ -63,7 +63,7 @@
       "requested_by": "user",
       "change": "Expand Result-list support, including parallel.map returning Results.",
       "owner": "A01",
-      "status": "in_progress"
+      "status": "integrated; Support5 Result-map release/TSan at1/2/8 workers passed6/6; final qualification pending"
     }
   ],
   "interim_compilers": [
@@ -81,7 +81,19 @@
       "name": "support3",
       "revision": "0d17e4e130706639c0f49e78b60502bfb2151ebc",
       "sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7",
-      "native_qualification": "blocked by preexisting uncacheable unit-object lifetime bug; A01 owns fix"
+      "native_qualification": "Superseded: object lifetime fixed in632726724 and host loader cache reviewed in a2160955e; final qualification pending."
+    },
+    {
+      "name": "support4",
+      "revision": "66890fbc5135a771e6a423724d13c30018ab717f",
+      "sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+      "qualification": "Intermediate Debug compiler; historical RC-seed installed components. Not C1/package qualification."
+    },
+    {
+      "name": "support5",
+      "revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+      "sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+      "qualification": "Intermediate Debug compiler; historical RC-seed installed components. Not C1/package qualification."
     }
   ],
   "baseline_census": {
@@ -96,7 +108,7 @@
     "final_candidate_qualification": false
   },
   "admission": {
-    "build_slots": 2,
+    "build_slots": 3,
     "gate_slots": 2,
     "jobs": 4,
     "maxrss": 8589934592,
@@ -105,7 +117,7 @@
       14.8,
       19
     ],
-    "timing": "A09 schedules exclusive admission; no timing queued during exploratory full verification."
+    "timing": "Shared admission also serves an independent development-loop session. Queue waits are excluded from timing."
   },
   "exploratory_full_gate": {
     "revision": "245e892f8518943ee44a0cc6009ab4b4fa6bca43",
@@ -124,5 +136,61 @@
       "Core dict fixture dictionary snapshot panic",
       "CLI fix contextual dictionary snapshot status2"
     ]
-  }
+  },
+  "interim_qualification": {
+    "final_candidate": false,
+    "original30_support5": {
+      "cases": 30,
+      "executions": 72,
+      "allocating": 23,
+      "allocation_free": 7,
+      "refused": 0,
+      "failed": 0,
+      "rc_events": 0,
+      "managed_exit_live_bytes": 0,
+      "comparison": "All72 source/input matched runs have identical C0 allocation traffic and managed peaks."
+    },
+    "libraries": "A04:80 functions/5 types,40 native mode lanes and3 negatives passed on Support4. A05:95 functions/25 types,20 native mode lanes passed on Support5. Common final compiler pending.",
+    "applications": "Four shapes x five modes;20 binaries and60 counted executions passed on Support4. Final rerun pending.",
+    "cache": "Support5 passed40 interim probes. cache-plan owned component still refuses initial loop-record owner lowering.",
+    "commands": "Support5 main23/23, analysis15/15, followup6/6, cost8/8. Unsupported guest test counts inspected explicitly."
+  },
+  "current_blockers": [
+    {
+      "owner": "A07",
+      "item": "Owned cache-plan component",
+      "reproducer": "A08 Support5 incremental.my:241 initial loop-record retain lowering",
+      "status": "blocked"
+    },
+    {
+      "owner": "A07/A06",
+      "item": "Record home cleanup",
+      "reproducer": "ce2_effects snapshot_between; copied child home overlaps whole-owner snapshot",
+      "status": "blocked"
+    },
+    {
+      "owner": "A01/A07",
+      "item": "Borrowed dictionary items",
+      "reproducer": "two-name and single-item dict.items public/doc fixtures",
+      "status": "blocked"
+    },
+    {
+      "owner": "A04",
+      "item": "Numeric formatter ABI",
+      "reproducer": "historical kind offset in core_number_text under zero-RC",
+      "status": "in_progress"
+    },
+    {
+      "owner": "coordinator/A05",
+      "item": "Aggregate providers",
+      "reproducer": "A05 record/tuple provider positives and negatives",
+      "status": "in_progress"
+    },
+    {
+      "owner": "coordinator/A10/A08",
+      "item": "Installed components",
+      "reproducer": "Support5 libexec still uses historical RC-seed components; independent owned pin required",
+      "status": "blocked"
+    }
+  ]
 }

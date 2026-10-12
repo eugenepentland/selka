@@ -355,3 +355,40 @@ test "zero RC allocation contracts audit borrowed identity queries without sourc
     try std.testing.expectError(error.SourceError, foreign.checkLibraryProgram());
     try std.testing.expectEqualStrings("E_EXTERN_SYMBOL", foreign.diagnostics.items[0].code);
 }
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "zero RC allocation contracts require validated aggregate provider pin markers" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var module: ir.Module = .{ .single_owner = true, .zero_rc = true };
+    const record = try module.intern(a, .{ .record = &.{ .i64, .capability } });
+    const canonical = try std.fmt.allocPrint(a, "{s}{d}", .{ @import("aggregate_provider.zig").prefix, @backingInt(record) });
+    const marker: ir.Function = .{ .name = canonical, .signature = .{ .params = &.{record}, .ret = .void, .linkage = .runtime_c } };
+    try module.functions.append(a, marker);
+    const call: ir.Inst = .{ .op = .call, .a = @fromBackingInt(0), .ty = .void };
+    try std.testing.expectEqual(cost.Allocation.never, cost.allocation(&module, &module.functions.items[0], call));
+    module.zero_rc = false;
+    try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, &module.functions.items[0], call));
+    module.zero_rc = true;
+    for (0..9) |invalid| {
+        module.functions.items[0] = marker;
+        const callee = &module.functions.items[0];
+        switch (invalid) {
+            0 => callee.signature.params = &.{.i64},
+            1 => callee.signature.ret = .i64,
+            2 => callee.signature.owned = 1,
+            3 => callee.signature.consumes = 1,
+            4 => callee.signature.views = 1,
+            5 => {
+                callee.signature.linkage = .extern_c;
+                callee.span = 13;
+            },
+            6 => callee.name = try std.fmt.allocPrint(a, "{s}0{d}", .{ @import("aggregate_provider.zig").prefix, @backingInt(record) }),
+            7 => callee.name = "myl_core_provider_pin_4294967295",
+            8 => callee.signature.params = &.{},
+            else => unreachable,
+        }
+        try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, callee, call));
+    }
+}

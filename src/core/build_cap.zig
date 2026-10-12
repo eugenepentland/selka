@@ -302,7 +302,7 @@ pub fn scopeProvider(program: typed.Program, source: typed.NodeId) ?typed.NodeId
 /// Close and drop a scoped handle while its provider is still a borrowed argument.
 pub fn closeScope(comptime Context: type, c: Context, scope: Scope, span: u32) Error!void {
     if (scope.pin) |slot| {
-        _ = try c.effectCall("myl_core_provider_keepalive", &.{.capability}, .void, &.{try c.read(slot, c.current.?)}, span);
+        try @import("aggregate_provider.zig").keepalive(Context, c, try c.read(slot, c.current.?), span);
         return;
     }
     if (c.module().zero_rc) {
