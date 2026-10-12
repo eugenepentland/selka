@@ -1,0 +1,36 @@
+{
+  "base_commit": "a084aa4bd46aeaf28b436512fd7ee2ccb90f1a46",
+  "change": "Bind CLI corruption fixture directory discovery to exported semantic_store.format_version via build test_options",
+  "semantic_cache_version": "semantic-cache-v9",
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "$ZIG",
+    "build",
+    "test-cli",
+    "-Dtest-filter=C2 damaged truncated oversized",
+    "-Dtest-filter=C3s damaged truncated",
+    "-Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+    "-Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar",
+    "-j4",
+    "--maxrss",
+    "8589934592"
+  ],
+  "process_exit": 0,
+  "guardian_tests": {
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0,
+    "named_selected": 2,
+    "unnamed": 3
+  },
+  "log_note": "The build wrapper prints a failed command transcript after the Guardian PASS result; the enclosing build returned zero. The raw transcript is retained unchanged.",
+  "sha256": {
+    "build.zig": "a5508371fbc0920c8819ae99b8b086aa229b3eee6258130fedd6e647d2244b8b",
+    "test/integration.zig": "30a632b1b5f998fbd6ebc66d98dbfb279baa5089f1a13461ddb31ae480381cdc",
+    "src/semantic_store.zig": "2db32dd9352b24feb8bdabfe2a37174772811b9e58502ea6e5bf14d03dd668d4",
+    ".zig-cache/o/2ca5a13b178774fec9f3c01212cf1933/test": "3fe6f9b9845c2f5e8558f06617cd80c9303318ddcabdf77058b05b85928582f0",
+    ".zig-cache/o/4666c25e70cf7628899b54e87b009f9c/mylang": "ac9ebb424496fa2951ce128987b4209b22861ac0914e27125fc0dbb2bebee549",
+    ".zig-cache/o/022768dcc47b849008714c99481f528a/options.zig": "48e975422b16ad35fa99f63668d58db282ebc9e2a2d4e4d1b140e145e1cc741c"
+  }
+}

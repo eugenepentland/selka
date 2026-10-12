@@ -639,6 +639,7 @@ pub fn build(b: *std.Build) void {
     options.addOptionPath("compiler_path", exe.getEmittedBin());
     options.addOptionPath("component_builder_path", component_tool.getEmittedBin());
     options.addOption([]const u8, "zig_path", b.graph.zig_exe);
+    options.addOption([]const u8, "semantic_cache_version", @import("src/semantic_store.zig").format_version);
     const integration = b.addTest(.{ .max_rss = rss.compile, .test_runner = guardian.testRunner(guardian_dep), .filters = test_filters, .root_module = b.createModule(.{
         .root_source_file = b.path("test/integration.zig"),
         .target = target,
