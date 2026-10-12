@@ -112,9 +112,14 @@ class MeasurementWindow(unittest.TestCase):
         self.assertEqual(status, 0)
         self.assertEqual(timings[0]['admission_scope'], 'request-timing-window')
         pidfile = self.root / 'child.pid'
-        code = 'import os,time;open(%r,"w").write(str(os.getpid()));time.sleep(30)' % str(pidfile)
+        # Exercise the real expiry handler only after the owned child is ready.
+        # A short startup deadline races scheduler load and can expire before
+        # there is a child to clean up. Separate tests cover timer-driven expiry.
+        code = ('import os,signal,time\n'
+                'with open(%r,"w") as stream: stream.write(str(os.getpid()))\n'
+                'os.kill(%d,signal.SIGALRM)\ntime.sleep(30)') % (str(pidfile), os.getpid())
         with self.assertRaises(measurement.WindowExpired):
-            with measurement.timing_window(.5):
+            with measurement.timing_window(10):
                 verify_cache.run_admitted(self.root, 'gate', [sys.executable, '-c', code],
                                           dict(os.environ), lambda: True)
         self.assertTrue(pidfile.exists())

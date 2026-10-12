@@ -29,8 +29,13 @@ The second complete gate on `0301b1b3c` passed formatting but failed two native
 tests (numeric fixtures and live iteration) that passed the first run. Neither
 wrapper printed child diagnostics, so those diagnostics have been added without
 changing assertions. Both tests then passed one focused run and 12 concurrent
-repetitions; see `diagnostics-01/`. The cause remains unproven. A third complete
-gate will run with failure capture enabled before main advances.
+repetitions; see `diagnostics-01/`. The cause remains unproven. Gate 03 on
+`e8c0a41d1` passed all 3,109 selected native tests and formatting. Its only failure
+was a tooling test whose 0.5-second timeout preceded child startup. That test
+now synchronizes expiry with the child PID publication; the real expiry handler
+and cleanup checks remain. All 12 measurement tests and ten deliberately delayed
+repetitions passed; see `measurement-startup-01/`. Gate 04 will verify the fix
+with all registered checks before main advances.
 
 Both gates use the unchanged qualified component pin and archive recorded in
 `../component-route.json`; no immutable bootstrap seed was repinned. This

@@ -1,0 +1,9 @@
+test_owned_commands_execute_without_nested_admission_and_expiry_cleans_up (verification_measurement_test.MeasurementWindow.test_owned_commands_execute_without_nested_admission_and_expiry_cleans_up) ... build-slot: timing slot 1, FIFO ticket 1 after 0s
+measured
+build-slot: timing slot 1, FIFO ticket 2 after 0s
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 2.249s
+
+OK
