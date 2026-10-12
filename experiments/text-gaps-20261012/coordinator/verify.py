@@ -29,7 +29,7 @@ def main():
     (output / 'request.json').write_text(json.dumps(identity, indent=2) + '\n')
     with (output / 'stdout.log').open('w') as stdout, (output / 'stderr.log').open('w') as stderr:
         result = subprocess.run(command, cwd=ROOT, stdout=stdout, stderr=stderr)
-    shutil.copy2(ROOT / '.mylang-cache/verification-v1/last-run.json', output / 'last-run.json')
+    shutil.copy2(ROOT / '.mylang-cache/verification-v2/last-run.json', output / 'last-run.json')
     print('Verification returncode', result.returncode, 'evidence', output, flush=True)
     raise SystemExit(result.returncode)
 

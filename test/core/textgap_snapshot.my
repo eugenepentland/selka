@@ -56,6 +56,7 @@ public func test_textgap_json_copy_temporary_snapshot_and_nested_mutation_keep_o
     saved.values.clear()
     return len(second.values["key"]) == 2 and second.values["key"][0] == "before-5" and second.values["key"][1] == "after-6"
 
+
 func main(out: Stream) -> int:
     out.print(test_textgap_json_copy_owned_donors_survive_loops_and_early_returns())
     out.print(test_textgap_json_copy_borrowed_and_live_sources_keep_independent_snapshots())
