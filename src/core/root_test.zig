@@ -29,6 +29,7 @@ comptime {
     _ = @import("native_receipt_test.zig");
     _ = @import("cli.zig");
     _ = @import("cost_test.zig");
+    _ = @import("cost_command.zig");
     _ = @import("cost_query_test.zig");
     _ = @import("count_test.zig");
     _ = @import("cli_args.zig");

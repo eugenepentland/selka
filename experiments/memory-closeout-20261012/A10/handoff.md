@@ -96,3 +96,18 @@ sessions, and repeated doctest runs with positive execution, library checking an
 expected move refusal. Focused `zero RC doctest` unit selection passed 8/8
 (one named regression and seven existing unnamed import blocks). The original
 focus installation was preserved for A04; this candidate uses a private prefix.
+
+Cost command followup: explicit zero-RC selection, eager whole-source ownership
+validation before lowering-cache use, and a shared mode across lowering/emission.
+`cost-matrix.json` passes 8/8 cases: four analysis modes, warm output, an ordinary
+RC cache control, then two source refusals. The registered structural cost test
+passes 1/1 and asserts the count-free module/LLVM ABI. Its first unregistered run
+selected zero tests and failed; the coordinator added the root registration before
+this passing rerun. Static `totals.rc.releases` currently counts direct ownership
+cleanup sites too; it is not a runtime reference-count event measurement.
+
+`rollout-test-inventory.json` and `rollout-test-plan.md` record exact test-path
+inheritance, 175 additional Core sources and 44 additional fixture sources,
+inline-source drivers and direct-IR retirement obligations. The first ten paired
+source admissions took 1.31 seconds; the remaining paired source inventory is
+independent of production fixes and remains distinct from the 356 denominator.

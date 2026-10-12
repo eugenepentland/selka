@@ -35,8 +35,10 @@ keeps the original fixture identity and exact compiler SHA-256 in each report.
 
 Candidate memo/persistence migrations preserve snapshot independence through explicit
 copies. `memo.message`, `persistent_memo.message` and `durable.message` now copy
-borrowed dynamic error text, requiring `effects(managed_allocation)` where callers
-previously assumed `effects()`. Literal-only error branches remain allocation-free.
+borrowed dynamic error text into independent returned storage, so these calls may
+allocate. Remove an old `effects()` narrowing when that allocation is needed; the
+compiler derives the ordinary ceiling without a new annotation. Literal-only error
+branches remain allocation-free.
 `memo.call` copies stored keys/results and independently returned hits; callers must
 copy a cache, pool or generator when both snapshots remain observable. These are
 source/library changes, not compiler-only performance wins.

@@ -14,6 +14,7 @@ const query = @import("cost_query.zig");
 const lowering_cache = @import("lowering_cache.zig");
 const stage_metrics = @import("stage_metrics.zig");
 const dynamic = @import("cost_dynamic.zig");
+const zero_rc_flag = @import("mylang").zero_rc_flag;
 
 /// A malformed request is rendered as usage, with exit 2.
 pub const Request = struct {
@@ -26,7 +27,8 @@ pub const Request = struct {
     /// `--counters FILE.json`: a counting run's counts, added after the static report.
     counters: ?[]const u8 = null,
 };
-const usage = "usage: mylang cost <entry.my> [function] [--json] [--debug | --no-facts | --verify-facts] [--llvm-remarks FILE.opt.yaml] [--counters FILE.json] [--cache-dir DIR] [--no-cache | --verify-cache] [--cache-report]\n";
+const usage = "usage: mylang cost <entry.my> [function] [--json] [--debug | --no-facts | --verify-facts] " ++
+    "[--llvm-remarks FILE.opt.yaml] [--counters FILE.json] [--cache-dir DIR] [--no-cache | --verify-cache] [--cache-report] [--experimental-zero-rc]\n";
 
 /// Parse supported modes and reject flags rather than silently changing the analysis.
 pub fn parse(args: []const []const u8) ?Request {
@@ -54,7 +56,7 @@ pub fn parse(args: []const []const u8) ?Request {
         } else if (std.mem.eql(u8, arg, "--cache-dir")) {
             if (request == null or index + 1 == args.len) return null;
             index += 1;
-        } else if (std.mem.eql(u8, arg, "--no-cache") or std.mem.eql(u8, arg, "--verify-cache") or std.mem.eql(u8, arg, "--cache-report")) {
+        } else if (std.mem.eql(u8, arg, "--no-cache") or std.mem.eql(u8, arg, "--verify-cache") or std.mem.eql(u8, arg, "--cache-report") or std.mem.eql(u8, arg, zero_rc_flag)) {
             if (request == null) return null;
         } else if (std.mem.startsWith(u8, arg, "--")) return null else if (request == null) {
             request = .{ .path = arg };
@@ -93,6 +95,7 @@ pub const QueryOptions = struct {
     enabled: bool = true,
     verify: bool = false,
     report: bool = false,
+    codegen: pipeline.Codegen = .{},
 
     fn parse(args: []const []const u8) QueryOptions {
         var options: QueryOptions = .{};
@@ -109,6 +112,9 @@ pub const QueryOptions = struct {
                 options.verify = true;
             } else if (std.mem.eql(u8, args[index], "--cache-report")) {
                 options.report = true;
+            } else if (std.mem.eql(u8, args[index], zero_rc_flag)) {
+                options.codegen.single_owner = true;
+                options.codegen.zero_rc = true;
             }
         }
         return options;
@@ -135,8 +141,11 @@ pub fn outputWithQuery(given: std.process.Init, request: Request, policy: QueryO
     }
     const checked = session.checkFile(a, request.path, &diagnostics) catch |err| return failure(init, diagnostics.items, err);
     entry.validate(a, &session, &diagnostics) catch |err| return failure(init, diagnostics.items, err);
+    if (policy.codegen.single_owner and !try @import("single_owner.zig").validateMode(a, checked.program, checked.src, .text, &diagnostics, policy.codegen.zero_rc)) {
+        return failure(init, diagnostics.items, error.SourceError);
+    }
     var refusal: build.Refusal = .{};
-    const input: build.Input = .{ .program = checked.program, .source = checked.src, .drop_debug = !request.debug };
+    const input = loweringInput(checked, request, policy.codegen);
     var module = (if (policy.enabled and !policy.verify) build.buildExecutableCached(a, input, &refusal, &lowering) else build.buildExecutable(a, input, &refusal)) catch |err| {
         if (err != error.Unsupported) return err;
         const at = frontend.position(checked.src, .{ .start = refusal.span, .end = refusal.span });
@@ -147,7 +156,7 @@ pub fn outputWithQuery(given: std.process.Init, request: Request, policy: QueryO
         .zig = cli_run.zigPath(init),
         .mode = if (request.debug) .debug else .release,
         .facts = if (request.mode == .verify) .verify else if (request.mode == .off) .off else .on,
-        .show = .{ .stats = true },
+        .show = .{ .stats = true, .codegen = policy.codegen },
         .cache = policy.cache,
     };
     const unit = try pipeline.unitFor(a, checked, entry.path, session.single != null);
@@ -235,4 +244,39 @@ fn failure(init: std.process.Init, text: []const u8, err: anyerror) Error!Output
     if (err == error.OutOfMemory) return error.OutOfMemory;
     try std.Io.File.stderr().writeStreamingAll(init.io, text);
     return .{ .status = if (err == error.PolicyDenied) 3 else if (err == error.ConfigurationFailed or err == error.ToolFailed or err == error.InvalidIr or err == error.WriteFailed) 2 else 1 };
+}
+
+/// Cost reports lower the same source ownership and ABI that emission verifies.
+fn loweringInput(checked: frontend.Checked, request: Request, codegen: pipeline.Codegen) build.Input {
+    return .{
+        .program = checked.program,
+        .source = checked.src,
+        .drop_debug = !request.debug,
+        .single_owner = codegen.single_owner,
+        .zero_rc = codegen.zero_rc,
+    };
+}
+
+// spec-case: NEW-CORE-ZERO-RC-3
+test "zero RC cost lowering and emission select the count-free ABI" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const arguments = [_][]const u8{ "cost.my", zero_rc_flag };
+    const request = parse(&arguments).?;
+    const policy = QueryOptions.parse(&arguments);
+    var unit = try @import("mylang").Compilation.init(a, "cost.my", "func main() -> int:\n    const value = \"value-\" + str(7)\n    return len(value)\n");
+    defer unit.deinit();
+    try unit.check();
+    const checked: frontend.Checked = .{ .program = unit.program.?, .src = unit.src };
+    var why: build.Refusal = .{};
+    var module = try build.buildExecutable(a, loweringInput(checked, request, policy.codegen), &why);
+    try std.testing.expect(module.single_owner and module.zero_rc);
+    var report: std.ArrayList(u8) = .empty;
+    const emission = try pipeline.emittedWithScratch(a, a, &module, .{ .src = checked.src, .source_path = "cost.my", .main = .{} }, .{
+        .zig = "unused",
+        .show = .{ .llvm = "unused", .codegen = policy.codegen },
+    }, &report);
+    try std.testing.expect(std.mem.indexOf(u8, emission.whole.?, "; mylang-zero-rc-v2") != null);
+    try std.testing.expect(@import("zero_rc.zig").emittedClean(emission.whole.?));
 }
