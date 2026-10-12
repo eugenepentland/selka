@@ -206,6 +206,7 @@ def run(args):
         if digest(record["compiler"]) != record["compiler_sha256"]:
             raise ValueError("compiler changed since builds")
     memory_only = args.metric == "rss"
+    harness_sha256 = digest(__file__)
     result = {"started_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
               "metric": args.metric,
               "method": ("3 alternating pairs; separate GNU time guest RSS runs" if memory_only else
@@ -251,6 +252,7 @@ def run(args):
         for case in (first, second):
             if digest(case["binary"]) != case["binary_sha256"]:
                 raise ValueError(f"{name}: binary changed")
+        window_started_utc = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
         observations = {"before": [], "after": []}
         sample = run_rss_once if memory_only else run_once
         for pair in range(3 if memory_only else 11):
@@ -259,6 +261,9 @@ def run(args):
                 row = sample([case["binary"], *case.get("args", [])], case.get("cwd", str(ROOT)),
                              clean_env(case.get("env")), cpus, case["expected"], case.get("timeout_s", 120))
                 observations[arm].append({"pair": pair, "warmup": not memory_only and pair < 2, **row})
+        window = {"window_started_utc": window_started_utc,
+                  "window_finished_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                  "measurement_harness_sha256": harness_sha256}
         summary = {}
         for arm in observations:
             measured = [r for r in observations[arm] if not r["warmup"]]
@@ -266,7 +271,7 @@ def run(args):
                 values = [r[metric] for r in measured]
                 summary[f"{arm}_{metric}"] = {"median": statistics.median(values), "min": min(values), "max": max(values)}
         if memory_only:
-            result["cases"][name] = {"cpus": cpus, "samples": observations, "summary": summary}
+            result["cases"][name] = {"cpus": cpus, "samples": observations, "summary": summary, **window}
             save(args.output, result)
             print(name, summary, flush=True)
             continue
@@ -285,7 +290,7 @@ def run(args):
                                        "compiler and source migration; not a compiler-only comparison")
         summary["slowdown_review_trigger"] = ratio > 1.05
         summary["tiny_workload"] = min(summary[f"{arm}_wall_ns"]["median"] for arm in observations) < 100_000_000
-        result["cases"][name] = {"cpus": cpus, "samples": observations, "summary": summary}
+        result["cases"][name] = {"cpus": cpus, "samples": observations, "summary": summary, **window}
         save(args.output, result)
         print(name, summary, flush=True)
     result["finished_utc"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())

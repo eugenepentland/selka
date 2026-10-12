@@ -1,0 +1,408 @@
+{
+  "source_commit": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "manifest_sha256": "ea4f3ba5fe04dd428b5b189bf65376988cd6c8ea92762653804625b60f072502",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "ownership_selection": "opt-in",
+  "admission": "held",
+  "cases": [
+    {
+      "id": "array",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/array_long.my",
+      "expected": "array 512000000\n",
+      "cpus": [
+        10
+      ],
+      "input_note": "128 sibling JSON items, 4000000 lookups selecting independently owned nested result",
+      "flags": [
+        "--experimental-zero-rc",
+        "--release"
+      ],
+      "source_sha256": "82125b5cfdfb1da843e5bdf53650dee86130c005d83701252c7143567d5d0942",
+      "source_inputs_sha256": {
+        "array_long.my": "82125b5cfdfb1da843e5bdf53650dee86130c005d83701252c7143567d5d0942"
+      },
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/array_long.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/array/program"
+      ],
+      "build_status": 0,
+      "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/array/build.stderr",
+      "artifact_preparation": "fresh",
+      "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/array/program",
+      "binary_sha256": "944c3b35b36411da47d08f1d2e94802bf999ed783c8cf13f802516e733d4092d",
+      "instrumentation": "absent; flags and nm checked"
+    },
+    {
+      "id": "object",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/object_long.my",
+      "expected": "object 512000000\n",
+      "cpus": [
+        10
+      ],
+      "input_note": "128 sibling JSON items, 4000000 lookups selecting independently owned nested result",
+      "flags": [
+        "--experimental-zero-rc",
+        "--release"
+      ],
+      "source_sha256": "e61f89aa77722e1c3386b47a929383bd2b2e5335a9236415f8aded2398159bc8",
+      "source_inputs_sha256": {
+        "object_long.my": "e61f89aa77722e1c3386b47a929383bd2b2e5335a9236415f8aded2398159bc8"
+      },
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/object_long.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/object/program"
+      ],
+      "build_status": 0,
+      "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/object/build.stderr",
+      "artifact_preparation": "fresh",
+      "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/object/program",
+      "binary_sha256": "3b77165a7187dd490327385f0913b56dc022f2945e1112192a426839ea866a11",
+      "instrumentation": "absent; flags and nm checked"
+    },
+    {
+      "id": "record",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/record_long.my",
+      "expected": "279555560\n",
+      "cpus": [
+        10
+      ],
+      "input_note": "1000000 fresh owned payload unpacks",
+      "flags": [
+        "--experimental-zero-rc",
+        "--release"
+      ],
+      "source_sha256": "384023aefd7a12a2e7db8c759649b8ba8928fb18117c8e56649c2e74b68026b1",
+      "source_inputs_sha256": {
+        "record_long.my": "384023aefd7a12a2e7db8c759649b8ba8928fb18117c8e56649c2e74b68026b1"
+      },
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/record_long.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/record/program"
+      ],
+      "build_status": 0,
+      "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/record/build.stderr",
+      "artifact_preparation": "fresh",
+      "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/record/program",
+      "binary_sha256": "7e59bb3fc025ed102d36f9e9a661f7a5d34d205a931bba9041d0b727bcc1b11a",
+      "instrumentation": "absent; flags and nm checked"
+    },
+    {
+      "id": "parallel_cheap_1",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+      "expected": "25853755392\n",
+      "args": [
+        "513",
+        "65536",
+        "cheap"
+      ],
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "cpus": [
+        10
+      ],
+      "input_note": "513 uneven inputs, 65536 maps; identical inputs within each paired worker case. Repetitions differ across worker counts, so raw wall times are not a worker-scaling comparison.",
+      "flags": [
+        "--experimental-zero-rc",
+        "--release"
+      ],
+      "source_sha256": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a",
+      "source_inputs_sha256": {
+        "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+      },
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program"
+      ],
+      "build_status": 0,
+      "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/build.stderr",
+      "artifact_preparation": "fresh",
+      "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program",
+      "binary_sha256": "7b364ec660c176e7655f1cb3cc4648a9ffb447323b46b7fb1544c0592468e5bc",
+      "instrumentation": "absent; flags and nm checked"
+    },
+    {
+      "id": "parallel_cheap_2",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+      "expected": "6463438848\n",
+      "args": [
+        "513",
+        "16384",
+        "cheap"
+      ],
+      "env": {
+        "MYLANG_THREADS": "2"
+      },
+      "cpus": [
+        8,
+        10
+      ],
+      "input_note": "513 uneven inputs, 16384 maps; identical inputs within each paired worker case. Repetitions differ across worker counts, so raw wall times are not a worker-scaling comparison.",
+      "flags": [
+        "--experimental-zero-rc",
+        "--release"
+      ],
+      "source_sha256": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a",
+      "source_inputs_sha256": {
+        "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+      },
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program"
+      ],
+      "build_status": 0,
+      "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/build.stderr",
+      "artifact_preparation": "reused",
+      "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program",
+      "binary_sha256": "7b364ec660c176e7655f1cb3cc4648a9ffb447323b46b7fb1544c0592468e5bc",
+      "instrumentation": "absent; flags and nm checked"
+    },
+    {
+      "id": "parallel_cheap_8",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+      "expected": "3231719424\n",
+      "args": [
+        "513",
+        "8192",
+        "cheap"
+      ],
+      "env": {
+        "MYLANG_THREADS": "8"
+      },
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "input_note": "513 uneven inputs, 8192 maps; identical inputs within each paired worker case. Repetitions differ across worker counts, so raw wall times are not a worker-scaling comparison.",
+      "flags": [
+        "--experimental-zero-rc",
+        "--release"
+      ],
+      "source_sha256": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a",
+      "source_inputs_sha256": {
+        "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+      },
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program"
+      ],
+      "build_status": 0,
+      "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/build.stderr",
+      "artifact_preparation": "reused",
+      "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program",
+      "binary_sha256": "7b364ec660c176e7655f1cb3cc4648a9ffb447323b46b7fb1544c0592468e5bc",
+      "instrumentation": "absent; flags and nm checked"
+    },
+    {
+      "id": "parallel_expensive_1",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+      "expected": "131028929568\n",
+      "args": [
+        "8193",
+        "32",
+        "expensive"
+      ],
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "cpus": [
+        10
+      ],
+      "input_note": "8193 uneven inputs, 32 maps, 2048 arithmetic iterations per callback. Same source, arguments, workers and P-core affinity in both arms.",
+      "flags": [
+        "--experimental-zero-rc",
+        "--release"
+      ],
+      "source_sha256": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a",
+      "source_inputs_sha256": {
+        "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+      },
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program"
+      ],
+      "build_status": 0,
+      "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/build.stderr",
+      "artifact_preparation": "reused",
+      "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program",
+      "binary_sha256": "7b364ec660c176e7655f1cb3cc4648a9ffb447323b46b7fb1544c0592468e5bc",
+      "instrumentation": "absent; flags and nm checked"
+    },
+    {
+      "id": "parallel_expensive_2",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+      "expected": "131028929568\n",
+      "args": [
+        "8193",
+        "32",
+        "expensive"
+      ],
+      "env": {
+        "MYLANG_THREADS": "2"
+      },
+      "cpus": [
+        8,
+        10
+      ],
+      "input_note": "8193 uneven inputs, 32 maps, 2048 arithmetic iterations per callback. Same source, arguments, workers and P-core affinity in both arms.",
+      "flags": [
+        "--experimental-zero-rc",
+        "--release"
+      ],
+      "source_sha256": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a",
+      "source_inputs_sha256": {
+        "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+      },
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program"
+      ],
+      "build_status": 0,
+      "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/build.stderr",
+      "artifact_preparation": "reused",
+      "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program",
+      "binary_sha256": "7b364ec660c176e7655f1cb3cc4648a9ffb447323b46b7fb1544c0592468e5bc",
+      "instrumentation": "absent; flags and nm checked"
+    },
+    {
+      "id": "parallel_expensive_8",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+      "expected": "131028929568\n",
+      "args": [
+        "8193",
+        "32",
+        "expensive"
+      ],
+      "env": {
+        "MYLANG_THREADS": "8"
+      },
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "input_note": "8193 uneven inputs, 32 maps, 2048 arithmetic iterations per callback. Same source, arguments, workers and P-core affinity in both arms.",
+      "flags": [
+        "--experimental-zero-rc",
+        "--release"
+      ],
+      "source_sha256": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a",
+      "source_inputs_sha256": {
+        "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+      },
+      "build_command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/cache",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program"
+      ],
+      "build_status": 0,
+      "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/build.stderr",
+      "artifact_preparation": "reused",
+      "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program",
+      "binary_sha256": "7b364ec660c176e7655f1cb3cc4648a9ffb447323b46b7fb1544c0592468e5bc",
+      "instrumentation": "absent; flags and nm checked"
+    }
+  ]
+}

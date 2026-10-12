@@ -1,0 +1,1482 @@
+{
+  "started_utc": "2026-10-12T05:49:57Z",
+  "metric": "runtime",
+  "method": "2 warmup pairs; 9 measured pairs; alternating before/after order; process wall time",
+  "wall_resolution_note": "monotonic perf_counter_ns around spawn and blocking wait4; medians below 100ms need a longer workload",
+  "rss_note": "Separate RSS-only runs use GNU time's child rusage in KiB, including guest threads. Outer launcher RSS is discarded. Descendant peaks are not simultaneous process-tree RSS; no cgroup claim.",
+  "managed_memory_note": "Separate counted executions measure managed traffic and live bytes; these are not RSS.",
+  "host": {
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "allowed_cpus": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "cpuinfo": "processor\t: 0\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 400.000\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 0\ncpu cores\t: 14\napicid\t\t: 0\ninitial apicid\t: 0\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 1\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 400.000\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 0\ncpu cores\t: 14\napicid\t\t: 1\ninitial apicid\t: 1\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 2\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 400.000\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 4\ncpu cores\t: 14\napicid\t\t: 8\ninitial apicid\t: 8\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 3\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 400.000\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 4\ncpu cores\t: 14\napicid\t\t: 9\ninitial apicid\t: 9\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 4\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 4104.676\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 8\ncpu cores\t: 14\napicid\t\t: 16\ninitial apicid\t: 16\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 5\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 400.000\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 8\ncpu cores\t: 14\napicid\t\t: 17\ninitial apicid\t: 17\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 6\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2818.757\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 12\ncpu cores\t: 14\napicid\t\t: 24\ninitial apicid\t: 24\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 7\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 400.000\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 12\ncpu cores\t: 14\napicid\t\t: 25\ninitial apicid\t: 25\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 8\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 400.000\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 16\ncpu cores\t: 14\napicid\t\t: 32\ninitial apicid\t: 32\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 9\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 400.000\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 16\ncpu cores\t: 14\napicid\t\t: 33\ninitial apicid\t: 33\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 10\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 2195.627\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 20\ncpu cores\t: 14\napicid\t\t: 40\ninitial apicid\t: 40\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 11\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 400.000\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 20\ncpu cores\t: 14\napicid\t\t: 41\ninitial apicid\t: 41\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 12\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 3300.998\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 24\ncpu cores\t: 14\napicid\t\t: 48\ninitial apicid\t: 48\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 13\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 400.000\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 25\ncpu cores\t: 14\napicid\t\t: 50\ninitial apicid\t: 50\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 14\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 1811.048\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 26\ncpu cores\t: 14\napicid\t\t: 52\ninitial apicid\t: 52\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 15\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 1573.273\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 27\ncpu cores\t: 14\napicid\t\t: 54\ninitial apicid\t: 54\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 16\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 400.000\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 28\ncpu cores\t: 14\napicid\t\t: 56\ninitial apicid\t: 56\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 17\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 400.000\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 29\ncpu cores\t: 14\napicid\t\t: 58\ninitial apicid\t: 58\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 18\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 409.653\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 30\ncpu cores\t: 14\napicid\t\t: 60\ninitial apicid\t: 60\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 19\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 154\nmodel name\t: 12th Gen Intel(R) Core(TM) i7-12700H\nstepping\t: 3\nmicrocode\t: 0x43b\ncpu MHz\t\t: 400.000\ncache size\t: 24576 KB\nphysical id\t: 0\nsiblings\t: 20\ncore id\t\t: 31\ncpu cores\t: 14\napicid\t\t: 62\ninitial apicid\t: 62\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 32\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs eibrs_pbrsb rfds bhi spectre_v2_user vmscape\nbogomips\t: 5376.00\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\n",
+    "cgroup": "0::/user.slice/user-1000.slice/session-3387.scope\n",
+    "boot_id": "52bc285e-69f2-4d0b-a648-1196587b54ba",
+    "loadavg": "1.27 1.43 1.34 1/1798 54824"
+  },
+  "builds": {
+    "before": {
+      "source_commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+      "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+      "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+      "manifest_sha256": "ea4f3ba5fe04dd428b5b189bf65376988cd6c8ea92762653804625b60f072502",
+      "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+      "cases": [
+        {
+          "id": "array",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/array_long.my",
+          "expected": "array 512000000\n",
+          "cpus": [
+            10
+          ],
+          "input_note": "128 sibling JSON items, 4000000 lookups selecting independently owned nested result",
+          "source_sha256": "82125b5cfdfb1da843e5bdf53650dee86130c005d83701252c7143567d5d0942",
+          "source_inputs_sha256": {
+            "array_long.my": "82125b5cfdfb1da843e5bdf53650dee86130c005d83701252c7143567d5d0942"
+          },
+          "build_command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/array_long.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/array/program"
+          ],
+          "build_status": 0,
+          "build_stderr": "previous build",
+          "artifact_preparation": "reused",
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/array/program",
+          "binary_sha256": "de4b61e31498a7677ae6f9c06a73b5889ad2ba63e101c39143b4d1d300fb2bfe",
+          "instrumentation": "absent; flags and nm checked"
+        },
+        {
+          "id": "object",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/object_long.my",
+          "expected": "object 512000000\n",
+          "cpus": [
+            10
+          ],
+          "input_note": "128 sibling JSON items, 4000000 lookups selecting independently owned nested result",
+          "source_sha256": "e61f89aa77722e1c3386b47a929383bd2b2e5335a9236415f8aded2398159bc8",
+          "source_inputs_sha256": {
+            "object_long.my": "e61f89aa77722e1c3386b47a929383bd2b2e5335a9236415f8aded2398159bc8"
+          },
+          "build_command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/object_long.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/object/program"
+          ],
+          "build_status": 0,
+          "build_stderr": "previous build",
+          "artifact_preparation": "reused",
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/object/program",
+          "binary_sha256": "da5a86e49d86bb2ae069cebf553ef3dc2ee8454700dfa9280159d203206da107",
+          "instrumentation": "absent; flags and nm checked"
+        },
+        {
+          "id": "record",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/record_long.my",
+          "expected": "279555560\n",
+          "cpus": [
+            10
+          ],
+          "input_note": "1000000 fresh owned payload unpacks",
+          "source_sha256": "384023aefd7a12a2e7db8c759649b8ba8928fb18117c8e56649c2e74b68026b1",
+          "source_inputs_sha256": {
+            "record_long.my": "384023aefd7a12a2e7db8c759649b8ba8928fb18117c8e56649c2e74b68026b1"
+          },
+          "build_command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/record_long.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-calibrated/cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-calibrated/record/program"
+          ],
+          "build_status": 0,
+          "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-calibrated/record/build.stderr",
+          "artifact_preparation": "reused",
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-calibrated/record/program",
+          "binary_sha256": "f5f994a9341c49ad5ac3e0e61c72aa239ad0ad5d509e25dfd38f3c2c2a48840b",
+          "instrumentation": "absent; flags and nm checked"
+        },
+        {
+          "id": "parallel_cheap_1",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "expected": "25853755392\n",
+          "args": [
+            "513",
+            "65536",
+            "cheap"
+          ],
+          "env": {
+            "MYLANG_THREADS": "1"
+          },
+          "cpus": [
+            10
+          ],
+          "input_note": "513 uneven inputs, 65536 maps; identical inputs within each paired worker case. Repetitions differ across worker counts, so raw wall times are not a worker-scaling comparison.",
+          "source_sha256": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "build_command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/parallel_cheap_1/program"
+          ],
+          "build_status": 0,
+          "build_stderr": "previous build",
+          "artifact_preparation": "reused",
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/parallel_cheap_1/program",
+          "binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+          "instrumentation": "absent; flags and nm checked"
+        },
+        {
+          "id": "parallel_cheap_2",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "expected": "6463438848\n",
+          "args": [
+            "513",
+            "16384",
+            "cheap"
+          ],
+          "env": {
+            "MYLANG_THREADS": "2"
+          },
+          "cpus": [
+            8,
+            10
+          ],
+          "input_note": "513 uneven inputs, 16384 maps; identical inputs within each paired worker case. Repetitions differ across worker counts, so raw wall times are not a worker-scaling comparison.",
+          "source_sha256": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "build_command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/parallel_cheap_1/program"
+          ],
+          "build_status": 0,
+          "build_stderr": "previous build",
+          "artifact_preparation": "reused",
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/parallel_cheap_1/program",
+          "binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+          "instrumentation": "absent; flags and nm checked"
+        },
+        {
+          "id": "parallel_cheap_8",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "expected": "3231719424\n",
+          "args": [
+            "513",
+            "8192",
+            "cheap"
+          ],
+          "env": {
+            "MYLANG_THREADS": "8"
+          },
+          "cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ],
+          "input_note": "513 uneven inputs, 8192 maps; identical inputs within each paired worker case. Repetitions differ across worker counts, so raw wall times are not a worker-scaling comparison.",
+          "source_sha256": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "build_command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/parallel_cheap_1/program"
+          ],
+          "build_status": 0,
+          "build_stderr": "previous build",
+          "artifact_preparation": "reused",
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/parallel_cheap_1/program",
+          "binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+          "instrumentation": "absent; flags and nm checked"
+        },
+        {
+          "id": "parallel_expensive_1",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "expected": "131028929568\n",
+          "args": [
+            "8193",
+            "32",
+            "expensive"
+          ],
+          "env": {
+            "MYLANG_THREADS": "1"
+          },
+          "cpus": [
+            10
+          ],
+          "input_note": "8193 uneven inputs, 32 maps, 2048 arithmetic iterations per callback. Same source, arguments, workers and P-core affinity in both arms.",
+          "source_sha256": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "build_command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/parallel_cheap_1/program"
+          ],
+          "build_status": 0,
+          "build_stderr": "previous build",
+          "artifact_preparation": "reused",
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/parallel_cheap_1/program",
+          "binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+          "instrumentation": "absent; flags and nm checked"
+        },
+        {
+          "id": "parallel_expensive_2",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "expected": "131028929568\n",
+          "args": [
+            "8193",
+            "32",
+            "expensive"
+          ],
+          "env": {
+            "MYLANG_THREADS": "2"
+          },
+          "cpus": [
+            8,
+            10
+          ],
+          "input_note": "8193 uneven inputs, 32 maps, 2048 arithmetic iterations per callback. Same source, arguments, workers and P-core affinity in both arms.",
+          "source_sha256": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "build_command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/parallel_cheap_1/program"
+          ],
+          "build_status": 0,
+          "build_stderr": "previous build",
+          "artifact_preparation": "reused",
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/parallel_cheap_1/program",
+          "binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+          "instrumentation": "absent; flags and nm checked"
+        },
+        {
+          "id": "parallel_expensive_8",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "expected": "131028929568\n",
+          "args": [
+            "8193",
+            "32",
+            "expensive"
+          ],
+          "env": {
+            "MYLANG_THREADS": "8"
+          },
+          "cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ],
+          "input_note": "8193 uneven inputs, 32 maps, 2048 arithmetic iterations per callback. Same source, arguments, workers and P-core affinity in both arms.",
+          "source_sha256": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "build_command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/parallel_cheap_1/program"
+          ],
+          "build_status": 0,
+          "build_stderr": "previous build",
+          "artifact_preparation": "reused",
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-guest-v2/parallel_cheap_1/program",
+          "binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+          "instrumentation": "absent; flags and nm checked"
+        }
+      ],
+      "reuse_builds": ".tmp/memory-closeout/A09/C0-calibrated/builds.json"
+    },
+    "after": {
+      "source_commit": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+      "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "manifest_sha256": "ea4f3ba5fe04dd428b5b189bf65376988cd6c8ea92762653804625b60f072502",
+      "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+      "ownership_selection": "opt-in",
+      "admission": "held",
+      "cases": [
+        {
+          "id": "array",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/array_long.my",
+          "expected": "array 512000000\n",
+          "cpus": [
+            10
+          ],
+          "input_note": "128 sibling JSON items, 4000000 lookups selecting independently owned nested result",
+          "flags": [
+            "--experimental-zero-rc",
+            "--release"
+          ],
+          "source_sha256": "82125b5cfdfb1da843e5bdf53650dee86130c005d83701252c7143567d5d0942",
+          "source_inputs_sha256": {
+            "array_long.my": "82125b5cfdfb1da843e5bdf53650dee86130c005d83701252c7143567d5d0942"
+          },
+          "build_command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/array_long.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/array/program"
+          ],
+          "build_status": 0,
+          "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/array/build.stderr",
+          "artifact_preparation": "fresh",
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/array/program",
+          "binary_sha256": "944c3b35b36411da47d08f1d2e94802bf999ed783c8cf13f802516e733d4092d",
+          "instrumentation": "absent; flags and nm checked"
+        },
+        {
+          "id": "object",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/object_long.my",
+          "expected": "object 512000000\n",
+          "cpus": [
+            10
+          ],
+          "input_note": "128 sibling JSON items, 4000000 lookups selecting independently owned nested result",
+          "flags": [
+            "--experimental-zero-rc",
+            "--release"
+          ],
+          "source_sha256": "e61f89aa77722e1c3386b47a929383bd2b2e5335a9236415f8aded2398159bc8",
+          "source_inputs_sha256": {
+            "object_long.my": "e61f89aa77722e1c3386b47a929383bd2b2e5335a9236415f8aded2398159bc8"
+          },
+          "build_command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/object_long.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/object/program"
+          ],
+          "build_status": 0,
+          "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/object/build.stderr",
+          "artifact_preparation": "fresh",
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/object/program",
+          "binary_sha256": "3b77165a7187dd490327385f0913b56dc022f2945e1112192a426839ea866a11",
+          "instrumentation": "absent; flags and nm checked"
+        },
+        {
+          "id": "record",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/record_long.my",
+          "expected": "279555560\n",
+          "cpus": [
+            10
+          ],
+          "input_note": "1000000 fresh owned payload unpacks",
+          "flags": [
+            "--experimental-zero-rc",
+            "--release"
+          ],
+          "source_sha256": "384023aefd7a12a2e7db8c759649b8ba8928fb18117c8e56649c2e74b68026b1",
+          "source_inputs_sha256": {
+            "record_long.my": "384023aefd7a12a2e7db8c759649b8ba8928fb18117c8e56649c2e74b68026b1"
+          },
+          "build_command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/record_long.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/record/program"
+          ],
+          "build_status": 0,
+          "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/record/build.stderr",
+          "artifact_preparation": "fresh",
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/record/program",
+          "binary_sha256": "7e59bb3fc025ed102d36f9e9a661f7a5d34d205a931bba9041d0b727bcc1b11a",
+          "instrumentation": "absent; flags and nm checked"
+        },
+        {
+          "id": "parallel_cheap_1",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "expected": "25853755392\n",
+          "args": [
+            "513",
+            "65536",
+            "cheap"
+          ],
+          "env": {
+            "MYLANG_THREADS": "1"
+          },
+          "cpus": [
+            10
+          ],
+          "input_note": "513 uneven inputs, 65536 maps; identical inputs within each paired worker case. Repetitions differ across worker counts, so raw wall times are not a worker-scaling comparison.",
+          "flags": [
+            "--experimental-zero-rc",
+            "--release"
+          ],
+          "source_sha256": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "build_command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program"
+          ],
+          "build_status": 0,
+          "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/build.stderr",
+          "artifact_preparation": "fresh",
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program",
+          "binary_sha256": "7b364ec660c176e7655f1cb3cc4648a9ffb447323b46b7fb1544c0592468e5bc",
+          "instrumentation": "absent; flags and nm checked"
+        },
+        {
+          "id": "parallel_cheap_2",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "expected": "6463438848\n",
+          "args": [
+            "513",
+            "16384",
+            "cheap"
+          ],
+          "env": {
+            "MYLANG_THREADS": "2"
+          },
+          "cpus": [
+            8,
+            10
+          ],
+          "input_note": "513 uneven inputs, 16384 maps; identical inputs within each paired worker case. Repetitions differ across worker counts, so raw wall times are not a worker-scaling comparison.",
+          "flags": [
+            "--experimental-zero-rc",
+            "--release"
+          ],
+          "source_sha256": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "build_command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program"
+          ],
+          "build_status": 0,
+          "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/build.stderr",
+          "artifact_preparation": "reused",
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program",
+          "binary_sha256": "7b364ec660c176e7655f1cb3cc4648a9ffb447323b46b7fb1544c0592468e5bc",
+          "instrumentation": "absent; flags and nm checked"
+        },
+        {
+          "id": "parallel_cheap_8",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "expected": "3231719424\n",
+          "args": [
+            "513",
+            "8192",
+            "cheap"
+          ],
+          "env": {
+            "MYLANG_THREADS": "8"
+          },
+          "cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ],
+          "input_note": "513 uneven inputs, 8192 maps; identical inputs within each paired worker case. Repetitions differ across worker counts, so raw wall times are not a worker-scaling comparison.",
+          "flags": [
+            "--experimental-zero-rc",
+            "--release"
+          ],
+          "source_sha256": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "build_command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program"
+          ],
+          "build_status": 0,
+          "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/build.stderr",
+          "artifact_preparation": "reused",
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program",
+          "binary_sha256": "7b364ec660c176e7655f1cb3cc4648a9ffb447323b46b7fb1544c0592468e5bc",
+          "instrumentation": "absent; flags and nm checked"
+        },
+        {
+          "id": "parallel_expensive_1",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "expected": "131028929568\n",
+          "args": [
+            "8193",
+            "32",
+            "expensive"
+          ],
+          "env": {
+            "MYLANG_THREADS": "1"
+          },
+          "cpus": [
+            10
+          ],
+          "input_note": "8193 uneven inputs, 32 maps, 2048 arithmetic iterations per callback. Same source, arguments, workers and P-core affinity in both arms.",
+          "flags": [
+            "--experimental-zero-rc",
+            "--release"
+          ],
+          "source_sha256": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "build_command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program"
+          ],
+          "build_status": 0,
+          "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/build.stderr",
+          "artifact_preparation": "reused",
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program",
+          "binary_sha256": "7b364ec660c176e7655f1cb3cc4648a9ffb447323b46b7fb1544c0592468e5bc",
+          "instrumentation": "absent; flags and nm checked"
+        },
+        {
+          "id": "parallel_expensive_2",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "expected": "131028929568\n",
+          "args": [
+            "8193",
+            "32",
+            "expensive"
+          ],
+          "env": {
+            "MYLANG_THREADS": "2"
+          },
+          "cpus": [
+            8,
+            10
+          ],
+          "input_note": "8193 uneven inputs, 32 maps, 2048 arithmetic iterations per callback. Same source, arguments, workers and P-core affinity in both arms.",
+          "flags": [
+            "--experimental-zero-rc",
+            "--release"
+          ],
+          "source_sha256": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "build_command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program"
+          ],
+          "build_status": 0,
+          "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/build.stderr",
+          "artifact_preparation": "reused",
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program",
+          "binary_sha256": "7b364ec660c176e7655f1cb3cc4648a9ffb447323b46b7fb1544c0592468e5bc",
+          "instrumentation": "absent; flags and nm checked"
+        },
+        {
+          "id": "parallel_expensive_8",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "expected": "131028929568\n",
+          "args": [
+            "8193",
+            "32",
+            "expensive"
+          ],
+          "env": {
+            "MYLANG_THREADS": "8"
+          },
+          "cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ],
+          "input_note": "8193 uneven inputs, 32 maps, 2048 arithmetic iterations per callback. Same source, arguments, workers and P-core affinity in both arms.",
+          "flags": [
+            "--experimental-zero-rc",
+            "--release"
+          ],
+          "source_sha256": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "build_command": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support7-install/bin/mylang",
+            "build",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+            "--experimental-zero-rc",
+            "--release",
+            "--zig",
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "--cache-dir",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/cache",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program"
+          ],
+          "build_status": 0,
+          "build_stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/build.stderr",
+          "artifact_preparation": "reused",
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/Support7-guests/parallel_cheap_1/program",
+          "binary_sha256": "7b364ec660c176e7655f1cb3cc4648a9ffb447323b46b7fb1544c0592468e5bc",
+          "instrumentation": "absent; flags and nm checked"
+        }
+      ]
+    }
+  },
+  "cases": {
+    "array": {
+      "cpus": [
+        10
+      ],
+      "samples": {
+        "before": [
+          {
+            "pair": 0,
+            "warmup": true,
+            "wall_ns": 314668267,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 1,
+            "warmup": true,
+            "wall_ns": 308326846,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 2,
+            "warmup": false,
+            "wall_ns": 310610888,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 3,
+            "warmup": false,
+            "wall_ns": 310554376,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 4,
+            "warmup": false,
+            "wall_ns": 313888882,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 5,
+            "warmup": false,
+            "wall_ns": 310955515,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 6,
+            "warmup": false,
+            "wall_ns": 308722475,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 7,
+            "warmup": false,
+            "wall_ns": 308713281,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 8,
+            "warmup": false,
+            "wall_ns": 306992921,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 9,
+            "warmup": false,
+            "wall_ns": 310639664,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 10,
+            "warmup": false,
+            "wall_ns": 310915505,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          }
+        ],
+        "after": [
+          {
+            "pair": 0,
+            "warmup": true,
+            "wall_ns": 299481419,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 1,
+            "warmup": true,
+            "wall_ns": 301931145,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 2,
+            "warmup": false,
+            "wall_ns": 302334791,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 3,
+            "warmup": false,
+            "wall_ns": 299632197,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 4,
+            "warmup": false,
+            "wall_ns": 303137029,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 5,
+            "warmup": false,
+            "wall_ns": 302967366,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 6,
+            "warmup": false,
+            "wall_ns": 304407740,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 7,
+            "warmup": false,
+            "wall_ns": 304307691,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 8,
+            "warmup": false,
+            "wall_ns": 302566227,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 9,
+            "warmup": false,
+            "wall_ns": 300994379,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          },
+          {
+            "pair": 10,
+            "warmup": false,
+            "wall_ns": 301674735,
+            "status": 0,
+            "stdout_sha256": "e2d59c508905ac525fe17f4938a624e135878e23c0bc9dcd9ae470edd5c71760",
+            "stderr": ""
+          }
+        ]
+      },
+      "summary": {
+        "before_wall_ns": {
+          "median": 310610888,
+          "min": 306992921,
+          "max": 313888882
+        },
+        "after_wall_ns": {
+          "median": 302566227,
+          "min": 299632197,
+          "max": 304407740
+        },
+        "candidate_baseline_wall_ratio": 0.974100518330832,
+        "paired_candidate_baseline_ratios": [
+          0.9733554188866682,
+          0.964830059261506,
+          0.9657463082747862,
+          0.9743109589164225,
+          0.9860239038314266,
+          0.9857291853925779,
+          0.9855804688082693,
+          0.968950246482368,
+          0.9702788382972409
+        ],
+        "paired_ratio_range": [
+          0.964830059261506,
+          0.9860239038314266
+        ],
+        "paired_ratio_median": 0.9733554188866682,
+        "noisy_ranges": false,
+        "comparison_scope": "same guest source; compiler/runtime/library comparison",
+        "slowdown_review_trigger": false,
+        "tiny_workload": false
+      }
+    },
+    "object": {
+      "cpus": [
+        10
+      ],
+      "samples": {
+        "before": [
+          {
+            "pair": 0,
+            "warmup": true,
+            "wall_ns": 311152814,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 1,
+            "warmup": true,
+            "wall_ns": 314297546,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 2,
+            "warmup": false,
+            "wall_ns": 316188414,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 3,
+            "warmup": false,
+            "wall_ns": 316932225,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 4,
+            "warmup": false,
+            "wall_ns": 313486958,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 5,
+            "warmup": false,
+            "wall_ns": 317117947,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 6,
+            "warmup": false,
+            "wall_ns": 314412206,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 7,
+            "warmup": false,
+            "wall_ns": 314927828,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 8,
+            "warmup": false,
+            "wall_ns": 312971558,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 9,
+            "warmup": false,
+            "wall_ns": 316673126,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 10,
+            "warmup": false,
+            "wall_ns": 320525962,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          }
+        ],
+        "after": [
+          {
+            "pair": 0,
+            "warmup": true,
+            "wall_ns": 297187292,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 1,
+            "warmup": true,
+            "wall_ns": 312572436,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 2,
+            "warmup": false,
+            "wall_ns": 303261506,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 3,
+            "warmup": false,
+            "wall_ns": 303289379,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 4,
+            "warmup": false,
+            "wall_ns": 303447036,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 5,
+            "warmup": false,
+            "wall_ns": 299588250,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 6,
+            "warmup": false,
+            "wall_ns": 302800072,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 7,
+            "warmup": false,
+            "wall_ns": 302065707,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 8,
+            "warmup": false,
+            "wall_ns": 301103440,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 9,
+            "warmup": false,
+            "wall_ns": 298123939,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          },
+          {
+            "pair": 10,
+            "warmup": false,
+            "wall_ns": 299934433,
+            "status": 0,
+            "stdout_sha256": "fc05ea1aab73259868586a171c5f0985118e145532a632f041b326ec1639e946",
+            "stderr": ""
+          }
+        ]
+      },
+      "summary": {
+        "before_wall_ns": {
+          "median": 316188414,
+          "min": 312971558,
+          "max": 320525962
+        },
+        "after_wall_ns": {
+          "median": 302065707,
+          "min": 298123939,
+          "max": 303447036
+        },
+        "candidate_baseline_wall_ratio": 0.9553345208910786,
+        "paired_candidate_baseline_ratios": [
+          0.9591164399844202,
+          0.9569534275033093,
+          0.9679733981150183,
+          0.9447218387800675,
+          0.9630671654013331,
+          0.9591585123433424,
+          0.9620792442743311,
+          0.9414248148104617,
+          0.9357570635729033
+        ],
+        "paired_ratio_range": [
+          0.9357570635729033,
+          0.9679733981150183
+        ],
+        "paired_ratio_median": 0.9591164399844202,
+        "noisy_ranges": false,
+        "comparison_scope": "same guest source; compiler/runtime/library comparison",
+        "slowdown_review_trigger": false,
+        "tiny_workload": false
+      }
+    },
+    "record": {
+      "cpus": [
+        10
+      ],
+      "samples": {
+        "before": [
+          {
+            "pair": 0,
+            "warmup": true,
+            "wall_ns": 164857059,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 1,
+            "warmup": true,
+            "wall_ns": 168939801,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 2,
+            "warmup": false,
+            "wall_ns": 168729283,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 3,
+            "warmup": false,
+            "wall_ns": 167604366,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 4,
+            "warmup": false,
+            "wall_ns": 169684103,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 5,
+            "warmup": false,
+            "wall_ns": 169453973,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 6,
+            "warmup": false,
+            "wall_ns": 176074068,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 7,
+            "warmup": false,
+            "wall_ns": 174846324,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 8,
+            "warmup": false,
+            "wall_ns": 175183017,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 9,
+            "warmup": false,
+            "wall_ns": 173003184,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 10,
+            "warmup": false,
+            "wall_ns": 177388360,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          }
+        ],
+        "after": [
+          {
+            "pair": 0,
+            "warmup": true,
+            "wall_ns": 163323536,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 1,
+            "warmup": true,
+            "wall_ns": 168331181,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 2,
+            "warmup": false,
+            "wall_ns": 175242626,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 3,
+            "warmup": false,
+            "wall_ns": 167593383,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 4,
+            "warmup": false,
+            "wall_ns": 172352309,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 5,
+            "warmup": false,
+            "wall_ns": 168033726,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 6,
+            "warmup": false,
+            "wall_ns": 171022787,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 7,
+            "warmup": false,
+            "wall_ns": 172556655,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 8,
+            "warmup": false,
+            "wall_ns": 169327166,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 9,
+            "warmup": false,
+            "wall_ns": 167960942,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          },
+          {
+            "pair": 10,
+            "warmup": false,
+            "wall_ns": 168391146,
+            "status": 0,
+            "stdout_sha256": "128a0a154e243c91b4432b1e5279df0c05dec0339f4922c9d18b6f24a2a1c721",
+            "stderr": ""
+          }
+        ]
+      },
+      "summary": {
+        "before_wall_ns": {
+          "median": 173003184,
+          "min": 167604366,
+          "max": 177388360
+        },
+        "after_wall_ns": {
+          "median": 169327166,
+          "min": 167593383,
+          "max": 175242626
+        },
+        "candidate_baseline_wall_ratio": 0.9787517321068495,
+        "paired_candidate_baseline_ratios": [
+          1.0386023272557852,
+          0.9999344706807936,
+          1.0157245490462945,
+          0.99161868574188,
+          0.9713116130195845,
+          0.986904677504115,
+          0.9665729526738314,
+          0.9708546288951537,
+          0.949279569414814
+        ],
+        "paired_ratio_range": [
+          0.949279569414814,
+          1.0386023272557852
+        ],
+        "paired_ratio_median": 0.986904677504115,
+        "noisy_ranges": false,
+        "comparison_scope": "same guest source; compiler/runtime/library comparison",
+        "slowdown_review_trigger": false,
+        "tiny_workload": false
+      }
+    }
+  },
+  "previous_window_started_utc": "2026-10-12T05:48:04Z",
+  "finished_utc": "2026-10-12T05:50:01Z"
+}

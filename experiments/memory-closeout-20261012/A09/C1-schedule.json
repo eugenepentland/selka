@@ -5,7 +5,7 @@
   "candidate_debug_sha256": null,
   "candidate_releasefast_sha256": null,
   "freeze_dependencies": [
-    "Exact coordinator C1 source; separate Debug and ReleaseFast complete installations",
+    "Exact final source and complete ReleaseFast installation; host optimization is separate from Release guest mode",
     "Installed owned components provisioned from the independent pinned RF builder with final component source/receipt/binary hashes",
     "Candidate correctness gates and public release inventory remain mandatory; timing does not replace them"
   ],
@@ -89,7 +89,7 @@
     "diagnostic_source_manifest_sha256": "55bc7f3f8249c93cff43a1f5fc249a083254081a2b9114dee90396b7b7fbc517",
     "diagnostic_baseline_status": "prepared, not executed; no timing before freeze",
     "memory_run": "fields64 separate memory-only sampled process-tree run; replay under-sampling limitation remains",
-    "correctness": "44 existing cache rows plus12 borrowed-selection rows and11 generic-tuple rows, with provider/relocation followups; C2/C3 transitions later."
+    "correctness": "44 existing cache rows plus12 borrowed-selection,11 generic-tuple and16 typed-selection rows, with provider/relocation followups; C2/C3 transitions later."
   },
   "census": {
     "main_cases": 81,
@@ -106,7 +106,8 @@
     "c0_queue_seconds": 296.492,
     "support5_original30_admitted_seconds": 5.154,
     "support5_original30_queue_seconds": 1168.835,
-    "scope": "Warm correctness scheduling evidence, not cold compile or runtime benchmarks. All preserved C0 denominators remain unchanged."
+    "scope": "Warm correctness scheduling evidence, not cold compile or runtime benchmarks. All preserved C0 denominators remain unchanged.",
+    "current_batch_policy": "Coordinator permits up to50 actions or30s admitted work at completed-action boundaries; old ten-call scheduling observations remain historical."
   },
   "applications": {
     "builds": 20,
@@ -144,7 +145,9 @@
       "queue_seconds": 40.820700139,
       "manual_evidence": "raw/size-aligned-C0-native-replay/results.json",
       "manual_admitted_seconds": 35.373652428,
-      "manual_queue_seconds": 75.878731661
+      "manual_queue_seconds": 75.878731661,
+      "v2_status": "Fresh15case C0 and Support7 arms passed using identical approved v2adapter; prior v1 and ordinary failed C0 evidence preserved",
+      "v2_comparison": "raw/size-aligned-Support7-native-replay-v2/comparison-C0.json"
     }
   },
   "c0_artifact_readiness": [
@@ -262,5 +265,20 @@
     "method": "counted-release-native-replay-v1",
     "manual_evidence": "raw/size-aligned-C0-native-replay/results.json",
     "candidate_requirement": "same adapter with final-source prepared runtime plus repeated normal/manual equivalence controls"
+  },
+  "updated_utc": "2026-10-12T06:00:00.070025+00:00",
+  "intermediate_checkpoint": {
+    "name": "Support7",
+    "source": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+    "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+    "host_optimization": "ReleaseFast",
+    "uncounted_binaries": 8,
+    "runtime_cases_prepared": 15,
+    "normal_counted_cases_passed": 15,
+    "v2_counted_cases_passed_per_arm": 15,
+    "completed_runtime_cases": 3,
+    "completed_runtime_launches": 66,
+    "completed_RSS_launches": 0,
+    "status": "intermediate, release-inventory and cache blockers remain; further timing paused for critical fixes"
   }
 }

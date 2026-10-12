@@ -21,8 +21,8 @@ ADAPTER_COMMIT = "44a9ccbbc5a179d15b057a369f22f22afb115c06"
 ADAPTER_PATH = "experiments/memory-closeout-20261012/A10/manual-native/manual_native.py"
 
 
-def adapter(path):
-    expected = subprocess.check_output(["git", "show", f"{ADAPTER_COMMIT}:{ADAPTER_PATH}"], cwd=measure.ROOT)
+def adapter(path, commit, source):
+    expected = subprocess.check_output(["git", "show", f"{commit}:{source}"], cwd=measure.ROOT)
     if measure.digest(path) != hashlib.sha256(expected).hexdigest():
         raise ValueError("adapter differs from approved commit")
     spec = importlib.util.spec_from_file_location("a10_manual_native", path)
@@ -76,12 +76,20 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ("adapter", "runtime-dir", "archive", "output"):
         parser.add_argument("--" + name, type=lambda p: Path(p).resolve(), required=True)
+    parser.add_argument("--adapter-commit", default=ADAPTER_COMMIT,
+                        help="explicit reviewed adapter revision; defaults to historical v1")
+    parser.add_argument("--adapter-source", default=ADAPTER_PATH,
+                        help="repository path at that revision, verified against the imported file")
+    parser.add_argument("--groups-per-lease", type=int, default=1,
+                        help="bounded distinct-source native groups per ordinary lease (1..4)")
     args = parser.parse_args()
+    if not 1 <= args.groups_per_lease <= 4:
+        parser.error("groups per lease must be between one and four")
     if args.output.exists():
         parser.error("refusing to overwrite supplemental evidence")
     if os.environ.get("MYLANG_ADMISSION_KIND"):
         parser.error("invoke directly; harness owns bounded source-group build admission")
-    manual = adapter(args.adapter)
+    manual = adapter(args.adapter, args.adapter_commit, args.adapter_source)
     runtime = json.loads((args.runtime_dir / "runtime.json").read_text())
     original = json.loads((args.archive / "results.json").read_text())
     archive = json.loads((args.archive / "archive.json").read_text())
@@ -92,34 +100,48 @@ def main():
     census = counted_inputs.module("a09_census_manual", "experiments/memory-closeout-20261012/A03/census.py")
     audit = counted_inputs.module("a09_audit_manual", "experiments/zero-rc-20261011/audit.py")
     admission = counted_inputs.module("a09_admission_manual", "scripts/build_admission.py")
-    report = {"method": manual.METHOD, "scope": __doc__, "adapter_commit": ADAPTER_COMMIT,
+    report = {"method": manual.METHOD, "scope": __doc__, "adapter_commit": args.adapter_commit,
+              "adapter_source": args.adapter_source,
               "adapter_sha256": measure.digest(args.adapter), "harness_sha256": measure.digest(__file__),
               "compiler_sha256": runtime["compiler_sha256"], "source_commit": runtime["source_revision"],
               "runtime_receipt": runtime, "original_results": str(args.archive / "results.json"),
               "original_results_sha256": measure.digest(args.archive / "results.json"),
               "counter_audit_sha256": measure.digest(audit.__file__),
               "structural_helper_sha256": measure.digest(census.__file__),
-              "case_denominator": original["case_denominator"], "groups": [],
+              "case_denominator": original["case_denominator"], "groups": [], "admission_leases": [],
               "limitations": original["limitations"] + ["Manual native replay is separate from original compiler command success.",
                                                          "Final candidate must use this same adapter and repeat normal/manual equivalence controls."]}
-    for item in original["groups"]:
-        directory, llvm = prepare_group(args, item, archive)
-        binary = directory / "program"
-        result = {"original_build_status": item["status"], "cases": []}
+    pending = list(original["groups"])
+    while pending:
         waiting = time.monotonic_ns()
         with admission.admission("build"):
             admitted = time.monotonic_ns()
-            try:
-                result["artifact"] = manual.link(args.runtime_dir, llvm, binary, directory / "native")
-                result["structural"] = census.structural(binary, llvm, directory, measure.clean_env())
-                result["cases"] = [execute(case, binary, directory, census, audit) for case in item["cases"]]
-                result["status"] = "passed" if result["structural"]["passed"] and all(c["status"] == "passed" for c in result["cases"]) else "failed"
-            except (RuntimeError, ValueError, OSError) as error:
-                result.update(status="manual_build_failed", error=str(error))
-                result["cases"] = [{"id": case["id"], "status": "manual_build_failed"} for case in item["cases"]]
-            result["admitted_work_ns"] = time.monotonic_ns() - admitted
-        result["queue_wait_ns"] = admitted - waiting
-        report["groups"].append(result)
+            count = 0
+            while pending and count < args.groups_per_lease:
+                item = pending.pop(0)
+                started = time.monotonic_ns()
+                directory, llvm = prepare_group(args, item, archive)
+                binary = directory / "program"
+                result = {"original_build_status": item["status"], "cases": [],
+                          "admission_lease": len(report["admission_leases"]),
+                          "queue_wait_ns": admitted - waiting if count == 0 else 0}
+                try:
+                    result["artifact"] = manual.link(args.runtime_dir, llvm, binary, directory / "native")
+                    result["structural"] = census.structural(binary, llvm, directory, measure.clean_env())
+                    result["cases"] = [execute(case, binary, directory, census, audit) for case in item["cases"]]
+                    result["status"] = "passed" if result["structural"]["passed"] and all(c["status"] == "passed" for c in result["cases"]) else "failed"
+                except (RuntimeError, ValueError, OSError) as error:
+                    result.update(status="manual_build_failed", error=str(error))
+                    result["cases"] = [{"id": case["id"], "status": "manual_build_failed"} for case in item["cases"]]
+                result["admitted_work_ns"] = time.monotonic_ns() - started
+                report["groups"].append(result)
+                measure.save(args.output / "results.json", report)
+                count += 1
+                if time.monotonic_ns() - admitted > 50_000_000_000:
+                    break
+            lease = {"queue_wait_ns": admitted - waiting, "groups": count,
+                     "admitted_work_ns": time.monotonic_ns() - admitted}
+        report["admission_leases"].append(lease)
         measure.save(args.output / "results.json", report)
     report["passed"] = all(item["status"] == "passed" for item in report["groups"])
     measure.save(args.output / "results.json", report)

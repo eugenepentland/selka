@@ -14,11 +14,14 @@ reruns or a cold compiler/seed build. It is not a closeout deadline.
 
 ## Artifacts before measurements
 
-Root freezes one source revision and builds separate complete Debug and
-ReleaseFast installations, preserving `bin/`, `libexec/` and `tools/` together.
-The Debug compiler produces Release guest timing binaries; ReleaseFast measures
-compiler work. Record both compiler hashes and every installed component's
-source, manifest, receipt and binary hash before consumers start.
+Root freezes one source revision and a complete ReleaseFast installation,
+preserving `bin/`, `libexec/` and `tools/` together. Support7 uses this compiler
+for both Release guest artifact preparation and compiler-throughput measurements.
+C0 Release guest artifacts were prepared with its Debug host compiler; the host
+optimization setting remains explicit and is separate from guest build mode.
+Compile-throughput measurements use matched ReleaseFast compilers. Record each
+compiler hash and every installed component's source, manifest, receipt and binary
+hash before consumers start.
 
 A10 confirms both installations can use the same independently pinned RF
 component builder (source prefix `5167c588`, compiler SHA-256
@@ -42,7 +45,7 @@ ABI audits and the full gate remain required.
 | Size-aligned counters | Eight distinct counted builds per arm; **30 execution configurations**, 15 per arm | All 15 C0 cases now pass via the approved native replay adapter; eight original compiler failures remain recorded. C1 uses the same adapter after freeze and repeats normal/manual controls |
 | Compiler scaling | 16 family/size cells × 5 phases = **80 final compiler calls** | A08 estimates 2–5 minutes, based on accepted C0 cells taking 4–8s each; each command has a 120s timeout |
 | Diagnostic compiler gap | Six module/generic inputs × C0/final = **12 source/Core-only commands** | Inputs frozen; still unrun. No native-link or whole-build ratio from this partial scope |
-| Cache correctness and compile memory | Existing 44 cache rows plus 12 borrowed-selection and 11 generic-tuple rows, with provider/relocation followups; representative fields64 memory run | Ordinary correctness admission and a separate sampled-memory execution; no estimate for newly added regressions |
+| Cache correctness and compile memory | Existing 44 cache rows plus 12 borrowed-selection, 11 generic-tuple and 16 typed-selection rows, with provider/relocation followups; representative fields64 memory run | Ordinary correctness admission and a separate sampled-memory execution; no estimate for newly added regressions |
 | Pinned census | **435 builds, 695 counted executions**, plus **30 original-source checks** | At least 47 ten-call leases; roughly 2–4 minutes of warm admitted work is an extrapolation, not a cold benchmark |
 | Four applications | **20 counted binaries, 60 executions**, all five pipelines | Roughly 2–3 minutes from prior bounded batches; exact final costs may differ |
 

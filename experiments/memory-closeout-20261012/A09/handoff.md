@@ -1,5 +1,23 @@
 # A09 handoff — prepared runtime matrix, frozen baselines and versioning fix
 
+Support7 checkpoint: source `bed11cf3bf3102ffec44487e431a1573fdf02ad5`, complete
+ReleaseFast compiler SHA-256 `540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef`.
+Eight uncounted Release binaries cover all fifteen unchanged timing inputs;
+`raw/Support7-artifacts` pins the full installation and actual owned components.
+All fifteen normal counted runs pass. Both C0 and Support7 additionally pass
+fresh fifteen-case replays using A10's identical v2 adapter `7b10b6b6`; matched
+managed evidence is `raw/size-aligned-Support7-native-replay-v2/comparison-C0.json`.
+The old v1 adapter/results and failed ordinary C0 builds remain preserved.
+
+Initial array/object/record runtime comparisons complete 66 exact-output runs
+(two warmup plus nine measured pairs each). Raw samples and identities are in
+`raw/Support7-runtime-initial3`; no RSS run exists yet. The next map timing lease
+was canceled before admission, after it waited for a long build, to prioritize
+A08's reduced warm-cache constructor/callback correctness defect. No guest run
+was interrupted. Further timing is paused. Support7 has release-inventory/cache
+blockers, so it is an intermediate checkpoint, not a qualified C1 milestone.
+Final runtime/RSS/compile comparisons and actual C2/C3 reruns remain outstanding.
+
 Latest coordinated C3 request: `retirement/c3-counter-runtime/counters.patch`
 targets four counter files at Support7 `bed11cf3bf3102ffec44487e431a1573fdf02ad5`.
 It is unapplied and must accompany A02 runtime/A07 emitter retirement. Twenty
