@@ -2,14 +2,24 @@
   "scope": "C0 and interim/overlay fixture evidence, not final integrated export qualification",
   "public_declarations": 120,
   "public_functions": 95,
-  "declarations_with_at_least_one_passing_fixture_reference": 92,
+  "declarations_with_at_least_one_passing_fixture_reference": 104,
   "items": [
     {
       "module": "cache_record",
       "name": "Error",
       "kind": "enum",
       "contract": "Scalar Corrupt tag; copyable without managed storage; message returns immutable static text.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support2-public-values.json",
+          "case": "public_values",
+          "mode": "release",
+          "compiler_sha256": "3e9f7f2cd7e1ff7dc13b342dc812cb64b340cddc02b8b2b4b1ae8008cb203c7c",
+          "source_sha256": "f32e2fb852ec09c428d6725a2d40241ea0c216fc8d7735f46a02db17e7464888",
+          "overlay": true,
+          "binary_sha256": "ee554ec6b1ae5bd22dd2b82da81b5534205a909f9924d99a07659d36bfb683f8"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -102,7 +112,17 @@
       "name": "Step",
       "kind": "record",
       "contract": "Owns output/state byte storage. Callback inputs borrow; retained fields need independent owners or explicit copies.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support2-public-values.json",
+          "case": "public_values",
+          "mode": "release",
+          "compiler_sha256": "3e9f7f2cd7e1ff7dc13b342dc812cb64b340cddc02b8b2b4b1ae8008cb203c7c",
+          "source_sha256": "f32e2fb852ec09c428d6725a2d40241ea0c216fc8d7735f46a02db17e7464888",
+          "overlay": true,
+          "binary_sha256": "ee554ec6b1ae5bd22dd2b82da81b5534205a909f9924d99a07659d36bfb683f8"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -111,7 +131,17 @@
       "name": "Request",
       "kind": "record",
       "contract": "Owns input, chunk-list, initial-state and output-path storage. run borrows all fields and validates byte/chunk/path bounds before native storage.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support2-public-values.json",
+          "case": "public_values",
+          "mode": "release",
+          "compiler_sha256": "3e9f7f2cd7e1ff7dc13b342dc812cb64b340cddc02b8b2b4b1ae8008cb203c7c",
+          "source_sha256": "f32e2fb852ec09c428d6725a2d40241ea0c216fc8d7735f46a02db17e7464888",
+          "overlay": true,
+          "binary_sha256": "ee554ec6b1ae5bd22dd2b82da81b5534205a909f9924d99a07659d36bfb683f8"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -120,7 +150,17 @@
       "name": "Report",
       "kind": "record",
       "contract": "Independent owned output-digest and state plus scalar fresh/reused counts; remains valid after request replacement.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support2-public-values.json",
+          "case": "public_values",
+          "mode": "release",
+          "compiler_sha256": "3e9f7f2cd7e1ff7dc13b342dc812cb64b340cddc02b8b2b4b1ae8008cb203c7c",
+          "source_sha256": "f32e2fb852ec09c428d6725a2d40241ea0c216fc8d7735f46a02db17e7464888",
+          "overlay": true,
+          "binary_sha256": "ee554ec6b1ae5bd22dd2b82da81b5534205a909f9924d99a07659d36bfb683f8"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1000,7 +1040,17 @@
       "name": "Entry",
       "kind": "record",
       "contract": "Owns key/value snapshots and stores a scalar callable pointer. Retention requires independent copies of borrowed inputs.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support2-public-values.json",
+          "case": "public_values",
+          "mode": "release",
+          "compiler_sha256": "3e9f7f2cd7e1ff7dc13b342dc812cb64b340cddc02b8b2b4b1ae8008cb203c7c",
+          "source_sha256": "f32e2fb852ec09c428d6725a2d40241ea0c216fc8d7735f46a02db17e7464888",
+          "overlay": true,
+          "binary_sha256": "ee554ec6b1ae5bd22dd2b82da81b5534205a909f9924d99a07659d36bfb683f8"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1009,7 +1059,17 @@
       "name": "Cache",
       "kind": "record",
       "contract": "Owns Entry list and scalar callable/capacity/FIFO state. create establishes valid bounds; explicit copy forks retained entries; clear mutates only its owner.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support2-public-values.json",
+          "case": "public_values",
+          "mode": "release",
+          "compiler_sha256": "3e9f7f2cd7e1ff7dc13b342dc812cb64b340cddc02b8b2b4b1ae8008cb203c7c",
+          "source_sha256": "f32e2fb852ec09c428d6725a2d40241ea0c216fc8d7735f46a02db17e7464888",
+          "overlay": true,
+          "binary_sha256": "ee554ec6b1ae5bd22dd2b82da81b5534205a909f9924d99a07659d36bfb683f8"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1018,7 +1078,17 @@
       "name": "Lookup",
       "kind": "record",
       "contract": "Owns an independent callback/hit value and scalar reused flag; retained cache contents cannot alias mutable descendants.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support2-public-values.json",
+          "case": "public_values",
+          "mode": "release",
+          "compiler_sha256": "3e9f7f2cd7e1ff7dc13b342dc812cb64b340cddc02b8b2b4b1ae8008cb203c7c",
+          "source_sha256": "f32e2fb852ec09c428d6725a2d40241ea0c216fc8d7735f46a02db17e7464888",
+          "overlay": true,
+          "binary_sha256": "ee554ec6b1ae5bd22dd2b82da81b5534205a909f9924d99a07659d36bfb683f8"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1248,7 +1318,17 @@
       "name": "Options",
       "kind": "record",
       "contract": "Scalar entry/byte retention bounds validated by call; zero entries computes without persistent storage.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support2-public-values.json",
+          "case": "public_values",
+          "mode": "release",
+          "compiler_sha256": "3e9f7f2cd7e1ff7dc13b342dc812cb64b340cddc02b8b2b4b1ae8008cb203c7c",
+          "source_sha256": "f32e2fb852ec09c428d6725a2d40241ea0c216fc8d7735f46a02db17e7464888",
+          "overlay": true,
+          "binary_sha256": "ee554ec6b1ae5bd22dd2b82da81b5534205a909f9924d99a07659d36bfb683f8"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1257,7 +1337,17 @@
       "name": "Lookup",
       "kind": "record",
       "contract": "Owns independent returned bytes and scalar reused flag; input/cache-record destruction must not invalidate value.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support2-public-values.json",
+          "case": "public_values",
+          "mode": "release",
+          "compiler_sha256": "3e9f7f2cd7e1ff7dc13b342dc812cb64b340cddc02b8b2b4b1ae8008cb203c7c",
+          "source_sha256": "f32e2fb852ec09c428d6725a2d40241ea0c216fc8d7735f46a02db17e7464888",
+          "overlay": true,
+          "binary_sha256": "ee554ec6b1ae5bd22dd2b82da81b5534205a909f9924d99a07659d36bfb683f8"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1594,7 +1684,17 @@
       "name": "Random",
       "kind": "record",
       "contract": "Owns the generator state list; constructors establish one u64 state word. Explicit copy forks state, next functions borrow mutably. Empty externally assembled state is invalid for indexed reads.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support2-public-values.json",
+          "case": "public_values",
+          "mode": "release",
+          "compiler_sha256": "3e9f7f2cd7e1ff7dc13b342dc812cb64b340cddc02b8b2b4b1ae8008cb203c7c",
+          "source_sha256": "f32e2fb852ec09c428d6725a2d40241ea0c216fc8d7735f46a02db17e7464888",
+          "overlay": true,
+          "binary_sha256": "ee554ec6b1ae5bd22dd2b82da81b5534205a909f9924d99a07659d36bfb683f8"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -2002,7 +2102,17 @@
       "name": "Duration",
       "kind": "record",
       "contract": "Copyable scalar signed nanosecond interval; arithmetic APIs explicitly report signed-range overflow.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support2-public-values.json",
+          "case": "public_values",
+          "mode": "release",
+          "compiler_sha256": "3e9f7f2cd7e1ff7dc13b342dc812cb64b340cddc02b8b2b4b1ae8008cb203c7c",
+          "source_sha256": "f32e2fb852ec09c428d6725a2d40241ea0c216fc8d7735f46a02db17e7464888",
+          "overlay": true,
+          "binary_sha256": "ee554ec6b1ae5bd22dd2b82da81b5534205a909f9924d99a07659d36bfb683f8"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -2011,7 +2121,17 @@
       "name": "Instant",
       "kind": "record",
       "contract": "Copyable scalar Unix nanosecond time; no managed storage or provider lifetime is retained.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support2-public-values.json",
+          "case": "public_values",
+          "mode": "release",
+          "compiler_sha256": "3e9f7f2cd7e1ff7dc13b342dc812cb64b340cddc02b8b2b4b1ae8008cb203c7c",
+          "source_sha256": "f32e2fb852ec09c428d6725a2d40241ea0c216fc8d7735f46a02db17e7464888",
+          "overlay": true,
+          "binary_sha256": "ee554ec6b1ae5bd22dd2b82da81b5534205a909f9924d99a07659d36bfb683f8"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },

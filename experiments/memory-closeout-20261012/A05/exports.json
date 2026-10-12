@@ -13,7 +13,9 @@
       "ownership_contract": "Scalar Corrupt tag; copyable without managed storage; message returns immutable static text.",
       "qualification": "pending executable coverage",
       "evidence": [],
-      "source_coverage": []
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/public_values.my"
+      ]
     },
     {
       "module": "cache_record",
@@ -75,7 +77,8 @@
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
-        "experiments/memory-closeout-20261012/A05/samples/storage.my"
+        "experiments/memory-closeout-20261012/A05/samples/storage.my",
+        "experiments/memory-closeout-20261012/A05/samples/public_values.my"
       ]
     },
     {
@@ -90,7 +93,8 @@
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
-        "experiments/memory-closeout-20261012/A05/samples/storage.my"
+        "experiments/memory-closeout-20261012/A05/samples/storage.my",
+        "experiments/memory-closeout-20261012/A05/samples/public_values.my"
       ]
     },
     {
@@ -104,7 +108,9 @@
       "ownership_contract": "Independent owned output-digest and state plus scalar fresh/reused counts; remains valid after request replacement.",
       "qualification": "pending executable coverage",
       "evidence": [],
-      "source_coverage": []
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/public_values.my"
+      ]
     },
     {
       "module": "durable",
@@ -652,7 +658,9 @@
       "ownership_contract": "Owns key/value snapshots and stores a scalar callable pointer. Retention requires independent copies of borrowed inputs.",
       "qualification": "pending executable coverage",
       "evidence": [],
-      "source_coverage": []
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/public_values.my"
+      ]
     },
     {
       "module": "memo",
@@ -665,7 +673,9 @@
       "ownership_contract": "Owns Entry list and scalar callable/capacity/FIFO state. create establishes valid bounds; explicit copy forks retained entries; clear mutates only its owner.",
       "qualification": "pending executable coverage",
       "evidence": [],
-      "source_coverage": []
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/public_values.my"
+      ]
     },
     {
       "module": "memo",
@@ -678,7 +688,9 @@
       "ownership_contract": "Owns an independent callback/hit value and scalar reused flag; retained cache contents cannot alias mutable descendants.",
       "qualification": "pending executable coverage",
       "evidence": [],
-      "source_coverage": []
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/public_values.my"
+      ]
     },
     {
       "module": "memo",
@@ -973,7 +985,8 @@
       "qualification": "pending executable coverage",
       "evidence": [],
       "source_coverage": [
-        "experiments/memory-closeout-20261012/A05/samples/storage.my"
+        "experiments/memory-closeout-20261012/A05/samples/storage.my",
+        "experiments/memory-closeout-20261012/A05/samples/public_values.my"
       ]
     },
     {
@@ -987,7 +1000,9 @@
       "ownership_contract": "Owns independent returned bytes and scalar reused flag; input/cache-record destruction must not invalidate value.",
       "qualification": "pending executable coverage",
       "evidence": [],
-      "source_coverage": []
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/public_values.my"
+      ]
     },
     {
       "module": "persistent_memo",
@@ -1211,7 +1226,9 @@
       "ownership_contract": "Owns the generator state list; constructors establish one u64 state word. Explicit copy forks state, next functions borrow mutably. Empty externally assembled state is invalid for indexed reads.",
       "qualification": "pending executable coverage",
       "evidence": [],
-      "source_coverage": []
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/public_values.my"
+      ]
     },
     {
       "module": "random",
@@ -1540,7 +1557,9 @@
       "ownership_contract": "Copyable scalar signed nanosecond interval; arithmetic APIs explicitly report signed-range overflow.",
       "qualification": "pending executable coverage",
       "evidence": [],
-      "source_coverage": []
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/public_values.my"
+      ]
     },
     {
       "module": "time",
@@ -1553,7 +1572,9 @@
       "ownership_contract": "Copyable scalar Unix nanosecond time; no managed storage or provider lifetime is retained.",
       "qualification": "pending executable coverage",
       "evidence": [],
-      "source_coverage": []
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/public_values.my"
+      ]
     },
     {
       "module": "time",

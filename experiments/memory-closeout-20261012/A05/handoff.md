@@ -190,3 +190,9 @@ counted branches/legacy sort entrypoint while preserving owned layouts, native
 provider storage and direct drops. Its README states the A02/A07/header/emission,
 fixture reservation, cache and installed-component dependencies. Actual Stage4
 qualification remains mandatory after C2 approval.
+
+The expanded public-value constructor/copy fixture passes release on support2
+(`evidence/support2-public-values.json`): direct public Cache/Entry/Lookup, generator
+state, duration/instant, persistent options/value and durable Step/Request/Report
+construction all preserve snapshots. It calls no resource/digest helper and closes
+previously indirect public-type coverage while those helpers are pending.
