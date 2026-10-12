@@ -58,3 +58,16 @@ approved host closure; those two failures are preserved. A08 owns final numeric
 object/cache invalidation qualification, and the integrated candidate must rerun
 these guest cases and the complete registered gate. No default/retirement or
 package-wide RC-free milestone is claimed.
+
+Support6 (`support6-01/results.json`) completes the integrated numeric rerun on
+source 5167c588be79dd43d21d5013c36db15110bf239b, compiler SHA256
+bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4.
+All five counted checked modes and the ordinary control pass, along with both
+release and debug receipt/replay checks. Counted checked runs preserve Unicode
+scalar indexing and length, have no RC events or managed exit bytes, and pass
+LLVM/symbol audits. The actual stored numeric object SHA256 is
+0fa3619e922e68e6418d487417de4b127281abe2618947cc023277dc7746c03c.
+The replay blockers from the earlier worker prototype are resolved for this
+intermediate artifact. A08 separately owns deliberate old-object seeding and
+repair; this report does not claim that result. Support6 retains historical RC
+installed components and is not a C1/default/retirement qualification.

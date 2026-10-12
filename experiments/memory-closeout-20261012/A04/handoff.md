@@ -205,3 +205,17 @@ assertions; the source burden is 44 line pairs / 45 added copy calls. See
 `additional-migrations/sources-support5.json` and both native result directories.
 Borrowed tuple decomposition migrations await the integrated tuple.copy frontend
 fix (A01 eccea1cc) and are not yet counted as qualified.
+
+Support6 source5167c588 / compiler SHA256bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4
+now completes two integrated follow-ups. Numeric formatting passes all six
+native lanes and both release/debug receipt-replay checks; the stored object
+SHA2560fa3619e922e68e6418d487417de4b127281abe2618947cc023277dc7746c03c
+is recorded separately from the earlier prototype. A08 owns old-object repair.
+Slice qualification passes all17 lanes, including both full original S1 fixtures
+with their existing output assertions. All15 counted checked slice lanes are
+RC0/live0 and structurally clean. See formatting/support6-01 and slices/support6-01.
+These results remain intermediate; Support6 retains historical RC installed
+components and is not the final C1/default/retirement artifact. The19-source
+migration survey still refuses the optional tuple unpack at found.copy(); A01's
+complete-unpack fix is excluded from Support6. Forced native tests for the
+admitted subset are underway and will retain all19 sources/133 tests in evidence.
