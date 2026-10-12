@@ -1,0 +1,324 @@
+{
+  "scalar_frame_probe": {
+    "path": "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p1/.tmp/lox-eda-improvements/P1/scalar-frame",
+    "sha256": "e3b1ceaea75b4aee17b0e0ba86bfb9529193d3e7b97e05ca6619292e551c38e9",
+    "status": "passed"
+  },
+  "binaries": {
+    "candidate": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p1/.tmp/lox-eda-improvements/P1/candidate",
+      "sha256": "c9a9bf6bfcfd1012745a09f0d620d34311c209c35f20c3e991dbd8031d7f0eaa"
+    },
+    "baseline": {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-rerun-20261012/lox/zero-rc-counted",
+      "sha256": "43914d2e558b27fdeccf931047775c95f639ad83a0001f20b3569861203203e0"
+    }
+  },
+  "correctness": [
+    {
+      "arm": "candidate",
+      "case": "recursion",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "recursion",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "upvalues",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "upvalues",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "open-shared",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "open-shared",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "class-gc",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "class-gc",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "trace",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "trace",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "arity",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "arity",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "overflow",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "overflow",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "cleanup",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "cleanup",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "recursion",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "recursion",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "upvalues",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "upvalues",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "open-shared",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "open-shared",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "class-gc",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "class-gc",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "trace",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "trace",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "arity",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "arity",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "overflow",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "overflow",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "cleanup",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "cleanup",
+      "gc_stress": true,
+      "status": "passed"
+    }
+  ],
+  "allocation": [
+    {
+      "arm": "candidate",
+      "kind": "arithmetic",
+      "n": 10,
+      "cumulative_bytes": 1515544,
+      "peak_live_bytes": 799200,
+      "live_bytes_at_exit": 0,
+      "raw_counter": "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p1/.tmp/lox-eda-improvements/P1/verify/candidate-arithmetic-10.counters.json",
+      "raw_counter_sha256": "5b47d6fbee0e74eaf83d10ab976af7362d7d3fc7e7fb77d7410ef5715d24c65c",
+      "archived_counter": "experiments/lox-eda-improvements-20261012/P1/counters/candidate-arithmetic-10.counters.json",
+      "archived_counter_sha256": "5b47d6fbee0e74eaf83d10ab976af7362d7d3fc7e7fb77d7410ef5715d24c65c"
+    },
+    {
+      "arm": "candidate",
+      "kind": "arithmetic",
+      "n": 100,
+      "cumulative_bytes": 1515544,
+      "peak_live_bytes": 799200,
+      "live_bytes_at_exit": 0,
+      "raw_counter": "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p1/.tmp/lox-eda-improvements/P1/verify/candidate-arithmetic-100.counters.json",
+      "raw_counter_sha256": "66be137ae859a56449b9d2bdf51cc85841111004a905d88d353dbfd10878160b",
+      "archived_counter": "experiments/lox-eda-improvements-20261012/P1/counters/candidate-arithmetic-100.counters.json",
+      "archived_counter_sha256": "66be137ae859a56449b9d2bdf51cc85841111004a905d88d353dbfd10878160b"
+    },
+    {
+      "arm": "candidate",
+      "kind": "calls",
+      "n": 10,
+      "cumulative_bytes": 1592568,
+      "peak_live_bytes": 800544,
+      "live_bytes_at_exit": 0,
+      "raw_counter": "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p1/.tmp/lox-eda-improvements/P1/verify/candidate-calls-10.counters.json",
+      "raw_counter_sha256": "002c29403ff8cc681dacff3ec0f9e55ba20c8fa726e616e3acf2178a13e0c29e",
+      "archived_counter": "experiments/lox-eda-improvements-20261012/P1/counters/candidate-calls-10.counters.json",
+      "archived_counter_sha256": "002c29403ff8cc681dacff3ec0f9e55ba20c8fa726e616e3acf2178a13e0c29e"
+    },
+    {
+      "arm": "candidate",
+      "kind": "calls",
+      "n": 100,
+      "cumulative_bytes": 1592568,
+      "peak_live_bytes": 800544,
+      "live_bytes_at_exit": 0,
+      "raw_counter": "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p1/.tmp/lox-eda-improvements/P1/verify/candidate-calls-100.counters.json",
+      "raw_counter_sha256": "94390dff409def418a0e7b74a494fabe0cc593c38a20dd398d6df60351c7d123",
+      "archived_counter": "experiments/lox-eda-improvements-20261012/P1/counters/candidate-calls-100.counters.json",
+      "archived_counter_sha256": "94390dff409def418a0e7b74a494fabe0cc593c38a20dd398d6df60351c7d123"
+    },
+    {
+      "arm": "baseline",
+      "kind": "arithmetic",
+      "n": 10,
+      "cumulative_bytes": 2147560,
+      "peak_live_bytes": 830768,
+      "live_bytes_at_exit": 0,
+      "raw_counter": "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p1/.tmp/lox-eda-improvements/P1/verify/baseline-arithmetic-10.counters.json",
+      "raw_counter_sha256": "fdc4461d5e03dbb87767bdd85d269c320b14f2c28f650205d1b41bfc2d7913c6",
+      "archived_counter": "experiments/lox-eda-improvements-20261012/P1/counters/baseline-arithmetic-10.counters.json",
+      "archived_counter_sha256": "fdc4461d5e03dbb87767bdd85d269c320b14f2c28f650205d1b41bfc2d7913c6"
+    },
+    {
+      "arm": "baseline",
+      "kind": "arithmetic",
+      "n": 100,
+      "cumulative_bytes": 7032040,
+      "peak_live_bytes": 830768,
+      "live_bytes_at_exit": 0,
+      "raw_counter": "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p1/.tmp/lox-eda-improvements/P1/verify/baseline-arithmetic-100.counters.json",
+      "raw_counter_sha256": "b97a6ac5e07903fe569a21a5c4b99d1303ccde143f396de8444c12ace8675cb0",
+      "archived_counter": "experiments/lox-eda-improvements-20261012/P1/counters/baseline-arithmetic-100.counters.json",
+      "archived_counter_sha256": "b97a6ac5e07903fe569a21a5c4b99d1303ccde143f396de8444c12ace8675cb0"
+    },
+    {
+      "arm": "baseline",
+      "kind": "calls",
+      "n": 10,
+      "cumulative_bytes": 2410248,
+      "peak_live_bytes": 832112,
+      "live_bytes_at_exit": 0,
+      "raw_counter": "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p1/.tmp/lox-eda-improvements/P1/verify/baseline-calls-10.counters.json",
+      "raw_counter_sha256": "28be1114a12625860f2c04bcc28ffca07276e8a918b86431ff90b2c4b9ccbcc7",
+      "archived_counter": "experiments/lox-eda-improvements-20261012/P1/counters/baseline-calls-10.counters.json",
+      "archived_counter_sha256": "28be1114a12625860f2c04bcc28ffca07276e8a918b86431ff90b2c4b9ccbcc7"
+    },
+    {
+      "arm": "baseline",
+      "kind": "calls",
+      "n": 100,
+      "cumulative_bytes": 8844168,
+      "peak_live_bytes": 832112,
+      "live_bytes_at_exit": 0,
+      "raw_counter": "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p1/.tmp/lox-eda-improvements/P1/verify/baseline-calls-100.counters.json",
+      "raw_counter_sha256": "60ac5db9e16344006962f745ca6c90b211dbb4e5c48708f27d2a2809e93a4e4a",
+      "archived_counter": "experiments/lox-eda-improvements-20261012/P1/counters/baseline-calls-100.counters.json",
+      "archived_counter_sha256": "60ac5db9e16344006962f745ca6c90b211dbb4e5c48708f27d2a2809e93a4e4a"
+    }
+  ],
+  "timings": "not measured; reduced inputs only",
+  "slopes_bytes_per_added_iteration": {
+    "candidate-arithmetic": 0.0,
+    "candidate-calls": 0.0,
+    "baseline-arithmetic": 54272.0,
+    "baseline-calls": 71488.0
+  },
+  "arithmetic_bytes_per_added_opcode": {
+    "candidate": 0.0,
+    "baseline": 3015.1111111111113
+  },
+  "equal_width_input_note": "Counter loop bounds use three decimal characters (010/100), preserving source byte width.",
+  "opcode_count_note": "Arithmetic loop executes 18 instructions per successful iteration: six condition/jump, six body/loop, six increment/loop; fixed setup/exit excluded by slope.",
+  "call_slope_note": "Calls slope is bytes per added single-call loop iteration, including dispatch/global work, not isolated call allocation.",
+  "ownership_counters": "All eight reduced runs: zero retain/release/unique_test events, zero runtime/shared retain/releases/share marks."
+}

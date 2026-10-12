@@ -1,0 +1,16 @@
+record Frame:
+    closure: int
+    function: int
+    ip: int
+    base: int
+record Runtime:
+    frames: Frame[]
+func update(mut rt: Runtime):
+    mut frame = rt.frames[0].copy()
+    frame.ip += 1
+    rt.frames[0] = frame.copy()
+func main() -> int:
+    mut rt = Runtime(frames=[Frame(closure=1, function=2, ip=3, base=4)])
+    update(mut rt)
+    assert rt.frames[0].ip == 4
+    return 0

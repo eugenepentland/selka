@@ -15,15 +15,14 @@ public const FRAMES_MAX: int = 64
 const FIRST_GC: int = 1048576
 
 
-# An active VM call, clox's CallFrame: the closure (a GC root), its
-# function and code (so the dispatch loop reaches the chunk without a table
-# lookup), its captured upvalues, the index of the next instruction and the
-# stack index of slot 0. The Runtime keeps FRAMES_MAX of them and reuses them.
+# An active VM call stores scalar object handles, the next instruction's
+# byte offset, and the value-stack index of slot 0. The closure is a GC root
+# that keeps its function and upvalues live. Instruction readers borrow
+# those objects briefly; publishing a frame never copies their storage.
+# Runtime keeps FRAMES_MAX frames and reuses them.
 public record CallFrame:
     closure: value.ObjRef
-    function: object.FunctionObj
-    code: int[]
-    upvalues: value.ObjRef[]
+    function: value.ObjRef
     ip: int
     base: int
 
@@ -69,9 +68,7 @@ public func new_runtime(gc_stress: bool) -> Runtime:
     mut frames: CallFrame[] = []
     i = 0
     while i < FRAMES_MAX:
-        mut function = object.new_function()
-        const frame_code = function.code.code.copy()
-        frames.append(CallFrame(closure=value.NO_OBJ, function=function, code=frame_code, upvalues=[], ip=0, base=0))
+        frames.append(CallFrame(closure=value.NO_OBJ, function=value.NO_OBJ, ip=0, base=0))
         i += 1
     return Runtime(objects=[], marker=Marker(marks=[], gray=[]), free_slots=[], strings=table.new_table(), globals=table.new_table(), init_string=value.NO_OBJ, gc_stress=gc_stress, bytes_allocated=0, next_gc=FIRST_GC, allocations=0, collections=0, freed=0, stack=stack, stack_top=0, frames=frames, frame_count=0, open_upvalues=value.NO_OBJ, compiling=[], current_env=value.NO_OBJ, saved_envs=[], permanent_roots=[])
 

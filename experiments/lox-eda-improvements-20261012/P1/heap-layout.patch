@@ -1,0 +1,26 @@
+diff --git a/experiments/lox-eda-improvements-20261012/source/lox/heap.my b/experiments/lox-eda-improvements-20261012/source/lox/heap.my
+index 99686a017..d1cc6b96e 100644
+--- a/experiments/lox-eda-improvements-20261012/source/lox/heap.my
++++ b/experiments/lox-eda-improvements-20261012/source/lox/heap.my
+@@ -21,9 +21,7 @@ const FIRST_GC: int = 1048576
+ # stack index of slot 0. The Runtime keeps FRAMES_MAX of them and reuses them.
+ public record CallFrame:
+     closure: value.ObjRef
+-    function: object.FunctionObj
+-    code: int[]
+-    upvalues: value.ObjRef[]
++    function: value.ObjRef
+     ip: int
+     base: int
+ 
+@@ -69,9 +67,7 @@ public func new_runtime(gc_stress: bool) -> Runtime:
+     mut frames: CallFrame[] = []
+     i = 0
+     while i < FRAMES_MAX:
+-        mut function = object.new_function()
+-        const frame_code = function.code.code.copy()
+-        frames.append(CallFrame(closure=value.NO_OBJ, function=function, code=frame_code, upvalues=[], ip=0, base=0))
++        frames.append(CallFrame(closure=value.NO_OBJ, function=value.NO_OBJ, ip=0, base=0))
+         i += 1
+     return Runtime(objects=[], marker=Marker(marks=[], gray=[]), free_slots=[], strings=table.new_table(), globals=table.new_table(), init_string=value.NO_OBJ, gc_stress=gc_stress, bytes_allocated=0, next_gc=FIRST_GC, allocations=0, collections=0, freed=0, stack=stack, stack_top=0, frames=frames, frame_count=0, open_upvalues=value.NO_OBJ, compiling=[], current_env=value.NO_OBJ, saved_envs=[], permanent_roots=[])
+ 

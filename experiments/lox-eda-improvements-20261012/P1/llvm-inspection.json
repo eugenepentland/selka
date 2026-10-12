@@ -1,0 +1,82 @@
+{
+  "llvm_sha256": "70f10cadc5d3988a11ef9e162bdfe2f6a5498f3d60e34156f04f96642260ec08",
+  "functions": {
+    "my.vm::read_byte": {
+      "declaration": "define internal fastcc void @\"my.vm::read_byte\"(ptr noalias sret([40 x i8]) align 8 %ret, ptr noalias readonly align 8 %p0, { i64, i64, i64, i64 } %p1) nounwind uwtable !dbg !1000925 {",
+      "calls": [
+        "\"my.heap::function_instruction\"",
+        "llvm.sadd.with.overflow.i64",
+        "myl_core_trap",
+        "myl_count_function_local",
+        "myl_count_site_local"
+      ],
+      "allocation_or_copy_callees": []
+    },
+    "my.vm::read_short": {
+      "declaration": "define internal fastcc void @\"my.vm::read_short\"(ptr noalias sret([40 x i8]) align 8 %ret, ptr noalias readonly align 8 %p0, { i64, i64, i64, i64 } %p1) nounwind uwtable !dbg !1001246 {",
+      "calls": [
+        "\"my.heap::function_instruction\"",
+        "llvm.sadd.with.overflow.i64",
+        "llvm.smul.with.overflow.i64",
+        "myl_core_trap",
+        "myl_count_function_local",
+        "myl_count_site_local"
+      ],
+      "allocation_or_copy_callees": []
+    },
+    "my.vm::read_constant": {
+      "declaration": "define internal fastcc void @\"my.vm::read_constant\"(ptr noalias sret([48 x i8]) align 8 %ret, ptr noalias readonly align 8 %p0, { i64, i64, i64, i64 } %p1) nounwind uwtable !dbg !1000930 {",
+      "calls": [
+        "\"my.heap::function_constant\"",
+        "\"my.vm::read_byte\"",
+        "myl_count_function_local"
+      ],
+      "allocation_or_copy_callees": []
+    },
+    "my.heap::function_instruction": {
+      "declaration": "define internal fastcc i64 @\"my.heap::function_instruction\"(ptr noalias readonly align 8 %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1002154 {",
+      "calls": [
+        "myl_core_assert_fail",
+        "myl_core_trap",
+        "myl_count_function_local",
+        "myl_count_site_local"
+      ],
+      "allocation_or_copy_callees": []
+    },
+    "my.heap::function_constant": {
+      "declaration": "define internal fastcc { i8, [1 x i64] } @\"my.heap::function_constant\"(ptr noalias readonly align 8 %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1002179 {",
+      "calls": [
+        "myl_core_assert_fail",
+        "myl_core_trap",
+        "myl_count_function_local",
+        "myl_count_site_local"
+      ],
+      "allocation_or_copy_callees": []
+    },
+    "my.heap::closure_upvalue": {
+      "declaration": "define internal fastcc i64 @\"my.heap::closure_upvalue\"(ptr noalias readonly align 8 %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1002275 {",
+      "calls": [
+        "myl_core_assert_fail",
+        "myl_core_trap",
+        "myl_count_function_local",
+        "myl_count_site_local"
+      ],
+      "allocation_or_copy_callees": []
+    },
+    "my.vm::call": {
+      "declaration": "define internal fastcc void @\"my.vm::call\"(ptr noalias sret([240 x i8]) align 8 %ret, ptr noalias align 8 %p0, ptr noalias align 8 %p1, i64 %p2, i64 %p3) nounwind uwtable !dbg !1000273 {",
+      "calls": [
+        "\"my.heap::closure_function\"",
+        "\"my.heap::function_arity\"",
+        "\"my.vm::arity_error\"",
+        "\"my.vm::runtime_error\"",
+        "llvm.sadd.with.overflow.i64",
+        "llvm.ssub.with.overflow.i64",
+        "myl_core_trap",
+        "myl_count_function_local",
+        "myl_count_site_local"
+      ],
+      "allocation_or_copy_callees": []
+    }
+  }
+}

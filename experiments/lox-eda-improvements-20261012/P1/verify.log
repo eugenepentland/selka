@@ -1,0 +1,8 @@
+build-slot: FIFO ticket 2507, position 9; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 3, FIFO ticket 2507 after 51s
+{
+  "candidate-arithmetic": 0.0,
+  "candidate-calls": 0.0,
+  "baseline-arithmetic": 54272.0,
+  "baseline-calls": 71488.0
+}
