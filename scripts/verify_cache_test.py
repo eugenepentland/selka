@@ -570,6 +570,112 @@ class VerificationCoordinator(unittest.TestCase):
         self.assertEqual(warm['build_admitted_seconds'], 0)
         self.assertEqual(warm['gate_admitted_seconds'], 0)
 
+    def component_options(self, *, relative=False):
+        external = tempfile.TemporaryDirectory(prefix='component-input-', dir=REPOSITORY / '.tmp')
+        self.addCleanup(external.cleanup)
+        pin, archive = Path(external.name) / 'pin.json', Path(external.name) / 'source.tar'
+        pin.write_text('{"compiler":"qualified-original"}')
+        archive.write_bytes(b'qualified-source-archive')
+        paths = [Path(os.path.relpath(path, self.root)) if relative else path for path in (pin, archive)]
+        options = coordinator.parse_options(['-Dcomponent-owned-compiler-pin=' + str(paths[0]),
+                                             '-Dcomponent-seed-source=' + str(paths[1])])
+        return options, pin, archive
+
+    def test_component_source_options_preserve_full_gate_restrictions(self):
+        options, _, _ = self.component_options()
+        self.assertIn('--maxrss', options)
+        for bad in ['-Dcomponent-owned-compiler-pin=', '-Dcomponent-seed-source=',
+                    '-Dcomponent-owned-compiler-pin', '-Dcomponent-seed-source=x\x00y',
+                    '-Dcomponent-other=path', '--prefix=other', '--cache-dir=other',
+                    'verification-unit', 'test', '--maxrss8589934592']:
+            with self.subTest(option=bad), self.assertRaises(coordinator.VerificationError):
+                coordinator.parse_options([bad])
+        for option in options[:2]:
+            with self.subTest(duplicate=option), self.assertRaisesRegex(coordinator.VerificationError, 'duplicate'):
+                coordinator.parse_options([option, option])
+        # Existing independently meaningful source controls need no new pairing rule.
+        for option in options[:2]:
+            self.assertIn(option, coordinator.parse_options([option]))
+
+    def test_component_source_forwarding_identity_and_warm_reuse(self):
+        options, pin, archive = self.component_options(relative=True)
+        self.assertEqual(self.execute(options), 0)
+        for phase in ['plan', 'prepare', 'gate']:
+            for option in options[:2]:
+                self.assertIn(option, self.events(phase)[0]['argv'])
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        files = report['component_sources']['files']
+        self.assertEqual({item['sha256'] for item in files},
+                         {coordinator.hashlib.sha256(path.read_bytes()).hexdigest() for path in (pin, archive)})
+        self.admissions.clear()
+        self.assertEqual(self.execute(options), 0)
+        self.assertEqual(self.admissions, [])
+        self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
+
+    def test_component_source_same_path_content_edit_invalidates_preparation_and_actions(self):
+        options, pin, archive = self.component_options()
+        self.assertEqual(self.execute(options), 0)
+        for path in (pin, archive):
+            metadata = path.stat()
+            content = path.read_bytes()
+            path.write_bytes(bytes([content[0] ^ 1]) + content[1:])
+            os.utime(path, ns=(metadata.st_atime_ns, metadata.st_mtime_ns))
+            self.admissions.clear()
+            self.assertEqual(self.execute(options), 0)
+            self.assertEqual([kind for kind, _ in self.admissions], ['build', 'build', 'gate'])
+            self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'execute'})
+        self.assertEqual(len(self.events('prepare')), 3)
+
+    def test_component_source_missing_or_non_file_never_admits_work(self):
+        options, pin, archive = self.component_options()
+        pin.unlink()
+        with self.assertRaises(SnapshotError):
+            self.execute(options)
+        self.assertEqual(self.admissions, [])
+        pin.mkdir()
+        with self.assertRaises(SnapshotError):
+            self.execute(options)
+        self.assertEqual(self.admissions, [])
+
+    def test_component_source_symlink_retarget_invalidates_identical_bytes(self):
+        options, pin, _ = self.component_options()
+        twin = pin.with_name('twin.json')
+        twin.write_bytes(pin.read_bytes())
+        alias = pin.with_name('selected.json')
+        alias.symlink_to(pin.name)
+        options[0] = '-Dcomponent-owned-compiler-pin=' + str(alias)
+        self.assertEqual(self.execute(options), 0)
+        alias.unlink()
+        alias.symlink_to(twin.name)
+        self.admissions.clear()
+        self.assertEqual(self.execute(options), 0)
+        self.assertEqual([kind for kind, _ in self.admissions], ['build', 'build', 'gate'])
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'execute'})
+
+    def test_component_source_queued_aba_refuses_before_gate(self):
+        options, pin, _ = self.component_options()
+        def mutate_restore():
+            original, metadata = pin.read_bytes(), pin.stat()
+            pin.write_bytes(b'x' * len(original))
+            pin.write_bytes(original)
+            os.utime(pin, ns=(metadata.st_atime_ns, metadata.st_mtime_ns))
+        self.before_gate = mutate_restore
+        self.assertEqual(self.execute(options), coordinator.RETRY)
+        self.assertEqual(self.events('gate'), [])
+        self.assertEqual(self.receipts(), [])
+
+    def test_component_source_running_aba_never_publishes_success(self):
+        options, _, archive = self.component_options()
+        def mutate_restore():
+            original, metadata = archive.read_bytes(), archive.stat()
+            archive.write_bytes(b'x' * len(original))
+            archive.write_bytes(original)
+            os.utime(archive, ns=(metadata.st_atime_ns, metadata.st_mtime_ns))
+        self.after_gate = mutate_restore
+        self.assertEqual(self.execute(options), coordinator.RETRY)
+        self.assertEqual(len(self.events('gate')), 1)
+        self.assertEqual(self.receipts(), [])
+
     def test_changed_options_environment_and_tool_each_invalidate(self):
         self.assertEqual(self.execute(), 0)
         self.assertEqual(self.execute(['-j4']), 0)

@@ -1,0 +1,11 @@
+..build-slot: gate slot 1, FIFO ticket 1 after 0s
+build-slot: gate slot 1, FIFO ticket 1 after 0s
+...........................build-slot: gate slot 1, FIFO ticket 1 after 0s
+..................build-slot: gate slot 1, FIFO ticket 1 after 0s
+....build-slot: FIFO ticket 1, position 1; all 1 gate slot(s) busy; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 1 after 1s
+......................
+----------------------------------------------------------------------
+Ran 73 tests in 29.002s
+
+OK

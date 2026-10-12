@@ -46,6 +46,7 @@ INVENTORY_VERSION = 2
 # auto-update this qualification after consumer changes.
 DECLARATIVE_CONFIG_SHA256 = "7cefed8043b05279aa8960b33ea742e728f91dfc294d08c6e48d7b4a0a8fd6fc"
 RETRY = 75
+COMPONENT_SOURCE_OPTIONS = {"-Dcomponent-owned-compiler-pin", "-Dcomponent-seed-source"}
 MAX_RECORD = 32 * 1024 * 1024
 CONFIG_INPUTS = ["./*.zig", "build.zig.zon", ".zigversion", "guardian.toml",
                  "src/user_docs.zig", "selfhost/*.zig", "../guardian-zig/build.zig",
@@ -697,6 +698,21 @@ def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[st
     return plan, artifacts, held
 
 
+def component_source_files(options: list[str]) -> list[Path]:
+    """Explicit packaging inputs; preserve logical paths for symlink watches."""
+    sources = {}
+    for arg in options:
+        name, separator, value = arg.partition("=")
+        if name not in COMPONENT_SOURCE_OPTIONS:
+            continue
+        if not separator or not value or "\x00" in value:
+            raise VerificationError("missing or invalid component input: " + name)
+        if name in sources:
+            raise VerificationError("duplicate component input: " + name)
+        sources[name] = Path(value)
+    return list(sources.values())
+
+
 def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool = False,
             shared_cache_dir: Path | None = None, *, build_timeout: float | None = None,
             gate_timeout: float | None = None, warn_after: float | None = None) -> int:
@@ -722,6 +738,12 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
             raise VerificationError("tool resolution changed while installing input watches")
         host = HostContext()
         snapshots = [tools, host]
+        component_sources = None
+        if files := component_source_files(options):
+            # Bind external pin/archive bytes before preparation and keep their
+            # watches through admission, execution, and receipt publication.
+            component_sources = stack.enter_context(Snapshot(root, [], files, digest_session=session))
+            snapshots.append(component_sources)
         common = {"version": VERSION, "root": str(root), "options": options,
                   "environment": key(env), "platform": host.identity,
                   "tools": key(tools.identity),
@@ -730,6 +752,8 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                   "implementation": [LOADED_CODE_SHA256, verification_snapshot.LOADED_CODE_SHA256,
                                      fuzz_campaign_store.LOADED_CODE_SHA256,
                                      verification_process.LOADED_CODE_SHA256]}
+        if component_sources is not None:
+            common["component_sources"] = component_sources.identity
         try:
             plan, artifacts, build_seconds = prepare(root, cache, zig, options, env, common, snapshots, stack,
                                                     admissions, phases, session, build_limits)
@@ -847,6 +871,7 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                          "enforced": False}
         report = {"version": VERSION, "success": status == 0, "status": status,
                   "actions": results, "inputs_stable": stable,
+                  "component_sources": common.get("component_sources"),
                   "action_metadata": plan["action_metadata"],
                   "budget_context": key({name: value for name, value in common.items() if name != "inventory"}),
                   "build_admitted_seconds": build_seconds, "gate_admitted_seconds": gate_seconds,
@@ -881,6 +906,7 @@ def parse_options(options: list[str]) -> list[str]:
     """Only full-gate build controls; no target, prefix, cache-root or runner overrides."""
     if options[:1] == ["--"]:
         options = options[1:]
+    component_source_files(options)  # Reject missing or ambiguous packaging inputs.
     allowed_values = {"--maxrss", "--summary"}
     index = 0
     while index < len(options):
@@ -889,7 +915,8 @@ def parse_options(options: list[str]) -> list[str]:
             index += 1
             if index >= len(options) or options[index].startswith("-"):
                 raise VerificationError("missing value for " + arg)
-        elif not (re.fullmatch(r"-j[1-9][0-9]*", arg)
+        elif not (arg.partition("=")[0] in COMPONENT_SOURCE_OPTIONS
+                  or re.fullmatch(r"-j[1-9][0-9]*", arg)
                   or re.fullmatch(r"--seed=(0x[0-9a-fA-F]+|[0-9]+)", arg) or re.fullmatch(
                 r"-D(optimize|test-shards|core-shards|test-rerun|test-filter)=[^\x00]+", arg)):
             raise VerificationError("unsupported verification build option: " + arg)
