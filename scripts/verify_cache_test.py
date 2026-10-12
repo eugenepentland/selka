@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import py_compile
+import re
 import shutil
 import signal
 import subprocess
@@ -1735,6 +1736,28 @@ class CallerAuthentication(unittest.TestCase):
         self.assertRaises(SnapshotError, self.authenticate, self.root, watched, [watched], contextlib.ExitStack())
 
 REAL_ADMISSION = coordinator.run_admitted
+
+
+class BuildToolIdentity(unittest.TestCase):
+    """The build graph's `build-env` tool is prepared infrastructure, not an
+    action, so no action key holds its bytes; the coordinator's configuration
+    identity must cover every file the tool compiles from instead."""
+
+    def test_build_env_tool_closure_is_in_every_action_configuration(self):
+        recipes = coordinator.CONFIG_INPUTS + coordinator.COORDINATOR_INPUTS
+        pending, closure = ['build_env.zig'], set()
+        while pending:
+            path = pending.pop()
+            if path in closure:
+                continue
+            closure.add(path)
+            text = (REPOSITORY / path).read_text()
+            for name in re.findall(r'@import\("([^"]+\.zig|[^"]+\.zon)"\)', text):
+                pending.append(os.path.normpath(os.path.join(os.path.dirname(path), name)))
+        self.assertIn('src/build_env_rules.zig', closure)
+        uncovered = sorted(path for path in closure
+                           if not any(coordinator.matches_recipe(path, recipe, REPOSITORY) for recipe in recipes))
+        self.assertEqual(uncovered, [], 'build-env sources outside the coordinator configuration identity')
 
 
 if __name__ == '__main__':

@@ -138,6 +138,7 @@ pub const Registry = struct {
             }) catch @panic("verification allocation");
         }
         if (unknown.items.len > 0) metadata.append(a, .{ .id = "unclassified", .steps = &.{} }) catch @panic("verification allocation");
+        self.requireCoverage(roots, unknown.items);
         const inventory: Inventory = .{
             .groups = groups.items,
             .action_metadata = metadata.items,
@@ -149,6 +150,22 @@ pub const Registry = struct {
         const written = self.build.addWriteFiles().add("verification-inventory.json", bytes);
         const install = self.build.addInstallFileWithDir(written, .{ .custom = "verification" }, "inventory.json");
         self.build.step("verification-plan", "Export authoritative test and format action inventory without executing gates").dependOn(&install.step);
+    }
+
+    /// The gate's coverage guard, `test-verification-registry`: every root depends
+    /// on it, and it fails, naming each action, while `unknown` is not empty.
+    /// The coordinator still sends such a request to the original complete
+    /// gate (`unclassified`), but that gate, like `zig build test`, then
+    /// cannot pass: an unregistered action costs every request the whole gate.
+    fn requireCoverage(self: *Registry, roots: []const *std.Build.Step, unknown: []const []const u8) void {
+        const b = self.build;
+        const guard = b.step("test-verification-registry", "Fail while a required test or format action is unregistered in the verification inventory");
+        for (roots) |root| root.dependOn(guard);
+        if (unknown.len == 0) return;
+        var message: std.ArrayList(u8) = .empty;
+        message.print(b.allocator, "verification inventory: {d} required gate action(s) belong to no cohort and no prepared infrastructure, so every coordinator request runs the original complete gate (verification-unclassified); register each in build.zig or build_verification.registerInfrastructure:", .{unknown.len}) catch @panic("verification allocation");
+        for (unknown) |name| message.print(b.allocator, "\n  unregistered action: {s}", .{name}) catch @panic("verification allocation");
+        guard.dependOn(&b.addFail(message.items).step);
     }
 
     fn observeNative(self: *Registry, step: *std.Build.Step, id: []const u8, member: usize) void {
@@ -356,7 +373,16 @@ fn inputLists(a: std.mem.Allocator) []const InputList {
     return lists.toOwnedSlice(a) catch @panic("verification allocation");
 }
 
-/// Register recognized Guardian and compiler-identity preparations conservatively.
+/// Register recognized Guardian, environment and compiler-identity preparations
+/// conservatively. The host tools that the always-fresh `guardian` and
+/// `environment-discovery` cohorts run (`guardian-check`, `build-env`) are
+/// infrastructure: their compile steps are prepared, not required actions, so
+/// they cannot send a request to the `unclassified` original-gate fallback.
+/// Every cached test step also runs through `build-env project` (`withTools`
+/// in `build.zig`), whose bytes key that step in the build runner; the
+/// coordinator binds the tool's sources through its configuration identity
+/// (`CONFIG_INPUTS` in `scripts/verify_cache.py`: `./*.zig` and the
+/// `src/` files `build_env.zig` imports).
 pub fn registerInfrastructure(registry: *Registry, roots: []const *std.Build.Step) void {
     var reachable = closure(registry.build.allocator, roots);
     var steps = reachable.keyIterator();
@@ -370,6 +396,12 @@ pub fn registerInfrastructure(registry: *Registry, roots: []const *std.Build.Ste
         };
         if (std.mem.eql(u8, name, "guardian-check")) {
             registry.register("guardian", &run.step, &.{}, false, "Guardian source, git scope and mutable policy validation require freshness");
+            switch (run.argv.items[0]) {
+                .artifact => |artifact| registry.infrastructure.append(registry.build.allocator, &artifact.artifact.step) catch @panic("verification allocation"),
+                else => {},
+            }
+        } else if (std.mem.eql(u8, name, "build-env")) {
+            // `addEnvironmentManifest` registers the run itself, always fresh.
             switch (run.argv.items[0]) {
                 .artifact => |artifact| registry.infrastructure.append(registry.build.allocator, &artifact.artifact.step) catch @panic("verification allocation"),
                 else => {},
