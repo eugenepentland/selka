@@ -550,6 +550,15 @@
      field(&hash, settings.mode.level());
      field(&hash, target_policy.native_link_target);
      for (target_policy.current.cpu_flags) |flag| field(&hash, flag);
+@@ -372,7 +376,7 @@
+ 
+ // spec: NEW-CORE-S4-CACHE-1
+ test "unit keys cover the text, level, toolchain, CPU and runtime, and fields cannot run together" {
+-    const base: Settings = .{ .tool = @splat(1), .cpu = @splat(2), .mode = .debug, .runtime = @splat(3) };
++    const base: Settings = .{ .abi = guest_abi.current, .tool = @splat(1), .cpu = @splat(2), .mode = .debug, .runtime = @splat(3) };
+     const original = key(base, "define i32 @f()");
+     try std.testing.expectEqual(original, key(base, "define i32 @f()"));
+     try std.testing.expect(!std.mem.eql(u8, &original, &key(base, "define i32 @g()")));
 --- a/src/core/driver.zig
 +++ b/src/core/driver.zig
 @@ -15,6 +15,7 @@

@@ -36,7 +36,11 @@ COMPILER_ALLOCATOR = re.compile(r'^.*(?:error\(SafeAllocator\): leaked|error\(gp
 
 
 def digest(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    result = hashlib.sha256()
+    with Path(path).open('rb') as source:
+        while block := source.read(1024 * 1024):
+            result.update(block)
+    return result.hexdigest()
 
 
 def write(path, text):

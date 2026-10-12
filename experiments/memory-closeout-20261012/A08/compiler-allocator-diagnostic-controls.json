@@ -1,6 +1,6 @@
 {
   "status": "retained_diagnostic_controls_passed",
-  "engine_sha256": "9fecbf4cb6b36607550ebdb9f232589b4bdc71db5fa7580cbbb217185be696ab",
+  "engine_sha256": "8383389bf1c59130c58e0be8899597a4bccb0c7ad3ffe0e930b92adb34289cbd",
   "rows": [
     {
       "retained_source": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/experiments/memory-closeout-20261012/A04/selections/prototype-03/raw/release/build.stderr",
@@ -15,5 +15,11 @@
       "expected": 0
     }
   ],
-  "scope": "Harness diagnostic classification only; existing compiler and guest outcomes retained under A04 identities. No new compiler execution or guest allocation measurement."
+  "scope": "Harness diagnostic classification only; existing compiler and guest outcomes retained under A04 identities. No new compiler execution or guest allocation measurement.",
+  "streamed_digest_control": {
+    "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+    "sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+    "status": "matches_frozen_C0",
+    "buffer_bytes": 1048576
+  }
 }

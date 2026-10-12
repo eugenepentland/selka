@@ -38,7 +38,7 @@
     },
     "unit_cache.zig": {
       "before_sha256": "63cd9948c004246f73652394e9543d08dba2412b2a80ab8e514923a4cd700878",
-      "draft_sha256": "a618299fd7e0ab2e038c98eb80322f2e2f65aff4e35876d2695d8e017d9f5a8c"
+      "draft_sha256": "d6bdbf8d201bd2ca7fb65f8f4d31c7543adceb765300a4959ec7ab206453121a"
     },
     "driver.zig": {
       "before_sha256": "8b990d67466be745c04313e77f9fa21291e5b0d5b4def7e91a2a844df45df766",
@@ -63,6 +63,6 @@
     "status": "prepared_uncompiled_unrun",
     "registered_tests": 3
   },
-  "patch_sha256": "ed704d3c4eec09079b1f462b7613b86de32d8a1d9f280f6d7b8d3c8744820b3b",
+  "patch_sha256": "60780e0cc45f21b61a348cc26529be469d72b356bc8bc6d33d92a7de2b54ecf6",
   "validation": "Zig fmt syntax check only; API/typechecking and all tests await coordinated C3 integration after C2."
 }
